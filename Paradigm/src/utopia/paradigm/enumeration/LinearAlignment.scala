@@ -38,6 +38,14 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	def origin(within: Double): Double
 	
 	
+	// COMPUTED ------------------------------
+	
+	/**
+	  * @return Whether this alignment tends to move items from the middle to either direction
+	  */
+	def movesItems = direction.isDefined
+	
+	
 	// IMPLEMENTED  --------------------------
 	
 	override protected def zero = Middle
@@ -54,7 +62,7 @@ object LinearAlignment
 	// ATTRIBUTES   ----------------------
 	
 	/**
-	  * All possible linear alignment values
+	  * All possible linear alignment values, from close to far
 	  */
 	val values = Vector[LinearAlignment](Close, Middle, Far)
 	

@@ -4,6 +4,7 @@ import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
@@ -11,7 +12,6 @@ import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.text.TextComponent
-import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
@@ -19,6 +19,7 @@ import utopia.reflection.localization.{LocalString, LocalizedString}
 import utopia.reflection.shape._
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import LengthExtensions._
 import utopia.reflection.text.Font
 
 object MultiLineTextView
@@ -54,10 +55,11 @@ object MultiLineTextView
   * @param initialTextColor Initially used text color (default = slightly opaque black)
   */
 class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initialLineSplitThreshold: Double,
-						initialInsets: StackInsets = StackInsets.any,
-						val betweenLinesMargin: StackLength = StackLength.fixed(0),
-						useLowPriorityForScalingSides: Boolean = false, initialAlignment: Alignment = Alignment.Left,
-						initialTextColor: Color = Color.textBlack)
+                        initialInsets: StackInsets = StackInsets.any,
+                        val betweenLinesMargin: StackLength = StackLength.fixed(0),
+                        useLowPriorityForScalingSides: Boolean = false,
+                        initialAlignment: enumeration.Alignment = enumeration.Alignment.Left,
+                        initialTextColor: Color = Color.textBlack)
 	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	------------------------
@@ -152,17 +154,13 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 				// Creates new line components
 				val language = text.languageCode
 				val lineComponents = lines.map { line =>
-					new TextLabel(LocalizedString(LocalString(line, language), None), font, textColor, insets.onlyHorizontal,
-						alignment.horizontal) }
+					new TextLabel(LocalizedString(LocalString(line, language), None), font, textColor,
+						insets.onlyHorizontal, alignment.onlyHorizontal)
+				}
 				
 				// Places the lines in a stack
 				// Stack layout depends from current alignment (horizontal)
-				val stackLayout = alignment.horizontal match
-				{
-					case Alignment.Left => Leading
-					case Alignment.Right => Trailing
-					case _ => Center
-				}
+				val stackLayout = alignment.horizontal.toStackLayout
 				
 				Stack.columnWithItems(lineComponents, betweenLinesMargin, insets.vertical / 2, stackLayout)
 			}
@@ -211,7 +209,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 		override def apply(size: StackSize) =
 		{
 			// Sets low priority length to one side of the size, based on alignment
-			val targetSide = if (alignment.isHorizontal) X else Y
+			val targetSide = if (alignment.affectsHorizontal) X else Y
 			size.mapSide(targetSide) { _.withLowPriority }
 		}
 	}

@@ -20,7 +20,7 @@ trait ComponentWrapper2 extends ComponentLike2
 	
 	// IMPLEMENTED	---------------
 	
-	override def fontMetrics(font: Font) = wrapped.fontMetrics(font)
+	override def fontMetricsWith(font: Font) = wrapped.fontMetricsWith(font)
 	
 	override def mouseButtonHandler = wrapped.mouseButtonHandler
 	override def mouseMoveHandler = wrapped.mouseMoveHandler

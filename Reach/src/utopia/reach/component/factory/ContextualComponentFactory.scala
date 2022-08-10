@@ -1,7 +1,7 @@
 package utopia.reach.component.factory
 
 import utopia.reflection.component.context.TextContext
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.text.Font
 
 object ContextualComponentFactory

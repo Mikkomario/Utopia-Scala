@@ -4,6 +4,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.paradigm.shape.shape2d.Insets
 import utopia.reflection.component.context.ButtonContextLike
@@ -118,7 +119,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 (actorHandler: ActorHandler, override protected val noResultsView: AwtStackable, icon: Image,
  selectionDrawer: CustomDrawer, focusColor: Color, selectionPrompt: Prompt, defaultFont: Font,
  defaultTextColor: Color = Color.textBlack, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
- textAlignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
+ textAlignment: enumeration.Alignment = enumeration.Alignment.Left, textInsets: StackInsets = StackInsets.any,
  imageInsets: StackInsets = StackInsets.any, borderColor: Color = Color.textBlackDisabled,
  borderWidth: Double = 1.0, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),

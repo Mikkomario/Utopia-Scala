@@ -7,7 +7,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.ImageViewDrawer
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
 object ViewImageLabel extends ComponentFactoryFactory[ViewImageLabelFactory]

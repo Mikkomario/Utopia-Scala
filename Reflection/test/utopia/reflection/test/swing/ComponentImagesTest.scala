@@ -5,7 +5,7 @@ import utopia.reflection.component.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.shape.Border
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup

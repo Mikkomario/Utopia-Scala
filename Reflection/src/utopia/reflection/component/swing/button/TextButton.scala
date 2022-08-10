@@ -4,13 +4,13 @@ import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.text.Font
 
 object TextButton

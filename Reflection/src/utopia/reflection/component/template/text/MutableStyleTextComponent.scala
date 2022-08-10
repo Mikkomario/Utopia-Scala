@@ -3,7 +3,7 @@ package utopia.reflection.component.template.text
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.template.layout.Alignable
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 

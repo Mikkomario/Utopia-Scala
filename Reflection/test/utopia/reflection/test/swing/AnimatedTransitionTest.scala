@@ -2,6 +2,7 @@ package utopia.reflection.test.swing
 
 import utopia.flow.async.Delay
 import utopia.flow.time.TimeExtensions._
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.reflection.component.drawing.immutable.BorderDrawer
@@ -9,7 +10,7 @@ import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.{Alignment, Border}
+import utopia.reflection.shape.Border
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._

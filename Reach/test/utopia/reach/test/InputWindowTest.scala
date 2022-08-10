@@ -30,7 +30,7 @@ import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.LengthExtensions._
 
 /**

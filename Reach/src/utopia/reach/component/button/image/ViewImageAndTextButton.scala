@@ -17,7 +17,7 @@ import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 

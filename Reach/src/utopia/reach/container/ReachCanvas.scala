@@ -29,7 +29,8 @@ import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reflection.shape.stack.StackSize
 
 import java.awt.event.KeyEvent
@@ -249,15 +250,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		val popup = Popup(this, newCanvas.parent, actorHandler, autoCloseLogic, alignment) { (_, popupSize) =>
 			// Calculates pop-up top left coordinates based on alignment
 			Point.calculateWith { axis =>
-				alignment.directionAlong(axis) match
-				{
-					case Some(direction) =>
-						direction match
-						{
-							case Positive => over.maxAlong(axis) + margin
-							case Negative => over.minAlong(axis) - popupSize.along(axis) - margin
-						}
-					case None => over.center.along(axis) - popupSize.along(axis) / 2
+				alignment.along(axis) match {
+					case Close => over.minAlong(axis) - popupSize.along(axis) - margin
+					case Middle => over.center.along(axis) - popupSize.along(axis) / 2
+					case Far => over.maxAlong(axis) + margin
 				}
 			}
 		}

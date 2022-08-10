@@ -11,7 +11,7 @@ import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.container.stack.template.layout.AlignFrameLike2
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 
 object AlignFrame extends ContextInsertableComponentFactoryFactory[Any, AlignFrameFactory, ContextualAlignFrameFactory]
 {

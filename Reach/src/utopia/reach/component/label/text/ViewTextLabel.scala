@@ -14,9 +14,9 @@ import utopia.reflection.component.drawing.view.TextViewDrawer2
 import utopia.reflection.component.template.display.PoolWithPointer
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
+import utopia.reflection.text.Font
 
 object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, ViewTextLabelFactory,
 	ContextualViewTextLabelFactory]
@@ -45,16 +45,14 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param stylePointer A pointer to this label's styling information
 	  * @param displayFunction Function used when converting content to text (default = toString)
 	  * @param additionalDrawers Additional custom drawing (default = empty)
-	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: ChangingLike[A], stylePointer: ChangingLike[TextDrawContext],
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
-				 allowTextShrink: Boolean = false) =
+				 additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
 		new ViewTextLabel(parentHierarchy, contentPointer, stylePointer, displayFunction, additionalDrawers,
-			allowLineBreaks, allowTextShrink)
+			allowTextShrink)
 	
 	/**
 	  * Creates a new text label
@@ -76,23 +74,23 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
 						   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
 						   allowTextShrink: Boolean = false) =
-		apply(contentPointer, Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin)),
-			displayFunction, additionalDrawers, allowLineBreaks, allowTextShrink)
+		apply(contentPointer,
+			Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)),
+			displayFunction, additionalDrawers, allowTextShrink)
 	
 	/**
 	  * Creates a new text label
 	  * @param contentPointer Pointer to the text displayed on this label
 	  * @param stylePointer A pointer to this label's styling information
 	  * @param additionalDrawers Additional custom drawing (default = empty)
-	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
 	def forText(contentPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
-				additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+				additionalDrawers: Seq[CustomDrawer] = Vector(),
 				allowTextShrink: Boolean = false) =
 		apply[LocalizedString](contentPointer, stylePointer, DisplayFunction.identity, additionalDrawers,
-			allowLineBreaks, allowTextShrink)
+			allowTextShrink)
 	
 	/**
 	  * Creates a new text label
@@ -196,11 +194,8 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 				 isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
 				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
 	{
-		val stylePointer = isHintPointer.map { isHint => TextDrawContext(context.font,
-			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
-			context.betweenLinesMargin.optimal) }
-		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, context.allowLineBreaks,
-			context.allowTextShrink)
+		val stylePointer = isHintPointer.map { isHint => TextDrawContext.createContextual(isHint)(context) }
+		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, context.allowTextShrink)
 	}
 	
 	/**
@@ -223,23 +218,16 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
   */
 class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: ChangingLike[A],
 					   stylePointer: ChangingLike[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+					   additionalDrawers: Seq[CustomDrawer] = Vector(),
 					   override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2 with PoolWithPointer[A, ChangingLike[A]]
 {
 	// ATTRIBUTE	-------------------------------------
 	
 	/**
-	  * A pointer containing the current text measurement context and alignment
-	  */
-	val measurementsContextPointer = stylePointer.map { style =>
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
-	}
-	/**
 	  * Pointer containing the current (measured) text
 	  */
-	val textPointer = contentPointer.mergeWith(measurementsContextPointer) { (content, context) =>
-		MeasuredText(displayFunction(content), context._1, context._2, allowLineBreaks) }
+	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => measure(displayFunction(content), style) }
 	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer2(textPointer, stylePointer)
 	
 	
@@ -255,17 +243,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	}
 	
 	
-	// COMPUTED	-----------------------------------------
-	
-	/**
-	  * @return Measurement context currently used in this label
-	  */
-	def textMeasurementContext = measurementsContextPointer.value._1
-	
-	
 	// IMPLEMENTED	-------------------------------------
-	
-	override def measure(text: LocalizedString) = MeasuredText(text, textMeasurementContext, alignment, allowLineBreaks)
 	
 	override def measuredText = textPointer.value
 	

@@ -11,6 +11,8 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.reflection.color.ColorSet
@@ -26,8 +28,8 @@ import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.localization.LocalizedString
+import utopia.reflection.shape.Border
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{stack, _}
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt}
 import utopia.reflection.util.AwtEventThread
@@ -121,7 +123,7 @@ object TextField
 	  */
 	def forDoubles(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Double] = None,
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-				   alignment: Alignment = Alignment.Left) =
+				   alignment: enumeration.Alignment = enumeration.Alignment.Left) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.decimalParts, 24),
 			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.decimal))(
@@ -293,7 +295,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	
 	{
 		// TODO: Handle alignment better (take into account bottom & top alignments)
-		val alignment = initialAlignment.horizontal
+		val alignment = initialAlignment.onlyHorizontal
 		if (alignment == Alignment.Left)
 			alignLeft(insideMargins.width.optimal)
 		else
@@ -353,10 +355,10 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	override def calculatedStackSize =
 	{
 		val h = textHeight.map { insideMargins.height * 2 + _ } getOrElse 32.any
-		stack.StackSize(targetWidth, h)
+		StackSize(targetWidth, h)
 	}
 	
-	override def align(alignment: Alignment) = alignment.horizontal.swingComponents.get(X).foreach(field.setHorizontalAlignment)
+	override def align(alignment: Alignment) = alignment.swingComponents.get(X).foreach(field.setHorizontalAlignment)
 	
 	override def requestFocusInWindow() = field.requestFocusInWindow()
 	

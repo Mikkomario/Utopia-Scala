@@ -107,7 +107,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 					val actualStylePointer = fieldContext.textStylePointer.map { _.expandingHorizontally }
 					val label = ViewTextLabel(fieldContext.parentHierarchy).apply(valuePointer, actualStylePointer,
 						displayFunction, additionalDrawers = fieldContext.promptDrawers,
-						allowLineBreaks = context.allowLineBreaks, allowTextShrink = context.allowTextShrink)
+						allowTextShrink = context.allowTextShrink)
 					// Makes sure the label doesn't have to resize itself when displaying various options
 					val maxContentWidthPointer = contentPointer.lazyMap {
 						_.view.map { c => label.calculatedStackSizeWith(displayFunction(Some(c))) }.reduceOption { _ max _ }

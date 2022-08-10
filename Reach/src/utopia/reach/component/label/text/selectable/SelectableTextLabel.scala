@@ -12,7 +12,7 @@ import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.util.ComponentCreationDefaults
@@ -45,7 +45,6 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 	  * @param caretBlinkFrequency How often caret visibility changes (default = global default)
 	  * @param customDrawers Custom drawers to assign to this label (default = empty)
 	  * @param focusListeners Focus listeners to assign to this label (default = empty)
-	  * @param allowLineBreaks Whether line breaks should be allowed within the text (default = true)
 	  * @param allowTextShrink Whether text should be allowed to be shrunk
 	  *                        to conserve space when necessary (default = false)
 	  * @return A new selectable text label
@@ -57,10 +56,10 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 	          caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
 	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector(),
-	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+	          allowTextShrink: Boolean = false) =
 		new SelectableTextLabel(hierarchy, actorHandler, textPointer, stylePointer, selectedTextColorPointer,
 			selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency, customDrawers,
-			focusListeners, allowLineBreaks, allowTextShrink)
+			focusListeners, allowTextShrink)
 	
 	/**
 	  * Creates a new selectable text label with fixed style settings
@@ -91,9 +90,10 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 	                    caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 	                    customDrawers: Vector[CustomDrawer], focusListeners: Seq[FocusListener],
 	                    allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		apply(actorHandler, textPointer, Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin)),
+		apply(actorHandler, textPointer,
+			Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)),
 			Fixed(selectedTextColor), Fixed(selectionBackgroundColor), Fixed(caretColor), caretWidth,
-			caretBlinkFrequency, customDrawers, focusListeners, allowLineBreaks, allowTextShrink)
+			caretBlinkFrequency, customDrawers, focusListeners, allowTextShrink)
 	
 	/**
 	  * Creates a new selectable text label with fixed content and style
@@ -152,7 +152,7 @@ case class ContextualSelectableTextLabelFactory[+N <: TextContextLike](factory: 
 		factory(context.actorHandler, textPointer, Fixed(TextDrawContext.contextual(context)),
 			Fixed(selectionBackground.defaultTextColor), Fixed(Some(selectionBackground)), Fixed(caretColor),
 			(context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, customDrawers, focusListeners,
-			context.allowLineBreaks, context.allowTextShrink)
+			context.allowTextShrink)
 	}
 }
 
@@ -168,15 +168,20 @@ class SelectableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Act
                           caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
                           caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
                           additionalCustomDrawers: Vector[CustomDrawer], additionalFocusListeners: Seq[FocusListener],
-                          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
+                          allowTextShrink: Boolean = false)
 	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler, textPointer,
 		stylePointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColorPointer, caretWidth,
-		caretBlinkFrequency, allowLineBreaks, allowTextShrink)
+		caretBlinkFrequency, allowTextShrink)
 {
 	// ATTRIBUTES   --------------------------------
 	
 	override val customDrawers = mainDrawer +: additionalCustomDrawers
 	override val focusListeners = FocusHandler +: additionalFocusListeners
+	
+	
+	// COMPUTED ------------------------------
+	
+	def text = textPointer.value
 	
 	
 	// INITIAL CODE --------------------------------

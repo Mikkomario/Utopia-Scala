@@ -9,7 +9,7 @@ import utopia.reflection.component.swing.input.SearchFrom
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._

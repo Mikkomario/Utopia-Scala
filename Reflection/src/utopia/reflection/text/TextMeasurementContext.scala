@@ -1,7 +1,8 @@
 package utopia.reflection.text
 
+import utopia.paradigm.enumeration.LinearAlignment.Close
 import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.LinearAlignment
 
 /**
   * A common trait for context information that allows deduction of string widths and heights
@@ -69,7 +70,7 @@ trait TextMeasurementContext
 	  * @param alignment Alignment used for placing the lines horizontally
 	  * @return Total size of the text area + relative bounds of each line of text
 	  */
-	def boundsOf(lines: Seq[String], alignment: Alignment = Alignment.Left) =
+	def boundsOf(lines: Seq[String], alignment: LinearAlignment = Close) =
 	{
 		val numberOfLines = lines.size
 		
@@ -94,7 +95,7 @@ trait TextMeasurementContext
 			val lineBounds = lines.indices.iterator.map { index =>
 				val width = lineWidths(index)
 				val marginsBefore = if (index > 0) (index - 1) * marginBetweenLines else 0.0
-				Bounds(Point(alignment.x(width, totalWidth), lineHeight * index + marginsBefore),
+				Bounds(Point(alignment.position(width, totalWidth), lineHeight * index + marginsBefore),
 					Size(width, lineHeight))
 			}.toVector
 			Size(totalWidth, totalHeight) -> lineBounds
@@ -106,7 +107,7 @@ trait TextMeasurementContext
 	  * @param alignment Alignment used for placing the lines horizontally
 	  * @return Total size of the text area + relative bounds of each line of text
 	  */
-	def boundsOf(text: String, alignment: Alignment): (Size, Vector[Bounds]) =
+	def boundsOf(text: String, alignment: LinearAlignment): (Size, Vector[Bounds]) =
 		boundsOf(text.linesIterator.toVector, alignment)
 	
 	/**

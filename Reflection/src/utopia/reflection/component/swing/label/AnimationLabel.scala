@@ -20,8 +20,8 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
@@ -128,19 +128,15 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 	
 	override def isAttachedToMainHierarchy = _isAttached
 	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-	{
-		if (_isAttached != newAttachmentStatus)
-		{
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
+		if (_isAttached != newAttachmentStatus) {
 			_isAttached = newAttachmentStatus
 			// Animator is only attached to the actor handler when this component is displayable
-			if (newAttachmentStatus)
-			{
+			if (newAttachmentStatus) {
 				actorHandler += animator
 				actorHandler += Repainter
 			}
-			else
-			{
+			else {
 				actorHandler -= animator
 				actorHandler -= Repainter
 			}
@@ -161,11 +157,12 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 		{
 			// Determines the draw location and scaling
 			val originalSize = stackSize.optimal
-			val drawBounds = alignment.position(originalSize, bounds)
-			val scaling = (drawBounds.size / originalSize).toVector
+			val displaySize = originalSize.fittedInto(bounds.size, preserveShape = true)
+			val drawPosition = alignment.position(displaySize, bounds)
+			val scaling = (displaySize / originalSize).toVector
 			// Performs the actual drawing
-			drawer.transformed(AffineTransformation(drawBounds.position.toVector + drawOrigin * scaling,
-				scaling = scaling)).disposeAfter(animator.draw)
+			drawer.transformed(AffineTransformation(drawPosition.toVector + drawOrigin * scaling, scaling = scaling))
+				.disposeAfter(animator.draw)
 		}
 	}
 	
@@ -174,8 +171,7 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 		private val threshold = maxFps.interval
 		private var lastDraw = Now - threshold
 		
-		override def act(duration: FiniteDuration) =
-		{
+		override def act(duration: FiniteDuration) = {
 			val time = Instant.now()
 			if (time >= lastDraw + threshold)
 				repaint()

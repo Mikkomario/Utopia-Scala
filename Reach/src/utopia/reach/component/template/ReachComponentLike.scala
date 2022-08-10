@@ -14,7 +14,7 @@ import utopia.reach.util.Priority
 import utopia.reflection.component.template.layout.stack.Stackable2
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.text.Font
 
 /**
@@ -127,7 +127,7 @@ trait ReachComponentLike extends Stackable2
 	
 	override def size = sizePointer.value
 	
-	override def fontMetrics(font: Font) = parentHierarchy.fontMetrics(font)
+	override def fontMetricsWith(font: Font) = parentHierarchy.fontMetricsWith(font)
 	
 	
 	// OTHER	-------------------------

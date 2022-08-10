@@ -9,7 +9,7 @@ import utopia.reflection.container.stack.template.StackContainerLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.AlignFrame
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 
 /**
  * This container consists of two views, one in the background and another in the foreground

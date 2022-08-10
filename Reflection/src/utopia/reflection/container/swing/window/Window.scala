@@ -3,7 +3,6 @@ package utopia.reflection.container.swing.window
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 import utopia.flow.async.{VolatileFlag, VolatileOption}
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -20,7 +19,8 @@ import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.util.AwtEventThread
 
@@ -374,15 +374,10 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
                 val increase = size - oldSize
                 // Window movement is determined by resize alignment
                 val movement = Axis2D.values.map { axis =>
-                    val move = resizeAlignment.directionAlong(axis) match
-                    {
-                        case Some(moveDirection) =>
-                            moveDirection match
-                            {
-                                case Positive => increase.along(axis)
-                                case Negative => 0.0
-                            }
-                        case None => increase.along(axis) / 2.0
+                    val move = resizeAlignment.along(axis) match {
+                        case Close => 0.0
+                        case Middle => increase.along(axis) / 2.0
+                        case Far => increase.along(axis)
                     }
                     axis -> move
                 }.toMap

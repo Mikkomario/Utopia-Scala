@@ -4,7 +4,7 @@ import utopia.genesis.image.Image
 import utopia.reflection.component.drawing.template
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
 /**

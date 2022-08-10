@@ -12,9 +12,9 @@ import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDraw
 import utopia.reflection.component.drawing.view.TextViewDrawer2
 import utopia.reflection.component.template.text.{MutableTextComponent, TextComponent2}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
+import utopia.reflection.text.Font
 
 object MutableTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, MutableTextLabelFactory,
 	ContextualMutableTextLabelFactory]
@@ -82,9 +82,10 @@ case class ContextualMutableTextLabelFactory[+N <: TextContextLike](parentHierar
 	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @return A new label
 	  */
-	def apply(text: LocalizedString, isHint: Boolean = false) = new MutableTextLabel(parentHierarchy, text,
-		context.font, if (isHint) context.hintTextColor else context.textColor, context.textAlignment,
-		context.textInsets, context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
+	def apply(text: LocalizedString, isHint: Boolean = false) =
+		new MutableTextLabel(parentHierarchy, text, context.font,
+			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
+			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
 }
 
 /**
@@ -95,7 +96,7 @@ case class ContextualMutableTextLabelFactory[+N <: TextContextLike](parentHierar
 class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
 					   initialFont: Font, initialTextColor: Color = Color.textBlack,
 					   initialAlignment: Alignment = Alignment.Left, initialInsets: StackInsets = StackInsets.any,
-					   initialBetweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true,
+					   initialBetweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = false,
 					   override val allowTextShrink: Boolean = false)
 	extends MutableCustomDrawReachComponent with TextComponent2 with MutableTextComponent
 {
@@ -105,19 +106,15 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	  * A mutable pointer that contains this label's style
 	  */
 	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
-		initialInsets, initialBetweenLinesMargin))
+		initialInsets, initialBetweenLinesMargin, allowLineBreaks))
 	/**
 	  * A mutable pointer that contains this label's text
 	  */
 	val textPointer = new PointerWithEvents(initialText)
-	private val measurerPointer = stylePointer.map { style =>
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
-	}
 	/**
 	  * A pointer to this label's measured text
 	  */
-	val measuredTextPointer = textPointer.mergeWith(measurerPointer) { (text, measures) => MeasuredText(text,
-		measures._1, measures._2, allowLineBreaks) }
+	val measuredTextPointer = textPointer.mergeWith(stylePointer)(measure)
 	
 	
 	// INITIAL CODE	-------------------------
@@ -145,7 +142,4 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	override def updateLayout() = ()
-	
-	override def measure(text: LocalizedString) = MeasuredText(text, measurerPointer.value._1, alignment,
-		allowLineBreaks)
 }

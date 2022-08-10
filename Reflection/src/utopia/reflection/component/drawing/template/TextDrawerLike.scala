@@ -4,6 +4,7 @@ import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.localization.LocalizedString
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * This custom drawer draws text over a component. This is a common trait for both mutable and immutable implementations.
@@ -70,7 +71,7 @@ trait TextDrawerLike extends CustomDrawer
 					drawer.withEdgeColor(color).clippedTo(bounds).disposeAfter { d =>
 						// Draws the text with correct positioning
 						d.drawSingleLineTextPositioned(textToDraw, font.toAwt) { textSize =>
-							alignment.position(textSize, bounds, insets)
+							alignment.positionWithInsets(textSize, bounds, insets)
 						}
 					}
 				}
@@ -80,7 +81,7 @@ trait TextDrawerLike extends CustomDrawer
 					drawer.withEdgeColor(color).clippedTo(bounds).disposeAfter { d =>
 						// Draws the text with correct positioning
 						d.drawTextLinesPositioned(lines.map { _.string }, font.toAwt, betweenLinesMargin) { textSize =>
-							alignment.position(textSize, bounds, insets) }(alignment.x)
+							alignment.positionWithInsets(textSize, bounds, insets) }(alignment.x.position)
 					}
 				}
 		}

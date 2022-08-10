@@ -10,8 +10,8 @@ import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtCompo
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.container.swing.window.WindowResizePolicy.{Program, User}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 

@@ -24,10 +24,9 @@ import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localizer}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
-import utopia.reflection.text.FontMetricsContext
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.Duration
@@ -50,8 +49,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private lazy val textMeasureContext = FontMetricsContext(parentHierarchy.fontMetrics(context.font),
-		context.betweenLinesMargin.optimal)
+	private lazy val fontMetrics = parentHierarchy.fontMetricsWith(context.font)
 	
 	private implicit val c: TextContextLike = context
 	
@@ -347,7 +345,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 			fillBackground, allowLineBreaks = false) { parse(_) }
 	}
 	
-	private def widthOf(text: String) = textMeasureContext.lineWidthOf(text)
+	private def widthOf(text: String) = fontMetrics.widthOf(text)
 }
 
 /**
@@ -415,7 +413,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		context.textInsets.total / 2, highlightStylePointer, focusColorRole, hintScaleFactor,
 		fillBackground) { (fc, tc) =>
 		
-		val stylePointer = fc.textStylePointer.map { _.expandingHorizontally }
+		val stylePointer = fc.textStylePointer.map { _.expandingHorizontally.withAllowLineBreaks(lineBreaksEnabled) }
 		val selectedBackgroundPointer = fc.backgroundPointer.mergeWith(selectionStylePointer) { (bg, c) =>
 			tc.colorScheme(c).forBackgroundPreferringLight(bg) }
 		val selectedTextColorPointer = selectedBackgroundPointer.map { _.defaultTextColor }
@@ -435,7 +433,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		val label = EditableTextLabel(fc.parentHierarchy).apply(tc.actorHandler, stylePointer,
 			selectedTextColorPointer, selectedBackgroundPointer.map { Some(_) }, caretColorPointer, caretWidth,
 			caretBlinkFrequency, textContentPointer, inputFilter, maxLength,
-			enabledPointer, allowSelectionWhileDisabled = false, lineBreaksEnabled, tc.allowTextShrink)
+			enabledPointer, allowSelectionWhileDisabled = false, tc.allowTextShrink)
 		label.addFocusListener(fc.focusListener)
 		fc.promptDrawers.foreach(label.addCustomDrawer)
 		
@@ -444,13 +442,17 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		if (showCharacterCount)
 			maxLength.map { maxLength =>
 				implicit val localizer: Localizer = tc.localizer
-				val countStylePointer = fc.backgroundPointer.map { background => TextDrawContext(fc.font,
-					background.textColorStandard.hintTextColor, Alignment.Right, tc.textInsets * hintScaleFactor) }
+				val countStylePointer = fc.backgroundPointer.map { background =>
+					TextDrawContext(fc.font, background.textColorStandard.hintTextColor, Alignment.Right,
+						tc.textInsets * hintScaleFactor)
+				}
 				val textLengthPointer = textContentPointer.map { _.length }
-				Open.using(ViewTextLabel) { _.apply(textLengthPointer, countStylePointer,
+				Open.using(ViewTextLabel) { _.apply(
+					textLengthPointer, countStylePointer,
 					DisplayFunction.functionToDisplayFunction[Int] { length =>
 						s"%i / %i".noLanguage.localized.interpolated(Vector(length, maxLength)) },
-					allowLineBreaks = false, allowTextShrink = true) }(parentHierarchy.top)
+					allowTextShrink = true)
+				}(parentHierarchy.top)
 			}
 		else
 			None

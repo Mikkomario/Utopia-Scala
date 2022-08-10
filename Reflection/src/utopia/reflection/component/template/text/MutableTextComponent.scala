@@ -11,5 +11,9 @@ trait MutableTextComponent extends MutableStyleTextComponent
 {
 	// ABSTRACT	------------------------
 	
+	/**
+	  * @return Text that is currently displayed on this component
+	  */
+	def text: LocalizedString
 	def text_=(newText: LocalizedString): Unit
 }

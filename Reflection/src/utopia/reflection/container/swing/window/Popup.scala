@@ -19,8 +19,8 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.{Never, WhenAnyKeyPressed, WhenClickedOutside, WhenEscPressed, WhenFocusLost}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.TopLeft
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.TopLeft
 
 import scala.concurrent.ExecutionContext
 

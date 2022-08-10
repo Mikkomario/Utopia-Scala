@@ -23,8 +23,7 @@ import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowG
 import utopia.reflection.event.HotKey
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.{Bottom, Top}
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reflection.shape.LengthExtensions._
 
 import java.awt.event.KeyEvent
@@ -291,50 +290,38 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		if (blueprint.displaysName)
 		{
 			// Case: The two components are next to each other horizontally
-			if (blueprint.fieldAlignment.isHorizontal && !blueprint.fieldAlignment.isVertical)
-			{
-				val verticalLayout = blueprint.fieldAlignment.vertical match
-				{
-					case Top => Leading
-					case Bottom => Trailing
-					case _ => Center
-				}
-				segmentGroup match
-				{
+			if (blueprint.fieldAlignment.affectsHorizontalOnly) {
+				segmentGroup match {
 					// Case segmented grouping is used
 					case Some(segmentGroup) =>
-						factories(Stack).build(Mixed).segmented(segmentGroup, verticalLayout, areRelated = true) { factories =>
+						factories(Stack).build(Mixed).segmented(segmentGroup, Center, areRelated = true) { factories =>
 							createHorizontalFieldAndNameRow(factories.next(), blueprint, fieldsBuilder)
 						}.parentAndResult
 					// Case: Segmented grouping is not used (only single row)
 					case None =>
-						factories(Stack).build(Mixed).row(verticalLayout, areRelated = true) { factories =>
+						factories(Stack).build(Mixed).row(Center, areRelated = true) { factories =>
 							createHorizontalFieldAndNameRow(factories, blueprint, fieldsBuilder)
 						}.parentAndResult
 				}
 			}
 			// Case: The two components are stacked on top of each other => segmentation is not enabled
-			else
-			{
-				val horizontalLayout = blueprint.fieldAlignment.horizontal match
-				{
-					case Alignment.Left => Leading
-					case Alignment.Right => Trailing
-					case _ => if (blueprint.isScalable) Fit else Center
+			else {
+				val horizontalLayout = blueprint.fieldAlignment.horizontal match {
+					case Close => Leading
+					case Far => Trailing
+					case Middle => if (blueprint.isScalable) Fit else Center
 				}
 				factories(Stack).build(Mixed).column(horizontalLayout, areRelated = true) { factories =>
 					createFieldAndName(factories, blueprint, fieldsBuilder,
-						blueprint.fieldAlignment.vertical != Top, horizontalLayout == Fit)
+						blueprint.fieldAlignment.vertical != Close, horizontalLayout == Fit)
 				}.parentAndResult
 			}
 		}
 		// Case: Only the field component is used => no segmentation is used
-		else
-		{
+		else {
 			// Case: Field doesn't need to be aligned to any side but can fill the whole area
 			// => it is attached directly to the stack
-			if (blueprint.isScalable)
-			{
+			if (blueprint.isScalable) {
 				val field = blueprint(factories.parentHierarchy, context.fieldContext)
 				fieldsBuilder += blueprint.key -> field
 				field.field -> blueprint.visibilityPointer
@@ -354,7 +341,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 												fieldsBuilder: VectorBuilder[(String, ManagedField[RowField])])
 											   (implicit context: FieldRowContext) =
 	{
-		val fieldNameComesFirst = blueprint.fieldAlignment.horizontal != Alignment.Left
+		val fieldNameComesFirst = blueprint.fieldAlignment.horizontal != Close
 		createFieldAndName(factories, blueprint, fieldsBuilder, fieldNameComesFirst, expandLabel = false)
 	}
 	

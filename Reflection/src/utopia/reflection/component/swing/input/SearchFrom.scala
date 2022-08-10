@@ -17,7 +17,7 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 import scala.concurrent.ExecutionContext

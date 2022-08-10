@@ -1,6 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.flow.event.ChangingLike
+import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
@@ -213,5 +214,5 @@ trait ComponentHierarchy
 	  * @return Metrics for that font
 	  */
 	// TODO: Refactor this once component class hierarchy has been updated
-	def fontMetrics(font: Font) = top.component.getFontMetrics(font.toAwt)
+	def fontMetricsWith(font: Font): FontMetricsWrapper = top.component.getFontMetrics(font.toAwt)
 }

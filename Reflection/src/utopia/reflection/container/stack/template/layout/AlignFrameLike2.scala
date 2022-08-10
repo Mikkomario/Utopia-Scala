@@ -1,12 +1,10 @@
 package utopia.reflection.container.stack.template.layout
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.template.layout.stack.{CachingStackable2, Stackable2}
 import utopia.reflection.container.template.SingleContainer2
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 
 /**
   * Contains a single item, which is aligned to a single side or corner, or the center
@@ -33,22 +31,7 @@ trait AlignFrameLike2[+C <: Stackable2] extends SingleContainer2[C] with Caching
 		val targetSize = content.stackSize.optimal.fittedInto(mySize)
 		
 		// Calculates new position
-		val align = alignment
-		val targetPosition = Point.of(Axis2D.values.map { axis =>
-			val myLength = mySize.along(axis)
-			val targetLength = targetSize.along(axis)
-			
-			axis -> (align.directionAlong(axis) match
-			{
-				case Some(dir) =>
-					dir match
-					{
-						case Positive => myLength - targetLength
-						case Negative => 0
-					}
-				case None => (myLength - targetLength) / 2
-			})
-		}.toMap)
+		val targetPosition = alignment.position(targetSize, mySize)
 		
 		// Updates component bounds
 		content.bounds = Bounds(targetPosition, targetSize)
@@ -64,7 +47,7 @@ trait AlignFrameLike2[+C <: Stackable2] extends SingleContainer2[C] with Caching
 		else
 		{
 			content.stackSize.map { (axis, length) =>
-				if (align.directionAlong(axis).isDefined)
+				if (align.along(axis).movesItems)
 					length.noMax.expanding
 				else
 					length

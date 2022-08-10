@@ -15,7 +15,7 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenClickedOutside
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
 import utopia.reflection.shape.LengthExtensions._
 

@@ -1,12 +1,14 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.flow.datastructure.mutable.Settable
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.transform.AffineTransformation
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.{Font, MeasuredText}
+import utopia.reflection.text.Font
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * Common trait for custom drawers that draw interactive text over a component
@@ -29,9 +31,9 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	
 	/**
 	  * @return The strings in text that are drawn normally (with their positions) and strings which should be drawn
-	  *         with highlighting (with their bounds)
+	  *         with highlighting (with their positions and highlight bounds)
 	  */
-	def drawTargets: (Vector[(String, Point)], Vector[(String, Bounds)])
+	def drawTargets: (Vector[(String, Point)], Vector[(String, Point, Bounds)])
 	
 	/**
 	  * @return The drawn caret bounds
@@ -79,7 +81,8 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	/**
 	  * @return The vertical margin to use when drawing multiple text lines
 	  */
-	def betweenLinesMargin = text.context.marginBetweenLines
+	@deprecated("Between lines margin is already accounted to within the text", "v2.0")
+	def betweenLinesMargin = text.betweenLinesAdjustment
 	
 	/**
 	  * @return The position where the text was drawn the last time (relative to draw origin)
@@ -102,7 +105,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 		if (normalDrawTargets.exists { _._1.nonEmpty } || highlightedTargets.nonEmpty)
 		{
 			// Calculates draw bounds and possible scaling
-			val textArea = alignment.position(text.size, bounds, insets)
+			val textArea = alignment.positionWithInsets(text.size, bounds, insets)
 			// Skips drawing if text area is outside of the clipping zone
 			if (drawer.clipBounds.forall { _.overlapsWith(textArea) })
 			{
@@ -112,9 +115,8 @@ trait SelectableTextDrawerLike extends CustomDrawer
 				
 				// Applies transformation during the whole drawing process
 				drawer.transformed(AffineTransformation(textArea.position.toVector, scaling = scaling)).disposeAfter { drawer =>
-					val drawnHighlightTargets = drawer.clipBounds match
-					{
-						case Some(clipArea) => highlightedTargets.filter { _._2.overlapsWith(clipArea) }
+					val drawnHighlightTargets = drawer.clipBounds match {
+						case Some(clipArea) => highlightedTargets.filter { _._3.overlapsWith(clipArea) }
 						case None => highlightedTargets
 					}
 					
@@ -122,7 +124,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 					if (drawnHighlightTargets.nonEmpty)
 						highlightedTextBackground.foreach { bg =>
 							drawer.onlyFill(bg).disposeAfter { drawer =>
-								drawnHighlightTargets.foreach { case (_, area) => drawer.draw(area) }
+								drawnHighlightTargets.foreach { case (_, _, area) => drawer.draw(area) }
 							}
 						}
 					// Draws the normal text, if applicable
@@ -133,8 +135,8 @@ trait SelectableTextDrawerLike extends CustomDrawer
 					// Draws the highlighted text, if applicable
 					if (drawnHighlightTargets.nonEmpty)
 						drawer.forTextDrawing(font.toAwt, highlightedTextColor).disposeAfter { drawer =>
-							drawnHighlightTargets.foreach { case (string, bounds) =>
-								drawer.drawTextRaw(string, bounds.position)
+							drawnHighlightTargets.foreach { case (string, position, _) =>
+								drawer.drawTextRaw(string, position)
 							}
 						}
 					// Draws the caret, if applicable
@@ -147,7 +149,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 		// If no text is displayed, may still draw the caret
 		else
 			caret.foreach { caretBounds =>
-				val caretArea = alignment.position(caretBounds.size, bounds, insets)
+				val caretArea = alignment.positionWithInsets(caretBounds.size, bounds, insets)
 				val scaling = (caretArea.size / caretBounds.size).toVector
 				val drawnCaretBounds = caretBounds.translated(caretArea.position) * scaling
 				if (drawer.clipBounds.forall { _.overlapsWith(drawnCaretBounds) })

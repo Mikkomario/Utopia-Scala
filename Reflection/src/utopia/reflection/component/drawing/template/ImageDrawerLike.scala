@@ -3,8 +3,9 @@ package utopia.reflection.component.drawing.template
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * A common trait for image drawer implementations
@@ -75,7 +76,7 @@ trait ImageDrawerLike extends CustomDrawer
 		
 		// Draws the image
 		imageToDraw.foreach { img =>
-			val position = alignment.position(img.size, bounds, insets, fitWithinBounds = false).position
+			val position = alignment.positionWithInsets(img.size, bounds, insets, fitWithinBounds = false).position
 			// Since 'position' represents the desired top left corner of the drawn image,
 			// has to adjust according to image origin
 			img.drawWith(drawer, position + image.origin)

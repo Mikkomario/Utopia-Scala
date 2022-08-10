@@ -18,8 +18,7 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Dialog, Frame}
 import utopia.reflection.container.template.window.WindowButtonBlueprint
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Top
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 
@@ -118,7 +117,7 @@ trait InteractionWindowFactory[A]
 						val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
 						
 						// Groups the buttons based on location
-						val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.vertical == Top }
+						val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }
 						
 						// Places the main content and the buttons in a vertical stack
 						val factoriesWithoutContext = factories.withoutContext
@@ -182,7 +181,7 @@ trait InteractionWindowFactory[A]
 	{
 		val nonScalingMargin = baseMargin.downscaling
 		
-		val buttonsByLocation = buttons.groupBy { _.location.horizontal }
+		val buttonsByLocation = buttons.groupBy { _.location.onlyHorizontal }
 		// Case: Items only on one side
 		if (buttonsByLocation.size == 1)
 		{

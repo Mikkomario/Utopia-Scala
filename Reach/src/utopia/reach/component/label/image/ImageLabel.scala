@@ -6,7 +6,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reflection.component.drawing.immutable.ImageDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
 object ImageLabel extends ComponentFactoryFactory[ImageLabelFactory]

@@ -11,7 +11,7 @@ import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.util.ProgressState
 
 import scala.concurrent.{ExecutionContext, Future}

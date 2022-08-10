@@ -15,7 +15,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.reflection.container.stack.template.layout.StackLike2
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackLength
 
 object Stack extends ContextInsertableComponentFactoryFactory[BaseContextLike, StackFactory, ContextualStackFactory]
@@ -151,7 +151,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 					case None => Center
 				}
 				(X, horizontal.sign, layout)
-			case None => (Y, alignment.verticalDirectionSign.getOrElse(Positive), Center)
+			case None => (Y, alignment.vertical.sign, Center)
 		}
 		// Negative sign keeps order, positive swaps it
 		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }

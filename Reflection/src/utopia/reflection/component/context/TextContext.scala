@@ -9,7 +9,7 @@ import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._

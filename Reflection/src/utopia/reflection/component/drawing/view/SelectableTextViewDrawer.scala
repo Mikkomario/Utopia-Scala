@@ -3,13 +3,13 @@ package utopia.reflection.component.drawing.view
 import utopia.flow.datastructure.immutable.View
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.datastructure.template.Viewable
-import utopia.flow.event.{Changing, ChangingLike, Fixed}
+import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{DrawLevel, SelectableTextDrawerLike}
-import utopia.reflection.text.MeasuredText
+import utopia.genesis.graphics.MeasuredText
 
 /**
   * A view-based implementation of a text drawer that supports text selection

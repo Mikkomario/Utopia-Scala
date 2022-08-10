@@ -31,6 +31,7 @@ object Axis
     {
         def toUnitVector = Vector2D(1)
         def perpendicular = Y
+        def apply(alignment: LinearAlignment): Alignment = Alignment.horizontal(alignment)
     }
     
     /**
@@ -40,6 +41,7 @@ object Axis
     {
         def toUnitVector = Vector2D(0, 1)
         def perpendicular = X
+        def apply(alignment: LinearAlignment): Alignment = Alignment.vertical(alignment)
     }
     
     /**
@@ -88,6 +90,12 @@ sealed trait Axis2D extends Axis
     override def toUnitVector: Vector2D
     
     override def apply(length: Double) = toUnitVector * length
+    
+    /**
+      * @param alignment A linear alignment
+      * @return That linear alignment when applied over this axis
+      */
+    def apply(alignment: LinearAlignment): Alignment
     
     
     // COMPUTED ----------------------------

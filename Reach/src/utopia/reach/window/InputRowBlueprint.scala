@@ -6,7 +6,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory,
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reflection.container.template.window.ManagedField
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 
 object InputRowBlueprint
 {

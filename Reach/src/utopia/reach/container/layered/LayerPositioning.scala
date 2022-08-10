@@ -4,8 +4,8 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.shape.stack.StackSize
 
 /**

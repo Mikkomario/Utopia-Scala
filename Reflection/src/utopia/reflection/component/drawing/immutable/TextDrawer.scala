@@ -4,7 +4,7 @@ import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 

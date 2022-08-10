@@ -5,8 +5,8 @@ import utopia.reflection.component.context.{ButtonContextLike, TextContext, Text
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{LocalizedString, Localizer}
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 
 object YesNoWindow
 {

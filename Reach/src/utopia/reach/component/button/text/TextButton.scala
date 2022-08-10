@@ -16,7 +16,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
 import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
@@ -61,8 +61,8 @@ class TextButtonFactory(parentHierarchy: ComponentHierarchy)
 			  additionalDrawers: Seq[CustomDrawer] = Vector(), additionalFocusListeners: Seq[FocusListener] = Vector(),
 			  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)(action: => Unit) =
 		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
-			betweenLinesMargin), color, borderWidth, hotKeys, additionalDrawers,
-			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
+			betweenLinesMargin, allowLineBreaks), color, borderWidth, hotKeys, additionalDrawers,
+			additionalFocusListeners, allowTextShrink)(action)
 }
 
 case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: TextButtonFactory, context: N)
@@ -100,7 +100,7 @@ case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: T
 class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
 				 color: Color, borderWidth: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 				 additionalDrawers: Seq[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+				 additionalFocusListeners: Seq[FocusListener] = Vector(),
 				 allowTextShrink: Boolean = false)(action: => Unit)
 	extends ButtonLike with ReachComponentWrapper
 {
@@ -111,8 +111,7 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	override val focusId = hashCode()
 	override protected val wrapped = new TextLabel(parentHierarchy, text, textDrawContext,
-		ButtonBackgroundViewDrawer(Fixed(color), statePointer, borderWidth) +: additionalDrawers,
-		allowLineBreaks, allowTextShrink)
+		ButtonBackgroundViewDrawer(Fixed(color), statePointer, borderWidth) +: additionalDrawers, allowTextShrink)
 	
 	
 	// INITIAL CODE	-----------------------------

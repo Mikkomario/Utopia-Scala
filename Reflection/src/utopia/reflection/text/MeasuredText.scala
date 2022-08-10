@@ -7,7 +7,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.{Bounds, Line, Point}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 
 import scala.collection.immutable.VectorBuilder
 
@@ -61,7 +61,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 		
 		startBuilder.result() -> endBuilder.result()
 	}
-	lazy val (size, lineBounds) = context.boundsOf(_lines, alignment)
+	lazy val (size, lineBounds) = context.boundsOf(_lines, alignment.x)
 	/**
 	  * Caret positions based on line and string indices
 	  */

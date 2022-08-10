@@ -5,7 +5,7 @@ import utopia.reflection.component.template.ComponentLike2
 import utopia.reflection.component.template.layout.stack.StackSizeCalculating
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.text.MeasuredText
+import utopia.genesis.graphics.MeasuredText
 
 /**
   * Common trait for components that present text
@@ -32,20 +32,23 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  */
 	def allowTextShrink: Boolean
 	
+	/*
 	/**
 	  * Measures specified text in this context
 	  * @param text Text to measure
 	  * @return Measured text
 	  */
 	def measure(text: LocalizedString): MeasuredText
-	
+	*/
 	
 	// COMPUTED	--------------------------
 	
+	/*
 	/**
 	  * @return Text displayed in this component
 	  */
 	def text = measuredText.text
+	 */
 	
 	/**
 	  * @return The insets around the text in this component
@@ -63,6 +66,11 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	def font = drawContext.font
 	
 	/**
+	  * @return Font metrics used in this component (with the current font)
+	  */
+	def fontMetrics = fontMetricsWith(font)
+	
+	/**
 	  * @return The color of the text in this component
 	  */
 	def textColor = drawContext.color
@@ -77,6 +85,16 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	
 	
 	// OTHER	--------------------------
+	
+	/**
+	  * @param text Text to measure
+	  * @param style Style to use when measuring text (default = current component style)
+	  * @return A measured copy of that text within this component
+	  */
+	def measure(text: LocalizedString, style: TextDrawContext = drawContext) = {
+		MeasuredText(text.string, fontMetricsWith(style.font), style.alignment,
+			betweenLinesAdjustment = style.betweenLinesMargin, allowLineBreaks = style.allowLineBreaks)
+	}
 	
 	/**
 	  * @param text Pre-measured text

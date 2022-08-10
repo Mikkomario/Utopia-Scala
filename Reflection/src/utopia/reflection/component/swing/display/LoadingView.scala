@@ -9,7 +9,7 @@ import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.Alignment.BottomLeft
+import utopia.paradigm.enumeration.Alignment.BottomLeft
 import utopia.reflection.shape.LengthExtensions.LengthNumber
 import utopia.reflection.shape.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
 import utopia.reflection.util.ProgressState

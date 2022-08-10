@@ -1,7 +1,7 @@
 package utopia.reflection.component.template.layout
 
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.{Bottom, Center, Left, Right, Top}
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.{Bottom, Center, Left, Right, Top}
 
 /**
   * Alignable elements can be aligned

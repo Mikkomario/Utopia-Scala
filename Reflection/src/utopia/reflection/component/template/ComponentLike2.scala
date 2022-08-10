@@ -1,8 +1,7 @@
 package utopia.reflection.component.template
 
-import java.awt.FontMetrics
-
 import utopia.genesis.event._
+import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.paradigm.shape.shape2d.Point
@@ -23,7 +22,7 @@ trait ComponentLike2 extends Area
       * @param font font for which the metrics are calculated
       * @return The font metrics object for this component
       */
-    def fontMetrics(font: Font): FontMetrics
+    def fontMetricsWith(font: Font): FontMetricsWrapper
     
     def mouseButtonHandler: MouseButtonStateHandler
     def mouseMoveHandler: MouseMoveHandler
@@ -48,14 +47,14 @@ trait ComponentLike2 extends Area
         if (text.isEmpty)
             0
         else
-            fontMetrics(font).stringWidth(text)
+            fontMetricsWith(font).widthOf(text)
     }
     
     /**
       * @param font Font being used
       * @return The height of a single line of text in this component, using the specified font
       */
-    def textHeightWith(font: Font) = fontMetrics(font).getHeight
+    def textHeightWith(font: Font) = fontMetricsWith(font).lineHeight
     
     
     // OTHER    -------------------------

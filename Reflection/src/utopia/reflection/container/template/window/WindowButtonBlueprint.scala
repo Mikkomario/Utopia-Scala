@@ -5,8 +5,8 @@ import utopia.reflection.color.ColorRole.Primary
 import utopia.reflection.event.HotKey
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.BottomRight
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.BottomRight
 
 import scala.concurrent.Promise
 import scala.util.Try

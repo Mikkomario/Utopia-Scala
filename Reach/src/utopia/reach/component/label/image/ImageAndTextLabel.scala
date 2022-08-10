@@ -15,7 +15,7 @@ import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 

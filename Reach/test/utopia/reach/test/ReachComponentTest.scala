@@ -18,7 +18,7 @@ import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Frame, Window}
 import utopia.reflection.event.HotKey
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup

@@ -7,8 +7,8 @@ import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.container.stack.template.layout.AlignFrameLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 
 object AlignFrame
 {

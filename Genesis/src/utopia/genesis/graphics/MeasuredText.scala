@@ -21,6 +21,7 @@ import scala.collection.immutable.VectorBuilder
   * @param context Text measurement context used
   * @param alignment Alignment used when placing text on multiple lines and when drawing text (default = top left)
   * @param heightSettings Settings used when interpreting text height (default = use standard line height)
+  * @param betweenLinesAdjustment Adjustment applied to the between lines margins, in pixels (default = 0)
   * @param allowLineBreaks Whether line breaks should be applied (default = true)
   */
 case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Alignment = Alignment.TopLeft,
@@ -75,7 +76,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	/**
 	  * The default text draw targets (texts to draw and the positions where they should be drawn)
 	  */
-	lazy val defaultDrawTargets = lines.indices.map { lineIndex => lines(lineIndex) -> lineBounds(lineIndex)._2 }
+	lazy val defaultDrawTargets = lines.indices.toVector.map { lineIndex => lines(lineIndex) -> lineBounds(lineIndex)._2 }
 	
 	
 	// COMPUTED	---------------------------------------
@@ -368,7 +369,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param highlightedCaretRanges Areas within this text to highlight
 	  * @return Standard draw targets + highlight draw targets (which include bounds)
 	  */
-	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()): (IndexedSeq[(String, Point)], Vector[(String, Point, Bounds)]) =
+	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()): (Vector[(String, Point)], Vector[(String, Point, Bounds)]) =
 	{
 		// If there aren't any highlighted ranges, uses the cached values
 		if (highlightedCaretRanges.isEmpty || isEmpty)

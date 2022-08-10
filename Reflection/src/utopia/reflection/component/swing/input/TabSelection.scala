@@ -19,7 +19,7 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font

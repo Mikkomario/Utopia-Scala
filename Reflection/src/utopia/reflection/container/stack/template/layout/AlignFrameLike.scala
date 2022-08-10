@@ -1,14 +1,12 @@
 package utopia.reflection.container.stack.template.layout
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.template.ComponentWrapper
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.template.Container
-import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackSize
 
 /**
@@ -50,22 +48,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 			val targetSize = c.stackSize.optimal.fittedInto(mySize)
 			
 			// Calculates new position
-			val align = alignment
-			val targetPosition = Point.of(Axis2D.values.map { axis =>
-				val myLength = mySize.along(axis)
-				val targetLength = targetSize.along(axis)
-				
-				axis -> (align.directionAlong(axis) match
-				{
-					case Some(dir) =>
-						dir match
-						{
-							case Positive => myLength - targetLength
-							case Negative => 0
-						}
-					case None => (myLength - targetLength) / 2
-				})
-			}.toMap)
+			val targetPosition = alignment.position(targetSize, mySize)
 			
 			// Updates component bounds
 			c.bounds = Bounds(targetPosition, targetSize)
@@ -81,14 +64,12 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 			if (align == Center)
 				c.stackSize.withNoMax.expanding
 			else
-			{
 				c.stackSize.map { (axis, length) =>
-					if (align.directionAlong(axis).isDefined)
+					if (align.along(axis).movesItems)
 						length.noMax.expanding
 					else
 						length
 				}
-			}
 		}.getOrElse(StackSize.any)
 	}
 }

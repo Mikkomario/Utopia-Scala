@@ -1,11 +1,13 @@
 package utopia.reflection.component.drawing.template
 
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.transform.AffineTransformation
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.{Font, MeasuredText}
+import utopia.reflection.text.Font
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * This custom drawer draws text over a component. This is a common trait for both mutable and immutable implementations.
@@ -47,7 +49,8 @@ trait TextDrawerLike2 extends CustomDrawer
 	/**
 	  * @return The vertical margin to use when drawing multiple text lines
 	  */
-	def betweenLinesMargin = text.context.marginBetweenLines
+	@deprecated("Between lines margin is already accounted to within the text", "v2.0")
+	def betweenLinesMargin = text.betweenLinesAdjustment
 	
 	
 	// IMPLEMENTED	-----------------------------
@@ -57,7 +60,7 @@ trait TextDrawerLike2 extends CustomDrawer
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		// Calculates draw bounds and possible scaling
-		val textArea = alignment.position(text.size, bounds, insets)
+		val textArea = alignment.positionWithInsets(text.size, bounds, insets)
 		// Skips drawing if the text is outside the clipping area
 		if (drawer.clipBounds.forall { _.overlapsWith(textArea) })
 		{

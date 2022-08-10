@@ -10,7 +10,7 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
 import utopia.reflection.component.template.display.PoolWithPointer
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 

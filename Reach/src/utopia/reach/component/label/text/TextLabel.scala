@@ -11,9 +11,9 @@ import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDraw
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
+import utopia.reflection.text.Font
 
 object TextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, TextLabelFactory,
 	ContextualTextLabelFactory]
@@ -53,8 +53,8 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
 			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
 			  betweenLinesMargin: Double = 0.0, additionalDrawers: Seq[CustomDrawer] = Vector(),
 			  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin),
-			additionalDrawers, allowLineBreaks, allowTextShrink)
+		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets,
+			betweenLinesMargin, allowLineBreaks), additionalDrawers, allowTextShrink)
 }
 
 object ContextualTextLabelFactory
@@ -129,15 +129,14 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
   * @param additionalDrawers Additional custom drawing (default = empty)
   * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
   */
-class TextLabel(override val parentHierarchy: ComponentHierarchy, override val text: LocalizedString,
+class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: LocalizedString,
 				override val drawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
-				allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
+				override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2
 {
 	// ATTRIBUTES	-----------------------------
 	
-	val fontMetricsContext = FontMetricsContext(fontMetrics(drawContext.font), drawContext.betweenLinesMargin)
-	override val measuredText = MeasuredText(text, fontMetricsContext, drawContext.alignment, allowLineBreaks)
+	override val measuredText = measure(text)
 	override val customDrawers = additionalDrawers.toVector :+
 		TextDrawer2(measuredText, drawContext.font, drawContext.insets, drawContext.color)
 	
@@ -145,6 +144,4 @@ class TextLabel(override val parentHierarchy: ComponentHierarchy, override val t
 	// IMPLEMENTED	-----------------------------
 	
 	override def updateLayout() = ()
-	
-	override def measure(text: LocalizedString) = MeasuredText(text, fontMetricsContext, alignment, allowLineBreaks)
 }

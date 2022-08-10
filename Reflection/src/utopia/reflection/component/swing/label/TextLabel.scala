@@ -9,7 +9,7 @@ import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike
 import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.template.text.SingleLineTextComponent
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 

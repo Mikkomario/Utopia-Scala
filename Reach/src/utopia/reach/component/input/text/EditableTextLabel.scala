@@ -62,7 +62,6 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param enabledPointer A pointer to this label's enabled state (default = always enabled)
 	  * @param allowSelectionWhileDisabled Whether this label's text should be selectable even while it is disabled
 	  *                                    (default = true)
-	  * @param allowLineBreaks Whether line breaks should be allowed inside this label (default = true)
 	  * @param allowTextShrink Whether the drawn text should be shrank to conserve space when required (default = false)
 	  * @return A new label
 	  */
@@ -74,11 +73,10 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			  allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
-			  allowTextShrink: Boolean = false) =
+			  allowSelectionWhileDisabled: Boolean = true, allowTextShrink: Boolean = false) =
 		new EditableTextLabel(parentHierarchy, actorHandler, stylePointer, selectedTextColorPointer,
 			selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency, textPointer,
-			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowLineBreaks, allowTextShrink)
+			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowTextShrink)
 }
 
 case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: EditableTextLabelFactory, context: N)
@@ -110,8 +108,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 		factory(context.actorHandler, Fixed(TextDrawContext.contextual(context)),
 			Fixed(selectionBackground.defaultTextColor), Fixed(Some(selectionBackground)),
 			Fixed(caretColor), (context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, textPointer,
-			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
-			context.allowTextShrink)
+			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowTextShrink)
 	}
 }
 
@@ -130,14 +127,13 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
                         val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
                         inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
                         enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-                        allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
-                        allowTextShrink: Boolean = false)
+                        allowSelectionWhileDisabled: Boolean = true, allowTextShrink: Boolean = false)
 	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler,
 		textPointer.map { _.noLanguageLocalizationSkipped },
 		baseStylePointer.mergeWith(enabledPointer) { (style, enabled) =>
 			if (enabled) style else style.mapColor { _.timesAlpha(0.66) } }, selectedTextColorPointer,
-		selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency,
-		allowLineBreaks, allowTextShrink) with MutableCustomDrawable with MutableFocusable
+		selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency, allowTextShrink)
+		with MutableCustomDrawable with MutableFocusable
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -165,6 +161,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 	  */
 	def enabled = enabledPointer.value
 	
+	def text = textPointer.value
 	def text_=(newText: String) = textPointer.value = newText
 	
 	private def _text = textPointer.value
@@ -307,7 +304,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 			if (event.isDown)
 			{
 				// Inserts a line-break on enter (if enabled)
-				if (allowLineBreaks && event.index == KeyEvent.VK_ENTER)
+				if (drawContext.allowLineBreaks && event.index == KeyEvent.VK_ENTER)
 					insertToCaret("\n")
 				// Removes a character on backspace / delete
 				else if (event.index == KeyEvent.VK_BACK_SPACE)

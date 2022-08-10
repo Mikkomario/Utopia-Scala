@@ -4,7 +4,7 @@ import utopia.flow.datastructure.template.Viewable
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.text.MeasuredText
+import utopia.genesis.graphics.MeasuredText
 
 /**
   * Used for drawing changing text

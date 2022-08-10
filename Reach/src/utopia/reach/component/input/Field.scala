@@ -2,10 +2,11 @@ package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Axis.X
-import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
 import utopia.reflection.color.ColorRole.{Error, Secondary}
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
@@ -29,8 +30,8 @@ import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.shape.{Alignment, Border}
-import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
+import utopia.reflection.shape.Border
+import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.util.ComponentCreationDefaults
 
@@ -518,7 +519,7 @@ class Field[C <: ReachComponentLike with Focusable]
 				val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
 				val nameStylePointer = contentColorPointer.map { makeHintStyle(_, !fillBackground) }
 				val nameLabel = factories.next()(ViewTextLabel).forText(fieldNamePointer, nameStylePointer,
-					allowLineBreaks = false, allowTextShrink = true)
+					allowTextShrink = true)
 				
 				// When displaying only the input, accommodates name label size increase into the vertical insets
 				// While displaying both, applies only half of the main text insets at top
@@ -612,12 +613,10 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	
 	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: ChangingLike[LocalizedString]) =
-		factory.forText(textPointer, hintTextStylePointer, allowLineBreaks = false, allowTextShrink = true)
+		factory.forText(textPointer, hintTextStylePointer, allowTextShrink = true)
 	
-	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) =
-	{
-		val insets =
-		{
+	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) = {
+		val insets = {
 			if (includeHorizontalBorder)
 				defaultHintInsets + Insets.horizontal(focusBorderWidth)
 			else
@@ -626,12 +625,13 @@ class Field[C <: ReachComponentLike with Focusable]
 		TextDrawContext(font * hintScaleFactor, textColor, alignment, insets)
 	}
 	
-	private def makeTextStyle(color: Color, insets: StackInsets) = TextDrawContext(font, color, alignment, insets)
+	private def makeTextStyle(color: Color, insets: StackInsets) = TextDrawContext(font, color, alignment, insets,
+		allowLineBreaks = true)
 	
 	private def makeBackgroundDrawer() = BackgroundViewDrawer(innerBackgroundPointer.lazyMap { c => c })
 	
-	private def measureText(text: LocalizedString, allowLineBreaks: Boolean = false) = MeasuredText(text,
-		FontMetricsContext(parentHierarchy.fontMetrics(font), 0.0), alignment)
+	private def measureText(text: LocalizedString, allowLineBreaks: Boolean = false) =
+		MeasuredText(text.string, parentHierarchy.fontMetricsWith(font), alignment, allowLineBreaks = allowLineBreaks)
 	
 	
 	// NESTED	-----------------------------------

@@ -9,7 +9,7 @@ import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.focus.{FocusListener, FocusRequestable}
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 
 object Focusable
 {

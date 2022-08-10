@@ -18,7 +18,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
 import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
@@ -248,14 +248,14 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	private val actualTextInsets = if (borderWidth > 0) textInsets + borderWidth else textInsets
 	private val stylePointer = colorPointer.mergeWith(enabledPointer) { (color, enabled) =>
 		TextDrawContext(font, if (enabled) color.defaultTextColor else color.textColorStandard.hintTextColor,
-			alignment, actualTextInsets, betweenLinesMargin)
+			alignment, actualTextInsets, betweenLinesMargin, allowLineBreaks)
 	}
 	
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	override val focusId = hashCode()
 	override protected val wrapped = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
 		displayFunction, ButtonBackgroundViewDrawer(colorPointer.map { c => c: Color }, statePointer, borderWidth) +:
-			additionalDrawers, allowLineBreaks, allowTextShrink)
+			additionalDrawers, allowTextShrink)
 	
 	
 	// INITIAL CODE	---------------------------------

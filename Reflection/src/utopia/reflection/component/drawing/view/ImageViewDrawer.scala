@@ -5,7 +5,7 @@ import utopia.flow.datastructure.template.Viewable
 import utopia.genesis.image.Image
 import utopia.reflection.component.drawing.template.{DrawLevel, ImageDrawerLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
 object ImageViewDrawer

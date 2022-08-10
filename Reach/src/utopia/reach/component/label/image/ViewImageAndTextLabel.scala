@@ -21,7 +21,7 @@ import utopia.reflection.component.drawing.view.BackgroundViewDrawer
 import utopia.reflection.component.template.layout.stack.ConstrainableWrapper
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
@@ -251,7 +251,7 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 				Fixed(alignment.opposite), allowUpscaling = allowImageUpscaling,
 				useLowPrioritySize = useLowPriorityImageSize)
 			val textLabel = ViewTextLabel(hierarchy).apply(itemPointer, stylePointer, displayFunction,
-				allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
+				allowTextShrink = allowTextShrink)
 			Pair(imageLabel, textLabel)
 		}(parentHierarchy.top)
 		// Wraps the components in a stack
@@ -270,5 +270,5 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 	// COMPUTED	-------------------------------------
 	
 	private def updatedStyle = TextDrawContext(fontPointer.value, textColorPointer.value, alignment,
-		textInsetsPointer.value, betweenLinesMargin)
+		textInsetsPointer.value, betweenLinesMargin, allowLineBreaks)
 }

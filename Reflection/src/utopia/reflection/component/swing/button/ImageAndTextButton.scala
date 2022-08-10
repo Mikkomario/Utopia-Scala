@@ -8,7 +8,7 @@ import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWr
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.ButtonState
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}

@@ -12,10 +12,10 @@ import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDraw
 import utopia.reflection.component.drawing.view.TextViewDrawer2
 import utopia.reflection.component.template.display.RefreshableWithPointer
 import utopia.reflection.component.template.text.{MutableStyleTextComponent, TextComponent2}
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Alignment
+import utopia.reflection.localization.DisplayFunction
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
+import utopia.reflection.text.Font
 
 object MutableViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike,
 	MutableViewTextLabelFactory, ContextualMutableViewTextLabelFactory]
@@ -54,7 +54,7 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 					  insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
 					  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
 		new MutableViewTextLabel[A](parentHierarchy, pointer, TextDrawContext(font, textColor, alignment, insets,
-			betweenLinesMargin), displayFunction, allowLineBreaks, allowTextShrink)
+			betweenLinesMargin, allowLineBreaks), displayFunction, allowTextShrink)
 	
 	/**
 	  * Creates a new mutable text view label
@@ -192,7 +192,7 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 							  override val contentPointer: PointerWithEvents[A],
 							  initialDrawContext: TextDrawContext,
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							  allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
+							  override val allowTextShrink: Boolean = false)
 	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with TextComponent2
 		with RefreshableWithPointer[A]
 {
@@ -202,14 +202,11 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	  * A mutable pointer that contains the currently used text styling
 	  */
 	val stylePointer = new PointerWithEvents(initialDrawContext)
-	private val measurerPointer = stylePointer.map { style =>
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
-	}
 	/**
 	  * Pointer that contains the text currently displayed on this label
 	  */
-	val textPointer = contentPointer.mergeWith(measurerPointer) { (content, measures) =>
-		MeasuredText(displayFunction(content), measures._1, measures._2, allowLineBreaks)
+	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) =>
+		measure(displayFunction(content), style)
 	}
 	
 	
@@ -231,9 +228,6 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	
 	override def drawContext = stylePointer.value
 	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
-	
-	override def measure(text: LocalizedString) = MeasuredText(text, measurerPointer.value._1, alignment,
-		allowLineBreaks)
 	
 	override def updateLayout() = ()
 }

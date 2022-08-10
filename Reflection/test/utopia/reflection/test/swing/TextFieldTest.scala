@@ -10,8 +10,8 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.container.swing.window.{Frame, Popup}
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Center
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._

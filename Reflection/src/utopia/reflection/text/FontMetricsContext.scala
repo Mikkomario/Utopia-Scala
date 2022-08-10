@@ -7,6 +7,7 @@ import java.awt.FontMetrics
   * @author Mikko Hilpinen
   * @since 1.11.2020, v2
   */
+@deprecated("Replaced with FontMetricsWrapper", "v2.0")
 case class FontMetricsContext(fontMetrics: FontMetrics, marginBetweenLines: Double) extends TextMeasurementContext
 {
 	override def lineHeight = fontMetrics.getHeight

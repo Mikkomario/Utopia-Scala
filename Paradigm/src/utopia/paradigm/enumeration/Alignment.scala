@@ -1,6 +1,7 @@
 package utopia.paradigm.enumeration
 
 import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
@@ -19,11 +20,11 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	// ABSTRACT	----------------
 	
 	/**
-	  * @return The horizontal component of this alignment
+	  * @return The horizontal component of this alignment (where the positive direction is right)
 	  */
 	def horizontal: LinearAlignment
 	/**
-	  * @return The vertical component of this alignment
+	  * @return The vertical component of this alignment (where the positive direction is down)
 	  */
 	def vertical: LinearAlignment
 	
@@ -41,18 +42,43 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	// COMPUTED	----------------
 	
 	/**
+	  * @return Whether this alignment moves items to the top
+	  */
+	def isTop = vertical == Close
+	/**
+	  * @return Whether this alignment moves items to the bottom
+	  */
+	def isBottom = vertical == Far
+	/**
+	  * @return Whether this alignment moves items to the left
+	  */
+	def isLeft = horizontal == Close
+	/**
+	  * @return Whether this alignment moves items to the right
+	  */
+	def isRight = horizontal == Far
+	
+	/**
 	  * @return The axes supported for this alignment
 	  */
 	def affectedAxes: Set[Axis2D] = toMap2D.filter { _._2.nonZero }.keySet
 	
 	/**
-	  * @return Whether this alignment can be used for horizontal axis (X)
+	  * @return Whether this alignment moves items along the horizontal axis (X)
 	  */
 	def affectsHorizontal = affects(X)
 	/**
-	  * @return Whether this alignment can be used for vertical axis (Y)
+	  * @return Whether this alignment moves items along the vertical axis (Y)
 	  */
 	def affectsVertical = affects(Y)
+	/**
+	  * @return Whether this alignment moves item along the horizontal axis (X) only
+	  */
+	def affectsHorizontalOnly = affectsHorizontal && !affectsVertical
+	/**
+	  * @return Whether this alignment moves items along the vertical axis (Y) only
+	  */
+	def affectsVerticalOnly = affectsVertical && !affectsHorizontal
 	
 	/**
 	  * @return Directions this alignment will try to move contents
@@ -84,6 +110,32 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	@deprecated("Please use .vertical.direction instead", "v2.6.3")
 	def verticalDirectionSign = verticalDirection.map { _.sign }
 	
+	/**
+	  * @return A copy of this alignment that doesn't move items horizontally
+	  */
+	def onlyVertical = withHorizontal(Middle)
+	/**
+	  * @return A copy of this alignment that doesn't move items vertically
+	  */
+	def onlyHorizontal = withVertical(Middle)
+	
+	/**
+	  * @return A copy of this alignment that moves items to the top, vertically
+	  */
+	def toTop = withVertical(Close)
+	/**
+	  * @return A copy of this alignment that moves items to the bottom, vertically
+	  */
+	def toBottom = withVertical(Far)
+	/**
+	  * @return A copy of this alignment that moves items to the left, horizontally
+	  */
+	def toLeft = withHorizontal(Close)
+	/**
+	  * @return A copy of this alignment that moves items to the right, horizontall
+	  */
+	def toRight = withHorizontal(Far)
+	
 	
 	// IMPLEMENTED  ------------
 	
@@ -101,7 +153,33 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	  * @param axis An axis
 	  * @return Whether this alignment specifies a direction along that axis
 	  */
-	def affects(axis: Axis2D) = along(axis).nonZero
+	def affects(axis: Axis2D) = along(axis).movesItems
+	
+	/**
+	  * @param direction A direction
+	  * @return A copy of this alignment that moves items to that direction
+	  */
+	def toDirection(direction: Direction2D) = {
+		val linearDirection = direction.sign match {
+			case Positive => Far
+			case Negative => Close
+		}
+		direction.axis match {
+			case X => withHorizontal(linearDirection)
+			case Y => withVertical(linearDirection)
+		}
+	}
+	
+	/**
+	  * @param horizontal New horizontal alignment component
+	  * @return A copy of this alignment with the specified horizontal component
+	  */
+	def withHorizontal(horizontal: LinearAlignment): Alignment = Alignment(horizontal, vertical)
+	/**
+	  * @param vertical New vertical alignment component
+	  * @return A copy of this alignment with the specified vertical component
+	  */
+	def withVertical(vertical: LinearAlignment): Alignment = Alignment(horizontal, vertical)
 	
 	/**
 	  * @param axis Target axis
@@ -153,6 +231,17 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	def position(area: Size, within: Bounds) =
 		Point.of(toMap2D.map { case (axis, alignment) =>
 			axis -> (within.position.along(axis) + alignment.position(area.along(axis), within.size.along(axis)))
+		})
+	/**
+	  * Positions a 2D area within another 2D area. Won't check whether the area would fit within the boundaries.
+	  * @param area Area to position
+	  * @param within Size of the area within which the area is positioned
+	  * @return The top left coordinate of the area when positioned according to this alignment,
+	  *         relative to the containment area top left position.
+	  */
+	def position(area: Size, within: Size): Point =
+		Point.of(toMap2D.map { case (axis, alignment) =>
+			axis -> alignment.position(area.along(axis), within.along(axis))
 		})
 	
 	/**
@@ -232,11 +321,9 @@ object Alignment
 		// IMPLEMENTED	-------------------
 		
 		override def horizontal = linear
-		
 		override def vertical = Middle
 		
 		override def horizontalDirection = Some(direction)
-		
 		override def verticalDirection = None
 	}
 	
@@ -248,11 +335,9 @@ object Alignment
 		// IMPLEMENTED	-------------------
 		
 		override def horizontal = Middle
-		
 		override def vertical = linear
 		
 		override def horizontalDirection = None
-		
 		override def verticalDirection = Some(direction)
 	}
 	
@@ -262,7 +347,6 @@ object Alignment
 	case object Left extends HorizontalAlignment
 	{
 		override def linear = Close
-		
 		override def direction = Direction2D.Left
 		
 		override def opposite = Right
@@ -276,7 +360,6 @@ object Alignment
 	case object Right extends HorizontalAlignment
 	{
 		override def linear = Far
-		
 		override def direction = Direction2D.Right
 		
 		override def opposite = Left
@@ -290,7 +373,6 @@ object Alignment
 	case object Top extends VerticalAlignment
 	{
 		override def linear = Close
-		
 		override def direction = Direction2D.Up
 		
 		override def opposite = Bottom
@@ -304,7 +386,6 @@ object Alignment
 	case object Bottom extends VerticalAlignment
 	{
 		override def linear = Far
-		
 		override def direction = Direction2D.Down
 		
 		override def opposite = Top
@@ -408,6 +489,50 @@ object Alignment
 	
 	
 	// OTHER	-----------------------
+	
+	/**
+	  * @param linear A (horizontal) linear alignment
+	  * @return An alignment matching that linear alignment (no vertical component)
+	  */
+	def horizontal(linear: LinearAlignment) = linear match {
+		case Close => Alignment.Left
+		case Middle => Center
+		case Far => Alignment.Right
+	}
+	/**
+	  * @param linear A (vertical) linear alignment
+	  * @return An alignment matching that linear alignment (no horizontal component)
+	  */
+	def vertical(linear: LinearAlignment) = linear match {
+		case Close => Top
+		case Middle => Center
+		case Far => Bottom
+	}
+	/**
+	  * @param horizontal A horizontal alignment component
+	  * @param vertical A vertical alignment component
+	  * @return An alignment combined from those two components
+	  */
+	def apply(horizontal: LinearAlignment, vertical: LinearAlignment) = horizontal match {
+		case Close =>
+			vertical match {
+				case Close => TopLeft
+				case Middle => Left
+				case Far => BottomLeft
+			}
+		case Middle =>
+			vertical match {
+				case Close => Top
+				case Middle => Center
+				case Far => Bottom
+			}
+		case Far =>
+			vertical match {
+				case Close => TopRight
+				case Middle => Right
+				case Far => BottomRight
+			}
+	}
 	
 	/**
 	  * @param direction Target direction

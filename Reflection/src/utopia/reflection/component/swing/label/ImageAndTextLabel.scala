@@ -13,8 +13,8 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.Alignment.{Bottom, Top}
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
@@ -84,31 +84,26 @@ class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], in
 		textInsets, alignment, textHasMinWidth)
 	private val imageLabel = new ImageLabel(itemToImageFunction(contentPointer.value), allowUpscaling = allowImageUpscaling)
 	
-	private val view =
-	{
+	private val view = {
 		val wrappedImageLabel = imageLabel.framed(imageInsets)
 		// Determines stack layout based on alignment
-		val (direction, items) = alignment.vertical match
-		{
-			case Top => Y -> Vector(textLabel, wrappedImageLabel)
-			case Bottom => Y -> Vector(wrappedImageLabel, textLabel)
+		val (direction, items) = alignment.vertical match {
+			case Close => Y -> Vector(textLabel, wrappedImageLabel)
+			case Far => Y -> Vector(wrappedImageLabel, textLabel)
 			case _ =>
-				alignment.horizontal match
-				{
-					case Alignment.Left => X -> Vector(wrappedImageLabel, textLabel)
-					case Alignment.Right => X -> Vector(textLabel, wrappedImageLabel)
+				alignment.horizontal match {
+					case Close => X -> Vector(wrappedImageLabel, textLabel)
+					case Far => X -> Vector(textLabel, wrappedImageLabel)
 					case _ => Y -> Vector(wrappedImageLabel, textLabel)
 				}
 		}
 		val layout = {
 			if (direction == X)
 				StackLayout.Center
-			else
-			{
-				alignment.horizontal match
-				{
-					case Alignment.Left => Leading
-					case Alignment.Right => Trailing
+			else {
+				alignment.horizontal match {
+					case Close => Leading
+					case Far => Trailing
 					case _ => StackLayout.Center
 				}
 			}

@@ -17,7 +17,7 @@ import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
 import utopia.reflection.component.template.text.MutableTextComponent
 import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
@@ -178,8 +178,6 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	override def measuredText = wrapped.measuredText
 	
-	override def measure(text: LocalizedString) = wrapped.measure(text)
-	
 	override def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
 	
 	override protected def drawable = wrapped
@@ -188,6 +186,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	override def trigger() = actions.foreach { _() }
 	
+	override def text = wrapped.text
 	override def text_=(newText: LocalizedString) = wrapped.text = newText
 	
 	override def drawContext_=(newContext: TextDrawContext) = wrapped.drawContext = newContext

@@ -11,8 +11,9 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.Alignment.Top
+import utopia.paradigm.enumeration.LinearAlignment
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.LinearAlignment.Close
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 
@@ -133,7 +134,7 @@ trait InteractionWindow[+A]
 			implicit val baseC: ColorContextLike = context
 			Stack.buildColumnWithContext() { mainStack =>
 				// Some of the buttons may be placed before the dialog content, some after
-				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Top }
+				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Close }
 				if (topButtons.nonEmpty)
 					mainStack += buttonRow(topButtons, context.defaultStackMargin.optimal)
 				mainStack += dialogContent
@@ -180,15 +181,13 @@ trait InteractionWindow[+A]
 		
 		val buttonsByLocation = buttons.groupMap { _._1.location.horizontal } { _._2 }
 		// Case: Items only on one side
-		if (buttonsByLocation.size == 1)
-		{
+		if (buttonsByLocation.size == 1) {
 			val (alignment, buttons) = buttonsByLocation.head
-			Stack.rowWithItems(buttons, nonScalingMargin).aligned(alignment)
+			Stack.rowWithItems(buttons, nonScalingMargin).aligned(X(alignment))
 		}
-		else
-		{
+		else {
 			val scalingMargin = baseMargin.upscaling.expanding
-			val buttonGroups = Vector(Alignment.Left, Alignment.Center, Alignment.Right).flatMap(buttonsByLocation.get)
+			val buttonGroups = LinearAlignment.values.flatMap(buttonsByLocation.get)
 			val buttonGroupComponents = buttonGroups.map { buttons =>
 				if (buttons.size == 1)
 					buttons.head
@@ -196,7 +195,7 @@ trait InteractionWindow[+A]
 					Stack.rowWithItems(buttons, nonScalingMargin)
 			}
 			// Case: Items on left side + right and/or center
-			if (buttonsByLocation.contains(Alignment.Left))
+			if (buttonsByLocation.contains(Close))
 				Stack.rowWithItems(buttonGroupComponents, scalingMargin)
 			// Case: Items only on center and right
 			else

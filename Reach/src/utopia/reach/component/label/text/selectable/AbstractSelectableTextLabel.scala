@@ -24,7 +24,6 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.text.{FontMetricsContext, MeasuredText}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import java.awt.Toolkit
@@ -47,7 +46,7 @@ abstract class AbstractSelectableTextLabel
  selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
  caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
- allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
+ override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2 with Focusable with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
@@ -55,16 +54,10 @@ abstract class AbstractSelectableTextLabel
 	private var draggingMouse = false
 	
 	override val focusId = hashCode()
-	
-	private val measurerPointer = stylePointer.map { style =>
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
-	}
 	/**
 	  * A pointer to this label's measured text information
 	  */
-	val measuredTextPointer = textPointer.mergeWith(measurerPointer) { (text, measures) =>
-		MeasuredText(text, measures._1, measures._2, allowLineBreaks)
-	}
+	val measuredTextPointer = textPointer.mergeWith(stylePointer)(measure)
 	/**
 	  * Pointer that contains the current caret index within text
 	  */
@@ -140,9 +133,6 @@ abstract class AbstractSelectableTextLabel
 	
 	override def drawContext = stylePointer.value
 	
-	override def measure(text: LocalizedString) = MeasuredText(text, measurerPointer.value._1, alignment,
-		allowLineBreaks)
-	
 	override def allowsFocusEnter = selectable
 	
 	override def cursorType = if (selectable) Text else Default
@@ -159,7 +149,7 @@ abstract class AbstractSelectableTextLabel
 				val highlightAreas = mainDrawer.drawTargets._2
 				lazy val positionInTextBounds = ((this.position + position) -
 					mainDrawer.lastDrawPosition) * mainDrawer.lastDrawScaling
-				if (highlightAreas.nonEmpty && highlightAreas.exists { _._2.contains(positionInTextBounds) })
+				if (highlightAreas.nonEmpty && highlightAreas.exists { _._3.contains(positionInTextBounds) })
 					cursor.over(selectedAreaBackground)
 				else
 					cursor.proposing(textColor)

@@ -5,6 +5,11 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import java.awt.FontMetrics
 import scala.collection.immutable.VectorBuilder
 
+object FontMetricsWrapper
+{
+	implicit def wrap(metrics: FontMetrics): FontMetricsWrapper = apply(metrics)
+}
+
 /**
   * Used for wrapping a FontMetrics instance, which is considered to be immutable afterwards
   * @author Mikko Hilpinen

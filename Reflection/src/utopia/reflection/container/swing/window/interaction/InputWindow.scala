@@ -19,7 +19,7 @@ import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenAn
 import utopia.reflection.container.template.window.RowGroups
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.LengthExtensions._
 
 import scala.concurrent.ExecutionContext

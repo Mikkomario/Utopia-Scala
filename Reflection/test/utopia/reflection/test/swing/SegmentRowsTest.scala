@@ -7,7 +7,7 @@ import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.Alignment
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._

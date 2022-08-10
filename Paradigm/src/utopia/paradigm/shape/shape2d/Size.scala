@@ -188,19 +188,27 @@ case class Size(override val dimensions2D: Pair[Double])
     
     /**
      * @param another Another size
+      * @param preserveShape Whether the width/height -ratio of this size should be preserved when altering size
+      *                      (default = false)
      * @return A copy of this size that fits into specified size. If this size already fits, returns this.
      */
-    def fittedInto(another: Size) =
-    {
-        if (width <= another.width)
-        {
+    def fittedInto(another: Size, preserveShape: Boolean = false) = {
+        if (width <= another.width) {
             if (height <= another.height)
                 this
+            else if (preserveShape)
+                this * (another.height / height)
             else
                 withHeight(another.height)
         }
-        else if (height <= another.height)
-            withWidth(another.width)
+        else if (height <= another.height) {
+            if (preserveShape)
+                this * (another.width / width)
+            else
+                withWidth(another.width)
+        }
+        else if (preserveShape)
+            this * (another / this).minDimension
         else
             another
     }

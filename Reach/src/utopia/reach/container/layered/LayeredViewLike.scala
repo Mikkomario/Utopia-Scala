@@ -77,7 +77,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 					if (expandIfPossible)
 						alignment.positionStretching(layer.stackSize, targetArea, optimalMargin.downscaling)
 					else
-						alignment.position(layer.stackSize.optimal, targetArea, optimalMargin.any)
+						alignment.positionWithInsets(layer.stackSize.optimal, targetArea, optimalMargin.any)
 			}
 		}
 	}
