@@ -190,10 +190,11 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     /**
       * Draws a piece of text, expecting font to be already set
       * @param text Text to draw
-      * @param topLeft The top left position of the text
+      * @param baselineStart Location of the leftmost position of the text baseline
       */
-    def drawTextRaw(text: String, topLeft: Point) = graphics.drawString(text, topLeft.x.round.toInt,
-        topLeft.y.round.toInt + graphics.getFontMetrics.getAscent)
+        // FIXME: Changed coordinates
+    def drawTextRaw(text: String, baselineStart: Point) =
+        graphics.drawString(text, baselineStart.x.round.toInt, baselineStart.y.round.toInt)
     
     /**
       * Draws a piece of text. Specified bounds affect the positioning and possibly scaling.

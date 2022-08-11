@@ -57,6 +57,7 @@ trait TextDrawerLike2 extends CustomDrawer
 	
 	override def opaque = false
 	
+	// TODO: This is probably broken
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		// Calculates draw bounds and possible scaling

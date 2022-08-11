@@ -110,6 +110,8 @@ case class Point(override val dimensions2D: Pair[Double])
 {
     // IMPLEMENTED    -----------------
 	
+	override def toString = dimensions2D.toString()
+	
 	override def buildCopy(vector: Vector2D) = Point(vector.dimensions2D)
 	override def buildCopy(vector: Vector3D) = Point(vector.dimensions2D)
 	

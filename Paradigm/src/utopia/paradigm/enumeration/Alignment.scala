@@ -213,9 +213,8 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	  * @param within An area within which a point is aligned
 	  * @return Location of a point within that area (relative position)
 	  */
-	def origin(within: Size) = Point.of(toMap2D.map { case (axis, alignment) =>
-		axis -> alignment.origin(within.along(axis))
-	})
+	def origin(within: Size) =
+		Point.of(toMap2D.map { case (axis, alignment) => axis -> alignment.origin(within.along(axis)) })
 	/**
 	  * @param within An area within which a point is aligned
 	  * @return Location of a point within that area
@@ -346,6 +345,8 @@ object Alignment
 	  */
 	case object Left extends HorizontalAlignment
 	{
+		override def toString = "Left"
+		
 		override def linear = Close
 		override def direction = Direction2D.Left
 		
@@ -359,6 +360,8 @@ object Alignment
 	  */
 	case object Right extends HorizontalAlignment
 	{
+		override def toString = "Right"
+		
 		override def linear = Far
 		override def direction = Direction2D.Right
 		
@@ -372,6 +375,8 @@ object Alignment
 	  */
 	case object Top extends VerticalAlignment
 	{
+		override def toString = "Top"
+		
 		override def linear = Close
 		override def direction = Direction2D.Up
 		
@@ -385,6 +390,8 @@ object Alignment
 	  */
 	case object Bottom extends VerticalAlignment
 	{
+		override def toString = "Bottom"
+		
 		override def linear = Far
 		override def direction = Direction2D.Down
 		
@@ -398,6 +405,8 @@ object Alignment
 	  */
 	case object Center extends Alignment
 	{
+		override def toString = "Center"
+		
 		override def horizontal = Middle
 		override def vertical = Middle
 		
@@ -413,6 +422,8 @@ object Alignment
 	
 	case object TopLeft extends Alignment
 	{
+		override def toString = "Top Left"
+		
 		override def horizontal = Close
 		override def vertical = Close
 		
@@ -427,6 +438,8 @@ object Alignment
 	
 	case object TopRight extends Alignment
 	{
+		override def toString = "Top Right"
+		
 		override def horizontal = Far
 		override def vertical = Close
 		
@@ -442,6 +455,8 @@ object Alignment
 	
 	case object BottomLeft extends Alignment
 	{
+		override def toString = "Bottom Left"
+		
 		override def horizontal = Close
 		override def vertical = Far
 		
@@ -457,6 +472,8 @@ object Alignment
 	
 	case object BottomRight extends Alignment
 	{
+		override def toString = "Bottom Right"
+		
 		override def horizontal = Far
 		override def vertical = Far
 		
