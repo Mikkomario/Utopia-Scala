@@ -92,7 +92,7 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  * @return A measured copy of that text within this component
 	  */
 	def measure(text: LocalizedString, style: TextDrawContext = drawContext) = {
-		MeasuredText(text.string, fontMetricsWith(style.font), style.alignment,
+		MeasuredText(text.string, fontMetricsWith(style.font),
 			betweenLinesAdjustment = style.betweenLinesMargin, allowLineBreaks = style.allowLineBreaks)
 	}
 	

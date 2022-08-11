@@ -133,6 +133,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  */
 	def caretAt(lineIndex: Int, indexOnLine: Int) =
 	{
+		// TODO: lineHeight might not be the correct function to call (see heightSettings)
 		if (isEmpty)
 			Line(Point.origin, Point(0, context.lineHeight))
 		else
@@ -476,6 +477,8 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			val textStart = topLeft - lineBounds.position
 			// Bounds of this text area
 			val areaBounds = Bounds(topLeft, lineBounds.size)
+			
+			// println(s"\nLine bounds = $lineBounds\nTop left = $topLeft\nArea bounds = $areaBounds\nText Start = $textStart\n")
 			
 			(areaBounds, Vector(areaBounds -> textStart))
 		}

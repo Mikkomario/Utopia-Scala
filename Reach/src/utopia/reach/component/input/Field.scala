@@ -631,7 +631,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	private def makeBackgroundDrawer() = BackgroundViewDrawer(innerBackgroundPointer.lazyMap { c => c })
 	
 	private def measureText(text: LocalizedString, allowLineBreaks: Boolean = false) =
-		MeasuredText(text.string, parentHierarchy.fontMetricsWith(font), alignment, allowLineBreaks = allowLineBreaks)
+		MeasuredText(text.string, parentHierarchy.fontMetricsWith(font), allowLineBreaks = allowLineBreaks)
 	
 	
 	// NESTED	-----------------------------------
