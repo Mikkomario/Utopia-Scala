@@ -4,6 +4,7 @@
 ### Breaking Changes
 - String / Text data type is no longer wrapped in **Option** and defaults to an empty string
   - This update requires using of **Flow** v1.16, which alter string-to-value conversion
+  - If you don't want the string to be empty by default (or ever), you may use the new nonEmptyString -data type
 - Plural name combinations only pluralize the last part anymore. E.g. when the previous version would return 
   "instancesIds", the current version returns "instanceIds"
 - Modified visibility writing logic in low merge priority -situations

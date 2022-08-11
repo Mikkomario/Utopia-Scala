@@ -116,7 +116,7 @@ trait SingleColumnPropertyType extends PropertyType
 	// ABSTRACT ------------------------
 	
 	/**
-	  * @return The SQL data type that matches this property type
+	  * @return Conversion used for converting this type into an sql type
 	  */
 	def sqlConversion: SqlTypeConversion
 	
@@ -527,21 +527,23 @@ object PropertyType
 	  * @return A property type matching that specification. None if no match was found.
 	  */
 	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None): Option[PropertyType] =
+	{
+		// Text length may be specified within parentheses after the type (E.g. "String(3)")
+		def appliedLength = typeName.afterFirst("(").untilFirst(")").int.orElse(length).getOrElse(255)
+		
 		typeName.toLowerCase match {
+			case "requiredstring" | "nonemptystring" | "stringnotempty" | "textnotempty" =>
+				Some(NonEmptyText(appliedLength))
 			case "creation" | "created" => Some(CreationTime)
 			case "updated" | "modification" | "update" => Some(UpdateTime)
 			case "deprecation" | "deprecated" => Some(Deprecation)
 			case "expiration" | "expired" => Some(Expiration)
-			case "value" => Some(GenericValue(length.getOrElse(255)))
+			case "value" => Some(GenericValue(appliedLength))
 			case "days" => Some(DayCount)
 			case other =>
-				if (other.startsWith("text") || other.startsWith("string") || other.startsWith("varchar")) {
-					// Text length may be specified within parentheses after the type (E.g. "String(3)")
-					val appliedLength: Int = other.afterFirst("(").untilFirst(")").int
-						.orElse(length).getOrElse(255)
+				if (other.startsWith("text") || other.startsWith("string") || other.startsWith("varchar"))
 					Some(Text(appliedLength))
-				}
-				if (other.startsWith("option"))
+				else if (other.startsWith("option"))
 					interpret(other.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
 				else if (other.startsWith("duration"))
 					Some(typeName.afterFirst("[").untilLast("]") match {
@@ -563,6 +565,7 @@ object PropertyType
 							}
 						}
 		}
+	}
 	
 	
 	// NESTED   -------------------------------
@@ -697,7 +700,7 @@ object PropertyType
 		override def emptyValue = Text.emptyValue
 		override def nonEmptyDefaultValue = CodePiece.empty
 		
-		override def defaultPropertyName = if (length < 100) "name" else "text"
+		override def defaultPropertyName = "text"
 		
 		override def concrete = this
 		
@@ -707,6 +710,60 @@ object PropertyType
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name) = ""
+	}
+	
+	// Works exactly like Text, except that
+	// a) No default empty value is given (this type is not considered optional)
+	// b) NOT NULL is added to the generated sql type
+	case class NonEmptyText(length: Int = 255) extends SingleColumnPropertyType
+	{
+		// ATTRIBUTES   ------------------------
+		
+		private val allowingEmpty = Text(length)
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override def scalaType = allowingEmpty.scalaType
+		override def sqlConversion: SqlTypeConversion = SqlConversion
+		
+		// Empty value is not allowed
+		override def emptyValue = CodePiece.empty
+		override def nonEmptyDefaultValue = CodePiece.empty
+		
+		override def defaultPropertyName =  if (length < 100) "name" else "text"
+		
+		override def optional = allowingEmpty
+		override def concrete = this
+		
+		override def yieldsTryFromValue = allowingEmpty.yieldsTryFromValue
+		
+		// Delegates value conversion
+		override def fromValueCode(valueCode: String) = allowingEmpty.fromValueCode(valueCode)
+		override def fromValuesCode(valuesCode: String) = allowingEmpty.fromValuesCode(valuesCode)
+		override def toValueCode(instanceCode: String) = allowingEmpty.toValueCode(instanceCode)
+		
+		override def writeDefaultDescription(className: Name, propName: Name) = ""
+		
+		
+		// NESTED   -------------------------
+		
+		// Simply modifies the "NOT NULL" -part from a standard string sql conversion, otherwise works exactly the same
+		private object SqlConversion extends SqlTypeConversion
+		{
+			// COMPUTED ---------------------
+			
+			private def parent = NonEmptyText.this
+			
+			
+			// IMPLEMENTED  -----------------
+			
+			override def origin = parent.scalaType
+			override def intermediate = parent.allowingEmpty
+			override def target = intermediate.sqlType.notNullable
+			
+			override def midConversion(originCode: String) = originCode
+		}
 	}
 	
 	case class GenericValue(length: Int = 255) extends DirectlySqlConvertiblePropertyType

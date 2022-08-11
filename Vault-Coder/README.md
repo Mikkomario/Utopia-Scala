@@ -129,20 +129,24 @@ Each property object should contain following properties:
   - You may specify the referenced column / property in parentheses after the table name. E.g. `"table_name(column_name)"`
     - If column prefixing is used, a prefix will automatically be added to the referenced column name
 - **"type": String (optional)** - The data type of this property. The following options are accepted:
-  - **"text" / "string" / "varchar"** - Results in a `String` / Varchar type (default name: `"name"` / `"text"`)
+  - **"text" / "String" / "varchar"** - Results in a `String` / Varchar type (default name: `"text"`)
     - You may specify the maximum string length in either parentheses at the end of the type (e.g. `"String(32)"`) or 
       via the `"length"` property (optional feature).
-  - **"int"** - Results in `Int` numeric type (default name: `"index"`)
+    - These strings are expected to be valid when empty. They default to an empty string, 
+      unless another default value is specified.
+  - **"nonEmptyString" / "requiredString" / "StringNotEmpty" / "textNotEmpty"** - 
+    Behaves like String, but doesn't allow empty values.
+  - **"Int"** - Results in `Int` numeric type (default name: `"index"`)
     - You may specify the maximum allowed value in either parentheses at the end of the type 
       (e.g. `"Int(tiny)"` OR `"Int(100)"`) (optional feature)
-  - **"long" / "bigint" / "number"** - Results in `Long` numeric type (default name: `"number"`)
-  - **"double"** - Results in `Double` numeric type (default name: `"amount"`)
-  - **"boolean" / "flag"** - Results in `Boolean` type (true / false) (default name: `"flag"`)
-  - **"datetime" / "timestamp" / "instant"** - Results in `Instant` / Datetime type (default name: `"timestamp"`)
+  - **"Long" / "bigint" / "number"** - Results in `Long` numeric type (default name: `"number"`)
+  - **"Double"** - Results in `Double` numeric type (default name: `"amount"`)
+  - **"Boolean" / "flag"** - Results in `Boolean` type (true / false) (default name: `"flag"`)
+  - **"datetime" / "timestamp" / "Instant"** - Results in `Instant` / Datetime type (default name: `"timestamp"`)
   - **"date" / "LocalDate"** - Results in `LocalDate` / Date type (default name: `"date"`)
   - **"time" / "LocalTime"** - Results in `LocalTime` / Time type (default name: `"time"`)
-  - **"days"** - Results in `Days` type (default name: `"duration"`)
-  - **"duration[X]"** - Results in a `FiniteDuration` type (default name: `"duration"`)
+  - **"Days"** - Results in `Days` type (default name: `"duration"`)
+  - **"Duration[X]"** - Results in a `FiniteDuration` type (default name: `"duration"`)
     - **X** determines the unit used when storing the duration to the database. Available options are:
       - **h / hour / hours** - Stores as hours (int)
       - **m / min / minute / minutes** - Stores as minutes (int)
@@ -164,8 +168,8 @@ Each property object should contain following properties:
     (default name: `"expires"`)
     - Enables (timed) item deprecation
     - Indexes by default
-  - **"option[X]"** - Results in `Option` / nullable type where the underlying type is determined by what `X` is
-  - **"enum[X]"** - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
+  - **"Option[X]"** - Results in `Option` / nullable type where the underlying type is determined by what `X` is
+  - **"Enum[X]"** - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
     (must be specified in the "enumerations" -property). Uses the enumeration's name as the default property name.
     - Can be wrapped in option
   - Any custom data type alias - Results in that custom data type being used
