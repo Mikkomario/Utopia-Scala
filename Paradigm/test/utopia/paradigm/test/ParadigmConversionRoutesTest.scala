@@ -1,7 +1,9 @@
 package utopia.paradigm.test
 
-import utopia.flow.generic.{BooleanType, ConversionHandler, DataType}
-import utopia.paradigm.generic.{ColorType, ParadigmDataType}
+import utopia.flow.generic.{ConversionHandler, DataType}
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
+import utopia.paradigm.generic.ParadigmDataType
 
 /**
   * Prints more complex conversion routes when Paradigm data types are in use
@@ -14,6 +16,7 @@ object ParadigmConversionRoutesTest extends App
 	
 	val types = DataType.values.toVector.sortBy { _.name }
 	
+	val start = Now.toInstant
 	types.foreach { target =>
 		println(s"\n${target.name.toUpperCase} \t---------------")
 		types.filterNot { _.isOfType(target) }
@@ -25,4 +28,6 @@ object ParadigmConversionRoutesTest extends App
 				println(s"\t${route.head.source.name} ${ route.map { r => s"=> ${r.target.name}" }.mkString(" ") } ($cost)")
 			}
 	}
+	println()
+	println((Now - start).description)
 }

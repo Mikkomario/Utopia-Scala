@@ -49,8 +49,17 @@ object GraphTest extends App
 	// The shortest route should be 1 -> 4 -> 5
 	assert(node1.shortestRouteTo(node5).get.size == 2)
 	// The cheapest route (weights considered) should be 1 -> 2 -> 3 -> 5
+	println()
+	node1.routesTo(node5).foreach { route =>
+		println(s"- ${route.map { e => s"to ${e.end.content} (${e.content})" }.mkString(" => ")} (${ route.foldLeft(0) { _ + _.content } })")
+	}
+	println()
+	val cheapestRoutes = node1.cheapestRoutesTo(node5) { _.content }
+	cheapestRoutes._1.foreach { r => println(r.map { e => s"to ${e.end.content} (${e.content})" }.mkString(" => ")) }
+	println(cheapestRoutes._2)
+	/*
 	val cheapestRoute = node1.cheapestRouteTo(node5) { edge => edge.content }
-	assert(cheapestRoute.get.size == 3)
+	assert(cheapestRoute.get.size == 3, cheapestRoute.get.map { _.end.content })
 	
 	// After disconnecting node 5 from node 4. Only one route should remain
 	node4.disconnectDirect(node5)
@@ -90,11 +99,12 @@ object GraphTest extends App
 	n3.connect(n4, 3)
 	
 	val shorts = n1.shortestRoutesTo(n4)
-	val cheaps = n1.cheapestRoutesTo(n4) { _.content }
+	val cheaps = n1.cheapestRoutesTo(n4) { _.content }._1
 	
 	assert(shorts.size == 2)
 	assert(cheaps.size == 1)
 	assert(cheaps.head.size == 2)
 	
 	print("Success")
+	 */
 }

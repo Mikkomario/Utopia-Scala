@@ -300,7 +300,7 @@ In the following examples, we're using an imaginary example data type **Weight**
 When specifying a data type that is represented using two or more database columns, you must also do the following:
 - Specify the **"parts"** -property
   - You must pass a **json object array** where each object contains the following properties:
-    - **"type": String** - The Scala type of this part of the parent type **as it appears in the database model**, 
+    - **"type": String** - The **Scala** type of this part of the parent type **as it appears in the database model**, 
       i.e. in "optional" form.
       - In our example, these would be `"Option[Double]"` and `"Option[example.enumerations.WeightUnit]"`
     - "sql": String** - The data type listed in the SQL document

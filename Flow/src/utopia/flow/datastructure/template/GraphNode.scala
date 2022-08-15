@@ -1,9 +1,177 @@
 package utopia.flow.datastructure.template
 
 import utopia.flow.datastructure.immutable.{Graph, Tree}
+import utopia.flow.datastructure.template.GraphNode.{AnyNode, PathsFinder}
 import utopia.flow.util.CollectionExtensions._
 
+import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
+import scala.math.Ordered.orderingToOrdered
+
+object GraphNode
+{
+	type AnyNode = GraphNode[_, _, _, _]
+	type AnyEdge = GraphEdge[_, _, _]
+	
+	// FIXME: Doesn't yield correct results
+	private class PathsFinder[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode], C]
+	(start: GNode, destinations: Set[GNode => Boolean], startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
+	(implicit ord: Ordering[C])
+	{
+		def apply(): Map[GNode, (Set[Vector[Edge]], C)] = {
+			// Filters out destinations that are immediately completed
+			val incompleteDestinations = destinations.filterNot { _(start) }
+			// Case: All destinations are already reached
+			if (incompleteDestinations.isEmpty) {
+				if (destinations.nonEmpty)
+					Map(start -> (Set(Vector[Edge]()) -> startCost))
+				else
+					Map()
+			}
+			// Case: Actual search is required
+			else {
+				val result = apply(Map(start -> new PathFinder(start, startCost, Set(Vector()))), Set(),
+					incompleteDestinations, Vector(), Map())
+				// Adds some auto-completed destinations, if there were some
+				if (incompleteDestinations.size < destinations.size)
+					result + (start -> (Set(Vector[Edge]()) -> startCost))
+				else
+					result
+			}
+		}
+		
+		@tailrec
+		private def apply(origins: Map[GNode, PathFinder], pastNodes: Set[AnyNode],
+		                  remainingDestinations: Iterable[GNode => Boolean],
+		                  improvableDestinations: Iterable[(GNode => Boolean, C)],
+		                  pastResults: Map[GNode, (Set[Vector[Edge]], C)]): Map[GNode, (Set[Vector[Edge]], C)] =
+		{
+			val currentMinCost = origins.valuesIterator.map { _.currentCost }.min
+			// Selects the next iteration origins - Nodes with the lowest current cost
+			val (delayedOrigins, iterationOrigins) = origins
+				.divideBy { case (_, finder) => ord.equiv(finder.currentCost, currentMinCost) }
+			val blockedNodes = pastNodes ++ iterationOrigins.keys
+			// Takes the next step and merges routes that arrived to the same node
+			val newFinders = iterationOrigins.values.flatMap { _.next(blockedNodes) }.groupBy { _.currentNode }
+				.flatMap { case (location, finders) =>
+					val bestNewCost = finders.map { _.currentCost }.min
+					// Only recognizes the new results if they were better than some previously encountered origins
+					// In which case either merges or discards the previous origins
+					val earlierResults = origins.get(location)
+					if (earlierResults.forall { _.currentCost >= bestNewCost }) {
+						// Includes the previously found "origins" in the merging process
+						val bestFinders = (finders ++ earlierResults)
+							.filter { f => ord.equiv(f.currentCost, bestNewCost) }
+						// Case: Only one finder arrived to this location => picks it as it is
+						if (bestFinders.size == 1)
+							Some(bestFinders.head)
+						// Case: Merging => Takes the finders of smallest cost and combines them
+						else
+							Some(bestFinders.reduce { (a, b) =>
+								new PathFinder(location, a.currentCost, a.pathHistory ++ b.pathHistory)
+							})
+					}
+					else
+						None
+				}
+			
+			val (destinations, improvable, results) = {
+				// Case: Iteration yielded no routes => keeps previous destinations etc.
+				if (newFinders.isEmpty)
+					(remainingDestinations, improvableDestinations, pastResults)
+				// Case: Iteration yielded new routes => updates results and destinations, etc.
+				else {
+					// Checks whether already arrived to some or all destinations
+					// Found destinations contains 4 parts:
+					// 1) The original destination function
+					// 2) Destination node
+					// 3) Routes
+					// 4) Cost
+					val (nextDestinations, foundDestinations) = remainingDestinations.divideWith { destination =>
+						val arrived = newFinders.filter { o => destination(o.currentNode) }
+						if (arrived.isEmpty)
+							Left(destination)
+						else {
+							val bestResults = arrived.minGroupBy { _.currentCost }
+							val bestResult = bestResults.head
+							// The latest result may still be improved upon
+							Right((destination, bestResult.currentNode,
+								bestResults.flatMap { _.pathHistory }.toSet, bestResult.currentCost))
+						}
+					}
+					// Checks whether it's possible to get a better result than one already found
+					val remainingImprovableDestinations = improvableDestinations.filter { currentMinCost <= _._2 }
+					val betterResults = remainingImprovableDestinations.flatMap { case (destination, minCost) =>
+						val arrived = newFinders.filter { o => destination(o.currentNode) }.filter { _.currentCost <= minCost }
+						if (arrived.nonEmpty) {
+							val bestResults = arrived.minGroupBy { _.currentCost }
+							val bestResult = bestResults.head
+							val newRoutes = pastResults.get(bestResult.currentNode)
+								.filter { case (_, cost) => ord.equiv(cost, bestResult.currentCost) } match
+							{
+								case Some((pastRoutes, _)) => pastRoutes ++ bestResults.flatMap { _.pathHistory }
+								case None => bestResults.flatMap { _.pathHistory }.toSet
+							}
+							Some(bestResult.currentNode -> (newRoutes, bestResult.currentCost))
+						}
+						else
+							None
+					}
+					
+					/*
+					println()
+					println(s"Current minimum cost: $currentMinCost")
+					println(s"${origins.size} origins")
+					println(s"${iterationOrigins.size} Current targets: [${ iterationOrigins.valuesIterator.map { _.currentNode.content }.mkString(", ") }]")
+					println(s"${delayedOrigins.size} delayed targets: [${ delayedOrigins.valuesIterator.map { _.currentNode.content }.mkString(", ") }]")
+					println(s"${blockedNodes.size} Nodes which may not be entered: [${ blockedNodes.map { _.content }.mkString(", ") }]")
+					println(s"Targets after iteration: [${ newFinders.map { _.currentNode.content }.mkString(", ") }]")
+					println(s"Found ${ foundDestinations.size } initial destination matches: [${ foundDestinations.map { _._4 }.mkString(", ") }]. ${ nextDestinations.size } destinations remain.")
+					println(s"${ remainingImprovableDestinations.size } destinations / routes may still be improved upon")
+					println(s"Found ${ betterResults.size } results that are better than the previous: [${ betterResults.map { _._2._2 }.mkString(", ") }]")
+					 */
+					val newResults = {
+						if (foundDestinations.isEmpty && betterResults.isEmpty)
+							pastResults
+						else
+							pastResults ++ betterResults ++
+								foundDestinations.map { case (_, node, routes, cost) => node -> (routes -> cost) }
+					}
+					(nextDestinations, remainingImprovableDestinations ++
+						foundDestinations.map { case (dest, _, _, cost) => dest -> cost } ,
+						newResults)
+				}
+			}
+			
+			val nextFinders = delayedOrigins ++ newFinders.map { f => f.currentNode -> f }
+			// Case: Impossible to continue => finishes
+			if (nextFinders.isEmpty)
+				results
+			// Case: No need to continue further, as optimum routes have already been found
+			else if (destinations.isEmpty && improvable.map { _._2 }.maxOption
+				.forall { c => nextFinders.valuesIterator.forall { _.currentCost >= c } }) {
+				/*
+				println("No more search needed")
+				println(s"Potential improvements: [${ improvable.map { _._2 }.mkString(", ") }]")
+				println(s"Next min cost would have been: ${ nextFinders.valuesIterator.map { _.currentCost }.minOption }")
+				 */
+				results
+			} // Case: Possible to and reasonable to continue => moves on to the next iteration
+			else
+				apply(nextFinders, blockedNodes, destinations, improvable, results)
+		}
+		
+		private class PathFinder(val currentNode: GNode, val currentCost: C, val pathHistory: Set[Vector[Edge]])
+		{
+			def next(blockedNodes: Set[AnyNode]) = {
+				currentNode.leavingEdges.filterNot { e => blockedNodes.contains(e.end) }
+					.map { edge =>
+						new PathFinder(edge.end, sumOf(currentCost, costOf(edge)), pathHistory.map { _ :+ edge })
+					}
+			}
+		}
+	}
+}
 
 /**
  * Graph nodes contain content and are connected to other graph nodes via edges
@@ -13,9 +181,7 @@ import scala.collection.immutable.VectorBuilder
 trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends Node[N]
 {
     // TYPES    --------------------
-    
-    type AnyNode = GraphNode[_, _, _, _]
-    type AnyEdge = GraphEdge[_, _, _]
+	
     type Route = Vector[Edge]
     
     
@@ -145,97 +311,185 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * @return The edges pointing towards the provided node from this node
      */
     def edgesTo(other: AnyNode) = leavingEdges.filter { _.end == other }
-    
-    /**
-     * Finds the shortest (least amount of edges) route from this node to another node
-     * @param node the node traversed to
-     * @return The shortest route from this node to the provided node, if any exist
-     */
-    def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node) { _ => 1 }
 	
 	/**
-	 * Finds the shortest (least amount of edges) routes from this node to another node
-	 * @param node the node traversed to
-	 * @return The shortest routes from this node to the provided node, if any exist
-	 */
-	def shortestRoutesTo(node: AnyNode) = cheapestRoutesTo(node) { _ => 1 }
-	
-    /**
-     * Finds the 'cheapest' route from this node to the provided node, if there is one. A special
-     * function is used for calculating the route cost.
-     * @param node The node traversed to
-     * @param costOf The function used for calculating the cost of a single edge (based on the edge
-     * contents, for example)
-     * @return The cheapest route found, if any exist
-     */
-    // TODO: optimize
-    def cheapestRouteTo(node: AnyNode)(costOf: Edge => Double): Option[Route] =
-	    cheapestRoutesTo(node)(costOf).headOption
+	  * Finds the cheapest routes to multiple destination searches at once
+	  * @param destinations Destinations to find, where each is a node search function
+	  * @param startCost The initial (zero) route cost
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param sumOf A function for combining two costs together
+	  * @param ord Implicit ordering for comparing costs
+	  * @tparam C Type of calculated cost
+	  * @return A map containing an entry for each <b>found</b> destination. Values of the map contain 2 parts:
+	  *         1) All cheapest routes o that node and 2) the cost of those routes
+	  */
+	def findCheapestRoutesTo[C](destinations: Set[GNode => Boolean], startCost: C)
+	                           (costOf: Edge => C)
+	                           (sumOf: (C, C) => C)
+	                           (implicit ord: Ordering[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+		new PathsFinder[N, E, GNode, Edge, C](repr, destinations, startCost)(costOf)(sumOf).apply()
+	/**
+	  * Finds the cheapest routes to multiple destination searches at once
+	  * @param destinations Destinations to find, where each is a node search function
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param n Implicit numeric functions for the cost type
+	  * @tparam C Type of calculated cost
+	  * @return A map containing an entry for each <b>found</b> destination. Values of the map contain 2 parts:
+	  *         1) All cheapest routes o that node and 2) the cost of those routes
+	  */
+	def findCheapestRoutesTo[C](destinations: Set[GNode => Boolean])
+	                           (costOf: Edge => C)
+	                           (implicit n: Numeric[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+		findCheapestRoutesTo[C](destinations, n.zero)(costOf)(n.plus)
+	/**
+	  * Finds the cheapest routes to a node found with a find function
+	  * @param startCost The initial (zero) route cost
+	  * @param find A find function that determines the destination node
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param sumOf A function for combining two costs together
+	  * @param ord Implicit ordering for comparing costs
+	  * @tparam C Type of calculated cost
+	  * @return None if no route / destination was found.
+	  *         Otherwise 1) the destination node, 2) cheapest routes to that node and 3) cost of those routes
+	  */
+	def findCheapestRoutes[C](startCost: C)(find: GNode => Boolean)(costOf: Edge => C)(sumOf: (C, C) => C)
+	                           (implicit ord: Ordering[C]): Option[(GNode, Set[Vector[Edge]], C)] =
+		findCheapestRoutesTo[C](Set(find), startCost)(costOf)(sumOf).headOption
+			.map { case (node, (routes, cost)) => (node, routes, cost) }
+	/**
+	  * Finds the cheapest routes to a node found with a find function
+	  * @param find A find function that determines the destination node
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param n Implicit numeric functions for the cost type
+	  * @tparam C Type of calculated cost
+	  * @return None if no route / destination was found.
+	  *         Otherwise 1) the destination node, 2) cheapest routes to that node and 3) cost of those routes
+	  */
+	def findCheapestRoutes[C](find: GNode => Boolean)(costOf: Edge => C)
+	                         (implicit n: Numeric[C]): Option[(GNode, Set[Vector[Edge]], C)] =
+		findCheapestRoutes[C](n.zero)(find)(costOf)(n.plus)
 	
 	/**
-	 * Finds the 'cheapest' routes from this node to the provided node, provided there are any. A special
-	 * function is used for calculating the route cost.
-	 * @param node The node traversed to
-	 * @param costOf The function used for calculating the cost of a single edge (based on the edge
-	 * contents, for example)
-	 * @return The cheapest routes found, if any exist
-	 */
-	def cheapestRoutesTo(node: AnyNode)(costOf: Edge => Double): Set[Route] =
-		cheapestRoutesTo(node, 0.0, None, Set(this))(costOf) match {
-			case Some((routes, _)) => routes
-			case None => Set()
+	  * Finds the cheapest routes to multiple nodes at once
+	  * @param destinations Nodes to find
+	  * @param startCost The initial (zero) route cost
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param sumOf A function for combining two costs together
+	  * @param ord Implicit ordering for comparing costs
+	  * @tparam C Type of calculated cost
+	  * @return A map containing an entry for each <b>found</b> destination. Values of the map contain 2 parts:
+	  *         1) All cheapest routes o that node and 2) the cost of those routes
+	  */
+	def cheapestRoutesToMany[C](destinations: Set[AnyNode], startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
+	                       (implicit ord: Ordering[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+		findCheapestRoutesTo[C](destinations.map { d => _ == d }, startCost)(costOf)(sumOf)
+	/**
+	  * Finds the cheapest routes to multiple nodes at once
+	  * @param destinations Nodes to find
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param n Implicit numeric functions for the cost type
+	  * @tparam C Type of calculated cost
+	  * @return A map containing an entry for each <b>found</b> destination. Values of the map contain 2 parts:
+	  *         1) All cheapest routes o that node and 2) the cost of those routes
+	  */
+	def cheapestRoutesToMany[C](destinations: Set[AnyNode])(costOf: Edge => C)
+	                       (implicit n: Numeric[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+		cheapestRoutesToMany[C](destinations, n.zero)(costOf)(n.plus)
+	/**
+	  * Finds the cheapest routes to another node
+	  * @param destination The node to reach
+	  * @param startCost The initial (zero) route cost
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param sumOf A function for combining two costs together
+	  * @param ord Implicit ordering for comparing costs
+	  * @tparam C Type of calculated cost
+	  * @return 1) Routes found to to the targeted node (may be empty),
+	  *         2) Cost of those routes (zero if no routes were found)
+	  */
+	def cheapestRoutesTo[C](destination: AnyNode, startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
+	                       (implicit ord: Ordering[C]): (Set[Vector[Edge]], C) =
+		cheapestRoutesToMany[C](Set(destination), startCost)(costOf)(sumOf).headOption match {
+			case Some((_, result)) => result
+			case None => Set[Vector[Edge]]() -> startCost
 		}
+	/**
+	  * Finds the cheapest routes to another node
+	  * @param destination The node to reach
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param n Implicit numeric functions for the cost type
+	  * @tparam C Type of calculated cost
+	  * @return 1) Routes found to to the targeted node (may be empty),
+	  *         2) Cost of those routes (zero if no routes were found)
+	  */
+	def cheapestRoutesTo[C](destination: AnyNode)(costOf: Edge => C)(implicit n: Numeric[C]): (Set[Vector[Edge]], C) =
+		cheapestRoutesTo[C](destination, n.zero)(costOf)(n.plus)
 	
-	// visitedNodes is expected to contain "this" node already
-	private def cheapestRoutesTo(node: AnyNode, currentCost: Double, currentMinCost: Option[Double],
-	                              visitedNodes: Set[AnyNode])
-	                             (costOf: Edge => Double): Option[(Set[Route], Double)] =
-	{
-		// Checks whether already arrived
-		if (this == node)
-			Some(Set[Route](Vector()) -> currentCost)
-		else {
-			// Checks available route options
-			val availableEdges = leavingEdges.filterNot { e => visitedNodes.contains(e.end) }
-			// Doesn't even consider moving to edges which are directly accessible from this node
-			// (because why make the round-trip?)
-			val newVisitedNodes = visitedNodes ++ availableEdges.map { _.end }
-			
-			// Orders the available edges in order to maximize the probability of finding a good route
-			// Traverses each route fully before moving to the next one
-			availableEdges.toVector.map { e => e -> costOf(e) }
-				.sortedWith(Ordering.by { _._2 }, Ordering.by { _._1.end.leavingEdges.size })
-				.foldLeft[Option[(Set[Route], Double)]](currentMinCost.map { Set[Route]() -> _ }) { case (bestRouteData, (edge, edgeCost)) =>
-				val minCost = bestRouteData.map { _._2 }
-				// Calculates next step cost
-				val stepCost = currentCost + edgeCost
-				// Will not continue to search the route if the minimum cost is exceeded
-				if (minCost.exists { _ < stepCost })
-					bestRouteData
-				else {
-					// Finds the routes from the linked node
-					val routeResult = edge.end.cheapestRoutesTo(node, stepCost, minCost, newVisitedNodes)(costOf)
-					// Remembers the route check results
-					// cachedPaths.getOrElseUpdate(edge.end, mutable.HashMap()) += ((node: AnyRef) -> routeResult)
-					// Checks whether the new route(s) are better than the previously found best routes
-					routeResult match {
-						// Case: Some routes were found that are better or as good as the ones found before
-						case Some((newRoutes, newCost)) =>
-							val fullNewRoutes = newRoutes.map { edge +: _ }
-							bestRouteData.filter { _._2 <= newCost } match {
-								// Case: The previously found routes are as good as the new ones => Combines
-								case Some((oldBestRoutes, bestCost)) =>
-									Some((oldBestRoutes ++ fullNewRoutes) -> bestCost)
-								// Case: The new routes are better => Overwrites
-								case None => Some(fullNewRoutes -> newCost)
-							}
-						// Case: No routes were found
-						case None => bestRouteData
-					}
-				}
-			}.filter { _._1.nonEmpty }
-		}
-	}
+	/**
+	  * Finds one cheapest route to a node found with a search function
+	  * @param find A search function for the destination node
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param n Implicit numeric functions for the cost type
+	  * @tparam C Type of cost used
+	  * @return None if no destination or route was found. Otherwise 1) The destination node and 2) cheapest route to that node
+	  */
+	def findCheapestRoute[C](find: GNode => Boolean)(costOf: Edge => C)(implicit n: Numeric[C]) =
+		findCheapestRoutesTo[C](Set(find))(costOf).headOption.map { case (node, (routes, _)) => node -> routes.head }
+	
+	/**
+	  * Finds one cheapest route to a node
+	  * @param destination The destination node
+	  * @param costOf A function for calculating the cost of a single route step (edge)
+	  * @param n Implicit numeric functions for the cost type
+	  * @tparam C Type of cost used
+	  * @return None if no route was found. Otherwise the cheapest route found.
+	  */
+	def cheapestRouteTo[C](destination: AnyNode)(costOf: Edge => C)(implicit n: Numeric[C]) =
+		cheapestRoutesToMany(Set(destination))(costOf).headOption.map { _._2._1.head }
+	
+	/**
+	  * Finds the shortest routes to multiple destination searches at once
+	  * @param destinations Destinations to find, where each is a node search function
+	  * @return A map containing an entry for each <b>found</b> destination. Values of the map contain all shortest
+	  *         routes to that node
+	  */
+	def findShortestRoutesTo(destinations: Set[GNode => Boolean]) =
+		findCheapestRoutesTo[Int](destinations) { _ => 1 }.view.mapValues { _._1 }.toMap
+	/**
+	  * Finds the shortest routes to a destination found with a search function
+	  * @param find A search function for the destination node
+	  * @return None if no destination / route was found.
+	  *         Otherwise the node that was found and the shortest routes to that node.
+	  */
+	def findShortestRoutes(find: GNode => Boolean) =
+		findCheapestRoutes[Int](find) { _ => 1 }.map { case (node, routes, _) => node -> routes }
+	/**
+	  * Finds one shortest route to a destination found with a search function
+	  * @param find A search function for the destination node
+	  * @return None if no destination / route was found.
+	  *         Otherwise the node that was found and the shortest route to that node.
+	  */
+	def findShortestRoute(find: GNode => Boolean) = findCheapestRoute[Int](find) { _ => 1 }
+	
+	/**
+	  * Finds the shortest routes to multiple destinations at once
+	  * @param destinations Destinations nodes
+	  * @return A map containing an entry for each <b>found</b> destination. Values of the map contain all shortest
+	  *         routes to that node
+	  */
+	def shortestRoutesToMany(destinations: Set[AnyNode]) =
+		findShortestRoutesTo(destinations.map { d => _ == d })
+	/**
+	  * Finds the shortest routes to another node
+	  * @param destination the destination node
+	  * @return Shortest routes to that node. Empty if no routes were found.
+	  */
+	def shortestRoutesTo(destination: AnyNode) = cheapestRoutesTo[Int](destination) { _ => 1 }._1
+	/**
+	  * Finds one shortest route to another node
+	  * @param destination the destination node
+	  * @return Shortest route to that node. None if no routes were found.
+	  */
+	def shortestRouteTo(destination: AnyNode) = cheapestRouteTo[Int](destination) { _ => 1 }
     
     /**
      * Finds all routes (edge combinations) that connect this node to the provided node. Routes

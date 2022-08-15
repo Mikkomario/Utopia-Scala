@@ -4,6 +4,7 @@ import utopia.flow.datastructure.template
 
 import scala.collection.immutable.HashSet
 import utopia.flow.datastructure.immutable.GraphEdge
+import utopia.flow.datastructure.template.GraphNode.AnyNode
 
 /**
  * Graph nodes contain content and are connected to other graph nodes via edges
