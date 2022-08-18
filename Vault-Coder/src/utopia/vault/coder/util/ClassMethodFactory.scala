@@ -45,7 +45,8 @@ object ClassMethodFactory
 		else
 			new MethodDeclaration(Public, methodName, Vector(), param,
 				tryApplyCode(targetClass, validatedModelCode)(propNamesInModel)(wrapAssignments), None,
-				"", "", Vector(), isOverridden = true, isLowMergePriority = false)
+				"", "", Vector(), isOverridden = true, isImplicit = false,
+				isLowMergePriority = false)
 	}
 	
 	/**

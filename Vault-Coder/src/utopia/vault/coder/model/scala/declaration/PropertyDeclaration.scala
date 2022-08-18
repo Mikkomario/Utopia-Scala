@@ -38,7 +38,8 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
                                visibility: Visibility = Public, explicitOutputType: Option[ScalaType] = None,
                                implicitParams: Vector[Parameter] = Vector(), description: String = "",
                                headerComments: Vector[String] = Vector(),
-                               isOverridden: Boolean = false, isLowMergePriority: Boolean = false)
+                               isOverridden: Boolean = false, isImplicit: Boolean = false,
+                               isLowMergePriority: Boolean = false)
 	extends FunctionDeclaration[PropertyDeclaration] with Mergeable[PropertyDeclaration, PropertyDeclaration]
 {
 	// COMPUTED -------------------------------------------
@@ -70,8 +71,9 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	                                parameters: Option[Parameters], bodyCode: Code,
 	                                explicitOutputType: Option[ScalaType], description: String,
 	                                returnDescription: String, headerComments: Vector[String],
-	                                isOverridden: Boolean) =
+	                                isOverridden: Boolean, isImplicit: Boolean) =
 		PropertyDeclaration(declarationType, name, bodyCode, visibility, explicitOutputType,
 			parameters.map { _.implicits }.getOrElse(implicitParams),
-			description.notEmpty.getOrElse(returnDescription), headerComments, isOverridden, isLowMergePriority)
+			description.notEmpty.getOrElse(returnDescription), headerComments, isOverridden, isImplicit,
+			isLowMergePriority)
 }

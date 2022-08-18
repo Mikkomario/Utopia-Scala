@@ -36,6 +36,10 @@ trait FunctionDeclaration[+Repr]
 	  */
 	def isOverridden: Boolean
 	/**
+	  * @return Whether this declares an implicit function or property
+	  */
+	def isImplicit: Boolean
+	/**
 	  * @return Whether this function implementation should be considered low priority when merging
 	  */
 	def isLowMergePriority: Boolean
@@ -69,11 +73,13 @@ trait FunctionDeclaration[+Repr]
 	  * @param returnDescription New return description
 	  * @param headerComments New header comments
 	  * @param isOverridden Whether new version should be overridden
+	  * @param isImplicit Whether this version should be implicit
 	  * @return Copy of this declaration
 	  */
 	protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType], parameters: Option[Parameters],
 	                       bodyCode: Code, explicitOutputType: Option[ScalaType], description: String,
-	                       returnDescription: String, headerComments: Vector[String], isOverridden: Boolean): Repr
+	                       returnDescription: String, headerComments: Vector[String], isOverridden: Boolean,
+	                       isImplicit: Boolean): Repr
 	
 	
 	// COMPUTED ------------------------------
@@ -108,6 +114,8 @@ trait FunctionDeclaration[+Repr]
 		// Then possible header comments
 		headerComments.foreach { c => builder += s"// $c" }
 		// Then the header and body
+		if (isImplicit)
+			builder.appendPartial("implicit ")
 		if (isOverridden)
 			builder.appendPartial("override ")
 		builder += basePart
@@ -172,6 +180,6 @@ trait FunctionDeclaration[+Repr]
 			priority.description.notEmpty.getOrElse(lowPriority.description),
 			priority.returnDescription.notEmpty.getOrElse(lowPriority.returnDescription),
 			other.headerComments.filterNot(headerComments.contains) ++ headerComments,
-			isOverridden || other.isOverridden) -> conflictsBuilder.result()
+			isOverridden || other.isOverridden, priority.isImplicit) -> conflictsBuilder.result()
 	}
 }

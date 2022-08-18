@@ -19,6 +19,9 @@ object MethodDeclaration
 	  * @param returnDescription Description of the return value of this method (default = empty)
 	  * @param headerComments Lines of comments to insert before the declaration (default = empty)
 	  * @param isOverridden Whether this method overrides a base member (default = false)
+	  * @param isImplicit Whether this is an implicit function (default = false)
+	  * @param isLowMergePriority Whether this method should be overwritten with an existing code when merging
+	  *                           (default = true)
 	  * @param params Method parameters (0-n)
 	  * @param firstLine First line of code
 	  * @param moreLines More lines of code (0-n)
@@ -27,12 +30,13 @@ object MethodDeclaration
 	def apply(name: String, codeReferences: Set[Reference] = Set(), visibility: Visibility = Public,
 	          genericTypes: Seq[GenericType] = Vector(), explicitOutputType: Option[ScalaType] = None,
 	          description: String = "", returnDescription: String = "", headerComments: Vector[String] = Vector(),
-	          isOverridden: Boolean = false, isLowMergePriority: Boolean = false)
+	          isOverridden: Boolean = false, isImplicit: Boolean = false, isLowMergePriority: Boolean = false)
 	         (params: Parameters = Parameters.empty)
 	         (firstLine: String, moreLines: String*): MethodDeclaration =
 		apply(visibility, name, genericTypes, params,
 			Code.from(firstLine +: moreLines.toVector).referringTo(codeReferences),
-			explicitOutputType, description, returnDescription, headerComments, isOverridden, isLowMergePriority)
+			explicitOutputType, description, returnDescription, headerComments, isOverridden, isImplicit,
+			isLowMergePriority)
 }
 
 /**
@@ -53,7 +57,8 @@ object MethodDeclaration
 case class MethodDeclaration(visibility: Visibility, name: String, genericTypes: Seq[GenericType],
                              parameters: Parameters, bodyCode: Code, explicitOutputType: Option[ScalaType],
                              description: String, returnDescription: String,
-                             headerComments: Vector[String], isOverridden: Boolean, isLowMergePriority: Boolean)
+                             headerComments: Vector[String], isOverridden: Boolean, isImplicit: Boolean,
+                             isLowMergePriority: Boolean)
 	extends FunctionDeclaration[MethodDeclaration] with Mergeable[MethodDeclaration, MethodDeclaration]
 {
 	override def keyword = "def"
@@ -64,7 +69,8 @@ case class MethodDeclaration(visibility: Visibility, name: String, genericTypes:
 	                                parameters: Option[Parameters], bodyCode: Code,
 	                                explicitOutputType: Option[ScalaType], description: String,
 	                                returnDescription: String, headerComments: Vector[String],
-	                                isOverridden: Boolean) =
+	                                isOverridden: Boolean, isImplicit: Boolean) =
 		MethodDeclaration(visibility, name, genericTypes, parameters.getOrElse(this.parameters), bodyCode,
-			explicitOutputType, description, returnDescription, headerComments, isOverridden, isLowMergePriority)
+			explicitOutputType, description, returnDescription, headerComments, isOverridden, isImplicit,
+			isLowMergePriority)
 }

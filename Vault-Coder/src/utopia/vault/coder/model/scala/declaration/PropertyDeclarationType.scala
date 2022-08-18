@@ -22,6 +22,7 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  * @param implicitParams Implicit parameters accepted by this (computed) property
 	  * @param description Documentation for this property
 	  * @param isOverridden Whether this property overrides a base member (default = false)
+	  * @param isImplicit Whether this is an implicit property (default = false)
 	  * @param isLowMergePriority Whether this declaration should be considered the lower priority
 	  *                           implementation when merging with another version
 	  * @param line1 First line of code
@@ -31,10 +32,10 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	def apply(name: String, references: Set[Reference] = Set(), visibility: Visibility = Public,
 	          explicitOutputType: Option[ScalaType] = None,
 	          implicitParams: Vector[Parameter] = Vector(), description: String = "", isOverridden: Boolean = false,
-	          isLowMergePriority: Boolean = false)
+	          isImplicit: Boolean = false, isLowMergePriority: Boolean = false)
 	         (line1: String, moreLines: String*) =
 		PropertyDeclaration(this, name, Code.from(line1 +: moreLines.toVector).referringTo(references), visibility,
-			explicitOutputType, implicitParams, description, Vector(), isOverridden, isLowMergePriority)
+			explicitOutputType, implicitParams, description, Vector(), isOverridden, isImplicit, isLowMergePriority)
 }
 
 object PropertyDeclarationType

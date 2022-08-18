@@ -19,6 +19,9 @@ object CopyTest extends App
 	// Metropolis\src\utopia\metropolis\model\stored\organization\Organization.scala
 	// Citadel\src\utopia\citadel\database\access\many\organization\ManyMemberRoleLinksAccess.scala
 	// Citadel\src\utopia\citadel\database\CitadelTables.scala
+	// Paradigm\src\utopia\paradigm\shape\template\VectorLike.scala
+	
+	// Vault-Coder/data/test/VectorLike.scala
 	
 	DataType.setup()
 	implicit val codec: Codec = Codec.UTF8

@@ -20,6 +20,8 @@
 - The root access points of multiple deprecatable items now include a `.includingHistory` -property
 ### Bugfixes
 - Extending column length rules are now written as "to X" instead of "up to X"
+- Fixed an interpretation bug when parsing generic type parameters
+- Implicit values and functions are now preserved and written as implicit when merging
 ### Other
 - A specified property default value may now automatically be applied to sql as well, under certain conditions
 - Very long strings are now written as TEXT, MEDIUMTEXT or LONGTEXT in the database
