@@ -89,6 +89,7 @@
 - **Volatile** classes now fire change events only **after** unlocking themselves. 
   The previous implementation led to deadlocks in reactive systems (such as **Reflection**)
 - **Version** finding didn't work for version numbers that started with a number larger than 9. Fixed.
+- **Path**`.parent` (**FileExtensions**) now works for a relative empty path, also
 ### Other Changes
 - Optimized json conversion (see breaking changes)
 - `.divideBy(...)` in **IterableOnce** through **CollectionExtensions** now returns collections based on the implicit 

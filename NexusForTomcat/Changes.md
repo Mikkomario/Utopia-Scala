@@ -6,6 +6,8 @@ New Build / Supports changes in **Flow** v1.16
 - Added **LogicWrappingServlet** to simplify **HttpServlet** creation
   - Added **ApiLogic** class to further simplify this, providing a standard servlet implementation logic that utilizes 
     a **RequestHandler** 
+    - The new **ApiLogic** instance supports request and response interception
+    - Internal server errors are automatically logged and a date header is added where not present
 
 ## v1.2.3 - 27.01.2022
 Scala version update

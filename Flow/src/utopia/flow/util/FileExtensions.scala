@@ -100,7 +100,7 @@ object FileExtensions
 		/**
 		 * @return A parent path for this path. Return this path if already a root path
 		 */
-		def parent = parentOption.getOrElse(p)
+		def parent = parentOption.orElse { p.toAbsolutePath.parentOption }.getOrElse(p)
 		/**
 		  * @return An iterator that returns all parents of this path, from closest to furthest
 		  */
