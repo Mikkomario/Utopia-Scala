@@ -1,6 +1,12 @@
 # Utopia Flow - List of Changes
 
-## v1.16 (in development)
+## v1.16 - 18.08.2022
+This update adds a number of new collection functions, and even new collection types. 
+Xml handling is also updated to support namespaces. Various bugfixes, optimizations and quality-of-life updates 
+are also included. This update also adds a new logging system.
+
+Due to the changes in Xml and trees, and because of the new logging system, this update requires a number of changes 
+from the implementing clients, especially those utilizing the xml-related features.
 ### Breaking Changes
 - **String** to **Value** conversion now returns an empty value for empty strings
 - The following classes now use **Logger**:
@@ -22,6 +28,7 @@
 - **TreeLike** now requires a new function `.containsDirect(...)` in order to support custom equality testing
 - Moved **Equatable** to `utopia.flow.operator`
 - **Iterable**`.bestMatch(...)` may cause a build error, due to new function variants
+- Moved **Equatable** to the `operator` -package
 - **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
   - Please notice that all existing implementations have been modified to include this function, so this should be 
     a problem only in custom implementations, and even then a minor one
@@ -51,6 +58,8 @@
   - Added `.mapValue(...)`
 - **Duration** (**TimeExtensions**)
   - Added `.isInfinite`
+- **GraphNode**
+  - Added a number of new cheapest route -functions
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`

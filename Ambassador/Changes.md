@@ -1,5 +1,8 @@
 # Utopia Ambassador - List of Changes
 
+## v2.1.1 - 18.08.2022
+New build / supports changes in **Flow** v1.16
+
 ## v2.1 - 06.06.2022
 This update reflects some changes in the **Exodus** v4.0 update, meaning that request authorization is not based on 
 scopes. See the **AmbassadorScope** object.

@@ -1,6 +1,9 @@
 # Utopia Vault Coder
 
-## v1.6 (in development)
+## v1.6 - 18.08.2022
+This update adds a number of new features, such as custom data type support and program settings saving. 
+This version also utilizes **Flow** v1.16 **String** value change, modifying how strings are handled in database 
+interactions.
 ### Breaking Changes
 - String / Text data type is no longer wrapped in **Option** and defaults to an empty string
   - This update requires using of **Flow** v1.16, which alter string-to-value conversion

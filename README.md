@@ -11,7 +11,7 @@ flexible language and most suited for this kind of a generic framework and **cor
 
 *Utopia* relies heavily on strong typing and generics and benefits greatly from implicits. 
 Based on my current experience, only Java, Scala and possibly Kotlin provide a suitable 
-foundation (although I haven't used Kotlin yet). *Utopia* started out as a Java project 
+foundation (although I haven't used Kotlin yet). *Utopia* started out as a Java project, 
 but I've found Scala to work better in every area.
 
 This project version is built using Scala v2.13.7
@@ -170,6 +170,17 @@ more details.
 (in this case Scala) code. Most of the heavy lifting is done by the Vorburger's library, but **Trove** adds its own flavor: 
 Database structure setup, version control and updates, as well as an easy one-line database setup and shutdown functions.
 
+### Utopia Paradigm
+*Shapes and mathematics at your disposal*
+
+**Utopia Paradigm** introduces a number of models that are often used in visual software, such as points, bounds, 
+polygons, matrices, affine transformations, colors and so on. While these models are most valuable in front-end UI 
+applications, they may also be utilized in backend calculations.
+
+The challenge with these kinds of models, previously, was that they were mostly available through AWT or some other 
+Java library, built around mutability and all sorts of nasty stuff like that. **Paradigm** models, however, are 
+all immutable and suitable for a Scala approach to front-end programming.
+
 ### Utopia Inception & Utopia Genesis
 *A foundation for anything real-time and/or visual*
 
@@ -179,12 +190,11 @@ they're by no means limited to such purposes and are most often used as a founda
 **Inception** allows you to easily distribute various types of events among a multitude of listeners that may come and
 go during a program's runtime, a feature that is very often needed in interactive client side programs.
 
-**Genesis** provides you with a powerful set of shapes and tools for doing everything visual, especially in 2D.
-You have images, animations, curves, 2D shapes, 3D vectors, affine transformations, mouse events, keyboard events,
-real-time action events - everything you need when doing anything visual. Without **Genesis**, you would normally
+**Genesis** provides you with a powerful set of tools for building interactive visual software.
+You have images, mouse events, keyboard events, real-time action events. Without **Genesis**, you would normally
 have to rely on awt-tools, which are less flexible, less scalable, less functional and less easy to use.
 
-The only problem with **Genesis** and **Inception** is that the standard Swing framework isn't build upon them,
+The problem with **Genesis** and **Inception** is that the standard Swing framework isn't build upon them,
 but that's why we have **Utopia Reflection** and **Utopia Reach**.
 
 ### Utopia Reflection
@@ -208,7 +218,7 @@ level interfaces, which let's you create your own components with relative ease,
 
 Turns out even **Reflection** was subject to limitations caused by Swing-dependency, preventing full scalability. Therefore we have **Utopia Reach**,
 a framework that uses only a single Swing component. **Reach** has the same core principles as **Reflection**, but takes things even further
-by having it's own, non Swing-dependent component, focus, paint and other systems. **Reach** even supports multithreading, which was *apparently*
+by having its own, non Swing-dependent component-, focus-, paint- and other systems. **Reach** even supports multithreading, which was *apparently*
 supposed to be impossible.
 
 **Reach** obviously doesn't have the same look and feel as Swing does. The existing component designs are somewhat inspired by Material Design.

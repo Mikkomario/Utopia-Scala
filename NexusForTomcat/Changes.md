@@ -1,7 +1,7 @@
 # Utopia Nexus for Tomcat - List of changes
 
-## v1.2.4 (in development)
-New Build / Supports changes in **Flow** v1.16
+## v1.2.4 - 18.08.2022
+This update adds a pre-built **HttpServlet** base, making new servlet creation much easier.
 ### New Features
 - Added **LogicWrappingServlet** to simplify **HttpServlet** creation
   - Added **ApiLogic** class to further simplify this, providing a standard servlet implementation logic that utilizes 

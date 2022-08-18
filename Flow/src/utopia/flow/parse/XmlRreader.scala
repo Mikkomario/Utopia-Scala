@@ -227,11 +227,9 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
      * @return how much the 'depth' of this reader changed in the process (1 for child, 
      * 0 for sibling, -1 for parent level and so on)
      */
-    def toNextElementWithName(nameFilter: String => Boolean) = 
-    {
+    def toNextElementWithName(nameFilter: String => Boolean) = {
         var depthChange = toNextElement()
-        while (currentElementName.exists(!nameFilter(_)))
-        {
+        while (currentElementName.exists(!nameFilter(_))) {
             depthChange += toNextElement()
         }
         depthChange
@@ -244,8 +242,8 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
      * 0 for sibling, -1 for parent level and so on)
      */
     //noinspection ConvertibleToMethodValue
-    def toNextElementWithName(searchedName: String): Int = toNextElementWithName {
-            searchedName.equalsIgnoreCase(_) }
+    def toNextElementWithName(searchedName: String): Int =
+        toNextElementWithName { searchedName.equalsIgnoreCase(_) }
     
     /**
      * Moves this reader to the next element with a name accepted by the provided filter. Limits the 

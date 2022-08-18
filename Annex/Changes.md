@@ -1,7 +1,7 @@
 # Utopia Annex - List of Changes
 
-## v1.2 (in development)
-New Build / Supports changes in **Flow** v1.16
+## v1.2 - 18.08.2022
+This update adds logging support to automated container updates, reflecting **Flow** v1.16 changes.
 ### Breaking Changes
 - **ContainerUpdateLoop**`.merge(...)` is now required to return a tuple instead of just one value. 
   The new, second value indicates the custom wait time until next request.

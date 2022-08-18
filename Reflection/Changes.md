@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 
-## v2.0-alpha-8 (in development)
+## v2.0-alpha-8 - 18.08.2022
+This update reflects changes in **Flow** v1.16 and **Genesis** v3.0. 
+An important bugfix is also included, which previously caused deadlocks.
 ### Breaking Changes
 - The following classes require an implicit **Logger** parameter
   - **LoadingWindow**

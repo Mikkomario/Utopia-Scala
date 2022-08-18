@@ -1,5 +1,8 @@
 # Utopia Disciple - List of changes
 
+## v2.1.1 - 18.08.2022
+New build - Supports changes in **Flow** v1.16
+
 ## v2.1 - 06.06.2022
 All client device -related features were deprecated (to be removed) in this release, 
 making this a relatively major update. 

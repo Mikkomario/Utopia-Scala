@@ -1,6 +1,7 @@
 # Utopia Nexus - List of Changes
 
-## v1.8 (in development)
+## v1.8 - 18.08.2022
+This update reflects changes in **Flow** v1.16, namely utilizing the new logging system.
 ### Breaking Changes
 - **RequestHandler** now requires an implicit logger parameter within its constructor
 ### Other Changes

@@ -1,6 +1,6 @@
 # Utopia BunnyMunch - List of Changes
 
-## v1.0.2 (in development)
+## v1.0.2 - 18.08.2022
 Rebuild required after **Flow** v1.16
 
 ## v1.0.1 - 27.01.2022

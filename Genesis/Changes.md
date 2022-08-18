@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 
-## v3.0 (in development)
+## v3.0 - 18.08.2022
+A number of shape classes were moved to the new **Paradigm** module in this update. Applying this update will require 
+quite a lot of refactoring, unfortunately.
 ### Breaking Changes
 - Moved a number of classes to the new **Paradigm** module
 - Removed the **Extensions** object
