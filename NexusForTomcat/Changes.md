@@ -3,7 +3,9 @@
 ## v1.2.4 (in development)
 New Build / Supports changes in **Flow** v1.16
 ### New Features
-- Added **Api** class which wraps a **RequestHandler** instance as a **HttpServlet**
+- Added **LogicWrappingServlet** to simplify **HttpServlet** creation
+  - Added **ApiLogic** class to further simplify this, providing a standard servlet implementation logic that utilizes 
+    a **RequestHandler** 
 
 ## v1.2.3 - 27.01.2022
 Scala version update
