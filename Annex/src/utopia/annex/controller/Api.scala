@@ -6,7 +6,7 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.Response
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}

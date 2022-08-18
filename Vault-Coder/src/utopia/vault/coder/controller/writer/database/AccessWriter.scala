@@ -8,7 +8,7 @@ import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.datatype.TypeVariance.Covariance
 import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
+import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, InstanceDeclaration, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
 import utopia.vault.coder.model.scala.{DeclarationDate, Package, Parameter, Parameters}
 
 import scala.io.Codec
@@ -271,7 +271,13 @@ object AccessWriter
 	                                (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
 		// Common part for all written trait names
-		val traitNameBase = (manyPrefix +: classToWrite.name) + accessTraitSuffix
+		val traitNameBase = {
+			// The "Many" -prefix is ignored if the class name already starts with "Many"
+			if (classToWrite.name.pluralClassName.toLowerCase.startsWith("many"))
+				classToWrite.name + accessTraitSuffix
+			else
+				(manyPrefix +: classToWrite.name) + accessTraitSuffix
+		}
 		
 		// Properties and methods that will be written to the highest trait (which may vary)
 		val idsPullCode = classToWrite.idType.fromValuesCode("pullColumn(index)")
@@ -399,6 +405,7 @@ object AccessWriter
 			else
 				s"Db$pluralClassName"
 		}
+		
 		// There is also a nested object for id-based multi-access, which may have description support
 		val subsetClassName = s"Db${ pluralClassName }Subset"
 		val subSetClass = descriptionReferences match
@@ -425,10 +432,29 @@ object AccessWriter
 			Parameter("ids", ScalaType.set(ScalaType.int),
 				description = s"Ids of the targeted ${ classToWrite.name.pluralText }"))(
 			s"new $subsetClassName(ids)")
+		
+		// For deprecating items, there is also a sub-object for accessing all items,
+		// including those that were deprecated
+		val historyAccess = {
+			if (classToWrite.isDeprecatable)
+				Some(ObjectDeclaration(
+					s"Db${pluralClassName}IncludingHistory",
+					Vector(manyAccessTraitRef, Reference.unconditionalView)
+				))
+			else
+				None
+		}
+		val historyAccessProperty = historyAccess.map { access =>
+			ComputedProperty("includingHistory",
+				description = s"A copy of this access point that includes historical (i.e. deprecated) ${
+					classToWrite.name.pluralText}")(access.name)
+		}
+		
 		File(manyAccessPackage,
 			ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, rootViewExtension),
+				properties = historyAccessProperty.toVector,
 				methods = Set(subSetClassAccessMethod),
-				nested = Set(subSetClass),
+				nested = Set[InstanceDeclaration](subSetClass) ++ historyAccess,
 				description = s"The root access point when targeting multiple ${
 					classToWrite.name.pluralText } at a time",
 				author = classToWrite.author, since = DeclarationDate.versionedToday

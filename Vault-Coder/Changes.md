@@ -17,6 +17,7 @@
   the program is used
 - Added update time data type (i.e. updated)
 - The application moves the last build results to a "last-build" -directory before exporting new files
+- The root access points of multiple deprecatable items now include a `.includingHistory` -property
 ### Bugfixes
 - Extending column length rules are now written as "to X" instead of "up to X"
 ### Other
