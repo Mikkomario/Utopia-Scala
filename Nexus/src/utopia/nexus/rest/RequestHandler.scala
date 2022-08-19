@@ -3,12 +3,12 @@ package utopia.nexus.rest
 import utopia.access.http.Status._
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.StringExtensions._
-import utopia.nexus.http.{Path, Request, Response}
-import Path._
 import utopia.flow.util.logging.Logger
+import utopia.nexus.http.Path._
+import utopia.nexus.http.{Path, Request, Response}
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow, Ready, Redirected}
 import utopia.nexus.result.Result
 

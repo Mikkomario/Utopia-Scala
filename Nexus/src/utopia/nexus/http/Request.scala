@@ -38,7 +38,13 @@ class Request(val method: Method, val targetUrl: String, val path: Option[Path] 
     
     // COMPUTED --------------------------------
     
-    // def jsonBody = body.headOption.map { b => Source.fromInputStream(b.) }
+    /**
+      * @return A string representation of this request's path
+      */
+    def pathString = path match {
+        case Some(p) => p.toString
+        case None => ""
+    }
     
     
     // IMPLEMENTED  ----------------------------

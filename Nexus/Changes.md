@@ -1,5 +1,10 @@
 # Utopia Nexus - List of Changes
 
+## v1.8.1 (in development)
+### New Methods
+- **Request**
+  - Added `.pathString`
+
 ## v1.8 - 18.08.2022
 This update reflects changes in **Flow** v1.16, namely utilizing the new logging system.
 ### Breaking Changes

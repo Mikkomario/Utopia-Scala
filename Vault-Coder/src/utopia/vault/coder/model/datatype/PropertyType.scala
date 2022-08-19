@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.datatype
 
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Enum, Name}

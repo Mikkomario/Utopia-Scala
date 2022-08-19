@@ -4,8 +4,8 @@ import utopia.flow.datastructure.template.{NoSuchAttributeException, Property}
 import utopia.flow.datastructure.template
 import utopia.flow.generic.{DataType, ModelConvertible, ModelType, StringType, VectorType}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
 

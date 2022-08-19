@@ -19,6 +19,7 @@ import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._

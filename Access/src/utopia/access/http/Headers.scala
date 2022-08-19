@@ -2,13 +2,14 @@ package utopia.access.http
 
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.datastructure.immutable.{Model, Pair}
-import utopia.flow.util.StringExtensions._
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.template
+import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.Now
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets

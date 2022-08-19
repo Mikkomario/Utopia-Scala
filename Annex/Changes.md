@@ -1,5 +1,16 @@
 # Utopia Annex - List of Changes
 
+## v1.3 (in development)
+### Breaking Changes
+- **Response** (including **Success** and **Failure**) now contains headers
+- **ContainerUpdateLoop** now requires  the `.requestTimeContainer` as a **FileContainer** of **Instant** **Options**
+  - See new **ValueConvertibleOptionFileContainer** class in **Flow**
+### Other Changes
+- **ContainerUpdateLoop** now primarily uses a **Date** header from the response as a new request time threshold, and only 
+  secondarily uses local time. This is to account for situations where server clock is in different time than client clock.
+- **Failure** response message parsing now first seeks for model properties "error", "description" or "message" before 
+  including the whole response body as the message
+
 ## v1.2 - 18.08.2022
 This update adds logging support to automated container updates, reflecting **Flow** v1.16 changes.
 ### Breaking Changes

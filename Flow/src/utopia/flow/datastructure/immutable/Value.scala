@@ -89,7 +89,21 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      * @param propertyName The name of the requested property
      * @return The value of the requested property 
      */
-    def apply(propertyName: String): Value = getModel(propertyName)
+    def apply(propertyName: String): Value = model match {
+        case Some(model) => model(propertyName)
+        case None => Value.empty
+    }
+    /**
+      * Finds a value from this value as if this value was a model
+      * @param propName Name of the targeted property
+      * @param alternative Alternative name of the property
+      * @param more More alternative names
+      * @return A value from under this (model) value
+      */
+    def apply(propName: String, alternative: String, more: String*): Value = model match {
+        case Some(model) => model(propName, alternative, more: _*)
+        case None => Value.empty
+    }
     
     /**
      * Finds a value from this value as if this value was a vector
@@ -97,10 +111,14 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      * @return The value from the provided index from a vector within this value or empty value if 
      * this value doesn't contain a vector or index was out of range
      */
-    def apply(index: Int): Value =
-    {
-        val vector = getVector
-        if (index < 0 || index >= vector.length) Value.empty else vector(index)
+    def apply(index: Int): Value = {
+        if (index < 0)
+            Value.empty
+        else
+            vector match {
+                case Some(vector) => if (index >= vector.size) Value.empty else vector(index)
+                case None => Value.empty
+            }
     }
     
     

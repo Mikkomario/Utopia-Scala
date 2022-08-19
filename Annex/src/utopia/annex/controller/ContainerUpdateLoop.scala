@@ -7,8 +7,7 @@ import utopia.annex.model.response.{Response, ResponseBody}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.LoopingProcess
 import utopia.flow.container.FileContainer
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.Logger
@@ -30,7 +29,7 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	/**
 	  * @return Container used for holding the last request time, which is then used as a request content threshold
 	  */
-	protected def requestTimeContainer: FileContainer[Value]
+	protected def requestTimeContainer: FileContainer[Option[Instant]]
 	
 	/**
 	  * @param status Response status (not OK)
@@ -64,22 +63,23 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	
 	override def iteration() =
 	{
-		val newRequestTime = Instant.now()
-		val lastRequestTime = requestTimeContainer.current.instant
+		val newRequestTime = Now.toInstant
+		val lastRequestTime = requestTimeContainer.current
 		
 		// Prepares and performs the request
 		val waitModifier = makeRequest(lastRequestTime).waitForResult() match {
 			case Success(response) =>
 				response match {
-					case Response.Success(status, body) =>
+					case Response.Success(status, body, headers) =>
 						// Updates last update time locally
-						requestTimeContainer.current = Some(newRequestTime)
+						// Reads the update time from the response headers, if available
+						requestTimeContainer.current = Some(headers.date.getOrElse(newRequestTime))
 						// If there was new data, updates container
 						if (status != NotModified && body.nonEmpty)
 							Right(container.pointer.pop { old => merge(old, body).swap })
 						else
 							Left(1)
-					case Response.Failure(status, message) =>
+					case Response.Failure(status, message, _) =>
 						handleFailureResponse(status, message)
 						Left(if (status.isTemporary) 5 else 15)
 				}

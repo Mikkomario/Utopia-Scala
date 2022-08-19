@@ -11,7 +11,7 @@ import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.partial.organization.InvitationResponseData

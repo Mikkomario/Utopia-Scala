@@ -95,7 +95,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 			validator.sendWithoutToken(email, UserCreation, "You already have an account") match {
 				case Success(_) => Result.Success(status = Accepted)
 				case Failure(error) =>
-					ExodusContext.handleError(error, "Failed to inform an user about their existing account")
+					ExodusContext.logger(error, "Failed to inform an user about their existing account")
 					Result.Failure(InternalServerError, error.getMessage)
 			}
 		else {
@@ -105,7 +105,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 			match {
 				case Success(_) => Result.Success(status = Accepted)
 				case Failure(error) =>
-					ExodusContext.handleError(error, "Failed to send email for user creation")
+					ExodusContext.logger(error, "Failed to send email for user creation")
 					Result.Failure(InternalServerError, error.getMessage)
 			}
 		}
@@ -152,7 +152,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 			result match {
 				case Success(_) => Result.Success(status = Accepted)
 				case Failure(error) =>
-					ExodusContext.handleError(error, "Password recovery email sending failed")
+					ExodusContext.logger(error, "Password recovery email sending failed")
 					Result.Failure(InternalServerError, error.getMessage)
 			}
 		}
@@ -190,7 +190,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 				{
 					case Success(_) => Result.Success(status = Accepted)
 					case Failure(error) =>
-						ExodusContext.handleError(error, "Failed to send email for email change")
+						ExodusContext.logger(error, "Failed to send email for email change")
 						Result.Failure(InternalServerError, error.getMessage)
 				}
 			}

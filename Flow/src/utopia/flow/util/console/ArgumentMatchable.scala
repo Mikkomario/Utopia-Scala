@@ -1,5 +1,6 @@
 package utopia.flow.util.console
 
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 
 /**

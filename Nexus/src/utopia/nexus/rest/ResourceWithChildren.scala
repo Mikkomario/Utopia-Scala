@@ -1,6 +1,6 @@
 package utopia.nexus.rest
 
-import utopia.flow.util.StringExtensions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
 

@@ -2,6 +2,7 @@ package utopia.vault.coder.model.data
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.FromValueFactory
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.SelfComparable
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.enumeration.NamingConvention

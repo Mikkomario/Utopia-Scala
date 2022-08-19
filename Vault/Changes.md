@@ -1,5 +1,9 @@
 # Utopia Vault - List of Changes
 
+## v1.13.1 (in development)
+### New Features
+- Added new **Log ErrorHandlingPrinciple**
+
 ## v1.13 - 18.08.2022
 This update reflects changes in **Flow** v1.16
 ### Breaking Changes

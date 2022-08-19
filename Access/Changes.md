@@ -1,5 +1,8 @@
 # Utopia Access - List of Changes
 
+## v1.4.5 (in development)
+Supports changes in **Flow** v1.17
+
 ## v1.4.4 - 18.08.2022
 New Build / Supports changes in **Flow** v1.16
 

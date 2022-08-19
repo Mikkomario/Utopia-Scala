@@ -18,6 +18,7 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 12.6.2019, v1.5+
  */
+@deprecated("Testing deprecated classes", "v1.17")
 object CacheTest extends App
 {
 	// Clearable single cache

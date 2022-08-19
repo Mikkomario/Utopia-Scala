@@ -6,7 +6,7 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, StringType}
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.operator.EqualsExtensions._
 
 import scala.util.{Failure, Success}
 

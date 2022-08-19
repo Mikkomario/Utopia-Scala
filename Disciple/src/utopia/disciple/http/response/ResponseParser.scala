@@ -3,10 +3,10 @@ package utopia.disciple.http.response
 import java.io.InputStream
 
 import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.{JSONReader, JsonParser, XmlReader}
 import utopia.flow.util.AutoClose._
-import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.ValueConversions._
 
 import scala.io.{Codec, Source}

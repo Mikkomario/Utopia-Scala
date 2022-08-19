@@ -4,10 +4,10 @@ import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.NeverDelete
 import utopia.courier.model.read.{DeletionRule, ReadSettings}
 import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.AutoCloseWrapper
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.StringExtensions._
 
 import java.io.InputStream
 import java.nio.file.Path

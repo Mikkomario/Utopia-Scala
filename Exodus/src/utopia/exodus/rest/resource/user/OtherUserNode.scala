@@ -6,8 +6,8 @@ import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.ExodusScope.{ReadOrganizationData, ReadPersonalData}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle.Simple
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceSearchResult.{Error, Ready}

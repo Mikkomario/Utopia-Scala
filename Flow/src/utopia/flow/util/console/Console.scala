@@ -5,6 +5,7 @@ import utopia.flow.datastructure.immutable.View
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.datastructure.template.Viewable
 import utopia.flow.event.Fixed
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._

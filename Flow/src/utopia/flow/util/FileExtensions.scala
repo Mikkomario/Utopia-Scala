@@ -1,5 +1,6 @@
 package utopia.flow.util
 
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.{FileEditor, JsonConvertible}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._

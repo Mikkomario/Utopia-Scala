@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.data
 
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 
 object Filter
