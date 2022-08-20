@@ -9,6 +9,7 @@
   - Custom id name and data type support
   - Documentation support
   - Default value support
+- Added markdown documentation writing
 - Documentation naming convention may now be altered
 
 ## v1.6 - 18.08.2022

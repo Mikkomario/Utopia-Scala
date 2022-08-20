@@ -364,44 +364,48 @@ If you want to specify custom naming schemes, you may do so in a naming object.
 
 Naming rules are interpreted as follows:
 - `"camel"` or `"camelCase"` => camel case property naming. E.g. "wordOfLife"
-- `"Camel"` or `"CamelCase"` => camel case class naming. E.g. "WordOfLife"
+- `"Camel"`, `"CamelCase"`, `"PascalCase"` or `"Pascal"` => pascal case class naming. E.g. "WordOfLife"
 - `"underscore"` => lower case words separated by an underscore. E.g. "word_of_life"
+- `"kebab"`, `"hyphen"`, `"hyphenated"` or `"dash"` => lower case words separated by a hyphen. E.g. "word-of-life"
 - `"text"` => lower case words separated with a whitespace. E.g. "word of life"
 - `"Text"` => capitalized words separated with a whitespace. E.g. "Word Of Life"
 
 Below are listed the properties which you may customize:
-- `"database_name"` / `"database"` / `"db_name"` / `"db"` / `"sql"` => database name
+- `"sql"` => All sql code
   - Default is `"underscore"`
-- `"table"` / `"sql"` / `"db"` => sql table naming
-  - Default is `"underscore"`
-- `"column"` / `"col"` / `"sql"` / `"db"` => sql column naming
-  - Default is `"underscore"`
-- `"db_prop"` / `"db_model_prop"` / `"db_model"` / `"db"` / `"prop"` / `"model"` => database model & factory string literals
+- `"database_name"` / `"database"` / `"db_name"` / `"db"` => database name
+  - Default is `"underscore"`, or the value defined for sql
+- `"table"` => sql table naming
+  - Default is `"underscore"`, or the value defined for sql
+- `"column"` / `"col"` => sql column naming
+  - Default is `"underscore"`, or the value defined for sql
+- `"property"` / `"prop"` => property and parameter names in Scala code
   - Default is `"camelCase"`
-- `"json"` / `"model"` => generated json objects
-  - Default is `"underscore"`
-- `"class"` / `"instance"` / `"object"` => class / object / trait names
+  - Changing this is not recommended
+- `"db_prop"` / `"db_model_prop"` / `"db_model"` => database model & factory string literals
+  - Default is `"camelCase"`, or the value defined for class properties
+- `"json"` / `"json_prop"` => generated json object properties
+  - Default is `"camelCase"`
+- `"documentation"` / `"doc"` / `"text"` => Naming within documentation
+  - Default is `"text"`
+- `"header"` / `"title"` => Documentation header naming
+  - Default is `"Text`", or the value specified for `"documentation"`
+- `"file_name"` / `"file"` => Naming within file names
+  - Default is `"hyphen"`
+- `"class"` => class & trait names
   - Default is `"CamelCase"`
   - Changing this is not recommended
-- `"property"` / `"prop"` / `"attribute"` / `"att"` / `"code"` => property and parameter names in Scala code
-  - Default is `"camelCase"`
-  - Changing this is not recommended
+- `"enum"` / `"enumeration"` => Enumeration trait & object names
+  - Default is `"CamelCase"`, or the value defined for classes
+- `"enum_value"` / `"enum_val"` => Enumeration value object names
+  - Default is `"CamelCase"`, or the value defined for enumerations
 
-Please note that if you specify a generic property such as `"db"`, the rule may be applied to multiple targets, 
+
+Please note that if you specify a generic property such as `"sql"`, the rule may be applied to multiple targets, 
 unless overridden by a more specific property elsewhere.
 
 Please also note that not all styles are suitable for all use cases.
 E.g. Using `"text"` style within code will result in build errors.
-
-## Root Path Aliases
-In case you're using certain root paths often, you may ease application use by aliasing those paths.  
-You may do this by adding a `config.json` file to the application directory (where `Vault-Coder.jar` resides) 
-with following properties in it:
-- **"roots": Object**
-  - "`<root alias 1>`" = "`<root path 1>`"
-  - "`<root alias 2>`" = "`<root path 2>`"
-  - ...
-You may then refer to a root alias instead of the full root path when using the application.
 
 ## Output Format
 This application will produce the following documents 
@@ -409,6 +413,7 @@ This application will produce the following documents
 - **S-database-structure.sql** -document that contains create table sql statements
 - **S-length-rules.json** -document that contains all listed column length rules
   - Use `ColumnLengthRules.loadFrom(...)` in **Vault** in your code to apply this file to your project
+- **S.md** - Class & enumeration documentation
 - **S-merge-conflicts-yyyy-mm-dd-hh-mm.txt** -document that lists merge conflicts that occurred (if there were any)
 - project root package
   - model

@@ -16,6 +16,7 @@ import utopia.flow.util.Version
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.coder.controller.reader
 import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, InsertsWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.documentation.DocumentationWriter
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
 import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectPaths, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NameContext.FileName
@@ -447,6 +448,8 @@ object VaultCoderApp extends App
 			// Writes column length rules
 			.flatMap { _ => ColumnLengthRulesWriter(data.databaseName, data.classes,
 				path("json", "length", "rules")) }
+			// Writes project documentation
+			.flatMap { _ => DocumentationWriter(data, path("md")) }
 			// Writes the tables document, which is referred to later, also
 			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>
