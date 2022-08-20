@@ -62,12 +62,40 @@ The input .json file should contain a single object with following properties:
 - **"types" / "data_types": Object (optional)** - Contains a custom data type object for each key. 
   The keys may be used within the property declarations to reference these data types.
   - See [Data Type Object Structure](#data-type-object-structure) for more details
-- **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
-  Each property should have a string array value where each item represents a possible enumeration value.
+- **"enumerations" / "enums": [Object] (optional)** - List of enumerations introduced within this project. 
+  See [Enumeration Object Structure](#enumeration-object-structure) for more details.
+  - Alternatively you may pass an object with a property for each introduced enumeration. 
+    Each property should have a string array value where each item represents a possible enumeration value.
 - **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
   - Enumeration paths should include the full reference: E.g. `"utopia.vault.coder.model.datatype.PropertyType"`
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
   sub-package property should be a class object or an array of **class objects** (see [structure](#class-object-structure) below).
+
+### Enumeration Object Structure
+Enumeration objects should contain the following properties:
+- **"name": String** - Name of this enumeration
+- **"id_name" / "id": String (optional)** - The name of the id property of this enumeration's values. 
+  The default is `"id"`.
+- **"id_type" / "type": String (optional)** - The data type used for the id of this enumeration
+  - Please refer to [Property Object Structure](#property-object-structure) for a list of supported data types
+  - The default type is **Int**
+  - Please note that multi-column data types are properly supported in this context at this time
+- **"values": [Object]** - An array that contains the values of this enumeration. 
+  - See [Value Object Structure](#enumeration-value-object-structure) for details concerning these objects
+  - Alternatively, you may provide an array of strings, where each string is interpreted as an enumeration value name
+- **"default": String (optional)** - Name of the default value of this enumeration, if applicable
+- **"package": String (optional)** - The package where this enumeration is placed. The default is 
+  "project"`.model.enumeration`, where "project" is populated by the project base package.
+- **"doc": String (optional)** - Documentation for this enumeration
+
+#### Enumeration Value Object Structure
+When specifying enumeration values, please specify the following properties:
+- **"name": String** - Name of this value
+- **"id" / "key": Code (optional)** - A custom id for this enumeration value. Should yield a value of a correct type.
+  - If omitted, the **1-based** index of this value will be used instead
+  - Please note that in order to pass a String id, you need to wrap it in double quotes, 
+    for example `"\"TestId\""`, which would show as `"TestId"` in the code.
+- **"doc": String (optional)** - Documentation for this enumeration value
 
 ### Class Object Structure
 Class objects should contain following properties:
