@@ -1,6 +1,5 @@
 package utopia.flow.datastructure.immutable
 
-import utopia.flow.datastructure.immutable.Value.emptyWithType
 import utopia.flow.datastructure.template.Node
 import utopia.flow.generic.{AnyType, BooleanType, ConversionHandler, DataType, DataTypeException, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
 import utopia.flow.parse.JsonValueConverter
@@ -139,18 +138,50 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      */
     def castTo(dataType: DataType) = ConversionHandler.cast(this, dataType)
     /**
-      * Casts this value to either of two data types
-      * @param primaryDataType The primary cast target type
-      * @param secondaryDataType The secondary cast target type
-      * @return Either: Right: This value converted to primary target type or
-      *         Left: This value converted to the secondary target type if first cast failed and second succeeded
+      * Casts this value to either of two data types. The resulting data type is based on comparing type conversions,
+      * attempting to minimize unnecessary conversions and data loss.
+      * @param leftType The primary (left) cast target type
+      * @param rightType The secondary (right) cast target type
+      * @return Either: Left: This value converted to primary target type or
+      *         Right: This value converted to the secondary target type
       */
-    def castTo(primaryDataType: DataType, secondaryDataType: DataType): Either[Value, Value] =
-        castTo(primaryDataType) match
-        {
-            case Some(primarySuccess) => Right(primarySuccess)
-            case None => castTo(secondaryDataType).map { Left(_) }.getOrElse { Right(emptyWithType(primaryDataType)) }
+    def castTo(leftType: DataType, rightType: DataType): Either[Value, Value] = {
+        // Checks which type would be more appropriate in this context
+        // Case: Already of primary type => No conversion needed
+        if (isOfType(leftType))
+            Left(this)
+        // Case: Already of secondary type => No conversion needed
+        else if (isOfType(rightType))
+            Right(this)
+        // Case: Conversion required
+        else {
+            // Converts first to the type that is more close to this value's original data type
+            val targetTypes = Pair(leftType, rightType)
+            val conversions = targetTypes.map { ConversionHandler.conversionRouteBetween(dataType, _)
+                .map { route => route.foldLeft(0) { _ + _.cost } } }
+            val rightIsFirst = conversions.second.exists { cost => conversions.first.forall { _ > cost } }
+    
+            // If the first conversion fails, attempts with the other data type
+            if (rightIsFirst)
+                castTo(rightType) match {
+                    case Some(v) => Right(v)
+                    case None =>
+                        castTo(leftType) match {
+                            case Some(v) => Left(v)
+                            case None => Right(Value.emptyWithType(rightType))
+                        }
+                }
+            else
+                castTo(leftType) match {
+                    case Some(v) => Left(v)
+                    case None =>
+                        castTo(rightType) match {
+                            case Some(v) => Right(v)
+                            case None => Left(Value.emptyWithType(leftType))
+                        }
+                }
         }
+    }
     
     /**
      * Casts this value to a new data type

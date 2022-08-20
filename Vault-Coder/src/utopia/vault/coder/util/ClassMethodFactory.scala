@@ -105,7 +105,7 @@ object ClassMethodFactory
 		val assignments = classToWrite.properties.map { prop =>
 			// Case: Try-based property / value => already defined
 			if (prop.dataType.yieldsTryFromValue)
-				CodePiece(prop.name.propName)
+				CodePiece(prop.name.prop)
 			// Case: Normal property / value => reads the value from the model
 			else
 				propFromValidModelCode(prop)(propNamesInModel)
@@ -125,7 +125,7 @@ object ClassMethodFactory
 	                           (implicit naming: NamingRules) =
 		tryProps.foreach { prop =>
 			val fromValueCode = propFromValidModelCode(prop)(propNamesInModel)
-			builder += fromValueCode + s".$mapMethod { ${prop.name.propName} => "
+			builder += fromValueCode + s".$mapMethod { ${prop.name.prop} => "
 			builder.indent()
 		}
 	

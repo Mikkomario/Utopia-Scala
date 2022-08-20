@@ -90,9 +90,9 @@ object AccessWriter
 		// (implementation varies, however)
 		// Option[Pair[method]], where first method is for individual access and second for many access
 		val deprecationMethods = classToWrite.deprecationProperty.map { prop =>
-			Pair(prop.name.propName, prop.name.pluralPropName).map { propName =>
+			Pair(prop.name.prop, prop.name.props).map { propName =>
 				MethodDeclaration("deprecate", Set(Reference.now, Reference.valueConversions),
-					description = s"Deprecates all accessible ${classToWrite.name.pluralText}",
+					description = s"Deprecates all accessible ${classToWrite.name.pluralDoc}",
 					returnDescription = "Whether any row was targeted")(
 					Parameters(Vector(Vector()), Vector(connectionParam)))(s"$propName = Now")
 			}
@@ -159,18 +159,18 @@ object AccessWriter
 					prop.onlyDbVariant.map { dbProp =>
 						val pullCode = prop.dataType.optional
 							.fromValueCode(Vector(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })"))
-						ComputedProperty(dbProp.name.propName, pullCode.references,
-							description = prop.description.nonEmptyOrElse(s"The ${ dbProp.name } of this ${
-								classToWrite.name }") + s". None if no ${ classToWrite.name } (or value) was found.",
+						ComputedProperty(dbProp.name.prop, pullCode.references,
+							description = prop.description.nonEmptyOrElse(s"The ${ dbProp.name.doc } of this ${
+								classToWrite.name.doc }") + s". None if no ${ classToWrite.name.doc } (or value) was found.",
 							implicitParams = Vector(connectionParam))(
 							pullCode.text)
 					}
 				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
 					pullIdCode.text),
 				// Contains setters for each property (singular)
-				methods = propertySettersFor(classToWrite) { _.propName } ++ deprecationMethod,
+				methods = propertySettersFor(classToWrite) { _.prop } ++ deprecationMethod,
 				description = s"A common trait for access points that return individual and distinct ${
-					classToWrite.name.pluralText
+					classToWrite.name.pluralDoc
 				}.", author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write()
@@ -214,7 +214,7 @@ object AccessWriter
 				// Implements the .condition property
 				properties = singleIdAccessParentProperties,
 				description = s"An access point to individual ${
-					classToWrite.name.pluralText }, based on their id",
+					classToWrite.name.pluralDoc }, based on their id",
 				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true
 			)
 		).write()
@@ -234,11 +234,11 @@ object AccessWriter
 				properties = baseProperties,
 				// Defines an .apply(id) method for accessing individual items
 				methods = Set(MethodDeclaration("apply", Set(singleIdAccessRef),
-					returnDescription = s"An access point to that ${ classToWrite.name }")(
+					returnDescription = s"An access point to that ${ classToWrite.name.doc }")(
 					Parameter("id", classToWrite.idType.toScala,
-						description = s"Database id of the targeted ${ classToWrite.name }"))(
+						description = s"Database id of the targeted ${ classToWrite.name.doc }"))(
 					s"${ singleIdAccessRef.target }(id)")),
-				description = s"Used for accessing individual ${ classToWrite.name.pluralText }",
+				description = s"Used for accessing individual ${ classToWrite.name.pluralDoc }",
 				author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write()
@@ -287,14 +287,14 @@ object AccessWriter
 				prop.onlyDbVariant.map { dbProp =>
 					val pullCode = prop.dataType
 						.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })")
-					ComputedProperty(prop.name.pluralPropName, pullCode.references,
-						description = s"${ prop.name.pluralText } of the accessible ${
-							classToWrite.name.pluralText }",
+					ComputedProperty(prop.name.props, pullCode.references,
+						description = s"${ prop.name.pluralDoc } of the accessible ${
+							classToWrite.name.pluralDoc }",
 						implicitParams = Vector(connectionParam))(pullCode.text)
 				}
 			} :+
 			ComputedProperty("ids", idsPullCode.references, implicitParams = Vector(connectionParam))(idsPullCode.text)
-		val highestTraitMethods = propertySettersFor(classToWrite) { _.pluralPropName } ++ deprecationMethod
+		val highestTraitMethods = propertySettersFor(classToWrite) { _.props } ++ deprecationMethod
 		
 		// Writes the more generic trait version (-Like) first, if one is requested
 		val parentRef = {
@@ -310,7 +310,7 @@ object AccessWriter
 							Reference.filterableView(repr.toScalaType)),
 						highestTraitProperties, highestTraitMethods,
 						description = s"A common trait for access points which target multiple ${
-							classToWrite.name.pluralText} or similar instances at a time",
+							classToWrite.name.pluralDoc} or similar instances at a time",
 						author = classToWrite.author, since = DeclarationDate.versionedToday))
 					.write().map { Some(_) }
 			}
@@ -385,7 +385,7 @@ object AccessWriter
 							Parameter("additionalCondition", Reference.condition))(
 							s"new $traitName.$subViewName(this, additionalCondition)"),
 					description = s"A common trait for access points which target multiple ${
-						classToWrite.name.pluralText } at a time",
+						classToWrite.name.pluralDoc } at a time",
 					author = classToWrite.author, since = DeclarationDate.versionedToday
 				)
 			).write()
@@ -428,9 +428,9 @@ object AccessWriter
 		}
 		val subSetClassAccessMethod = MethodDeclaration("apply",
 			returnDescription = s"An access point to ${
-				classToWrite.name.pluralText } with the specified ids")(
+				classToWrite.name.pluralDoc } with the specified ids")(
 			Parameter("ids", ScalaType.set(ScalaType.int),
-				description = s"Ids of the targeted ${ classToWrite.name.pluralText }"))(
+				description = s"Ids of the targeted ${ classToWrite.name.pluralDoc }"))(
 			s"new $subsetClassName(ids)")
 		
 		// For deprecating items, there is also a sub-object for accessing all items,
@@ -447,7 +447,7 @@ object AccessWriter
 		val historyAccessProperty = historyAccess.map { access =>
 			ComputedProperty("includingHistory",
 				description = s"A copy of this access point that includes historical (i.e. deprecated) ${
-					classToWrite.name.pluralText}")(access.name)
+					classToWrite.name.pluralDoc}")(access.name)
 		}
 		
 		File(manyAccessPackage,
@@ -456,7 +456,7 @@ object AccessWriter
 				methods = Set(subSetClassAccessMethod),
 				nested = Set[InstanceDeclaration](subSetClass) ++ historyAccess,
 				description = s"The root access point when targeting multiple ${
-					classToWrite.name.pluralText } at a time",
+					classToWrite.name.pluralDoc } at a time",
 				author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write()
@@ -478,7 +478,7 @@ object AccessWriter
 	                  (methodNameFromPropName: Name => String)
 	                  (implicit naming: NamingRules) =
 	{
-		val paramName = (newPrefix +: dbProp.name).propName
+		val paramName = (newPrefix +: dbProp.name).prop
 		val paramType = if (prop.isSingleColumn) prop.dataType.toScala else dbProp.conversion.origin
 		val valueConversionCode = {
 			if (prop.isSingleColumn)
@@ -489,9 +489,9 @@ object AccessWriter
 			}
 		}
 		MethodDeclaration(s"${ methodNameFromPropName(dbProp.name) }_=", valueConversionCode.references,
-				description = s"Updates the ${ prop.name.pluralText } of the targeted ${ className.pluralText }",
-				returnDescription = s"Whether any $className was affected")(
-				Parameter(paramName, paramType, description = s"A new ${ dbProp.name } to assign")
+				description = s"Updates the ${ prop.name.pluralDoc } of the targeted ${ className.pluralDoc }",
+				returnDescription = s"Whether any ${className.doc} was affected")(
+				Parameter(paramName, paramType, description = s"A new ${ dbProp.name.doc } to assign")
 					.withImplicits(connectionParam))(
 				s"putColumn(model.${ DbModelWriter.columnNameFrom(dbProp) }, $valueConversionCode)")
 	}

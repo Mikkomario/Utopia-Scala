@@ -125,13 +125,13 @@ case class Property(name: Name, dataType: PropertyType, customDefaultValue: Code
 	def jsonPropName(implicit naming: NamingRules) =
 		onlyDbVariant match {
 			case Some(variant) => variant.jsonPropName
-			case None => name.jsonPropName
+			case None => name.jsonProp
 		}
 	
 	/**
 	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.
 	  */
-	def toValueCode(implicit naming: NamingRules): CodePiece = dataType.toValueCode(name.propName)
+	def toValueCode(implicit naming: NamingRules): CodePiece = dataType.toValueCode(name.prop)
 	
 	/*
 	/**

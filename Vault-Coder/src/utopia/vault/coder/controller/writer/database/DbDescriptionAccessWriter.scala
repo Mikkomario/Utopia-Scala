@@ -33,7 +33,7 @@ object DbDescriptionAccessWriter
 	          descriptionFactoriesRef: Reference)
 	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
 	{
-		val factoryPropertyName = baseClassName.propName
+		val factoryPropertyName = baseClassName.prop
 		
 		val baseAccessProperties = Vector(
 			ComputedProperty("factory", Set(descriptionFactoriesRef), isOverridden = true)(

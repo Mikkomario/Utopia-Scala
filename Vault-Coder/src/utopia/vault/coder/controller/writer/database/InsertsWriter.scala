@@ -77,13 +77,13 @@ object InsertsWriter
 	private def writeClassInstances(writer: PrintWriter, parentClass: Class, instances: Iterable[Instance])
 	                               (implicit naming: NamingRules) =
 	{
-		val className = if (instances.size > 1) parentClass.name.pluralText else parentClass.name.toString
+		val classDocName = if (instances.size > 1) parentClass.name.pluralDoc else parentClass.name.doc
 		val tableName = parentClass.tableName
-		writer.println(s"-- Inserts ${instances.size} $className")
+		writer.println(s"-- Inserts ${instances.size} $classDocName")
 		// Instances with ids are written separate from instances without id
 		val (instancesWithoutId, instancesWithId) = instances.divideBy { _.id.nonEmpty }
 		if (instancesWithId.nonEmpty)
-			writeInstanceInserts(writer, tableName, instancesWithId, Some(parentClass.idName.columnName))
+			writeInstanceInserts(writer, tableName, instancesWithId, Some(parentClass.idName.column))
 		if (instancesWithoutId.nonEmpty)
 			writeInstanceInserts(writer, tableName, instancesWithoutId)
 		writer.println()
@@ -97,7 +97,7 @@ object InsertsWriter
 		instances.groupBy { _.valueAssignments.keySet }.toVector.sortBy { _._1.size }
 			.foreach { case (properties, instances) =>
 				// Writes properties in alphabetical order
-				val orderedProperties = properties.toVector.map { p => p.name.columnName -> p }.sortBy { _._1 }
+				val orderedProperties = properties.toVector.map { p => p.name.column -> p }.sortBy { _._1 }
 				// Writes instances in order of id, or in order of alphabetical property values
 				val orderedInstances = {
 					if (idColumnName.isDefined)

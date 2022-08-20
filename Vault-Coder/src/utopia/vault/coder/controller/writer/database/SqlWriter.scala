@@ -43,7 +43,7 @@ object SqlWriter
 				val refs = c.properties.flatMap { _.dataType match {
 					case ClassReference(referencedTableName, _, _) =>
 						// References to the class' own table are ignored
-						Some(referencedTableName.tableName).filterNot { _ == tableName }
+						Some(referencedTableName.table).filterNot { _ == tableName }
 					case _ => None
 				} }
 				c.tableName -> refs.toSet
@@ -163,7 +163,7 @@ object SqlWriter
 		lazy val classInitials = initialsMap(tableName)
 		def prefixColumn(column: DbProperty, parentType: PropertyType): String =
 			prefixColumnName(column.columnName, parentType match {
-				case ClassReference(table, _, _) => Some(table.tableName)
+				case ClassReference(table, _, _) => Some(table.table)
 				case _ => None
 			})
 		def prefixColumnName(colName: String, referredTableName: => Option[String] = None): String = {
@@ -176,7 +176,7 @@ object SqlWriter
 			else
 				colName
 		}
-		val idName = prefixColumnName(classToWrite.idName.columnName)
+		val idName = prefixColumnName(classToWrite.idName.column)
 		// [(Property -> [(DbProperty -> Full Column Name)])]
 		val namedProps = classToWrite.properties
 			.map { prop => prop -> prop.dbProperties.map { dbProp => dbProp -> prefixColumn(dbProp, prop.dataType) } }
@@ -222,10 +222,10 @@ object SqlWriter
 			val foreignKeyDeclarations = namedProps.flatMap { case (prop, columns) =>
 				prop.dataType match {
 					case ClassReference(rawReferencedTableName, rawColumnName, referenceType) =>
-						val refTableName = rawReferencedTableName.tableName
+						val refTableName = rawReferencedTableName.table
 						val refInitials = initialsMap(refTableName)
 						val refColumnName = {
-							val base = rawColumnName.columnName
+							val base = rawColumnName.column
 							if (setup.prefixSqlProperties)
 								refInitials + "_" + base
 							else
@@ -233,7 +233,7 @@ object SqlWriter
 						}
 						val columnName = columns.headOption match {
 							case Some((_, name)) => name
-							case None => prop.name.columnName
+							case None => prop.name.column
 						}
 						val constraintNameBase = {
 							val nameWithoutId = columnName.replace("_id", "")

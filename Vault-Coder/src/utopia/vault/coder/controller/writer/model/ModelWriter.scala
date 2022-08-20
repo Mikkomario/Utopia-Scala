@@ -46,7 +46,7 @@ object ModelWriter
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
 				constructionParams = classToWrite.properties.map { prop =>
-					Parameter(prop.name.propName, prop.dataType.toScala, prop.defaultValue,
+					Parameter(prop.name.prop, prop.dataType.toScala, prop.defaultValue,
 						description = prop.description)
 				},
 				// Extends ModelConvertible
@@ -63,22 +63,22 @@ object ModelWriter
 				val idType = classToWrite.idType.toScala
 				// Accepts id and data -parameters
 				val constructionParams = Vector(
-					Parameter("id", idType, description = s"id of this ${ classToWrite.name } in the database"),
-					Parameter("data", dataClassRef, description = s"Wrapped ${ classToWrite.name } data")
+					Parameter("id", idType, description = s"id of this ${ classToWrite.name.doc } in the database"),
+					Parameter("data", dataClassRef, description = s"Wrapped ${ classToWrite.name.doc } data")
 				)
 				// May provide a utility access method
 				val accessProperty = {
 					if (setup.modelCanReferToDB) {
 						val singleAccessRef = AccessWriter.singleIdReferenceFor(classToWrite)
 						Some(ComputedProperty("access", Set(singleAccessRef),
-							description = s"An access point to this ${ classToWrite.name } in the database")(
+							description = s"An access point to this ${ classToWrite.name.doc } in the database")(
 							s"${ singleAccessRef.target }(id)"))
 					}
 					else
 						None
 				}
 				
-				val description = s"Represents a ${ classToWrite.name } that has already been stored in the database"
+				val description = s"Represents a ${ classToWrite.name.doc } that has already been stored in the database"
 				// ModelConvertible extension & implementation differs based on id type
 				// Also, the Stored extension differs based on whether Vault-dependency is allowed
 				if (classToWrite.useLongId)
@@ -109,10 +109,10 @@ object ModelWriter
 			case Some(prop) =>
 				Vector(
 					ComputedProperty("isDeprecated",
-						description = s"Whether this ${ classToWrite.name } has already been deprecated")(
-						s"${ prop.name.propName }.isDefined"),
+						description = s"Whether this ${ classToWrite.name.doc } has already been deprecated")(
+						s"${ prop.name.prop }.isDefined"),
 					ComputedProperty("isValid",
-						description = s"Whether this ${ classToWrite.name } is still valid (not deprecated)")(
+						description = s"Whether this ${ classToWrite.name.doc } is still valid (not deprecated)")(
 						"!isDeprecated")
 				)
 			case None =>
@@ -123,9 +123,9 @@ object ModelWriter
 								description = s"Whether this ${
 									classToWrite.name
 								} is no longer valid because it has expired")(
-								s"${ prop.name.propName } <= Now"),
+								s"${ prop.name.prop } <= Now"),
 							ComputedProperty("isValid",
-								description = s"Whether this ${ classToWrite.name } is still valid (hasn't expired yet)")(
+								description = s"Whether this ${ classToWrite.name.doc } is still valid (hasn't expired yet)")(
 								"!hasExpired")
 						)
 					case None => Vector()

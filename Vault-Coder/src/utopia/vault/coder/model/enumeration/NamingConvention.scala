@@ -14,6 +14,8 @@ import scala.collection.immutable.VectorBuilder
   */
 sealed trait NamingConvention
 {
+	// ABSTRACT -------------------------
+	
 	/**
 	  * @param name A name / string
 	  * @return Whether that name conforms to this naming convention as-is
@@ -41,6 +43,16 @@ sealed trait NamingConvention
 	  * @return Parts of that string, according to this naming convention.
 	  */
 	def split(string: String): Seq[String]
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * Converts a string to this naming convention
+	  * @param string A string to convert
+	  * @return Version of the specified string in this naming convention
+	  */
+	def convert(string: String): String = convert(string, NamingConvention.of(string, this))
 }
 
 object NamingConvention

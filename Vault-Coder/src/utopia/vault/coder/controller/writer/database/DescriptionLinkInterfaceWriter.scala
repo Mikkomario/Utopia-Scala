@@ -39,7 +39,7 @@ object DescriptionLinkInterfaceWriter
 			// First writes database models object
 			val modelProps = targets.map { case (base, desc) =>
 				tableWrappingPropertyFor(base, desc, tablesRef, Reference.descriptionLinkModelFactory,
-					s"Database interaction model factory for ${ base.name } description links")
+					s"Database interaction model factory for ${ base.name.doc } description links")
 			}
 			File(setup.dbModelPackage/"description",
 				ObjectDeclaration(setup.dbModuleName + "DescriptionLinkModel",
@@ -65,7 +65,7 @@ object DescriptionLinkInterfaceWriter
 						.map { case ((base, _), linkFactoryProp) =>
 							propertyFor(base, Reference.linkedDescriptionFactory,
 								CodePiece(s"${linksRef.target}.${linkFactoryProp.name}", Set(linksRef)),
-								s"Factory for reading descriptions linked with ${base.name.pluralText}")
+								s"Factory for reading descriptions linked with ${base.name.pluralDoc}")
 						}
 					File(setup.factoryPackage/"description",
 						ObjectDeclaration(setup.dbModuleName + "LinkedDescriptionFactory",
@@ -85,11 +85,11 @@ object DescriptionLinkInterfaceWriter
 	                                     wrapperRef: Reference, description: String)
 	                                    (implicit naming: NamingRules) =
 		propertyFor(baseClass, wrapperRef,
-			CodePiece(s"${ tablesRef.target }.${ descriptionClass.name.propName }", Set(tablesRef)),
+			CodePiece(s"${ tablesRef.target }.${ descriptionClass.name.prop }", Set(tablesRef)),
 			description)
 	
 	private def propertyFor(baseClass: Class, wrapperRef: Reference, wrappedCode: CodePiece, description: String)
 	                       (implicit naming: NamingRules) =
-		LazyValue(baseClass.name.propName, wrappedCode.references + wrapperRef,
+		LazyValue(baseClass.name.prop, wrappedCode.references + wrapperRef,
 			description = description)(s"${wrapperRef.target}(${wrappedCode.text})")
 }

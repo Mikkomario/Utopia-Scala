@@ -3,12 +3,19 @@
 ## v1.17 (in development)
 ### Breaking Changes
 - Removed `~==` and `!~==` from **StringExtensions**, as they are now made available through **EqualsExtensions**
+- `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
 ### New Features
 - Added **ValueConvertibleFileContainer** and **ValueConvertibleOptionFileContainer** -classes
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
+- Added **OptionsIterator** class
 ### New Methods
+- **Either** (**CollectionExtensions**)
+  - Added new functions for eithers that contain items of the same type on both sides
 - **Value**
   - Added a new variant of `.apply(...) `
+### Other Changes
+- Rewrote **Value**`.castTo(DataType, DataType)` so that it will cast to the closer data type
+- **PollingIterator** is now type covariant
 
 ## v1.16 - 18.08.2022
 This update adds a number of new collection functions, and even new collection types. 

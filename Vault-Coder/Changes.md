@@ -1,5 +1,16 @@
 # Utopia Vault Coder
 
+## v1.7 (in development)
+### Breaking Changes
+- The default naming style for json properties is now `camelCase` (previously was `underscore`)
+- Optional enumeration value code structure may be altered
+### New Features
+- Added support for complex enumerations, meaning
+  - Custom id name and data type support
+  - Documentation support
+  - Default value support
+- Documentation naming convention may now be altered
+
 ## v1.6 - 18.08.2022
 This update adds a number of new features, such as custom data type support and program settings saving. 
 This version also utilizes **Flow** v1.16 **String** value change, modifying how strings are handled in database 

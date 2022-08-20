@@ -44,6 +44,7 @@ object Reference
 	lazy val constant = apply(immutableStruct, "Constant")
 	lazy val templateModel = apply(struct, "template", "Model")
 	lazy val model = apply(immutableStruct, "Model")
+	lazy val valueConvertible = apply(flowGenerics, "ValueConvertible")
 	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
 	
 	lazy val now = apply(flowTime, "Now")

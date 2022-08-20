@@ -8,7 +8,7 @@ import utopia.flow.generic.{FromModelFactory, StringType}
 import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.Name
+import utopia.vault.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.datatype.CustomPropertyType.{pluralRegex, singularRegex, valueRegex}
 import utopia.vault.coder.model.datatype.CustomPropertyType.CustomPartConversion
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
@@ -181,10 +181,10 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 				.referringTo(Reference.value)
 	}
 	
-	override def writeDefaultDescription(className: Name, propName: Name) =
+	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 		autoDescription
-			.replaceAll(singularRegex, className.toText.singular)
-			.replaceAll(pluralRegex, className.pluralText)
+			.replaceAll(singularRegex, className.doc)
+			.replaceAll(pluralRegex, className.pluralDoc)
 	
 	
 	// OTHER    ----------------------------
@@ -234,7 +234,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode(Vector("v")).mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			CustomPropertyType.this.writeDefaultDescription(className, propName)
 	}
 	

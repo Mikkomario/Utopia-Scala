@@ -1001,7 +1001,7 @@ object CollectionExtensions
 		  * iterator should be used afterwards.
 		  * @return A copy of this iterator that allows polling (checking of the next item without advancing)
 		  */
-		def pollable = new PollingIterator[A](i)
+		def pollable = PollingIterator[A](i)
 		
 		/**
 		  * Finds the last item accessible from this iterator. Consumes all items in this iterator.
@@ -1426,6 +1426,44 @@ object CollectionExtensions
 		{
 			case Right(r) => Right(rightMap(r))
 			case Left(l) => Left(leftMap(l))
+		}
+	}
+	
+	implicit class RichSingleTypeEither[A](val e: Either[A, A]) extends AnyVal
+	{
+		/**
+		  * @return Left or right side value, whichever is defined
+		  */
+		def either = e match {
+			case Left(l) => l
+			case Right(r) => r
+		}
+		/**
+		  * @return A pair based on this either, where the non-occupied side receives None and the occupied side
+		  *         receives Some
+		  */
+		def toPair = e match {
+			case Left(l) => Pair(Some(l), None)
+			case Right(r) => Pair(None, Some(r))
+		}
+		
+		/**
+		  * @param f A mapping function
+		  * @tparam B Mapping result type
+		  * @return Mapping result, keeping the same side
+		  */
+		def mapEither[B](f: A => B) = e match {
+			case Left(l) => Left(f(l))
+			case Right(r) => Right(f(r))
+		}
+		/**
+		  * @param f A mapping function
+		  * @tparam B Mapping result type
+		  * @return Mapping function result, whether from left or from right
+		  */
+		def mapEitherToSingle[B](f: A => B) = e match {
+			case Left(l) => f(l)
+			case Right(r) => f(r)
 		}
 	}
 	

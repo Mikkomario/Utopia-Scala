@@ -2,6 +2,7 @@ package utopia.vault.coder.model.data
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.datatype.SqlTypeConversion
+import utopia.vault.coder.model.enumeration.NameContext.{ColumnName, DbModelPropName}
 
 /**
   * A database-column matching property for a class. Some class properties may match to multiple database-column
@@ -36,24 +37,24 @@ case class DbProperty(parentName: Name, conversion: SqlTypeConversion, overrides
 	  * @return Column name to use for this property
 	  */
 	def columnName(implicit naming: NamingRules) =
-		overrides.columnName.nonEmptyOrElse { (name + sqlType.columnNameSuffix).columnName }
+		overrides.columnName.nonEmptyOrElse { (name + sqlType.columnNameSuffix).column }
 	/**
 	  * @param naming Implicit naming rules
 	  * @return Name to use for this property in database model string literals
 	  */
-	def modelName(implicit naming: NamingRules) = naming.dbModelProp.convert(columnName, naming.column)
+	def modelName(implicit naming: NamingRules) = naming(DbModelPropName).convert(columnName, naming(ColumnName))
 	/**
 	  * @param naming Implicit naming rules
 	  * @return A json object property name matching this property
 	  */
-	def jsonPropName(implicit naming: NamingRules) = (name + sqlType.columnNameSuffix).jsonPropName
+	def jsonPropName(implicit naming: NamingRules) = (name + sqlType.columnNameSuffix).jsonProp
 	
 	/**
 	  * @param naming Implicit naming rules
 	  * @return Property to value code - NB: This property is expected to be in the "intermediate" (db model) state
 	  *         during this conversion
 	  */
-	def toValueCode(implicit naming: NamingRules) = conversion.intermediate.toValueCode(name.propName)
+	def toValueCode(implicit naming: NamingRules) = conversion.intermediate.toValueCode(name.prop)
 	
 	
 	// IMPLEMENTED  --------------------
