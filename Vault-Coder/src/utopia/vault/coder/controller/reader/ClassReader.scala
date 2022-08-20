@@ -13,8 +13,8 @@ import utopia.vault.coder.model.datatype.{CustomPropertyType, PropertyType}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue, Text}
-import utopia.vault.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, DatabaseName, EnumName, EnumValueName, TableName}
-import utopia.vault.coder.model.enumeration.NamingConvention.UnderScore
+import utopia.vault.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, DatabaseName, EnumName, EnumValueName, Header, TableName}
+import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
 import utopia.vault.coder.model.enumeration.{CombinationType, IntSize, NamingConvention}
 import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.model.scala.code.CodePiece
@@ -47,6 +47,8 @@ object ClassReader
 				.flatMap(CustomPropertyType.apply)
 				.map { c.name.toLowerCase -> _ }
 		}.map { customTypes =>
+			implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
+			
 			val customTypesMap = customTypes.toMap
 			val author = root("author").getString
 			val basePackage = Package(root("base_package", "package").getString)
@@ -58,18 +60,18 @@ object ClassReader
 				case Some(pack) => Package(pack)
 				case None => basePackage / "database"
 			}
-			val projectName = root("name", "project").stringOr {
-				basePackage.parts.lastOption match {
-					case Some(lastPart) => lastPart.capitalize
-					case None =>
-						dbPackage.parent.parts.lastOption
-							.orElse { dbPackage.parts.lastOption }
-							.getOrElse { "Project" }
-							.capitalize
+			val projectName = Header.from(root, disableGeneric = true)
+				.orElse { root("name", "project").string.map { Name.interpret(_, namingRules(Header)) } }
+				.getOrElse {
+					basePackage.parts.lastOption match {
+						case Some(lastPart) => Name.interpret(lastPart, CamelCase.lower)
+						case None =>
+							dbPackage.parent.parts.lastOption
+								.orElse { dbPackage.parts.lastOption }
+								.map { Name.interpret(_, CamelCase.lower) }
+								.getOrElse { Name("Project", CamelCase.capitalized) }
+					}
 				}
-			}
-			
-			implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
 			
 			val databaseName = DatabaseName.from(root, disableGeneric = true)
 			val enumPackage = modelPackage / "enumeration"
@@ -142,7 +144,7 @@ object ClassReader
 			}
 			// Returns class instances, also
 			val instances = classData.flatMap { _._3 }
-			ProjectData(projectName, modelPackage, dbPackage, databaseName.map { _.singularInContext(DatabaseName) },
+			ProjectData(projectName, modelPackage, dbPackage, databaseName,
 				enumerations, classes, combinations, instances, namingRules, root("version").string.map { Version(_) },
 				!root("models_without_vault").getBoolean, root("prefix_columns").getBoolean)
 		}

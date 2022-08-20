@@ -5,7 +5,7 @@ import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.util.ScopeUsable
 import utopia.vault.coder.model.data.{Name, NamingRules}
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text, UnderScore}
+import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated, Text, UnderScore}
 
 /**
   * A common trait for all name context values. These determine how a name should be displayed.
@@ -110,7 +110,7 @@ object NameContext
 	  * All name context values
 	  */
 	val values = Vector[NameContext](EnumValueName, EnumName, JsonPropName, FunctionName, ClassPropName, ObjectName,
-		ClassName, ColumnName, TableName, DatabaseName, Sql, Documentation)
+		ClassName, ColumnName, TableName, DatabaseName, Sql, Header, Documentation, FileName)
 	
 	
 	// NESTED   ----------------------
@@ -235,5 +235,24 @@ object NameContext
 		override def defaultNaming = Text.lower
 		override def parent = None
 		override lazy val jsonProps = Vector("documentation", "doc", "text")
+	}
+	/**
+	  * Name context for documentation headers
+	  */
+	case object Header extends NameContext
+	{
+		override def defaultNaming = Text.allCapitalized
+		override def parent = Some(Documentation)
+		override lazy val jsonProps =
+			Vector("header_name", "heading_name", "title_name", "header", "heading", "head", "title")
+	}
+	/**
+	  * Name context for file names
+	  */
+	case object FileName extends NameContext
+	{
+		override def defaultNaming = Hyphenated
+		override def parent = None
+		override def jsonProps = Vector("file_name", "file", "path_name", "path")
 	}
 }

@@ -18,6 +18,7 @@ import utopia.vault.coder.controller.reader
 import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, InsertsWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
 import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectPaths, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NameContext.FileName
 import utopia.vault.coder.model.scala.datatype.Reference
 
 import java.nio.file.{Path, Paths}
@@ -405,14 +406,15 @@ object VaultCoderApp extends App
 						case Some(version) => s" $version"
 						case None => ""
 					}}")
+					implicit val naming: NamingRules = data.namingRules
+					val mergeFileName = (data.projectName.inContext(FileName) ++ Vector("merge", "conflicts",
+						Today.toString, startTime.getHour.toString, startTime.getMinute.toString)).fileName + ".txt"
 					implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
 						data.databasePackage, directory,
 						if (data.modelCanReferToDB) mainMergeRoot.toVector else
 							Vector(mainMergeRoot, alternativeMergeRoot).flatten,
-						directory/s"${data.projectName}-merge-conflicts-${Today.toString}-${startTime.getHour}-${
-							startTime.getMinute}.txt",
-						data.version, data.modelCanReferToDB, data.prefixColumnNames)
-					implicit val naming: NamingRules = data.namingRules
+						directory/mergeFileName, data.version, data.modelCanReferToDB, data.prefixColumnNames)
+					
 					write(data)
 				}
 			}
@@ -430,22 +432,21 @@ object VaultCoderApp extends App
 	
 	def write(data: ProjectData)(implicit setup: ProjectSetup, naming: NamingRules): Try[Unit] =
 	{
-		val dbFileNamePart = setup.dbModuleName.toLowerCase
-		val versionPart = setup.version match {
-			case Some(version) => "-" + version
-			case None => ""
-		}
+		def path(fileType: String, parts: String*) =
+			setup.sourceRoot/s"${ (setup.dbModuleName.inContext(FileName) ++ parts ++
+				setup.version.map { _.toString }).fileName }.$fileType"
+		
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
 			// Writes the SQL declaration
 			.flatMap { _ => SqlWriter(data.databaseName, data.classes,
-				setup.sourceRoot/s"$dbFileNamePart-db-structure$versionPart.sql") }
+				path("sql", "db", "structure")) }
 			// Writes initial database inserts document
 			.flatMap { _ => InsertsWriter(data.databaseName, data.instances,
-				setup.sourceRoot/s"$dbFileNamePart-initial-inserts$versionPart.sql") }
+				path("sql", "initial", "inserts")) }
 			// Writes column length rules
 			.flatMap { _ => ColumnLengthRulesWriter(data.databaseName, data.classes,
-				setup.sourceRoot/s"$dbFileNamePart-length-rules$versionPart.json") }
+				path("json", "length", "rules")) }
 			// Writes the tables document, which is referred to later, also
 			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>

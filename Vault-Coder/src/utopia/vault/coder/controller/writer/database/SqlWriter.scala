@@ -8,6 +8,7 @@ import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, Proj
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.vault.coder.model.datatype.PropertyType.ClassReference
+import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
 
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -30,7 +31,7 @@ object SqlWriter
 	  * @param codec      Implicit codec used when writing
 	  * @return Target path. Failure if writing failed.
 	  */
-	def apply(dbName: Option[String], classes: Seq[Class], targetPath: Path)
+	def apply(dbName: Option[Name], classes: Seq[Class], targetPath: Path)
 	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		// Doesn't write anything if no classes are included
@@ -53,17 +54,18 @@ object SqlWriter
 			targetPath.writeUsing { writer =>
 				// Writes the header
 				writer.println("-- ")
-				writer.println(s"-- Database structure for ${setup.dbModuleName} models")
+				writer.println(s"-- Database structure for ${setup.dbModuleName.doc} models")
 				setup.version.foreach { v => writer.println(s"-- Version: $v") }
 				writer.println(s"-- Last generated: ${Today.toString}")
 				writer.println("--")
 				
 				// Writes the database introduction, if needed
 				dbName.foreach { dbName =>
+					val formattedDbName = dbName(DatabaseName)
 					writer.println()
-					writer.println(s"CREATE DATABASE IF NOT EXISTS `$dbName` ")
+					writer.println(s"CREATE DATABASE IF NOT EXISTS `$formattedDbName` ")
 					writer.println("\tDEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;")
-					writer.println(s"USE `$dbName`;")
+					writer.println(s"USE `$formattedDbName`;")
 				}
 				
 				// Groups the classes by package and writes them

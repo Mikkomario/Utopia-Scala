@@ -28,7 +28,7 @@ object TablesWriter
 	  */
 	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
-		val objectName = setup.dbModuleName + "Tables"
+		val objectName = (setup.dbModuleName + "Tables").objectName
 		// If there are no classes to write, omits this document (e.g. when only writing enumerations or something)
 		if (classes.isEmpty)
 			Success(Reference(setup.databasePackage, objectName))

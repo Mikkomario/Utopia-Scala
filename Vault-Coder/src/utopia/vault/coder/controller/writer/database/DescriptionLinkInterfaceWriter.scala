@@ -1,6 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NameContext.ObjectName
 import utopia.vault.coder.model.scala.DeclarationDate
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.Reference
@@ -42,7 +43,7 @@ object DescriptionLinkInterfaceWriter
 					s"Database interaction model factory for ${ base.name.doc } description links")
 			}
 			File(setup.dbModelPackage/"description",
-				ObjectDeclaration(setup.dbModuleName + "DescriptionLinkModel",
+				ObjectDeclaration((setup.dbModuleName + "DescriptionLinkModel").objectName,
 					properties = modelProps,
 					description = s"Used for interacting with description links for models in ${setup.dbModuleName}",
 					since = DeclarationDate.versionedToday
@@ -54,7 +55,7 @@ object DescriptionLinkInterfaceWriter
 						s"Factory for reading ${base.name} description links")
 				}
 				File(setup.factoryPackage/"description",
-					ObjectDeclaration(setup.dbModuleName + "DescriptionLinkFactory",
+					ObjectDeclaration((setup.dbModuleName + "DescriptionLinkFactory").objectName,
 						properties = linkFactoryProps,
 						description = s"Used for accessing description link factories for the models in ${
 							setup.dbModuleName}", since = DeclarationDate.versionedToday
@@ -68,7 +69,7 @@ object DescriptionLinkInterfaceWriter
 								s"Factory for reading descriptions linked with ${base.name.pluralDoc}")
 						}
 					File(setup.factoryPackage/"description",
-						ObjectDeclaration(setup.dbModuleName + "LinkedDescriptionFactory",
+						ObjectDeclaration((setup.dbModuleName + "LinkedDescriptionFactory").objectName,
 							properties = descriptionFactoryProps,
 							description = s"Used for reading linked descriptions for models in ${setup.dbModuleName}",
 							since = DeclarationDate.versionedToday

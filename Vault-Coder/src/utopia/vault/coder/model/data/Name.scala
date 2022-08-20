@@ -5,7 +5,7 @@ import utopia.flow.generic.FromValueFactory
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.SelfComparable
-import utopia.vault.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, Documentation, EnumName, EnumValueName, FunctionName, JsonPropName, TableName}
+import utopia.vault.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, Documentation, EnumName, EnumValueName, FileName, FunctionName, Header, JsonPropName, ObjectName, TableName}
 import utopia.vault.coder.model.enumeration.{NameContext, NamingConvention}
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 
@@ -137,10 +137,20 @@ case class Name(singular: String, plural: String, style: NamingConvention)
 	  */
 	def pluralDoc(implicit naming: NamingRules) = pluralInContext(Documentation)
 	/**
+	  * @param naming Implicit naming rules
+	  * @return A header name based on this name
+	  */
+	def header(implicit naming: NamingRules) = apply(Header)
+	/**
 	  * @param naming Implicit naming convention
 	  * @return A class name based on this name
 	  */
 	def className(implicit naming: NamingRules) = apply(ClassName)
+	/**
+	  * @param naming Implicit naming convention
+	  * @return An object name based on this name
+	  */
+	def objectName(implicit naming: NamingRules) = apply(ObjectName)
 	/**
 	  * @param naming Implicit naming convention
 	  * @return A class name based on the plural version of this name
@@ -186,6 +196,11 @@ case class Name(singular: String, plural: String, style: NamingConvention)
 	  * @return An enumeration value (object) name based on this name
 	  */
 	def enumValue(implicit naming: NamingRules) = apply(EnumValueName)
+	/**
+	  * @param naming Implicit naming rules
+	  * @return A file name based on this name
+	  */
+	def fileName(implicit naming: NamingRules) = apply(FileName)
 	
 	
 	// IMPLEMENTED  --------------------------

@@ -62,6 +62,7 @@ object NamingConvention
 	private lazy val upperCaseRangeRegex = Regex.upperCaseLetter.oneOrMoreTimes
 	private lazy val digitRangeRegex = Regex.digit.oneOrMoreTimes
 	private lazy val underscoreRegex = Regex.escape('_')
+	private lazy val hyphenRegex = Regex.escape('-')
 	
 	
 	// OTHER    ----------------------------
@@ -71,7 +72,11 @@ object NamingConvention
 	  * @return A guess of that string's naming convention
 	  */
 	def of(string: String) = {
-		if (string.contains(' ')) {
+		lazy val containsUnderScore = underscoreRegex.existsIn(string)
+		lazy val containsHyphen = hyphenRegex.existsIn(string)
+		
+		// Hyphen & underscore are mutually exclusive, resulting in a text type when combined
+		if (Regex.whiteSpace.existsIn(string) || (containsHyphen && containsUnderScore)) {
 			if (string.view.drop(1).exists { _.isUpper })
 				Text.allCapitalized
 			else if (string.head.isUpper)
@@ -79,7 +84,9 @@ object NamingConvention
 			else
 				Text.lower
 		}
-		else if (string.contains('_'))
+		else if (containsHyphen)
+			Hyphenated
+		else if (containsUnderScore)
 			UnderScore
 		else if (string.headOption.exists { _.isUpper })
 			CamelCase.capitalized
@@ -106,8 +113,10 @@ object NamingConvention
 		val lower = styleName.toLowerCase
 		lazy val isCapitalized = styleName.headOption.exists { _.isUpper }
 		lower match {
+			case "pascal" | "pascalcase" => Some(CamelCase.capitalized)
 			case "camel" | "camelcase" => Some(if (isCapitalized) CamelCase.capitalized else CamelCase.lower)
-			case "under" | "underscore" => Some(UnderScore)
+			case "under" | "underscore" | "_" => Some(UnderScore)
+			case "hyphen" | "dash" | "hyphenated" | "kebab" | "-" => Some(Hyphenated)
 			case "text" | "doc" => Some(if (isCapitalized) Text.allCapitalized else Text.lower)
 			case _ => None
 		}
@@ -136,7 +145,7 @@ object NamingConvention
 		// IMPLEMENTED  ------------------------
 		
 		override def accepts(name: String) = {
-			if (underscoreRegex.existsIn(name) || Regex.whiteSpace.existsIn(name))
+			if (underscoreRegex.existsIn(name) || Regex.whiteSpace.existsIn(name) || hyphenRegex.existsIn(name))
 				false
 			else
 				name.headOption.exists { c => !c.isLetter || c.isUpper == capitalized }
@@ -146,7 +155,7 @@ object NamingConvention
 		{
 			lazy val parts = originalStyle.split(string)
 			originalStyle match {
-				case UnderScore => fromParts(parts)
+				case UnderScore | Hyphenated => fromParts(parts)
 				case Text(firstCapitalized, _) =>
 					val base = fromParts(parts)
 					if (firstCapitalized == capitalized)
@@ -266,7 +275,8 @@ object NamingConvention
 	{
 		// This naming convention doesn't support uppercase characters, nor whitespaces
 		override def accepts(name: String) =
-			!Regex.whiteSpace.existsIn(name) && name.forall { c => !c.isLetter || !c.isUpper }
+			!Regex.whiteSpace.existsIn(name) && !hyphenRegex.existsIn(name) &&
+				name.forall { c => !c.isLetter || !c.isUpper }
 		
 		override def convert(string: String, originalStyle: NamingConvention) =
 			originalStyle match {
@@ -277,6 +287,22 @@ object NamingConvention
 		override def combine(beginning: String, end: String) = beginning + "_" + end
 		
 		override def split(string: String) = underscoreRegex.split(string)
+	}
+	
+	case object Hyphenated extends NamingConvention
+	{
+		override def accepts(name: String) =
+			!Regex.whiteSpace.existsIn(name) && !underscoreRegex.existsIn(name) &&
+				name.forall { c => !c.isLetter || !c.isUpper }
+		
+		override def convert(string: String, originalStyle: NamingConvention) = originalStyle match {
+			case Hyphenated => string
+			case _ => originalStyle.split(string).map { _.toLowerCase }.mkString("-")
+		}
+		
+		override def combine(beginning: String, end: String) = s"$beginning-$end"
+		
+		override def split(string: String) = hyphenRegex.split(string)
 	}
 	
 	object Text

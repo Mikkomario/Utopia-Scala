@@ -7,6 +7,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.model.data.{Class, Instance, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 
 import java.io.PrintWriter
@@ -37,7 +38,7 @@ object InsertsWriter
 	  * @param naming Implicit naming rules
 	  * @return Success (containing target path) or failure
 	  */
-	def apply(dbName: Option[String], instances: Iterable[Instance], targetPath: Path)
+	def apply(dbName: Option[Name], instances: Iterable[Instance], targetPath: Path)
 	         (implicit setup: ProjectSetup, naming: NamingRules) =
 	{
 		if (instances.nonEmpty)
@@ -52,7 +53,7 @@ object InsertsWriter
 				// Writes USE db statement (optional)
 				dbName.foreach { dbName =>
 					writer.println()
-					writer.println(s"USE $dbName;")
+					writer.println(s"USE ${dbName(DatabaseName)};")
 				}
 				
 				// Groups the instances based on package and class
