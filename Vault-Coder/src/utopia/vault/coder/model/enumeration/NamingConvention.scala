@@ -17,6 +17,11 @@ sealed trait NamingConvention
 	// ABSTRACT -------------------------
 	
 	/**
+	  * @return A separator placed between different parts of the names in this naming convention
+	  */
+	def separator: String
+	
+	/**
 	  * @param name A name / string
 	  * @return Whether that name conforms to this naming convention as-is
 	  */
@@ -143,6 +148,8 @@ object NamingConvention
 	case class CamelCase(capitalized: Boolean) extends NamingConvention
 	{
 		// IMPLEMENTED  ------------------------
+		
+		override def separator = ""
 		
 		override def accepts(name: String) = {
 			if (underscoreRegex.existsIn(name) || Regex.whiteSpace.existsIn(name) || hyphenRegex.existsIn(name))
@@ -273,6 +280,8 @@ object NamingConvention
 	  */
 	case object UnderScore extends NamingConvention
 	{
+		override def separator = "_"
+		
 		// This naming convention doesn't support uppercase characters, nor whitespaces
 		override def accepts(name: String) =
 			!Regex.whiteSpace.existsIn(name) && !hyphenRegex.existsIn(name) &&
@@ -291,6 +300,8 @@ object NamingConvention
 	
 	case object Hyphenated extends NamingConvention
 	{
+		override def separator = "-"
+		
 		override def accepts(name: String) =
 			!Regex.whiteSpace.existsIn(name) && !underscoreRegex.existsIn(name) &&
 				name.forall { c => !c.isLetter || !c.isUpper }
@@ -329,6 +340,8 @@ object NamingConvention
 	case class Text(capitalizeFirst: Boolean, capitalizeMore: Boolean) extends NamingConvention
 	{
 		// IMPLEMENTED  --------------------------
+		
+		override def separator = " "
 		
 		override def accepts(name: String) = {
 			if (name.isEmpty)

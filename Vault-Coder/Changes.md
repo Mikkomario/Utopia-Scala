@@ -3,6 +3,7 @@
 ## v1.7 (in development)
 ### Breaking Changes
 - The default naming style for json properties is now `camelCase` (previously was `underscore`)
+- Description access point naming updated (see **Bugfixes**)
 - Optional enumeration value code structure may be altered
 ### New Features
 - Added support for complex enumerations, meaning
@@ -11,6 +12,9 @@
   - Default value support
 - Added markdown documentation writing
 - Documentation naming convention may now be altered
+### Bugfixes
+- Description access point naming previously yielded duplicate object names, now contains the proper suffix 
+  "Descriptions"
 
 ## v1.6 - 18.08.2022
 This update adds a number of new features, such as custom data type support and program settings saving. 

@@ -433,9 +433,14 @@ object VaultCoderApp extends App
 	
 	def write(data: ProjectData)(implicit setup: ProjectSetup, naming: NamingRules): Try[Unit] =
 	{
-		def path(fileType: String, parts: String*) =
-			setup.sourceRoot/s"${ (setup.dbModuleName.inContext(FileName) ++ parts ++
-				setup.version.map { _.toString }).fileName }.$fileType"
+		def path(fileType: String, parts: String*) = {
+			val fileNameBase = (setup.dbModuleName.inContext(FileName) ++ parts).fileName
+			val fullFileName = data.version match {
+				case Some(version) => s"$fileNameBase${naming(FileName).separator}$version.$fileType"
+				case None => s"$fileNameBase.$fileType"
+			}
+			setup.sourceRoot/fullFileName
+		}
 		
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
@@ -482,12 +487,10 @@ object VaultCoderApp extends App
 				DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
 					.flatMap { dbModelRef =>
 						// Adds description-specific references if applicable
-						(descriptionLinkObjects match
-						{
+						(descriptionLinkObjects match {
 							// Case: At least one class uses descriptions
 							case Some((linkModels, _, linkedDescriptionFactories)) =>
-								classToWrite.descriptionLinkClass match
-								{
+								classToWrite.descriptionLinkClass match {
 									case Some(descriptionLinkClass) =>
 										DescribedModelWriter(classToWrite, modelRef).flatMap { describedRef =>
 											DbDescriptionAccessWriter(descriptionLinkClass,

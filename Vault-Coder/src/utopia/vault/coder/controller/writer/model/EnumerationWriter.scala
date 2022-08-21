@@ -59,7 +59,7 @@ object EnumerationWriter
 			case Some(default) => CodePiece(".getOrElse(default)") -> s", or the default ${e.name} (${default.name})"
 			case None =>
 				CodePiece(s".toTry { new NoSuchElementException(s${
-					s"No value of ${ e.name.doc } matches ${ e.idPropName.doc } '${ "$" + idPropName }'".quoted
+					s"No value of ${ e.name.enumName } matches ${ e.idPropName.prop } '${ "$" + idPropName }'".quoted
 				}) }", Set(Reference.collectionExtensions, Reference.noSuchElementException)) ->
 					". Failure if no matching value was found."
 		}

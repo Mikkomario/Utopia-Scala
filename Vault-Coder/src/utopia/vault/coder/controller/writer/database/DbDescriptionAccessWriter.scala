@@ -17,6 +17,7 @@ import scala.io.Codec
 object DbDescriptionAccessWriter
 {
 	private val accessPrefix = Name("Db", "Db", CamelCase.capitalized)
+	private val descriptionsSuffix = Name("Description", "Descriptions", CamelCase.capitalized)
 	
 	/**
 	  * Writes description-related database interaction objects
@@ -42,8 +43,9 @@ object DbDescriptionAccessWriter
 				s"${ linkModelsRef.target }.$factoryPropertyName")
 		)
 		// Next writes the individual description access point
+		// FIXME: Object naming is not complete, missing the "Descriptions" -suffix
 		File(setup.singleAccessPackage / descriptionLinkClass.packageName,
-			ObjectDeclaration((accessPrefix +: descriptionLinkClass.name).className,
+			ObjectDeclaration(((accessPrefix +: descriptionLinkClass.name) + descriptionsSuffix).className,
 				Vector(Reference.linkedDescriptionAccess),
 				properties = baseAccessProperties, author = descriptionLinkClass.author,
 				description = s"Used for accessing individual $baseClassName descriptions",
@@ -52,7 +54,7 @@ object DbDescriptionAccessWriter
 		).write().flatMap { singleDescriptionAccessRef =>
 			// Finally writes the multiple descriptions access point
 			File(setup.manyAccessPackage / descriptionLinkClass.packageName,
-				ObjectDeclaration((accessPrefix +: baseClassName).pluralClassName,
+				ObjectDeclaration(((accessPrefix +: baseClassName) + descriptionsSuffix).pluralClassName,
 					Vector(Reference.linkedDescriptionsAccess), properties = baseAccessProperties,
 					author = descriptionLinkClass.author,
 					description = s"Used for accessing multiple $baseClassName descriptions at a time",

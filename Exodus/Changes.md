@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v4.1.1 (in development)
+## v4.2 (in development)
 Supports changes in **Flow** v1.17
 
 ## v4.1 - 18.08.2022

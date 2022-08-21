@@ -1,5 +1,8 @@
 # Utopia Ambassador - List of Changes
 
+## v2.2 (in development)
+Planning for model renames & token hashing
+
 ## v2.1.1 - 18.08.2022
 New build / supports changes in **Flow** v1.16
 
