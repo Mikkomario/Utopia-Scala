@@ -15,6 +15,7 @@
   - Added a new variant of `.apply(...) `
 ### Other Changes
 - Rewrote **Value**`.castTo(DataType, DataType)` so that it will cast to the closer data type
+- **Volatile**`.value` is no longer synchronized. For synchronized access, use `.synchronizedValue`
 - **PollingIterator** is now type covariant
 
 ## v1.16 - 18.08.2022

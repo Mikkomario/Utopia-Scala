@@ -38,10 +38,19 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     @deprecated("Please use .value instead", "v1.9")
     def get = value
     
+    /**
+      * @return The current value of this volatile container, accessed in a synchronized manner,
+      *         meaning that this function call will block while the value is being locked from another thread,
+      *         during an update or such. For non-synchronized access, which is perhaps faster but might be less
+      *         accurate, call `.value`
+      * @see value
+      */
+    def synchronizedValue = this.synchronized { _value }
+    
     
     // IMPLEMENTED  ----------------
     
-    override def value = this.synchronized { _value }
+    override def value = _value
     override def value_=(newValue: A) = lockAndSet { _ => () -> newValue }
     
     override def isChanging = true
