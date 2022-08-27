@@ -47,5 +47,10 @@ object VolatileTest extends App
 	assert(!flag.isSet)
 	assert(called)
 	
+	assert(!flag.getAndSet())
+	assert(flag.getAndSet())
+	flag.reset()
+	assert(!flag.isSet)
+	
 	println("Success!")
 }

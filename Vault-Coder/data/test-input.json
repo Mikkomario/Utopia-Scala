@@ -146,6 +146,24 @@
             "type": "creation"
           }
         ]
+      },
+      {
+        "name": "CarOwnership",
+        "props": [
+          {
+            "ref": "car"
+          },
+          {
+            "name": "ownerName",
+            "length": 32
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "type": "deprecation"
+          }
+        ]
       }
     ]
   }
