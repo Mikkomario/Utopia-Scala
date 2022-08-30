@@ -8,7 +8,8 @@ import utopia.vault.nosql.access.single.SingleAccess
 import utopia.vault.nosql.access.template.model.ModelAccess
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Condition, JoinType, Limit, OrderBy, Select, Where}
+import utopia.vault.sql.OrderDirection.{Ascending, Descending}
+import utopia.vault.sql.{Condition, JoinType, Limit, OrderBy, OrderDirection, Select, Where}
 
 /**
  * Used for accessing individual models from DB
@@ -48,4 +49,97 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 		// Applies the query and parses results
 		connection(statement).firstValue
 	}
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Reads the value of a column from the first row when reading accessible model(s) using the specified ordering
+	  * @param column Column to read
+	  * @param order Ordering to use
+	  * @param additionalCondition Additional filter condition to apply (optional)
+	  * @param joins Joins to apply (default = empty)
+	  * @param joinType Join type to use (default = inner)
+	  * @param connection Implicit DB connection
+	  * @return Value of the specified column in the first accessible row when using the specified ordering
+	  *         (and other search criteria)
+	  */
+	def firstColumnUsing(column: Column, order: OrderBy, additionalCondition: Option[Condition] = None,
+	                     joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                    (implicit connection: Connection) =
+		readColumn(column, additionalCondition, Some(order), joins, joinType)
+	
+	/**
+	  * Reads the value of a column from a max/min row based on another column
+	  * @param readColumn Column to read
+	  * @param orderingColumn Column to base the ordering upon
+	  * @param orderDirection Ordering direction to use
+	  * @param additionalCondition Additional filter condition to apply (optional)
+	  * @param joins Joins to apply (default = empty)
+	  * @param joinType Join type to use (default = inner)
+	  * @param connection Implicit DB connection
+	  * @return Value of the specified column in the first accessible row when using the specified ordering
+	  *         (and other search criteria)
+	  */
+	def topColumnBy(readColumn: Column, orderingColumn: Column, orderDirection: OrderDirection,
+	                additionalCondition: Option[Condition] = None, joins: Seq[Joinable] = Vector(),
+	                joinType: JoinType = Inner)
+	               (implicit connection: Connection) =
+		firstColumnUsing(readColumn, OrderBy(orderingColumn, orderDirection), additionalCondition, joins, joinType)
+	
+	/**
+	  * Reads the value of a column from a row with the maximum value in another column
+	  * @param readColumn Column to read
+	  * @param orderingColumn Column to base the ordering upon
+	  * @param additionalCondition Additional filter condition to apply (optional)
+	  * @param joins Joins to apply (default = empty)
+	  * @param joinType Join type to use (default = inner)
+	  * @param connection Implicit DB connection
+	  * @return Value of the specified column in the row with the maximum value in the other column
+	  */
+	def maxColumnBy(readColumn: Column, orderingColumn: Column, additionalCondition: Option[Condition] = None,
+	                joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	               (implicit connection: Connection) =
+		topColumnBy(readColumn, orderingColumn, Descending, additionalCondition, joins, joinType)
+	/**
+	  * Reads the value of a column from a row with the minimum value in another column
+	  * @param readColumn Column to read
+	  * @param orderingColumn Column to base the ordering upon
+	  * @param additionalCondition Additional filter condition to apply (optional)
+	  * @param joins Joins to apply (default = empty)
+	  * @param joinType Join type to use (default = inner)
+	  * @param connection Implicit DB connection
+	  * @return Value of the specified column in the row with the minimum value in the other column
+	  */
+	def minColumnBy(readColumn: Column, orderingColumn: Column, additionalCondition: Option[Condition] = None,
+	                joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	               (implicit connection: Connection) =
+		topColumnBy(readColumn, orderingColumn, Ascending, additionalCondition, joins, joinType)
+	
+	/**
+	  * Reads the largest accessible value of a column
+	  * @param column Column to read
+	  * @param additionalCondition Additional filter condition to apply (optional)
+	  * @param joins Joins to apply (default = empty)
+	  * @param joinType Join type to use (default = inner)
+	  * @param connection Implicit DB connection
+	  * @return Largest accessible value of that column
+	  */
+	def maxColumn(column: Column, additionalCondition: Option[Condition] = None,
+	              joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	             (implicit connection: Connection) =
+		maxColumnBy(column, column, additionalCondition, joins, joinType)
+	/**
+	  * Reads the smallest accessible value of a column
+	  * @param column Column to read
+	  * @param additionalCondition Additional filter condition to apply (optional)
+	  * @param joins Joins to apply (default = empty)
+	  * @param joinType Join type to use (default = inner)
+	  * @param connection Implicit DB connection
+	  * @return Smallest accessible value of that column
+	  */
+	def minColumn(column: Column, additionalCondition: Option[Condition] = None,
+	              joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	             (implicit connection: Connection) =
+		minColumnBy(column, column, additionalCondition, joins, joinType)
 }

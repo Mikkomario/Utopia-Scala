@@ -20,12 +20,12 @@ trait SingleColumnAccess[+V]
 	  * @param connection Database connection (implicit)
 	  * @return The smallest available row id
 	  */
-	def min(implicit connection: Connection) = first(OrderBy.ascending(column))
+	def min(implicit connection: Connection) = firstUsing(OrderBy.ascending(column))
 	/**
 	  * @param connection Database connection (implicit)
 	  * @return The largest available row id
 	  */
-	def max(implicit connection: Connection) = first(OrderBy.descending(column))
+	def max(implicit connection: Connection) = firstUsing(OrderBy.descending(column))
 	
 	
 	// IMPLEMENTED	---------------------------

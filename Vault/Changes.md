@@ -1,8 +1,20 @@
 # Utopia Vault - List of Changes
 
-## v1.13.1 (in development)
+## v1.14 (in development)
+### Breaking Changes
+- **SingleChronoRowModelAccess**`.latest` now returns an access-point, not the read item
+### Deprecations
+- In **SingleAccess**
+  - Deprecated the `.first(...)` -variants in favor of `.firstUsing(...)` and `.findFirstUsing(...)`
+  - Deprecated the `.top(...)` -variants in favor of `.topBy(...)`
+  - Deprecated some `.maxBy(...)` and `.minBy(...)` variants
 ### New Features
 - Added new **Log ErrorHandlingPrinciple**
+- Added a constructor to **LatestModelAccess**
+- SingleAccess max & min -functions now support joining
+### New Methods
+- **SingleModelAccess**
+  - Added multiple new methods for reading max/min column values
 
 ## v1.13 - 18.08.2022
 This update reflects changes in **Flow** v1.16
