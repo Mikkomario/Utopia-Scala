@@ -5,6 +5,7 @@ package utopia.reflection.color
   * @author Mikko Hilpinen
   * @since 18.8.2020, v1.2
   */
+// TODO: Color role ought not to be sealed
 sealed trait ColorRole
 
 sealed trait AdditionalColorRole extends ColorRole

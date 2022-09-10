@@ -1,6 +1,7 @@
 package utopia.reflection.controller.data
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.operator.EqualsFunction
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.display.Refreshable
@@ -26,7 +27,7 @@ object ContainerContentManager
 	  */
 	def forStatelessItemsPointer[A, Display <: Stackable with Refreshable[A]]
 	(container: MultiStack[Display], contentPointer: PointerWithEvents[Vector[A]],
-	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
+	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerContentManager[A, MultiStack[Display], Display](container, contentPointer, equalsCheck)(makeDisplay)
 	
 	/**
@@ -42,7 +43,7 @@ object ContainerContentManager
 	  */
 	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
 	(container: MultiStack[Display], initialItems: Vector[A] = Vector(),
-	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
+	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		forStatelessItemsPointer[A, Display](container, new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
 	
 	/**
@@ -61,7 +62,7 @@ object ContainerContentManager
 	  */
 	def forImmutableStatesPointer[A, Display <: Stackable with Refreshable[A]]
 	(container: MultiStack[Display], contentPointer: PointerWithEvents[Vector[A]])(
-		sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerContentManager[A, MultiStack[Display], Display](container, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
 	
@@ -81,7 +82,7 @@ object ContainerContentManager
 	  */
 	def forImmutableStates[A, Display <: Stackable with Refreshable[A]]
 	(container: MultiStack[Display], initialItems: Vector[A] = Vector())(
-		sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forImmutableStatesPointer[A, Display](container, new PointerWithEvents(initialItems))(sameItemCheck)(makeDisplay)
 	
 	/**
@@ -100,7 +101,7 @@ object ContainerContentManager
 	  */
 	def forMutableItemsPointer[A, Display <: Stackable with Refreshable[A]]
 	(container: MultiStack[Display], contentPointer: PointerWithEvents[Vector[A]])(
-		sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerContentManager[A, MultiStack[Display], Display](container, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
 	
@@ -120,7 +121,7 @@ object ContainerContentManager
 	  */
 	def forMutableItems[A, Display <: Stackable with Refreshable[A]]
 	(container: MultiStack[Display], initialItems: Vector[A] = Vector())(
-		sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forMutableItemsPointer[A, Display](container, new PointerWithEvents(initialItems))(sameItemCheck)(equalsCheck)(makeDisplay)
 }
 
@@ -142,6 +143,7 @@ object ContainerContentManager
   */
 class ContainerContentManager[A, Container <: MultiContainer[Display] with Stackable, Display <: Stackable with Refreshable[A]]
 (container: Container, contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
-(makeItem: A => Display) extends ContainerContentDisplayer[A, Container, Display, PointerWithEvents[Vector[A]]](
-	container, contentPointer, sameItemCheck, equalsCheck)(makeItem) with ContentManager[A, Display]
+ sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
+(makeItem: A => Display)
+	extends ContainerContentDisplayer[A, Container, Display, PointerWithEvents[Vector[A]]](
+		container, contentPointer, sameItemCheck, equalsCheck)(makeItem) with ContentManager[A, Display]

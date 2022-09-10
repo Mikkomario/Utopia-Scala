@@ -20,21 +20,17 @@ trait ContentManager[A, C <: Refreshable[A]] extends ContentDisplayer[A, C, Poin
 	  * @param oldItem Item to be replaced
 	  * @param newItem The item that will replace the old item
 	  */
-	def replace(oldItem: A, newItem: A) =
-	{
-		content.indexWhereOption { representSameItem(oldItem, _) }.foreach { targetIndex =>
-			content = content.updated(targetIndex, newItem)
-		}
+	def replace(oldItem: A, newItem: A) = {
+		content.indexWhereOption { representSameItem(oldItem, _) }
+			.foreach { targetIndex => content = content.updated(targetIndex, newItem) }
 	}
 	
 	/**
 	  * Updates a single item in this display's content (only useful when managed content has mutable state)
 	  * @param item Item to be updated
 	  */
-	def updateSingle(item: A) =
-	{
-		content.indexWhereOption { representSameItem(item, _) } match
-		{
+	def updateSingle(item: A) = {
+		content.indexWhereOption { representSameItem(item, _) } match {
 			case Some(index) =>
 				// val targetedDisplay = displays(index)
 				// targetedDisplay.content = item

@@ -118,6 +118,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
   * @since 30.10.2020, v0.1
   */
 // TODO: Create a password mode where text is not displayed nor copyable
+// TODO: Should also support input modification (e.g. upper-casing)
 class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
                         baseStylePointer: ChangingLike[TextDrawContext],
                         selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),

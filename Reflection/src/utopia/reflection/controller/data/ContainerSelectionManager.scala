@@ -1,8 +1,8 @@
 package utopia.reflection.controller.data
 
 import java.awt.event.KeyEvent
-
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
@@ -38,7 +38,7 @@ object ContainerSelectionManager
 	  */
 	def forStatelessItemsPointer[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]],
-	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
+	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, equalsCheck)(makeDisplay)
 	
 	/**
@@ -55,7 +55,7 @@ object ContainerSelectionManager
 	  */
 	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
-	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
+	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer,
 			new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
 	
@@ -76,7 +76,7 @@ object ContainerSelectionManager
 	  */
 	def forImmutableStatesPointer[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
-		sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
 	
@@ -97,7 +97,7 @@ object ContainerSelectionManager
 	  */
 	def forImmutableStates[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
-		sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(sameItemCheck)(makeDisplay)
 	
 	/**
@@ -117,7 +117,7 @@ object ContainerSelectionManager
 	  */
 	def forMutableItemsPointer[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
-		sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
 	
@@ -138,7 +138,7 @@ object ContainerSelectionManager
 	  */
 	def forMutableItems[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
-		sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(
 			sameItemCheck)(equalsCheck)(makeDisplay)
 }
@@ -151,7 +151,7 @@ object ContainerSelectionManager
 class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 (container: MultiContainer[C] with Stackable with CustomDrawable with AreaOfItems[C], selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)(makeItem: A => C)
+ sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
 	extends ContainerContentManager[A, MultiContainer[C] with Stackable, C](container, contentPointer,
 		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
 {
@@ -162,10 +162,10 @@ class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def updateSelectionDisplay(oldSelected: Option[C], newSelected: Option[C]) = container.repaint()
+	override protected def updateSelectionDisplay(oldSelected: Option[C], newSelected: Option[C]) =
+		container.repaint()
 	
-	override protected def finalizeRefresh() =
-	{
+	override protected def finalizeRefresh() = {
 		super.finalizeRefresh()
 		container.repaint()
 	}
@@ -177,7 +177,8 @@ class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 	  * Enables mouse button state handling for the stack (selects the clicked item)
 	  * @param consumeEvents Whether mouse events should be consumed (default = true)
 	  */
-	def enableMouseHandling(consumeEvents: Boolean = true) = container.addMouseButtonListener(new MouseHandler(consumeEvents))
+	def enableMouseHandling(consumeEvents: Boolean = true) =
+		container.addMouseButtonListener(new MouseHandler(consumeEvents))
 	/**
 	  * Enables key state handling for the stack (allows selection change with up & down arrows)
 	  */

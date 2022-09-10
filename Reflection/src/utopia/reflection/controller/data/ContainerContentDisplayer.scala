@@ -1,6 +1,7 @@
 package utopia.reflection.controller.data
 
 import utopia.flow.event.ChangingLike
+import utopia.flow.operator.EqualsFunction
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.display.Refreshable
@@ -31,7 +32,7 @@ object ContainerContentDisplayer
 	 */
 	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
 		(container: MultiStack[Display], contentPointer: P[A],
-		 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
+		 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerContentDisplayer[A, MultiStack[Display], Display, P[A]](
 			container, contentPointer, equalsCheck)(makeDisplay)
 	
@@ -51,7 +52,7 @@ object ContainerContentDisplayer
 	 */
 	def forImmutableStates[A, Display <: Stackable with Refreshable[A]]
 		(container: MultiStack[Display], contentPointer: P[A])(
-			sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+			sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerContentDisplayer[A, MultiStack[Display], Display, P[A]](container, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
 	
@@ -71,7 +72,7 @@ object ContainerContentDisplayer
 	 */
 	def forMutableItems[A, Display <: Stackable with Refreshable[A]]
 		(container: MultiStack[Display], contentPointer: P[A])(
-			sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
+			sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerContentDisplayer[A, MultiStack[Display], Display, P[A]](container, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
 }
@@ -96,7 +97,7 @@ object ContainerContentDisplayer
 class ContainerContentDisplayer[A, Container <: MultiContainer[Display] with Stackable,
 	Display <: Stackable with Refreshable[A], +P <: ChangingLike[Vector[A]]]
 (protected val container: Container, override val contentPointer: P,
- sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
+ sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => Display) extends ContentDisplayer[A, Display, P]
 {
 	// ATTRIBUTES   -----------------------

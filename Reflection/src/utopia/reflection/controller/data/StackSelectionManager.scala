@@ -1,8 +1,8 @@
 package utopia.reflection.controller.data
 
 import java.awt.event.KeyEvent
-
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
@@ -148,7 +148,7 @@ object StackSelectionManager
 class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
 (stack: StackLike[C] with CustomDrawable, selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)(makeItem: A => C)
+ sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
 	extends ContainerContentManager[A, StackLike[C], C](stack, contentPointer, sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
 {
 	// INITIAL CODE	--------------------
