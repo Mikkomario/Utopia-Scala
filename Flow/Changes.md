@@ -11,8 +11,12 @@
 ### New Methods
 - **Either** (**CollectionExtensions**)
   - Added new functions for eithers that contain items of the same type on both sides
+- **Option** (**CollectionExtensions**)
+  - Added `.mergeWith(Option)`
 - **Value**
   - Added a new variant of `.apply(...) `
+- **XmlReader** (object)
+  - Added `.parseString(String)`
 ### Other Changes
 - Rewrote **Value**`.castTo(DataType, DataType)` so that it will cast to the closer data type
 - **Volatile**`.value` is no longer synchronized. For synchronized access, use `.synchronizedValue`

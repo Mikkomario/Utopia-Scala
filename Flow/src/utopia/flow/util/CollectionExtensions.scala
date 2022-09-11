@@ -1187,14 +1187,11 @@ object CollectionExtensions
 		  * @return The first item in this iterator that fulfills the condition.
 		  *         None if none of the items in this iterator fulfilled the condition.
 		  */
-		def nextWhere(condition: A => Boolean) =
-		{
-			if (i.hasNext)
-			{
+		def nextWhere(condition: A => Boolean) = {
+			if (i.hasNext) {
 				var current = i.next()
 				var foundResult = condition(current)
-				while (!foundResult && i.hasNext)
-				{
+				while (!foundResult && i.hasNext) {
 					current = i.next()
 					foundResult = condition(current)
 				}
@@ -1317,6 +1314,25 @@ object CollectionExtensions
 		{
 			case Some(v) => Success(v)
 			case None => Failure(generateFailure)
+		}
+		
+		/**
+		  * Merges this option with another option using the following logic:
+		  * 1) If neither of these options are defined, returns None
+		  * 2) If only one of these options is defined, returns that option
+		  * 3) If both of these options are defined, merges the two values into a new option
+		  * @param other Another option
+		  * @param merge Function to use when both of these options contain a value
+		  * @tparam B Type of the other option (super-type of this option)
+		  * @return Merge result, as described above
+		  */
+		def mergeWith[B >: A](other: Option[B])(merge: (A, B) => B) = o match {
+			case Some(a) =>
+				other match {
+					case Some(b) => Some(merge(a, b))
+					case None => Some(a)
+				}
+			case None => other
 		}
 	}
 	
