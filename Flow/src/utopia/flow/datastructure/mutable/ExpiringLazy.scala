@@ -91,10 +91,7 @@ class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
 				if (waitDuration > Duration.Zero) {
 					val newExpiration = DelayedProcess.hurriable(Now + waitDuration) { _ => cache.reset() }
 					// If there was another reset pending, cancels that first
-					expirationProcessPointer.getAndSet { Some(newExpiration) }.foreach { oldExpiration =>
-						if (oldExpiration.state.isRunning)
-							oldExpiration.stop()
-					}
+					expirationProcessPointer.getAndSet { Some(newExpiration) }.foreach { _.stopIfRunning() }
 					newExpiration.runAsync()
 				}
 				// Case: The item is immediately marked as expired =>

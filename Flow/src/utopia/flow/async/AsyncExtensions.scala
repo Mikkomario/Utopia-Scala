@@ -2,7 +2,6 @@ package utopia.flow.async
 
 import utopia.flow.time.WaitTarget
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.logging.Logger
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -81,8 +80,7 @@ object AsyncExtensions
 		 * @tparam B Type of return value
 		 * @return A future for the first completion of these two futures
 		 */
-		def raceWith[B >: A](other: Future[B])(implicit exc: ExecutionContext) =
-		{
+		def raceWith[B >: A](other: Future[B])(implicit exc: ExecutionContext) = {
 			if (f.isCompleted)
 				f
 			else if (other.isCompleted)
@@ -104,7 +102,9 @@ object AsyncExtensions
 					
 					// Waits until either future completes
 					wait.run()
-					resultPointer.value.get // Can call get because pointer is always set before wait is stopped
+					resultPointer.value.getOrElse {
+						throw new InterruptedException("Wait was interrupted before either future resolved")
+					}
 				}
 			}
 		}
