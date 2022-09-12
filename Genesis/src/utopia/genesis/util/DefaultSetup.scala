@@ -99,10 +99,8 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	/**
 	  * Starts the program (only works once)
 	  */
-	override def start() =
-	{
-		started.runAndSet
-		{
+	override def start() = {
+		if (started.set()) {
 			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
 			
 			GlobalKeyboardEventHandler += keyStateHandler

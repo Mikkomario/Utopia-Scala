@@ -97,15 +97,12 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 		}
 	}
 	
-	private def goOffline() =
-	{
+	private def goOffline() = {
 		isOnlineFlag.reset()
 		nextOfflineMinRequestTime = Now + nextOfflineDelay
 	}
-	
-	private def goOnline() =
-	{
-		isOnlineFlag.runAndSet {
+	private def goOnline() = {
+		if (isOnlineFlag.set()) {
 			nextOfflineDelay = minOfflineDelay
 			nextOfflineMinRequestTime = Now
 		}

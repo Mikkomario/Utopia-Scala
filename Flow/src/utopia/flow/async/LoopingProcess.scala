@@ -106,11 +106,17 @@ object LoopingProcess
 }
 
 /**
-  * Loops are operations that can be repeated multpile times. Loops can also be broken between
-  * operations. Loops don't have value semantics. One loop should only be used a single time by
-  * a single instance.
+  * Loops are operations that can be repeated multiple times.
+  * Loops can be broken and sometimes restarted. Care should be taken when sharing process instances, as they have a
+  * mutable state.
   * @author Mikko Hilpinen
   * @since 31.3.2019
+  * @constructor Creates a new looping process that is not active yet
+  * @param startDelay Delay applied before the first iteration (default = no delay)
+  * @param waitLock Wait lock to utilize (default = new lock)
+  * @param shutdownReaction How this process should react to JVM shutdowns (default = terminate)
+  * @param exc Implicit execution context
+  * @param logger Logger that records exceptions caught during the scheduled actions
   **/
 abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock: AnyRef = new AnyRef,
                               shutdownReaction: ShutdownReaction = Cancel)
@@ -130,25 +136,38 @@ abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock
 	
 	override protected def runOnce() = {
 		// Performs the initial delay, if one has been specified
-		if (startDelay.isPositive)
-			Wait(startDelay, waitLock)
-		
-		var broken = false
-		while (!broken && !shouldHurry)
-		{
+		var broken = {
+			if (startDelay.isPositive) {
+				// If the initial wait is interrupted, considers this loop as broken
+				val waitCompleted = Wait(startDelay, waitLock)
+				if (waitCompleted)
+					false
+				else {
+					markAsInterrupted()
+					true
+				}
+			}
+			else
+				false
+		}
+		// Iterates as long as
+		// a) New iterations are scheduled
+		// b) This process is not broken or requested to hurry
+		while (!broken && !shouldHurry) {
 			// Performs the operation. Exceptions break this loop.
 			iteration() match {
-				// Waits between runs
+				// Case: New iteration requested => Waits the appropriate period first
 				case Some(waitTarget) =>
 					if (shouldHurry)
 						broken = true
-					else
-						Wait(waitTarget, waitLock)
+					// Wait interruptions terminate this loop also
+					else if (!Wait(waitTarget, waitLock)) {
+						markAsInterrupted()
+						broken = true
+					}
+				//  Case: Natural loop completion
 				case None => broken = true
 			}
 		}
 	}
-	
-	@deprecated("The specified shutdownReaction already handles this feature", "v1.15")
-	override def registerToStopOnceJVMCloses() = super.registerToStopOnceJVMCloses()
 }

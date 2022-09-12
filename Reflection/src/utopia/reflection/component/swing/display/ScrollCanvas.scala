@@ -135,11 +135,12 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	  * @param maxFPS The largest frames per second rate allowed (default = 60 Hrz)
 	  * @param context The asynchronous execution context (implicit)
 	  */
-	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger) = started.runAndSet
-	{
-		canvas.addCustomDrawer(new CustomDraw())
-		val repaintLoop = new RepaintLoop(canvas.component, maxFPS)
-		repaintLoop.runAsync()
+	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger) = {
+		if (started.set()) {
+			canvas.addCustomDrawer(new CustomDraw())
+			val repaintLoop = new RepaintLoop(canvas.component, maxFPS)
+			repaintLoop.runAsync()
+		}
 	}
 	
 	

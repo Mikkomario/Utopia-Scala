@@ -193,6 +193,12 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 		}
 	}
 	
+	override def registerToStopOnceJVMCloses() = {
+		// The Cancel -ShutdownReaction already handles this feature, if used
+		if (!shutdownReaction.contains(Cancel))
+			super.registerToStopOnceJVMCloses()
+	}
+	
 	
 	// OTHER    ---------------------------
 	
@@ -244,6 +250,22 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  * @param wait Wait to perform before this process is run
 	  */
 	def runAsyncAfter(wait: WaitTarget) = delayed(wait).runAsync()
+	
+	/**
+	  * Marks this process's state as having been interrupted.
+	  * This resembles calling stop(), but only modifies the state of this process,
+	  * skipping the additional asynchronous operations.
+	  *
+	  * This function should be called in situations where the process finds out its broken during runOnce().
+	  * For example, if an InterruptedException is encountered (while waiting),
+	  * this process should call this function and then hurry to complete the operation it was performing.
+	  *
+	  * @return Whether this process was successfully marked as broken.
+	  *         False if this process had already completed when this function was called.
+	  */
+	protected def markAsInterrupted() = _statePointer.pop { oldState =>
+		if (oldState.isFinal) false -> oldState else true -> oldState.broken
+	}
 	
 	
 	// NESTED   ---------------------------

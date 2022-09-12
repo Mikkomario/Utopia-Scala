@@ -4,6 +4,8 @@
 ### Breaking Changes
 - Removed `~==` and `!~==` from **StringExtensions**, as they are now made available through **EqualsExtensions**
 - `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
+### Deprecations
+- Deprecated `.runAndSet(...)`, `.doIfNotSet(...)` and `.mapAndSet()` in **VolatileFlag**
 ### New Features
 - Added **ValueConvertibleFileContainer** and **ValueConvertibleOptionFileContainer** -classes
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
@@ -13,14 +15,29 @@
   - Added new functions for eithers that contain items of the same type on both sides
 - **Option** (**CollectionExtensions**)
   - Added `.mergeWith(Option)`
+- **Process**
+  - Added a protected `.markAsInterrupted()` -function that acts as a `.stop()`, but only alters the process' state
 - **Value**
   - Added a new variant of `.apply(...) `
 - **XmlReader** (object)
   - Added `.parseString(String)`
 ### Other Changes
+- Added proper handling for **InterruptedExceptions** in **Wait**
+  - **Wait** now properly breaks (stops) when it encounters an **InterruptedException**
+  - `Wait.apply(...)` now returns a boolean that indicates whether the wait was forcibly interrupted or not
+  - Modified the following classes to support interruptions, also:
+    - **DelayedView**
+    - **LoopingProcess**
+    - **TimedTasks**
+    - **ExpiringCache**
+    - **ExpiringLazy**
+    - **KeptOpenWriter**
 - Rewrote **Value**`.castTo(DataType, DataType)` so that it will cast to the closer data type
 - **Volatile**`.value` is no longer synchronized. For synchronized access, use `.synchronizedValue`
+- **VolatileFlag**.`set()` and `.reset()` now return booleans that indicate whether the flag state was actually modified
 - **PollingIterator** is now type covariant
+- **Process**`.registerToStopOnceJVMCloses()` ignores the call if it has uses **ShutdownReaction** of **Cancel**
+  - As a consequence, this function is no longer deprecated in **LoopingProcess**
 
 ## v1.16 - 18.08.2022
 This update adds a number of new collection functions, and even new collection types. 

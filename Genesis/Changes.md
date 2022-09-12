@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 
+## v3.0.1 (in development)
+Reflects changes in **Flow** v1.17
+
 ## v3.0 - 18.08.2022
 A number of shape classes were moved to the new **Paradigm** module in this update. Applying this update will require 
 quite a lot of refactoring, unfortunately.

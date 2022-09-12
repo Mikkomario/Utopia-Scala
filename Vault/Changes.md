@@ -15,6 +15,8 @@
 ### New Methods
 - **SingleModelAccess**
   - Added multiple new methods for reading max/min column values
+### Other Changes
+- **ConnectionPool** now terminates all unused connections when the connection closing thread is interrupted 
 
 ## v1.13 - 18.08.2022
 This update reflects changes in **Flow** v1.16

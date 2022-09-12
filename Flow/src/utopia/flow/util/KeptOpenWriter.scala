@@ -88,8 +88,10 @@ class KeptOpenWriter(keepOpenDuration: FiniteDuration)(generate: => OutputStream
 						val waitLock = new AnyRef
 						val closeProcess = Process(waitLock, SkipDelay) { hurryPointer =>
 							// Waits until the writer has been unused long enough
-							while (!hurryPointer.value && Now < (lastAccessTime + keepOpenDuration)) {
-								Wait(lastAccessTime + keepOpenDuration, waitLock)
+							// (or interrupted, or scheduled to close)
+							var uninterrupted = true
+							while (uninterrupted && !hurryPointer.value && Now < (lastAccessTime + keepOpenDuration)) {
+								uninterrupted = Wait(lastAccessTime + keepOpenDuration, waitLock)
 							}
 							// Closes the writer
 							writerPointer.update { _ =>

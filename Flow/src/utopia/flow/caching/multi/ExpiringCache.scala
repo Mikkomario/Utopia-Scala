@@ -1,14 +1,15 @@
 package utopia.flow.caching.multi
 
-import utopia.flow.async.{Volatile, Wait}
+import utopia.flow.async.{LoopingProcess, Volatile, Wait}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 object ExpiringCache
 {
@@ -44,16 +45,16 @@ object ExpiringCache
   * @since 16.5.2021, v1.10
   */
 class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Duration)
-                         (implicit exc: ExecutionContext) extends CacheLike[K, V]
+                         (implicit exc: ExecutionContext)
+	extends CacheLike[K, V]
 {
 	// ATTRIBUTES   -----------------------------
 	
+	implicit val log: Logger = SysErrLogger
+	
 	private val waitLock = new AnyRef
-	
 	private val cachePointer = Volatile(Map[K, V]())
-	
 	private val queuedExpirationsPointer = VolatileList[(Instant, K)]()
-	private var expirationFuture = Future.successful(())
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -64,51 +65,35 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 		// Generates and stores the new value
 		val newValue = request(key)
 		val expirationDuration = calculateExpiration(key, newValue)
-		if (expirationDuration > Duration.Zero)
-		{
+		if (expirationDuration > Duration.Zero) {
 			cachePointer.update { _ + (key -> newValue) }
 			// Prepares an expiration if necessary
 			expirationDuration.finite.foreach { expirationDuration =>
 				// Queues a new expiration
 				val expirationTime = Now + expirationDuration
-				val (queueWasEmpty, needsNotify) = queuedExpirationsPointer.pop { queue =>
+				val needsNotify = queuedExpirationsPointer.pop { queue =>
+					// Case: There were no other expirations queued
 					if (queue.isEmpty)
-						(true, false) -> Vector(expirationTime -> key)
+						false -> Vector(expirationTime -> key)
 					else
-					{
-						val (needsNotify, newQueue) = queue
-							.lastIndexWhereOption { case (time, _) => time < expirationTime } match
-							{
-								case Some(previousIndex) =>
-									val newQueue = (queue.take(previousIndex + 1) :+
-										(expirationTime -> key)) ++ queue.drop(previousIndex + 1)
-									false -> newQueue
-								case None =>
-									val newQueue = (expirationTime -> key) +: queue
-									true -> newQueue
-							}
-						(false -> needsNotify) -> newQueue
-					}
+						queue.lastIndexWhereOption { case (time, _) => time < expirationTime } match {
+							// Case: The new expiration is executed after some other expiration =>
+							// No need to modify the expiration process
+							case Some(previousIndex) =>
+								val newQueue = (queue.take(previousIndex + 1) :+
+									(expirationTime -> key)) ++ queue.drop(previousIndex + 1)
+								false -> newQueue
+							// Case: The new expiration becomes the first expiration time =>
+							// Notifies the expiration process of this change
+							case None =>
+								val newQueue = (expirationTime -> key) +: queue
+								true -> newQueue
+						}
 				}
-				// Starts asynchronous expiration process if necessary
-				if (queueWasEmpty)
-					expirationFuture = Future {
-						// Handles expirations as long as there are some available
-						Iterator.continually { queuedExpirationsPointer.value.headOption }
-							.takeWhile { _.isDefined }.flatten
-							.foreach { case (waitTarget, targetKey) =>
-								// Waits until the wait target is reached (may be interrupted)
-								Wait(waitTarget, waitLock)
-								// If target was reached, removes the key from the cache
-								// Otherwise finds a new target
-								if (Now >= waitTarget)
-								{
-									cachePointer.update { _ - targetKey }
-									queuedExpirationsPointer.update { _.filterNot { _._2 == targetKey } }
-								}
-							}
-					}
-				else if (needsNotify)
+				// Starts asynchronous expiration process, if not already started
+				ExpirationProcess.runAsync()
+				// Also notifies the process if needed
+				if (needsNotify)
 					WaitUtils.notify(waitLock)
 			}
 		}
@@ -117,4 +102,32 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 	}
 	
 	override def cached(key: K) = cachePointer.value.get(key)
+	
+	
+	// NESTED   ---------------------------
+	
+	private object ExpirationProcess extends LoopingProcess(waitLock = waitLock)
+	{
+		override protected def isRestartable = true
+		
+		override protected def iteration() = {
+			queuedExpirationsPointer.headOption.flatMap { case (waitTarget, targetKey) =>
+				// Waits until the wait target is reached (may be interrupted)
+				if (Wait(waitTarget, waitLock)) {
+					// If target was reached, removes the key from the cache
+					// Otherwise finds a new target
+					if (Now >= waitTarget) {
+						cachePointer.update { _ - targetKey }
+						queuedExpirationsPointer.update { _.filterNot { _._2 == targetKey } }
+					}
+					// Schedules the next wait based on the next expiration
+					queuedExpirationsPointer.headOption.map { _._1 }
+				}
+				else {
+					markAsInterrupted()
+					None
+				}
+			}
+		}
+	}
 }
