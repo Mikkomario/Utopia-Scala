@@ -291,14 +291,10 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 		val defaultWidth = StackLength(minStringWidth min maxStringWidth, minStringWidth max maxStringWidth)
 		
 		// May display min / max values as hints
-		val effectiveHintPointer =
-		{
-			if (markMinimumValue || markMaximumValue)
-			{
-				val autoHint =
-				{
-					if (markMaximumValue)
-					{
+		val effectiveHintPointer = {
+			if (markMinimumValue || markMaximumValue) {
+				val autoHint = {
+					if (markMaximumValue) {
 						if (markMinimumValue)
 							s"$minValue - $maxValue".noLanguageLocalizationSkipped
 						else
@@ -307,8 +303,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 					else
 						s"$minValue+".noLanguageLocalizationSkipped
 				}
-				hintPointer.notFixedWhere { _.isEmpty } match
-				{
+				hintPointer.notFixedWhere { _.isEmpty } match {
 					case Some(hint) => hint.map { _.notEmpty.getOrElse(autoHint) }
 					case None => Fixed(autoHint)
 				}
@@ -430,10 +425,10 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		}
 		val caretWidth = (context.margins.verySmall / 2) max 1
 		
-		val label = EditableTextLabel(fc.parentHierarchy).apply(tc.actorHandler, stylePointer,
-			selectedTextColorPointer, selectedBackgroundPointer.map { Some(_) }, caretColorPointer, caretWidth,
-			caretBlinkFrequency, textContentPointer, inputFilter, maxLength,
-			enabledPointer, allowSelectionWhileDisabled = false, tc.allowTextShrink)
+		val label = EditableTextLabel(fc.parentHierarchy)
+			.apply(tc.actorHandler, stylePointer, selectedTextColorPointer, selectedBackgroundPointer.map { Some(_) },
+				caretColorPointer, caretWidth, caretBlinkFrequency, textContentPointer, inputFilter, maxLength,
+				enabledPointer, allowSelectionWhileDisabled = false, tc.allowTextShrink)
 		label.addFocusListener(fc.focusListener)
 		fc.promptDrawers.foreach(label.addCustomDrawer)
 		

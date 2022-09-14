@@ -17,6 +17,7 @@ import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.stack.StackLength
 
 /**
   * A simple test for text fields
@@ -51,6 +52,9 @@ object ReachTextFieldTest extends App
 					makeRow[String](DisplayFunction.raw) {
 						_.forString(320.any, Fixed("Text"), maxLength = Some(32),
 							showCharacterCount = true)
+					},
+					makeRow[String](DisplayFunction.raw) {
+						_.forString(StackLength(160, 320), Fixed("Text"), maxLength = Some(32), fillBackground = false)
 					},
 					makeRow[Option[Int]](DisplayFunction.rawOption) { _.forInt(Fixed("Int"), fillBackground = false) },
 					makeRow[Option[Int]](DisplayFunction.rawOption) {

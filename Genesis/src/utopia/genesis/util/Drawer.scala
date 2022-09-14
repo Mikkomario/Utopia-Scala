@@ -46,6 +46,9 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
              val edgePaint: Option[Paint] = Some(java.awt.Color.BLACK))
     extends LinearTransformable[Drawer] with AffineTransformable[Drawer]
 {
+    if (graphics == null)
+        throw new NullPointerException("Graphics must not be null")
+    
     // TODO: Add rendering hints
     
     // ATTRIBUTES    ----------------------
