@@ -2,6 +2,8 @@
 
 ## v3.0.1 (in development)
 Reflects changes in **Flow** v1.17
+### Bugfixes
+- Empty **MeasuredText** now has a positive height, like in the previous **Reflection** implementation
 
 ## v3.0 - 18.08.2022
 A number of shape classes were moved to the new **Paradigm** module in this update. Applying this update will require 

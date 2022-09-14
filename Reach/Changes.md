@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v0.3.5 (in development)
+Adjusting to changes in Flow v1.17
+
 ## v0.3.4 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0
 
