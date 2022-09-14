@@ -139,9 +139,6 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			case None => queuedDependencies :+= dependency
 		}
 		
-		override def futureWhere(valueCondition: Boolean => Boolean)(implicit exc: ExecutionContext) =
-			defaultFutureWhere(valueCondition)
-		
 		override def map[B](f: Boolean => B) = Mirror.of(this)(f)
 		
 		override def lazyMap[B](f: Boolean => B) = LazyMirror.of(this)(f)
@@ -197,16 +194,17 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			}
 			
 			// Transfers listeners, if any were queued
-			if (queuedListeners.nonEmpty)
-			{
-				queuedListeners.foreach { pointer.addListener(_) }
-				// Informs the listeners of this new change
-				if (pointer.value)
-				{
-					val event = ChangeEvent(false, true)
-					queuedListeners.foreach { _.onChangeEvent(event) }
+			if (queuedListeners.nonEmpty) {
+				val remainingListeners = {
+					if (pointer.value) {
+						val event = ChangeEvent(false, true)
+						queuedListeners.filter { _.onChangeEvent(event).shouldContinue }
+					}
+					else
+						queuedListeners
 				}
 				queuedListeners = Vector()
+				remainingListeners.foreach { pointer.addListener(_) }
 			}
 			
 			// Performs the dependency after effects

@@ -107,6 +107,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: ChangingLike[Vector[A]]] e
 		{
 			setContent(event.newValue)
 			finalizeRefresh()
+			true
 		}
 		
 		private def setContent(newValues: Vector[A]) =

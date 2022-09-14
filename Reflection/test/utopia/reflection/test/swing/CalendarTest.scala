@@ -49,7 +49,7 @@ object CalendarTest extends App
 		Color.textBlack, StackInsets.symmetric(4.upscaling, 8.upscaling), smallFont, Color.textBlack,
 		StackInsets.symmetric(4.upscaling, 6.upscaling), Color.black.withAlpha(0.33), Color.cyan)
 	
-	calendar.addValueListener { e => println(s"New selected date: ${ e.newValue }") }
+	calendar.valuePointer.addContinuousListener { e => println(s"New selected date: ${ e.newValue }") }
 	
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()

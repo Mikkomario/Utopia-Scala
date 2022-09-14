@@ -140,7 +140,10 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	private val keyListener = SelectionKeyListener2.along(direction, hasFocus)(manager.moveSelection)
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] =
-		e => Bounds.aroundOption(Vector(e.oldValue, e.newValue).flatten).foreach { repaintArea(_, High) }
+		e => {
+			Bounds.aroundOption(Vector(e.oldValue, e.newValue).flatten).foreach { repaintArea(_, High) }
+			true
+		}
 	
 	
 	// INITIAL CODE	--------------------------------
@@ -171,7 +174,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	}
 	
 	// Repaints selected area when focus changes
-	focusPointer.addAnyChangeListener { SelectionDrawer.selectedAreaPointer.value.foreach { repaintArea(_) } }
+	focusPointer.addContinuousAnyChangeListener { SelectionDrawer.selectedAreaPointer.value.foreach { repaintArea(_) } }
 	
 	// Listens to local mouse events
 	addMouseButtonListener(LocalMouseListener)

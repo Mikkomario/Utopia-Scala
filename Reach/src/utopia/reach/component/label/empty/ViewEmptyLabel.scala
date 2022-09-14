@@ -66,7 +66,7 @@ class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	def withBackground(backgroundPointer: ChangingLike[Color], stackSizePointer: ChangingLike[StackSize]) =
 	{
 		val label = withStaticDrawers(stackSizePointer, Vector(BackgroundViewDrawer(backgroundPointer)))
-		backgroundPointer.addAnyChangeListener { label.repaint() }
+		backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
 		label
 	}
 }
@@ -113,8 +113,8 @@ class ViewEmptyLabel(override val parentHierarchy: ComponentHierarchy, val stack
 	// INITIAL CODE -------------------------------
 	
 	// Reacts to pointer changes
-	stackSizePointer.addAnyChangeListener { revalidate() }
-	customDrawersPointer.addAnyChangeListener { repaint() }
+	stackSizePointer.addContinuousAnyChangeListener { revalidate() }
+	customDrawersPointer.addContinuousAnyChangeListener { repaint() }
 	
 	
 	// IMPLEMENTED  -------------------------------

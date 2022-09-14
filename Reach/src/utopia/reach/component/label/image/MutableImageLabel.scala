@@ -63,14 +63,14 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	addCustomDrawer(ImageViewDrawer(imagePointer, insetsPointer, alignmentPointer, useUpscaling = allowUpscaling))
 	
 	// Updates and repaints this label when values change
-	imagePointer.addListener { change =>
+	imagePointer.addContinuousListener { change =>
 		if (change.compareBy { _.size } && change.compareBy { _.sourceResolution })
 			repaint()
 		else
 			revalidateAndThen { repaint() }
 	}
-	insetsPointer.addListener { _ => revalidateAndThen { repaint() } }
-	alignmentPointer.addListener { _ => repaint() }
+	insetsPointer.addContinuousListener { _ => revalidateAndThen { repaint() } }
+	alignmentPointer.addContinuousListener { _ => repaint() }
 	
 	
 	// COMPUTED	------------------------------

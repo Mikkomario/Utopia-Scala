@@ -216,7 +216,10 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	
 	private class ContentUpdateListener extends ChangeListener[Vector[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = updateContent(event.newValue)
+		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = {
+			updateContent(event.newValue)
+			true
+		}
 	}
 	
 	private class SelectionUpdateListener extends ChangeListener[Option[A]]
@@ -237,6 +240,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 					updateContent(content)
 			}
 			isUpdatingSelection = false
+			true
 		}
 	}
 	

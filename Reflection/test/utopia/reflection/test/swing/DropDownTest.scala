@@ -45,8 +45,12 @@ object DropDownTest extends App
 	stack.background = Color.black
 
 	// Adds item listners
-	categorySelect.addValueListener { c => characterSelect.content = c.newValue.flatMap(data.get) getOrElse Vector() }
-	characterSelect.addValueListener { c => println(c.newValue.map { _ + " is ready for adventure!" } getOrElse "No character selected") }
+	categorySelect.valuePointer.addContinuousListener { c =>
+		characterSelect.content = c.newValue.flatMap(data.get) getOrElse Vector()
+	}
+	characterSelect.valuePointer.addContinuousListener { c =>
+		println(c.newValue.map { _ + " is ready for adventure!" } getOrElse "No character selected")
+	}
 
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()

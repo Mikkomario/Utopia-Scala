@@ -148,8 +148,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 	{
 		private var lastSelectedLabel: Option[TextLabel] = None
 		
-		override def onChangeEvent(event: ChangeEvent[Option[A]]) =
-		{
+		override def onChangeEvent(event: ChangeEvent[Option[A]]) = {
 			// Styles the labels based on selection
 			lastSelectedLabel.foreach(styleNotSelected)
 			
@@ -158,6 +157,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 			lastSelectedLabel = newSelected
 			
 			repaint()
+			true
 		}
 	}
 	
@@ -208,6 +208,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 				value = oldValue
 			else
 				value = None
+			true
 		}
 	}
 	

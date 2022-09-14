@@ -136,11 +136,15 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 					case None => value = None
 				}
 			}
+			true
 		}
 	}
 	
 	private class ValueUpdateListener extends ChangeListener[Option[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Option[A]]) = updateSelection(event.newValue)
+		override def onChangeEvent(event: ChangeEvent[Option[A]]) = {
+			updateSelection(event.newValue)
+			true
+		}
 	}
 }

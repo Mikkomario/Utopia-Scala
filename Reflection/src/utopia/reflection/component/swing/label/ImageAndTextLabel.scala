@@ -115,7 +115,7 @@ class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], in
 	// INITIAL CODE	-------------------------
 	
 	// Whenever content updates, image also updates
-	addContentListener { e => imageLabel.image = itemToImageFunction(e.newValue) }
+	contentPointer.addContinuousListener { e => imageLabel.image = itemToImageFunction(e.newValue) }
 	
 	
 	// IMPLEMENTED	-------------------------

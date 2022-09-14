@@ -2,6 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.time.{Now, WaitTarget}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitTarget.UntilNotified
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.util.CollectionExtensions._
 
@@ -28,6 +29,16 @@ object Wait
 		else
 			true
 	}
+	
+	/**
+	  * Waits until the specified wait lock is notified
+	  * @param waitLock Wait lock to wait on
+	  * @param exc Implicit execution context
+	  * @return Whether this wait completed without being interrupted though an InterruptedException.
+	  *         If false, the process that follows should likewise take measures to hurry to its completion
+	  *         (use discrection).
+	  */
+	def untilNotifiedWith(waitLock: AnyRef)(implicit exc: ExecutionContext) = apply(UntilNotified, waitLock)
 }
 
 /**

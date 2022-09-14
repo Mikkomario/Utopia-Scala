@@ -278,7 +278,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	}
 	
 	// When gains focus, displays the pop-up. Hides the pop-up when focus is lost.
-	focusPointer.addListenerAndSimulateEvent(false) { event =>
+	focusPointer.addContinuousListenerAndSimulateEvent(false) { event =>
 		if (event.newValue) openPopup() else hidePopup()
 	}
 	

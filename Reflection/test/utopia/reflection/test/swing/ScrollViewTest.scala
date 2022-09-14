@@ -66,7 +66,7 @@ object ScrollViewTest extends App
 	}
 	
 	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
-	contentManager.addValueListener(i => println("Selected " + i.newValue))
+	contentManager.valuePointer.addContinuousListener { i => println("Selected " + i.newValue) }
 	contentManager.enableKeyHandling(actorHandler)
 	contentManager.enableMouseHandling(false)
 	private val contentUpdateLoop = new ContentUpdateLoop(contentManager)

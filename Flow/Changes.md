@@ -3,22 +3,52 @@
 ## v1.17 (in development)
 ### Breaking Changes
 - Removed `~==` and `!~==` from **StringExtensions**, as they are now made available through **EqualsExtensions**
+- **ChangeListener**`.onChangeEvent(ChangeEvent)` is now expected to return a **DetachmentChoice** instance, 
+  which determines whether the listener will be removed from the applicable change event source
+  - This may cause build errors in certain cases. 
+    There are, however, implicit conversions from **Unit** (old use-case) and **Boolean** to **DetachmentChoice**, 
+    so the earlier implementations should work in most cases, also.
+  - **ChangingLike** implementations should also be altered in a manner which handles this return value. 
+    **Changing** already does this, covering most of the use-cases.
+- Altered **ChangingLike**`.futureWhere(...)` in following ways:
+  - **ChangingLike** trait now implements this function by itself, meaning that subclasses are no longer required to 
+    implement this function 
+  - This function no longer accepts an implicit execution context, since the default implementation doesn't require one
+- Altered `.current` implementations in **AsyncExtensions** in following ways:
+  - **Future**`.currentResult` now behaves as `.current` used to behave
+  - **Future**`.current` now behaves as `.currentSuccess` used to behave
+  - Removed **Future**`.currentSuccess` altogether
 - `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
 ### Deprecations
 - Deprecated `.runAndSet(...)`, `.doIfNotSet(...)` and `.mapAndSet()` in **VolatileFlag**
+- Deprecated .get in LazyFuture in favor of .value, reflecting similar changes in past releases
 ### New Features
+- It is now possible to write change listeners that detach from the change event source automatically. 
+  Simply return `DetachmentChoice.detach`, `DetachmentChoice(shouldContinue = false)` or `false` in an 
+  `.onChange(ChangeEvent) ` function implementation to detach from the event source.
+- Added **PostponingProcess** class that behaves somewhat like **DelayedProcess**, but accepts a variable wait target
 - Added **ValueConvertibleFileContainer** and **ValueConvertibleOptionFileContainer** -classes
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
 - Added **OptionsIterator** class
 ### New Methods
+- **ChangeEvent**
+  - Added `.toStringWith(A => String)`
+- **ChangingLike**
+  - Added `.nextFutureWhere(...)` which works like `.futureWhere(...)`, except that it can't be triggered  
+    by the current value
 - **Either** (**CollectionExtensions**)
   - Added new functions for eithers that contain items of the same type on both sides
+- **Future** (**AsyncExtensions**)
+  - Added `.waitWith(AnyRef, Duration)` that works like an interruptible `.waitFor()`
+  - Added `.currentSuccess` and `.currentFailure` to **Futures** which contain instances of **Try**
 - **Option** (**CollectionExtensions**)
   - Added `.mergeWith(Option)`
 - **Process**
   - Added a protected `.markAsInterrupted()` -function that acts as a `.stop()`, but only alters the process' state
 - **Value**
-  - Added a new variant of `.apply(...) `
+  - Added a new variant of `.apply(...)`
+- **Wait** (object)
+  - Added `.untilNotifiedWith(AnyRef)`, a variant of `.apply(...)`
 - **XmlReader** (object)
   - Added `.parseString(String)`
 ### Other Changes

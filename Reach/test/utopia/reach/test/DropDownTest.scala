@@ -49,7 +49,7 @@ object DropDownTest extends App
 					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
 					val selectedItemPointer = new PointerWithEvents[Option[String]](None)
 					
-					selectedItemPointer.addListener(println)
+					selectedItemPointer.addListener { e => println(e) }
 					
 					Vector(
 						ddF.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer, expandIcon.toOption,

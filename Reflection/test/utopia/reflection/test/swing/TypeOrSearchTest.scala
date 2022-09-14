@@ -53,8 +53,8 @@ object TypeOrSearchTest extends App
 	}
 	val tags = TagView.withRemovalEnabled(480, closeIcon)
 	
-	search.contentPointer.addListener { w => tags.content = w.newValue.map { _ -> context.color(Primary) } }
-	tags.contentPointer.addListener { event =>
+	search.contentPointer.addContinuousListener { w => tags.content = w.newValue.map { _ -> context.color(Primary) } }
+	tags.contentPointer.addContinuousListener { event =>
 		if (event.newValue.size < event.oldValue.size)
 			search --= event.oldValue.map { _._1 }.toSet -- event.newValue.map { _._1 }.toSet
 	}

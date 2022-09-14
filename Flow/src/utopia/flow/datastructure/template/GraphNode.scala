@@ -13,7 +13,6 @@ object GraphNode
 	type AnyNode = GraphNode[_, _, _, _]
 	type AnyEdge = GraphEdge[_, _, _]
 	
-	// FIXME: Doesn't yield correct results
 	private class PathsFinder[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode], C]
 	(start: GNode, destinations: Set[GNode => Boolean], startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
 	(implicit ord: Ordering[C])

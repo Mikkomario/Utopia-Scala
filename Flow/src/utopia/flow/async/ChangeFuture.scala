@@ -18,8 +18,7 @@ object ChangeFuture
 	  * @return A new change future (or wrapped future result)
 	  */
 	def wrap[A](future: Future[A], placeHolder: => A)(implicit exc: ExecutionContext) =
-		future.currentSuccess match
-		{
+		future.current match {
 			case Some(v) => Fixed(v)
 			case None => new ChangeFuture[A](placeHolder, future)
 		}
@@ -99,7 +98,7 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = if (isChanging) dependencies :+= dependency
 	
-	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
+	override def futureWhere(valueCondition: A => Boolean) =
 		future.flatMap { v => if (valueCondition(v)) Future.successful(v) else Future.never }
 	
 	override def map[B](f: A => B) =

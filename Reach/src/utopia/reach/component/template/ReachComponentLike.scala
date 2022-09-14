@@ -279,7 +279,7 @@ trait ReachComponentLike extends Stackable2
 	  * @tparam U Arbitrary result type
 	  */
 	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer
-		.addListenerAndSimulateEvent(false) { e => listener(e.newValue) }
+		.addContinuousListenerAndSimulateEvent(false) { e => listener(e.newValue) }
 	
 	/**
 	  * Creates a pop-up next to this component

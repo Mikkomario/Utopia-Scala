@@ -144,7 +144,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			}
 		}
 		
-		currentSelectionOptionsPointer.addListenerAndSimulateEvent(Vector()) { e =>
+		currentSelectionOptionsPointer.addContinuousListenerAndSimulateEvent(Vector()) { e =>
 			// Displays either "no content" view or the selection stack view
 			if (e.newValue.isEmpty)
 				popupContentView.set(noResultsView)
@@ -165,11 +165,11 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			popupContentView.set(noResultsView)
 		
 		// When value is updated from an external source, it also affects selection stack
-		addValueListenerAndSimulateEvent(None) { e => displaysManager.value = e.newValue }
+		valuePointer.addContinuousListenerAndSimulateEvent(None) { e => displaysManager.value = e.newValue }
 		
 		// When display manager updates its value (for example due to content change), updates current value
 		// (if not displaying a pop-up at the time)
-		displaysManager.addValueListener { e =>
+		displaysManager.valuePointer.addContinuousListener { e =>
 			if (!isDisplayingPopUp)
 				value = e.newValue
 		}

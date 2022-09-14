@@ -4,7 +4,7 @@ import utopia.flow.async.SynchronousExecutionContext
 import utopia.flow.datastructure.immutable.Lazy
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 case class Fixed[+A](override val value: A) extends ChangingLike[A]
 {
@@ -30,16 +30,6 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 		simulateChangeEventFor(changeListener, simulatedOldValue)
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = ()
-	
-	override def futureWhere(valueCondition: A => Boolean)
-	                        (implicit exc: ExecutionContext = SynchronousExecutionContext) =
-	{
-		// Will return either a completed future or a future that never completes
-		if (valueCondition(value))
-			Future.successful(value)
-		else
-			Future.never
-	}
 	
 	override def map[B](f: A => B) = Fixed(f(value))
 	

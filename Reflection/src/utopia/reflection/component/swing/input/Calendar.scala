@@ -4,7 +4,6 @@ import java.time._
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
-import utopia.flow.util.RichComparable._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
@@ -89,7 +88,7 @@ object Calendar
 		label.component.setFocusable(true)
 		addCustomDrawer(SelectionCircleViewDrawer(hoverColor, selectedColor, valuePointer, statePointer))
 		
-		valuePointer.addListener { _ => repaint() }
+		valuePointer.addContinuousAnyChangeListener { repaint() }
 		registerAction { () => value = !value }
 		initializeListeners()
 		setHandCursor()
@@ -180,14 +179,12 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	// INITIAL CODE	-----------------------
 	
 	// Listens for month & year changes
-	yearDropDown.addValueListener { _ => handleDropDownUpdate() }
-	monthDropDown.addValueListener { _ => handleDropDownUpdate() }
+	Vector(yearDropDown, monthDropDown)
+		.foreach { _.valuePointer.addContinuousAnyChangeListener { handleDropDownUpdate() } }
 	
 	// Listens for date changes from outside
 	valuePointer.addListener { e =>
-		
-		if (!handlingDropDownUpdate && !handlingPointerUpdate)
-		{
+		if (!handlingDropDownUpdate && !handlingPointerUpdate) {
 			handlingPointerUpdate = true
 			
 			// May need to switch year, month and/or date
@@ -203,6 +200,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			
 			handlingPointerUpdate = false
 		}
+		true
 	}
 	
 	
@@ -306,13 +304,12 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	
 	private object SelectionChangeListener extends ChangeListener[Option[LocalDate]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Option[LocalDate]]) =
-		{
-			if (!handlingPointerUpdate )
-			{
+		override def onChangeEvent(event: ChangeEvent[Option[LocalDate]]) = {
+			if (!handlingPointerUpdate ) {
 				// Updates date pointer based on selection update
 				event.newValue.foreach { value = _ }
 			}
+			true
 		}
 	}
 	
@@ -341,8 +338,15 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			
 			// Adds button listening
 			SelectionGroup(buttons.flatten.map { _._2 }.toSet)
-			buttons.view.flatten.foreach { case (date, button) => button.addValueListener { e =>
-				if (e.newValue) valuePointer.value = Some(date) else if (value.contains(date)) valuePointer.value = None } }
+			buttons.view.flatten.foreach { case (date, button) =>
+				button.addValueListener { e =>
+					if (e.newValue)
+						valuePointer.value = Some(date)
+					else if (value.contains(date))
+						valuePointer.value = None
+					true
+				}
+			}
 			
 			// Creates date rows
 			rowElements.map { items => Stack.rowWithItems(segmentGroup.wrap(items), insideCalendarMargin.width) }
@@ -354,8 +358,9 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		// INITIAL CODE	------------------
 		
 		// Updates buttons based on value pointer changes
-		valuePointer.addListener { e => e.newValue.foreach { date => buttons.view.flatten.find { _._1 == date }
-			.foreach { _._2.value = true } } }
+		valuePointer.addContinuousListener { e =>
+			e.newValue.foreach { date => buttons.view.flatten.find { _._1 == date }.foreach { _._2.value = true } }
+		}
 		
 		
 		// IMPLEMENTED	------------------

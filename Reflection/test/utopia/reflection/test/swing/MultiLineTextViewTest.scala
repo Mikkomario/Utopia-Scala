@@ -39,7 +39,7 @@ object MultiLineTextViewTest extends App
 
 			val alignSelect = JDropDownWrapper.contextual("Select Alignment", initialChoices = Alignment.values)
 			alignSelect.selectOne(Alignment.Left)
-			alignSelect.addValueListener { _.newValue.foreach { a => textView.alignment = a } }
+			alignSelect.valuePointer.addContinuousListener { _.newValue.foreach { a => textView.alignment = a } }
 
 			Stack.buildRowWithContext(isRelated = true) { row =>
 				row += textInput

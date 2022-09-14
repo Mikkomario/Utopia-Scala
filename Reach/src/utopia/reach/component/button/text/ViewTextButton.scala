@@ -261,7 +261,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	// INITIAL CODE	---------------------------------
 	
 	setup(baseStatePointer, hotKeys)
-	colorPointer.addListener { _ => repaint() }
+	colorPointer.addContinuousAnyChangeListener { repaint() }
 	
 	
 	// COMPUTED	-------------------------------------

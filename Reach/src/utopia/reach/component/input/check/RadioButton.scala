@@ -172,7 +172,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	// INITIAL CODE ---------------------------------
 	
 	setup(baseStatePointer)
-	selectedPointer.addAnyChangeListener { repaint(High) }
+	selectedPointer.addContinuousAnyChangeListener { repaint(High) }
 	
 	
 	// COMPUTED -------------------------------------

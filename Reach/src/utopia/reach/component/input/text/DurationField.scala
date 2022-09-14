@@ -190,7 +190,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 						val sourceField = inputFields(sourceIndex)
 						sourceField.maxLength.foreach { maxLength =>
 							val targetField = inputFields(sourceIndex + 1)
-							sourceField.textPointer.addListener { event =>
+							sourceField.textPointer.addContinuousListener { event =>
 								// Focus transfer is slightly delayed to avoid duplicate key event triggering
 								if (event.newValue.length == maxLength &&
 									event.oldValue.length != maxLength && sourceField.hasFocus)

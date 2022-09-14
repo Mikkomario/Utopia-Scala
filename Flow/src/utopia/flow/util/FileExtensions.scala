@@ -757,10 +757,12 @@ object FileExtensions
 		  * @tparam U Arbitrary result type
 		  * @return This path. Failure if the writing process, or the function, threw an exception.
 		  */
-		// TODO: Add a variant of this function that appends
-		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) = writeWith { stream =>
-			stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
-		}
+		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) =
+			_writeUsing(append = false)(writer)
+		def _writeUsing[U](append: Boolean)(writer: PrintWriter => U)(implicit codec: Codec) =
+			_writeWith(append) { stream =>
+				stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
+			}
 		private def _writeWith[U](append: Boolean)(writer: BufferedOutputStream => U) =
 			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
 				.map { _ => p }
@@ -801,6 +803,15 @@ object FileExtensions
 		  * @return This path. Failure if writing function threw or stream couldn't be opened
 		  */
 		def appendWith[U](writer: BufferedOutputStream => U) = _writeWith(append = true)(writer)
+		/**
+		  * Appends new lines to a file utilizing a PrintWriter
+		  * @param writer A function that uses a PrintWriter
+		  * @param codec Implicit codec used when writing the file
+		  * @tparam U Arbitrary result type
+		  * @return This path. Failure if the writing process, or the specified function, threw an exception.
+		  */
+		def appendUsing[U](writer: PrintWriter => U)(implicit codec: Codec) =
+			_writeUsing(append = true)(writer)
 		/**
 		  * Writes the specified text lines to the end of this file
 		  * @param lines Lines to write to the file

@@ -72,7 +72,7 @@ class DelayedView[A](val source: ChangingLike[A], delay: FiniteDuration)(implici
 	// INITIAL CODE -------------------------
 	
 	// Whenever source's value changes, delays change activation and updates future value
-	source.addListener { event =>
+	source.addListener(ChangeListener.continuous { event =>
 		changeReactionThreshold = Now + delay
 		latestReceivedValue = event.newValue
 		// If no waiting is currently active, starts one
@@ -88,7 +88,7 @@ class DelayedView[A](val source: ChangingLike[A], delay: FiniteDuration)(implici
 				isWaitingFlag.reset()
 				valuePointer.value = latestReceivedValue
 			}
-	}
+	})
 	
 	
 	// COMPUTED -----------------------------

@@ -53,7 +53,7 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 	addResizeListener(updateLayout())
 	
 	// Revalidates this component whenever image changes (although only if image size changes as well)
-	contentPointer.addListener { event =>
+	contentPointer.addContinuousListener { event =>
 		if (event.newValue.size != event.oldValue.size)
 			revalidate()
 		else

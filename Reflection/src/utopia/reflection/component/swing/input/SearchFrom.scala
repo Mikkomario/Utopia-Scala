@@ -224,7 +224,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	}
 	
 	// When content updates, changes selection options and updates field size
-	addContentListenerAndSimulateEvent(Vector()) { e =>
+	contentPointer.addContinuousListenerAndSimulateEvent(Vector()) { e =>
 		currentOptions = e.newValue.map { a => itemToSearchString(a) -> a }
 		updateDisplayedOptions()
 		searchField.targetWidth = (if (content.isEmpty) defaultWidth else currentSearchStackSize.width) +
@@ -232,7 +232,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	}
 	
 	// When text field updates (while no value is selected)
-	searchField.addValueListener { event =>
+	searchField.valuePointer.addContinuousListener { event =>
 		val newFilter = event.newValue
 		if (currentSearchString != newFilter)
 		{
@@ -241,9 +241,8 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 		}
 	}
 	
-	addValueListenerAndSimulateEvent(None) {e =>
-		e.newValue match
-		{
+	valuePointer.addContinuousListenerAndSimulateEvent(None) { e =>
+		e.newValue match {
 			case Some(newValue) =>
 				currentSearchString = itemToSearchString(newValue)
 				searchField.text = currentSearchString

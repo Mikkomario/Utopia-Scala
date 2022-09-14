@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.event.{ChangeListener, ChangingLike}
+import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
@@ -52,7 +52,8 @@ class LoadingView(loadingLabel: AwtStackable, progressPointer: ChangingLike[Prog
 		label.addWidthConstraint(new NoShrinkingLengthModifier(defaultWidth.any.expanding) && ExpandingLengthModifier)
 		label
 	}
-	private lazy val progressListener: ChangeListener[ProgressState] = e => statusLabel.text = e.newValue.description
+	private lazy val progressListener = ChangeListener
+		.continuous { e: ChangeEvent[ProgressState] => statusLabel.text = e.newValue.description }
 	
 	// The view consists of an animated label on the left, followed by a description and a progress bar combination
 	private val view =

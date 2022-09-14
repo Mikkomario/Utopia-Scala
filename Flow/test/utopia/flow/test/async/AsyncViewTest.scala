@@ -60,7 +60,10 @@ object AsyncViewTest extends App
 	
 	// Performs multiple consecutive changes to the controlled pointer
 	var eventsReceived = 0
-	val receiveListener: ChangeListener[Any] = _ => eventsReceived += 1
+	val receiveListener: ChangeListener[Any] = _ => {
+		eventsReceived += 1
+		true
+	}
 	
 	delayed.addListener(receiveListener)
 	original.value = 2

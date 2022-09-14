@@ -38,7 +38,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color) ex
 	// Adds rounded background drawing
 	addCustomDrawer(RoundedBackgroundViewDrawer.withFactor(colorPointer, Fixed(1.0)))
 	
-	colorPointer.addListener { _ => repaint() }
+	colorPointer.addContinuousAnyChangeListener { repaint() }
 	
 	
 	// COMPUTED ------------------------------

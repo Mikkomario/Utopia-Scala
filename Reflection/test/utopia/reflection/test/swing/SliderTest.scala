@@ -46,7 +46,7 @@ object SliderTest extends App
 				label.background = c.containerBackground
 				// TODO: There should be an itemlabel variation that simply displays a pointer value without
 				//  requiring mutability
-				slider.valuePointer.addListener { e => label.content = e.newValue }
+				slider.valuePointer.addContinuousListener { e => label.content = e.newValue }
 				s += label
 			}
 		}

@@ -130,7 +130,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: ChangingLike[Origin], 
 	currentCalculation.value = calculateNextValue(source.value)
 	
 	// Whenever source value changes, requests an asynchronous status update
-	source.addListener { event => requestCalculation(event.newValue) }
+	source.addListener(ChangeListener.continuous { event => requestCalculation(event.newValue) })
 	
 	
 	// COMPUTED	-------------------------

@@ -131,9 +131,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	// IMPLEMENTED	---------------------------
 	
-	override protected def currentContent = contentFuture.current.flatMap { _.toOption }
-	
-	override protected def currentPainter = painterPromise.current.flatMap { _.toOption }
+	override protected def currentContent = contentFuture.current
+	override protected def currentPainter = painterPromise.current
 	
 	override def isAttachedToMainHierarchy = _attachmentPointer.value
 	
@@ -341,8 +340,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				if (bounds.contains(event.mousePosition))
 				{
 					val newImage = cursorManager.cursorImageAt(newPosition) { area =>
-						shadeCalculatorFuture.currentSuccess  match
-						{
+						shadeCalculatorFuture.current match {
 							case Some(calculate) => calculate(area)
 							case None => Dark
 						}

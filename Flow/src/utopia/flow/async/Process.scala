@@ -240,7 +240,14 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  */
 	def delayed(wait: WaitTarget) = {
 		DelayedProcess(wait, shutdownReaction = shutdownReaction) { hurryPointer =>
-			hurryPointer.addListener { e => if (e.newValue) stop() }
+			hurryPointer.addListener { e =>
+				if (e.newValue) {
+					markAsInterrupted()
+					false
+				}
+				else
+					true
+			}
 			run()
 		}
 	}

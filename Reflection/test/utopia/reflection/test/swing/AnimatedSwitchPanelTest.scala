@@ -53,5 +53,5 @@ object AnimatedSwitchPanelTest extends App
 					newI
 			}
 	})
-	indexPointer.addListener { e => panel.set(labels(e.newValue)) }
+	indexPointer.addContinuousListener { e => panel.set(labels(e.newValue)) }
 }

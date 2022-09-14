@@ -413,7 +413,7 @@ class Field[C <: ReachComponentLike with Focusable]
 		}
 		component -> openMainArea.result
 	}
-	private val repaintListener = ChangeListener.onAnyChange { repaint(High) }
+	private val repaintListener = ChangeListener.continuousOnAnyChange { repaint(High) }
 	
 	
 	// INITIAL CODE	------------------------------------------

@@ -1,6 +1,7 @@
 package utopia.flow.time
 
 import utopia.flow.async.{ShutdownReaction, Wait}
+import utopia.flow.operator.Zeroable
 import utopia.flow.time.TimeExtensions._
 
 import java.time.{Instant, LocalTime}
@@ -15,7 +16,7 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
-sealed trait WaitTarget
+sealed trait WaitTarget extends Zeroable[WaitTarget]
 {
     // ABSTRACT    --------------
     
@@ -42,7 +43,6 @@ sealed trait WaitTarget
      * Whether this wait target has a maximum duration
      */
     def isInfinite = targetTime.left.exists { !_.isFinite }
-    
     /**
      * Whether this wait target only stops when the lock is notified
      */
@@ -52,12 +52,10 @@ sealed trait WaitTarget
      * the duration of this target or None if this target had infinite duration
      */
     def toFiniteDuration = toDuration.finite
-    
     /**
      * The duration of this target. May be infinite
      */
-    def toDuration: Duration = targetTime match
-    {
+    def toDuration: Duration = targetTime match {
         case Left(duration) => duration
         case Right(time) => time - Now
     }
@@ -65,8 +63,7 @@ sealed trait WaitTarget
     /**
      * @return the ending time of this target, after which no waiting is done
      */
-    def endTime = targetTime match
-    {
+    def endTime = targetTime match {
         case Left(duration) => duration.finite.map { Now + _ }
         case Right(time) => Some(time)
     }
@@ -75,16 +72,20 @@ sealed trait WaitTarget
      * Whether this wait target is specified by wait duration
      */
     def durationIsSpecified = targetTime.isLeft
-    
     /**
       * @return Whether this wait target is specified by a finite wait duration
       */
     def finiteDurationIsSpecified = targetTime.left.exists { _.isFinite }
-    
     /**
      * Whether this wait target is specified by end time
      */
     def endTimeIsSpecified = targetTime.isRight
+    
+    
+    // IMPLEMENTED  -------------
+    
+    override def repr = this
+    override def isZero = !isPositive
     
     
     // OTHER    -----------------

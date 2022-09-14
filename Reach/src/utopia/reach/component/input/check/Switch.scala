@@ -152,7 +152,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	setup(baseStatePointer)
 	
-	valuePointer.addListener { event => SwitchDrawer.updateTarget(event.newValue) }
+	valuePointer.addContinuousListener { event => SwitchDrawer.updateTarget(event.newValue) }
 	
 	addHierarchyListener { isAttached =>
 		if (isAttached)

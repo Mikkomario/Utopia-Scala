@@ -31,8 +31,7 @@ class ListenableLazy[A](generator: => A) extends ListenableLazyLike[A]
 	private var generated: Option[A] = None
 	
 	// Value future is generated only once
-	override lazy val valueFuture = generated match
-	{
+	override lazy val valueFuture = generated match {
 		case Some(value) => Future.successful(value)
 		case None =>
 			val promise = Promise[A]()
@@ -110,6 +109,7 @@ class ListenableLazy[A](generator: => A) extends ListenableLazyLike[A]
 		override def addDependency(dependency: => ChangeDependency[Option[A]]) =
 			if (nonInitialized) queuedDependencies :+= dependency
 		
+		/* Removed 12.9.2022 because ChangingLike now implements this without using an ExecutionContext
 		override def futureWhere(valueCondition: Option[A] => Boolean)(implicit exc: ExecutionContext) =
 			current match
 			{
@@ -125,6 +125,7 @@ class ListenableLazy[A](generator: => A) extends ListenableLazyLike[A]
 								Future.never
 						}
 			}
+		 */
 		
 		override def map[B](f: Option[A] => B) = Mirror.of(this)(f)
 		

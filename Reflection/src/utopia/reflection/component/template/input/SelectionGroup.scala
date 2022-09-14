@@ -40,7 +40,9 @@ case class SelectionGroup[A, C <: InteractionWithPointer[A]](options: Set[C], is
 	options.foreach { o => if (!lastSelected.contains(o) && isSelected(o.value)) deselect(o) }
 	
 	// Adds listening
-	options.foreach { _.addValueListener { e => if (isSelected(e.newValue)) updateSelection() else lastSelected = None } }
+	options.foreach { _.valuePointer.addContinuousListener { e =>
+		if (isSelected(e.newValue)) updateSelection() else lastSelected = None
+	} }
 	
 	
 	// OTHER	------------------------

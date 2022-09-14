@@ -10,7 +10,7 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager
 import utopia.reflection.test.TestContext
-import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
+import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -32,7 +32,7 @@ object StackContentManagementTest extends App
 		ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
 			println(s"Creating a new label ($i)")
 			val label = ItemLabel.contextual(i)
-			label.addContentListener { e => println(s"Label content changed: $e") }
+			label.contentPointer.addContinuousListener { e => println(s"Label content changed: $e") }
 			println(s"\tLabel created ($i)")
 			label
 		}

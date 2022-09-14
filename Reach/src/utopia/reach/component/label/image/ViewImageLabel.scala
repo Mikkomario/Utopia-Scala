@@ -73,14 +73,14 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	// INITIAL CODE	---------------------------------
 	
 	// Reacts to changes in the pointers
-	imagePointer.addListener { change =>
+	imagePointer.addContinuousListener { change =>
 		if (change.compareBy { _.size } && change.compareBy { _.sourceResolution })
 			repaint()
 		else
 			revalidateAndRepaint()
 	}
-	insetsPointer.addListener { _ => revalidateAndRepaint() }
-	alignmentPointer.addListener { _ => repaint() }
+	insetsPointer.addContinuousListener { _ => revalidateAndRepaint() }
+	alignmentPointer.addContinuousListener { _ => repaint() }
 	
 	
 	

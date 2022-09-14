@@ -13,6 +13,15 @@ object OptionsIterator
 	  * @return A new iterator
 	  */
 	def iterate[A](start: Option[A])(iterate: A => Option[A]) = new OptionsIterator[A](start)(iterate)
+	
+	/**
+	  * Creates a new iterator that generates items until None is encountered
+	  * @param generate A function that possibly generates an item, or generates None to terminate the iterator
+	  * @tparam A Type of generated items (when present)
+	  * @return A new iterator that returns all defined generated items
+	  */
+	def continually[A](generate: => Option[A]) =
+		Iterator.continually(generate).takeWhile { _.isDefined }.flatten
 }
 
 /**
