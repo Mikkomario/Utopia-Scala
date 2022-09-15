@@ -4,6 +4,7 @@ import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadOrganizationData
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
@@ -52,7 +53,7 @@ object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 					else
 						Result.NotModified
 				// Case: Token is not tied to a user => acts as if there were no linked organizations
-				case None => Result.Success(Vector())
+				case None => Result.Success(Vector[Value]())
 			}
 		}
 	}

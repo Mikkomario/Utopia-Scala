@@ -65,6 +65,8 @@
     - **KeptOpenWriter**
   - **Future**`.raceWith(Future)` may now yield a failing future in case the process is interrupted with an 
     **InterruptedException**
+- **XmlElement**`.toXml` now wraps element content in CDATA if there exist any unaccepted characters within the 
+  element's contents
 - Rewrote **Value**`.castTo(DataType, DataType)` so that it will cast to the closer data type
 - **Volatile**`.value` is no longer synchronized. For synchronized access, use `.synchronizedValue`
 - **VolatileFlag**.`set()` and `.reset()` now return booleans that indicate whether the flag state was actually modified

@@ -41,5 +41,9 @@ object XmlToStringTest extends App
 	assert(xml3.contains("CamelCaseAttribute"))
 	assert(xml3.contains("CamelCaseAttValue"))
 	
+	val xml4 = XmlElement.local("Test", "Häkky & rä!").toXml
+	println(xml4)
+	assert(xml4.contains("[!CDATA") && xml4.contains("]]"))
+	
 	println("Success!")
 }

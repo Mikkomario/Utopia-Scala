@@ -4,11 +4,51 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ModelConvertible
+import utopia.flow.parse.XmlElementLike.isAllowedInContent
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
 
+object XmlElementLike
+{
+    // ATTRIBUTES   -----------------------
+    
+    // Characters not accepted in the xml text (http://validchar.com/d/xml10/xml10_namestart [17.1.2018])
+    // Ordered
+    /**
+      * Ranges of characters that are not allowed within an XML element body / content. Ordered.
+      */
+    val invalidContentCharacterRanges = Vector(/*(0 to 64), */91 to 94, 123 to 191, 768 to 879,
+        8192 to 8203, 8206 to 8303, 8592 to 11263, 12272 to 12288, 55296 to 63743,
+        64976 to 65007, 65534 to 1114111)
+    /**
+      * Individual characters (in addition to 'invalidContentCharacterRanges') that are not allowed within
+      * an XML element body / content. Ordered.
+      */
+    val invalidExtraCharacters = Vector(34, 38, 39, 60, 62, 96, 215, 247, 894)
+    
+    
+    // OTHER    ----------------------------
+    
+    /**
+      * @param string A string that would appear in an xml element body
+      * @return Whether the specified string may appear as is (true).
+      *         If false, the string must be wrapped in CDATA if present in an xml element body.
+      */
+    def isAllowedInContent(string: String): Boolean = string.forall(isAllowedInContent)
+    /**
+      * @param c A character that would appear in an xml element body
+      * @return Whether the specified character may appear in an xml element's body as is (true).
+      *         If false, the xml element content must be wrapped in CDATA.
+      */
+    def isAllowedInContent(c: Char) = {
+        val i = c.toInt
+        // Character is not allowed if it lies in an invalid char range or is specifically invalid
+        invalidContentCharacterRanges.find { _.end >= i }.forall { _.start > i } &&
+            !invalidExtraCharacters.contains(i)
+    }
+}
 
 /**
  * XML Elements are used for representing XML data
@@ -62,7 +102,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     def isEmptyElement = children.isEmpty && value.isEmpty
     
     /**
-     * Prints an xml string from this element. Character data is represented as is.
+     * Prints an xml string from this element.
      */
     def toXml: String = {
         val builder = new StringBuilder()
@@ -296,8 +336,14 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Eg. <foo att1="2">Test value</foo>
         // Or <foo><bar/></foo>
         else {
+            val cDataRequired = !isAllowedInContent(text)
+            
             xmlBuilder ++= s"<$namePart$attsPart>"
+            if (cDataRequired)
+                xmlBuilder ++= "[!CDATA["
             xmlBuilder ++= text
+            if (cDataRequired)
+                xmlBuilder ++= "]]"
             children.foreach { _.appendToXml(xmlBuilder) }
             xmlBuilder ++= s"</$namePart>"
         }
