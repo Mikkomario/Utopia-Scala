@@ -43,7 +43,7 @@ object XmlToStringTest extends App
 	
 	val xml4 = XmlElement.local("Test", "Häkky & rä!").toXml
 	println(xml4)
-	assert(xml4.contains("[!CDATA") && xml4.contains("]]"))
+	assert(xml4.contains("![CDATA") && xml4.contains("]]"))
 	
 	println("Success!")
 }
