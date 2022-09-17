@@ -1,7 +1,7 @@
 # Utopia Reflection - List of Changes
 
 ## v3.0.1 (in development)
-Reflects changes in **Flow** v1.17
+Reflects changes in **Flow** v1.17 and **Paradigm** v1.1
 ### Bugfixes
 - Empty **MeasuredText** now has a positive height, like in the previous **Reflection** implementation
 

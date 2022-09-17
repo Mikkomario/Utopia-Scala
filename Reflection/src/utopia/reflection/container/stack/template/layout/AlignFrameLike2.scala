@@ -28,7 +28,7 @@ trait AlignFrameLike2[+C <: Stackable2] extends SingleContainer2[C] with Caching
 	{
 		// Calculates new size
 		val mySize = size
-		val targetSize = content.stackSize.optimal.fittedInto(mySize)
+		val targetSize = content.stackSize.optimal.croppedToFit(mySize)
 		
 		// Calculates new position
 		val targetPosition = alignment.position(targetSize, mySize)

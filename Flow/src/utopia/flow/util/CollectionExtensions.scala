@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator, ZipPadIterator}
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.datastructure.template.LazyLike
@@ -457,6 +457,38 @@ object CollectionExtensions
 		  */
 		def minGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
 			maxGroupBy(f)(bf, ord.reverse)
+		
+		/**
+		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
+		  * collections are included in the resulting collection.
+		  * @param other Another collection
+		  * @param myPadding Padding to use for this collection, if shorter (call-by-name)
+		  * @param theirPadding Padding to use for the other collection, if shorter (call-by-name)
+		  * @param bf Implicit BuildFrom
+		  * @tparam B Type of items in the other collection
+		  * @tparam To Type of resulting collection
+		  * @return A collection that contains tuples where the first values are from this collection and
+		  *         the second values are from the other collection.
+		  */
+		def zipPad[B, To](other: Iterable[B], myPadding: => iter.A, theirPadding: => B)
+		                 (implicit bf: BuildFrom[Repr, (iter.A, B), To]) =
+		{
+			val ops = iter(coll)
+			bf.fromSpecific(coll)(ZipPadIterator(ops.iterator, other.iterator, myPadding, theirPadding))
+		}
+		/**
+		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
+		  * collections are included in the resulting collection.
+		  * @param other Another collection
+		  * @param padding Padding to use for the shorter collection, if one exists (call-by-name)
+		  * @param bf Implicit BuildFrom
+		  * @tparam To Type of resulting collection
+		  * @return A collection that contains tuples where the first values are from this collection and
+		  *         the second values are from the other collection.
+		  */
+		def zipPad[To](other: Iterable[iter.A], padding: => iter.A)
+		              (implicit bf: BuildFrom[Repr, (iter.A, iter.A), To]): To =
+			zipPad[iter.A, To](other, padding, padding)
 	}
 	
 	implicit def iterableOperations[Repr](coll: Repr)
@@ -1298,6 +1330,29 @@ object CollectionExtensions
 		  *         return [XA, AB, BC]
 		  */
 		def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
+		
+		/**
+		  * Zips this iterator with another, possibly padding one of them.
+		  * Neither of these two source iterators should be used afterwards.
+		  * @param other Another iterator
+		  * @param myPadding Padding to use for this iterator (call-by-name)
+		  * @param theirPadding Padding to use for the other iterator (call-by-name)
+		  * @tparam B Type of items in the other iterator
+		  * @return An iterator that takes from both of these iterators and zips the results,
+		  *         padding if one depletes before the other
+		  */
+		def zipPad[B](other: Iterator[B], myPadding: => A, theirPadding: => B) =
+			ZipPadIterator(i, other, myPadding, theirPadding)
+		
+		/**
+		  * Zips this iterator with another, possibly padding one of them.
+		  * Neither of these two source iterators should be used afterwards.
+		  * @param other Another iterator
+		  * @param padding Padding to use for the iterator that depletes first (call-by-name)
+		  * @return An iterator that takes from both of these iterators and zips the results,
+		  *         padding if one depletes before the other
+		  */
+		def zipPad(other: Iterator[A], padding: => A) = ZipPadIterator(i, other, padding)
 	}
 	
 	

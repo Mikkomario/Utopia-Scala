@@ -272,7 +272,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  * @param dimensions A set of dimensions
 	  * @return A parsed version of the dimensions
 	  */
-	override def buildCopy(dimensions: Seq[Double]) = Vector3D.withDimensions(dimensions)
+	override def buildCopy(dimensions: IndexedSeq[Double]) = Vector3D.withDimensions(dimensions)
     
     
     // OTHER METHODS    ----------------
@@ -287,37 +287,23 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  * @param axis Target axis / dimension
 	  * @return A 2D copy of this vector with the specified dimension dropped (Eg. (x, z) or (y, z))
 	  */
-	def withoutDimension(axis: Axis) = axis match
-	{
+	def withoutDimension(axis: Axis) = axis match {
 		case X => Vector2D(y, z)
 		case Y => Vector2D(x, z)
 		case Z => Vector2D(x, y)
 	}
-	
 	/**
 	  * @param index Index of the targeted dimension [0, 2]
 	  * @return A 2D copy of this vector with the specified dimension dropped
 	  */
-	def withoutDimensionAtIndex(index: Int) =
-	{
-		val dimension = index match
-		{
-			case 0 => X
-			case 1 => Y
-			case 2 => Z
-			case _ => throw new IndexOutOfBoundsException(s"3D Vector doesn't have dimension with index $index")
-		}
-		withoutDimension(dimension)
-	}
+	def withoutDimensionAtIndex(index: Int) = withoutDimension(Axis(index))
 	
 	/**
 	  * A projection of this vector for the specified axis
 	  */
 	@deprecated("Please use ProjectedOver instead", "v2")
-	def projectedAlong(axis: Axis) =
-	{
-		axis match
-		{
+	def projectedAlong(axis: Axis) = {
+		axis match {
 			case X => xProjection
 			case Y => yProjection
 			case Z => zProjection

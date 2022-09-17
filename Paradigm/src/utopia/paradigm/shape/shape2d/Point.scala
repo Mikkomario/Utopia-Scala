@@ -115,7 +115,7 @@ case class Point(override val dimensions2D: Pair[Double])
 	override def buildCopy(vector: Vector2D) = Point(vector.dimensions2D)
 	override def buildCopy(vector: Vector3D) = Point(vector.dimensions2D)
 	
-	override def buildCopy(dimensions: Seq[Double]) =
+	override def buildCopy(dimensions: IndexedSeq[Double]) =
 	{
 		if (dimensions.size >= 2)
 			Point(dimensions.head, dimensions(1))
@@ -168,5 +168,5 @@ case class Point(override val dimensions2D: Pair[Double])
      * A copy of this point with specified coordinate
      */
 	@deprecated("Please use the more generic .withDimension(...) instead", "v2.3")
-    def withCoordinate(c: Double, axis: Axis2D) = withDimension(c, axis)
+    def withCoordinate(c: Double, axis: Axis2D) = withDimension(axis(c))
 }

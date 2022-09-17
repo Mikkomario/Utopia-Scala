@@ -29,7 +29,7 @@
 - Added **PostponingProcess** class that behaves somewhat like **DelayedProcess**, but accepts a variable wait target
 - Added **ValueConvertibleFileContainer** and **ValueConvertibleOptionFileContainer** -classes
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
-- Added **OptionsIterator** class
+- Added **OptionsIterator** and **ZipPadIterator** classes
 ### New Methods
 - **ChangeEvent**
   - Added `.toStringWith(A => String)`
@@ -41,8 +41,14 @@
 - **Future** (**AsyncExtensions**)
   - Added `.waitWith(AnyRef, Duration)` that works like an interruptible `.waitFor()`
   - Added `.currentSuccess` and `.currentFailure` to **Futures** which contain instances of **Try**
+- **Iterable** (**CollectionExtensions**)
+  - Added `.zipPad(...)` functions, which behave like `.zip(...)` but pad the shorter collection where necessary
+- **Iterator** (**CollectionExtensions**)
+  - Added `.zipPad(...)` functions (see **Iterable**)
 - **Option** (**CollectionExtensions**)
   - Added `.mergeWith(Option)`
+- **Pair**
+  - Added a `.zip(Pair)` that returns a **Pair**
 - **Process**
   - Added a protected `.markAsInterrupted()` -function that acts as a `.stop()`, but only alters the process' state
 - **Value**

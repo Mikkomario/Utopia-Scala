@@ -191,13 +191,13 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Makes sure this image fills the specified area. If this image is already larger than the area, does nothing
 	  * @param area Area to fill
 	  */
-	def expandToFill(area: Size) = if (!area.fitsInto(size)) resizeToFill(area)
+	def expandToFill(area: Size) = if (!area.fitsWithin(size)) resizeToFill(area)
 	
 	/**
 	  * Makes sure this image fits into the specified area. If this image is already smaller than the area, does nothing
 	  * @param area Area to fit into
 	  */
-	def shrinkToFit(area: Size) = if (!size.fitsInto(area)) resizeToFit(area)
+	def shrinkToFit(area: Size) = if (!size.fitsWithin(area)) resizeToFit(area)
 	
 	/**
 	  * Places a limitation upon either image width or height. Preserves shape.
@@ -205,7 +205,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param maxLength Length limitation for that axis
 	  */
 	def limitAlong(side: Axis2D, maxLength: Double) =
-		if (size.along(side) > maxLength) shrinkToFit(size.withDimension(maxLength, side))
+		if (size.along(side) > maxLength) shrinkToFit(size.withDimension(side(maxLength)))
 	
 	/**
 	  * Places a width limitation for this image. Preserves shape.

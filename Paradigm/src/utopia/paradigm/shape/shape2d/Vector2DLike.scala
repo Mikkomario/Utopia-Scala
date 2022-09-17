@@ -6,6 +6,14 @@ import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.shape.template.{Dimensional, VectorLike}
 import utopia.paradigm.transform.Transformable
 
+object Vector2DLike
+{
+	/**
+	  * Type alias for any Vector2DLike, regardless of 'Repr' type
+	  */
+	type V2D = VectorLike[_]
+}
+
 /**
   * A common trait for vectors which have the both x and y dimensions. May contain more dimensions.
   * @author Mikko Hilpinen
@@ -47,12 +55,6 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]]
 		0, 1
 	)
 	
-	/**
-	  * @return X and Y components that form this vector. Zero vectors are not included.
-	  */
-	def components = toMap2D.flatMap { case (axis, length) =>
-		if (length != 0) Some(axis(length)) else None }
-	
 	
 	// IMPLEMENTED	----------------------
 	
@@ -61,7 +63,6 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]]
 	override def transformedWith(transformation: Matrix3D) = buildCopy(transformation(Vector3D(x, y, 1)))
 	
 	override def scaled(xScaling: Double, yScaling: Double) = this * Vector(xScaling, yScaling)
-	
 	override def scaled(modifier: Double) = this * modifier
 	
 	override def translated(translation: Vector2DLike[_]) = this + translation
@@ -73,8 +74,7 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]]
 	  * Creates a new vector with the same length as this vector
 	  * @param direction The direction of the new vector (on the x-y -plane)
 	  */
-	def withDirection(direction: Angle) =
-	{
+	def withDirection(direction: Angle) = {
 		val l = length
 		buildCopy(Vector(direction.cosine * l, direction.sine * l))
 	}
@@ -96,11 +96,11 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]]
 	/**
 	  * A copy of this point with specified x
 	  */
-	def withX(x: Double) = withDimension(x, X)
+	def withX(x: Double) = withDimension(X(x))
 	/**
 	  * A copy of this point with specified y
 	  */
-	def withY(y: Double) = withDimension(y, Y)
+	def withY(y: Double) = withDimension(Y(y))
 	
 	/**
 	  * @param f A mapping function

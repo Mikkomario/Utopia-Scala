@@ -51,7 +51,7 @@ trait ScrollViewLike[C <: Stackable] extends ScrollAreaLike[C]
 	  * @return The current position of this view's contents (negative)
 	  */
 	def contentPosition = contentOrigin.along(axis)
-	def contentPosition_=(pos: Double) = contentOrigin = contentOrigin.withDimension(pos, axis)
+	def contentPosition_=(pos: Double) = contentOrigin = contentOrigin.withDimension(axis(pos))
 	
 	/**
 	  * @return The smallest possible content position (= position when scrolled at bottom)

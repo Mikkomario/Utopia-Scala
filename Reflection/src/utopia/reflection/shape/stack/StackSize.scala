@@ -232,7 +232,7 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
     
     override def toInsets = StackInsets.symmetric(this)
     
-    override protected def zeroDimension = StackLength.any
+    override def zeroDimension = StackLength.any
     
     override def toString = s"[$width, $height]"
     
@@ -476,7 +476,7 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param maximum Maximum allowed size
       * @return Whether this stack size contains a value that fits under that maximum size
       */
-    def fitsWithin(maximum: Size) = min.fitsInto(maximum)
+    def fitsWithin(maximum: Size) = min.fitsWithin(maximum)
     /**
       * @param limits Another stack size
       * @return Whether there exists a value that fulfils both of these size requirements

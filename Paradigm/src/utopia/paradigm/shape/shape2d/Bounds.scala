@@ -5,7 +5,8 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
-import utopia.paradigm.enumeration.Axis.X
+import utopia.flow.operator.LinearScalable
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.generic.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
@@ -115,7 +116,8 @@ object Bounds extends FromModelFactory[Bounds]
  * @author Mikko Hilpinen
  * @since Genesis 13.1.2017
  */
-case class Bounds(position: Point, size: Size) extends Rectangular with ValueConvertible with ModelConvertible
+case class Bounds(position: Point, size: Size)
+    extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds]
 {
     // COMPUTED PROPERTIES    ------------
     
@@ -150,32 +152,27 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     /**
       * @return A rounded version of these bounds
       */
-    def round =
-    {
+    def round = {
         val newPosition = position.round
         if (newPosition == position)
             Bounds(newPosition, size.round)
         else
             Bounds(newPosition, Size((rightX - newPosition.x).round.toDouble, (bottomY - newPosition.y).round.toDouble))
     }
-    
     /**
       * @return A copy of these bounds that rounds values for increased size and decreased position
       */
-    def ceil =
-    {
+    def ceil = {
         val newPosition = position.floor
         if (newPosition == position)
             Bounds(newPosition, size.ceil)
         else
             Bounds(newPosition, Size((rightX - newPosition.x).ceil, (bottomY - newPosition.y).ceil))
     }
-    
     /**
       * @return A copy of these bounds for decreased size and increased position
       */
-    def floor =
-    {
+    def floor = {
         val newPosition = position.ceil
         if (newPosition == position)
             Bounds(newPosition, size.floor)
@@ -186,30 +183,41 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     
     // IMPLEMENTED METHODS    ----------
     
-    def topLeft = position
-    
+    override def repr = this
     override def bounds = this
     
+    override def topLeft = position
+    override def bottomRight = position + size
+    
     override def width = size.width
-    
     override def height = size.height
-    
-    override def toValue = new Value(Some(this), BoundsType)
-    
-    override def toModel = Model(Vector("position" -> position, "size" -> size))
-    
-    override def toShape = toAwt
     
     override def leftLength = size.height
     
-    override def top = X(size.width)
+    override def toValue = new Value(Some(this), BoundsType)
+    override def toModel = Model(Vector("position" -> position, "size" -> size))
+    override def toShape = toAwt
     
-    override def bottomRight = position + size
+    override def top = X(size.width).in2D
+    override def left = Y(size.height).in2D
     
-    override def contains[V <: Vector2DLike[V]](point: V) = point.x >= topLeft.x && point.y >= topLeft.y &&
-            point.x <= bottomRight.x && point.y <= bottomRight.y
+    override def contains[V <: Vector2DLike[V]](point: V) =
+        point.x >= topLeft.x && point.y >= topLeft.y && point.x <= bottomRight.x && point.y <= bottomRight.y
     
     override def translated(translation: Vector2DLike[_]) = withPosition(position + translation)
+    
+    /**
+      * Scales both position and size
+      * @param scaling A scaling factor
+      * @return A scaled version of these bounds
+      */
+    override def *(scaling: Double) = Bounds(position * scaling, size * scaling)
+    /**
+      * Divides both position and size
+      * @param div A dividing factor
+      * @return A divided version of these bounds
+      */
+    override def /(div: Double) = Bounds(position / div, size / div)
     
     
     // OPERATORS    --------------------
@@ -219,7 +227,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return A translated set of bounds
       */
     def +(translation: Vector2DLike[_]) = translated(translation)
-    
     /**
       * @param insets Insets to add to these bounds
       * @return A copy of these bounds with specified insets added to the sides
@@ -231,7 +238,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return A translated set of bounds
       */
     def -[V <: Vector2DLike[V]](translation: V) = translated(-translation)
-    
     /**
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted
@@ -244,27 +250,12 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return A scaled version of these bounds
       */
     def *(scaling: VectorLike[_]) = Bounds(position * scaling, size * scaling)
-    
-    /**
-      * Scales both position and size
-      * @param scaling A scaling factor
-      * @return A scaled version of these bounds
-      */
-    def *(scaling: Double) = Bounds(position * scaling, size * scaling)
-    
     /**
       * Divides both position and size
       * @param div A dividing factor
       * @return A divided version of these bounds
       */
     def /(div: VectorLike[_]) = Bounds(position / div, size / div)
-    
-    /**
-      * Divides both position and size
-      * @param div A dividing factor
-      * @return A divided version of these bounds
-      */
-    def /(div: Double) = Bounds(position / div, size / div)
     
     
     // OTHER METHODS    ----------------
@@ -428,7 +419,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
         if (area.contains(this))
             this
         // Case: Only position needs to be adjusted
-        else if (size.fitsInto(area.size))
+        else if (size.fitsWithin(area.size))
         {
             val newPosition = Point.calculateWith { axis =>
                 if (maxAlong(axis) > area.maxAlong(axis))

@@ -167,6 +167,7 @@ object Image
   * @author Mikko Hilpinen
   * @since 15.6.2019, v2.1
   */
+// TODO: Extend Sized
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: LazyLike[PixelTable])
@@ -478,12 +479,12 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param area Target area (maximum)
 	  * @return A copy of this image that is smaller or equal to the target area. Shape is preserved.
 	  */
-	def smallerThan(area: Size) = if (size.fitsInto(area)) this else fitting(area)
+	def smallerThan(area: Size) = if (size.fitsWithin(area)) this else fitting(area)
 	/**
 	  * @param area Target area (minimum)
 	  * @return A copy of this image that is larger or equal to the target area. Shape is preserved.
 	  */
-	def largerThan(area: Size) = if (area.fitsInto(size)) this else filling(area)
+	def largerThan(area: Size) = if (area.fitsWithin(size)) this else filling(area)
 	
 	/**
 	  * Limits the height or width of this image
@@ -492,7 +493,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image that has equal or lower than maximum length on the specified axis
 	  */
 	def limitedAlong(side: Axis2D, maxLength: Double) = if (size.along(side) <= maxLength) this else
-		smallerThan(size.withDimension(maxLength, side))
+		smallerThan(size.withDimension(side(maxLength)))
 	/**
 	  * @param maxWidth Maximum allowed width
 	  * @return A copy of this image with equal or lower width than the specified maximum

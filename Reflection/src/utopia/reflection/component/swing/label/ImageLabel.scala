@@ -83,7 +83,7 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 		// Updates image scaling to match this label's size
 		if (image.size.ceil == size)
 			scaledImage = image
-		else if (alwaysFillArea || !image.size.fitsInto(size))
+		else if (alwaysFillArea || !image.size.fitsWithin(size))
 			scaledImage = image.withSize(size)
 		else
 			scaledImage = image

@@ -191,7 +191,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 					drawer.onlyFill(barColor).draw(rounded)
 				else
 				{
-					val partial = barBounds.mapSize { _ * (X -> drawnProgress) }
+					val partial = barBounds.mapSize { _.scaledAlong(X(drawnProgress)) }
 					drawer.clippedTo(rounded).onlyFill(barColor).draw(partial)
 				}
 			}

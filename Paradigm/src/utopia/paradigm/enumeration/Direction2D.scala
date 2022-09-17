@@ -5,9 +5,9 @@ import utopia.flow.operator.{Reversible, Scalable, Sign}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape1d.Vector1D
 
-sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Parallel] with Scalable[Vector2D, Double]
+sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Parallel] with Scalable[Vector1D, Double]
 {
 	// ABSTRACT	--------------------------
 	
@@ -57,7 +57,6 @@ sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Paral
 	  * @return A direction that is 90 degree clockwise of this direction
 	  */
 	def rotatedQuarterClockwise = rotatedQuarterTowards(Clockwise)
-	
 	/**
 	  * @return A direction that is 90 degree counter-clockwise of this direction
 	  */
@@ -68,6 +67,11 @@ sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Paral
 	  *         then the direction to clockwise direction
 	  */
 	def perpendicular = Vector(rotatedQuarterCounterClockwise, rotatedQuarterClockwise)
+	
+	/**
+	  * @return A unit vector pointing towards this direction
+	  */
+	def toUnitVector = axis(sign.modifier)
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -99,7 +103,6 @@ sealed trait Direction2D extends Direction2DLike[Direction2D, Direction2D]
 	  * @return This direction if it is horizontal. None otherwise.
 	  */
 	def horizontal = along(X)
-	
 	/**
 	  * @return This direction if it is vertical. None otherwise.
 	  */

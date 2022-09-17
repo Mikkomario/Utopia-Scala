@@ -22,7 +22,6 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	  * @return The top / bottom edge of this shape
 	  */
 	def top: Vector2D
-	
 	/**
 	  * @return The left / right edge of this shape
 	  */
@@ -34,24 +33,20 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	def topRight = topLeft + top
 	
 	def bottomRight = topRight + left
-	
 	def bottomLeft = topLeft + left
 	
 	/**
 	  * @return The top side of this shape (left to right)
 	  */
 	def topEdge = Line(topLeft, topRight)
-	
 	/**
 	  * @return The right side of this shape (top to bottom)
 	  */
 	def rightEdge = Line(topRight, bottomRight)
-	
 	/**
 	  * @return The bottom side of this shape (right to left)
 	  */
 	def bottomEdge = Line(bottomRight, bottomLeft)
-	
 	/**
 	  * @return The left side of this shape (bottom to top)
 	  */
@@ -66,7 +61,6 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	// IMPLEMENTED	--------------
 	
 	override def transformedWith(transformation: Matrix3D) = map { _ * transformation }
-	
 	override def transformedWith(transformation: Matrix2D) = map { _ * transformation }
 	
 	override def center = topLeft + (top / 2) + (left / 2)
@@ -78,8 +72,7 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	
 	// OTHER	----------------
 	
-	private def map(f: Point => Point) =
-	{
+	private def map(f: Point => Point) = {
 		val topLeft2 = f(topLeft)
 		val topRight2 = f(topRight).toVector
 		val bottomLeft2 = f(bottomLeft).toVector

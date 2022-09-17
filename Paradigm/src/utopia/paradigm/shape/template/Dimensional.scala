@@ -2,6 +2,7 @@ package utopia.paradigm.shape.template
 
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 
@@ -17,12 +18,12 @@ trait Dimensional[+A]
 	/**
 	  * @return The X, Y, Z ... dimensions of this vector-like instance. No specific length required, however.
 	  */
-	def dimensions: Seq[A]
+	def dimensions: IndexedSeq[A]
 	
 	/**
 	  * @return A value with length of zero
 	  */
-	protected def zeroDimension: A
+	def zeroDimension: A
 	
 	
 	// COMPUTED	--------------------
@@ -31,8 +32,7 @@ trait Dimensional[+A]
 	  * @return A map with axes as keys and dimensions as values. Only supports up to 3 axes, all of which
 	  *         might not be present in the resulting map.
 	  */
-	def toMap = dimensions.take(3).zipWithIndex.map { case (v, i) =>
-		axisForIndex(i) -> v }.toMap
+	def toMap = dimensions.take(3).zipWithIndex.map { case (v, i) => Axis(i) -> v }.toMap
 	
 	
 	// IMPLEMENTED  ----------------
@@ -46,7 +46,7 @@ trait Dimensional[+A]
 	  * @param axis Target axis
 	  * @return This instance's component along specified axis
 	  */
-	def along(axis: Axis) = dimensions.getOrElse(indexForAxis(axis), zeroDimension)
+	def along(axis: Axis) = dimensions.getOrElse(axis.index, zeroDimension)
 	
 	/**
 	  * @param axis Target axis
@@ -58,6 +58,7 @@ trait Dimensional[+A]
 	  * @param axis Target axis
 	  * @return Index in the dimensions array for the specified axis
 	  */
+	@deprecated("Please use axis.index instead", "v1.1")
 	def indexForAxis(axis: Axis) = axis match
 	{
 		case X => 0
@@ -70,8 +71,8 @@ trait Dimensional[+A]
 	  * @throws IndexOutOfBoundsException If passing an index larger than 2 or smaller than 0
 	  */
 	@throws[IndexOutOfBoundsException]("Only indices 0, 1, and 2 are allowed")
-	protected def axisForIndex(index: Int) = index match
-	{
+	@deprecated("Please use Axis(Int) instead", "v1.1")
+	protected def axisForIndex(index: Int): Axis = index match {
 		case 0 => X
 		case 1 => Y
 		case 2 => Z
@@ -79,19 +80,89 @@ trait Dimensional[+A]
 	}
 	
 	/**
+	  * @param other Another dimensional item
+	  * @tparam B Type of dimensions in the other item
+	  * @return Dimensions of both of these items zipped,
+	  *         so that the length of the resulting Seq is equal to the maximum number of dimensions between these items
+	  */
+	def zipDimensionsWith[B](other: Dimensional[B]) =
+		dimensions.zipPad(other.dimensions, zeroDimension, other.zeroDimension)
+	/**
+	  * @param other Another dimensional item
+	  * @tparam B Type of dimensions in the other item
+	  * @return An iterator that returns zipped dimensions from both of these items,
+	  *         so that the length of the resulting iterator is equal to the
+	  *         maximum number of dimensions between these items
+	  */
+	def zipDimensionsIteratorWith[B](other: Dimensional[B]) =
+		dimensions.iterator.zipPad(other.dimensions.iterator, zeroDimension, other.zeroDimension)
+	
+	/**
+	  * Compares this item with another using 'forall'.
+	  * Works even when these two items have a different number of dimensions.
+	  * @param other Another dimensional item
+	  * @param f A function that accepts a dimension (of same direction) from both of these items
+	  *          and yields true or false
+	  * @tparam B Type of dimensions in the other item
+	  * @return Whether the specified function returned true for all dimensions between this and the other item
+	  */
+	def forAllDimensionsWith[B](other: Dimensional[B])(f: (A, B) => Boolean) =
+		zipDimensionsIteratorWith(other).forall { case (my, their) => f(my, their) }
+	/**
+	  * Compares this item with another using 'exists'.
+	  * Works even when these two items have a different number of dimensions.
+	  * @param other Another dimensional item
+	  * @param f A function that accepts a dimension (of same direction) from both of these items
+	  *          and yields true or false
+	  * @tparam B Type of dimensions in the other item
+	  * @return Whether the specified function returned true for any dimensions between this and the other item
+	  */
+	def existsDimensionWith[B](other: Dimensional[B])(f: (A, B) => Boolean) =
+		zipDimensionsIteratorWith(other).exists { case (my, their) => f(my, their) }
+	/**
 	  * Checks whether these two dimensional items are equal when using the specified equality function
 	  * @param other Another dimensional item
 	  * @param f Equality function
 	  * @tparam B Type of the other dimensions
 	  * @return Whether these two items are equal, according to the equality function
 	  */
-	def compareEqualityWith[B](other: Dimensional[B])(f: (A, B) => Boolean) =
+	@deprecated("Please use testEqualityWith(...) instead", "v1.1")
+	def compareEqualityWith[B](other: Dimensional[B])(f: (A, B) => Boolean) = testEqualityWith(other)(f)
+	/**
+	  * Tests whether these two items may be considered equal using the specified equality function.
+	  * This function works even when these two items have a different number of dimensions.
+	  * @param other Another dimensional item
+	  * @param equals A function that accepts a dimension from this item and a dimension from the other item and
+	  *               returns whether the two dimensions may be considered equal
+	  * @tparam B Type of dimensions in the other item
+	  * @return Whether these two items may be considered equal
+	  */
+	def testEqualityWith[B](other: Dimensional[B])(equals: (A, B) => Boolean) =
+		forAllDimensionsWith(other)(equals)
+	/**
+	  * Compares the dimensions of this item to the dimensions of another.
+	  * This function works even when these two items have different number of dimensions.
+	  * @param other Another dimensional item
+	  * @param f A function that compares two dimensions of the same direction and yields either true or false
+	  * @tparam B Type of dimensions in the other item
+	  * @return True if 'f' yielded true for all dimensions,
+	  *         False if 'f' yielded false for all dimensions,
+	  *         Undefined otherwise
+	  */
+	def compareDimensions[B](other: Dimensional[B])(f: (A, B) => Boolean) =
 	{
-		val myDimensions = dimensions
-		val otherDimensions = other.dimensions
-		(0 until (myDimensions.size max otherDimensions.size)).forall { index =>
-			f(myDimensions.getOrElse(index, zeroDimension), otherDimensions.getOrElse(index, other.zeroDimension))
-		}
+		val zippedDimensions = zipDimensionsWith(other)
+		val sidesCount = zippedDimensions.count { case (my, their) => f(my, their) }
+		
+		// Case: f yielded false for all items => False
+		if (sidesCount == 0)
+			Certain(false)
+		// Case: f yielded false for some and true for some => Undefined
+		else if (sidesCount < zippedDimensions.size)
+			Undefined
+		// Case: f yielded true for all items => True
+		else
+			Certain(true)
 	}
 	
 	/**
@@ -101,6 +172,6 @@ trait Dimensional[+A]
 	  * @return Whether these two items are equal when using the specified equals function
 	  */
 	def ~==[B >: A](other: Dimensional[B])(implicit equals: EqualsFunction[B]) =
-		compareEqualityWith(other) { equals(_, _) }
+		testEqualityWith(other)(equals.apply)
 	def !~==[B >: A](other: Dimensional[B])(implicit equals: EqualsFunction[B]) = !(this ~== other)
 }

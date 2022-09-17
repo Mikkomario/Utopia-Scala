@@ -102,7 +102,7 @@ trait StackLike2[C <: Stackable2] extends MultiContainer2[C] with StackSizeCalcu
                     length - item.maxCoordinateAlong(direction)
                 
                 // Also includes the whole stack breadth
-                Bounds(item.position - direction(top), item.size.withDimension(breadth, direction.perpendicular) +
+                Bounds(item.position - direction(top), item.size.withDimension(direction.perpendicular(breadth)) +
                     direction(top + bottom))
             }
         }

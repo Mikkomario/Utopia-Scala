@@ -216,6 +216,14 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	def mergeWith[B, C](other: Pair[B])(f: (A, B) => C) =
 		Pair(f(first, other.first), f(second, other.second))
 	
+	/**
+	  * Merges this pair with another pair, resulting in a pair containing the entries from both
+	  * @param other Another pair
+	  * @tparam B Type of items in the other pair
+	  * @return A pair that combines the values of both of these pairs in tuples
+	  */
+	def zip[B](other: Pair[B]) = Pair((first, other.first), (second, other.second))
+	
 	
 	// NESTED   ------------------------------
 	

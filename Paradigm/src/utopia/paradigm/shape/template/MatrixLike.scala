@@ -12,12 +12,11 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	// ABSTRACT	---------------------
 	
 	// x-transformation at index 0, y-transformation at index 1 and so on
-	def columns: Seq[V]
-	
+	def columns: IndexedSeq[V]
 	/**
 	  * @return The rows in this matrix
 	  */
-	def rows: Seq[V]
+	def rows: IndexedSeq[V]
 	
 	/**
 	  * The determinant of this matrix. The determinant shows the scaling applied to the volume
@@ -35,28 +34,26 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  */
 	def inverse: Option[Repr]
 	
-	protected def buildCopy(columns: Seq[V]): Repr
+	protected def buildCopy(columns: IndexedSeq[V]): Repr
 	
 	
 	// IMPLEMENTED	----------------
 	
 	override def dimensions = columns
 	
+	override def toString = {
+		val content = toMap.map { case (axis, vector) =>
+			s"$axis: [${vector.dimensions.mkString(", ")}]" }.mkString(", ")
+		s"{$content}"
+	}
+	
 	override def *(mod: Double) = map { _ * mod }
 	
-	def ~==(other: Dimensional[V]) =
-	{
+	def ~==(other: Dimensional[V]) = {
 		if (dimensions.size == other.dimensions.size)
 			dimensions.zip(other.dimensions).forall { case (a, b) => a ~== b }
 		else
 			false
-	}
-	
-	override def toString =
-	{
-		val content = toMap.map { case (axis, vector) =>
-			s"$axis: [${vector.dimensions.mkString(", ")}]" }.mkString(", ")
-		s"{$content}"
 	}
 	
 	

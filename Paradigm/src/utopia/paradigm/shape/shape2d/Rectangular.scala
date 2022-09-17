@@ -8,7 +8,7 @@ trait Rectangular extends Parallelogramic
 	// ABSTRACT	-----------------
 	
 	/**
-	  * @return The lenght of the left / right (top to bottom) edge of this rectangular shape
+	  * @return The length of the left / right (top to bottom) edge of this rectangular shape
 	  */
 	def leftLength: Double
 	
@@ -19,7 +19,6 @@ trait Rectangular extends Parallelogramic
 	  * @return The width of this rectangle (not necessarily X-wise)
 	  */
 	def width = top.length
-	
 	/**
 	  * @return The height of this rectangle (not necessarily Y-wise)
 	  */
@@ -29,7 +28,6 @@ trait Rectangular extends Parallelogramic
 	  * @return The width or the height of this rectangle, whichever is larger
 	  */
 	def maxDimension = width max height
-	
 	/**
 	  * @return The width or the height of this rectangle, whichever is smaller
 	  */

@@ -298,7 +298,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
             original.toAwt.foreach { maxImage =>
                 val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
                 // Case: No smaller icons are allowed
-                if (maxSize.fitsInto(minSize))
+                if (maxSize.fitsWithin(minSize))
                     component.setIconImage(maxImage)
                 // Case: Multiple icon sizes allowed
                 else

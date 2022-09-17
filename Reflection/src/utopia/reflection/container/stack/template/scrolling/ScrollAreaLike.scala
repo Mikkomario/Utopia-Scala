@@ -232,7 +232,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  */
 	def scrollTo(abovePercent: Double, axis: Axis2D, animated: Boolean) =
 	{
-		val target = contentOrigin.withDimension(-contentSize.along(axis) * abovePercent, axis)
+		val target = contentOrigin.withDimension(contentSize.componentAlong(axis) * -abovePercent)
 		if (animated)
 			animateScrollTo(target)
 		else
@@ -472,7 +472,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 					
 					// Calculates scroll bar size
 					val barLengthMod = (length / contentLength) min 1.0
-					val barSize = barAreaSize * (axis -> barLengthMod)
+					val barSize = barAreaSize.scaledAlong(axis(barLengthMod))
 					
 					// Calculates the positions of scroll bar area + bar itself
 					val barAreaPosition = Point(myBreadth - scrollBarWidth, 0, axis.perpendicular)

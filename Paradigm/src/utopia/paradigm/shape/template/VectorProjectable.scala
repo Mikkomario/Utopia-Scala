@@ -25,15 +25,15 @@ trait VectorProjectable[+Projection]
 	/**
 	  * @return The x-wise projection of this item (only has x-component)
 	  */
-	def xProjection = projectedOver(X.toUnitVector)
+	def xProjection = projectedOver(X)
 	/**
 	  * @return The y-wise projection of this item (only has y-component)
 	  */
-	def yProjection = projectedOver(Y.toUnitVector)
+	def yProjection = projectedOver(Y)
 	/**
 	  * @return The z-wise projection of this item (only has z-component)
 	  */
-	def zProjection = projectedOver(Z.toUnitVector)
+	def zProjection = projectedOver(Z)
 	
 	
 	// OTHER	-------------------
@@ -42,10 +42,5 @@ trait VectorProjectable[+Projection]
 	  * @param axis Target axis
 	  * @return A projection of this item over specified axis
 	  */
-	def projectedOver(axis: Axis): Projection = axis match
-	{
-		case X => xProjection
-		case Y => yProjection
-		case Z => zProjection
-	}
+	def projectedOver(axis: Axis): Projection = projectedOver(axis.unit)
 }

@@ -75,18 +75,18 @@ object Size extends FromModelFactory[Size]
 **/
 case class Size(override val dimensions2D: Pair[Double])
     extends Vector2DLike[Size] with ValueConvertible with ModelConvertible
-        with TwoDimensional[Double] with SignedOrZero[Size]
+        with TwoDimensional[Double] with SignedOrZero[Size] with Sized[Size]
 {
     // COMPUTED    --------------------------
     
     /**
       * @return Width of this size
       */
-    def width = dimensions2D.first
+    override def width = dimensions2D.first
     /**
       * @return Height of this size
       */
-    def height = dimensions2D.second
+    override def height = dimensions2D.second
     
     /**
      * The area of this size (width * height)
@@ -108,24 +108,29 @@ case class Size(override val dimensions2D: Pair[Double])
 	def toDimension = new Dimension(width.ceil.toInt, height.ceil.toInt)
     
     /**
-      * @return This size as a square shape where width is equal to height. Lowers one of the sides if necessary.
+      * @return This size as a square shape (equal width and height).
+      *         Decreases the larger side to match the smaller side.
       */
     def fitToSquare = Size(Pair.twice(minDimension))
+    /**
+      * @return This size as a square shape (equal width and height).
+      *         Increases the smaller side to match the larger side.
+      */
+    def fillToSquare = Size(Pair.twice(maxDimension))
     
     
     // IMPLEMENTED    -----------------------
+    
+    override def repr = this
+    override def size = this
     
     override def isPositive = dimensions2D.forall { _ > 0 }
     
     override protected def zero = Size.zero
     
     override def buildCopy(vector: Vector2D) = Size(vector.x, vector.y)
-    
     override def buildCopy(vector: Vector3D) = Size(vector.x, vector.y)
-    
-    override def repr = this
-    
-    override def buildCopy(dimensions: Seq[Double]) =
+    override def buildCopy(dimensions: IndexedSeq[Double]) =
     {
         if (dimensions.size >= 2)
             Size(dimensions.head, dimensions(1))
@@ -134,11 +139,10 @@ case class Size(override val dimensions2D: Pair[Double])
         else
             Size(dimensions.head, 0)
     }
+    override def withSize(size: Size) = size
     
     override def toValue = new Value(Some(this), SizeType)
-    
     def toModel = Model.from("width" -> width, "height" -> height)
-    
     override def toString = s"$width x $height"
     
     
@@ -161,8 +165,8 @@ case class Size(override val dimensions2D: Pair[Double])
     /**
      * A copy of this size with specified length along the target axis
      */
-    def withLength(l: Double, axis: Axis2D) = axis match 
-    {
+    @deprecated("Replaced with withLength(Vector1D, Boolean)", "v1.1")
+    def withLength(l: Double, axis: Axis2D) = axis match {
         case X => withWidth(l)
         case Y => withHeight(l)
     }
@@ -184,7 +188,8 @@ case class Size(override val dimensions2D: Pair[Double])
       * @param another Another size
       * @return Whether this size would fit into the other size
       */
-    def fitsInto(another: Size) = compareEqualityWith(another) { _ <= _ }
+    @deprecated("Replaced with fitsWithin(Size)", "v1.1")
+    def fitsInto(another: Size) = testEqualityWith(another) { _ <= _ }
     
     /**
      * @param another Another size
@@ -192,6 +197,7 @@ case class Size(override val dimensions2D: Pair[Double])
       *                      (default = false)
      * @return A copy of this size that fits into specified size. If this size already fits, returns this.
      */
+    @deprecated("Replaced with fittingWithin(Size, Boolean) and croppedToFit(Size). Notice also the different functionality.", "v1.1")
     def fittedInto(another: Size, preserveShape: Boolean = false) = {
         if (width <= another.width) {
             if (height <= another.height)
