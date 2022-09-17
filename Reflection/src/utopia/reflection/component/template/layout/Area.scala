@@ -2,15 +2,17 @@ package utopia.reflection.component.template.layout
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape2d.{Bounded, Bounds, Point, Size}
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.Dimensional
 
 /**
 * This trait is extended by classes that occupy a certain 2D space (position + size)
 * @author Mikko Hilpinen
 * @since 26.2.2019
 **/
-trait Area
+trait Area extends Bounded
 {
     // ABSTRACT    ------------------------
     
@@ -51,28 +53,20 @@ trait Area
     def y_+=(adjustment: Double) = position = position + Y(adjustment)
     def y_-=(adjustment: Double) = y += (-adjustment)
     
-    def width = size.width
     def width_=(w: Double) = size = size.withWidth(w)
     def width_+=(adjustment: Double) = size = size + X(adjustment)
     def width_-=(adjustment: Double) = width += (-adjustment)
     
-    def height = size.height
     def height_=(h: Double) = size = size.withHeight(h)
     def height_+=(adjustment: Double) = size = size + Y(adjustment)
     def height_-=(adjustment: Double) = height += (-adjustment)
     
-    def rightX = x + width
     def rightX_=(newX: Double) = x = newX - width
-    def bottomY = y + height
     def bottomY_=(newY: Double) = y = newY - height
     
-    def topLeft = position
     def topLeft_=(p: Point) = position = p
-    def topRight = position.plusX(width)
     def topRight_=(p: Point) = position = p.minusX(width)
-    def bottomRight = position + size
     def bottomRight_=(p: Point) = position = p - size
-    def bottomLeft = position.plusY(height)
     def bottomLeft_=(p: Point) = position = p.minusY(height)
     def center = position + size / 2
     def center_=(p: Point) = position = p - size / 2
@@ -81,18 +75,34 @@ trait Area
     // OTHER    ------------------------
     
     /**
+      * Updates this component's position based on a mapping function result
+      * @param f A mapping function for this component's position
+      */
+    def mapPosition(f: Point => Point) = position = f(position)
+    /**
+      * Updates this component's size based on a mapping function result
+      * @param f A mapping function for this component's size
+      */
+    def mapSize(f: Size => Size) = size = f(size)
+    /**
+      * Updates this component's bounds based on a mapping function result
+      * @param f A mapping function for this component's bounds
+      */
+    def mapBounds(f: Bounds => Bounds) = bounds = f(bounds)
+    
+    /**
      * The x or y coordinate of this component
      */
-    def coordinateAlong(axis: Axis2D) = axis match
-    {
+    @deprecated("Please use position.along(Axis) instead", "v2.0")
+    def coordinateAlong(axis: Axis2D) = axis match {
         case X => x
         case Y => y
     }
-    
     /**
       * @param axis Target axis
       * @return The right side x-coordinate or the bottom y-coordinate, depending on target axis
       */
+    @deprecated("Please use maxAlong(Axis) instead", "v2.0")
     def maxCoordinateAlong(axis: Axis2D) = axis match
     {
         case X => rightX
@@ -100,41 +110,47 @@ trait Area
     }
     
     /**
+      * Updates one coordinate of this component
+      * @param position New coordinate for this component
+      */
+    def setCoordinate(position: Vector1D) = this.position = this.position.withDimension(position)
+    /**
      * Changes either x- or y-coordinate of this area
      * @param position the target coordinate
      * @param axis the target axis (X or Y)
      */
-    def setCoordinate(position: Double, axis: Axis2D) = axis match
-    {
+    @deprecated("Please use setCoordinate(Vector1D) instead", "v2.0")
+    def setCoordinate(position: Double, axis: Axis2D) = axis match {
         case X => x = position
         case Y => y = position
     }
     
     /**
+      * Translates this area's location
+      * @param translation Translation to apply to this area's location
+      */
+    def translate(translation: Dimensional[Double]) = position += translation
+    /**
      * Adjusts either x- or y-coordinate of this area
      */
-    def adjustCoordinate(adjustment: Double, axis: Axis2D) = axis match
-    {
+    @deprecated("Please rather use translate(Dimensional) or position += axis(adjustment)", "v2.0")
+    def adjustCoordinate(adjustment: Double, axis: Axis2D) = axis match {
         case X => x += adjustment
         case Y => y += adjustment
     }
     
     /**
-     * The length of this component along the specified axis
-     */
-    def lengthAlong(axis: Axis2D) = axis match
-    {
-        case X => width
-        case Y => height
-    }
-    
+      * Updates either the width or height of this component
+      * @param newLength New length for this component, including targeted axis
+      */
+    def setLength(newLength: Vector1D) = size = size.withLength(newLength)
     /**
      * Changes either the width or height of this area
      * @param length the new side length
      * @param axis the target axis (X for width, Y for height)
      */
-    def setLength(length: Double, axis: Axis2D) = axis match
-    {
+    @deprecated("Please use setLength(Vector1D) instead", "v2.0")
+    def setLength(length: Double, axis: Axis2D) = axis match {
         case X => width = length
         case Y => height = length
     }
@@ -142,8 +158,8 @@ trait Area
     /**
      * Adjusts either the width (for X-axis) or height (for Y-axis) of this component
      */
-    def adjustLength(adjustment: Double, axis: Axis2D) = axis match
-    {
+    @deprecated("Please use size += axis(adjustment) instead", "v2.0")
+    def adjustLength(adjustment: Double, axis: Axis2D) = axis match {
         case X => width += adjustment
         case Y => height += adjustment
     }

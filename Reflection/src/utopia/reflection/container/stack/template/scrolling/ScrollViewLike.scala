@@ -31,12 +31,12 @@ trait ScrollViewLike[C <: Stackable] extends ScrollAreaLike[C]
 	  * @return The length of this scroll view
 	  */
 	def length = lengthAlong(axis)
-	def length_=(newLength: Double) = setLength(newLength, axis)
+	def length_=(newLength: Double) = setLength(axis(newLength))
 	/**
 	  * @return The breadth of this scroll view
 	  */
 	def breadth = lengthAlong(axis.perpendicular)
-	def breadth_=(newBreadth: Double) = setLength(newBreadth, axis.perpendicular)
+	def breadth_=(newBreadth: Double) = setLength(axis.perpendicular(newBreadth))
 	
 	/**
 	  * @return The length of this view's contents

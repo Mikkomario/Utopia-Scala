@@ -3,6 +3,18 @@
 ## v2.0-alpha-9 (in development)
 ### Breaking Changes
 - **ContainerContentDisplayer** now uses **EqualsFunction** instead of standard functions
+### Deprecations
+- In **Area**
+  - Deprecated `.coordinateAlong(Axis2D)` and `.maxCoordinateAlong(Axis2D)` in favor of 
+    `.position.along(Axis)` and `.maxAlong(Axis)`
+  - Deprecated `.setCoordinate(Double, Axis2D)` and `.setLength(Double, Axis2D)` in favor of 
+   ` .setCoordinate(Vector1D)` and `.setLength(Vector1D)`
+  - Deprecated `.adjustCoordinate(Double, Axis2D)` in favor of `.translate(Dimensional)`
+  - Deprecated `.adjustLength(Double, Axis2D)` in favor of `.size += axis(adjustment)`
+### New Methods
+- Added a number of new methods to **Area**
+### Other Changes
+- **Area** now extends **Bounded**
 
 ## v2.0-alpha-8 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0. 

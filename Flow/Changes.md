@@ -51,6 +51,8 @@
   - Added a `.zip(Pair)` that returns a **Pair**
 - **Process**
   - Added a protected `.markAsInterrupted()` -function that acts as a `.stop()`, but only alters the process' state
+- **Signed**
+  - Added `.ifPositive` and `.ifNegative`
 - **Value**
   - Added a new variant of `.apply(...)`
 - **Wait** (object)
