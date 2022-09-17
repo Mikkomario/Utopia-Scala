@@ -1,13 +1,11 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.Transformable
 
 import java.awt.Shape
-import scala.collection.immutable.VectorBuilder
 
 /**
   * This trait is extended by 2D shapes that have 3 or more corners
@@ -20,65 +18,39 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	// ABSTRACT	----------------
 	
 	/**
-	  * @return The corners of this shape, in order
+	  * @return The corners of this shape, ordered
 	  */
-	def corners: Vector[Point]
+	def corners: IndexedSeq[Point]
 	
 	
 	// COMPUTED	----------------
 	
 	/**
-	  * @return The sides of this shape, in order
+	  * @return The sides of this shape as lines, in order
 	  */
-	def sides =
-	{
+	def sides = {
 		val c = corners
-		if (c.size < 2)
+		if (c.isEmpty)
 			Vector()
 		else
-		{
-			val buffer = new VectorBuilder[Line]()
-			var start = c.head
-			
-			c.tail.foreach
-			{
-				corner =>
-					buffer += Line(start, corner)
-					start = corner
-			}
-			
-			buffer += Line(start, c.head)
-			buffer.result()
-		}
+			(c :+ c.head).paired.map { p => Line(p.first, p.second) }
 	}
-	
 	/**
 	  * @return The edges of this shape in order. Same as sides, except in vector form
 	  */
 	def edges = sides.map { _.vector }
-	
 	/**
-	  * @return The rotations at each corner of this polygonic shape
+	  * @return The rotations at each corner of this shape
 	  */
-	def rotations =
-	{
+	def rotations = {
 		val e = sides
-		
-		if (e.size > 1)
-		{
-			val buffer = new VectorBuilder[Rotation]()
-			
-			buffer += e.head.direction - e.last.direction
-			for (i <- 1 until e.size) buffer += e(i).direction - e(i - 1).direction
-			
-			buffer.result()
-		}
+		if (e.nonEmpty)
+			(e :+ e.head).paired.map { p => p.second.direction - p.first.direction }
 		else
 			Vector()
 	}
-	
 	/**
-	  * @return The angles at each corner of this polygonic shape
+	  * @return The angles at each corner of this shape
 	  */
 	def angles = rotations.map { _.toAngle }
 	
@@ -92,8 +64,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	  * Whether this polygon is convex. Convex polygons only need to turn clockwise or
 	  * counter-clockwise when traversing through the polygon. They don't have holes or dips, so to speak.
 	  */
-	def isConvex =
-	{
+	def isConvex = {
 		val dir = rotationDirection
 		rotations.forall { _.direction == dir }
 	}
@@ -106,33 +77,37 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	/**
 	  * @return The center point of this shape
 	  */
-	def center =
-	{
+	def center = {
 		val c = corners
 		if (c.isEmpty)
 			Point.origin
-		else
-		{
+		else {
 			val total = c.reduce { _ + _ }
 			total / c.size
 		}
 	}
 	
 	/**
+	  * @return The length of the longest edge in this polygon
+	  */
+	def maxEdgeLength = edges.map { _.length }.maxOption.getOrElse(0.0)
+	/**
+	  * @return The length of the shortest edge in this polygon
+	  */
+	def minEdgeLength = edges.map { _.length }.minOption.getOrElse(0.0)
+	
+	/**
 	  * The smallest possible circle that contains all the vertices in this polygon
 	  */
-	def circleAround =
-	{
+	def circleAround = {
 		val origin = center
 		val radius = corners.map { c => (c - origin).toVector.length }.max
 		Circle(origin, radius)
 	}
-	
 	/**
 	  * The largest possible circle that fits inside this polygon
 	  */
-	def circleInside =
-	{
+	def circleInside = {
 		val origin = center
 		val radius = corners.map { vertex => (vertex - origin).toVector.length }.min
 		Circle(origin, radius)
@@ -207,8 +182,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	/**
 	  * @return The bounds around this polygonic instance
 	  */
-	override def bounds =
-	{
+	override def bounds = {
 		val c = corners
 		val topLeft = Point.topLeft(c)
 		val bottomRigth = Point.bottomRight(c)
@@ -216,8 +190,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		Bounds(topLeft, (bottomRigth - topLeft).toSize)
 	}
 	
-	override def toShape: Shape =
-	{
+	override def toShape: Shape = {
 		val c = corners
 		val x = c.map { _.x.toInt }.toArray
 		val y = c.map { _.y.toInt }.toArray
@@ -225,8 +198,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		new java.awt.Polygon(x, y, c.size)
 	}
 	
-	override def projectedOver(axis: Vector2D) =
-	{
+	override def projectedOver(axis: Vector2D) = {
 		val projectedCorners = corners.map { _.toVector.projectedOver(axis).toPoint }
 		val start = projectedCorners.min
 		val end = projectedCorners.max
@@ -236,9 +208,10 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	
 	override def contains[V <: Vector2DLike[V]](point: V) = collisionAxes.forall { containsProjection(point, _) }
 	
-	override def transformedWith(transformation: Matrix3D): Polygonic = Polygon(corners.map { transformation(_).toPoint })
-	
-	override def transformedWith(transformation: Matrix2D): Polygonic = Polygon(corners.map { transformation(_).toPoint })
+	override def transformedWith(transformation: Matrix3D): Polygonic =
+		Polygon(corners.map { transformation(_).toPoint }.toVector)
+	override def transformedWith(transformation: Matrix2D): Polygonic =
+		Polygon(corners.map { transformation(_).toPoint }.toVector)
 	
 	
 	// OTHER	---------------
@@ -326,6 +299,6 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		
 		val cutVertices = c.slice(index1, index2 + 1)
 		val remainingVertices = c.take(index1 + 1) ++ c.drop(index2)
-		Polygon(remainingVertices) -> Polygon(cutVertices)
+		Polygon(remainingVertices.toVector) -> Polygon(cutVertices.toVector)
 	}
 }

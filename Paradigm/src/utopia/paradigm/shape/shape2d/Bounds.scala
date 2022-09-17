@@ -7,11 +7,11 @@ import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.LinearScalable
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis2D, Direction2D}
+import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.VectorLike
+import utopia.paradigm.shape.template.{Dimensional, VectorLike}
 
 import java.awt.geom.RoundRectangle2D
 import scala.language.implicitConversions
@@ -116,8 +116,8 @@ object Bounds extends FromModelFactory[Bounds]
  * @author Mikko Hilpinen
  * @since Genesis 13.1.2017
  */
-case class Bounds(position: Point, size: Size)
-    extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds]
+case class Bounds(position: Point, override val size: Size)
+    extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds] with BoundedLike[Bounds]
 {
     // COMPUTED PROPERTIES    ------------
     
@@ -140,14 +140,6 @@ case class Bounds(position: Point, size: Size)
       * @return The y-coordinate of these bounds
       */
     def y = position.y
-    /**
-      * @return The right side x-coordinate
-      */
-    def rightX = x + width
-    /**
-      * @return The bottom side y-coordinate
-      */
-    def bottomY = y + height
     
     /**
       * @return A rounded version of these bounds
@@ -186,25 +178,24 @@ case class Bounds(position: Point, size: Size)
     override def repr = this
     override def bounds = this
     
-    override def topLeft = position
-    override def bottomRight = position + size
+    override def topLeftCorner = position
+    override def bottomRightCorner = position + size
     
     override def width = size.width
     override def height = size.height
     
-    override def leftLength = size.height
+    override def rightEdgeLength = height
     
     override def toValue = new Value(Some(this), BoundsType)
     override def toModel = Model(Vector("position" -> position, "size" -> size))
     override def toShape = toAwt
     
-    override def top = X(size.width).in2D
-    override def left = Y(size.height).in2D
+    override def topEdge = X(size.width).in2D
+    override def rightEdge = Y(height).in2D
     
-    override def contains[V <: Vector2DLike[V]](point: V) =
-        point.x >= topLeft.x && point.y >= topLeft.y && point.x <= bottomRight.x && point.y <= bottomRight.y
+    override def withBounds(newBounds: Bounds) = newBounds
     
-    override def translated(translation: Vector2DLike[_]) = withPosition(position + translation)
+    override def translated(translation: Vector2DLike[_]): Bounds = withPosition(position + translation)
     
     /**
       * Scales both position and size
@@ -212,12 +203,6 @@ case class Bounds(position: Point, size: Size)
       * @return A scaled version of these bounds
       */
     override def *(scaling: Double) = Bounds(position * scaling, size * scaling)
-    /**
-      * Divides both position and size
-      * @param div A dividing factor
-      * @return A divided version of these bounds
-      */
-    override def /(div: Double) = Bounds(position / div, size / div)
     
     
     // OPERATORS    --------------------
@@ -226,7 +211,7 @@ case class Bounds(position: Point, size: Size)
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def +(translation: Vector2DLike[_]) = translated(translation)
+    def +(translation: Dimensional[Double]) = mapPosition { _ + translation }
     /**
       * @param insets Insets to add to these bounds
       * @return A copy of these bounds with specified insets added to the sides
@@ -237,7 +222,7 @@ case class Bounds(position: Point, size: Size)
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def -[V <: Vector2DLike[V]](translation: V) = translated(-translation)
+    def -[V <: VectorLike[V]](translation: V) = translated(-translation)
     /**
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted
@@ -249,29 +234,16 @@ case class Bounds(position: Point, size: Size)
       * @param scaling A scaling factor
       * @return A scaled version of these bounds
       */
-    def *(scaling: VectorLike[_]) = Bounds(position * scaling, size * scaling)
+    def *(scaling: Dimensional[Double]) = Bounds(position * scaling, size * scaling)
     /**
       * Divides both position and size
       * @param div A dividing factor
       * @return A divided version of these bounds
       */
-    def /(div: VectorLike[_]) = Bounds(position / div, size / div)
+    def /(div: Dimensional[Double]) = Bounds(position / div, size / div)
     
     
     // OTHER METHODS    ----------------
-    
-    /**
-      * Finds the minimum coordinate along specified axis (assuming positive size of these bounds)
-      * @param axis Targeted axis
-      * @return The coordinate of the top-left corner of these bounds along the specified axis
-      */
-    def minAlong(axis: Axis2D) = position.along(axis)
-    /**
-      * Finds the maximum coordinate along specified axis (assuming positive size of these bounds)
-      * @param axis Targeted axis
-      * @return The coordinate of the bottom-right corner of these bounds along the specified axis
-      */
-    def maxAlong(axis: Axis2D) = position.along(axis) + size.along(axis)
     
     /**
      * Creates a rounded rectangle based on this rectangle shape.
@@ -303,17 +275,15 @@ case class Bounds(position: Point, size: Size)
      */
     def contains(bounds: Bounds): Boolean = contains(bounds.topLeft) && contains(bounds.bottomRight)
     /**
+      * @param item An item with bounds
+      * @return Whether these bounds completely contain the specified item
+      */
+    def contains(item: Bounded): Boolean = contains(item.bounds)
+    /**
      * Checks whether a circle completely lies within the rectangle's bounds when the z-axis is 
      * ignored
      */
     def contains(circle: Circle): Boolean = contains(circle.origin) && circleIntersection(circle).isEmpty
-    
-    /**
-      * @param bounds Another set of bounds
-      * @return Whether these bounds overlap with the other set of bounds
-      */
-    def overlapsWith(bounds: Bounds) = Axis2D.values.forall { axis =>
-        maxAlong(axis) > bounds.minAlong(axis) && bounds.maxAlong(axis) > minAlong(axis) }
     
     /**
      * Finds the intersection points between the edges of this rectangle and the provided circle
@@ -327,16 +297,11 @@ case class Bounds(position: Point, size: Size)
     
     /**
       * Enlarges these bounds from the center
-      * @param enlargement The size enlargement
-      * @return A copy of these bounds with same center but increased size
-      */
-    def enlarged(enlargement: Size) = Bounds(position - enlargement / 2, size + enlargement)
-    /**
-      * Enlarges these bounds from the center
       * @param widthIncrease The increase in width
       * @param heightIncrease The increase in height
       * @return A copy of these bounds with same center but increased size
       */
+    @deprecated("Please use enlarged(VectorLike) instead", "v1.1")
     def enlarged(widthIncrease: Double, heightIncrease: Double): Bounds = enlarged(Size(widthIncrease, heightIncrease))
     
     /**
@@ -344,6 +309,7 @@ case class Bounds(position: Point, size: Size)
       * @param shrinking The size decrease
       * @return A copy of these bounds with same center but decreased size
       */
+    @deprecated("Please use shrunk(VectorLike) instead", "v1.1")
     def shrinked(shrinking: Size) = enlarged(-shrinking)
     /**
       * Shrinks these bounds from the center
@@ -351,7 +317,8 @@ case class Bounds(position: Point, size: Size)
       * @param heightDecrease The decrease in height
       * @return A copy of these bounds with same center but decreased size
       */
-    def shrinked(widthDecrease: Double, heightDecrease: Double): Bounds = shrinked(Size(widthDecrease, heightDecrease))
+    @deprecated("Please use shrunk(VectorLike) instead", "v1.1")
+    def shrinked(widthDecrease: Double, heightDecrease: Double): Bounds = shrunk(Size(widthDecrease, heightDecrease))
     
     /**
       * @param p New position
@@ -359,53 +326,38 @@ case class Bounds(position: Point, size: Size)
       */
     def withPosition(p: Point) = Bounds(p, size)
     /**
-      * @param s New size
-      * @return A copy of these bounds with specified size
-      */
-    def withSize(s: Size) = Bounds(position, s)
-    /**
-      * @param w New width
-      * @return A copy of these bounds with specified width
-      */
-    def withWidth(w: Double) = withSize(Size(w, height))
-    /**
-      * @param h New height
-      * @return A copy of these bounds with specified height
-      */
-    def withHeight(h: Double) = withSize(Size(width, h))
-    /**
       * @param map A mapping function for position
       * @return A copy of these bounds with mapped position
       */
     def mapPosition(map: Point => Point) = withPosition(map(position))
     
     /**
-      * @param map A mapping function for size
-      * @return A copy of these bounds with mapped size
-      */
-    def mapSize(map: Size => Size) = withSize(map(size))
-    
-    /**
       * @param x X-translation applied
       * @param y Y-translation applied
       * @return A copy of these bounds with translated position
       */
+    @deprecated("Please use translated(Dimensional) instead", "v1.1")
     def translatedBy(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
     
     /**
-      * @param area Another area
+      * @param other Another area
       * @return The intersection between these two areas. None if there is no intersection.
       */
-    def within(area: Bounds) =
-    {
-        val newTopLeft = topLeft.bottomRight(area.topLeft)
-        val newBottomRight = bottomRight.topLeft(area.bottomRight)
+    def intersectionWith(other: Bounds) = {
+        val newTopLeft = topLeft.bottomRight(other.topLeft)
+        val newBottomRight = bottomRight.topLeft(other.bottomRight)
         
         if (newTopLeft.x > newBottomRight.x || newTopLeft.y > newBottomRight.y)
             None
         else
             Some(Bounds.between(newTopLeft, newBottomRight))
     }
+    /**
+      * @param area Another area
+      * @return The intersection between these two areas. None if there is no intersection.
+      */
+    @deprecated("Please use intersectionWith(Bounds) instead", "v1.1")
+    def within(area: Bounds) = intersectionWith(area)
     
     /**
       * Fits these bounds to the specified area. Alters the size and position as little as possible.
@@ -413,6 +365,7 @@ case class Bounds(position: Point, size: Size)
       * @param area Target area
       * @return These bounds fitted to the specified area.
       */
+    @deprecated("Please use positionedWithin(...) or fittedWithin(...) instead", "v1.1")
     def fittedInto(area: Bounds) =
     {
         // Case: Already fits

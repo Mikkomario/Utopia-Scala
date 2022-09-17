@@ -210,7 +210,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 		{
 			// Calculates dimensions
 			val center = bounds.center.round
-			val maxRadius = bounds.minDimension / 2
+			val maxRadius = bounds.size.minDimension / 2
 			if (maxRadius > 1.0)
 			{
 				val buttonRadius = (diameter / 2).round.toDouble min maxRadius

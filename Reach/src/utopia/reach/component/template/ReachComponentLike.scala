@@ -256,11 +256,9 @@ trait ReachComponentLike extends Stackable2
 	  */
 	def regionToImage(region: Bounds) =
 	{
-		if (size.isPositive)
-		{
+		if (size.isPositive) {
 			// Places the drawer so that the top left corner of the region will be drawn to (0,0)
-			region.within(Bounds(Point.origin, size)) match
-			{
+			region.intersectionWith(Bounds(Point.origin, size)) match {
 				case Some(actualRegion) =>
 					Image.paint(actualRegion.size) { d =>
 						paintWith(d.translated(-position - region.position), Some(region))

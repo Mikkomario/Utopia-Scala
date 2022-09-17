@@ -122,7 +122,7 @@ case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[C
 		if (isEmpty)
 			Iterator.empty
 		else
-			bounds.within(Bounds(Point.origin, area)) match
+			bounds.intersectionWith(Bounds(Point.origin, area)) match
 			{
 				case Some(area) => new PixelIterator(area.y.toInt, area.bottomY.toInt, area.x.toInt, area.rightX.toInt)
 				case None => Iterator.empty

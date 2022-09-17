@@ -208,7 +208,7 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 			val alpha = state.hoverAlpha
 			if (alpha > 0)
 				drawer.onlyFill(if (value) onHoverColor else offHoverColor).withAlpha(alpha)
-					.draw(Circle(bounds.center, bounds.minDimension / 2.0))
+					.draw(Circle(bounds.center, bounds.size.minDimension / 2.0))
 		}
 	}
 }

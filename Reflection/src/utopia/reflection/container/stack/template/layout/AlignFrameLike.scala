@@ -44,7 +44,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 		content.foreach { c =>
 			// Calculates new size
 			val mySize = size
-			val targetSize = c.stackSize.optimal.croppedToFit(mySize)
+			val targetSize = c.stackSize.optimal.croppedToFitWithin(mySize)
 			
 			// Calculates new position
 			val targetPosition = alignment.position(targetSize, mySize)

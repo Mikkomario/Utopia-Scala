@@ -382,8 +382,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	def subImage(area: Bounds) = source match
 	{
 		case Some(source) =>
-			area.within(Bounds(Point.origin, size)) match
-			{
+			area.intersectionWith(Bounds(Point.origin, size)) match {
 				case Some(overlap) => _subImage(source, overlap / scaling)
 				case None => Image(new BufferedImage(0, 0, source.getType), scaling, alpha,
 					specifiedOrigin.map { _ - area.position / scaling })

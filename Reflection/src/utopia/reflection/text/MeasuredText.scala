@@ -65,7 +65,8 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	/**
 	  * Caret positions based on line and string indices
 	  */
-	lazy val carets = _lines.zip(lineBounds).map { case (line, bounds) => context.caretsFromLine(line, bounds) }
+	lazy val carets: Vector[Vector[Line]] =
+		_lines.zip(lineBounds).map { case (line, bounds) => context.caretsFromLine(line, bounds) }
 	
 	/**
 	  * The default text draw targets (texts to draw and the positions where they should be drawn)

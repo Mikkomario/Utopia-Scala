@@ -226,7 +226,7 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match
 	{
-		case Some(clip) => clip.within(bounds).foreach { c => super.paintWith(drawer, Some(c)) }
+		case Some(clip) => clip.intersectionWith(bounds).foreach { c => super.paintWith(drawer, Some(c)) }
 		case None => super.paintWith(drawer, Some(bounds))
 	}
 }

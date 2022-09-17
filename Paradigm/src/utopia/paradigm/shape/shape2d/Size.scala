@@ -75,7 +75,7 @@ object Size extends FromModelFactory[Size]
 **/
 case class Size(override val dimensions2D: Pair[Double])
     extends Vector2DLike[Size] with ValueConvertible with ModelConvertible
-        with TwoDimensional[Double] with SignedOrZero[Size] with Sized[Size]
+        with TwoDimensional[Double] with SignedOrZero[Size] with SizedLike[Size]
 {
     // COMPUTED    --------------------------
     

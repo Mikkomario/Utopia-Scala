@@ -126,6 +126,6 @@ trait TextMeasurementContext
 			Line(Point(x, startY), Point(x, endY))
 		}.toVector
 		// Places one caret at each end of bounds
-		(Line(Point(startX, startY), Point(startX, endY)) +: midPoints) :+ lineBounds.rightEdge
+		(Line(Point(startX, startY), Point(startX, endY)) +: midPoints) :+ lineBounds.rightSide
 	}
 }

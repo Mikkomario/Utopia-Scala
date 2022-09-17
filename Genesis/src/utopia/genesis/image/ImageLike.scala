@@ -179,7 +179,7 @@ trait ImageLike
 		{
 			case Some(pixels) => pixels(area / scaling)
 			case None =>
-				(area / scaling).within(Bounds(Point.origin, sourceResolution)) match
+				(area / scaling).intersectionWith(Bounds(Point.origin, sourceResolution)) match
 				{
 					case Some(insideArea) =>
 						if (insideArea.size.isPositive)
