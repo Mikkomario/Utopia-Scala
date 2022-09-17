@@ -64,6 +64,7 @@
 ### Other Changes
 - **Size** now extends **SizedLike**, which introduces a number of new methods
 - Similarly, **Bounds** now extends **BoundedLike**
+- **Line** now extends **Bounded**
 - **Axis** now extends **RichComparable**
 
 ## v1.0 - 18.08.2022

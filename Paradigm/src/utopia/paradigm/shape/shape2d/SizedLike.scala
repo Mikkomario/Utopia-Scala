@@ -169,14 +169,14 @@ trait SizedLike[+Repr] extends Sized
 	  * @param maximize Whether the width of this item should be set to the specified maximum width
 	  * @return A copy of this item fitting to the specified width limit, with its shape preserved
 	  */
-	def fittingWidth(maxWidth: Double, maximize: Boolean = false) = _fittingWithin(X(maxWidth), maximize)
+	def fittingWithinWidth(maxWidth: Double, maximize: Boolean = false) = _fittingWithin(X(maxWidth), maximize)
 	/**
 	  * Creates a copy of this item that fits within the specified height limit. Preserves shape.
 	  * @param maxHeight The largest allowed height
 	  * @param maximize Whether the height of this item should be set to the specified maximum height
 	  * @return A copy of this item fitting to the specified height limit, with its shape preserved
 	  */
-	def fittingHeight(maxHeight: Double, maximize: Boolean = false) = _fittingWithin(Y(maxHeight), maximize)
+	def fittingWithinHeight(maxHeight: Double, maximize: Boolean = false) = _fittingWithin(Y(maxHeight), maximize)
 	
 	/**
 	  * Creates a copy of this item that has its size reduced to fit within the specified maximum threshold.

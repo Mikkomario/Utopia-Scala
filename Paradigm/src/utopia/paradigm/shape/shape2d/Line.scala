@@ -85,10 +85,9 @@ object Line extends FromModelFactory[Line]
  * @author Mikko Hilpinen
  * @since Genesis 13.12.2016
  */
-// (override val start: Point, override val end: Point)
 case class Line(points: Pair[Point])
     extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
-        with LinearMeasurable with Transformable[Line]
+        with LinearMeasurable with Transformable[Line] with Bounded
 {
     // ATTRIBUTES    -------------------
     
@@ -138,17 +137,17 @@ case class Line(points: Pair[Point])
     def center = (start + end) / 2
     
     /**
-      * @return The bounds around this line
-      */
-    def bounds = Bounds.between(start, end)
-    
-    /**
       * @return The direction of this line
       */
     def direction = vector.direction
     
     
     // IMPLEMENTED METHODS    ----------
+    
+    /**
+      * @return The bounds around this line
+      */
+    override def bounds = Bounds.between(start, end)
     
     override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
     

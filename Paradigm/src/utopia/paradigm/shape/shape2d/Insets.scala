@@ -1,6 +1,8 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.shape.template.Dimensional
 
 import scala.collection.immutable.HashMap
 
@@ -22,10 +24,10 @@ object Insets extends InsetsFactory[Double, Size, Insets, Insets]
     def of(insets: java.awt.Insets) = Insets(insets.left, insets.right, insets.top, insets.bottom)
     
     /**
-     * Creates a symmetric set of insets where top = bottom and left = right
-     * @param size the total size of the insets
-     */
-    def symmetric(size: Size): Insets = symmetric(size.width / 2, size.height / 2)
+      * Creates a symmetric set of insets where top = bottom and left = right
+      * @param size the total size of the insets
+      */
+    def symmetric(size: Dimensional[Double]): Insets = symmetric(size.along(X) / 2, size.along(Y) / 2)
 }
 
 /**

@@ -40,13 +40,11 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
       * @return A new set of insets
       */
     def symmetric(w: L, h: L) = apply(w, w, h, h)
-    
     /**
       * @param sideWidth The width of each side on these insets
       * @return Insets with all sides equal
       */
     def symmetric(sideWidth: L) = apply(sideWidth, sideWidth, sideWidth, sideWidth)
-    
     /**
       * @param sideWidth The width of both of the targeted sides
       * @param axis Targeted axis (X|Y)
@@ -61,7 +59,6 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
       * @return New insets
       */
     def horizontal(left: L, right: L) = apply(HashMap(Direction2D.Left -> left, Direction2D.Right -> right))
-    
     /**
       * Creates a horizontal set of insets
       * @param w left / right side
@@ -76,7 +73,6 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
       * @return New insets
       */
     def vertical(top: L, bottom: L) = apply(HashMap(Up -> top, Down -> bottom))
-    
     /**
       * Creates a vertical set of insets
       * @param h Top / bottom side
@@ -96,19 +92,16 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
       * @return An inset with only left side
       */
     def left(amount: L) = towards(Direction2D.Left, amount)
-    
     /**
       * @param amount Length of inset
       * @return An inset with only right side
       */
     def right(amount: L) = towards(Direction2D.Right, amount)
-    
     /**
       * @param amount Length of inset
       * @return An inset with only top side
       */
     def top(amount: L) = towards(Up, amount)
-    
     /**
       * @param amount Length of inset
       * @return An inset with only bottom side

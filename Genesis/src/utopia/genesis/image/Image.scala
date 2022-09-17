@@ -12,9 +12,11 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.angular.{Angle, Rotation}
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Insets, Matrix2D, Point, Size, Vector2D}
-import utopia.paradigm.shape.template.{Dimensional, VectorLike}
+import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Insets, Matrix2D, Point, Size, SizedLike, Vector2D, Vector2DLike}
+import utopia.paradigm.shape.template.Dimensional
 import utopia.genesis.util.Drawer
+import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.template.VectorLike.V
 
 import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
@@ -167,11 +169,10 @@ object Image
   * @author Mikko Hilpinen
   * @since 15.6.2019, v2.1
   */
-// TODO: Extend Sized
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: LazyLike[PixelTable])
-	extends ImageLike with LinearScalable[Image]
+	extends ImageLike with LinearScalable[Image] with SizedLike[Image]
 {
 	// ATTRIBUTES	----------------
 	
@@ -281,19 +282,37 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	override def repr = this
 	
-	override def preCalculatedPixels = _pixels.current
-	
 	/**
 	  * @return Whether this image is actually completely empty
 	  */
 	override def isEmpty = source.isEmpty
 	
+	override def preCalculatedPixels = _pixels.current
 	/**
 	  * @return The pixels in this image
 	  */
 	override def pixels = _pixels.value
 	
-	override def *(scaling: Double): Image = this * Vector2D(scaling, scaling)
+	override def *(scaling: Double): Image = withScaling(this.scaling * scaling)
+	
+	override def withSize(size: Size) = withScaling(size / this.size)
+	
+	override def croppedToFitWithin(maxArea: Vector2DLike[_ <: V]) = {
+		if (fitsWithin(maxArea))
+			this
+		else {
+			val requiredCropping = size - maxArea
+			crop(Insets.symmetric(requiredCropping))
+		}
+	}
+	override def croppedToFitWithin(maxLength: Vector1D) = {
+		if (fitsWithin(maxLength))
+			this
+		else {
+			val requiredCropping = lengthAlong(maxLength.axis) - maxLength.length
+			crop(Insets.symmetric(Vector1D(requiredCropping, maxLength.axis)))
+		}
+	}
 	
 	
 	// OPERATORS	----------------
@@ -303,14 +322,13 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param scaling The scaling factor
 	  * @return A scaled version of this image
 	  */
-	def *(scaling: VectorLike[_]): Image = withScaling(this.scaling * scaling)
-	
+	def *(scaling: Dimensional[Double]): Image = withScaling(this.scaling * scaling)
 	/**
 	  * Downscales this image
 	  * @param divider The dividing factor
 	  * @return A downscaled version of this image
 	  */
-	def /(divider: VectorLike[_]): Image = withScaling(scaling / divider)
+	def /(divider: Dimensional[Double]): Image = withScaling(scaling / divider)
 	
 	/**
 	 * @param other Another image
@@ -379,8 +397,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *             corner of this image.
 	  * @return The portion of this image within the relative area
 	  */
-	def subImage(area: Bounds) = source match
-	{
+	def subImage(area: Bounds) = source match {
 		case Some(source) =>
 			area.intersectionWith(Bounds(Point.origin, size)) match {
 				case Some(overlap) => _subImage(source, overlap / scaling)
@@ -402,10 +419,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param insets Insets to crop out of this image
 	  * @return A cropped copy of this image
 	  */
-	def crop(insets: Insets) =
-	{
-		source match
-		{
+	def crop(insets: Insets) = {
+		source match {
 			case Some(img) =>
 				val totalInsets = insets.total
 				if (totalInsets.width > width || totalInsets.height > height)
@@ -428,8 +443,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param marginBetweenParts The horizontal margin between the parts within this image in pixels (default = 0)
 	  * @return A strip containing numberOfParts images, which all are sub-images of this image
 	  */
-	def split(numberOfParts: Int, marginBetweenParts: Int = 0) =
-	{
+	def split(numberOfParts: Int, marginBetweenParts: Int = 0) = {
 		val subImageWidth = (width - marginBetweenParts * (numberOfParts - 1)) / numberOfParts
 		val subImageSize = Size(subImageWidth, height)
 		Strip((0 until numberOfParts).map {
@@ -445,6 +459,11 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param scaling A scaling modifier applied to the original image
 	  * @return A scaled version of this image
 	  */
+	def withScaling(scaling: Dimensional[Double]): Image = withScaling(Vector2D.withDimensions(scaling.dimensions))
+	/**
+	  * @param scaling A scaling modifier applied to the original image
+	  * @return A scaled version of this image
+	  */
 	def withScaling(scaling: Double): Image = withScaling(Vector2D(scaling, scaling))
 	
 	/**
@@ -453,8 +472,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *                      while this is true, uses the smaller available scaling)
 	  * @return A copy of this image scaled to match the target size (dimensions might not be preserved)
 	  */
-	def withSize(newSize: Size, preserveShape: Boolean = true) =
-	{
+	def withSize(newSize: Size, preserveShape: Boolean = true) = {
 		if (preserveShape)
 			this * ((newSize.width / width) min (newSize.height / height))
 		else
@@ -464,26 +482,23 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	/**
 	  * Scales this image, preserving shape.
 	  * @param area An area
-	  * @return A copy of this image that matches the specified area, but may be larger if shape preservation demands it.
-	  */
-	def filling(area: Size) = if (size.nonZero) this * (area / size).dimensions2D.max else this
-	/**
-	  * Scales this image, preserving shape.
-	  * @param area An area
 	  * @return A copy of this image that matches the specified area, but may be smaller if shape preservation demands it.
 	  */
+	@deprecated("Please use fittingWithin(Vector2DLike, Boolean) instead", "v3.1")
 	def fitting(area: Size) = if (size.nonZero) this * (area / size).dimensions2D.min else this
 	
 	/**
 	  * @param area Target area (maximum)
 	  * @return A copy of this image that is smaller or equal to the target area. Shape is preserved.
 	  */
+	@deprecated("Please use fittingWithin(Vector2DLike) instead", "v3.1")
 	def smallerThan(area: Size) = if (size.fitsWithin(area)) this else fitting(area)
 	/**
 	  * @param area Target area (minimum)
 	  * @return A copy of this image that is larger or equal to the target area. Shape is preserved.
 	  */
-	def largerThan(area: Size) = if (area.fitsWithin(size)) this else filling(area)
+	@deprecated("Please use filling(Dimensional) instead", "v3.1")
+	def largerThan(area: Size) = filling(area)
 	
 	/**
 	  * Limits the height or width of this image
@@ -491,46 +506,44 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param maxLength Maximum length for this image on that axis
 	  * @return A copy of this image that has equal or lower than maximum length on the specified axis
 	  */
-	def limitedAlong(side: Axis2D, maxLength: Double) = if (size.along(side) <= maxLength) this else
-		smallerThan(size.withDimension(side(maxLength)))
+	@deprecated("Please use fittingWithin(Vector1D) instead", "v3.1")
+	def limitedAlong(side: Axis2D, maxLength: Double) =
+		if (size.along(side) <= maxLength) this else smallerThan(size.withDimension(side(maxLength)))
 	/**
 	  * @param maxWidth Maximum allowed width
 	  * @return A copy of this image with equal or lower width than the specified maximum
 	  */
+	@deprecated("Please use fittingWithinWidth(Double) instead", "v3.1")
 	def withLimitedWidth(maxWidth: Double) = limitedAlong(X, maxWidth)
 	/**
 	  * @param maxHeight Maximum allowed height
 	  * @return A copy of this image with equal or lower height than the specified maximum
 	  */
+	@deprecated("Please use fittingWithinHeight(Double) instead", "v3.1")
 	def withLimitedHeight(maxHeight: Double) = limitedAlong(Y, maxHeight)
 	
 	/**
 	  * @param f A mapping function for pixel tables
 	  * @return A copy of this image with mapped pixels
 	  */
-	def mapPixelTable(f: PixelTable => PixelTable) =
-	{
-		if (source.isDefined)
-		{
+	def mapPixelTable(f: PixelTable => PixelTable) = {
+		if (source.isDefined) {
 			val newPixels = f(pixels)
 			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, LazyWrapper(newPixels))
 		}
 		else
 			this
 	}
-	
 	/**
 	  * @param f A function that maps pixel colors
 	  * @return A copy of this image with mapped pixels
 	  */
 	def mapPixels(f: Color => Color) = mapPixelTable { _.map(f) }
-	
 	/**
 	  * @param f A function that maps pixel colors, also taking relative pixel coordinate
 	  * @return A copy of this image with mapped pixels
 	  */
 	def mapPixelsWithIndex(f: (Color, Point) => Color) = mapPixelTable { _.mapWithIndex(f) }
-	
 	/**
 	  * @param area The mapped relative area
 	  * @param f A function that maps pixel colors
@@ -545,14 +558,12 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A blurred version of this image
 	  */
 	def blurred(intensity: Double = 1) = Blur(intensity)(this)
-	
 	/**
 	  * Creates a sharpened copy of this image
 	  * @param intensity The sharpening intensity (default = 5)
 	  * @return A sharpened copy of this image
 	  */
 	def sharpened(intensity: Double = 5) = Sharpen(intensity)(this)
-	
 	/**
 	  * Creates a version of this image where the hue (color) of the image is shifted
 	  * @param hueAdjust The amount of shift applied to color hue
@@ -568,7 +579,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def withAdjustedHue(sourceHue: Angle, sourceRange: Angle, targetHue: Angle) =
 		HueAdjust(sourceHue, sourceRange, targetHue)(this)
-	
 	/**
 	  * Creates a copy of this image where each color channel is limited to a certain number of values
 	  * @param colorAmount The number of possible values for each color channel
@@ -581,8 +591,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param op The operation that is applied
 	  * @return A new image with operation applied
 	  */
-	def filterWith(op: BufferedImageOp) = source match
-	{
+	def filterWith(op: BufferedImageOp) = source match {
 		case Some(source) =>
 			val destination = new BufferedImage(source.getWidth, source.getHeight, source.getType)
 			op.filter(source, destination)
@@ -604,22 +613,18 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param preserveUseSize Whether the resulting image should be scaled to match this image (default = false)
 	  * @return A new image with altered source resolution
 	  */
-	def withSourceResolution(newSize: Size, preserveUseSize: Boolean = false) =
-	{
-		source match
-		{
+	def withSourceResolution(newSize: Size, preserveUseSize: Boolean = false) = {
+		source match {
 			case Some(source) =>
 				// Won't copy into 0 or negative size
 				if (newSize.isNegative)
 					Image.empty
 				else if (source.getWidth == newSize.width.toInt && source.getHeight == newSize.height.toInt)
 					this
-				else
-				{
+				else {
 					val scaledImage = source.getScaledInstance(newSize.width.toInt, newSize.height.toInt,
 						java.awt.Image.SCALE_SMOOTH)
-					val scaledAsBuffered = scaledImage match
-					{
+					val scaledAsBuffered = scaledImage match {
 						case b: BufferedImage => b
 						case i =>
 							val buffered = new BufferedImage(i.getWidth(null), i.getHeight(null),
@@ -647,10 +652,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param maxResolution The maximum resolution allowed for this image
 	  * @return A copy of this image with equal or smaller resolution than that specified
 	  */
-	def withMaxSourceResolution(maxResolution: Size) =
-	{
-		if (source.isDefined)
-		{
+	def withMaxSourceResolution(maxResolution: Size) = {
+		if (source.isDefined) {
 			// Preserves shape
 			val scale = (maxResolution.width / width) min (maxResolution.height / height)
 			// Won't ever upscale
@@ -669,8 +672,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *                        the other image will be placed
 	 * @return A new image where the specified image is drawn on top of this one
 	 */
-	def withOverlay(overlayImage: Image, overlayPosition: Point = Point.origin) =
-	{
+	def withOverlay(overlayImage: Image, overlayPosition: Point = Point.origin) = {
 		// If one of the images is empty, uses the other image
 		if (overlayImage.isEmpty)
 			this
@@ -696,10 +698,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *              ((0,0) is at the top left corner if this image).
 	  * @return A copy of this image with the paint operation applied
 	  */
-	def paintedOver(paint: Drawer => Unit) =
-	{
-		toAwt match
-		{
+	def paintedOver(paint: Drawer => Unit) = {
+		toAwt match {
 			case Some(buffer) =>
 				// Paints into created buffer
 				Drawer.use(buffer.createGraphics()) { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
@@ -713,8 +713,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *              ((0,0) is at the top left corner if this image).
 	  * @return A copy of this image with the paint operation applied
 	  */
-	def paintedOver2[U](paint: Drawer3 => U) =
-	{
+	def paintedOver2[U](paint: Drawer3 => U) = {
 		toAwt match {
 			case Some(buffer) =>
 				// Paints into created buffer
@@ -734,8 +733,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A new image with this image drawn at the center. The image origin is preserved, if it was defined
 	  *         in this image.
 	  */
-	def paintedToCanvas(targetSize: Size) =
-	{
+	def paintedToCanvas(targetSize: Size) = {
 		if (size == targetSize)
 			this
 		else
@@ -757,12 +755,10 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param transformation Transformation to apply to this image
 	  * @return Transformed copy of this image
 	  */
-	def transformedWith(transformation: Matrix2D) =
-	{
+	def transformedWith(transformation: Matrix2D) = {
 		if (isEmpty)
 			this
-		else
-		{
+		else {
 			// Calculates new bounds
 			val transformedBounds = (bounds * transformation).bounds
 			val transformedOrigin = Point.origin * transformation
