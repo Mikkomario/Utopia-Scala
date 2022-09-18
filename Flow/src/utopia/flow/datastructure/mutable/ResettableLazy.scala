@@ -52,7 +52,14 @@ class ResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 	
 	// IMPLEMENTED	---------------------------
 	
-	override def reset() = _value = None
+	override def reset() = {
+		if (_value.isDefined) {
+			_value = None
+			true
+		}
+		else
+			false
+	}
 	
 	override def current = _value
 	

@@ -371,28 +371,28 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	override val valuePointer = resultFilter match
-	{
+	// private val
+	
+	override val valuePointer = resultFilter match {
 		case Some(filter) => textContentPointer.map { text => parseResult(filter.filter(text).notEmpty) }
 		case None => textContentPointer.map { text => parseResult(text.notEmpty) }
 	}
 	
 	// Uses either the outside error message, an input validator, both or neither as the error message pointer
-	private val actualErrorPointer = inputValidation match
-	{
+	private val actualErrorPointer = inputValidation match {
 		case Some(validation) =>
 			val validationErrorPointer = valuePointer.map(validation)
-			errorMessagePointer.notFixedWhere { _.isEmpty } match
-			{
-				case Some(outsideError) => outsideError.mergeWith(validationErrorPointer) { (default, validation) =>
-					default.notEmpty.getOrElse(validation) }
+			errorMessagePointer.notFixedWhere { _.isEmpty } match {
+				case Some(outsideError) =>
+					outsideError.mergeWith(validationErrorPointer) { (default, validation) =>
+						default.notEmpty.getOrElse(validation)
+					}
 				case None => validationErrorPointer
 			}
 		case None => errorMessagePointer
 	}
 	
-	private val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match
-	{
+	private val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match {
 		case Some(promptPointer) =>
 			// Displays the prompt while text starts with the same characters or is empty
 			promptPointer.mergeWith(textContentPointer) { (prompt, text) =>

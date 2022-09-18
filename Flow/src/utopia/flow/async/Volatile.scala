@@ -21,8 +21,8 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
 {
     // ATTRIBUTES   ----------------
     
-    override var listeners = Vector[ChangeListener[A]]()
-    override var dependencies = Vector[ChangeDependency[A]]()
+    private var _listeners = Vector[ChangeListener[A]]()
+    private var _dependencies = Vector[ChangeDependency[A]]()
     
     /**
       * An immutable view of this volatile instance
@@ -54,6 +54,12 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     override def value_=(newValue: A) = lockAndSet { _ => () -> newValue }
     
     override def isChanging = true
+    
+    override def listeners = _listeners
+    override def listeners_=(newListeners: Vector[ChangeListener[A]]) = _listeners = newListeners
+    
+    override def dependencies = _dependencies
+    override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) = _dependencies = newDependencies
     
     /**
       * Safely updates the value in this container

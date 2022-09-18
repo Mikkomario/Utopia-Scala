@@ -301,18 +301,15 @@ class Field[C <: ReachComponentLike with Focusable]
 	private val _focusPointer = new PointerWithEvents(false)
 	
 	// Displays an error if there is one, otherwise displays the hint (provided there is one). None if neither is used.
-	private lazy val actualHintTextPointer = hintPointer.notFixedWhere { _.isEmpty } match
-	{
+	private lazy val actualHintTextPointer = hintPointer.notFixedWhere { _.isEmpty } match {
 		case Some(hint) =>
-			errorMessagePointer.notFixedWhere { _.isEmpty } match
-			{
+			errorMessagePointer.notFixedWhere { _.isEmpty } match {
 				case Some(error) => Some(hint.mergeWith(error) { (hint, error) => error.notEmpty getOrElse hint })
 				case None => Some(hint)
 			}
 		case None => errorMessagePointer.notFixedWhere { _.isEmpty }
 	}
-	private lazy val hintVisibilityPointer = actualHintTextPointer match
-	{
+	private lazy val hintVisibilityPointer = actualHintTextPointer match {
 		case Some(hintTextPointer) => hintTextPointer.map { _.nonEmpty }
 		case None => AlwaysFalse
 	}

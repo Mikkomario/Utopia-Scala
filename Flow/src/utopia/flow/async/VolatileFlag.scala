@@ -1,5 +1,7 @@
 package utopia.flow.async
 
+import utopia.flow.datastructure.mutable.ResettableFlag
+
 object VolatileFlag
 {
     /**
@@ -15,18 +17,10 @@ object VolatileFlag
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](initialState)
+class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](initialState) with ResettableFlag
 {
     // COMPUTED    ---------------
     
-    /**
-     * Whether this flag is currently set
-     */
-    def isSet = value
-    /**
-      * @return Whether this flag isn't currently set
-      */
-    def isNotSet = !isSet
     /**
       * @return Whether this flag isn't currently set
       */
@@ -34,20 +28,23 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     def notSet = !isSet
     
     
-	// OTHER    ------------------
+    // IMPLEMENTED  ---------------
     
     /**
-     * Sets this flag (same as !getAndSet(true))
+      * Sets this flag (same as !getAndSet(true))
       * @return True if this flag was NOT previously set, i.e. the state of this flag was altered by this method call.
       *         False if this flag was already set.
-     */
+      */
     def set(): Boolean = !getAndSet(true)
     /**
-     * Resets this flag (same as getAndSet(false))
+      * Resets this flag (same as getAndSet(false))
       * @return True if this flag was previously set, i.e. the state of this flag was altered by this method call.
       *         False if this flag was not set.
-     */
+      */
     def reset() = getAndSet(false)
+    
+    
+	// OTHER    ------------------
     
     /**
      * Sets this flag and also returns the state before conversion

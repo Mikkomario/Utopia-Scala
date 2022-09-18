@@ -57,10 +57,9 @@ class RefreshingLazy[+A](generator: => A)(expirationPerItem: A => Duration) exte
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def reset() =
-	{
-		cache.reset()
+	override def reset() = {
 		nextResetThreshold = None
+		cache.reset()
 	}
 	
 	override def current =

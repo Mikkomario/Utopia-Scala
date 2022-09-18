@@ -28,7 +28,14 @@ class MutableLazy[A](generator: => A) extends MutableLazyLike[A]
     
     override def value_=(newValue: A) = _value = Some(newValue)
     
-    override def reset() = _value = None
+    override def reset() = {
+        if (_value.isDefined) {
+            _value = None
+            true
+        }
+        else
+            false
+    }
     
     override def value = current match
     {

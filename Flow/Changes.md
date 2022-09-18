@@ -18,6 +18,7 @@
   - **Future**`.currentResult` now behaves as `.current` used to behave
   - **Future**`.current` now behaves as `.currentSuccess` used to behave
   - Removed **Future**`.currentSuccess` altogether
+- **ResettableLazyLike**`.reset()` is now required to return a **Boolean**
 - `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
 ### Deprecations
 - Deprecated `.runAndSet(...)`, `.doIfNotSet(...)` and `.mapAndSet()` in **VolatileFlag**
@@ -29,6 +30,7 @@
 - Added **PostponingProcess** class that behaves somewhat like **DelayedProcess**, but accepts a variable wait target
 - Added **ValueConvertibleFileContainer** and **ValueConvertibleOptionFileContainer** -classes
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
+- Added **Flag** and **ResettableFlag** -traits and implementations
 - Added **OptionsIterator** and **ZipPadIterator** classes
 ### New Methods
 - **ChangeEvent**

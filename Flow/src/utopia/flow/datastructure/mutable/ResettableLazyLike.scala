@@ -8,16 +8,8 @@ import utopia.flow.datastructure.template.LazyLike
   * @author Mikko Hilpinen
   * @since 4.11.2020, v1.9
   */
-trait ResettableLazyLike[+A] extends LazyLike[A]
+trait ResettableLazyLike[+A] extends LazyLike[A] with Resettable
 {
-	// ABSTRACT	----------------------
-	
-	/**
-	  * Resets this lazy container so that a new value is generated the next time it is requested
-	  */
-	def reset(): Unit
-	
-	
 	// OTHER	----------------------
 	
 	/**

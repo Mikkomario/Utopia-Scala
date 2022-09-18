@@ -48,8 +48,11 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
     
     /**
      * Clears any items from this option
+      * @return Whether the state of this option changed
      */
-    def clear() = value = None
+    def clear() = pop { old =>
+        old.isDefined -> None
+    }
     
     /**
      * Removes and returns the item in this option, if there is one
