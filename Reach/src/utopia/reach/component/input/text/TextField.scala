@@ -371,7 +371,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	// private val
+	// private val hasReceivedFocusFlag =
 	
 	override val valuePointer = resultFilter match {
 		case Some(filter) => textContentPointer.map { text => parseResult(filter.filter(text).notEmpty) }

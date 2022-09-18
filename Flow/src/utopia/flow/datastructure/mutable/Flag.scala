@@ -1,6 +1,8 @@
-package utopia.flow.datastructure.template
+package utopia.flow.datastructure.mutable
 
-import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike}
+import utopia.flow.datastructure.immutable.FlagView
+import utopia.flow.datastructure.template.FlagLike
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 
 object Flag
 {
@@ -20,7 +22,7 @@ object Flag
 	  * @author Mikko Hilpinen
 	  * @since 18.9.2022, v1.17
 	  */
-	class _Flag extends Flag with Changing[Boolean]
+	private class _Flag extends Flag with Changing[Boolean]
 	{
 		// ATTRIBUTES   ---------------------
 		
@@ -28,6 +30,8 @@ object Flag
 		
 		private var _listeners = Vector[ChangeListener[Boolean]]()
 		private var _dependencies = Vector[ChangeDependency[Boolean]]()
+		
+		lazy val view = new FlagView(this)
 		
 		
 		// IMPLEMENTED  ---------------------
@@ -66,20 +70,16 @@ object Flag
   * A common trait for flags.
   * I.e. for boolean containers that may be set from false to true.
   */
-trait Flag extends ChangingLike[Boolean]
+trait Flag extends FlagLike
 {
+	/**
+	  * @return An immutable view into this flag
+	  */
+	def view: FlagLike
+	
 	/**
 	  * Sets this flag (from false to true), unless set already
 	  * @return Whether the state of this flag was altered, i.e. whether this flag was not set previously.
 	  */
 	def set(): Boolean
-	
-	/**
-	  * @return Whether this flag has been set
-	  */
-	def isSet = value
-	/**
-	  * @return Whether this flag hasn't been set yet
-	  */
-	def isNotSet = !isSet
 }

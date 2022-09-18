@@ -1,6 +1,6 @@
 package utopia.flow.datastructure.mutable
 
-import utopia.flow.datastructure.template.Flag
+import utopia.flow.datastructure.immutable.FlagView
 import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 
 object ResettableFlag
@@ -23,6 +23,8 @@ object ResettableFlag
 		
 		override var listeners = Vector[ChangeListener[Boolean]]()
 		override var dependencies = Vector[ChangeDependency[Boolean]]()
+		
+		lazy val view = new FlagView(this)
 		
 		
 		// IMPLEMENTED  -----------------------
@@ -68,4 +70,7 @@ object ResettableFlag
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait ResettableFlag extends Flag with Resettable
+trait ResettableFlag extends Flag with Resettable with Settable[Boolean]
+{
+	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
+}

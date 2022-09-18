@@ -1,5 +1,6 @@
 package utopia.flow.async
 
+import utopia.flow.datastructure.immutable.FlagView
 import utopia.flow.datastructure.mutable.ResettableFlag
 
 object VolatileFlag
@@ -19,6 +20,11 @@ object VolatileFlag
 **/
 class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](initialState) with ResettableFlag
 {
+    // ATTRIBUTES   --------------
+    
+    override lazy val view = new FlagView(this)
+    
+    
     // COMPUTED    ---------------
     
     /**
