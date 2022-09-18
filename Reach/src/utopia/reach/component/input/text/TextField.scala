@@ -2,7 +2,7 @@ package utopia.reach.component.input.text
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangeListener, ChangingLike, DetachmentChoice, Fixed}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
@@ -11,7 +11,7 @@ import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.input.Field
+import utopia.reach.component.input.{Field, FieldState, InputValidationResult}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.template.focus.{FocusableWithState, MutableFocusableWrapper}
@@ -25,6 +25,9 @@ import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localizer}
 import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
+import utopia.reach.component.input.InputValidationResult.Default
+import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
 import utopia.reflection.util.ComponentCreationDefaults
@@ -90,7 +93,9 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 	  * @param inputFilter A regex / filter applied to all typed characters and copied strings (optional)
 	  * @param resultFilter A regex / filter applied to the resulting string (optional)
 	  * @param maxLength Maximum number of characters to type (optional)
-	  * @param inputValidation A function to possibly generate an error message based on the input (optional)
+	  * @param inputValidation A validator function for specified input. Returns a validation result.
+	  *                        Called only once the user leaves this input field.
+	  *                        None if no validation should be applied (default)
 	  * @param fillBackground Whether filled style should be used (default = global default)
 	  * @param showCharacterCount Whether character count should be displayed (default = false)
 	  * @param allowLineBreaks Whether line breaks (multi-line text) should be completely enabled in this field
@@ -114,7 +119,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				 inputFilter: Option[Regex] = None,
 				 resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				 inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
+				 inputValidation: Option[A => InputValidationResult] = None, fillBackground: Boolean = true,
 				 showCharacterCount: Boolean = false, allowLineBreaks: Boolean = context.allowLineBreaks)
 				(parseResult: Option[String] => A) =
 		new TextField[A](parentHierarchy, defaultWidth, fieldNamePointer, promptPointer, hintPointer,
@@ -144,7 +149,9 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 	  * @param inputFilter A regex / filter applied to all typed characters and copied strings (optional)
 	  * @param resultFilter A regex / filter applied to the resulting string (optional)
 	  * @param maxLength Maximum number of characters to type (optional)
-	  * @param inputValidation A function to possibly generate an error message based on the input (optional)
+	  * @param inputValidation A validator function for specified input. Returns a validation result.
+	  *                        Called only once the user leaves this input field.
+	  *                        None if no validation should be applied (default)
 	  * @param fillBackground Whether filled style should be used (default = global default)
 	  * @param showCharacterCount Whether character count should be displayed (default = false)
 	  * @param allowLineBreaks Whether line breaks (multi-line text) should be completely enabled in this field
@@ -166,7 +173,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				  inputFilter: Option[Regex] = None,
 				  resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				  inputValidation: Option[String => LocalizedString] = None, fillBackground: Boolean = true,
+				  inputValidation: Option[String => InputValidationResult] = None, fillBackground: Boolean = true,
 				  showCharacterCount: Boolean = false, allowLineBreaks: Boolean = context.allowLineBreaks) =
 		apply[String](defaultWidth, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, textPointer,
 			leftIconPointer, rightIconPointer, enabledPointer, selectionStylePointer, highlightStylePointer,
@@ -315,22 +322,22 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 		
 		// Displays an error if the value is outside of accepted range
 		val textPointer = new PointerWithEvents(initialText)
-		def validateInput(input: Option[A]) = input match
+		def validateInput(input: Option[A]): InputValidationResult = input match
 		{
 			// Case: Input could be parsed => Checks for min / max values
 			case Some(input) =>
 				if (ordering.compare(input, minValue) < 0)
-					"Minimum value is %i".autoLocalized.interpolated(Vector(minValue))
+					InputValidationResult.Failure("Minimum value is %i".autoLocalized.interpolated(Vector(minValue)))
 				else if (ordering.compare(input, maxValue) > 0)
-					"Maximum value is %i".autoLocalized.interpolated(Vector(maxValue))
+					InputValidationResult.Failure("Maximum value is %i".autoLocalized.interpolated(Vector(maxValue)))
 				else
-					LocalizedString.empty
+					Default
 			// Case: Input couldn't be parsed => May inform the user
 			case None =>
 				if (textPointer.value.isEmpty)
-					LocalizedString.empty
+					Default
 				else
-					"Not a valid number".autoLocalized
+					InputValidationResult.Failure("Not a valid number".autoLocalized)
 		}
 		
 		apply[Option[A]](defaultWidth, fieldNamePointer, promptPointer, effectiveHintPointer, errorMessagePointer,
@@ -349,47 +356,60 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
   * @since 14.11.2020, v0.1
   */
 class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLength,
-				   fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-				   promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-				   hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-				   errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-				   textContentPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-				   leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-				   rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-				   enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-				   selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
-				   highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
-				   focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
-				   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-				   inputFilter: Option[Regex] = None,
-				   resultFilter: Option[Regex] = None, val maxLength: Option[Int] = None,
-				   inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
-				   showCharacterCount: Boolean = false, lineBreaksEnabled: Boolean = false)
+                   fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+                   promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+                   hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+                   errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+                   textContentPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+                   leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+                   rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+                   enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
+                   selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
+                   highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+                   focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
+                   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+                   inputFilter: Option[Regex] = None,
+                   resultFilter: Option[Regex] = None, val maxLength: Option[Int] = None,
+                   inputValidation: Option[A => InputValidationResult] = None, fillBackground: Boolean = true,
+                   showCharacterCount: Boolean = false, lineBreaksEnabled: Boolean = false)
 				  (parseResult: Option[String] => A)(implicit context: TextContextLike)
 	extends ReachComponentWrapper with InputWithPointer[A, ChangingLike[A]] with MutableFocusableWrapper
 		with FocusableWithState
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	// private val hasReceivedFocusFlag =
+	private val _statePointer = new PointerWithEvents[FieldState](BeforeEdit)
+	private val goToEditInputListener = ChangeListener.onAnyChange {
+		if (hasFocus)
+			_statePointer.value = Editing
+		DetachmentChoice.detach
+	}
 	
 	override val valuePointer = resultFilter match {
 		case Some(filter) => textContentPointer.map { text => parseResult(filter.filter(text).notEmpty) }
 		case None => textContentPointer.map { text => parseResult(text.notEmpty) }
 	}
 	
-	// Uses either the outside error message, an input validator, both or neither as the error message pointer
-	private val actualErrorPointer = inputValidation match {
+	// Input validation affects hint and highlight logic, if specified
+	private val (actualHintPointer, actualHighlightingPointer) = inputValidation match {
+		// Case: Input validation is used => Merges validation results input other pointers
 		case Some(validation) =>
-			val validationErrorPointer = valuePointer.map(validation)
-			errorMessagePointer.notFixedWhere { _.isEmpty } match {
-				case Some(outsideError) =>
-					outsideError.mergeWith(validationErrorPointer) { (default, validation) =>
-						default.notEmpty.getOrElse(validation)
-					}
-				case None => validationErrorPointer
+			// The input is validated only after (and not during) editing
+			val validationResultPointer = valuePointer.mergeWith(_statePointer) { (value, state) =>
+				if (state == AfterEdit)
+					validation(value)
+				else
+					InputValidationResult.Default
 			}
-		case None => errorMessagePointer
+			val hintTextPointer = validationResultPointer.mergeWith(hintPointer) { (validation, hint) =>
+				validation.message.nonEmptyOrElse(hint)
+			}
+			val colorPointer = validationResultPointer.mergeWith(highlightStylePointer) { (validation, default) =>
+				validation.highlighting.orElse(default)
+			}
+			hintTextPointer -> colorPointer
+		// Case: Input validation is not used => Uses the pointers specified earlier
+		case None => hintPointer -> highlightStylePointer
 	}
 	
 	private val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match {
@@ -404,8 +424,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	private val isEmptyPointer = textContentPointer.map { _.isEmpty }
 	
 	private val _wrapped = Field(parentHierarchy).withContext(context).apply[EditableTextLabel](isEmptyPointer,
-		fieldNamePointer, actualPromptPointer, hintPointer, actualErrorPointer, leftIconPointer, rightIconPointer,
-		context.textInsets.total / 2, highlightStylePointer, focusColorRole, hintScaleFactor,
+		fieldNamePointer, actualPromptPointer, actualHintPointer, errorMessagePointer, leftIconPointer, rightIconPointer,
+		context.textInsets.total / 2, actualHighlightingPointer, focusColorRole, hintScaleFactor,
 		fillBackground) { (fc, tc) =>
 		
 		val stylePointer = fc.textStylePointer.map { _.expandingHorizontally.withAllowLineBreaks(lineBreaksEnabled) }
@@ -459,8 +479,16 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	// Will not shrink below the default width
 	_wrapped.wrappedField.addConstraintOver(X)(MaxBetweenLengthModifier(defaultWidth))
 	
-	// Formats text contents whenever focus is lost
-	resultFilter.foreach { filter => addFocusLostListener { textContentPointer.update(filter.filter) } }
+	addFocusListener {
+		// Remembers the first time this field received focus
+		case FocusGained => textContentPointer.addListener(goToEditInputListener)
+		// Formats text contents whenever focus is lost
+		case FocusLost =>
+			textContentPointer.removeListener(goToEditInputListener)
+			_statePointer.value = AfterEdit
+			resultFilter.foreach { filter => textContentPointer.update(filter.filter) }
+		case _ => ()
+	}
 	
 	
 	// COMPUTED	----------------------------------------------
@@ -469,6 +497,15 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	  * @return A read-only version of this text field's text pointer
 	  */
 	def textPointer = textContentPointer.view
+	/**
+	  * @return A pointer that contains the current state of this field
+	  */
+	def statePointer = _statePointer.view
+	
+	/**
+	  * @return The current state of this field
+	  */
+	def state = statePointer.value
 	
 	
 	// IMPLEMENTED	------------------------------------------

@@ -1,7 +1,13 @@
 # Utopia Reach - List of Changes
 
-## v0.3.5 (in development)
-Adjusting to changes in **Flow** v1.17 and **Paradigm** v1.1
+## v0.4 (in development)
+### Breaking Changes
+- **TextField** input validation function is now required to return an **InputValidationResult** instead of a 
+  **LocalizedString**
+### New Features
+- **TextField** input validation is only applied when the field loses focus. 
+  Also, The validation is now allowed to return custom highlighting, 
+  suitable for displaying a success or a warning message, etc.
 
 ## v0.3.4 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0

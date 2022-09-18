@@ -3,6 +3,8 @@ package utopia.reach.test
 import utopia.flow.event.Fixed
 import utopia.flow.generic.DataType
 import utopia.reach.component.factory.Mixed
+import utopia.reach.component.input.InputValidationResult
+import utopia.reach.component.input.InputValidationResult.Default
 import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.stack.Stack
@@ -51,6 +53,8 @@ object ReachTextFieldTest extends App
 				Vector(
 					makeRow[String](DisplayFunction.raw) {
 						_.forString(320.any, Fixed("Text"), maxLength = Some(32),
+							inputValidation = Some(in =>
+								if (in.isEmpty) InputValidationResult.Warning("Should not be empty") else Default),
 							showCharacterCount = true)
 					},
 					makeRow[String](DisplayFunction.raw) {

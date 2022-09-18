@@ -12,8 +12,12 @@
   - Deprecated `.adjustCoordinate(Double, Axis2D)` in favor of `.translate(Dimensional)`
   - Deprecated `.adjustLength(Double, Axis2D)` in favor of `.size += axis(adjustment)`
 ### New Methods
-- Added a number of new methods to **Area**
+- **Area**
+  - Added a number of new methods
+- **LocalStringLike**
+  - Added `.nonEmptyOrElse(...)`
 ### Other Changes
+- **ColorRole** is no longer sealed, enabling custom color roles
 - **Area** now extends **Bounded**
 
 ## v2.0-alpha-8 - 18.08.2022
