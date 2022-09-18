@@ -1,6 +1,5 @@
 package utopia.genesis.test
 
-import java.nio.file.Paths
 import utopia.flow.test.TestContext._
 import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
@@ -8,6 +7,9 @@ import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.generic.ParadigmDataType
+
+import java.nio.file.Paths
 
 /**
   * This test tests image drawing
@@ -16,6 +18,8 @@ import utopia.paradigm.angular.{Angle, Rotation}
   */
 object ImageTest extends App
 {
+	ParadigmDataType.setup()
+	
 	// Generates the images
 	val original = Image.readFrom(Paths.get("Genesis/test-images/mushrooms.png")).get
 		.withMaxSourceResolution(Size(128, 128)).withSize(Size(100, 100)).withCenterOrigin

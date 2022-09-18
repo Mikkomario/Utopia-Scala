@@ -69,7 +69,7 @@ trait SizedLike[+Repr] extends Sized
 	def withLength(length: Vector1D, preserveShape: Boolean = false) = {
 		if (preserveShape) {
 			val myLength = lengthAlong(length.axis)
-			if (myLength == 0) repr else withScaledSize(length / myLength)
+			if (myLength == 0) repr else withScaledSize(length.length / myLength)
 		}
 		else
 			withSize(size.withDimension(length))
@@ -135,12 +135,10 @@ trait SizedLike[+Repr] extends Sized
 	  * @return A scaled copy of this item that spans at least the specified length
 	  */
 	def spanning(minLength: Vector1D, minimize: Boolean = false) = {
-		if (minimize)
-			withLength(minLength)
-		else if (spans(minLength))
-			repr
-		else
+		if (minimize || !spans(minLength))
 			withLength(minLength, preserveShape = true)
+		else
+			repr
 	}
 	/**
 	  * Returns a copy of this item that fits within the specified length limit on one axis. Preserves shape.

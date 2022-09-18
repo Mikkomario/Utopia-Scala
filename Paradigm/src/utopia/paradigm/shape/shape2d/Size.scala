@@ -149,12 +149,6 @@ case class Size(override val dimensions2D: Pair[Double])
     // OTHER    -----------------------------
     
     /**
-     * The length of a side of this size along the specified axis
-     */
-    @deprecated("Please use along(Axis2D) instead", "v1.1.2")
-    def lengthAlong(axis: Axis2D) = along(axis)
-    
-    /**
      * A copy of this size with specified width
      */
     def withWidth(w: Double) = Size(w, height)
