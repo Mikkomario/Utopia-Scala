@@ -4,10 +4,14 @@
 ### Breaking Changes
 - **TextField** input validation function is now required to return an **InputValidationResult** instead of a 
   **LocalizedString**
+### Bugfixes
+- Fixed a bug where all text was drawn with wrong alignment
 ### New Features
 - **TextField** input validation is only applied when the field loses focus. 
   Also, The validation is now allowed to return custom highlighting, 
   suitable for displaying a success or a warning message, etc.
+### Other Changes
+- **Field** now highlights the hint text as well when custom highlighting is applied
 
 ## v0.3.4 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0

@@ -16,6 +16,8 @@
   - Added a number of new methods
 - **LocalStringLike**
   - Added `.nonEmptyOrElse(...)`
+- **StackLength**
+  - Added `.notExpanding` and `.notShrinking`
 ### Other Changes
 - **ColorRole** is no longer sealed, enabling custom color roles
 - **Area** now extends **Bounded**

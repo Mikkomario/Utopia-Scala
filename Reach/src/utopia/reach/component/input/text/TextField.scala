@@ -19,7 +19,7 @@ import utopia.reach.component.wrapper.Open
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
+import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalString._

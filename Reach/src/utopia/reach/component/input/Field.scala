@@ -11,7 +11,7 @@ import utopia.paradigm.shape.shape2d.Insets
 import utopia.reflection.color.ColorRole.{Error, Secondary}
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
 import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
+import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer2}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
@@ -343,27 +343,23 @@ class Field[C <: ReachComponentLike with Focusable]
 	private val editTextColorPointer = innerBackgroundPointer.map { _.defaultTextColor }
 	private val contentColorPointer: ChangingLike[Color] = highlightColorPointer
 		.mergeWith(editTextColorPointer) { (highlight, default) =>
-			highlight match
-			{
+			highlight match {
 				case Some(color) => color: Color
 				case None => default.timesAlpha(0.66)
 			}
 		}
-	private val defaultHintColorPointer = contextBackgroundPointer.map { _.textColorStandard.hintTextColor }
-	private val errorHintColorPointer = contextBackgroundPointer.mergeWith(errorStatePointer) { (background, isError) =>
-			if (isError) Some(colorScheme.error.forBackground(background)) else None
-	}
-	private lazy val hintColorPointer = errorHintColorPointer.notFixedWhere { _.isEmpty } match
-	{
-		case Some(errorColorPointer) =>
-			defaultHintColorPointer.mergeWith(errorColorPointer) { (default, error) =>
-				error match {
-					case Some(color) => color: Color
-					case None => default
-				}
+	// Hint text colouring is affected by the displayed error, as well as possible highlighting
+	// The actual display color is adjusted based on context background
+	private lazy val hintColorPointer = contextBackgroundPointer
+		.mergeWith(errorStatePointer, highlightStatePointer) { (background, isError, highlight) =>
+			val colorRole = if (isError) Some(Error) else highlight
+			colorRole match {
+				// Case: Highlighting applied
+				case Some(colorRole) => colorScheme(colorRole).forBackground(background): Color
+				// Case: Default hint color
+				case None => background.textColorStandard.hintTextColor
 			}
-		case None => defaultHintColorPointer
-	}
+		}
 	
 	private lazy val hintTextStylePointer = hintColorPointer.map { makeHintStyle(_) }
 	
@@ -583,15 +579,14 @@ class Field[C <: ReachComponentLike with Focusable]
 	{
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
-		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, font * hintScaleFactor, contextBackgroundPointer)) match
-		{
+		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, font * hintScaleFactor, contextBackgroundPointer)) match {
 			case Some(rightComponent) =>
-				actualHintTextPointer match
-				{
+				actualHintTextPointer match {
 					// Case: Hints are sometimes displayed
 					case Some(hintTextPointer) =>
 						// Places caps to stack equal to horizontal content margin
-						val cap = textInsets.horizontal / 2 + (if (fillBackground) 0 else defaultBorderWidth)
+						val cap = (textInsets.horizontal / 2 + (if (fillBackground) 0 else defaultBorderWidth))
+							.notExpanding
 						val hintLabel = Open.using(ViewTextLabel) { makeHintLabel(_, hintTextPointer) }
 						val stack = Open.using(ViewStack) { _.withFixedStyle(
 							Vector(hintLabel.withResult(hintVisibilityPointer), rightComponent.withResult(AlwaysTrue)), X,

@@ -15,6 +15,7 @@ import utopia.reflection.component.template.display.PoolWithPointer
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.paradigm.enumeration.Alignment
+import utopia.reach.util.Priority
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
@@ -227,19 +228,25 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	/**
 	  * Pointer containing the current (measured) text
 	  */
-	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => measure(displayFunction(content), style) }
+	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) =>
+		measure(displayFunction(content), style)
+	}
 	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer2(textPointer, stylePointer)
 	
 	
 	// INITIAL CODE	-------------------------------------
 	
-	// Revalidates and repaints this component on all text changes
-	// TODO: Also revalidate / repaint on style updates (like color or alignment change)
+	// Revalidates and/or repaints this component on all text changes
 	textPointer.addListener { event =>
 		if (event.compareBy { _.size })
 			repaint()
 		else
 			revalidateAndRepaint()
+	}
+	// Style changes (color & alignment) also trigger a revalidation / repaint
+	stylePointer.addListener { event =>
+		if (event.compareBy { _.color } || event.compareBy { _.alignment })
+			repaint(Priority.Low)
 	}
 	
 	
