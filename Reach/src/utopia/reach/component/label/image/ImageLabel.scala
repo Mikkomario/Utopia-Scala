@@ -21,15 +21,15 @@ class ImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param image Drawn image
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image (default = Center)
-	  * @param additionalCustomDrawers Additional custom drawers assigned to this label
+	  * @param customDrawers Additional custom drawers assigned to this label
 	  * @param allowUpscaling Whether the image should be allowed to scale up to it's source resolution (default = true)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used for this image
 	  * @return A new label
 	  */
 	def apply(image: Image, insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-			  additionalCustomDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
-			  useLowPrioritySize: Boolean = false) =
-		new ImageLabel(parentHierarchy, image, insets, alignment, additionalCustomDrawers, allowUpscaling,
+	          customDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
+	          useLowPrioritySize: Boolean = false) =
+		new ImageLabel(parentHierarchy, image, insets, alignment, customDrawers, allowUpscaling,
 			useLowPrioritySize)
 }
 

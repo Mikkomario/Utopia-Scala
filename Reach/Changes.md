@@ -4,6 +4,7 @@
 ### Breaking Changes
 - **TextField** input validation function is now required to return an **InputValidationResult** instead of a 
   **LocalizedString**
+- Renamed the custom drawer construction parameter to `customDrawers` **ImageLabel** and **ImageAndTextLabel** 
 ### Bugfixes
 - Fixed a bug where all text was drawn with wrong alignment
 ### New Features

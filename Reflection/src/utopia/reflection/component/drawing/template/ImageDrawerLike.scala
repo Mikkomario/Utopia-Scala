@@ -20,22 +20,19 @@ trait ImageDrawerLike extends CustomDrawer
 	  * @return The image being drawn by this drawer
 	  */
 	def image: Image
-	
+	/**
+	  * @return The insets being placed around the image
+	  */
+	def insets: StackInsets
+	/**
+	  * @return Alignment that determines the position of the image
+	  */
+	def alignment: Alignment
 	/**
 	  * @return Whether the image is allowed to scale up from its normal size when presented with more space
 	  *         (the natural resolution of the image is still respected).
 	  */
 	def useUpscaling: Boolean
-	
-	/**
-	  * @return The insets being placed around the image
-	  */
-	def insets: StackInsets
-	
-	/**
-	  * @return Alignment that determines the position of the image
-	  */
-	def alignment: Alignment
 	
 	
 	// IMPLEMENTED	------------------------

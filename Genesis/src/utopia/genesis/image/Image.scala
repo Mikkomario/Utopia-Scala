@@ -295,7 +295,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	override def *(scaling: Double): Image = withScaling(this.scaling * scaling)
 	
-	override def withSize(size: Size) = withScaling(size / this.size)
+	override def withSize(size: Size) = this * (size / this.size)
 	
 	override def croppedToFitWithin(maxArea: Vector2DLike[_ <: V]) = {
 		if (fitsWithin(maxArea))
