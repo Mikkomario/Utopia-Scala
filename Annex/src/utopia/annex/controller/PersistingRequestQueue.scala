@@ -76,11 +76,9 @@ trait PersistingRequestQueue extends RequestQueue
 	
 	// IMPLEMENTED	---------------------
 	
-	override def push(request: ApiRequest) =
-	{
+	override def push(request: ApiRequest) = {
 		// Saves the requests when they are send, if necessary
-		request.persistingModel match
-		{
+		request.persistingModel match {
 			case Some(model) =>
 				requestContainer.current :+= model
 				val result = super.push(request)
@@ -98,8 +96,7 @@ trait PersistingRequestQueue extends RequestQueue
 	  * @param handlers Request handlers which are used for parsing persisted requests and handling their responses
 	  * @return A list of errors that occurred while parsing the requests
 	  */
-	protected def start(handlers: Iterable[PersistedRequestHandler]) =
-	{
+	protected def start(handlers: Iterable[PersistedRequestHandler]) = {
 		requestContainer.current.flatMap { requestModel =>
 			handlers.view.filter { _.shouldHandle(requestModel) }.tryFindMap { h => h.factory(requestModel)
 				.map { r => h -> r } } match

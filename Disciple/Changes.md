@@ -2,6 +2,8 @@
 
 ## v1.5.3 (in development)
 Supports changes in **Flow** v1.17
+### Bugfixes
+- **Patch** method was previously converted to **Put** in some cases, fixed
 ### Other Changes
 - **RequestRateLimiter** now handles thread interruptions, as well as JVM shutdowns, better
 
