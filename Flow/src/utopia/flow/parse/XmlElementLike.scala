@@ -340,10 +340,10 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             
             xmlBuilder ++= s"<$namePart$attsPart>"
             if (cDataRequired)
-                xmlBuilder ++= "![CDATA["
+                xmlBuilder ++= "<![CDATA["
             xmlBuilder ++= text
             if (cDataRequired)
-                xmlBuilder ++= "]]"
+                xmlBuilder ++= "]]>"
             children.foreach { _.appendToXml(xmlBuilder) }
             xmlBuilder ++= s"</$namePart>"
         }

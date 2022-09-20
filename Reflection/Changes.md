@@ -21,6 +21,7 @@
 ### Other Changes
 - **ColorRole** is no longer sealed, enabling custom color roles
 - **Area** now extends **Bounded**
+- **SingleColorIcon** now extends **SizedLike**
 
 ## v2.0-alpha-8 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0. 
