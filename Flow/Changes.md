@@ -51,6 +51,11 @@
   - Added `.mergeWith(Option)`
 - **Pair**
   - Added a `.zip(Pair)` that returns a **Pair**
+- **Path** (**FileExtensions**)
+  - Added `.parts` and `.partsIterator` and `.length`
+  - Added `.allDirectoriesIterator` and `.allSubDirectoriesIterator`
+  - Added `.relativeTo(Path)`
+  - Added `.take(Int)`, `.takeRight(Int)`, `.drop(Int)` and `.dropRight(Int)`
 - **Process**
   - Added a protected `.markAsInterrupted()` -function that acts as a `.stop()`, but only alters the process' state
 - **Signed**
