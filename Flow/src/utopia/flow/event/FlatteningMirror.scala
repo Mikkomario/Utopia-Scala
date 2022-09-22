@@ -58,5 +58,7 @@ class FlatteningMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Orig
 	
 	// IMPLEMENTED  -----------------------
 	
+	override def isChanging = source.isChanging || pointerPointer.value.isChanging
+	
 	override protected def wrapped = pointer
 }

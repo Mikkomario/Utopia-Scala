@@ -4,6 +4,7 @@ import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, 
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.event.IteratorWithEvents
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.util.logging.Logger
 
@@ -1343,7 +1344,6 @@ object CollectionExtensions
 		  */
 		def zipPad[B](other: Iterator[B], myPadding: => A, theirPadding: => B) =
 			ZipPadIterator(i, other, myPadding, theirPadding)
-		
 		/**
 		  * Zips this iterator with another, possibly padding one of them.
 		  * Neither of these two source iterators should be used afterwards.
@@ -1353,6 +1353,14 @@ object CollectionExtensions
 		  *         padding if one depletes before the other
 		  */
 		def zipPad(other: Iterator[A], padding: => A) = ZipPadIterator(i, other, padding)
+		
+		/**
+		  * Creates a copy of this iterator that supports change events
+		  * @param initialValue The value of the resulting iterator until next() is called for the first time
+		  * @tparam B Type of items in the resulting iterator
+		  * @return A copy of this iterator that supports change events
+		  */
+		def withEvents[B >: A](initialValue: B) = new IteratorWithEvents[B](initialValue, i)
 	}
 	
 	
