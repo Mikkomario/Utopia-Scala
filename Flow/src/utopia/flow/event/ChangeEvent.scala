@@ -1,5 +1,17 @@
 package utopia.flow.event
 
+import utopia.flow.datastructure.immutable.Pair
+
+object ChangeEvent
+{
+	/**
+	  * @param values The old and the new value
+	  * @tparam A Type of changed value
+	  * @return A new change event based on the specified pair
+	  */
+	def apply[A](values: Pair[A]): ChangeEvent[A] = apply(values.first, values.second)
+}
+
 /**
   * Change events are generated when a value changes
   * @author Mikko Hilpinen
@@ -10,6 +22,16 @@ package utopia.flow.event
   */
 case class ChangeEvent[+A](oldValue: A, newValue: A)
 {
+	// OTHER    ---------------------------------
+	
+	/**
+	  * @return A pair containing:
+	  *         - 1: The old value
+	  *         - 2: The new value
+	  */
+	def toPair = Pair(oldValue, newValue)
+	
+	
 	// IMPLEMENTED	-----------------------------
 	
 	override def toString = s"Change from $oldValue to $newValue"

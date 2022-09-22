@@ -14,6 +14,7 @@
   - **ChangingLike** trait now implements this function by itself, meaning that subclasses are no longer required to 
     implement this function 
   - This function no longer accepts an implicit execution context, since the default implementation doesn't require one
+- **ChangingLike** implementations are now required to implement `.removeDependency(Any)`
 - Altered `.current` implementations in **AsyncExtensions** in following ways:
   - **Future**`.currentResult` now behaves as `.current` used to behave
   - **Future**`.current` now behaves as `.currentSuccess` used to behave
@@ -40,8 +41,11 @@
 - Added **OptionsIterator** and **ZipPadIterator** classes
 ### New Methods
 - **ChangeEvent**
+  - Added `.toPair`
   - Added `.toStringWith(A => String)`
+  - Added a new constructor variant that accepts a **Pair**
 - **ChangingLike**
+  - Added `.flatMap(...)` that is a map function that supports functions that yield changing items
   - Added `.nextFutureWhere(...)` which works like `.futureWhere(...)`, except that it can't be triggered  
     by the current value
 - **Either** (**CollectionExtensions**)
@@ -56,7 +60,11 @@
 - **Option** (**CollectionExtensions**)
   - Added `.mergeWith(Option)`
 - **Pair**
-  - Added a `.zip(Pair)` that returns a **Pair**
+  - Object
+    - Added `.fill(...)` that calls a call-by-name parameter twice
+  - Instance
+    - Added `.isSymmetric`, `.isNotSymmetric` and `.compareWith(...)`
+    - Added a `.zip(Pair)` that returns a **Pair**
 - **Path** (**FileExtensions**)
   - Added `.parts` and `.partsIterator` and `.length`
   - Added `.allDirectoriesIterator` and `.allSubDirectoriesIterator`

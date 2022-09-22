@@ -43,6 +43,7 @@ trait ChangingWrapper[+A] extends ChangingLike[A]
 	override def removeListener(changeListener: Any) = wrapped.removeListener(changeListener)
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = wrapped.addDependency(dependency)
+	override def removeDependency(dependency: Any) = wrapped.removeDependency(dependency)
 	
 	override def map[B](f: A => B) = wrapped.map(f)
 	override def lazyMap[B](f: A => B) = wrapped.lazyMap(f)

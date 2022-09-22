@@ -97,6 +97,7 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	override def removeListener(changeListener: Any) = listeners = listeners.filterNot { _ == changeListener }
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = if (isChanging) dependencies :+= dependency
+	override def removeDependency(dependency: Any) = dependencies = dependencies.filterNot { _ == dependency }
 	
 	override def futureWhere(valueCondition: A => Boolean) =
 		future.flatMap { v => if (valueCondition(v)) Future.successful(v) else Future.never }

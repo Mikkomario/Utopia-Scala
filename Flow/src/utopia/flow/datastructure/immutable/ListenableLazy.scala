@@ -109,6 +109,9 @@ class ListenableLazy[A](generator: => A) extends ListenableLazyLike[A]
 		override def addDependency(dependency: => ChangeDependency[Option[A]]) =
 			if (nonInitialized) queuedDependencies :+= dependency
 		
+		override def removeDependency(dependency: Any) =
+			queuedDependencies = queuedDependencies.filterNot { _ == dependency }
+		
 		/* Removed 12.9.2022 because ChangingLike now implements this without using an ExecutionContext
 		override def futureWhere(valueCondition: Option[A] => Boolean)(implicit exc: ExecutionContext) =
 			current match

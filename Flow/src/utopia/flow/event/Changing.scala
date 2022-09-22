@@ -65,6 +65,7 @@ trait Changing[A] extends ChangingLike[A]
 	override def removeListener(listener: Any) = listeners = listeners.filterNot { _ == listener }
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = dependencies :+= dependency
+	override def removeDependency(dependency: Any) = dependencies = dependencies.filterNot { _ == dependency }
 	
 	override def map[B](f: A => B) = Mirror.of(this)(f)
 	

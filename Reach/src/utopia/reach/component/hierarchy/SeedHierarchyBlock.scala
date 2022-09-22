@@ -132,6 +132,10 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			queuedListeners = queuedListeners.filterNot { _ == changeListener }
 			finalManagedPointer.foreach { _.removeListener(changeListener) }
 		}
+		override def removeDependency(dependency: Any) = {
+			queuedDependencies = queuedDependencies.filterNot { _ == dependency }
+			finalManagedPointer.foreach { _.removeDependency(dependency) }
+		}
 		
 		override def addDependency(dependency: => ChangeDependency[Boolean]) = finalManagedPointer match
 		{

@@ -13,6 +13,7 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 	override def isChanging = false
 	
 	override def removeListener(changeListener: Any) = ()
+	override def removeDependency(dependency: Any) = ()
 	
 	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 		other.map { f(value, _) }

@@ -123,6 +123,11 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @param dependency A dependency to add (call by name)
 	  */
 	def addDependency(dependency: => ChangeDependency[A]): Unit
+	/**
+	  * Removes a change dependency from being activated in the future
+	  * @param dependency A dependency to remove from this item
+	  */
+	def removeDependency(dependency: Any): Unit
 	
 	/**
 	  * @param valueCondition A condition for finding a suitable future
@@ -140,6 +145,7 @@ trait ChangingLike[+A] extends Viewable[A]
 	def nextFutureWhere(valueCondition: A => Boolean) =
 		_futureWhere(valueCondition, disableImmediateTrigger = true)
 	
+	// TODO: Why are these abstract?
 	/**
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
@@ -266,6 +272,19 @@ trait ChangingLike[+A] extends Viewable[A]
 	  */
 	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
 		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
+	
+	/**
+	  * Maps this changing item with a function that yields changing items.
+	  * The resulting changing will match the value of the most recent map result.
+	  *
+	  * Please note that listeners and dependencies attached to the map results, and not to the result of this function,
+	  * will not be carried over to future map results.
+	  *
+	  * @param f A mapping function that yields changing items
+	  * @tparam B Type of values in the resulting items
+	  * @return A pointer to the current value of the last map result
+	  */
+	def flatMap[B](f: A => ChangingLike[B]) = FlatteningMirror(this)(f)
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
