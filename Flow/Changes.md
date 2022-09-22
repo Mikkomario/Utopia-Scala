@@ -18,6 +18,12 @@
   - **Future**`.currentResult` now behaves as `.current` used to behave
   - **Future**`.current` now behaves as `.currentSuccess` used to behave
   - Removed **Future**`.currentSuccess` altogether
+- Rewrote the **AsyncMirror** class (matching **ChangingLike**`.mapAsync(...)` -variants)
+  - The mapping function must now return a **Future**
+  - The resulting pointer now also shows the mapping process state 
+    (e.g. whether an asynchronous mapping is occurring in another thread)
+  - `AsyncMirror.apply(...)` no longer catches errors but expects merging logic to be provided
+  - Renamed and modified **ChangingLike**`.mapAsync(...)` -variants
 - **ResettableLazyLike**`.reset()` is now required to return a **Boolean**
 - `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
 ### Deprecations

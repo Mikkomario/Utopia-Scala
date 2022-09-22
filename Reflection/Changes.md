@@ -2,6 +2,7 @@
 
 ## v2.0-alpha-9 (in development)
 ### Breaking Changes
+- **TypeOrSearch** search function is now required to return a **Future**
 - **ContainerContentDisplayer** now uses **EqualsFunction** instead of standard functions
 ### Deprecations
 - In **Area**

@@ -16,6 +16,8 @@ import utopia.reflection.test.TestContext
 import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
 import utopia.reflection.shape.LengthExtensions._
 
+import scala.concurrent.Future
+
 /**
   * Tests typeOrSearch and TagView components
   * @author Mikko Hilpinen
@@ -46,10 +48,7 @@ object TypeOrSearchTest extends App
 		"Turhake", "Turjake").sorted
 	val search = TypeOrSearch.apply(320, addButtonIcon = Some(addIcon), selectButtonText = "Select",
 		optimalSelectionAreaLength = Some(560), textFieldPrompt = "Type or Search") { w =>
-		if (w.nonEmpty)
-			words.filter { _.containsIgnoreCase(w) }
-		else
-			words
+		Future { if (w.nonEmpty) words.filter { _.containsIgnoreCase(w) } else words }
 	}
 	val tags = TagView.withRemovalEnabled(480, closeIcon)
 	

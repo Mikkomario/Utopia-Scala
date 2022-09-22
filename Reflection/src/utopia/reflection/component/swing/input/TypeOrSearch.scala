@@ -22,7 +22,7 @@ import utopia.reflection.shape.stack.{StackLength, StackLengthLimit}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 
 object TypeOrSearch
@@ -41,8 +41,8 @@ object TypeOrSearch
 	  * @param preferredTextFieldShade Color shade preferred in the text field (default = standard shade)
 	  * @param searchDelay Delay applied before performing the search (good to increase for slower search functions)
 	  *                    (default = no delay)
-	  * @param optionsForInput Function for converting text field input into a list of proposed values.
-	  *                        Run asynchronously. Should not throw.
+	  * @param optionsForInput Asynchronous function for converting text field input into a list of proposed values.
+	  *                        Not expected to throw.
 	  * @param context Implicit component creation context (including font information)
 	  * @param scrollingContext Implicit scroll component creation context
 	  * @param animationContext Implicit component animation context
@@ -53,7 +53,7 @@ object TypeOrSearch
 	          selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
 	          textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorShade = Light,
 	          searchDelay: Duration = Duration.Zero)
-	         (optionsForInput: String => Seq[String])
+	         (optionsForInput: String => Future[Seq[String]])
 	         (implicit context: TextContext, scrollingContext: ScrollingContextLike,
 	          animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger) = new TypeOrSearch(context,
 		optimalTextFieldWidth, addButtonText, addButtonIcon, selectButtonText, selectButtonIcon,
@@ -75,8 +75,8 @@ object TypeOrSearch
   * @param preferredTextFieldShade Color shade preferred in the text field (default = standard shade)
   * @param searchDelay Delay applied before performing the search (good to increase for slower search functions)
   *                    (default = no delay)
-  * @param optionsForInput Function for converting text field input into a list of proposed values.
-  *                        Run asynchronously. Should not throw.
+  * @param optionsForInput Asynchronous function for converting text field input into a list of proposed values.
+  *                        Not expected to throw.
   */
 class TypeOrSearch
 (parentContext: TextContext, optimalTextFieldWidth: Double, addButtonText: LocalizedString = LocalizedString.empty,
@@ -84,7 +84,7 @@ class TypeOrSearch
  selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
  textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorShade = Light,
  searchDelay: Duration = Duration.Zero)
-(optionsForInput: String => Seq[String])
+(optionsForInput: String => Future[Seq[String]])
 (implicit scrollingContext: ScrollingContextLike, animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger)
 	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], ChangingLike[Vector[String]]]
 {
@@ -94,7 +94,7 @@ class TypeOrSearch
 	
 	private implicit val languageCode: String = "en"
 	private implicit val localizer: Localizer = parentContext.localizer
-	private val margin = parentContext.relatedItemsStackMargin
+	// private val margin = parentContext.relatedItemsStackMargin
 	private val selectionColor = parentContext.color(Secondary, Light)
 	private val itemButtonColor = parentContext.colorScheme.secondary.bestAgainst(
 		Vector(parentContext.containerBackground, selectionColor))
@@ -137,7 +137,7 @@ class TypeOrSearch
 	
 	// Updates selectable values when search field content updates (possibly delayed)
 	(if (searchDelay > Duration.Zero) textField.valuePointer.delayedBy(searchDelay) else textField.valuePointer)
-		.mapAsync[Seq[String]](Vector())(optionsForInput).addListener { event =>
+		.mapAsyncCatching[Seq[String]](Vector())(optionsForInput).addListener { event =>
 			// Won't include already selected items
 			val selected = selectedItemsPointer.value
 			manager.content = event.newValue.toVector.filterNot(selected.contains)

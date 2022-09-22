@@ -269,51 +269,79 @@ trait ChangingLike[+A] extends Viewable[A]
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that catches errors, returning a try
-	  * @param exc Implicit execution context
-	  * @tparam B Successful mapping result type
-	  * @return An asynchronously mapped view of this changing item
-	  */
-	def tryMapAsync[B](placeHolderResult: B)(f: A => Try[B])
-					  (implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror.trying(this, placeHolderResult)(f)
-	/**
-	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that may throw errors
-	  * @param exc Implicit execution context
-	  * @tparam B Successful mapping result type
-	  * @return An asynchronously mapped view of this changing item
-	  */
-	def mapAsyncCatching[B](placeHolderResult: B)(f: A => B)
-						   (implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror.catching(this, placeHolderResult)(f)
-	/**
-	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that is not expected to throw errors (if it throws, those errors
-	  *          are printed yet not propagated)
-	  * @param exc Implicit execution context
-	  * @tparam B Mapping result type
-	  * @return An asynchronously mapped view of this changing item
-	  */
-	def mapAsync[B](placeHolderResult: B)(f: A => B)(implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror(this, placeHolderResult)(f)
-	/**
-	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that may throw
-	  * @param merge A function for handling possible error cases and merging gained results with those
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function
+	  * @param merge A function for handling possible error cases and merging received results with those
 	  *              previously acquired
 	  * @param exc Implicit execution context
 	  * @tparam B Type of mapping result
 	  * @tparam R Type of merged / reduced mapping results
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsyncMerging[A2 >: A, B, R](placeHolderResult: R)(f: A2 => B)(merge: (R, Try[B]) => R)
-									  (implicit exc: ExecutionContext) =
-		new AsyncMirror[A2, B, R](this, placeHolderResult)(f)(merge)
+	def mapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
+	                           (f: A2 => Future[B])
+	                           (merge: (R, Try[B]) => R)
+	                           (implicit exc: ExecutionContext) =
+		AsyncMirror[A2, B, R](this, placeHolderResult, skipInitialMap)(f)(merge)
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function that may fail
+	  * @param merge A function for handling possible error cases and merging received results with those
+	  *              previously acquired
+	  * @param exc Implicit execution context
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def tryMapAsync[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	                  (merge: (B, Try[B]) => B)
+	                  (implicit exc: ExecutionContext) =
+		mapAsync(placeHolderResult, skipInitialMap)(f) { (previous, result) => merge(previous, result.flatten) }
+	/**
+	  * Creates an asynchronously mapping view of this changing item.
+	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
+	  * mapping was even requested / as if the value of this pointer didn't change.
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function
+	  * @param exc Implicit execution context
+	  * @param logger An implicit logger that will receive encountered errors
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsyncCatching[B](placeHolderResult: B, skipInitialMap: Boolean = false)
+	                       (f: A => Future[B])
+	                       (implicit exc: ExecutionContext, logger: Logger) =
+		AsyncMirror.catching(this, placeHolderResult, skipInitialMap)(f)
+	/**
+	  * Creates an asynchronously mapping view of this changing item.
+	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
+	  * mapping was even requested / as if the value of this pointer didn't change.
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function that may fail
+	  * @param exc Implicit execution context
+	  * @param logger An implicit logger that will receive encountered errors
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsyncTryCatching[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	                          (implicit exc: ExecutionContext, logger: Logger) =
+		AsyncMirror.tryCatching(this, placeHolderResult, skipInitialMap)(f)
 	
 	/**
 	  * Simulates a change event for the specified listener, if necessary

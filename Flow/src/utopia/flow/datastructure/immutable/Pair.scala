@@ -41,6 +41,13 @@ object Pair
 	  * @return That item twice
 	  */
 	def twice[A](item: A) = apply(item, item)
+	
+	/**
+	  * @param item An item or function that will be called twice (call-by-name)
+	  * @tparam A Type of item stored in this pair
+	  * @return A new pair with two values of the specified function
+	  */
+	def fill[A](item: => A) = apply(item, item)
 }
 
 /**
