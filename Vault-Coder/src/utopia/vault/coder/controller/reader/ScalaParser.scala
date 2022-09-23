@@ -1,7 +1,8 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.flow.collection.{MultiMapBuilder, PollingIterator}
-import utopia.flow.datastructure.mutable.MutatingOnce
+import utopia.flow.collection.immutable.MutatingOnce
+import utopia.flow.collection.mutable.builder.MultiMapBuilder
+import utopia.flow.collection.mutable.iterator.PollingIterator
 import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._

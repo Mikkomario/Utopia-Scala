@@ -1,7 +1,8 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.Constant
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender

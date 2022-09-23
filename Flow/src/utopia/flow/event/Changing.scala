@@ -1,8 +1,9 @@
 package utopia.flow.event
 
 import utopia.flow.async.DelayedView
-import utopia.flow.datastructure.immutable.{Lazy, View}
-import utopia.flow.datastructure.template.{ListenableLazyLike, Viewable}
+import utopia.flow.collection.template.Viewable
+import utopia.flow.collection.template.caching.ListenableLazyLike
+import utopia.flow.collection.value.View
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext

@@ -2,7 +2,8 @@ package utopia.citadel.database.factory.user
 
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.user.UserSettingsModel
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.Model
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps

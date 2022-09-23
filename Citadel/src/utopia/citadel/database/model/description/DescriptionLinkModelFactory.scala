@@ -1,7 +1,7 @@
 package utopia.citadel.database.model.description
 
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.metropolis.model.combined.description.LinkedDescription
 import utopia.metropolis.model.partial.description.{DescriptionData, DescriptionLinkData}
 import utopia.metropolis.model.stored.description.DescriptionLink

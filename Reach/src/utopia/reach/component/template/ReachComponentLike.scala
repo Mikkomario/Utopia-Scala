@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.flow.datastructure.immutable.Tree
+import utopia.flow.collection.value.Tree
 import utopia.flow.event.ChangingLike
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image

@@ -7,7 +7,7 @@ import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.datastructure.template.MapLike
+import utopia.flow.collection.template.MapLike
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource

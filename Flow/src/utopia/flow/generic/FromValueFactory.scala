@@ -1,8 +1,8 @@
 package utopia.flow.generic
 
-import scala.language.implicitConversions
+import utopia.flow.collection.value.typeless.Value
 
-import utopia.flow.datastructure.immutable.Value
+import scala.language.implicitConversions
 
 /**
   * A factory used for parsing items from values

@@ -1,7 +1,8 @@
 package utopia.metropolis.model.stored
 
-import utopia.flow.datastructure.immutable.ModelValidationFailedException
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.ModelValidationFailedException
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.util.CollectionExtensions._
 

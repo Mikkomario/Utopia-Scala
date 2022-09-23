@@ -1,8 +1,8 @@
 package utopia.flow.event
 
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.datastructure.template.ListenableLazyWrapper
+import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
+import utopia.flow.collection.template.caching.ListenableLazyWrapper
 
 object LazyMergeMirror
 {

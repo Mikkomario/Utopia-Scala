@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.device
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.metropolis.model.partial.device.ClientDeviceData
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

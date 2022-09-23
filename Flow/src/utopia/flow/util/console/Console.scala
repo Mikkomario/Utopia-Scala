@@ -1,9 +1,11 @@
 package utopia.flow.util.console
 
-import utopia.flow.async.{Breakable, Volatile, VolatileFlag}
-import utopia.flow.datastructure.immutable.View
-import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.datastructure.template.Viewable
+import utopia.flow.async.process.Breakable
+import utopia.flow.async.Volatile
+import utopia.flow.collection.mutable.async.VolatileFlag
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
+import utopia.flow.collection.template.Viewable
+import utopia.flow.collection.value.View
 import utopia.flow.event.Fixed
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.JsonParser

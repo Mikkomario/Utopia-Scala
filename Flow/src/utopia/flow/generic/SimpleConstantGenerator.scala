@@ -1,7 +1,7 @@
 package utopia.flow.generic
 
+import utopia.flow.collection.value.typeless.{Constant, Value}
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.immutable.Constant
 
 import scala.language.implicitConversions
 

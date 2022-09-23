@@ -1,12 +1,15 @@
 package utopia.vault.database
 
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.{Constant, Value}
+
 import java.nio.file.Path
 import utopia.flow.generic.EnvironmentNotSetupException
 
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.SQLException
-import utopia.flow.datastructure.immutable.{Constant, Lazy, Model, Value}
+import utopia.flow.datastructure.immutable.Value
 
 import java.sql.PreparedStatement
 import utopia.flow.parse.ValueConverterManager
@@ -634,7 +637,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             }
             // NB: view.force is added in order to create a concrete map
             rowBuffer += Row(columnIndices.view.mapValues { data =>
-                Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
+                Model.withConstants(data.map { case (column, sqlType, index) => typeless.Constant(column.name,
                 Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
             }.toMap, otherData)
         }

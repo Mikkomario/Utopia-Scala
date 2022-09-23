@@ -1,6 +1,7 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Constant
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.{DeepExtender, StyledModelConvertible}
 import utopia.metropolis.model.partial.user.UserLanguageLinkData

@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.collection.VolatileList
+import utopia.flow.collection.mutable.async.VolatileList
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try

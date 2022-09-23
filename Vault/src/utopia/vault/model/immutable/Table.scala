@@ -1,7 +1,9 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.immutable.{ModelDeclaration, Pair, Value}
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.datastructure.template.Model
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
 import utopia.vault.model.error.NoReferenceFoundException

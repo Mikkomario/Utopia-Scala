@@ -1,7 +1,8 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import ValueConversions._
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.flow.parse.JsonConvertible
 
 /**

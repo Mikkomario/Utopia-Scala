@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.motion3d
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.Velocity3DType

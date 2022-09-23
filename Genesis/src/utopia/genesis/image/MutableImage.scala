@@ -1,6 +1,6 @@
 package utopia.genesis.image
 
-import utopia.flow.datastructure.mutable.MutableLazy
+import utopia.flow.collection.mutable.caching.lazily.MutableLazy
 import utopia.flow.util.AutoClose._
 import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3

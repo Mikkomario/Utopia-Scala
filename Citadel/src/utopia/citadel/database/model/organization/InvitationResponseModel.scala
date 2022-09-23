@@ -2,7 +2,7 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.factory.organization.InvitationResponseFactory
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.stored.organization.InvitationResponse

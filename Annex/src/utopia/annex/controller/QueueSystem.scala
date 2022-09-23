@@ -5,7 +5,8 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.{ActionQueue, VolatileFlag, Wait}
+import utopia.flow.async.ActionQueue
+import utopia.flow.collection.mutable.async.VolatileFlag
 import utopia.flow.event.Changing
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.Now

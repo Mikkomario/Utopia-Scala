@@ -1,8 +1,9 @@
 package utopia.access.http
 
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.{Model, Pair}
-import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.template
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
@@ -50,7 +51,7 @@ object Headers extends FromModelFactory[Headers]
     
     // IMPLEMENTED    ----------------------
     
-    override def apply(model: template.Model[Property]) = 
+    override def apply(model: typeless.Model[Property]) =
     {
         val fields = model.attributesWithValue
             .flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap

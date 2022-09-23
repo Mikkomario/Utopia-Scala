@@ -1,8 +1,9 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.value.typeless.Value
+
 import scala.collection.immutable.HashMap
 import utopia.flow.generic.DataType
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ConversionHandler
 
 /**

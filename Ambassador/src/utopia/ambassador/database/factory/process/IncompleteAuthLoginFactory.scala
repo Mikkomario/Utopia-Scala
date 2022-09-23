@@ -3,7 +3,8 @@ package utopia.ambassador.database.factory.process
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.process.IncompleteAuthLoginData
 import utopia.ambassador.model.stored.process.IncompleteAuthLogin
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 

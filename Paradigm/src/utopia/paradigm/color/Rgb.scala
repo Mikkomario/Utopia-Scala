@@ -1,8 +1,10 @@
 package utopia.paradigm.color
 
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.ApproximatelyEquatable
@@ -42,7 +44,7 @@ object Rgb extends SureFromModelFactory[Rgb]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def parseFrom(model: template.Model[Property]) = {
+	override def parseFrom(model: typeless.Model[Property]) = {
 		val r = model("red", "r").getDouble
 		val g = model("green", "g").getDouble
 		val b = model("blue", "b").getDouble

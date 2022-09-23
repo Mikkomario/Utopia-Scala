@@ -3,9 +3,11 @@ package utopia.flow.container
 import java.nio.file.Path
 import utopia.flow.async.ProcessState.NotStarted
 import utopia.flow.async.ShutdownReaction.DelayShutdown
-import utopia.flow.async.{CloseHook, DelayedProcess, Process, Volatile, VolatileOption}
+import utopia.flow.async.process.Process
+import utopia.flow.async.context.CloseHook
+import utopia.flow.collection.mutable.async.Volatile
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._

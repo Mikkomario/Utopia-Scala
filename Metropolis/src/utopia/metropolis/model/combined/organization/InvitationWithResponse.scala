@@ -1,7 +1,9 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.Constant
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
@@ -43,12 +45,12 @@ case class InvitationWithResponse(invitation: Invitation, response: Option[Invit
 	
 	override def wrapped = invitation.data
 	
-	override def toModel = invitation.toModel + Constant("response", response.map { _.toModel })
+	override def toModel = invitation.toModel + typeless.Constant("response", response.map { _.toModel })
 	override def toSimpleModel =
 	{
 		val base = invitation.toModel
 		response match {
-			case Some(response) => base + Constant("response", response.toSimpleModel)
+			case Some(response) => base + typeless.Constant("response", response.toSimpleModel)
 			case None => base
 		}
 	}

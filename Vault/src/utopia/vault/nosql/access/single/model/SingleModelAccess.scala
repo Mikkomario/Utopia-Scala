@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.single.model
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.model.template.Joinable

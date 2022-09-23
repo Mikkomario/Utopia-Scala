@@ -1,9 +1,9 @@
 package utopia.disciple.http.response
 
 import java.io.InputStream
-
 import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.{JSONReader, JsonParser, XmlReader}
 import utopia.flow.util.AutoClose._

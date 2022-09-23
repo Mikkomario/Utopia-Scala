@@ -1,6 +1,7 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.{Delay, ThreadPool, Wait}
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.Delay
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangeListener
 import utopia.flow.time.TimeExtensions._

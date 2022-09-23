@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.single.model.distinct
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctReadModelAccess
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps

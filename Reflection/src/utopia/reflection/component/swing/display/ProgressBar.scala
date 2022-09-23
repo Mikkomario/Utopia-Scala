@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.async.VolatileFlag
+import utopia.flow.collection.mutable.async.VolatileFlag
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.animation.Animation

@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 

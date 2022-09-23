@@ -1,6 +1,6 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D

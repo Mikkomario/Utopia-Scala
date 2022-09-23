@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.single.column
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 
 /**
   * Trait for access points that access individual integer ids from a table or a group of tables

@@ -1,6 +1,7 @@
 package utopia.flow.generic
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.datastructure.template.Model
 
 /**
   * A common trait for factories which process model data, but which can also provide a backup in

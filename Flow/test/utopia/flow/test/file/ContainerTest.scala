@@ -1,8 +1,9 @@
 package utopia.flow.test.file
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.container.{ObjectMapFileContainer, ValueConvertibleFileContainer}
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.generic.{DataType, FromModelFactoryWithSchema, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._

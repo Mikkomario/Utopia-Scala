@@ -1,9 +1,9 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.value.typeless.Value
+
 import java.io.{File, InputStream}
 import java.nio.file.Path
-
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 
 import scala.io.Codec

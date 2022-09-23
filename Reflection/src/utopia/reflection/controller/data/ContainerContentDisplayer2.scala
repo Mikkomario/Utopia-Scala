@@ -1,6 +1,6 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.async.Volatile
+import utopia.flow.collection.mutable.async.Volatile
 import utopia.flow.event.ChangingLike
 import utopia.flow.operator.EqualsFunction
 import utopia.reflection.component.template.ComponentLike2

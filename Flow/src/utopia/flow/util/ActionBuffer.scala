@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 
 import scala.collection.immutable.VectorBuilder
 

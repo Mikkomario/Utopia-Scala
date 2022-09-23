@@ -1,6 +1,6 @@
 package utopia.vault.model.template
 
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 

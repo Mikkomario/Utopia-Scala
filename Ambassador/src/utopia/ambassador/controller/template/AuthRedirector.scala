@@ -4,7 +4,7 @@ import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.exodus.util.ExodusContext.logger
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection

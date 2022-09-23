@@ -1,7 +1,8 @@
 package utopia.reflection.image
 
+import utopia.flow.collection.immutable.caching.cache.ReleasingCache
+
 import java.nio.file.Path
-import utopia.flow.caching.multi.ReleasingCache
 import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image

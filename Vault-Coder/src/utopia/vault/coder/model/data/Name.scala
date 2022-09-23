@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.FromValueFactory
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.operator.EqualsExtensions._

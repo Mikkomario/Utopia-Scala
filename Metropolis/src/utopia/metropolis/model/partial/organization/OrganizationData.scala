@@ -1,9 +1,11 @@
 package utopia.metropolis.model.partial.organization
 
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Model
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -13,7 +15,7 @@ import scala.util.Success
 
 object OrganizationData extends FromModelFactory[OrganizationData]
 {
-	override def apply(model: template.Model[Property]) =
+	override def apply(model: typeless.Model[Property]) =
 		Success(OrganizationData(model("creator_id"), model("created")))
 }
 

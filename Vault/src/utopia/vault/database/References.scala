@@ -1,6 +1,7 @@
 package utopia.vault.database
 
-import utopia.flow.datastructure.immutable.{Pair, Tree}
+import utopia.flow.collection.value.Tree
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.flow.operator.Sign
 import utopia.flow.util.CollectionExtensions._

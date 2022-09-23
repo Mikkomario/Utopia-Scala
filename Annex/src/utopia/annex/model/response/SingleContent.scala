@@ -1,6 +1,7 @@
 package utopia.annex.model.response
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.FromModelFactory
 
 /**

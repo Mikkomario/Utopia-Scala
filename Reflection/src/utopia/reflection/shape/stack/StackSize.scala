@@ -1,6 +1,6 @@
 package utopia.reflection.shape.stack
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D

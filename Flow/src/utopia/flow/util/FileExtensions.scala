@@ -6,7 +6,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
 import StringExtensions._
-import utopia.flow.datastructure.mutable.PollableOnce
+import utopia.flow.collection.mutable.iterator.PollableOnce
 
 import scala.language.implicitConversions
 import scala.jdk.CollectionConverters._

@@ -7,7 +7,7 @@ import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.exodus.model.enumeration.ExodusScope.JoinOrganization
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
 import utopia.metropolis.model.partial.organization.InvitationResponseData

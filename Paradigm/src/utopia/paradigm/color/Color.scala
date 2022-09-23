@@ -1,7 +1,7 @@
 package utopia.paradigm.color
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.mutable.Pointer
+import utopia.flow.collection.mutable.Pointer
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.operator.EqualsExtensions._

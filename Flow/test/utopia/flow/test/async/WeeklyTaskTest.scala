@@ -1,6 +1,6 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.WeeklyTask
+import utopia.flow.async.process.WeeklyTask
 import utopia.flow.generic.DataType
 import utopia.flow.time.WeekDay
 import utopia.flow.time.TimeExtensions._

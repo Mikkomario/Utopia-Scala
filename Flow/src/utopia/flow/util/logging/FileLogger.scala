@@ -1,6 +1,6 @@
 package utopia.flow.util.logging
 
-import utopia.flow.datastructure.mutable.DeprecatingLazy
+import utopia.flow.collection.mutable.caching.lazily.DeprecatingLazy
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
 import utopia.flow.util.CollectionExtensions._

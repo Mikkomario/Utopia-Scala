@@ -1,5 +1,6 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.util.AutoClose._
 import utopia.flow.generic.ValueConversions._
 
@@ -7,7 +8,7 @@ import java.io.{BufferedInputStream, ByteArrayInputStream, File, FileInputStream
 import java.nio.charset.Charset
 import javax.xml.stream.XMLInputFactory
 import java.nio.charset.StandardCharsets
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.StringType
 
 import java.nio.file.Path

@@ -1,7 +1,7 @@
 package utopia.vault.database
 
-import utopia.flow.async.{ActionQueue, Volatile}
-import utopia.flow.collection.VolatileList
+import utopia.flow.async.ActionQueue
+import utopia.flow.collection.mutable.async.VolatileList
 import utopia.vault.model.immutable.{Table, TableUpdateEvent}
 
 import scala.concurrent.ExecutionContext

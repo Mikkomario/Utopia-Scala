@@ -1,6 +1,6 @@
 package utopia.metropolis.model.stored.language
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.combined.description.LinkedDescription

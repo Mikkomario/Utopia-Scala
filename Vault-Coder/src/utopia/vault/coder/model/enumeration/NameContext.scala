@@ -1,7 +1,8 @@
 package utopia.vault.coder.model.enumeration
 
-import utopia.flow.collection.OptionsIterator
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.datastructure.template.Model
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.util.ScopeUsable
 import utopia.vault.coder.model.data.{Name, NamingRules}

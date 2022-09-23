@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.code
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.operator.Combinable
 import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._

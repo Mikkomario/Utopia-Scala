@@ -1,6 +1,6 @@
 package utopia.annex.model
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 
 /**
   * A common trait for classes which represent items before they are recorded on server side. Even server side instances

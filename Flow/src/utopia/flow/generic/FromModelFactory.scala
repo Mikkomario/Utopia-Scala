@@ -1,7 +1,6 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.template.Model
-import utopia.flow.datastructure.template.Property
+import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.parse.{JSONReader, JsonParser}
 
 import scala.util.Try

@@ -1,8 +1,8 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.citadel.util.CitadelContext
-import utopia.flow.datastructure.mutable.{ExpiringLazy, RefreshingLazy}
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.collection.template.caching.LazyLike
+import utopia.flow.datastructure.mutable.RefreshingLazy
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole

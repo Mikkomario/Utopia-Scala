@@ -1,9 +1,7 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.PropertyDeclaration
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.datastructure.mutable.Variable
+import utopia.flow.collection.mutable.typeless.Variable
+import utopia.flow.collection.value.typeless.{ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.operator.Equatable
 
 /**

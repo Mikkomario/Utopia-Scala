@@ -1,9 +1,10 @@
 package utopia.vault.database
 
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.parse.ValueConverter
 import utopia.flow.generic.StringType
 import utopia.flow.generic.DataType
-import utopia.flow.datastructure.immutable.Value
+
 import scala.collection.immutable.HashSet
 import utopia.flow.generic.InstantType
 import utopia.flow.generic.BooleanType
@@ -11,11 +12,14 @@ import utopia.flow.generic.IntType
 import utopia.flow.generic.LongType
 import utopia.flow.generic.FloatType
 import utopia.flow.generic.DoubleType
+
 import java.sql.Types
 import java.sql.Timestamp
 import utopia.flow.generic.LocalDateType
+
 import java.sql.Date
 import utopia.flow.generic.LocalTimeType
+
 import java.sql.Time
 
 /**

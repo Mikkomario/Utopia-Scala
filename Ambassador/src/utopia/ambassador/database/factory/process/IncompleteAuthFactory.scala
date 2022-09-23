@@ -4,7 +4,8 @@ import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.database.model.process.IncompleteAuthModel
 import utopia.ambassador.model.partial.process.IncompleteAuthData
 import utopia.ambassador.model.stored.process.IncompleteAuth
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable

@@ -1,8 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.{Combinable, LinearScalable}
@@ -17,7 +19,7 @@ import scala.util.Success
 
 object Circle extends FromModelFactory[Circle]
 {
-    override def apply(model: template.Model[Property]) =
+    override def apply(model: typeless.Model[Property]) =
         Success(Circle(model("origin").getPoint, model("radius").getDouble))
 }
 

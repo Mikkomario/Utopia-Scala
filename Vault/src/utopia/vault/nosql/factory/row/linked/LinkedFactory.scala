@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.row.linked
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.vault.model.error.NoModelDataInRowException
 import utopia.vault.model.immutable.Row
 import utopia.vault.nosql.factory.LinkedFactoryLike

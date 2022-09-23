@@ -1,8 +1,8 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.mutable.Tree
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.mutable.Tree
+import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.value.typeless.{Model, Value}
 
 import scala.language.existentials
 
@@ -63,7 +63,7 @@ object DurationType extends DataType("Duration", classOf[scala.concurrent.durati
   * Days type represents a length of time, measured in days
   */
 object DaysType extends DataType("Days", classOf[utopia.flow.time.Days])
-object PairType extends DataType("Pair", classOf[utopia.flow.datastructure.immutable.Pair[Value]])
+object PairType extends DataType("Pair", classOf[Pair[Value]])
 /**
  * Vector type stands for a vector of values. Only Vectors with exact parameter type of Value
  * are accepted

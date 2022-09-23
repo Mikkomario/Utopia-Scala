@@ -1,7 +1,7 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.template.Property
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.operator.Equatable
 
 /**

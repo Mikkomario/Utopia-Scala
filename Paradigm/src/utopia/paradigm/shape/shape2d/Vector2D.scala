@@ -1,8 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Pair, Value}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions.RichSeqLike
@@ -35,7 +37,7 @@ object Vector2D extends SureFromModelFactory[Vector2D]
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def parseFrom(model: template.Model[Property]) =
+	override def parseFrom(model: typeless.Model[Property]) =
 		apply(model("x").getDouble, model("y").getDouble)
 	
 	

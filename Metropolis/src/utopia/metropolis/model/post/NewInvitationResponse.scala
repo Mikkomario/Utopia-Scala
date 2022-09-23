@@ -1,6 +1,6 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.collection.value.typeless.{Model, PropertyDeclaration}
 import utopia.flow.generic.{BooleanType, FromModelFactoryWithSchema, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 

@@ -1,6 +1,6 @@
 package utopia.reach.component.wrapper
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.event.ChangingLike
 import utopia.reach.component.template.ReachComponentLike
 

@@ -1,8 +1,9 @@
 package utopia.journey.model
 
 import utopia.annex.model.Spirit
-import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.{Constant, PropertyDeclaration}
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.NewInvitationResponse

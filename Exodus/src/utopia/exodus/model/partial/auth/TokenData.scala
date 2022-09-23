@@ -5,7 +5,7 @@ import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.database.access.single.auth.{DbToken, DbTokenType}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle

@@ -1,6 +1,7 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.{Loop, SynchronizedLoops, ThreadPool}
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.{Loop, SynchronizedLoops}
 import utopia.flow.generic.DataType
 import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._

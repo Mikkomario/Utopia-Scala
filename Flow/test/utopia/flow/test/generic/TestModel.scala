@@ -1,8 +1,9 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.Equatable
@@ -11,7 +12,7 @@ import scala.util.{Failure, Success}
 
 object TestModel extends FromModelFactory[TestModel]
 {
-    def apply(model: template.Model[Property]) = 
+    def apply(model: typeless.Model[Property]) =
     {
         val name = model("name").string
         

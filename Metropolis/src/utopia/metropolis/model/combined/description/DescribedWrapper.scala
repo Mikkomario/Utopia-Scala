@@ -1,6 +1,7 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
@@ -15,5 +16,5 @@ trait DescribedWrapper[+A <: ModelConvertible] extends Extender[A] with Describe
 	// IMPLEMENTED	-----------------------
 	
 	override def toModel = wrapped.toModel +
-		Constant("descriptions", descriptions.map { _.toModel }.toVector)
+		typeless.Constant("descriptions", descriptions.map { _.toModel }.toVector)
 }

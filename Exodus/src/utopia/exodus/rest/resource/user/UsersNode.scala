@@ -16,7 +16,8 @@ import utopia.exodus.rest.resource.user.me.MeNode
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.util.{ExodusContext, PasswordHash}
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.metropolis.model.combined.user.DetailedUser
@@ -107,9 +108,9 @@ object UsersNode extends Resource[AuthorizedContext]
 							}
 							
 							val resultModel = user.toModelWith(token.modelStyle) ++
-								(Constant("session_token", tokenToModel(newSessionToken, sessionTokenString)) +:
+								(typeless.Constant("session_token", tokenToModel(newSessionToken, sessionTokenString)) +:
 									refreshToken.toVector.map { case (token, tokenString) =>
-										Constant("refresh_token", tokenToModel(token, tokenString))
+										typeless.Constant("refresh_token", tokenToModel(token, tokenString))
 									})
 							Result.Success(resultModel, Created)
 						case Failure(error) =>

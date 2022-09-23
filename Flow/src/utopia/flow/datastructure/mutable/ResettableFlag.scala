@@ -1,5 +1,6 @@
 package utopia.flow.datastructure.mutable
 
+import utopia.flow.collection.mutable.{Resettable, Settable}
 import utopia.flow.datastructure.immutable.FlagView
 import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 

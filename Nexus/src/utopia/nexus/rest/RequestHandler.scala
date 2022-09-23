@@ -1,7 +1,7 @@
 package utopia.nexus.rest
 
 import utopia.access.http.Status._
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.AutoClose._

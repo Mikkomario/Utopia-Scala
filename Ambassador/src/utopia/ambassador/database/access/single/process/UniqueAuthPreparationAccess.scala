@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.ambassador.database.factory.process.AuthPreparationFactory
 import utopia.ambassador.database.model.process.AuthPreparationModel
 import utopia.ambassador.model.stored.process.AuthPreparation
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

@@ -1,7 +1,8 @@
 package utopia.flow.container
 
+import utopia.flow.collection.value.typeless.Value
+
 import java.nio.file.Path
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.parse.JsonParser
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.logging.Logger

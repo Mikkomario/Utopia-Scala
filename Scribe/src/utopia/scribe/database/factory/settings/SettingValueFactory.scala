@@ -1,6 +1,6 @@
 package utopia.scribe.database.factory.settings
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.scribe.database.ScribeTables
 import utopia.scribe.database.model.settings.SettingValueModel
 import utopia.scribe.model.partial.settings.SettingValueData

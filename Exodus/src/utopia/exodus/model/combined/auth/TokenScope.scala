@@ -2,7 +2,8 @@ package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.partial.auth.ScopeData
 import utopia.exodus.model.stored.auth.{Scope, TokenScopeLink}
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
 import utopia.metropolis.model.StyledModelConvertible
@@ -26,10 +27,10 @@ case class TokenScope(scope: Scope, tokenLink: TokenScopeLink) extends Extender[
 	
 	override def wrapped = scope.data
 	
-	override def toModel = scope.toModel + Constant("token_link", tokenLink.toModel)
+	override def toModel = scope.toModel + typeless.Constant("token_link", tokenLink.toModel)
 	
 	override def toSimpleModel = scope.toSimpleModel ++ Vector(
-		Constant("is_directly_accessible", tokenLink.isDirectlyAccessible),
-		Constant("grants_forward", tokenLink.grantsForward))
+		typeless.Constant("is_directly_accessible", tokenLink.isDirectlyAccessible),
+		typeless.Constant("grants_forward", tokenLink.grantsForward))
 }
 

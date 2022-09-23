@@ -1,8 +1,11 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.template.TreeLike
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.parse.XmlElementLike.isAllowedInContent
 import utopia.flow.util.CollectionExtensions._
@@ -56,7 +59,7 @@ object XmlElementLike
  * @since 13.1.2017 (v1.3)
  */
 trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
-    extends template.TreeLike[NamespacedString, Repr] with ModelConvertible
+    extends TreeLike[NamespacedString, Repr] with ModelConvertible
 {
     // ABSTRACT --------------------------------
     
@@ -145,13 +148,13 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         {
             // Case: Empty element with no attributes => Converts to name value pair
             if (attributes.isEmpty)
-                Left(Constant(localName, value))
+                Left(typeless.Constant(localName, value))
             // Case: Empty element with attributes => returns those
             else if (text.isEmpty)
                 Right(attributes.attributes)
             // Case: Attributes and value are defined => wraps them into a model, possibly overwriting 'value' attribute
             else
-                Right((attributes + Constant("value", value)).attributes)
+                Right((attributes + typeless.Constant("value", value)).attributes)
         }
         // Case: Wraps a single child => Attempts to convert it into a single property
         else if (children.size == 1)
@@ -174,7 +177,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Case: All children have the same name and can therefore be expressed as a single array
         else if (children.map { _.localName }.toSet.size == 1) {
             // val childName = children.head.name
-            val childrenProperty = Constant(localName, groupChildren(children))
+            val childrenProperty = typeless.Constant(localName, groupChildren(children))
             propertyWithAttributes(childrenProperty)
         }
         else
@@ -182,7 +185,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             val childConstants = children.map { _.localName }.distinct.map { childName =>
                 val children = childrenWithName(childName)
                 if (children.size > 1)
-                    Constant(childName, groupChildren(children))
+                    typeless.Constant(childName, groupChildren(children))
                 else
                     children.head.toConstants match {
                         case Left(constant) =>
@@ -197,7 +200,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Right(childConstants)
             else if (childConstants.exists { c => attributes.contains(c.name) })
                 Right(Vector(
-                    Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
+                    typeless.Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
             else
                 Right(attributes.attributes ++ childConstants)
         }
@@ -367,7 +370,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         if (attributes.isEmpty)
             Left(property)
         else if (attributes.contains(property.name) && property.name.toLowerCase != "attributes")
-            Right(Vector(Constant("attributes", attributes), property))
+            Right(Vector(typeless.Constant("attributes", attributes), property))
         else
             Right((attributes + property).attributes)
     }

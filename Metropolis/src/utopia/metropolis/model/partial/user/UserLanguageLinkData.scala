@@ -1,9 +1,11 @@
 package utopia.metropolis.model.partial.user
 
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.{Model, PropertyDeclaration}
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactoryWithSchema, IntType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -34,7 +36,7 @@ object UserLanguageLinkData extends FromModelFactoryWithSchema[UserLanguageLinkD
 	  * @param model Model being parsed
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
-	def apply(userId: Int, model: template.Model[Property]): Try[UserLanguageLinkData] =
+	def apply(userId: Int, model: typeless.Model[Property]): Try[UserLanguageLinkData] =
 		withoutUserSchema.validate(model).toTry.map { valid =>
 			UserLanguageLinkData(userId, valid("language_id"), valid("familiarity_id"))
 		}

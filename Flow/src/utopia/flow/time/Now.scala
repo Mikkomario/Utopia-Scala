@@ -1,10 +1,10 @@
 package utopia.flow.time
 
 import scala.language.implicitConversions
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.generic.ValueConversions._
 import TimeExtensions._
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.util.RichComparable
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}

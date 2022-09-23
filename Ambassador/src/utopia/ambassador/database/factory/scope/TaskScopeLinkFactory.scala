@@ -3,7 +3,7 @@ package utopia.ambassador.database.factory.scope
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.scope.TaskScopeLinkData
 import utopia.ambassador.model.stored.scope.TaskScopeLink
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**

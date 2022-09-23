@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.exodus.database.factory.auth.EmailValidationPurposeFactory
 import utopia.exodus.model.partial.auth.EmailValidationPurposeData
 import utopia.exodus.model.stored.auth.EmailValidationPurpose
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter

@@ -1,6 +1,7 @@
 package utopia.vault.nosql.factory.row.model
 
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.vault.model.immutable.{Row, Storable, Table}
 import utopia.vault.nosql.factory.row.FromRowFactory

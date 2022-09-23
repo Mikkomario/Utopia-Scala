@@ -1,7 +1,7 @@
 package utopia.reach.component.input.selection
 
+import utopia.flow.collection.template.Viewable
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.datastructure.template.Viewable
 import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler

@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.motion1d
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
 import utopia.flow.time.TimeExtensions._

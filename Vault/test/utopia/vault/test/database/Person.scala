@@ -1,5 +1,6 @@
 package utopia.vault.test.database
 
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
@@ -19,7 +20,7 @@ object Person extends FromValidatedRowModelFactory[Person]
     
     override def defaultOrdering = None
     
-    override protected def fromValidatedModel(model: immutable.Model) = new Person(model("name").getString,
+    override protected def fromValidatedModel(model: Model) = new Person(model("name").getString,
         model("age").int, model("isAdmin").getBoolean, model("created").getInstant, model("rowId").int)
 }
 

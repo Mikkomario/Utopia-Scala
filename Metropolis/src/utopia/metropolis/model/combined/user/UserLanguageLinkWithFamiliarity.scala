@@ -1,6 +1,7 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
 import utopia.metropolis.model.StyledModelConvertible
@@ -28,9 +29,9 @@ case class UserLanguageLinkWithFamiliarity(languageLink: UserLanguageLink, famil
 	
 	override def wrapped = languageLink.data
 	
-	override def toModel = languageLink.toModel + Constant("familiarity", familiarity.toModel)
+	override def toModel = languageLink.toModel + typeless.Constant("familiarity", familiarity.toModel)
 	
 	override def toSimpleModel =
-		languageLink.toSimpleModel - "familiarity_id" + Constant("familiarity", familiarity.toSimpleModel)
+		languageLink.toSimpleModel - "familiarity_id" + typeless.Constant("familiarity", familiarity.toSimpleModel)
 }
 

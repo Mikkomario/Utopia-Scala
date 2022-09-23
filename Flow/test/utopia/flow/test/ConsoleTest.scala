@@ -1,6 +1,6 @@
 package utopia.flow.test
 
-import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents}
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.{JSONReader, JsonParser}

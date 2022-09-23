@@ -1,11 +1,11 @@
 package utopia.flow.filesearch
 
 import java.nio.file.Path
-
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.FileExtensions._
-import utopia.flow.async.{Volatile, VolatileLazy}
-import utopia.flow.datastructure.immutable.Tree
+import utopia.flow.async.VolatileLazy
+import utopia.flow.collection.mutable.async.Volatile
+import utopia.flow.collection.value.Tree
 import utopia.flow.filesearch.ExcavationStatus.{Finished, Passed, Started, Unexplored}
 
 import scala.concurrent.{ExecutionContext, Future}

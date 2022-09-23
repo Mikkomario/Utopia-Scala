@@ -1,7 +1,8 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 
 /**
   * Represents a relatively simple request that may be sent multiple times if need be

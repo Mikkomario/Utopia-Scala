@@ -1,7 +1,7 @@
 package utopia.flow.async
 
 import AsyncExtensions._
-import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.collection.immutable.caching.lazily.Lazy
 import utopia.flow.event.{ChangeDependency, ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, TripleMergeMirror}
 
 import scala.concurrent.duration.Duration

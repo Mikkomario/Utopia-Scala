@@ -1,9 +1,9 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.immutable.{ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic._
 import ValueConversions._
-import utopia.flow.datastructure.mutable.Model
+import utopia.flow.collection.mutable.typeless.Model
+import utopia.flow.collection.value.typeless.PropertyDeclaration
 
 /**
  *

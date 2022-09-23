@@ -1,7 +1,7 @@
 package utopia.vault.coder.main
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.util.FileExtensions._
 
 import java.nio.file.Path

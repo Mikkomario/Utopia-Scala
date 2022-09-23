@@ -2,9 +2,8 @@ package utopia.bunnymunch.jawn
 
 import java.io.{File, InputStream}
 import java.nio.file.Path
-
 import org.typelevel.jawn.Parser
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.util.StringFrom
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser

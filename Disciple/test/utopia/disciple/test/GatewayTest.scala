@@ -9,10 +9,10 @@ import utopia.flow.generic.DataType
 import utopia.access.http.Method._
 import utopia.access.http.Status
 import utopia.disciple.apache.Gateway
-import utopia.flow.datastructure.immutable.Model
 
 import java.io.File
 import utopia.disciple.http.request.{FileBody, Request}
+import utopia.flow.collection.value.typeless.Model
 
 /**
  * Tests the Gateway interface

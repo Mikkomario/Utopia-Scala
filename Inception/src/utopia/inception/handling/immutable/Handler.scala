@@ -1,6 +1,6 @@
 package utopia.inception.handling.immutable
 
-import utopia.flow.collection.VolatileList
+import utopia.flow.collection.mutable.async.VolatileList
 import utopia.inception.handling.{HandlerType, Mortal}
 
 object Handler

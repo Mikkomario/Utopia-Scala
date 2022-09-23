@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.exodus.database.factory.auth.TokenScopeLinkFactory
 import utopia.exodus.database.model.auth.TokenScopeLinkModel
 import utopia.exodus.model.stored.auth.TokenScopeLink
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

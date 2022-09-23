@@ -1,8 +1,9 @@
 package utopia.flow.container
 
+import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.value.typeless.{Constant, Value}
 import utopia.flow.container.SaveTiming.Immediate
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.datastructure.template.MapLike
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser

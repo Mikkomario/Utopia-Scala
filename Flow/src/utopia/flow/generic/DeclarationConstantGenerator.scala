@@ -1,10 +1,8 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.{Constant, ModelDeclaration, Value}
 
-class DeclarationConstantGenerator(declaration: ModelDeclaration, 
+class DeclarationConstantGenerator(declaration: ModelDeclaration,
         defaultValue: Value = Value.empty) extends
         DeclarationPropertyGenerator(Constant.apply, declaration, defaultValue)
 {

@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.window
 
-import utopia.flow.async.Delay
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import javax.swing.JFrame
@@ -177,6 +178,6 @@ class Frame[C <: Stackable with AwtContainerRelated](override val content: C,
      */
     def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) = {
         implicit val logger: Logger = SysErrLogger
-        closeFuture.onComplete { _ => Delay(delay) { System.exit(0) } }
+        closeFuture.onComplete { _ => process.Delay(delay) { System.exit(0) } }
     }
 }

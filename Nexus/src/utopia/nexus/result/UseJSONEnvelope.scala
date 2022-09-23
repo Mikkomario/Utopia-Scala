@@ -3,8 +3,7 @@ package utopia.nexus.result
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Request
 import utopia.access.http.{Status, StatusGroup}
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.nexus.http.Response
 
 /**

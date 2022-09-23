@@ -1,6 +1,6 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 
 /**

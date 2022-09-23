@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.ambassador.database.factory.token.AuthTokenFactory
 import utopia.ambassador.database.model.token.AuthTokenModel
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.database.Connection

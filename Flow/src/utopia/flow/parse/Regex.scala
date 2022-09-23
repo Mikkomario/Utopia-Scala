@@ -1,8 +1,8 @@
 package utopia.flow.parse
 
-import utopia.flow.datastructure.immutable.{Lazy, Pair}
-import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.datastructure.template.Viewable
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
+import utopia.flow.collection.template.Viewable
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.util.CollectionExtensions._
 
 import java.util.regex.{Matcher, Pattern}

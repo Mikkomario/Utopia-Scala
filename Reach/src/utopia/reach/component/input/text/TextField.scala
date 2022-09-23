@@ -1,6 +1,6 @@
 package utopia.reach.component.input.text
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangeListener, ChangingLike, DetachmentChoice, Fixed}
 import utopia.flow.generic.ValueConversions._

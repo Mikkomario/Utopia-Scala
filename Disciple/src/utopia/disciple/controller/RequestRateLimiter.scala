@@ -1,7 +1,7 @@
 package utopia.disciple.controller
 
-import utopia.flow.async.{Breakable, Volatile, Wait}
-import utopia.flow.collection.VolatileList
+import utopia.flow.async.process.Breakable
+import utopia.flow.collection.mutable.async.{Volatile, VolatileList}
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._

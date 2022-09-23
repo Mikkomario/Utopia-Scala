@@ -1,8 +1,10 @@
 package utopia.vault.model.mutable
 
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.sql._
@@ -21,7 +23,7 @@ trait Readable extends Storable
      * Updates data in this object. This object may not use all of the data in the update
      * @param data the updated properties
      */
-	def set(data: template.Model[Property]): Unit
+	def set(data: typeless.Model[Property]): Unit
 	
 	
 	// COMPUTED    ---------------------
@@ -59,7 +61,7 @@ trait Readable extends Storable
 	 * Updates data in this object, then updates the database as well. Only works when this object
 	 * has an index
 	 */
-	def setAndUpdate(data: template.Model[Property])(implicit connection: Connection) =
+	def setAndUpdate(data: typeless.Model[Property])(implicit connection: Connection) =
 	{
 	    set(data)
 	    updateProperties(data.attributeNames)
@@ -69,7 +71,7 @@ trait Readable extends Storable
 	 * Updates data in this object, then pushes all data to the database. May insert a new row.
 	 * May update the index for this object.
 	 */
-	def setAndPush(data: template.Model[Property], writeNulls: Boolean = false)(implicit connection: Connection) =
+	def setAndPush(data: typeless.Model[Property], writeNulls: Boolean = false)(implicit connection: Connection) =
 	{
 	    set(data)
 	    // Updates the index as well

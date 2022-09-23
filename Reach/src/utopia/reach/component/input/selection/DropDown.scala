@@ -1,6 +1,6 @@
 package utopia.reach.component.input.selection
 
-import utopia.flow.datastructure.immutable.View
+import utopia.flow.collection.value.View
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}

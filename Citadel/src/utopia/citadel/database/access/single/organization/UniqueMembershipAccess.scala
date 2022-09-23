@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.organization
 import java.time.Instant
 import utopia.citadel.database.factory.organization.MembershipFactory
 import utopia.citadel.database.model.organization.MembershipModel
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.stored.organization.Membership

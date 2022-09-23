@@ -1,6 +1,6 @@
 package utopia.flow.parse
 
-import utopia.flow.collection.PollingIterator
+import utopia.flow.collection.mutable.iterator.PollingIterator
 
 import java.io.PrintWriter
 

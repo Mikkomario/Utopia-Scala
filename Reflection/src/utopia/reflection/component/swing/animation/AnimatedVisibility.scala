@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.animation
 
-import utopia.flow.async.Volatile
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.mutable.async.Volatile
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps

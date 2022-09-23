@@ -1,8 +1,9 @@
 package utopia.metropolis.model.combined.device
 
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
@@ -15,7 +16,7 @@ object DetailedClientDevice extends FromModelFactory[DetailedClientDevice]
 {
 	// IMPLEMENTED	----------------------
 	
-	override def apply(model: template.Model[Property]) =
+	override def apply(model: Model[Property]) =
 		DescribedClientDevice(model).map { device =>
 			apply(device,
 				model("user_links").getVector.flatMap { _.model }.flatMap { ClientDeviceUser(_).toOption }.toSet)
@@ -56,5 +57,5 @@ case class DetailedClientDevice(describedDevice: DescribedClientDevice, userLink
 		wrapped.toSimpleModelUsing(descriptionRoles) + Constant("user_ids", userIds.toVector.sorted)
 	
 	override def toModel =
-		describedDevice.toModel + Constant("user_links", userLinks.toVector.map { _.toModel })
+		describedDevice.toModel + typeless.Constant("user_links", userLinks.toVector.map { _.toModel })
 }

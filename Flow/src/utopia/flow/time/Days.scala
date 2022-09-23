@@ -1,6 +1,6 @@
 package utopia.flow.time
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.{DaysType, ValueConvertible}
 import utopia.flow.util.SelfComparable
 

@@ -1,7 +1,8 @@
 package utopia.flow.generic
 
+import utopia.flow.collection.value.typeless.Value
+
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.time.Days
 
 import scala.concurrent.duration.FiniteDuration

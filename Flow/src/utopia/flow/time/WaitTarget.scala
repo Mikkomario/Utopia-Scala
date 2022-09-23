@@ -1,6 +1,7 @@
 package utopia.flow.time
 
-import utopia.flow.async.{ShutdownReaction, Wait}
+import utopia.flow.async.Wait
+import utopia.flow.async.process.{ShutdownReaction, Wait}
 import utopia.flow.operator.Zeroable
 import utopia.flow.time.TimeExtensions._
 

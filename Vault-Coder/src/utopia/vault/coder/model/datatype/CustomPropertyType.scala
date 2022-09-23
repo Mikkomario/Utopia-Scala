@@ -1,8 +1,10 @@
 package utopia.vault.coder.model.datatype
 
-import utopia.flow.datastructure.immutable.{ModelDeclaration, ModelValidationFailedException}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.ModelValidationFailedException
+import utopia.flow.datastructure.immutable.ModelValidationFailedException
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.generic.{FromModelFactory, StringType}
 import utopia.flow.parse.Regex
@@ -35,7 +37,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: template.Model[template.Property]) =
+	override def apply(model: Model[Property]) =
 		schema.validate(model).toTry.flatMap { model =>
 			// from_value, from_values and to_value must all exist and contain the appropriate parameter placeholder
 			ensureFunctions(model, Vector("from_value", "to_value", "option_from_value")).flatMap { _ =>

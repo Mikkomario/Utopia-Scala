@@ -1,6 +1,6 @@
 package utopia.paradigm.angular
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.util.SelfComparable

@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Private

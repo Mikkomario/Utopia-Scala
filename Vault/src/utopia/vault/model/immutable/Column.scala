@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.immutable.{PropertyDeclaration, Value}
+import utopia.flow.collection.value.typeless.{PropertyDeclaration, Value}
 import utopia.flow.generic.DataType
 import utopia.vault.database.References
 import utopia.vault.model.error.{ColumnNotFoundException, NoReferenceFoundException}

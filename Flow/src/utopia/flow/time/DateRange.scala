@@ -1,7 +1,8 @@
 package utopia.flow.time
 
 import TimeExtensions._
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.generic.{FromModelFactoryWithSchema, LocalDateType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.DateRange.dateFormat

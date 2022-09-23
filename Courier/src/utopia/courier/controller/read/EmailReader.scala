@@ -3,7 +3,7 @@ package utopia.courier.controller.read
 import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.NeverDelete
 import utopia.courier.model.read.{DeletionRule, ReadSettings}
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.AutoCloseWrapper

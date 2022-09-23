@@ -1,7 +1,7 @@
 package utopia.flow.event
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.template.Property
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Value
 
 object PropertyChangeEvent
 {

@@ -1,5 +1,6 @@
 package utopia.vault.test.database
 
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
@@ -11,7 +12,7 @@ object IndexStorable extends FromValidatedRowModelFactory[IndexStorable]
 	
 	override def defaultOrdering = None
 	
-	override protected def fromValidatedModel(model: immutable.Model) = IndexStorable(model("id").int, model("text").string)
+	override protected def fromValidatedModel(model: Model) = IndexStorable(model("id").int, model("text").string)
 	
 	def apply(id: Int, text: String): IndexStorable = IndexStorable(Some(id), Some(text))
 }

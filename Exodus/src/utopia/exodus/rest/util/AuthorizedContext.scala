@@ -16,7 +16,8 @@ import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token}
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.logger
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._

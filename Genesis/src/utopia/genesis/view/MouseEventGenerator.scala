@@ -2,7 +2,7 @@ package utopia.genesis.view
 
 import java.awt.{Component, MouseInfo}
 import java.awt.event.{MouseEvent, MouseListener, MouseWheelListener}
-import utopia.flow.async.{ActionQueue, VolatileOption}
+import utopia.flow.async.ActionQueue
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.Actor

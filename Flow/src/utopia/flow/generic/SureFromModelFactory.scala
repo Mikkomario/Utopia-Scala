@@ -1,5 +1,6 @@
 package utopia.flow.generic
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.datastructure.template.Model
 
 import scala.util.Success
 

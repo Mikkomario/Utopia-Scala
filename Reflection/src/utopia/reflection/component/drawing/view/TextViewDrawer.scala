@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.datastructure.template.Viewable
+import utopia.flow.collection.template.Viewable
 import utopia.flow.event.ChangingLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel

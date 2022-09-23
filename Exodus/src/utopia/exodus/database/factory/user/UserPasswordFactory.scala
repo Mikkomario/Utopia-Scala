@@ -3,7 +3,7 @@ package utopia.exodus.database.factory.user
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.user.UserPasswordData
 import utopia.exodus.model.stored.user.UserPassword
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**

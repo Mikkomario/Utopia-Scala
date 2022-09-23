@@ -4,7 +4,8 @@ import java.util.concurrent.TimeUnit
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.service.AuthServiceSettingsData
 import utopia.ambassador.model.stored.service.AuthServiceSettings
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 

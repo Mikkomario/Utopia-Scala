@@ -1,6 +1,6 @@
 package utopia.reach.component.input
 
-import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.color.Color

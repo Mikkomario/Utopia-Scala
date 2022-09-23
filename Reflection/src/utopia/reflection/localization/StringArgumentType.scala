@@ -1,6 +1,6 @@
 package utopia.reflection.localization
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueConvertible
 

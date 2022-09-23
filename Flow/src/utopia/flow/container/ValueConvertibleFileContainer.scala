@@ -1,7 +1,7 @@
 package utopia.flow.container
 
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.container.SaveTiming.Immediate
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.logging.Logger

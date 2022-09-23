@@ -1,7 +1,7 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.mutable.GraphNode
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.mutable.graph.GraphNode
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.util.CollectionExtensions._
 
 import scala.collection.mutable

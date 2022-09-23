@@ -1,7 +1,8 @@
 package utopia.scribe.model.partial.logging
 
+import utopia.flow.collection.value.typeless.Model
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now

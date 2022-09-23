@@ -1,6 +1,7 @@
 package utopia.reach.component.input.text
 
-import utopia.flow.async.Delay
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -194,7 +195,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 								// Focus transfer is slightly delayed to avoid duplicate key event triggering
 								if (event.newValue.length == maxLength &&
 									event.oldValue.length != maxLength && sourceField.hasFocus)
-									Delay(focusTransferDelay) { targetField.requestFocus() }
+									process.Delay(focusTransferDelay) { targetField.requestFocus() }
 							}
 						}
 					}

@@ -1,6 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.async.LoopingProcess
+import utopia.flow.async.process.LoopingProcess
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.model.immutable.{Reference, Table}

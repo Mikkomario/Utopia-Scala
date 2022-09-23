@@ -1,6 +1,7 @@
 package utopia.flow.test.event
 
-import utopia.flow.async.{ChangeFuture, Delay, Wait}
+import utopia.flow.async.ChangeFuture
+import utopia.flow.async.process.Delay
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.DataType
 import utopia.flow.time.Now

@@ -1,8 +1,9 @@
 package utopia.flow.util
 
 import utopia.flow.async.ShutdownReaction.SkipDelay
-import utopia.flow.async.{Process, ProcessState, Volatile, VolatileOption, Wait}
-import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.async.process.ProcessState
+import utopia.flow.async.VolatileOption
+import utopia.flow.collection.immutable.caching.lazily.Lazy
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._

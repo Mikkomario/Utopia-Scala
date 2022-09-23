@@ -1,8 +1,9 @@
 package utopia.nexus.result
 
 import utopia.access.http.ContentCategory._
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.access.http.Status
+import utopia.flow.collection.value.typeless.Value
 import utopia.nexus.http.Request
 
 /**

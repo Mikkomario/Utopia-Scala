@@ -1,16 +1,18 @@
 package utopia.nexus.test.servlet
 
+import utopia.flow.collection.value.typeless.Model
+
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Response
 import utopia.flow.generic.DataType
+
 import javax.servlet.annotation.MultipartConfig
 import utopia.nexus.servlet.HttpExtensions._
 import utopia.nexus.http.ServerSettings
 import utopia.flow.datastructure.mutable
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.nexus.http.Body
 

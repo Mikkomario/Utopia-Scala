@@ -1,9 +1,11 @@
 package utopia.flow.parse
 
-import java.io.{File, InputStream}
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.{Constant, Value}
 
+import java.io.{File, InputStream}
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.{DoubleType, IntType, LongType}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringFrom
@@ -165,14 +167,14 @@ object JSONReader extends JsonParser
 				
 				if (separatorBeforeEvent.exists { _ > range.end })
 				{
-					buffer += Constant(propertyName, parseStringAssignment(data.json, quoteRange.end, range.end))
+					buffer += typeless.Constant(propertyName, parseStringAssignment(data.json, quoteRange.end, range.end))
 					isCompleted = true
 				}
 				else if (separatorBeforeEvent.isDefined)
 				{
 					// In case of a simple string, parses it and assigns it to a constant
 					// Expects the string to contain an assignment portion, which is not parsed of course
-					buffer += Constant(propertyName, parseStringAssignment(data.json, quoteRange.end,
+					buffer += typeless.Constant(propertyName, parseStringAssignment(data.json, quoteRange.end,
 						separatorBeforeEvent.get))
 					
 					// Moves to the next separator afterwards
@@ -199,7 +201,7 @@ object JSONReader extends JsonParser
 				}
 				else
 				{
-					buffer += Constant(propertyName, parseStringAssignment(data.json, quoteRange.end, range.end))
+					buffer += typeless.Constant(propertyName, parseStringAssignment(data.json, quoteRange.end, range.end))
 					isCompleted = true
 				}
 			}

@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.code
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.FromValueFactory
 import utopia.flow.operator.Combinable
 import utopia.vault.coder.model.scala.datatype.Reference

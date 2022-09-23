@@ -1,7 +1,9 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.datastructure.immutable.{ModelValidationFailedException, Value}
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.{ModelValidationFailedException, Value}
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.operator.ApproximatelyZeroable
 import utopia.flow.util.CollectionExtensions._

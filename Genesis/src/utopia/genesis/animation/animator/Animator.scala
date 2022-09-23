@@ -1,6 +1,6 @@
 package utopia.genesis.animation.animator
 
-import utopia.flow.async.ResettableVolatileLazy
+import utopia.flow.collection.mutable.async.ResettableVolatileLazy
 import utopia.genesis.handling.mutable.{Actor, Drawable}
 import utopia.genesis.util.Drawer
 

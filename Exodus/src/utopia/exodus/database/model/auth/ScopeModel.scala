@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.exodus.database.factory.auth.ScopeFactory
 import utopia.exodus.model.partial.auth.ScopeData
 import utopia.exodus.model.stored.auth.Scope
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter

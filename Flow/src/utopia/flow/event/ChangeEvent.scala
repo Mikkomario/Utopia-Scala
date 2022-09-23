@@ -1,6 +1,6 @@
 package utopia.flow.event
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 
 object ChangeEvent
 {

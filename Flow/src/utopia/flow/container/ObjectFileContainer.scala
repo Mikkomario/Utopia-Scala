@@ -1,8 +1,9 @@
 package utopia.flow.container
 
+import utopia.flow.collection.value.typeless.Value
+
 import java.nio.file.Path
 import utopia.flow.container.SaveTiming.Immediate
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser

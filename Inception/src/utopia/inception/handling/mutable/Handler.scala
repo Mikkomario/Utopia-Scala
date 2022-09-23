@@ -1,8 +1,7 @@
 package utopia.inception.handling.mutable
 
+import utopia.flow.collection.mutable.async.VolatileList
 import utopia.inception.handling
-
-import utopia.flow.collection.VolatileList
 import utopia.inception.handling.HandlerType
 
 object Handler

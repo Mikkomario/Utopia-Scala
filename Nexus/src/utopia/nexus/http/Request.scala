@@ -1,10 +1,9 @@
 package utopia.nexus.http
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Value
 import utopia.access.http.Method
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.flow.time.Now
 
 import java.time.Instant

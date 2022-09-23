@@ -1,7 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.VolatileList
+import utopia.flow.collection.mutable.async.VolatileList
 import utopia.flow.event.ChangingLike
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}

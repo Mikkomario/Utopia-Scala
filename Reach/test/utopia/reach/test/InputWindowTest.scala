@@ -1,6 +1,5 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
@@ -21,6 +20,7 @@ import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
 import ManagedField._
+import utopia.flow.collection.value.typeless.Model
 import utopia.reach.component.input.check.{CheckBox, ContextualCheckBoxFactory}
 import utopia.reach.component.input.selection.{ContextualRadioButtonGroupFactory, RadioButtonGroup}
 import utopia.reach.component.input.text.{ContextualDurationFieldFactory, ContextualTextFieldFactory, DurationField, TextField}

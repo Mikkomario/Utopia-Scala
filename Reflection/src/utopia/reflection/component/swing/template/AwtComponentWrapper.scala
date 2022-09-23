@@ -1,9 +1,9 @@
 package utopia.reflection.component.swing.template
 
+import utopia.flow.collection.mutable.caching.lazily.MutableLazy
+
 import java.awt.Component
 import java.awt.event.MouseEvent
-
-import utopia.flow.datastructure.mutable.MutableLazy
 import utopia.flow.util.NullSafe._
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}

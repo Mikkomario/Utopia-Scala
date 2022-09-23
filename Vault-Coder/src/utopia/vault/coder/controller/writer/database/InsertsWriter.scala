@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.{BooleanType, DoubleType, FloatType, IntType, LongType}
 import utopia.flow.time.Today
 import utopia.flow.util.CollectionExtensions._

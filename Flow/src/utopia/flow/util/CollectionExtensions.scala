@@ -1,9 +1,9 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator, ZipPadIterator}
-import utopia.flow.datastructure.immutable.{Lazy, Pair}
-import utopia.flow.datastructure.mutable.PollableOnce
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.collection.mutable.iterator.{FoldingIterator, LimitedLengthIterator, PairingIterator, PollableOnce}
+import utopia.flow.collection.LazyVector
+import utopia.flow.collection.template.caching.LazyLike
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.event.IteratorWithEvents
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.util.logging.Logger

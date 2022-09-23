@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.vault.sql.Join
 
 object Reference

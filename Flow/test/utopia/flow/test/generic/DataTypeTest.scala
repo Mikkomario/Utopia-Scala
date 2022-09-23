@@ -1,9 +1,9 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.mutable.GraphNode
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic._
 import ValueConversions._
+import utopia.flow.collection.mutable.graph.GraphNode
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.collection.immutable.HashSet

@@ -5,9 +5,9 @@ import utopia.annex.controller.QueueSystem
 import utopia.annex.model.request.GetRequest
 import utopia.annex.model.schrodinger.{CachedFindSchrodinger, CompletedSchrodinger}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.container.SaveTiming.Delayed
 import utopia.flow.container.{ModelFileContainer, ObjectsFileContainer}
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._

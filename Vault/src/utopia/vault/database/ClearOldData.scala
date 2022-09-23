@@ -1,6 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.async.LoopingProcess
+import utopia.flow.async.process.LoopingProcess
 
 import java.time.{Instant, LocalTime}
 import utopia.flow.generic.ValueConversions._

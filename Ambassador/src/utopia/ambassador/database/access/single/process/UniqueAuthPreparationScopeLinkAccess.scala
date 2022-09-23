@@ -3,7 +3,7 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.AuthPreparationScopeLinkFactory
 import utopia.ambassador.database.model.process.AuthPreparationScopeLinkModel
 import utopia.ambassador.model.stored.process.AuthPreparationScopeLink
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

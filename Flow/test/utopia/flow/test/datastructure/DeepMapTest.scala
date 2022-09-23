@@ -1,6 +1,6 @@
 package utopia.flow.test.datastructure
 
-import utopia.flow.datastructure.immutable.DeepMap
+import utopia.flow.collection.value.iterable.DeepMap
 
 /**
   * Tests DeepMap data structure

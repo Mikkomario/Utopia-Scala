@@ -1,6 +1,7 @@
 package utopia.flow.util.console
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.collection.value.typeless.{Constant, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser

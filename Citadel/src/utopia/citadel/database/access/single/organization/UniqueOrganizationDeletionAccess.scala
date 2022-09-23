@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.organization
 import java.time.Instant
 import utopia.citadel.database.factory.organization.OrganizationDeletionFactory
 import utopia.citadel.database.model.organization.OrganizationDeletionModel
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.OrganizationDeletion
 import utopia.vault.database.Connection

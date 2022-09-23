@@ -21,8 +21,9 @@ import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.datastructure.template.MapLike
+import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.value.typeless.Constant
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

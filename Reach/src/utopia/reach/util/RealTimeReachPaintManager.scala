@@ -1,6 +1,6 @@
 package utopia.reach.util
 
-import utopia.flow.async.{Volatile, VolatileOption}
+import utopia.flow.async.VolatileOption
 import utopia.flow.operator.Sign
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.image.Image

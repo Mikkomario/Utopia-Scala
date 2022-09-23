@@ -5,11 +5,11 @@ import utopia.access.http.ContentCategory._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
-import java.io.{BufferedReader, File, FileOutputStream, OutputStream}
 
+import java.io.{BufferedReader, File, FileOutputStream, OutputStream}
 import utopia.access.http.ContentType
 import utopia.access.http.Headers
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.DataTypeException
 
 import scala.util.{Success, Try}

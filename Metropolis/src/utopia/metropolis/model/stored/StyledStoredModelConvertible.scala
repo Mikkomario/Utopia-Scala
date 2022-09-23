@@ -1,6 +1,6 @@
 package utopia.metropolis.model.stored
 
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.StyledModelConvertible
 

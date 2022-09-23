@@ -1,8 +1,8 @@
 package utopia.reflection.container.template.window
 
-import scala.language.implicitConversions
+import utopia.flow.collection.value.typeless.Value
 
-import utopia.flow.datastructure.immutable.Value
+import scala.language.implicitConversions
 import utopia.flow.generic.ValueConvertible
 import utopia.reflection.component.template.input.Input
 import utopia.reflection.localization.LocalizedString

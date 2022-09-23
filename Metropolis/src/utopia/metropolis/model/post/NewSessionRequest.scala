@@ -1,8 +1,9 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{ModelConvertible, SureFromModelFactory}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -23,7 +24,7 @@ object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def parseFrom(model: template.Model[Property]) =
+	override def parseFrom(model: typeless.Model[Property]) =
 		NewSessionRequest(model("model_style", "style").string.flatMap(ModelStyle.findForKey),
 			model("duration_minutes", "duration").int.map { _.minutes },
 			model("request_refresh_token"), model("revoke_previous"))

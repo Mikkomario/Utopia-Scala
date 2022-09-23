@@ -1,7 +1,7 @@
 package utopia.flow.test.datastructure
 
-import utopia.flow.async.{ThreadPool, Wait}
-import utopia.flow.collection.WeakList
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.immutable.WeakList
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 

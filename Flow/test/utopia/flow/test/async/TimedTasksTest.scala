@@ -2,7 +2,8 @@ package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ProcessState.{Completed, NotStarted, Running, Stopped}
-import utopia.flow.async.{ThreadPool, TimedTasks, Volatile, Wait}
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.TimedTasks
 import utopia.flow.generic.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

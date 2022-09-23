@@ -1,9 +1,9 @@
 package utopia.reflection.container.stack
 
-import utopia.flow.async.LoopingProcess
-import utopia.flow.collection.VolatileList
-import utopia.flow.datastructure.immutable.GraphEdge
-import utopia.flow.datastructure.mutable.GraphNode
+import utopia.flow.async.process.LoopingProcess
+import utopia.flow.collection.mutable.async.VolatileList
+import utopia.flow.collection.mutable.graph.GraphNode
+import utopia.flow.collection.value.graph.GraphEdge
 import utopia.flow.util.Counter
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps

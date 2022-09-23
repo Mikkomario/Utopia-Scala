@@ -1,7 +1,8 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.collection.value.typeless.ModelDeclaration
+import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.{FromModelFactory, IntType, StringType, VectorType}
 import utopia.flow.util.CollectionExtensions._
 

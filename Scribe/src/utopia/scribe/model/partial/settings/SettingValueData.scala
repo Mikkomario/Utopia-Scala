@@ -1,7 +1,9 @@
 package utopia.scribe.model.partial.settings
 
+import utopia.flow.collection.value.typeless.Value
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now

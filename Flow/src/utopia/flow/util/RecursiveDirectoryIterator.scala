@@ -2,7 +2,7 @@ package utopia.flow.util
 
 import CollectionExtensions._
 import FileExtensions._
-import utopia.flow.datastructure.mutable.PollableOnce
+import utopia.flow.collection.mutable.iterator.PollableOnce
 
 import java.nio.file.Path
 import scala.util.{Failure, Success, Try}

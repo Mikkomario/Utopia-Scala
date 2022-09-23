@@ -1,6 +1,6 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 
 /**
  * Objects extending this trait can easily be converted / wrapped to values

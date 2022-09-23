@@ -1,8 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Pair, Value}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.LinearMeasurable
@@ -30,7 +32,7 @@ object Line extends FromModelFactory[Line]
     
     // OPERATORS    -------------------------
     
-    override def apply(model: template.Model[Property]) = Success(Line(model("start").getPoint, model("end").getPoint))
+    override def apply(model: typeless.Model[Property]) = Success(Line(model("start").getPoint, model("end").getPoint))
     
     
     // OTHER METHODS    ---------------------

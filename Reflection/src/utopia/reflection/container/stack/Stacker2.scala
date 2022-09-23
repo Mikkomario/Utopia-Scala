@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack
 
-import utopia.flow.datastructure.mutable.Pointer
+import utopia.flow.collection.mutable.Pointer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.template.layout.stack.Stackable2

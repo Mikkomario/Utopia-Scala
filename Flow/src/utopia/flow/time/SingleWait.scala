@@ -1,7 +1,8 @@
 package utopia.flow.time
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.{Breakable, VolatileFlag}
+import utopia.flow.async.process.Breakable
+import utopia.flow.collection.mutable.async.VolatileFlag
 
 import scala.concurrent.Promise
 

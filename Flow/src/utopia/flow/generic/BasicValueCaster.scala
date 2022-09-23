@@ -2,7 +2,8 @@ package utopia.flow.generic
 
 import utopia.flow.generic.ConversionReliability.{CONTEXT_LOSS, DANGEROUS, DATA_LOSS, MEANING_LOSS, PERFECT}
 import ValueConversions._
-import utopia.flow.datastructure.immutable.{Model, Pair, Value}
+import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.flow.parse.JSONReader
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._

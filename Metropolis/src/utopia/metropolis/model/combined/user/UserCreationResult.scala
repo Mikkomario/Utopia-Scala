@@ -1,8 +1,9 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, IntType, ModelType, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -14,7 +15,7 @@ object UserCreationResult extends FromModelFactory[UserCreationResult]
 	private val schema = ModelDeclaration("id" -> IntType, "session_token" -> StringType,
 		"data" -> ModelType)
 	
-	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: typeless.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		UserWithLinks(valid("data").getModel).map { userData =>
 			UserCreationResult(valid("id"), userData, valid("session_token"), valid("device_id"), valid("device_token"))
 		}

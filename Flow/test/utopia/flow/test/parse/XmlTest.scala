@@ -1,6 +1,6 @@
 package utopia.flow.test.parse
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.{XmlElement, XmlReader, XmlWriter}

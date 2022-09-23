@@ -3,7 +3,7 @@ package utopia.reflection.util
 import java.time.Instant
 import javax.swing.SwingUtilities
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.VolatileList
+import utopia.flow.collection.mutable.async.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._

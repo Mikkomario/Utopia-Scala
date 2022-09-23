@@ -1,6 +1,6 @@
 package utopia.metropolis.model.cached
 
-import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.collection.immutable.caching.lazily.Lazy
 import utopia.flow.util.Extender
 
 object LanguageIds

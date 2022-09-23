@@ -1,7 +1,8 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.value.typeless.Value
+
 import scala.collection.immutable.HashSet
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.{BooleanType, DataType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LongType, ModelType, StringType, VectorType}
 import utopia.flow.util.StringExtensions._
 

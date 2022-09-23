@@ -1,7 +1,7 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.DataType
-import utopia.flow.datastructure.immutable.Value
 
 /**
  * Value converters are able to process certain types of values into other types of information

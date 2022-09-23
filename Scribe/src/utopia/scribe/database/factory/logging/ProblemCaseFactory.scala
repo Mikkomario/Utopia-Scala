@@ -1,6 +1,6 @@
 package utopia.scribe.database.factory.logging
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.scribe.database.ScribeTables
 import utopia.scribe.model.partial.logging.ProblemCaseData
 import utopia.scribe.model.stored.logging.ProblemCase

@@ -1,7 +1,7 @@
 package utopia.flow.event
 
-import utopia.flow.async.SynchronousExecutionContext
-import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.async.context.SynchronousExecutionContext
+import utopia.flow.collection.immutable.caching.lazily.Lazy
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext

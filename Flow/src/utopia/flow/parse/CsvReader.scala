@@ -1,8 +1,9 @@
 package utopia.flow.parse
 
-import java.nio.file.Path
+import utopia.flow.collection.value.typeless.{Constant, Model}
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import java.nio.file.Path
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.util.IterateLines
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._

@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.data
 
+import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.SureFromModelFactory
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.coder.model.enumeration.{NameContext, NamingConvention}
@@ -13,7 +13,7 @@ object NamingRules extends SureFromModelFactory[NamingRules]
 	  */
 	val default = apply(Map[NameContext, NamingConvention]())
 	
-	override def parseFrom(model: Model[template.Property]) =
+	override def parseFrom(model: Model[Property]) =
 		apply(NameContext.values.flatMap { c =>
 			model(c.jsonProps).string.flatMap(NamingConvention.forName).map { c -> _ }
 		}.toMap)

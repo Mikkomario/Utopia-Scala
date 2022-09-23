@@ -15,8 +15,8 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.logger
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.collection.LazyVector
-import utopia.flow.datastructure.template.MapLike
+import utopia.flow.collection.immutable.caching.iterable.LazyVector
+import utopia.flow.collection.template.MapLike
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.Path

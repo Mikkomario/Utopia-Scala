@@ -1,6 +1,6 @@
 package utopia.paradigm.generic
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.DataTypeException
 import utopia.flow.util.CollectionExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}

@@ -2,7 +2,8 @@ package utopia.flow.time
 
 import utopia.flow.time.WaitTarget.{Until, UntilNotified, WaitDuration}
 import TimeExtensions._
-import utopia.flow.async.Delay
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
 import utopia.flow.util.logging.SysErrLogger
 
 import java.time.Instant
@@ -76,5 +77,5 @@ object WaitUtils
 	def delayed[A](waitDuration: Duration, lock: AnyRef = new AnyRef)
 	              (operation: => A)
 	              (implicit exc: ExecutionContext) =
-		Delay(waitDuration, lock)(operation)(exc, SysErrLogger)
+		process.Delay(waitDuration, lock)(operation)(exc, SysErrLogger)
 }

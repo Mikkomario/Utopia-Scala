@@ -4,13 +4,13 @@ import utopia.flow.util.NullSafe._
 
 import scala.jdk.CollectionConverters._
 import utopia.access.http.ContentCategory._
+
 import javax.servlet.http.HttpServletResponse
 import utopia.nexus.http.Response
+
 import javax.servlet.http.HttpServletRequest
 import utopia.nexus.http.Path
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.parse.JsonParser
-import utopia.flow.datastructure.immutable.Value
 
 import scala.util.{Success, Try}
 import utopia.nexus.http.Request
@@ -19,7 +19,9 @@ import utopia.access.http.Method
 import utopia.access.http.Headers
 import utopia.access.http.Cookie
 import utopia.access.http.ContentType
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.nexus.http.StreamedBody
+
 import javax.servlet.http.Part
 import java.io.BufferedReader
 import java.io.InputStreamReader

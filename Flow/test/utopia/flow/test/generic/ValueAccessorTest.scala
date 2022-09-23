@@ -1,6 +1,7 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.collection.value.typeless.Constant
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 

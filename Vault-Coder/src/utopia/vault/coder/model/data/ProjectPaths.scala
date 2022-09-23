@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.collection.value.typeless.Model
+import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._

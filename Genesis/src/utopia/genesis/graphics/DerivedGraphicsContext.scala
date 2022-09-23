@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape3d.Matrix3D
 

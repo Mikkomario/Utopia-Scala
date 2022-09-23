@@ -1,8 +1,10 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents, Settable}
-import utopia.flow.datastructure.template.{LazyLike, Viewable}
+import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.collection.mutable.{Pointer, Settable}
+import utopia.flow.collection.template.Viewable
+import utopia.flow.collection.template.caching.LazyLike
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}

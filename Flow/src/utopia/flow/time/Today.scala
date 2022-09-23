@@ -1,7 +1,8 @@
 package utopia.flow.time
 
+import utopia.flow.collection.value.typeless.Value
+
 import scala.language.implicitConversions
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.TimeExtensions.ExtendedLocalDate

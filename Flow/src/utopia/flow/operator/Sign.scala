@@ -1,6 +1,6 @@
 package utopia.flow.operator
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.flow.util.SelfComparable
 
 /**

@@ -6,8 +6,8 @@ import utopia.exodus.model.enumeration.ExodusScope._
 import utopia.exodus.rest.resource.ExodusResources
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
-import utopia.flow.async.ThreadPool
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.DataType
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.FileExtensions._

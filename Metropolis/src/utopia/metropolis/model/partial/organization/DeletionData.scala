@@ -1,8 +1,8 @@
 package utopia.metropolis.model.partial.organization
 
-import java.time.Instant
+import utopia.flow.collection.value.typeless.Model
 
-import utopia.flow.datastructure.immutable.Model
+import java.time.Instant
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 

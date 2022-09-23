@@ -3,7 +3,8 @@ package utopia.nexus.test
 import utopia.access.http.Method
 import utopia.access.http.Method._
 import utopia.access.http.Status._
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JSONReader

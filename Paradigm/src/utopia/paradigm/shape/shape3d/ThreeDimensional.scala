@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape3d
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.value.iterable.Pair
 import utopia.paradigm.enumeration.Axis.Z
 import utopia.paradigm.shape.shape2d.MultiDimensional
 

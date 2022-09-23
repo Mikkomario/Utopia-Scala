@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.device
 import java.time.Instant
 import utopia.citadel.database.factory.device.ClientDeviceFactory
 import utopia.citadel.database.model.device.ClientDeviceModel
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.database.Connection

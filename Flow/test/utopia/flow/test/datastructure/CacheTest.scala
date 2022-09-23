@@ -1,10 +1,12 @@
 package utopia.flow.test.datastructure
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.context.ThreadPool
 import utopia.flow.caching.multi._
 import utopia.flow.caching.single.{ClearableSingleCache, ExpiringSingleCache, SingleAsyncCache, SingleTryCache}
-import utopia.flow.datastructure.mutable.Pointer
+import utopia.flow.collection.immutable.caching
+import utopia.flow.collection.immutable.caching.cache.TryCache
+import utopia.flow.collection.mutable.Pointer
 import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -143,7 +145,7 @@ object CacheTest extends App
 	
 	// TryCache
 	cacheRequests = 0
-	val tryCache = TryCache[Int, Int](failureTime) { i =>
+	val tryCache = caching.cache.TryCache[Int, Int](failureTime) { i =>
 		cacheRequests += 1
 		if (i < 0) Failure(new NullPointerException()) else Success(i)
 	}

@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.metropolis.model.partial.organization.OrganizationData
 import utopia.metropolis.model.stored.organization.Organization
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

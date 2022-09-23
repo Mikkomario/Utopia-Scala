@@ -1,11 +1,13 @@
 package utopia.flow.parse
 
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.TreeLike
+import utopia.flow.collection.value.typeless.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.immutable.{Constant, Model, TreeLike, Value}
 import utopia.flow.generic.StringType
 import utopia.flow.generic.FromModelFactory
-import utopia.flow.datastructure.template.Property
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
@@ -16,7 +18,7 @@ object XmlElement extends FromModelFactory[XmlElement]
 {
     // IMPLEMENTED  -----------------------
     
-    def apply(model: template.Model[Property]): Try[XmlElement] = {
+    def apply(model: typeless.Model[Property]): Try[XmlElement] = {
         model("name").string.map { name =>
             val namespacedName = {
                 if (name.contains(':')) {
@@ -45,7 +47,7 @@ object XmlElement extends FromModelFactory[XmlElement]
      * were missing.
      */
     // TODO: Handle vector value types and instead of model, accept value
-    def apply(name: NamespacedString, model: template.Model[Property]): XmlElement =
+    def apply(name: NamespacedString, model: typeless.Model[Property]): XmlElement =
     {
         // Value is either in 'value' or 'text' attribute
         val valueAttribute = model.findExisting("value")

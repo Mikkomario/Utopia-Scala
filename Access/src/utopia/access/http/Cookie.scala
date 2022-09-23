@@ -1,12 +1,12 @@
 package utopia.access.http
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 
 import scala.util.{Failure, Success, Try}
 
@@ -16,7 +16,7 @@ object Cookie extends FromModelFactory[Cookie]
      * Parses a cookie from the provided model. The model must have a 'name' property or None is 
      * returned.
      */
-    override def apply(model: template.Model[Property]): Try[Cookie] =
+    override def apply(model: typeless.Model[Property]): Try[Cookie] =
     {
         // Name property is required
         val name = model("name").string

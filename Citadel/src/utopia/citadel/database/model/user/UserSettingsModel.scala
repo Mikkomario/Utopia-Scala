@@ -2,7 +2,7 @@ package utopia.citadel.database.model.user
 
 import java.time.Instant
 import utopia.citadel.database.factory.user.UserSettingsFactory
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings

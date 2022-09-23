@@ -1,6 +1,7 @@
 package utopia.reach.container.wrapper
 
-import utopia.flow.caching.multi.{Cache, CacheLike}
+import utopia.flow.collection.immutable.caching.cache.Cache
+import utopia.flow.collection.template.caching.CacheLike
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangingLike
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory

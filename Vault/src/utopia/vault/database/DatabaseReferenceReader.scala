@@ -1,13 +1,12 @@
 package utopia.vault.database
 
+import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.StringType
 import utopia.vault.sql.Select
 import utopia.vault.sql.Where
 import utopia.vault.sql.SqlExtensions._
 import utopia.vault.sql.ConditionElement
-import utopia.flow.datastructure.template.Model
-import utopia.flow.datastructure.template.Property
 import utopia.vault.model.immutable.{Column, Reference, Table}
 
 /**

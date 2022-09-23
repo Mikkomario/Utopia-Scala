@@ -2,7 +2,7 @@ package utopia.ambassador.model.partial.process
 
 import utopia.ambassador.model.enumeration.AuthCompletionType
 import utopia.ambassador.model.enumeration.AuthCompletionType.{Default, DenialOfAccess, PartialSuccess}
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 

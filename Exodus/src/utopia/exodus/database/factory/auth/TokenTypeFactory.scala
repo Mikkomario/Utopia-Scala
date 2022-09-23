@@ -5,7 +5,7 @@ import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.auth.TokenTypeData
 import utopia.exodus.model.stored.auth.TokenType
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**

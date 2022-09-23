@@ -1,5 +1,6 @@
 package utopia.flow.datastructure.mutable
 
+import utopia.flow.collection.mutable.Settable
 import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 
 /**

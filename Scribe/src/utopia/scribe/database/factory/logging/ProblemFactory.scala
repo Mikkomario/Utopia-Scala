@@ -1,7 +1,7 @@
 package utopia.scribe.database.factory.logging
 
+import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.scribe.database.ScribeTables
 import utopia.scribe.model.enumeration.Severity
 import utopia.scribe.model.partial.logging.ProblemData
@@ -22,7 +22,7 @@ object ProblemFactory extends FromRowModelFactory[Problem] with FromRowFactoryWi
 	
 	override def table = ScribeTables.problem
 	
-	override def apply(model: template.Model[Property]) = {
+	override def apply(model: Model[Property]) = {
 		table.validate(model).flatMap{ valid => 
 			Severity.forId(valid("severity").getInt).map { severity => 
 				Problem(valid("id").getInt, ProblemData(valid("context").getString, severity, 

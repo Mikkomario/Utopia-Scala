@@ -1,6 +1,6 @@
 package utopia.paradigm.color
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
+import utopia.flow.collection.value.typeless.{Model, PropertyDeclaration, Value}
 import utopia.flow.generic.{DoubleType, FromModelFactoryWithSchema, ModelConvertible, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.ApproximatelyEquatable

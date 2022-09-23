@@ -1,9 +1,9 @@
 package utopia.reflection.test.swing
 
-import java.awt.Color
+import utopia.flow.async.process.Loop
 
+import java.awt.Color
 import javax.swing.JLabel
-import utopia.flow.async.Loop
 import utopia.flow.generic.DataType
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.shape.shape2d.Size

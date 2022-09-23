@@ -1,7 +1,8 @@
 package utopia.reflection.test.swing
 
+import utopia.flow.async.process.LoopingProcess
+
 import java.awt.event.KeyEvent
-import utopia.flow.async.LoopingProcess
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.WaitDuration

@@ -1,6 +1,6 @@
 package utopia.reflection.event
 
-import utopia.flow.datastructure.template.Viewable
+import utopia.flow.collection.template.Viewable
 import utopia.flow.event.AlwaysTrue
 import utopia.genesis.event.KeyStatus
 

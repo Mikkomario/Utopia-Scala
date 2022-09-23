@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.flow.async.Loop
+import utopia.flow.async.process.Loop
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmDataType

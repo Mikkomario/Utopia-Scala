@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 
 /**
   * Represents an actual class instance

@@ -13,7 +13,8 @@ import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._

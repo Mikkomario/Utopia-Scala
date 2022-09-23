@@ -1,7 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.async.ChangeFuture
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 import utopia.flow.event.{AlwaysFalse, ChangeDependency, ChangeListener, Changing, ChangingLike}
 import utopia.flow.util.CollectionExtensions._
 

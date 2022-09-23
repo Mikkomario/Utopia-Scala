@@ -2,8 +2,8 @@ package utopia.exodus.util
 
 import utopia.access.http.Status
 import utopia.citadel.util.CitadelContext
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.collection.template.caching.LazyLike
 import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.metropolis.model.enumeration.ModelStyle

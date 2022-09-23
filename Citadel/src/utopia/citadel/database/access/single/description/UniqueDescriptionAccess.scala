@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.description
 import java.time.Instant
 import utopia.citadel.database.factory.description.DescriptionFactory
 import utopia.citadel.database.model.description.DescriptionModel
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.description.Description
 import utopia.vault.database.Connection

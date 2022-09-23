@@ -1,7 +1,8 @@
 package utopia.flow.event
 
 import utopia.flow.async.AsyncMirror
-import utopia.flow.datastructure.template.{ListenableLazyLike, Viewable}
+import utopia.flow.collection.template.Viewable
+import utopia.flow.collection.template.caching.ListenableLazyLike
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future, Promise}

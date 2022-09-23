@@ -1,6 +1,6 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 
 import java.time.Instant
 import scala.language.implicitConversions

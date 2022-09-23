@@ -1,7 +1,8 @@
 package utopia.ambassador.model.partial.process
 
+import utopia.flow.collection.value.typeless.Model
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

@@ -1,7 +1,7 @@
 package utopia.flow.util
 
-import utopia.flow.datastructure.mutable.ResettableLazy
 import CollectionExtensions._
+import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
 import utopia.flow.parse.Regex
 
 /**

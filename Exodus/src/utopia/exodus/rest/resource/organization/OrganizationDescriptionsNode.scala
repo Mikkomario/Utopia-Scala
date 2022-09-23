@@ -7,7 +7,7 @@ import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOr
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.model.enumeration.ExodusTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.SimplyDescribed

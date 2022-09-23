@@ -1,6 +1,6 @@
 package utopia.reach.window
 
-import utopia.flow.datastructure.template.Viewable
+import utopia.flow.collection.template.Viewable
 import utopia.flow.event.AlwaysTrue
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener

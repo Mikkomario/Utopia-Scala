@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.language
 import java.time.Instant
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
 import utopia.citadel.database.model.language.LanguageFamiliarityModel
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection

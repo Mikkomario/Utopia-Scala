@@ -1,6 +1,6 @@
 package utopia.reflection.image
 
-import utopia.flow.caching.multi.WeakCache
+import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Size, SizedLike}

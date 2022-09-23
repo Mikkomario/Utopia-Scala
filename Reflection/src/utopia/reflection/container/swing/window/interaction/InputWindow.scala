@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.flow.async.Delay
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.paradigm.enumeration.Direction2D
@@ -131,7 +132,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 					}
 					
 					// Closes the pop-up if any key is pressed or after a delay
-					Delay(5.seconds) { popup.close() }
+					process.Delay(5.seconds) { popup.close() }
 					popup.display(false)
 					None -> false
 			}

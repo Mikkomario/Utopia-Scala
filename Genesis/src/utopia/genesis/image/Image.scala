@@ -1,10 +1,11 @@
 package utopia.genesis.image
 
+import utopia.flow.collection.immutable.caching.lazily.LazyWrapper
+import utopia.flow.collection.template.caching.LazyLike
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.NullSafe._
-import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.datastructure.immutable.LazyWrapper
 import utopia.flow.operator.LinearScalable
 import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3

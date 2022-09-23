@@ -6,7 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 import utopia.ambassador.database.factory.service.AuthServiceSettingsFactory
 import utopia.ambassador.database.model.service.AuthServiceSettingsModel
 import utopia.ambassador.model.stored.service.AuthServiceSettings
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

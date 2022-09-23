@@ -1,13 +1,14 @@
 package utopia.paradigm.generic
 
 import utopia.flow.generic.{Conversion, DataType, DoubleType, DurationType, IntType, LocalTimeType, ModelType, PairType, StringType, ValueCaster, ValueConvertible, VectorType}
-import utopia.flow.datastructure.immutable.{Model, Pair, Value}
 import utopia.flow.generic.ConversionReliability._
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import ParadigmValue._
+import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.value.typeless.{Model, Value}
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}

@@ -1,6 +1,7 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.datastructure.immutable.{DeepMap, Model}
+import utopia.flow.collection.value.iterable.DeepMap
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.StringExtensions._

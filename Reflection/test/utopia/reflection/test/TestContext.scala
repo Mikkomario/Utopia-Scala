@@ -1,6 +1,6 @@
 package utopia.reflection.test
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler

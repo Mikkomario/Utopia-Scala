@@ -1,7 +1,7 @@
 package utopia.genesis.graphics
 
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.collection.template.caching.LazyLike
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Polygonic, Size}
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}

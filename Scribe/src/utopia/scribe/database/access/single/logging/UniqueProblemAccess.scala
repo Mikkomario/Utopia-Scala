@@ -1,7 +1,8 @@
 package utopia.scribe.database.access.single.logging
 
+import utopia.flow.collection.value.typeless.Value
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.scribe.database.factory.logging.ProblemFactory
 import utopia.scribe.database.model.logging.ProblemModel

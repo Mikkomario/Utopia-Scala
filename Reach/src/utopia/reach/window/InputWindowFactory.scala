@@ -1,6 +1,9 @@
 package utopia.reach.window
-import utopia.flow.async.Delay
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
+import utopia.flow.collection.value.typeless
+import utopia.flow.collection.value.typeless.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -136,7 +139,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 						Some(key -> field.field)
 					case Right(value) =>
 						// Stores values in the buffer
-						resultBuffer += Constant(key, value)
+						resultBuffer += typeless.Constant(key, value)
 						None
 				}
 			}.find { _.isDefined }.flatten
@@ -207,7 +210,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 		// Displays the pop-up and closes it automatically after a while
 		window.display()
-		Delay(5.seconds) { window.close() }
+		process.Delay(5.seconds) { window.close() }
 	}
 	
 	private def groupsToComponent(factories: ContextualMixed[ColorContext],

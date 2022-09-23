@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.async.Loop
+import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType

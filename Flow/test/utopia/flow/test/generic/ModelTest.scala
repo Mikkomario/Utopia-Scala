@@ -1,6 +1,7 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.collection.mutable.typeless.Model
+import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.{immutable, mutable}
 import utopia.flow.generic.{DataType, SimpleConstantGenerator, SimpleVariableGenerator}
 import utopia.flow.generic.ValueConversions._
@@ -41,7 +42,7 @@ object ModelTest extends App
 	assert(model1.attributes.size == 3)
 	
 	// 2) model with default value
-	val model2 = new mutable.Model(generator2)
+	val model2 = new Model(generator2)
 	assert(model2.findExisting("Test").isEmpty)
 	assert(model2("Test").content.get == 0)
 	

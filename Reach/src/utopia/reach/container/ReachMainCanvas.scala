@@ -1,6 +1,6 @@
 package utopia.reach.container
 
-import utopia.flow.datastructure.immutable.Tree
+import utopia.flow.collection.value.Tree
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler

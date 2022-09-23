@@ -1,8 +1,9 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.{PropertyDeclaration, Value}
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -16,7 +17,7 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
 {
 	private val schema = ModelDeclaration(PropertyDeclaration("familiarity_id", IntType))
 	
-	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: typeless.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		// Either language id or language code must be specified
 		val languageId = valid("language_id").int
 		val languageCode = valid("language_code").string.flatMap { _.trim.notEmpty }

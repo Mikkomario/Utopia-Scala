@@ -1,8 +1,10 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.collection.template.typeless
+import utopia.flow.collection.template.typeless.Property
+import utopia.flow.collection.value.typeless.{Model, ModelDeclaration}
+import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
 
 /**
  * This factory uses a schema to validate the model before attempting parse
@@ -28,5 +30,5 @@ trait FromModelFactoryWithSchema[+A] extends FromModelFactory[A]
 	
 	// IMPLEMENTED	------------------
 	
-	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.map(fromValidatedModel)
+	override def apply(model: typeless.Model[Property]) = schema.validate(model).toTry.map(fromValidatedModel)
 }
