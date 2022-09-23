@@ -124,8 +124,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 		// Creates the data interface (reading input data from fields)
 		val fields = managedFieldsBuilder.result().toMap
-		def tryReadData() =
-		{
+		def tryReadData() = {
 			val resultBuffer = new VectorBuilder[Constant]()
 			// Reads values until one read fails
 			val failure = fields.view.map { case (key, field) =>
@@ -142,17 +141,14 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				}
 			}.find { _.isDefined }.flatten
 			
-			failure match
-			{
+			failure match {
 				case Some(failure) => Left(failure)
 				case None => Right(Model.withConstants(resultBuffer.result()))
 			}
 		}
-		def warn(key: String, message: LocalizedString) =
-		{
+		def warn(key: String, message: LocalizedString) = {
 			// Finds the field matching the key
-			fields.get(key) match
-			{
+			fields.get(key) match {
 				case Some(field) => showWarningFor(field.field, message)
 				case None => println(s"Warning: No input field with key '$key' to display warning: $message")
 			}
@@ -174,7 +170,12 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	// OTHER	--------------------------------
 	
-	private def showWarningFor(field: RowField, message: LocalizedString): Unit =
+	/**
+	  * Displays a warning pop-up next to a field
+	  * @param field The field next to which the pop-up will be displayed
+	  * @param message The message to display on the pop-up
+	  */
+	protected def showWarningFor(field: RowField, message: LocalizedString): Unit =
 	{
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext

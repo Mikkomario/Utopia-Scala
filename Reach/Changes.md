@@ -13,6 +13,7 @@
   suitable for displaying a success or a warning message, etc.
 ### Other Changes
 - **Field** now highlights the hint text as well when custom highlighting is applied
+- **InputWindowFactory**`.showWarningFor(...)` is now **protected** instead of private
 
 ## v0.3.4 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0

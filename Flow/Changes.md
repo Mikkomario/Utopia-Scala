@@ -39,6 +39,8 @@
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
 - Added **Flag** and **ResettableFlag** -traits and implementations
 - Added **OptionsIterator** and **ZipPadIterator** classes
+- Added change event support for iterators
+  - See **IteratorWithEvents** and `.withEvents(...)` in **CollectionExtensions**
 ### New Methods
 - **ChangeEvent**
   - Added `.toPair`

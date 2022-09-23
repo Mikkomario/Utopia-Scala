@@ -48,7 +48,6 @@ class FlatteningMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Orig
 	
 	// Listener that listens to the source pointer and moves the aforementioned listener between mid-pointers
 	pointerPointer.addDependency(ChangeDependency { event: ChangeEvent[ChangingLike[Reflection]] =>
-		println(event)
 		event.oldValue.removeListener(valueUpdatingListener)
 		event.newValue.addListener(valueUpdatingListener)
 		// Also updates the simulated value when pointers change
