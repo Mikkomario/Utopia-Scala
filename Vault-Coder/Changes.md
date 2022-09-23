@@ -5,6 +5,9 @@
 - The default naming style for json properties is now `camelCase` (previously was `underscore`)
 - Description access point naming updated (see **Bugfixes**)
 - Optional enumeration value code structure may be altered
+### Bugfixes
+- Description access point naming previously yielded duplicate object names, now contains the proper suffix
+  "Descriptions"
 ### New Features
 - Added support for complex enumerations, meaning
   - Custom id name and data type support
@@ -12,9 +15,8 @@
   - Default value support
 - Added markdown documentation writing
 - Documentation naming convention may now be altered
-### Bugfixes
-- Description access point naming previously yielded duplicate object names, now contains the proper suffix 
-  "Descriptions"
+### Other Changes
+- Factory implementations of `.fromValidatedModel(Model)` are now **protected** instead of public
 
 ## v1.6 - 18.08.2022
 This update adds a number of new features, such as custom data type support and program settings saving. 

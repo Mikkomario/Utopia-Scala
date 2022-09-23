@@ -3,7 +3,7 @@ package utopia.vault.coder.util
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.data.{Class, NamingRules, Property}
-import utopia.vault.coder.model.scala.Visibility.Public
+import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
 import utopia.vault.coder.model.scala.Parameter
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.Reference
@@ -69,7 +69,7 @@ object ClassMethodFactory
 		// Case: Class contains no properties
 		if (targetClass.properties.isEmpty) {
 			val code = wrapAssignments(CodePiece.empty)
-			MethodDeclaration(methodName, code.references, isOverridden = true)(param)(code.text)
+			MethodDeclaration(methodName, code.references, visibility = Protected, isOverridden = true)(param)(code.text)
 		}
 		// Case: No try-based or potentially failing reads are used => implements a simpler fromValidatedModel
 		else {
@@ -78,7 +78,7 @@ object ClassMethodFactory
 				.map { prop => propFromValidModelCode(prop, modelName)(propNamesInModel) }
 				.reduceLeft { _.append(_, ", ") }
 			val code = wrapAssignments(dataCreation)
-			MethodDeclaration(methodName, code.references, isOverridden = true)(param)(code.text)
+			MethodDeclaration(methodName, code.references, visibility = Protected, isOverridden = true)(param)(code.text)
 		}
 	}
 	

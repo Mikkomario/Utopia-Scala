@@ -84,24 +84,26 @@ object DocumentationWriter
 			}
 			
 			// Writes enumeration descriptions
-			writer.println(s"\n## Enumerations\nBelow are listed all enumerations introduced in ${
-				data.projectName.header }, in alphabetical order  ")
-			orderedEnums.foreach { case (name, enum) =>
-				writer.println(s"\n### ${ name.header }")
-				enum.description.notEmpty.foreach { doc => writer.println(doc) }
-				writer.println(s"\nKey: `${ enum.idPropName.prop }: ${ enum.idType.toScala }`  ")
-				enum.defaultValue.foreach { default =>
-					writer.println(s"Default Value: **${ default.name.header }**")
-				}
-				// Lists each enum value
-				writer.println("\n**Values:**")
-				enum.values.foreach { v =>
-					writer.println(s"- **${ v.name.header }** (${ v.id })${ v.description.mapIfNotEmpty { " - " + _ } }")
-				}
-				// Lists classes that use this enumeration
-				classesPerEnum.get(enum).foreach { classes =>
-					writer.println(s"\nUtilized by the following ${classes.size} classes:")
-					classes.sortBy { _.name }.foreach { c => writer.println(s"- ${ link(c.name) }") }
+			if (orderedEnums.nonEmpty) {
+				writer.println(s"\n## Enumerations\nBelow are listed all enumerations introduced in ${
+					data.projectName.header }, in alphabetical order  ")
+				orderedEnums.foreach { case (name, enum) =>
+					writer.println(s"\n### ${ name.header }")
+					enum.description.notEmpty.foreach { doc => writer.println(doc) }
+					writer.println(s"\nKey: `${ enum.idPropName.prop }: ${ enum.idType.toScala }`  ")
+					enum.defaultValue.foreach { default =>
+						writer.println(s"Default Value: **${ default.name.header }**")
+					}
+					// Lists each enum value
+					writer.println("\n**Values:**")
+					enum.values.foreach { v =>
+						writer.println(s"- **${ v.name.header }** (${ v.id })${ v.description.mapIfNotEmpty { " - " + _ } }")
+					}
+					// Lists classes that use this enumeration
+					classesPerEnum.get(enum).foreach { classes =>
+						writer.println(s"\nUtilized by the following ${classes.size} classes:")
+						classes.sortBy { _.name }.foreach { c => writer.println(s"- ${ link(c.name) }") }
+					}
 				}
 			}
 			
@@ -121,7 +123,7 @@ object DocumentationWriter
 					writer.println("\n##### Details")
 					c.customTableName.foreach { t => s"- Appears in the database as: `$t`" }
 					if (c.idName !~== Class.defaultIdName)
-						writer.println(s"- Uses a **custom id: ${ c.idName.header }**")
+						writer.println(s"- Uses a **custom id**: `${ c.idName.prop }`")
 					if (c.useLongId)
 						writer.println(s"- Uses very **large ids**")
 					if (c.isDescribed)
@@ -169,7 +171,7 @@ object DocumentationWriter
 					writer.println("\n##### Properties")
 					writer.println(s"${ className.header } contains the following ${ c.properties.size } properties:")
 					c.properties.foreach { prop =>
-						writer.println(s"- **${ prop.name.header }** - `${ prop.dataType.toScala }`${
+						writer.println(s"- **${ prop.name.header }** - `${ prop.name.prop }: ${ prop.dataType.toScala }`${
 							prop.customDefaultValue.text.mapIfNotEmpty { d => s", `$d` by default" } }${
 							prop.description.mapIfNotEmpty { " - " + _ } }")
 						prop.referencedTableName.foreach { tableName =>
