@@ -1,6 +1,5 @@
 package utopia.flow.event.listener
 
-import utopia.flow.event.DetachmentChoice
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 
 import scala.language.implicitConversions

@@ -1,7 +1,7 @@
 package utopia.vault.sql
 
 import utopia.flow.generic.model.template.{Model, Property}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, Triggers}
 import utopia.vault.model.error.ColumnNotFoundException

@@ -8,8 +8,8 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.parse.file.container.FileContainer
 import utopia.flow.time.Now
-import utopia.flow.time.WaitTarget.WaitDuration
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}

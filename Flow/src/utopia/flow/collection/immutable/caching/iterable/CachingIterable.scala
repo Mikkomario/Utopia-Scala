@@ -2,7 +2,7 @@ package utopia.flow.collection.immutable.caching.iterable
 
 import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
 import utopia.flow.collection.mutable.iterator.PollableOnce
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.template.Viewable
 
 import scala.annotation.unchecked.uncheckedVariance

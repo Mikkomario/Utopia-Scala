@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration

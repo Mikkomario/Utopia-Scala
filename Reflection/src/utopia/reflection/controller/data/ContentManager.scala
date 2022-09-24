@@ -1,6 +1,6 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.reflection.component.template.display.{Refreshable, RefreshableWithPointer}
 

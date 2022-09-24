@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder

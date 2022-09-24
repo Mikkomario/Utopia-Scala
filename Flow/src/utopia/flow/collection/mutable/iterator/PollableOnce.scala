@@ -1,5 +1,7 @@
 package utopia.flow.collection.mutable.iterator
 
+import utopia.flow.collection.mutable.iterator.PollableOnce.AlreadyConsumedException
+
 object PollableOnce
 {
 	// OTHER    --------------------------

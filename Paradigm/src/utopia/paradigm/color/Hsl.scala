@@ -1,7 +1,7 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.value.typeless.PropertyDeclaration
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, Value}

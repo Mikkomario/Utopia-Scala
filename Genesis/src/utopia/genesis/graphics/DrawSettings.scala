@@ -1,7 +1,7 @@
 package utopia.genesis.graphics
 
 import utopia.paradigm.color.Color
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import java.awt.Paint
 import scala.language.implicitConversions

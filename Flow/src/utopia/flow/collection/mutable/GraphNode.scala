@@ -2,6 +2,7 @@ package utopia.flow.collection.mutable
 
 import utopia.flow.collection.immutable.GraphEdge
 import utopia.flow.collection.template
+import utopia.flow.collection.template.GraphNode.AnyNode
 
 import scala.collection.immutable.HashSet
 

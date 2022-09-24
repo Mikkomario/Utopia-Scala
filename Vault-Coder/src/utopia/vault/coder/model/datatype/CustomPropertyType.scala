@@ -9,7 +9,7 @@ import utopia.flow.generic.model.immutable.ModelValidationFailedException
 import utopia.flow.generic.model.template.{Model, Property}
 import utopia.flow.generic.model.mutable.StringType
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.datatype.CustomPropertyType.{pluralRegex, singularRegex, valueRegex}

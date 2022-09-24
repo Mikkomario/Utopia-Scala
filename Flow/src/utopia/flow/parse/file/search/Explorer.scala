@@ -2,7 +2,7 @@ package utopia.flow.parse.file.search
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 /**
  * Explorers can traverse in the mines

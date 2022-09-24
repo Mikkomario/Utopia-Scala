@@ -6,7 +6,7 @@ import utopia.flow.async.context.{CloseHook, ThreadPool}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext

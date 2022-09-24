@@ -11,7 +11,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 

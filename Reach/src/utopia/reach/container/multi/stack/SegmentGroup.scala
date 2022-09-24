@@ -1,6 +1,6 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.hierarchy.ComponentHierarchy

@@ -1,7 +1,6 @@
 package utopia.flow.async.process
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.time.WaitUtils
 import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag

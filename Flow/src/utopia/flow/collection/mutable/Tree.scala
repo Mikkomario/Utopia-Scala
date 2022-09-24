@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable
 
-import utopia.flow.collection.{immutable, value}
+import utopia.flow.collection.immutable
 import utopia.flow.operator.EqualsFunction
 
 object Tree
@@ -38,7 +38,7 @@ class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())
      * Creates an immutable copy of this tree
      * @return An immutable copy of this tree
      */
-    def immutableCopy: immutable.Tree[A] = value.Tree(content, children.map { _.immutableCopy })
+    def immutableCopy: immutable.Tree[A] = immutable.Tree(content, children.map { _.immutableCopy })
     
     
     // IMPLEMENTED PROPERTIES    -----

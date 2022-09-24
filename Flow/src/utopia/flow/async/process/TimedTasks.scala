@@ -1,10 +1,12 @@
 package utopia.flow.async.process
 
+import utopia.flow.async.process.ProcessState.Completed
+import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.{DailyTime, WeeklyTime}
+import utopia.flow.async.process.WaitTarget.{DailyTime, WeeklyTime}
 import utopia.flow.time.{Now, Today, WeekDay}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.time.{Instant, LocalTime}

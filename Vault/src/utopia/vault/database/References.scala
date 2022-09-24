@@ -3,7 +3,7 @@ package utopia.vault.database
 import utopia.flow.collection.immutable.{Pair, Tree}
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.operator.Sign
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table}
 
 import scala.collection.immutable.{HashMap, HashSet}

@@ -1,6 +1,6 @@
 package utopia.metropolis.model.enumeration
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.error.NoSuchTypeException
 
 /**

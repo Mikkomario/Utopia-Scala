@@ -3,9 +3,8 @@ package utopia.flow.collection.immutable
 import utopia.flow.collection.template.MapLike
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.AnyType
-import utopia.flow.generic.ValueConvertible
 import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 object DeepMap
 {

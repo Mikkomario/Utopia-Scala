@@ -1,7 +1,7 @@
 package utopia.metropolis.model.enumeration
 
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import java.util.NoSuchElementException
 

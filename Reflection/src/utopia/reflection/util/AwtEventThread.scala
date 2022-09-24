@@ -6,7 +6,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.Duration

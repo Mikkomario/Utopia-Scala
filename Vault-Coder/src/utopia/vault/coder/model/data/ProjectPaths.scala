@@ -6,7 +6,7 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.StringType
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Path

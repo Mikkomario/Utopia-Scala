@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.template.Viewable
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template

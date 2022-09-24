@@ -3,7 +3,7 @@ package utopia.vault.database
 import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Breakable
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.collection.VolatileFlag
 import utopia.flow.async.context.NewThreadExecutionContext

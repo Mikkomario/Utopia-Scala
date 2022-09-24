@@ -3,12 +3,12 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.typeless
 import utopia.flow.datastructure.template
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
-import utopia.flow.util.CollectionExtensions.RichSeqLike
+import utopia.flow.collection.CollectionExtensions.RichSeqLike
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D

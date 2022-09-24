@@ -1,7 +1,7 @@
 package utopia.vault.coder.controller.writer.documentation
 
 import utopia.flow.time.Today
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectData}

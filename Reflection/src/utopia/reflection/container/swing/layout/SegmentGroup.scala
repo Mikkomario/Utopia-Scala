@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.container.stack.StackLayout

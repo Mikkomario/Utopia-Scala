@@ -7,7 +7,7 @@ import utopia.flow.generic.ModelType
 import utopia.flow.generic.model.mutable.{ModelType, VectorType}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, EnumerationValue, Instance, Name, NamingRules, ProjectData, Property}
 import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber

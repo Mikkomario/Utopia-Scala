@@ -2,7 +2,7 @@ package utopia.reflection.text
 
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.{Bounds, Line, Point}

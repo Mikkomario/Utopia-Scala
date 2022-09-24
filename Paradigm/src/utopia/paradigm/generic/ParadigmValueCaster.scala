@@ -4,7 +4,7 @@ import utopia.flow.generic.ConversionReliability._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import ParadigmValue._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.value.typeless.Value

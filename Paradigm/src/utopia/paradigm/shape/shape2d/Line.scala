@@ -3,7 +3,7 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.typeless
 import utopia.flow.datastructure.template
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value

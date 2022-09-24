@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
 import utopia.vault.model.immutable.TableUpdateEvent.DataDeleted

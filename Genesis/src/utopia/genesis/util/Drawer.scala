@@ -5,7 +5,7 @@ import java.awt.geom.AffineTransform
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, MultiDimensional, Point, ShapeConvertible, Size}
 import utopia.flow.util.NullSafe._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.transform.{AffineTransformable, AffineTransformation, JavaAffineTransformConvertible, LinearTransformable}
 

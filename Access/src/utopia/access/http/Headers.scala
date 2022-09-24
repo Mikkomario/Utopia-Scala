@@ -8,7 +8,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.Now
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.nio.charset.Charset

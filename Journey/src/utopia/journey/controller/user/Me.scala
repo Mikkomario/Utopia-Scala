@@ -6,7 +6,7 @@ import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.annex.model.schrodinger.TryFindSchrodinger
 import utopia.flow.parse.file.container.OptionObjectFileContainer
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.journey.model.error.NoUserDataError
 import utopia.journey.util.JourneyContext._

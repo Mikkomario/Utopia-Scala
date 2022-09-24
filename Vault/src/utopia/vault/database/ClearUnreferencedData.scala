@@ -1,7 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.async.process.LoopingProcess
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.model.immutable.{Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, JoinType, SqlTarget, Where}

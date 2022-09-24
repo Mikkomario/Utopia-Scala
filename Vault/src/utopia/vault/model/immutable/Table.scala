@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.{Model, Property}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.template.Joinable

@@ -5,7 +5,7 @@ import utopia.flow.generic.IntType
 import utopia.flow.generic.model.mutable.{BooleanType, DoubleType, FloatType, IntType, LongType}
 import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Today
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.coder.model.data.{Class, Instance, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NameContext.DatabaseName

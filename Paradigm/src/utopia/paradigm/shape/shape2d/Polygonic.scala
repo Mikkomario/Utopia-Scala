@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.Transformable

@@ -4,7 +4,7 @@ import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelValidationFailedException
 import utopia.flow.generic.model.template.{Model, Property}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 /**
   * A common trait for model parsers which produce stored elements

@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D

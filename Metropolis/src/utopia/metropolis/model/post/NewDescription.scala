@@ -5,7 +5,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelDeclaration
 import utopia.flow.generic.model.template.{Model, Property}
 import utopia.flow.generic.model.mutable.{IntType, StringType, VectorType}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 object NewDescription extends FromModelFactory[NewDescription]
 {

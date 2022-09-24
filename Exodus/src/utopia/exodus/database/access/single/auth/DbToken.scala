@@ -9,7 +9,7 @@ import utopia.exodus.util.UuidGenerator
 import utopia.flow.parse.Sha256Hasher
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

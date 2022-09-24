@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.code
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.{CodeConvertible, Referencing}

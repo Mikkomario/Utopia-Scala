@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.datatype.PropertyType.ClassReference
 import utopia.vault.coder.model.datatype.{PropertyType, SingleColumnPropertyType}
 import utopia.vault.coder.model.scala.code.CodePiece

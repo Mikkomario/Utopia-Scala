@@ -2,7 +2,7 @@ package utopia.paradigm.shape.template
 
 import utopia.flow.operator.{ApproximatelyZeroable, Combinable, EqualsFunction, LinearMeasurable, LinearScalable}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}

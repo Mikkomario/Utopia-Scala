@@ -8,7 +8,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.{StringType, VectorType}
 import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
 import utopia.metropolis.util.MetropolisRegex
 

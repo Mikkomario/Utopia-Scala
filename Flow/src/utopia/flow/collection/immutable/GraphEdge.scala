@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.template
-import utopia.flow.collection.template.{GraphNode, graph}
+import utopia.flow.collection.template.GraphNode
 
 /**
   * Graph edges are used for connecting two nodes and storing data. Edges are immutable.

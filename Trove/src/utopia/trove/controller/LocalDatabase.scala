@@ -5,7 +5,7 @@ import ch.vorburger.mariadb4j.{DB, DBConfigurationBuilder}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.CloseHook
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.trove.database.{DbDatabaseVersion, DbDatabaseVersions}
 import utopia.trove.event.DatabaseSetupEvent.{DatabaseConfigured, DatabaseStarted, SetupFailed, SetupSucceeded, UpdateApplied, UpdateFailed, UpdatesFound}
 import utopia.trove.event.{DatabaseSetupEvent, DatabaseSetupListener}

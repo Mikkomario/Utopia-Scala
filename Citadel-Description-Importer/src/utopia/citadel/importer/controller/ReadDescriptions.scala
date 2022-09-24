@@ -10,7 +10,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.database.Connection

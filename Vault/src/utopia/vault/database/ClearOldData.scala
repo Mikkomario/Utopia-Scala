@@ -7,7 +7,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.sql.SqlExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}

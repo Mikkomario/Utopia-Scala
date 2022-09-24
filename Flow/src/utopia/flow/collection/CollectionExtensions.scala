@@ -1,23 +1,23 @@
-package utopia.flow.util
+package utopia.flow.collection
 
-import utopia.flow.collection.mutable.iterator.{FoldingIterator, IteratorWithEvents, LimitedLengthIterator, PairingIterator, PollableOnce}
-import utopia.flow.collection.LazyVector
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.caching.iterable.{CachingIterable, LazyIterable, LazyVector}
+import utopia.flow.collection.mutable.iterator.{FoldingIterator, GroupIterator, IteratorWithEvents, LimitedLengthIterator, PairingIterator, PollableOnce, PollingIterator, TerminatingIterator, ZipPadIterator}
 import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.LazyLike
 
-import scala.language.implicitConversions
-import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
+import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.util.{Failure, Success, Try}
 
 /**
   * This object contains some extensions for the more traditional collections / data structures
   * @author Mikko Hilpinen
   * @since 10.10.2018
-  **/
+  * */
 object CollectionExtensions
 {
 	// ITERABLE ONCE    ---------------------------------------
@@ -26,7 +26,7 @@ object CollectionExtensions
 	{
 		/**
 		  * Filters this collection so that only distinct values remain. Uses a special function to determine equality
-		  * @param equals A function that determines whether two values are equal
+		  * @param equals    A function that determines whether two values are equal
 		  * @param buildFrom Builder for the new collection
 		  * @return A collection with only distinct values (when considering the provided 'equals' function)
 		  */
@@ -37,8 +37,7 @@ object CollectionExtensions
 			val collected = mutable.HashSet[iter.A]()
 			
 			iterOps.iterator.foreach { item =>
-				if (!collected.exists { e => equals(e, item) })
-				{
+				if (!collected.exists { e => equals(e, item) }) {
 					builder += item
 					collected += item
 				}
@@ -49,7 +48,7 @@ object CollectionExtensions
 		
 		/**
 		  * Filters this collection so that only distinct values remain. Compares the values by mapping them.
-		  * @param f A mapping function to produce comparable values
+		  * @param f         A mapping function to produce comparable values
 		  * @param buildFrom A builder (implicit) to build the final collection
 		  * @tparam B Map target type
 		  * @return A collection with only distinct values (based on mapping)
@@ -59,10 +58,10 @@ object CollectionExtensions
 		
 		/**
 		  * This function works like foldLeft, except that it stores each step (including the start) into a seq
-		  * @param start The starting step
-		  * @param map A function for calculating the next step, takes the previous result + the next item in this seq
+		  * @param start     The starting step
+		  * @param map       A function for calculating the next step, takes the previous result + the next item in this seq
 		  * @param buildFrom A buildfrom for final collection (implicit)
-		  * @tparam B The type of steps
+		  * @tparam B    The type of steps
 		  * @tparam That The type of final collection
 		  * @return All of the steps mapped into a collection
 		  */
@@ -82,13 +81,14 @@ object CollectionExtensions
 		}
 		
 		// Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
+		
 		/**
 		  * Converts this iterable item to a map with possibly multiple values per key
-		  * @param toKey A function for mapping items to keys
+		  * @param toKey   A function for mapping items to keys
 		  * @param toValue A function for mapping items to values
-		  * @param bf Implicit build from for the final values collections
-		  * @tparam Key Type of key in the final map
-		  * @tparam Value Type of individual values in the final map
+		  * @param bf      Implicit build from for the final values collections
+		  * @tparam Key    Type of key in the final map
+		  * @tparam Value  Type of individual values in the final map
 		  * @tparam Values Type of values collections in the final map
 		  * @return A multi map based on this iteration mapping
 		  */
@@ -97,10 +97,10 @@ object CollectionExtensions
 		
 		/**
 		  * Converts this iterable item to a map with possibly multiple values per key
-		  * @param f A function for mapping items to key value pairs
+		  * @param f  A function for mapping items to key value pairs
 		  * @param bf Implicit build from for the final values collections
-		  * @tparam Key Type of key in the final map
-		  * @tparam Value Type of individual values in the final map
+		  * @tparam Key    Type of key in the final map
+		  * @tparam Value  Type of individual values in the final map
 		  * @tparam Values Type of values collections in the final map
 		  * @return A multi map based on this iteration mapping
 		  */
@@ -128,11 +128,12 @@ object CollectionExtensions
 				case None => Success(())
 			}
 		}
+		
 		/**
 		  * Maps the contents of this collection. Mapping may fail, interrupting all remaining mappings
-		  * @param f A mapping function. May fail.
+		  * @param f  A mapping function. May fail.
 		  * @param bf A build from for the final collection (implicit)
-		  * @tparam B Type of map result
+		  * @tparam B  Type of map result
 		  * @tparam To Type of final collection
 		  * @return Mapped collection if all mappings succeeded. Failure otherwise.
 		  */
@@ -142,11 +143,12 @@ object CollectionExtensions
 			// Maps items until the mapping function fails
 			tryForeach { f(_).map { buffer += _ } }.map { _ => buffer.result() }
 		}
+		
 		/**
 		  * FlatMaps the contents of this collection. Mapping may fail, however, cancelling all remaining mappings
-		  * @param f A mapping function. May fail.
+		  * @param f  A mapping function. May fail.
 		  * @param bf A build from for the final collection (implicit)
-		  * @tparam B Type of individual map result item
+		  * @tparam B  Type of individual map result item
 		  * @tparam To Type of final collection
 		  * @return Flat mapped collection if all mappings succeeded. Failure otherwise.
 		  */
@@ -160,7 +162,7 @@ object CollectionExtensions
 		  * Takes elements from this collection until the specified condition is met. If found, includes the item
 		  * on which that condition was met.
 		  * @param endCondition A condition for ending this take operation (returns true on the last item to collect)
-		  * @param buildFrom Implicit build from
+		  * @param buildFrom    Implicit build from
 		  * @tparam That Target collection type
 		  * @return All elements of this collection until the first item that matches the specified condition +
 		  *         the matching item itself. Contains all items of this collection if the condition was never met.
@@ -173,7 +175,7 @@ object CollectionExtensions
 		
 		/**
 		  * Divides the items in this collection into two groups, based on boolean result
-		  * @param f A function that separates the items
+		  * @param f  A function that separates the items
 		  * @param bf an implicit buildFrom for the resulting collection type
 		  * @tparam To type of the resulting collection
 		  * @return The 'false' group, followed by the 'true' group
@@ -224,15 +226,14 @@ object CollectionExtensions
 		  * condition 'f' returns true. Compared to .count -function, this function is more optimized since it stops
 		  * counting once the required amount has been reached.
 		  * @param requiredCount The required amount of matches before returning true
-		  * @param f A test function
+		  * @param f             A test function
 		  * @return Whether 'requiredCount' number of items were found where the specified function 'f' returned true
 		  */
 		def existsCount(requiredCount: Int)(f: A => Boolean) =
 		{
 			val iter = i.iterator
 			var currentCount = 0
-			while (iter.hasNext && currentCount < requiredCount)
-			{
+			while (iter.hasNext && currentCount < requiredCount) {
 				if (f(iter.next()))
 					currentCount += 1
 			}
@@ -254,6 +255,7 @@ object CollectionExtensions
 		  * @return A lazily initialized collection containing the mapping results
 		  */
 		def lazyMap[B](f: A => B) = LazyIterable[B](i.iterator.map { a => Lazy { f(a) } })
+		
 		/**
 		  * Lazily maps the contents of this collection
 		  * @param f A mapping function that returns 0-n lazily initialized items for each element
@@ -279,6 +281,7 @@ object CollectionExtensions
 			}
 			lBuilder.result() -> rBuilder.result()
 		}
+		
 		/**
 		  * Divides / maps the items in this collection to two groups
 		  * @param f A function for separating / mapping the items
@@ -288,6 +291,7 @@ object CollectionExtensions
 		  */
 		@deprecated("Please use .divideWith(...) instead", "v1.4.1")
 		def dividedWith[L, R](f: A => Either[L, R]) = divideWith[L, R](f)
+		
 		/**
 		  * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
 		  * resulting group(s)
@@ -325,6 +329,7 @@ object CollectionExtensions
 			}
 			lBuilder.result() -> rBuilder.result()
 		}
+		
 		/**
 		  * Maps items in this collection into two groups, where an item maps to
 		  * x left group items and y right group items
@@ -348,11 +353,12 @@ object CollectionExtensions
 		
 		/**
 		  * @param start Fold starting value
-		  * @param f A fold function
+		  * @param f     A fold function
 		  * @tparam V Type of fold function return values
 		  * @return An iterator that folds the items in this collection and returns every iteration result
 		  */
 		def foldLeftIterator[V](start: V)(f: (V, A) => V) = new FoldingIterator[A, V](start, i.iterator)(f)
+		
 		/**
 		  * @param f A reduce function
 		  * @return An iterator that reduces the items in this collection and returns every iteration result
@@ -382,6 +388,7 @@ object CollectionExtensions
 				case None => Success(successesBuilder.result())
 			}
 		}
+		
 		/**
 		  * @return Failure if all attempts in this collection failed, containing the first encountered error.
 		  *         If one or more attempts succeeded, or if no attempts were made, returns a success containing
@@ -406,6 +413,7 @@ object CollectionExtensions
 		  * @return An iterator that only includes failed attempts
 		  */
 		def failuresIterator = tries.iterator.flatMap { _.failure }
+		
 		/**
 		  * @return The first failure that was encountered. None if no failures were encountered.
 		  */
@@ -428,10 +436,10 @@ object CollectionExtensions
 		/**
 		  * Finds the item or items with the maximum value, based on a mapping function. Works like maxBy, except that
 		  * multiple values are returned in cases where items map to the same (maximum) value.
-		  * @param f A function that maps items to comparable values
-		  * @param bf An implicit buildfrom for the resulting collection
+		  * @param f   A function that maps items to comparable values
+		  * @param bf  An implicit buildfrom for the resulting collection
 		  * @param ord Implicit ordering for the mapped values
-		  * @tparam B Compared type (map result type)
+		  * @tparam B  Compared type (map result type)
 		  * @tparam To Type of the resulting collection
 		  * @return A version of this collection that only contains the items that mapped to the largest available value
 		  */
@@ -445,13 +453,14 @@ object CollectionExtensions
 				bf.fromSpecific(coll)(pairs.iterator.filter { _._2 == maxValue }.map { _._1 })
 			}
 		}
+		
 		/**
 		  * Finds the item or items with the minimum value, based on a mapping function. Works like minBy, except that
 		  * multiple values are returned in cases where items map to the same (minimum) value.
-		  * @param f A function that maps items to comparable values
-		  * @param bf An implicit buildfrom for the resulting collection
+		  * @param f   A function that maps items to comparable values
+		  * @param bf  An implicit buildfrom for the resulting collection
 		  * @param ord Implicit ordering for the mapped values
-		  * @tparam B Compared type (map result type)
+		  * @tparam B  Compared type (map result type)
 		  * @tparam To Type of the resulting collection
 		  * @return A version of this collection that only contains the items that mapped to the smallest available value
 		  */
@@ -461,11 +470,11 @@ object CollectionExtensions
 		/**
 		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
 		  * collections are included in the resulting collection.
-		  * @param other Another collection
-		  * @param myPadding Padding to use for this collection, if shorter (call-by-name)
+		  * @param other        Another collection
+		  * @param myPadding    Padding to use for this collection, if shorter (call-by-name)
 		  * @param theirPadding Padding to use for the other collection, if shorter (call-by-name)
-		  * @param bf Implicit BuildFrom
-		  * @tparam B Type of items in the other collection
+		  * @param bf           Implicit BuildFrom
+		  * @tparam B  Type of items in the other collection
 		  * @tparam To Type of resulting collection
 		  * @return A collection that contains tuples where the first values are from this collection and
 		  *         the second values are from the other collection.
@@ -476,12 +485,13 @@ object CollectionExtensions
 			val ops = iter(coll)
 			bf.fromSpecific(coll)(ZipPadIterator(ops.iterator, other.iterator, myPadding, theirPadding))
 		}
+		
 		/**
 		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
 		  * collections are included in the resulting collection.
-		  * @param other Another collection
+		  * @param other   Another collection
 		  * @param padding Padding to use for the shorter collection, if one exists (call-by-name)
-		  * @param bf Implicit BuildFrom
+		  * @param bf      Implicit BuildFrom
 		  * @tparam To Type of resulting collection
 		  * @return A collection that contains tuples where the first values are from this collection and
 		  *         the second values are from the other collection.
@@ -518,7 +528,7 @@ object CollectionExtensions
 		  * Iterates through the items in this iterable along with another iterable's items. Will stop when either
 		  * iterable runs out of items
 		  * @param another Another iterable
-		  * @param f A function that handles the items
+		  * @param f       A function that handles the items
 		  * @tparam B The type of another iterable's items
 		  * @tparam U Arbitrary result type
 		  */
@@ -544,6 +554,7 @@ object CollectionExtensions
 		  * @return Maximum item or None if this Iterable was empty
 		  */
 		def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] = if (t.isEmpty) None else Some(t.max(cmp))
+		
 		/**
 		  * Finds the minimum value in this Iterable
 		  * @param cmp Ordering (implicit)
@@ -551,6 +562,7 @@ object CollectionExtensions
 		  * @return Minimum item or None if this Iterable was empty
 		  */
 		def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] = if (t.isEmpty) None else Some(t.min(cmp))
+		
 		/**
 		  * Finds the maximum value based on map result
 		  * @param map A mapping function
@@ -560,6 +572,7 @@ object CollectionExtensions
 		  */
 		def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
 			if (t.isEmpty) None else Some(t.maxBy(map))
+		
 		/**
 		  * Finds the minimum value based on map result
 		  * @param map A mapping function
@@ -582,8 +595,7 @@ object CollectionExtensions
 			// If there are no matchers left, cannot make a distinction between items
 			if (t.size < 2 || matchers.isEmpty)
 				t.toVector
-			else
-			{
+			else {
 				val nextMatcher = matchers.head
 				val matched = t.filter(nextMatcher)
 				
@@ -594,8 +606,10 @@ object CollectionExtensions
 					bestMatch(matchers.drop(1))
 			}
 		}
+		
 		def bestMatch(firstMatcher: A => Boolean, secondMatcher: A => Boolean, more: (A => Boolean)*): Vector[A] =
 			bestMatch(Vector(firstMatcher, secondMatcher) ++ more)
+		
 		/**
 		  * Filters this collection with the specified filter function, but if the results would be empty, returns
 		  * this collection instead
@@ -610,13 +624,13 @@ object CollectionExtensions
 		/**
 		  * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
 		  * between items that have stayed
-		  * @param another Another Iterable
+		  * @param another   Another Iterable
 		  * @param connectBy A function for providing the unique key based on which items are connected
 		  *                  (should be unique within each collection). Items sharing this key are connected.
-		  * @param merge A function for merging two connected items. Takes connection key, item in this collection and
-		  *              item in the other collection
-		  * @tparam B Type of items in the other collection
-		  * @tparam K Type of match key used
+		  * @param merge     A function for merging two connected items. Takes connection key, item in this collection and
+		  *                  item in the other collection
+		  * @tparam B     Type of items in the other collection
+		  * @tparam K     Type of match key used
 		  * @tparam Merge Merge function for merging connected items
 		  * @return 1) Items only present in this collection, 2) Merged items shared between these two collections,
 		  *         3) Items only present in the other collection
@@ -646,8 +660,7 @@ object CollectionExtensions
 		def tryFindMap[B](f: A => Try[B]) =
 		{
 			val iter = t.iterator.map(f)
-			if (iter.hasNext)
-			{
+			if (iter.hasNext) {
 				// Returns the first result if its a success or if no successes were found
 				val firstResult = iter.next()
 				if (firstResult.isSuccess)
@@ -661,14 +674,15 @@ object CollectionExtensions
 		
 		/**
 		  * Checks whether this collection contains an item equal to the specified item
-		  * @param item A searched item
+		  * @param item   A searched item
 		  * @param equals Equals function to use (implicit)
 		  * @tparam B Type of searched item
 		  * @return Whether this collection contains an equal item
 		  */
 		def containsEqual[B >: A](item: B)(implicit equals: EqualsFunction[B]) = t.exists { equals(_, item) }
+		
 		/**
-		  * @param items Items to test
+		  * @param items  Items to test
 		  * @param equals Equals function to use (implicit)
 		  * @tparam B Type of items collection
 		  * @return Whether this collection of items contains all of the specified items
@@ -684,15 +698,16 @@ object CollectionExtensions
 	{
 		/**
 		  * Maps a single item in this sequence
-		  * @param index The index that should be mapped
-		  * @param f A mapping function
+		  * @param index     The index that should be mapped
+		  * @param f         A mapping function
 		  * @param buildFrom A can build from (implicit)
 		  * @return A copy of this sequence with the specified index mapped
 		  */
 		def mapIndex[B >: seq.A, That](index: Int)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
 		{
 			val seqOps = seq(coll)
-			buildFrom.fromSpecific(coll)(new AbstractView[B] {
+			buildFrom.fromSpecific(coll)(new AbstractView[B]
+			{
 				override def iterator: AbstractIterator[B] = new AbstractIterator[B]
 				{
 					val it = seqOps.iterator
@@ -703,8 +718,7 @@ object CollectionExtensions
 					// Passes items from the original iterator, except at specified index
 					override def next() =
 					{
-						val result =
-						{
+						val result = {
 							if (nextIndex == index)
 								f(it.next())
 							else
@@ -719,22 +733,21 @@ object CollectionExtensions
 		
 		/**
 		  * Maps the first item that matches provided condition, leaves the other items as they were
-		  * @param find A function for finding the mapped item
-		  * @param map A mapping function for that item
+		  * @param find      A function for finding the mapped item
+		  * @param map       A mapping function for that item
 		  * @param buildFrom A can build from for resulting collection (implicit)
 		  * @return A copy of this sequence with specified item mapped. Returns this if no such item was found.
 		  */
 		def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
 		{
-			seq(coll).indexWhereOption(find) match
-			{
+			seq(coll).indexWhereOption(find) match {
 				case Some(index) => mapIndex(index)(map)
 				case None => coll
 			}
 		}
 		
 		/**
-		  * @param index Targeted index
+		  * @param index     Targeted index
 		  * @param buildFrom A build from (implicit)
 		  * @return A copy of this sequence without specified index
 		  */
@@ -742,8 +755,7 @@ object CollectionExtensions
 		{
 			if (index < 0)
 				coll
-			else
-			{
+			else {
 				val seqOps = seq(coll)
 				if (index >= seqOps.size)
 					coll
@@ -762,13 +774,11 @@ object CollectionExtensions
 			val seqOps = seq(coll)
 			if (seqOps.size <= maxLength)
 				Vector(buildFrom.fromSpecific(coll)(seqOps))
-			else
-			{
+			else {
 				val factory = buildFrom.toFactory(coll)
 				val builder = new VectorBuilder[Repr]
 				val iter = seqOps.iterator
-				while (iter.hasNext)
-				{
+				while (iter.hasNext) {
 					val segmentBuilder = factory.newBuilder
 					iter.forNext(maxLength) { segmentBuilder += _ }
 					builder += segmentBuilder.result()
@@ -787,12 +797,12 @@ object CollectionExtensions
 		def foreachWithIndex[U](f: (seq.A, Int) => U) =
 		{
 			val seqOps = seq(coll)
-			seqOps.zipWithIndex.foreach { case(item, index) => f(item, index) }
+			seqOps.zipWithIndex.foreach { case (item, index) => f(item, index) }
 		}
 		
 		/**
 		  * Takes items from right to left as long as the specified condition holds
-		  * @param f A function that determines whether an item is accepted to the final collection
+		  * @param f         A function that determines whether an item is accepted to the final collection
 		  * @param buildFrom A build from (implicit)
 		  * @tparam That Resulting collection type
 		  * @return A collection that contains the collected items in the same order as they appear in this
@@ -822,7 +832,7 @@ object CollectionExtensions
 		
 		/**
 		  * Same as apply except returns a default value on non-existing indices
-		  * @param index Target index
+		  * @param index   Target index
 		  * @param default Default value
 		  * @return Value from index or default value if no such index exists
 		  */
@@ -869,7 +879,7 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * @param f A mapping function
+		  * @param f     A mapping function
 		  * @param order Ordering for mapped values
 		  * @tparam B Type of map result
 		  * @return The index in this sequence that contains the largest value when mapped
@@ -882,8 +892,7 @@ object CollectionExtensions
 			var maxResult = f(seq.head)
 			seq.indices.drop(1).foreach { index =>
 				val result = f(seq(index))
-				if (order.compare(result, maxResult) > 0)
-				{
+				if (order.compare(result, maxResult) > 0) {
 					maxIndex = index
 					maxResult = result
 				}
@@ -892,7 +901,7 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * @param f A mapping function
+		  * @param f     A mapping function
 		  * @param order Ordering for mapped values
 		  * @tparam B Type of map result
 		  * @return The index in this sequence that contains the smallest value when mapped
@@ -902,7 +911,7 @@ object CollectionExtensions
 		def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxIndexBy(f)(order.reverse)
 		
 		/**
-		  * @param f A mapping function
+		  * @param f     A mapping function
 		  * @param order Ordering for mapped values
 		  * @tparam B Type of map result
 		  * @return The index in this sequence that contains the largest value when mapped.
@@ -911,7 +920,7 @@ object CollectionExtensions
 		def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = if (seq.isEmpty) None else Some(maxIndexBy(f))
 		
 		/**
-		  * @param f A mapping function
+		  * @param f     A mapping function
 		  * @param order Ordering for mapped values
 		  * @tparam B Type of map result
 		  * @return The index in this sequence that contains the smallest value when mapped.
@@ -932,8 +941,7 @@ object CollectionExtensions
 		  * @param f A function that tests whether items should be dropped
 		  * @return A copy of this collection with rightmost items (that satisfy provided predicate) removed
 		  */
-		def dropRightWhile(f: A => Boolean) = lastIndexWhereOption { !f(_) } match
-		{
+		def dropRightWhile(f: A => Boolean) = lastIndexWhereOption { !f(_) } match {
 			case Some(index) => seq.take(index + 1)
 			case None => seq.take(0)
 		}
@@ -952,7 +960,7 @@ object CollectionExtensions
 		
 		/**
 		  * @param another Another sequence
-		  * @param equals Equality function
+		  * @param equals  Equality function
 		  * @tparam B Type of another sequence's content
 		  * @return Whether these two sequences are equal when using specified equality function
 		  */
@@ -962,9 +970,9 @@ object CollectionExtensions
 		/**
 		  * Sorts this collection based on multiple orderings (second ordering is only used if first one fails to
 		  * differentiate the items, then third and so on)
-		  * @param firstOrdering The first ordering to use
+		  * @param firstOrdering  The first ordering to use
 		  * @param secondOrdering The second ordering to use
-		  * @param moreOrderings More orderings to use
+		  * @param moreOrderings  More orderings to use
 		  * @return A sorted copy of this collection
 		  */
 		def sortedWith(firstOrdering: Ordering[A], secondOrdering: Ordering[A], moreOrderings: Ordering[A]*) =
@@ -977,8 +985,10 @@ object CollectionExtensions
 		  * @return The first non-empty map result, along with the index of the mapped item. None if all items were
 		  *         mapped to None.
 		  */
-		def findMapAndIndex[B](f: A => Option[B]) = seq.indices.view.flatMap { i => f(seq(i))
-			.map { _ -> i }  }.headOption
+		def findMapAndIndex[B](f: A => Option[B]) = seq.indices.view.flatMap { i =>
+			f(seq(i))
+				.map { _ -> i }
+		}.headOption
 		
 		/**
 		  * Maps each item + index in this sequence
@@ -993,7 +1003,7 @@ object CollectionExtensions
 	{
 		/**
 		  * Creates a copy of this sequence with the specified item inserted to a certain index
-		  * @param item An item to insert
+		  * @param item  An item to insert
 		  * @param index Index where the item is inserted, where 0 is the first position
 		  * @tparam B Type of resulting collection's items
 		  * @return A copy of this collection with the item inserted
@@ -1004,8 +1014,7 @@ object CollectionExtensions
 				seq.prepended(item)
 			else if (index >= seq.size)
 				seq.appended(item)
-			else
-			{
+			else {
 				val (beginning, end) = seq.splitAt(index)
 				(beginning :+ item) ++ end
 			}
@@ -1048,6 +1057,7 @@ object CollectionExtensions
 			}
 			current
 		}
+		
 		/**
 		  * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
 		  */
@@ -1073,6 +1083,7 @@ object CollectionExtensions
 		  * @return A copy of this iterator with that item prepended. This iterator is invalidated.
 		  */
 		def +:[B >: A](item: => B): Iterator[B] = PollableOnce(item) ++ i
+		
 		/**
 		  * @param item An item to append (call-by-name)
 		  * @tparam B Type of that item
@@ -1085,15 +1096,14 @@ object CollectionExtensions
 		  * Consumes items within this iterator until the required amount of matches has been found. If not enough
 		  * matches were found, consumes this whole iterator.
 		  * @param count Number of required matches (the minimum amount of times 'f' must return true)
-		  * @param f A function for testing each item
+		  * @param f     A function for testing each item
 		  * @return Whether 'f' returned true for 'count' items. Doesn't test whether 'f' would return true for more
 		  *         than 'count' items.
 		  */
 		def existsCount(count: Int)(f: A => Boolean) =
 		{
 			var found = 0
-			while (found < count && i.hasNext)
-			{
+			while (found < count && i.hasNext) {
 				if (f(i.next()))
 					found += 1
 			}
@@ -1107,8 +1117,7 @@ object CollectionExtensions
 		def skip(n: Int = 1) =
 		{
 			var skipped = 0
-			while (skipped < n && i.hasNext)
-			{
+			while (skipped < n && i.hasNext) {
 				i.next()
 				skipped += 1
 			}
@@ -1127,7 +1136,7 @@ object CollectionExtensions
 		/**
 		  * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
 		  * (although limited by number of available items)
-		  * @param n The maximum number of iterations / items handled
+		  * @param n         The maximum number of iterations / items handled
 		  * @param operation Operation called for each handled item
 		  * @tparam U Arbitrary operation result type (not used)
 		  * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
@@ -1135,8 +1144,7 @@ object CollectionExtensions
 		def forNext[U](n: Int)(operation: A => U) =
 		{
 			var consumed = 0
-			while (i.hasNext && consumed < n)
-			{
+			while (i.hasNext && consumed < n) {
 				operation(i.next())
 				consumed += 1
 			}
@@ -1154,14 +1162,14 @@ object CollectionExtensions
 		{
 			var consumed = 0
 			val builder = new VectorBuilder[A]()
-			while (i.hasNext && consumed < n)
-			{
+			while (i.hasNext && consumed < n) {
 				builder += i.next()
 				consumed += 1
 			}
 			
 			builder.result()
 		}
+		
 		/**
 		  * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
 		  * @param n Number of items to make available
@@ -1181,8 +1189,7 @@ object CollectionExtensions
 		{
 			val builder = new VectorBuilder[A]()
 			var found = false
-			while (i.hasNext && !found)
-			{
+			while (i.hasNext && !found) {
 				val nextItem = i.next()
 				builder += nextItem
 				if (stopCondition(nextItem))
@@ -1190,6 +1197,7 @@ object CollectionExtensions
 			}
 			builder.result()
 		}
+		
 		/**
 		  * Takes the next n items from this iterator until a specified condition is met or until the end of this
 		  * iterator is reached. The item which fulfills the specified condition is included in the result as the
@@ -1203,8 +1211,7 @@ object CollectionExtensions
 		{
 			val builder = new VectorBuilder[A]()
 			var found = false
-			while (i.hasNext && !found)
-			{
+			while (i.hasNext && !found) {
 				val nextItem = i.next()
 				builder += nextItem
 				if (stopCondition(nextItem))
@@ -1246,8 +1253,7 @@ object CollectionExtensions
 		def findMapNext[B](map: A => Option[B]) =
 		{
 			var current: Option[B] = None
-			while (current.isEmpty && i.hasNext)
-			{
+			while (current.isEmpty && i.hasNext) {
 				current = map(i.next())
 			}
 			current
@@ -1258,12 +1264,11 @@ object CollectionExtensions
 		  * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
 		  * without discarding the possible smaller group at the end
 		  * @param maxGroupSize Maximum number of items for a function call
-		  * @param f A function that is called for each group of items
+		  * @param f            A function that is called for each group of items
 		  */
 		def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) =
 		{
-			while (i.hasNext)
-			{
+			while (i.hasNext) {
 				f(collectNext(maxGroupSize))
 			}
 		}
@@ -1271,7 +1276,7 @@ object CollectionExtensions
 		/**
 		  * Maps the items in this iterator, one group at a time
 		  * @param groupSize The maximum size of an individual group of items to map
-		  * @param map a mapping function applied to groups of items
+		  * @param map       a mapping function applied to groups of items
 		  * @tparam B Type of map result
 		  * @return All map results in order
 		  */
@@ -1303,9 +1308,10 @@ object CollectionExtensions
 			i.foreach { failuresBuilder ++= f(_).failure }
 			failuresBuilder.result()
 		}
+		
 		/**
 		  * Maps this iterator with a function that can fail. Handles failures by catching them.
-		  * @param f A mapping function
+		  * @param f      A mapping function
 		  * @param logger A logger that will receive possibly thrown exceptions
 		  * @tparam B Type of successful map result
 		  * @return Iterator of the mapped items
@@ -1334,8 +1340,8 @@ object CollectionExtensions
 		/**
 		  * Zips this iterator with another, possibly padding one of them.
 		  * Neither of these two source iterators should be used afterwards.
-		  * @param other Another iterator
-		  * @param myPadding Padding to use for this iterator (call-by-name)
+		  * @param other        Another iterator
+		  * @param myPadding    Padding to use for this iterator (call-by-name)
 		  * @param theirPadding Padding to use for the other iterator (call-by-name)
 		  * @tparam B Type of items in the other iterator
 		  * @return An iterator that takes from both of these iterators and zips the results,
@@ -1343,10 +1349,11 @@ object CollectionExtensions
 		  */
 		def zipPad[B](other: Iterator[B], myPadding: => A, theirPadding: => B) =
 			ZipPadIterator(i, other, myPadding, theirPadding)
+		
 		/**
 		  * Zips this iterator with another, possibly padding one of them.
 		  * Neither of these two source iterators should be used afterwards.
-		  * @param other Another iterator
+		  * @param other   Another iterator
 		  * @param padding Padding to use for the iterator that depletes first (call-by-name)
 		  * @return An iterator that takes from both of these iterators and zips the results,
 		  *         padding if one depletes before the other
@@ -1372,8 +1379,7 @@ object CollectionExtensions
 		  * @param generateFailure A function for generating a throwable for a failure if one is needed
 		  * @return Success with this option's value or failure if this option was empty
 		  */
-		def toTry(generateFailure: => Throwable) = o match
-		{
+		def toTry(generateFailure: => Throwable) = o match {
 			case Some(v) => Success(v)
 			case None => Failure(generateFailure)
 		}
@@ -1404,6 +1410,7 @@ object CollectionExtensions
 		  * The success value of this try. None if this try was a failure
 		  */
 		def success = t.toOption
+		
 		/**
 		  * The failure (throwable) value of this try. None if this try was a success.
 		  */
@@ -1414,8 +1421,7 @@ object CollectionExtensions
 		  * @tparam B Result type
 		  * @return Contents of this try on success, mapped error on failure
 		  */
-		def getOrMap[B >: A](f: Throwable => B): B = t match
-		{
+		def getOrMap[B >: A](f: Throwable => B): B = t match {
 			case Success(item) => item
 			case Failure(error) => f(error)
 		}
@@ -1426,11 +1432,11 @@ object CollectionExtensions
 		/**
 		  * @return This either's left value or None if this either is right
 		  */
-		def leftOption = e match
-		{
+		def leftOption = e match {
 			case Left(l) => Some(l)
 			case Right(_) => None
 		}
+		
 		/**
 		  * @return This either's right value or None if this either is left (same as toOption)
 		  */
@@ -1442,19 +1448,18 @@ object CollectionExtensions
 		  * @tparam B New type for left side
 		  * @return A mapped version of this either
 		  */
-		def mapLeft[B](f: L => B) = e match
-		{
+		def mapLeft[B](f: L => B) = e match {
 			case Right(r) => Right(r)
 			case Left(l) => Left(f(l))
 		}
+		
 		/**
 		  * If this either is right, maps it
 		  * @param f A mapping function for left side
 		  * @tparam B New type for right side
 		  * @return A mapped version of this either
 		  */
-		def mapRight[B](f: R => B) = e match
-		{
+		def mapRight[B](f: R => B) = e match {
 			case Right(r) => Right(f(r))
 			case Left(l) => Left(l)
 		}
@@ -1464,44 +1469,42 @@ object CollectionExtensions
 		  * @tparam B Type of map result
 		  * @return Right value or the mapped left value
 		  */
-		def rightOrMap[B >: R](f: L => B) = e match
-		{
+		def rightOrMap[B >: R](f: L => B) = e match {
 			case Right(r) => r
 			case Left(l) => f(l)
 		}
+		
 		/**
 		  * @param f A mapping function for right values
 		  * @tparam B Type of map result
 		  * @return Left value or the mapped right value
 		  */
-		def leftOrMap[B >: L](f: R => B) = e match
-		{
+		def leftOrMap[B >: L](f: R => B) = e match {
 			case Right(r) => f(r)
 			case Left(l) => l
 		}
 		
 		/**
 		  * Maps the value of this either to a single value, whichever side this is
-		  * @param leftMap Mapping function used when left value is present
+		  * @param leftMap  Mapping function used when left value is present
 		  * @param rightMap Mapping function used when right value is present
 		  * @tparam B Resulting item type
 		  * @return Mapped left or mapped right
 		  */
-		def mapToSingle[B](leftMap: L => B)(rightMap: R => B) = e match
-		{
+		def mapToSingle[B](leftMap: L => B)(rightMap: R => B) = e match {
 			case Right(r) => rightMap(r)
 			case Left(l) => leftMap(l)
 		}
+		
 		/**
 		  * Maps this either, no matter which side it is
-		  * @param leftMap Mapping function used when this either is left
+		  * @param leftMap  Mapping function used when this either is left
 		  * @param rightMap Mapping function used when this either is right
 		  * @tparam L2 New left type
 		  * @tparam R2 New right type
 		  * @return A mapped version of this either (will have same side)
 		  */
-		def mapBoth[L2, R2](leftMap: L => L2)(rightMap: R => R2) = e match
-		{
+		def mapBoth[L2, R2](leftMap: L => L2)(rightMap: R => R2) = e match {
 			case Right(r) => Right(rightMap(r))
 			case Left(l) => Left(leftMap(l))
 		}
@@ -1516,6 +1519,7 @@ object CollectionExtensions
 			case Left(l) => l
 			case Right(r) => r
 		}
+		
 		/**
 		  * @return A pair based on this either, where the non-occupied side receives None and the occupied side
 		  *         receives Some
@@ -1534,6 +1538,7 @@ object CollectionExtensions
 			case Left(l) => Left(f(l))
 			case Right(r) => Right(f(r))
 		}
+		
 		/**
 		  * @param f A mapping function
 		  * @tparam B Mapping result type
@@ -1554,10 +1559,11 @@ object CollectionExtensions
 		  * @return A copy of this map with updated keys
 		  */
 		def mapKeys[K2](f: K => K2) = m.map { case (k, v) => f(k) -> v }
+		
 		/**
 		  * Maps an individual key within this map
 		  * @param key Targeted key (must exist)
-		  * @param f A mapping function for the value in the specified key
+		  * @param f   A mapping function for the value in the specified key
 		  * @tparam V2 Map function result type
 		  * @return A copy of this map with that key mapped
 		  */
@@ -1567,7 +1573,7 @@ object CollectionExtensions
 		/**
 		  * Merges this map with another map. If value is present only in one map, it is preserved as is.
 		  * @param another Another map
-		  * @param merge A merge function used when both maps contain a value
+		  * @param merge   A merge function used when both maps contain a value
 		  * @tparam V2 The resulting value type
 		  * @return A map with merged values
 		  */
@@ -1589,7 +1595,7 @@ object CollectionExtensions
 		/**
 		  * Merges this map with another map. If value is present only in one map, it is preserved as is.
 		  * @param another Another map
-		  * @param merge A merge function used when both maps contain a value
+		  * @param merge   A merge function used when both maps contain a value
 		  * @tparam V2 The resulting value type
 		  * @return A map with merged values
 		  */
@@ -1609,7 +1615,7 @@ object CollectionExtensions
 		
 		/**
 		  * Appends or merges a single key value pair into this map
-		  * @param key Key to add or modify
+		  * @param key   Key to add or modify
 		  * @param value Value to add
 		  * @param merge A merge function called if this map already contained a value for that key.
 		  *              Accepts the existing map value and the new value and returns the merged (i.e. resulting) value.
@@ -1674,16 +1680,15 @@ object CollectionExtensions
 		/**
 		  * @return The first index that is outside of this range
 		  */
-		def exclusiveEnd = range match
-		{
+		def exclusiveEnd = range match {
 			case r: Range.Exclusive => r.end
 			case r: Range.Inclusive => if (r.step > 0) r.end + 1 else r.end - 1
 		}
 		
 		/**
 		  * This function works like foldLeft, except that it stores each step (including the start) into a vector
-		  * @param start The starting step
-		  * @param map A function for calculating the next step, takes the previous result + the next item in this range
+		  * @param start   The starting step
+		  * @param map     A function for calculating the next step, takes the previous result + the next item in this range
 		  * @param factory A factory for final collection (implicit)
 		  * @tparam B The type of steps
 		  * @return All of the steps mapped into a collection
@@ -1735,7 +1740,7 @@ object CollectionExtensions
 		
 		private def iter() =
 		{
-			if (currentIterator.forall { !_.hasNext } )
+			if (currentIterator.forall { !_.hasNext })
 				currentIterator = Some(c.iterator)
 			
 			currentIterator.get
@@ -1759,8 +1764,7 @@ object CollectionExtensions
 		{
 			val start = lastEnd + minStep
 			val defaultEnd = start + by
-			val actualEnd =
-			{
+			val actualEnd = {
 				if ((by < 0 && defaultEnd < end) || (by > 0 && defaultEnd > end))
 					end
 				else

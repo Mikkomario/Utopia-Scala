@@ -5,7 +5,7 @@ import utopia.citadel.database.model.description.{DescriptionLinkModelFactory, D
 import utopia.citadel.model.cached.DescriptionLinkTable
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.LinkedDescription
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper

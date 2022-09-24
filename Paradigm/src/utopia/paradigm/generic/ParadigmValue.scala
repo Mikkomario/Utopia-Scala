@@ -2,7 +2,7 @@ package utopia.paradigm.generic
 
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}

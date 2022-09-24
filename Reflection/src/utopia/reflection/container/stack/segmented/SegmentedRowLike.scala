@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack.segmented
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.template.ComponentWrapper

@@ -1,9 +1,9 @@
 package utopia.flow.async.process
 
-import utopia.flow.async.VolatileOption
-import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.WeekDay
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.VolatileFlag
 

@@ -5,7 +5,7 @@ import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.file.search.Guild
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext

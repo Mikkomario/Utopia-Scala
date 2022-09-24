@@ -1,9 +1,9 @@
 package utopia.flow.async.process
 
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.UntilNotified
+import utopia.flow.async.process.WaitTarget.UntilNotified
 import utopia.flow.time.Now
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.SysErrLogger
 
 import scala.concurrent.ExecutionContext

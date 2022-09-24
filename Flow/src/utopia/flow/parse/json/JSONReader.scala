@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.mutable.{DoubleType, IntType, LongType}
 import utopia.flow.parse.string.StringFrom
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import java.io.{File, InputStream}
 import scala.collection.immutable.VectorBuilder

@@ -2,7 +2,7 @@ package utopia.reflection.controller.data
 
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
 

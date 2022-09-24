@@ -1,6 +1,7 @@
 package utopia.flow.async.process
 
-import utopia.flow.time.WaitTarget.WeeklyTime
+import utopia.flow.async.process.ShutdownReaction.Cancel
+import utopia.flow.async.process.WaitTarget.WeeklyTime
 import utopia.flow.time.WeekDay
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.ChangingLike

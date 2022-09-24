@@ -12,7 +12,7 @@ import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelValidationFailedException, Value}
 import utopia.flow.generic.model.mutable.{IntType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.journey.util.JourneyContext._

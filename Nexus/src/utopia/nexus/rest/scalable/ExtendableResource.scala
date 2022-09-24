@@ -1,7 +1,7 @@
 package utopia.nexus.rest.scalable
 
 import utopia.access.http.Method
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.nexus.rest.{Context, Resource}
 
 /**

@@ -15,7 +15,7 @@ import utopia.flow.collection.value.typeless
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.post.NewSessionRequest
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{LeafResource, Resource, ResourceWithChildren}

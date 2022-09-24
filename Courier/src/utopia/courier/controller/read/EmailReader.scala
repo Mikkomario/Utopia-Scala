@@ -6,7 +6,7 @@ import utopia.courier.model.read.{DeletionRule, ReadSettings}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import java.io.InputStream

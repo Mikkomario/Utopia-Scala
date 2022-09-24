@@ -7,7 +7,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{ModelValidationFailedException, Value}
 import utopia.flow.generic.model.template.{Model, Property}
 import utopia.flow.operator.ApproximatelyZeroable
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}

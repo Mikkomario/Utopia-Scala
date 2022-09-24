@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import StringExtensions._
 import utopia.flow.operator.SelfComparable
 import utopia.flow.parse.string.Regex

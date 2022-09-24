@@ -3,7 +3,7 @@ package utopia.vault.coder.controller.reader
 import utopia.flow.collection.mutable.builder.MultiMapBuilder
 import utopia.flow.collection.mutable.iterator.PollingIterator
 import utopia.flow.parse.string.{IterateLines, Regex}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.MutatingOnce
 import utopia.vault.coder.controller.writer.CodeBuilder

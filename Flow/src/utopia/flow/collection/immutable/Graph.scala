@@ -1,8 +1,8 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.template.{GraphEdge, GraphNode}
-import utopia.flow.collection.template.graph.GraphNode
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Graph.{GraphViewEdge, GraphViewNode}
 
 object Graph
 {

@@ -8,7 +8,7 @@ import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.disciple.http.request.StringBody
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestException}
 import utopia.disciple.apache.Gateway

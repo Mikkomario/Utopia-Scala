@@ -1,7 +1,8 @@
 package utopia.flow.collection.template
 
 import utopia.flow.collection.immutable.{Graph, Tree}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.template.GraphNode.{AnyNode, PathsFinder}
 import utopia.flow.view.template.Viewable
 
 import scala.annotation.tailrec

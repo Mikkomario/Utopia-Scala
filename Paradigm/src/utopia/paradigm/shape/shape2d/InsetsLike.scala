@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.operator.LinearScalable
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}

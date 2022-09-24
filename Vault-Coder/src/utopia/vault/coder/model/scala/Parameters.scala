@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}

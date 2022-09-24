@@ -3,7 +3,7 @@ package utopia.annex.model.response
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 /**
   * Used for representing content read from a non-empty response in vector/array format

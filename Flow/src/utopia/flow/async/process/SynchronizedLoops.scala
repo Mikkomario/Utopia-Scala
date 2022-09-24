@@ -1,8 +1,8 @@
 package utopia.flow.async.process
 
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.Until
-import utopia.flow.util.CollectionExtensions.RichTry
+import utopia.flow.async.process.WaitTarget.Until
+import utopia.flow.collection.CollectionExtensions.RichTry
 
 import scala.util.Try
 

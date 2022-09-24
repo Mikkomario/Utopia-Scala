@@ -4,7 +4,7 @@ import utopia.flow.async.process.Breakable
 import utopia.flow.async.Volatile
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed

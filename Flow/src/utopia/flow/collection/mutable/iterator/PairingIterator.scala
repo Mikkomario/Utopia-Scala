@@ -1,7 +1,7 @@
 package utopia.flow.collection.mutable.iterator
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.caching.MutableLazy
 
 /**

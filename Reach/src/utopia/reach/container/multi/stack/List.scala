@@ -1,7 +1,7 @@
 package utopia.reach.container.multi.stack
 
 import utopia.flow.collection.mutable.Settable
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents

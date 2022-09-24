@@ -1,5 +1,7 @@
 package utopia.flow.collection.mutable.iterator
 
+import utopia.flow.view.mutable.caching.ResettableLazy
+
 import scala.collection.immutable.VectorBuilder
 
 object PollingIterator

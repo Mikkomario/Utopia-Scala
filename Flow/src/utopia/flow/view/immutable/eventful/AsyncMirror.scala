@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{ChangingLike, ChangingWrapper}
 

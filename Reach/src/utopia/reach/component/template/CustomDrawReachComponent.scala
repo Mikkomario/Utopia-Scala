@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}

@@ -5,7 +5,7 @@ import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable

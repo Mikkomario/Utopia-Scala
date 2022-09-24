@@ -21,7 +21,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.mutable.IntType
 import utopia.flow.parse.string.IterateLines
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.vault.database.Connection.settings
 import utopia.vault.model.immutable.{Result, Row, Table}

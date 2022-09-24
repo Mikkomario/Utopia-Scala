@@ -7,7 +7,7 @@ import utopia.flow.generic.model
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.StringType
 import utopia.flow.generic.model.template.Property
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder

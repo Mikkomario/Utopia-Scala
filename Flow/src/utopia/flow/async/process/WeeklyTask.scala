@@ -1,7 +1,7 @@
 package utopia.flow.async.process
 
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.Until
+import utopia.flow.async.process.WaitTarget.Until
 import utopia.flow.time.WeekDay
 
 import java.time.{LocalDateTime, LocalTime}

@@ -1,5 +1,6 @@
 package utopia.flow.async.process
 
+import utopia.flow.async.process.ShutdownReaction.{Cancel, DelayShutdown, SkipDelay}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.ChangingLike

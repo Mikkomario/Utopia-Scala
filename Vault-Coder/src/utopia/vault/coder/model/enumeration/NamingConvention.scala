@@ -2,7 +2,7 @@ package utopia.vault.coder.model.enumeration
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder

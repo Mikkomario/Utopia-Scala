@@ -9,7 +9,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments, CommandArgumentsSchema}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{Connection, ConnectionPool}

@@ -13,7 +13,7 @@ import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, Ext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.post.NewInvitation

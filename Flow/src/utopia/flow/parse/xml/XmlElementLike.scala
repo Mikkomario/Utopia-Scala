@@ -5,7 +5,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder

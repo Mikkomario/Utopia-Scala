@@ -3,7 +3,7 @@ package utopia.flow.view.mutable.async
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.Settable
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 object Volatile
 {

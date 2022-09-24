@@ -5,7 +5,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.generic.model.{immutable, template}
 import utopia.flow.generic.model.mutable.{DataType, ModelType, StringType, VectorType}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import scala.collection.immutable.VectorBuilder
 

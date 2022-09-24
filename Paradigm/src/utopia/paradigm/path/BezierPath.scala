@@ -1,7 +1,7 @@
 package utopia.paradigm.path
 
 import utopia.flow.operator.{Combinable, LinearMeasurable, LinearScalable}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 /**
   * This class calculates a smooth path between points that consists of bezier curves

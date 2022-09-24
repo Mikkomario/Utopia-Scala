@@ -3,7 +3,7 @@ package utopia.genesis.graphics
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.graphics.TextDrawHeight.LineHeight
 import utopia.paradigm.enumeration.{Alignment, Direction2D}

@@ -7,7 +7,7 @@ import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
 import utopia.flow.parse.file.container.{FileContainer, ModelsFileContainer, SaveTiming}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext

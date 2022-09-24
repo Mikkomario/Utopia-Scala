@@ -3,7 +3,7 @@ package utopia.paradigm.color
 import utopia.flow.collection.template.typeless
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.Value

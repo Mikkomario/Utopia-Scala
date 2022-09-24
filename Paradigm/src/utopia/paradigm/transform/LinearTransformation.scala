@@ -7,7 +7,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation

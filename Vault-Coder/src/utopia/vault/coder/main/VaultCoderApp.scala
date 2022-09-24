@@ -8,7 +8,7 @@ import utopia.flow.parse.JSONReader
 import utopia.flow.parse.json.{JSONReader, JsonParser}
 import utopia.flow.time.Today
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}

@@ -2,7 +2,7 @@ package utopia.flow.test.collection
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.mutable.iterator.PollableOnce
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 /**
  * Tests iterator -related functions

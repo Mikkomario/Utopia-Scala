@@ -2,7 +2,7 @@ package utopia.flow.util.logging
 
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.error.ErrorExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter

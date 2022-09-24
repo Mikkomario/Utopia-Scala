@@ -4,7 +4,7 @@ import utopia.flow.collection.mutable.TreeLike
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.StringType
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 object XmlElementBuilder
 {

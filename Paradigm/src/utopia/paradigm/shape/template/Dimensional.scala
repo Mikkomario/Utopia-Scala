@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.operator.EqualsFunction
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}

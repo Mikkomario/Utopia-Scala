@@ -1,5 +1,6 @@
 package utopia.flow.async.process
 
+import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileOption
 

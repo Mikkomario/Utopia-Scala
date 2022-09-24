@@ -2,13 +2,11 @@ package utopia.flow.generic.model.immutable
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.error.DataTypeException
-import utopia.flow.generic._
 import utopia.flow.generic.casting.ConversionHandler
 import utopia.flow.generic.model.mutable.{AnyType, BooleanType, DataType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
-import utopia.flow.parse.JsonValueConverter
 import utopia.flow.parse.json.{JsonConvertible, JsonValueConverter}
 import utopia.flow.time.{Days, Today}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.duration.{Duration, FiniteDuration}

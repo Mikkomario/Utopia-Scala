@@ -1,5 +1,7 @@
 package utopia.flow.collection.template
 
+import utopia.flow.collection.immutable.caching.cache.{KeyMappingCache, MappingCacheView}
+
 /**
   * Caches keep their values after requesting them
   * @author Mikko Hilpinen

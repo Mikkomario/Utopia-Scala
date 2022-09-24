@@ -1,6 +1,6 @@
 package utopia.flow.test.collection
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 
 /**

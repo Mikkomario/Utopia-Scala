@@ -4,7 +4,7 @@ import scala.language.postfixOps
 import utopia.access.http.ContentCategory._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import java.io.{BufferedReader, File, FileOutputStream, OutputStream}
 import utopia.access.http.ContentType

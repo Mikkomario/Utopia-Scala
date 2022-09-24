@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable.caching.iterable
 
 import utopia.flow.collection.template.factory.LazyFactory
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.LazyLike
 

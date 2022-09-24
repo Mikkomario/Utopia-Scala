@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.generic.ParadigmDataType

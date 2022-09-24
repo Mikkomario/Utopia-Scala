@@ -1,6 +1,6 @@
 package utopia.paradigm.color
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.enumeration.RgbChannel.{Blue, Green, Red}
 

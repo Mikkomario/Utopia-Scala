@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.window
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
-import utopia.flow.async.VolatileOption
+import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.color.Color

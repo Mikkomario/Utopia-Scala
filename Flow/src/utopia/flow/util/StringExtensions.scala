@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 

@@ -7,7 +7,7 @@ import java.awt.Component
 import java.time.Instant
 import javax.swing.SwingUtilities
 import utopia.flow.time.Now
-import utopia.flow.time.WaitTarget.{Until, WaitDuration}
+import utopia.flow.async.process.WaitTarget.{Until, WaitDuration}
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 

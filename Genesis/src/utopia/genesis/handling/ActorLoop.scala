@@ -4,7 +4,7 @@ import utopia.flow.async.process.LoopingProcess
 
 import java.time.Instant
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.Until
+import utopia.flow.async.process.WaitTarget.Until
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 
