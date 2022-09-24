@@ -1,8 +1,8 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.datastructure.template
-import utopia.flow.generic.SureFromModelFactory
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.coder.model.enumeration.{NameContext, NamingConvention}
 

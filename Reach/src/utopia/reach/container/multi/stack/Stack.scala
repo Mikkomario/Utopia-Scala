@@ -1,6 +1,6 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.Positive
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D

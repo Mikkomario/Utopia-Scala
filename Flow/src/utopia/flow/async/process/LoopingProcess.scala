@@ -1,9 +1,9 @@
 package utopia.flow.async.process
 
-import utopia.flow.event.ChangingLike
 import utopia.flow.time.WaitTarget.WeeklyTime
-import utopia.flow.time.{WaitTarget, WeekDay}
+import utopia.flow.time.WeekDay
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.template.eventful.ChangingLike
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext

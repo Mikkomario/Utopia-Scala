@@ -1,11 +1,11 @@
 package utopia.flow.async.process
 
 import utopia.flow.async.VolatileOption
-import utopia.flow.collection.mutable.async.VolatileFlag
 import utopia.flow.time.WaitTarget.WaitDuration
-import utopia.flow.time.{WaitTarget, WaitUtils, WeekDay}
+import utopia.flow.time.WeekDay
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.async.VolatileFlag
 
 import java.time.LocalTime
 import scala.concurrent.duration.{Duration, FiniteDuration}

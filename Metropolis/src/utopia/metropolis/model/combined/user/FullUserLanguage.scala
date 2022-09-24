@@ -1,8 +1,9 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.metropolis.model.{DeepExtender, StyledModelConvertible}
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.language.Language
@@ -18,5 +19,5 @@ case class FullUserLanguage(wrapped: UserLanguageLinkWithFamiliarity, language: 
 	override def toSimpleModel = Model(Vector(
 		"language" -> language.toSimpleModel, "familiarity" -> wrapped.familiarity.toSimpleModel))
 	
-	override def toModel = wrapped.toModel + Constant("language", language.toModel)
+	override def toModel = wrapped.toModel + immutable.Constant("language", language.toModel)
 }

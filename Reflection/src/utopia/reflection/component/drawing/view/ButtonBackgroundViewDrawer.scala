@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer

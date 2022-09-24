@@ -1,8 +1,9 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.{ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.Zeroable
 import utopia.flow.time.TimeExtensions._
 

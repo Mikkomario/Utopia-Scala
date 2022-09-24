@@ -1,13 +1,15 @@
 package utopia.metropolis.model.combined.organization
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
 import utopia.flow.collection.value
-import utopia.flow.collection.value.typeless.{Constant, PropertyDeclaration}
+import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{FromModelFactory, ModelType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.mutable.ModelType
+import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.metropolis.model.stored.organization.Membership
@@ -18,7 +20,7 @@ object DetailedMembership extends FromModelFactory[DetailedMembership]
 	private val schema = ModelDeclaration(PropertyDeclaration("user_data", ModelType))
 	
 	// Validates model, then parses membership and settings (if possible)
-	override def apply(model: typeless.Model[Property]) =
+	override def apply(model: Model[Property]) =
 		schema.validate(model).toTry.flatMap { valid =>
 			Membership(valid).flatMap { membership =>
 				UserSettings(valid("user_data").getModel).map { settings =>
@@ -54,7 +56,7 @@ case class DetailedMembership(membership: Membership, roleLinks: Set[MemberRoleW
 	
 	override def toModel = membership.toModel ++
 		Vector(Constant("roles_links", roleLinks.toVector.sortBy { _.roleId }.map { _.toModel }),
-			value.typeless.Constant("user_data", userData.toModel))
+			Constant("user_data", userData.toModel))
 	
 	override def toSimpleModel = userData.toSimpleModel ++ membership.toSimpleModel ++
 		Model(Vector("role_ids" -> roleLinks.map { _.roleId }.toVector.sorted,

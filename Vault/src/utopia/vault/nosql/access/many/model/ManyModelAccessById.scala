@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.many.model
 
-import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 

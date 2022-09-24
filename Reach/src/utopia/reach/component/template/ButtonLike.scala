@@ -1,9 +1,8 @@
 package utopia.reach.component.template
 
-import utopia.flow.collection.mutable.Settable
-
 import java.awt.event.KeyEvent
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.mutable.Settable
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType

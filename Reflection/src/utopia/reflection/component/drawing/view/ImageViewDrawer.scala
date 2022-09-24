@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.collection.template.Viewable
-import utopia.flow.collection.value.View
+import utopia.flow.view.immutable.View
+import utopia.flow.view.template.Viewable
 import utopia.genesis.image.Image
 import utopia.reflection.component.drawing.template.{DrawLevel, ImageDrawerLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Normal

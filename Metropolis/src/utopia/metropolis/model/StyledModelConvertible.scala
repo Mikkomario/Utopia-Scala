@@ -1,7 +1,7 @@
 package utopia.metropolis.model
 
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 

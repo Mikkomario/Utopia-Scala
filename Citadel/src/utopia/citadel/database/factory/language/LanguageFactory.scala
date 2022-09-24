@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.language
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.language.LanguageData
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

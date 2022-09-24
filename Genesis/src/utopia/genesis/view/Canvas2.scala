@@ -1,6 +1,6 @@
 package utopia.genesis.view
 
-import utopia.flow.util.AutoClose._
+import utopia.flow.parse.AutoClose._
 import utopia.flow.util.logging.Logger
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.DrawableHandler2

@@ -7,9 +7,10 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.collection.VolatileFlag
 import utopia.flow.async.context.NewThreadExecutionContext
-import utopia.flow.collection.mutable.async.{Volatile, VolatileFlag, VolatileList}
+import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.FiniteDuration

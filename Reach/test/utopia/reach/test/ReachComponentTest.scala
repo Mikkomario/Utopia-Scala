@@ -1,7 +1,7 @@
 package utopia.reach.test
 
-import utopia.flow.collection.mutable.Pointer
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener

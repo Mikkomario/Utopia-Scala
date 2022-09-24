@@ -2,8 +2,8 @@ package utopia.courier.controller.read
 
 import utopia.courier.model.{Email, EmailContent, EmailHeaders}
 import utopia.flow.time.Today
-import utopia.flow.util.FileExtensions._
-import utopia.flow.util.StringFrom
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.string.StringFrom
 
 import java.io.InputStream
 import java.nio.file.Path

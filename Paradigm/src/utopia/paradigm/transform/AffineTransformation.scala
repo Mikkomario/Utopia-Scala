@@ -1,13 +1,16 @@
 package utopia.paradigm.transform
 
-import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.{Constant, Value}
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
@@ -95,7 +98,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     
     override implicit def toValue: Value = new Value(Some(this), AffineTransformationType)
     
-    override def toModel: typeless.Model = linear.toModel + Constant("translation", translation)
+    override def toModel: immutable.Model = linear.toModel + Constant("translation", translation)
     
     override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
         copy(linear = LinearTransformation(scaling, rotation, shear))

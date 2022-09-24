@@ -1,9 +1,8 @@
 package utopia.paradigm.angular
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConvertible
-import utopia.flow.operator.{ApproximatelyEquatable, Combinable, LinearScalable, Zeroable}
-import utopia.flow.util.SelfComparable
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.{ApproximatelyEquatable, Combinable, LinearScalable, SelfComparable, Zeroable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}

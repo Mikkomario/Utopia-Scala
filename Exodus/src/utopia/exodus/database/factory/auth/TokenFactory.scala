@@ -4,8 +4,8 @@ import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.auth.TokenModel
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.exodus.model.stored.auth.Token
-import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.datastructure.template
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory

@@ -1,6 +1,7 @@
 package utopia.reach.window
 
-import utopia.flow.event.{AlwaysTrue, ChangingLike}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.enumeration.HorizontalDirection
 import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy

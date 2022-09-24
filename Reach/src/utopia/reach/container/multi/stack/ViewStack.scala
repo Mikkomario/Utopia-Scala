@@ -1,7 +1,9 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
-import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}

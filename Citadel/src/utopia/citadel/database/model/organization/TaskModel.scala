@@ -2,8 +2,8 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.factory.organization.TaskFactory
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.partial.organization.TaskData
 import utopia.metropolis.model.stored.organization.Task
 import utopia.vault.model.immutable.StorableWithFactory

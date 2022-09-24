@@ -1,6 +1,6 @@
 package utopia.access.http
 
-import utopia.flow.generic.EnvironmentNotSetupException
+import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.operator.Equatable
 
 object Status

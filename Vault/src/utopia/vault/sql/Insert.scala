@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.collection.template.typeless.{Model, Property}
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, Triggers}

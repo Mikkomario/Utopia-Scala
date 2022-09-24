@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.flow.collection.mutable.Settable
+import utopia.flow.view.mutable.Settable
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.transform.AffineTransformation

@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.user
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.user.UserLanguageLink
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

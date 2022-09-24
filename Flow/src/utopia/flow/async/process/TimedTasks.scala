@@ -1,9 +1,9 @@
 package utopia.flow.async.process
 
-import utopia.flow.collection.mutable.async.VolatileList
+import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.{DailyTime, WeeklyTime}
-import utopia.flow.time.{Now, Today, WaitUtils, WeekDay}
+import utopia.flow.time.{Now, Today, WeekDay}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 

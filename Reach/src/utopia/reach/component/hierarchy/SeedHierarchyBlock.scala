@@ -1,7 +1,9 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.async.DelayedView
-import utopia.flow.event.{AlwaysTrue, ChangeDependency, ChangeEvent, ChangeListener, ChangingLike, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, DelayedView}
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 

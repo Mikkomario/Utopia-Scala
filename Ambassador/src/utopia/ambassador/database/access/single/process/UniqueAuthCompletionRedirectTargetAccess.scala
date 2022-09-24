@@ -3,8 +3,8 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.AuthCompletionRedirectTargetFactory
 import utopia.ambassador.database.model.process.AuthCompletionRedirectTargetModel
 import utopia.ambassador.model.stored.process.AuthCompletionRedirectTarget
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess

@@ -4,8 +4,8 @@ import java.time.Instant
 import utopia.ambassador.database.factory.process.IncompleteAuthFactory
 import utopia.ambassador.model.partial.process.IncompleteAuthData
 import utopia.ambassador.model.stored.process.IncompleteAuth
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.storable.deprecation.Expiring

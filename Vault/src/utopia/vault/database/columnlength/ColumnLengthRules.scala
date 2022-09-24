@@ -1,9 +1,9 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.collection.value.iterable.DeepMap
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JsonParser
+import utopia.flow.collection.immutable.DeepMap
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.{Throw, TryCrop, TryExpand}

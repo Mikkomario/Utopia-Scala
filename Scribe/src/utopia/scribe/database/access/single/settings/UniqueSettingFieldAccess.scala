@@ -1,9 +1,8 @@
 package utopia.scribe.database.access.single.settings
 
-import utopia.flow.collection.value.typeless.Value
-
 import java.time.Instant
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.scribe.database.factory.settings.SettingFieldFactory
 import utopia.scribe.database.model.settings.SettingFieldModel
 import utopia.scribe.model.stored.settings.SettingField

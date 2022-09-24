@@ -1,7 +1,7 @@
 package utopia.vault.database
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.AnyType
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.AnyType
 
 /**
  * This class uses multiple sql value generators and generates values that way

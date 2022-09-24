@@ -3,7 +3,7 @@ package utopia.flow.test.async
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ProcessState.{Completed, Running, Stopped}
 import utopia.flow.async.context.{CloseHook, ThreadPool}
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}

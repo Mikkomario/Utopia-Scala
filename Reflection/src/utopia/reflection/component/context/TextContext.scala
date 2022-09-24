@@ -1,6 +1,6 @@
 package utopia.reflection.component.context
 
-import utopia.flow.util.ScopeUsable
+import utopia.flow.operator.ScopeUsable
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.ColorContrastStandard

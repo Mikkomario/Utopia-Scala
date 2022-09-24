@@ -4,7 +4,7 @@ import utopia.citadel.database.access.many.organization.ManyMembershipsWithRoles
 import utopia.citadel.database.access.many.user.DbUsers
 import utopia.citadel.database.factory.organization.MembershipWithRolesFactory
 import utopia.citadel.database.model.organization.MemberRoleLinkModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.combined.organization.{DetailedMembership, MembershipWithRoles}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess

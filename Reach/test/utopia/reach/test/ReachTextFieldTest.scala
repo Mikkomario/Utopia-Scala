@@ -1,7 +1,7 @@
 package utopia.reach.test
 
-import utopia.flow.event.Fixed
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default

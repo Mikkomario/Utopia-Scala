@@ -3,7 +3,7 @@ package utopia.ambassador.database.access.single.service
 import utopia.ambassador.database.factory.service.AuthServiceFactory
 import utopia.ambassador.database.model.service.AuthServiceModel
 import utopia.ambassador.model.stored.service.AuthService
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.column.SingleIntIdAccess
 import utopia.vault.nosql.view.{FactoryView, UnconditionalView}

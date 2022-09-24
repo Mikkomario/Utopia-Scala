@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.flow.collection.mutable.Pointer
+import utopia.flow.view.mutable.Pointer
 import utopia.vault.coder.model.scala.code
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
 import utopia.vault.coder.model.scala.datatype.Reference

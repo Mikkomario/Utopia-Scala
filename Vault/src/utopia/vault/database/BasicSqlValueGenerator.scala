@@ -1,13 +1,13 @@
 package utopia.vault.database
 
-import utopia.flow.collection.value.typeless.Value
-
 import java.sql.Types
-import utopia.flow.generic.{BooleanType, DataType, DoubleType, FloatType, IntType, LongType, StringType}
+import utopia.flow.generic.BooleanType
 
 import java.sql.Date
 import java.sql.Timestamp
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.{BooleanType, DataType, DoubleType, FloatType, IntType, LongType, StringType}
 
 import java.sql.Time
 

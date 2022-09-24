@@ -1,12 +1,11 @@
 package utopia.flow.util
 
-import utopia.flow.collection.mutable.iterator.{FoldingIterator, LimitedLengthIterator, PairingIterator, PollableOnce}
+import utopia.flow.collection.mutable.iterator.{FoldingIterator, IteratorWithEvents, LimitedLengthIterator, PairingIterator, PollableOnce}
 import utopia.flow.collection.LazyVector
-import utopia.flow.collection.template.caching.LazyLike
-import utopia.flow.collection.value.iterable.Pair
-import utopia.flow.event.IteratorWithEvents
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.template.LazyLike
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}

@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbUserRoleDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.organization.UserRoleFactory
 import utopia.citadel.database.model.organization.UserRoleModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.DescribedUserRole
 import utopia.metropolis.model.stored.organization.UserRole

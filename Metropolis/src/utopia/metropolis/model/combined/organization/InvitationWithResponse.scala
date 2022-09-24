@@ -1,12 +1,13 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.FromModelFactory
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
@@ -45,12 +46,12 @@ case class InvitationWithResponse(invitation: Invitation, response: Option[Invit
 	
 	override def wrapped = invitation.data
 	
-	override def toModel = invitation.toModel + typeless.Constant("response", response.map { _.toModel })
+	override def toModel = invitation.toModel + immutable.Constant("response", response.map { _.toModel })
 	override def toSimpleModel =
 	{
 		val base = invitation.toModel
 		response match {
-			case Some(response) => base + typeless.Constant("response", response.toSimpleModel)
+			case Some(response) => base + immutable.Constant("response", response.toSimpleModel)
 			case None => base
 		}
 	}

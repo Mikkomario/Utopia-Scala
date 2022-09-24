@@ -1,9 +1,8 @@
 package utopia.exodus.model.partial.auth
 
-import utopia.flow.collection.value.typeless.Model
-
 import java.time.Instant
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.metropolis.model.StyledModelConvertible
 

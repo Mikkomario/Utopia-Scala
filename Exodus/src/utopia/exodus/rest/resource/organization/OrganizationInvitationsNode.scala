@@ -11,7 +11,7 @@ import utopia.exodus.model.enumeration.ExodusScope.{CreateUser, JoinOrganization
 import utopia.exodus.model.enumeration.ExodusTask.InviteMembers
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.exodus.util.ExodusContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
@@ -21,7 +21,7 @@ import utopia.metropolis.model.stored.organization.Invitation
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 import ExodusContext.uuidGenerator
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.generic.model.immutable.Model
 
 object OrganizationInvitationsNode extends ExtendableOrganizationResourceFactory[OrganizationInvitationsNode]
 {

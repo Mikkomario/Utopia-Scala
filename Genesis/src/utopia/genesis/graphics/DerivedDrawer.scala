@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.shape2d.{Matrix2D, Polygonic}
 import utopia.paradigm.shape.shape3d.Matrix3D
 

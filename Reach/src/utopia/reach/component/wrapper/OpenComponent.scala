@@ -1,7 +1,9 @@
 package utopia.reach.component.wrapper
 
 import scala.language.implicitConversions
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.event.AlwaysTrue
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D

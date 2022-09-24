@@ -1,7 +1,7 @@
 package utopia.reach.component.template
 
-import utopia.flow.collection.value.Tree
-import utopia.flow.event.ChangingLike
+import utopia.flow.collection.immutable.Tree
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}

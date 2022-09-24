@@ -1,7 +1,7 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.collection.mutable.async.VolatileFlag
-import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
+import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}

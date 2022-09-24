@@ -1,12 +1,13 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.LinearScalable
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
@@ -37,7 +38,7 @@ object Bounds extends FromModelFactory[Bounds]
     
     // OPERATORS    -----------------------
     
-    override def apply(model: typeless.Model[Property]) =
+    override def apply(model: Model[Property]) =
         Success(Bounds(model("position").getPoint, model("size").getSize))
     
     /**

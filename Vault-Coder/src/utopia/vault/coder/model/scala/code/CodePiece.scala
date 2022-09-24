@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.code
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.FromValueFactory
+import utopia.flow.generic.factory.FromValueFactory
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Combinable
 import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.Referencing

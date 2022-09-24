@@ -2,14 +2,15 @@ package utopia.vault.coder.main
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.container.ObjectMapFileContainer
-import utopia.flow.generic.DataType
-import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.parse.file.container.ObjectMapFileContainer
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.JSONReader
+import utopia.flow.parse.json.{JSONReader, JsonParser}
 import utopia.flow.time.Today
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version

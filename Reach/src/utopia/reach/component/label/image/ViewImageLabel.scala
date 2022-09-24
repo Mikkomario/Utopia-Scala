@@ -1,6 +1,7 @@
 package utopia.reach.component.label.image
 
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.image.Image
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy

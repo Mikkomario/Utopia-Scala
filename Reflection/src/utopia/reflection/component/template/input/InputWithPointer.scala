@@ -1,6 +1,7 @@
 package utopia.reflection.component.template.input
 
-import utopia.flow.event.{ChangeListener, ChangingLike}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.template.eventful.ChangingLike
 
 /**
   * This input provides access to a changing element

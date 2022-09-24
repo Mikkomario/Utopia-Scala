@@ -1,9 +1,9 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.description.DescriptionRole

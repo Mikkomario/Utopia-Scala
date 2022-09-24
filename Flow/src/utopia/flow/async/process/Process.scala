@@ -1,11 +1,11 @@
 package utopia.flow.async.process
 
 import utopia.flow.async.context.CloseHook
-import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
-import utopia.flow.event.ChangingLike
-import utopia.flow.time.{WaitTarget, WaitUtils}
+import utopia.flow.time.WaitUtils
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.template.eventful.ChangingLike
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try

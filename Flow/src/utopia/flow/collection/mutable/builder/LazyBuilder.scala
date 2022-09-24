@@ -1,8 +1,8 @@
 package utopia.flow.collection.mutable.builder
 
-import utopia.flow.collection.immutable.caching.lazily.Lazy
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
-import utopia.flow.collection.template.caching.LazyLike
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.LazyLike
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable

@@ -1,8 +1,10 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
+import utopia.flow.event.ChangeListener
+import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.shape.shape2d.Vector2DLike
 
 import java.time.Instant

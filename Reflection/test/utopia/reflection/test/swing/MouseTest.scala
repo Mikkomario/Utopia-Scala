@@ -1,8 +1,8 @@
 package utopia.reflection.test.swing
 
-import java.awt.Color
+import utopia.flow.generic.model.mutable.DataType
 
-import utopia.flow.generic.DataType
+import java.awt.Color
 import utopia.genesis.event.{MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._

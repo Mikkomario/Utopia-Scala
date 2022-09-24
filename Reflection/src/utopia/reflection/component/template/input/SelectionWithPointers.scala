@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.input
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.component.template.display.PoolWithPointer
 
 /**

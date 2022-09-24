@@ -1,6 +1,6 @@
 package utopia.genesis.animation.animator
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.animation.TimedAnimation
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.shape.shape2D.{MutableTransformable, Transformation}

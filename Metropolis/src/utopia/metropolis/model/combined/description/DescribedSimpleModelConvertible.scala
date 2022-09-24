@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.stored.description.DescriptionRole
 
 /**

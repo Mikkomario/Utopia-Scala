@@ -1,7 +1,7 @@
 package utopia.flow.async.context
 
-import utopia.flow.collection.mutable.async.Volatile
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
 

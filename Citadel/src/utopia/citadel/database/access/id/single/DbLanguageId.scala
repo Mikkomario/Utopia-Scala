@@ -2,7 +2,7 @@ package utopia.citadel.database.access.id.single
 
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
-import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.partial.language.LanguageData
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.column.{SingleIntIdAccess, UniqueIdAccess}

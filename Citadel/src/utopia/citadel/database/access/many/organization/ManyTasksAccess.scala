@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbTaskDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.organization.TaskFactory
 import utopia.citadel.database.model.organization.TaskModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.stored.organization.Task
 import utopia.vault.database.Connection

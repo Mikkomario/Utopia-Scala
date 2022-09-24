@@ -1,7 +1,7 @@
 package utopia.reflection.event
 
-import utopia.flow.collection.template.Viewable
-import utopia.flow.event.AlwaysTrue
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.Viewable
 import utopia.genesis.event.KeyStatus
 
 import java.awt.event.KeyEvent

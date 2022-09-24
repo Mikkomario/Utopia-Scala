@@ -1,6 +1,6 @@
 package utopia.scribe.database.access.many.settings
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.scribe.model.stored.settings.SettingValue
 import utopia.vault.nosql.view.NonDeprecatedView
 import utopia.vault.sql.SqlExtensions._

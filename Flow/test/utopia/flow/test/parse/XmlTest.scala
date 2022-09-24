@@ -1,10 +1,11 @@
 package utopia.flow.test.parse
 
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.{XmlElement, XmlReader, XmlWriter}
-import utopia.flow.util.FileExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.XmlWriter
+import utopia.flow.parse.xml.XmlReader
+import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Paths
 import scala.util.Try

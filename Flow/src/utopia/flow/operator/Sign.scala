@@ -1,7 +1,6 @@
 package utopia.flow.operator
 
-import utopia.flow.collection.value.iterable.Pair
-import utopia.flow.util.SelfComparable
+import utopia.flow.collection.immutable.Pair
 
 /**
   * An enumeration for sign (positive or negative), which can also be used as binary direction enumeration

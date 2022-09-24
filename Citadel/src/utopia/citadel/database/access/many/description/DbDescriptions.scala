@@ -1,6 +1,6 @@
 package utopia.citadel.database.access.many.description
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.description.Description
 import utopia.vault.nosql.view.NonDeprecatedView
 import utopia.vault.sql.SqlExtensions._

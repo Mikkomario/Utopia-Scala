@@ -1,9 +1,9 @@
 package utopia.reach.container
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.mutable.async.VolatileList
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}

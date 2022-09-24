@@ -1,9 +1,10 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.ModelDeclaration
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.{FromModelFactory, IntType, StringType, VectorType}
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.mutable.{IntType, StringType, VectorType}
 import utopia.flow.util.CollectionExtensions._
 
 object NewDescription extends FromModelFactory[NewDescription]

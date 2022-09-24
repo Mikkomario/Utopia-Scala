@@ -3,7 +3,8 @@ package utopia.nexus.http
 import utopia.access.http.Method
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
-import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 
 import java.time.Instant

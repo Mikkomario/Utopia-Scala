@@ -1,7 +1,7 @@
 package utopia.nexus.rest
 
 import utopia.access.http.Method._
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.NullSafe._
 import utopia.flow.datastructure.immutable
 import utopia.nexus.http.Path
@@ -12,13 +12,13 @@ import java.nio.file.Files
 import scala.util.Try
 import scala.util.Failure
 import utopia.access.http.Status._
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.collection.mutable.iterator.Counter
+import utopia.flow.generic.model.immutable.Model
 
 import java.time.LocalDateTime
 import utopia.nexus.http.StreamedBody
 
 import scala.util.Success
-import utopia.flow.util.Counter
 import utopia.nexus.rest.ResourceSearchResult.Ready
 
 /**

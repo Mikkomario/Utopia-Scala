@@ -1,14 +1,17 @@
 package utopia.flow.test.file
 
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.container.{ObjectMapFileContainer, ValueConvertibleFileContainer}
+import utopia.flow.parse.file.container.{ObjectMapFileContainer, ValueConvertibleFileContainer}
 import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.generic.{DataType, FromModelFactoryWithSchema, ModelConvertible, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.parse.{JSONReader, JsonParser}
-import utopia.flow.util.FileExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.{DataType, StringType}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.parse.JSONReader
+import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.Instant

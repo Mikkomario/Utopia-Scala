@@ -2,7 +2,7 @@ package utopia.ambassador.model.combined.service
 
 import utopia.ambassador.model.partial.service.AuthServiceData
 import utopia.ambassador.model.stored.service.{AuthService, AuthServiceSettings}
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * Combines service with settings data

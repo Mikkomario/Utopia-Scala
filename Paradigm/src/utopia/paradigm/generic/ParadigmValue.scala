@@ -1,7 +1,7 @@
 package utopia.paradigm.generic
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.DataTypeException
+import utopia.flow.error.DataTypeException
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.CollectionExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}

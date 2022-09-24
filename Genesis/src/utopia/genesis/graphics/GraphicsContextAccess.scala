@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 
 /**
   * Used for accessing a graphics context at any time for read operations

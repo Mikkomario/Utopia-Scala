@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.reflection.component.template.display.RefreshableWithPointer
 
 /**

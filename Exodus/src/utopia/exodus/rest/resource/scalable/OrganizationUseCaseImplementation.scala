@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.scalable
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.OrganizationParams
-import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.nexus.http.Path
 import utopia.nexus.rest.scalable.UseCaseImplementation
 import utopia.nexus.result.Result

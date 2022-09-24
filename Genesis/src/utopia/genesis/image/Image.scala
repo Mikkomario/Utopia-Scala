@@ -1,12 +1,12 @@
 package utopia.genesis.image
 
-import utopia.flow.collection.immutable.caching.lazily.LazyWrapper
-import utopia.flow.collection.template.caching.LazyLike
-import utopia.flow.util.AutoClose._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.NullSafe._
 import utopia.flow.datastructure.immutable.LazyWrapper
 import utopia.flow.operator.LinearScalable
+import utopia.flow.view.immutable.caching.LazyWrapper
+import utopia.flow.view.template.LazyLike
 import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}

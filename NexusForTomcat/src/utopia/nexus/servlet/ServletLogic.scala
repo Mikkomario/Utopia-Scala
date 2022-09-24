@@ -1,6 +1,6 @@
 package utopia.nexus.servlet
 
-import utopia.flow.parse.JsonParser
+import utopia.flow.parse.json.JsonParser
 import utopia.nexus.http.{Request, Response, ServerSettings}
 
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}

@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.button
 
-import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType

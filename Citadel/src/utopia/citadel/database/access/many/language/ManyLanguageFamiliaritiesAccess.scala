@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbLanguageFamiliarityDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
 import utopia.citadel.database.model.language.LanguageFamiliarityModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection

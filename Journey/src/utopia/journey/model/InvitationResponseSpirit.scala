@@ -1,11 +1,13 @@
 package utopia.journey.model
 
 import utopia.annex.model.Spirit
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.{Constant, PropertyDeclaration}
+import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
 import utopia.metropolis.model.post.NewInvitationResponse
 
 object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpirit]

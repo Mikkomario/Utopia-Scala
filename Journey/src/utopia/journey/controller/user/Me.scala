@@ -5,9 +5,9 @@ import utopia.annex.model.error.EmptyResponseException
 import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.annex.model.schrodinger.TryFindSchrodinger
-import utopia.flow.container.OptionObjectFileContainer
+import utopia.flow.parse.file.container.OptionObjectFileContainer
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.journey.model.error.NoUserDataError
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.user.UserWithLinks

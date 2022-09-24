@@ -1,8 +1,7 @@
 package utopia.flow.async.process
 
-import utopia.flow.collection.mutable.async.VolatileOption
-import utopia.flow.time.WaitTarget
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.VolatileOption
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try

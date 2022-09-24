@@ -32,7 +32,7 @@ Main Features
 Usage Notes
 -----------
 
-    Like with Flow, if you wish to use typeless values, you need to call utopia.flow.generic.DataType.setup() on
+    Like with Flow, if you wish to use typeless values, you need to call utopia.flow.generic.model.mutable.DataType.setup() on
     program startup.
 
 

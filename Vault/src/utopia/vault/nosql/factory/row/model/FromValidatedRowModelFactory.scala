@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.row.model
 
-import utopia.flow.generic.FromModelFactoryWithSchema
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
 
 /**
   * This storable factory uses table structure to validate model before parsing it

@@ -2,15 +2,15 @@ package utopia.flow.util.console
 
 import utopia.flow.async.process.Breakable
 import utopia.flow.async.Volatile
-import utopia.flow.collection.mutable.async.VolatileFlag
-import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
-import utopia.flow.collection.template.Viewable
-import utopia.flow.collection.value.View
-import utopia.flow.event.Fixed
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.parse.JsonParser
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.template.Viewable
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.io.StdIn

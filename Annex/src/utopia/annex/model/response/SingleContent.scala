@@ -1,8 +1,8 @@
 package utopia.annex.model.response
 
-import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Model
 
 /**
   * Used for representing contents of non-empty responses which contain model data

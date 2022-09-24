@@ -1,6 +1,6 @@
 package utopia.nexus.http
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.access.http.Status._
 import utopia.access.http.ContentCategory._
 
@@ -13,8 +13,9 @@ import utopia.access.http.Status
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
 import utopia.access.http.ContentType
-import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 
 object Response
 {

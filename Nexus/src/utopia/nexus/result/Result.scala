@@ -2,7 +2,7 @@ package utopia.nexus.result
 
 import utopia.access.http.{Headers, Status, StatusGroup}
 import utopia.access.http.Status._
-import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.rest.Context
 
 object Result

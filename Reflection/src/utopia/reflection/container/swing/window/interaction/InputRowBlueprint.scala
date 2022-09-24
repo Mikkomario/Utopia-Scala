@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.localization.LocalizedString
 

@@ -22,9 +22,10 @@ import utopia.disciple.model.error.RequestFailedException
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.template.MapLike
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
@@ -208,7 +209,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 			"redirect_uri" -> settings.redirectUrl))
 		val bodyModel = if (useAuthorizationHeader) baseBodyModel else
 			baseBodyModel ++ Vector("client_id" -> settings.clientId, "client_secret" -> settings.clientSecret)
-				.map { case (key, value) => Constant(key, value) }
+				.map { case (key, value) => immutable.Constant(key, value) }
 		
 		Request(settings.tokenUrl, Post, headers = headers, body = Some(StringBody.urlEncodedForm(bodyModel)))
 	}

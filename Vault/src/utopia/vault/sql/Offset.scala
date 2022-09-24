@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 
 /**
  * Offset determines how many rows to skip from the beginning. Offset is always used in combination with Limit.

@@ -3,7 +3,7 @@ package utopia.vault.database
 import utopia.flow.async.process.LoopingProcess
 
 import java.time.{Instant, LocalTime}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.sql.SqlExtensions._
 import utopia.flow.time.TimeExtensions._

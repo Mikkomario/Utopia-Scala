@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbClientDeviceDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.device.ClientDeviceFactory
 import utopia.citadel.database.model.device.ClientDeviceModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.combined.device.DescribedClientDevice
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.database.Connection

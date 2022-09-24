@@ -1,9 +1,10 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.collection.template.Viewable
-import utopia.flow.collection.value.View
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.Viewable
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.reflection.component.drawing.immutable.TextDrawContext

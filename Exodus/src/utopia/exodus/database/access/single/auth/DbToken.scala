@@ -6,10 +6,10 @@ import utopia.exodus.model.combined.auth.ScopedTokenLike
 import utopia.exodus.model.partial.auth.{TokenData, TokenScopeLinkData}
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.util.UuidGenerator
+import utopia.flow.parse.Sha256Hasher
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.Sha256Hasher
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

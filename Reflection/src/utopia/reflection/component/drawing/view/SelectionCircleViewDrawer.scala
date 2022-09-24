@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.collection.template.Viewable
+import utopia.flow.view.template.Viewable
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Circle}
 import utopia.genesis.util.Drawer

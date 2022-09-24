@@ -1,8 +1,9 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.collection.value.typeless.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.DescriptionRole

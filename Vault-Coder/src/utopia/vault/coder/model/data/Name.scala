@@ -1,10 +1,9 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.FromValueFactory
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.generic.factory.FromValueFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.{ApproximatelyEquatable, SelfComparable}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.util.SelfComparable
 import utopia.vault.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, Documentation, EnumName, EnumValueName, FileName, FunctionName, Header, JsonPropName, ObjectName, TableName}
 import utopia.vault.coder.model.enumeration.{NameContext, NamingConvention}
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}

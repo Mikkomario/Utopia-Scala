@@ -1,10 +1,9 @@
 package utopia.reflection.container.stack
 
 import utopia.flow.async.process.LoopingProcess
-import utopia.flow.collection.mutable.async.VolatileList
-import utopia.flow.collection.mutable.graph.GraphNode
-import utopia.flow.collection.value.graph.GraphEdge
-import utopia.flow.util.Counter
+import utopia.flow.collection.immutable.GraphEdge
+import utopia.flow.collection.mutable.iterator.Counter
+import utopia.flow.collection.mutable.{GraphNode, VolatileList}
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated

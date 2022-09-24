@@ -1,7 +1,7 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.event.ChangingLike
 import utopia.flow.operator.EqualsFunction
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.display.Refreshable

@@ -1,6 +1,7 @@
 package utopia.reach.component.label.text.selectable
 
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}

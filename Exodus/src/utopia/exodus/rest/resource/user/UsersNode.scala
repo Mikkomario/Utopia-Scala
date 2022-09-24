@@ -17,8 +17,9 @@ import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.util.{ExodusContext, PasswordHash}
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.Constant
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.operator.EqualsExtensions._
 import utopia.metropolis.model.combined.user.DetailedUser
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
@@ -108,9 +109,9 @@ object UsersNode extends Resource[AuthorizedContext]
 							}
 							
 							val resultModel = user.toModelWith(token.modelStyle) ++
-								(typeless.Constant("session_token", tokenToModel(newSessionToken, sessionTokenString)) +:
+								(immutable.Constant("session_token", tokenToModel(newSessionToken, sessionTokenString)) +:
 									refreshToken.toVector.map { case (token, tokenString) =>
-										typeless.Constant("refresh_token", tokenToModel(token, tokenString))
+										immutable.Constant("refresh_token", tokenToModel(token, tokenString))
 									})
 							Result.Success(resultModel, Created)
 						case Failure(error) =>

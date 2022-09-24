@@ -2,8 +2,8 @@ package utopia.citadel.database.model.language
 
 import java.time.Instant
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.partial.language.LanguageFamiliarityData
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.model.immutable.StorableWithFactory

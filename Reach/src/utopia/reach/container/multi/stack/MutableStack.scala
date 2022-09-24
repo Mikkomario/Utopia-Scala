@@ -1,7 +1,7 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.collection.mutable.Settable
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}

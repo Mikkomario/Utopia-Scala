@@ -1,11 +1,11 @@
 package utopia.ambassador.model.partial.process
 
 import utopia.ambassador.model.enumeration.GrantLevel
-import utopia.flow.collection.value.typeless.Model
 
 import java.time.Instant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
 
 object AuthRedirectResultData

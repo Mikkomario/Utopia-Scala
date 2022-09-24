@@ -10,7 +10,6 @@ import utopia.nexus.http.Response
 
 import javax.servlet.http.HttpServletRequest
 import utopia.nexus.http.Path
-import utopia.flow.parse.JsonParser
 
 import scala.util.{Success, Try}
 import utopia.nexus.http.Request
@@ -19,7 +18,8 @@ import utopia.access.http.Method
 import utopia.access.http.Headers
 import utopia.access.http.Cookie
 import utopia.access.http.ContentType
-import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.parse.json.JsonParser
 import utopia.nexus.http.StreamedBody
 
 import javax.servlet.http.Part

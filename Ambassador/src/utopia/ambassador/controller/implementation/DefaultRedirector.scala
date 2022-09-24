@@ -4,7 +4,7 @@ import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.vault.database.Connection
 
 /**

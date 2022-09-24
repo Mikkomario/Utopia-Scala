@@ -7,8 +7,8 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.{Charset, StandardCharsets}
 import utopia.access.http.ContentCategory._
 import utopia.access.http.ContentType
-import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.datastructure.template.Model
+import utopia.flow.generic.model.template.{Model, Property}
 
 import scala.jdk.CollectionConverters._
 import scala.util.Success

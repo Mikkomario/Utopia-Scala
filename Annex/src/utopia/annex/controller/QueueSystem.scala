@@ -5,11 +5,11 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ActionQueue
-import utopia.flow.collection.mutable.async.VolatileFlag
-import utopia.flow.event.Changing
+import utopia.flow.async.context.ActionQueue
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.Now
+import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}

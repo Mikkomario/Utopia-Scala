@@ -1,11 +1,12 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.iterable.Pair
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.SignedOrZero
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
@@ -27,7 +28,7 @@ object Size extends FromModelFactory[Size]
     
     // IMPLEMENTED  --------------------------
     
-    def apply(model: typeless.Model[Property]) = Success(
+    def apply(model: Model[Property]) = Success(
             Size(model("width").getDouble, model("height").getDouble))
     
     

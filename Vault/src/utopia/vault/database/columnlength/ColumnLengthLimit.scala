@@ -1,7 +1,7 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.util.SelfComparable
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.SelfComparable
 
 /**
   * Used for tracking column maximum values

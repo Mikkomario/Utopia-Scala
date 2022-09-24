@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.doc
 
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.template.CodeConvertible
 

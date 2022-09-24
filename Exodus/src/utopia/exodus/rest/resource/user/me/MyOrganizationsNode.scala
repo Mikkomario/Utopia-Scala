@@ -4,8 +4,8 @@ import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadOrganizationData
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path

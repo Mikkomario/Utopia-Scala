@@ -1,10 +1,12 @@
 package utopia.reflection.component.swing.input
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color

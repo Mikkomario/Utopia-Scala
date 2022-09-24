@@ -1,6 +1,6 @@
 package utopia.flow.test.async
 
-import utopia.flow.collection.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.VolatileFlag
 
 /**
  * This app tests volatile classes

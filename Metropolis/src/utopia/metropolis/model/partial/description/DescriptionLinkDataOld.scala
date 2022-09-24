@@ -1,13 +1,15 @@
 package utopia.metropolis.model.partial.description
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.{Constant, PropertyDeclaration}
+import utopia.flow.collection.value.typeless.PropertyDeclaration
 
 import java.time.Instant
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
 import utopia.flow.time.Now
 import utopia.metropolis.model.stored.description.Description
 

@@ -5,8 +5,8 @@ import utopia.exodus.database.factory.auth.TokenFactory
 import utopia.exodus.database.model.auth.{TokenModel, TokenScopeLinkModel}
 import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.Token
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection

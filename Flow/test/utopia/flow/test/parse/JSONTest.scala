@@ -1,10 +1,12 @@
 package utopia.flow.test.parse
 
-import utopia.flow.collection.value.typeless.{Constant, Value}
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.{DataType, IntType, ModelType, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JSONReader
+import utopia.flow.generic.StringType
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.mutable.{DataType, IntType, ModelType, StringType}
+import utopia.flow.parse.json.JSONReader
 
 import java.time.Instant
 

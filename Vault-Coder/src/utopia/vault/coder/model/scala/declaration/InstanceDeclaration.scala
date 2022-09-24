@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.flow.operator.CombinedOrdering
 import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.{Author, Since}
-import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.CodeBuilder

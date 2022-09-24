@@ -1,12 +1,15 @@
 package utopia.paradigm.motion.motion1d
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.typeless.{ModelValidationFailedException, Value}
+import utopia.flow.collection.value.typeless.ModelValidationFailedException
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{DoubleType, FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{ModelValidationFailedException, Value}
+import utopia.flow.generic.model.mutable.DoubleType
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.operator.EqualsExtensions._
@@ -35,7 +38,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: typeless.Model[Property]) = schema.validate(model).toTry.flatMap { model =>
+	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { model =>
 		val amount = model("amount").getDouble
 		model("duration").duration match {
 			case Some(duration) => Success(apply(amount, duration))

@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala
 
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.SelfComparable
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 /**

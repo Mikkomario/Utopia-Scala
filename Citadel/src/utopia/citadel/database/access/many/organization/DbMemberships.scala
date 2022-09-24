@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.many.organization
 
 import utopia.citadel.database.access.many.organization.DbMembershipsWithRoles.DbMembershipsWithRolesWithHistory
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._

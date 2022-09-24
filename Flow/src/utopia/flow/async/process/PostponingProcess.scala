@@ -1,10 +1,11 @@
 package utopia.flow.async.process
 
-import utopia.flow.collection.mutable.async.VolatileFlag
-import utopia.flow.event.{ChangeListener, ChangingLike}
-import utopia.flow.time.{WaitTarget, WaitUtils}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.time.WaitUtils
 import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.template.eventful.ChangingLike
 
 import scala.concurrent.ExecutionContext
 

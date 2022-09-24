@@ -1,11 +1,11 @@
 package utopia.metropolis.model.partial.user
 
-import utopia.flow.collection.value.typeless.Model
-
 import java.time.Instant
 import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, StringType}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.{IntType, StringType}
 import utopia.flow.time.Now
 import utopia.metropolis.model.StyledModelConvertible
 

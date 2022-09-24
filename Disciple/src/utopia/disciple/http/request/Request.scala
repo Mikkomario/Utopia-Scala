@@ -4,9 +4,11 @@ import utopia.access.http.{Headers, Method}
 import utopia.access.http.Method._
 import utopia.flow.collection.template.typeless
 import utopia.flow.collection.value
-import utopia.flow.collection.value.typeless.{Constant, Model, Value}
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
+import utopia.flow.generic.model
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -62,12 +64,12 @@ case class Request(requestUri: String, method: Method = Get, params: Model = Mod
     /**
      * Adds a new parameter to this request
      */
-    def +(parameter: (String, Value)): Request = this + value.typeless.Constant(parameter._1, parameter._2)
+    def +(parameter: (String, Value)): Request = this + Constant(parameter._1, parameter._2)
     
     /**
      * Adds multiple new parameters to this request
      */
-    def ++(params: typeless.Model[Constant]) = copy(params = this.params ++ params)
+    def ++(params: model.template.Model[Constant]) = copy(params = this.params ++ params)
     
     
     // OTHER METHODS    ----------------

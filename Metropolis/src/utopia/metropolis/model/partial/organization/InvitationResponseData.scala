@@ -1,12 +1,14 @@
 package utopia.metropolis.model.partial.organization
 
-import utopia.flow.collection.value.typeless.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
 
 import java.time.Instant
 import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.generic.model.mutable.IntType
 import utopia.flow.time.Now
 import utopia.metropolis.model.StyledModelConvertible
 

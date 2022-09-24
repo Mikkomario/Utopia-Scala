@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 /**
   * This interaction uses a pointer to store its current value

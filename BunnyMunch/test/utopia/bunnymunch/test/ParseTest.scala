@@ -3,8 +3,8 @@ package utopia.bunnymunch.test
 import org.typelevel.jawn.Parser
 import utopia.bunnymunch.jawn.ValueFacade
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.mutable.DataType
 
 import scala.util.{Failure, Success}
 

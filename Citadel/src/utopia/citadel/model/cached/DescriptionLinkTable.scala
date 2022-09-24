@@ -1,7 +1,7 @@
 package utopia.citadel.model.cached
 
 import utopia.citadel.model.cached.DescriptionLinkTable.descriptionLinkAttName
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 import utopia.vault.model.immutable.Table
 
 object DescriptionLinkTable

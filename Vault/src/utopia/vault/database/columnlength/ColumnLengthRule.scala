@@ -1,7 +1,7 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.StringType
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.StringType
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.CombiningRule

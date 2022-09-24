@@ -1,11 +1,11 @@
 package utopia.flow.test.event
 
-import utopia.flow.async.ChangeFuture
 import utopia.flow.async.process.Delay
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.eventful.ChangeFuture
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 /**
   * A test for certain functions in Changing and ChangingLike

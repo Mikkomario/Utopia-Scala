@@ -5,11 +5,11 @@ import java.awt.event.{ActionEvent, ActionListener, FocusEvent, FocusListener}
 import javax.swing.JTextField
 import javax.swing.event.{DocumentEvent, DocumentListener}
 import javax.swing.text.{Document, PlainDocument}
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.Regex
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment

@@ -1,7 +1,8 @@
 package utopia.flow.time
 
+import utopia.flow.operator.SelfComparable
+
 import scala.language.implicitConversions
-import utopia.flow.util.SelfComparable
 import utopia.flow.time.WeekDay.Monday
 
 import java.time.format.DateTimeFormatter

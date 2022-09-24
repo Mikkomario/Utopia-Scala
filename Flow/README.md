@@ -39,7 +39,7 @@ becomes an issue.
 ### Data caching & Local data containment
 - `utopia.flow.caching` package contains various tools for caching individual or multiple pieces of data either
 temporarily or permanently, asynchronously or synchronously
-- `utopia.flow.container` package contains numerous classes and traits for storing data locally in json files, 
+- `utopia.flow.parse.file.container` package contains numerous classes and traits for storing data locally in json files, 
 which is useful when you need to store small amounts of data and don't want to use a local database 
 (**Vault** and/or **Trove**)
   
@@ -63,7 +63,7 @@ extension (**TimeExtensions**)
 Hints and advice to help you get started and to get most out of Utopia Flow
 
 ### What you should know before using Flow
-When you use **Flow** or its sub-modules, you want to call `utopia.flow.generic.DataType.setup()` at the
+When you use **Flow** or its sub-modules, you want to call `utopia.flow.generic.model.mutable.DataType.setup()` at the
 beginning or your App.
 
 When you wish to instantiate typeless values, please enable implicit value conversions by adding 

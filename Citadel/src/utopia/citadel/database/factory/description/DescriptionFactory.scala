@@ -2,8 +2,8 @@ package utopia.citadel.database.factory.description
 
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.description.DescriptionModel
-import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.Description
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps

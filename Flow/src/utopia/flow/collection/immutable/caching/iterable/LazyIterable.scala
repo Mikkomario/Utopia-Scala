@@ -1,8 +1,8 @@
 package utopia.flow.collection.immutable.caching.iterable
 
-import utopia.flow.collection.immutable.caching.lazily.Lazy
-import utopia.flow.collection.template.caching.LazyLike
 import utopia.flow.collection.template.factory.LazyFactory
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.LazyLike
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{IterableFactory, IterableOps, mutable}

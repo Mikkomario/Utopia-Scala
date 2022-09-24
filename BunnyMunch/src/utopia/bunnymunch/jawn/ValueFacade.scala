@@ -1,10 +1,12 @@
 package utopia.bunnymunch.jawn
 
 import org.typelevel.jawn.Facade.SimpleFacade
-import utopia.flow.collection.value.typeless.{Constant, Value}
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.{DoubleType, IntType, LongType}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.LongType
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.mutable.{DoubleType, IntType, LongType}
 
 /**
   * A facade for producing flow values

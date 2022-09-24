@@ -1,12 +1,13 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.iterable.Pair
-import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.LinearMeasurable
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.generic.ParadigmValue._
@@ -32,7 +33,7 @@ object Line extends FromModelFactory[Line]
     
     // OPERATORS    -------------------------
     
-    override def apply(model: typeless.Model[Property]) = Success(Line(model("start").getPoint, model("end").getPoint))
+    override def apply(model: Model[Property]) = Success(Line(model("start").getPoint, model("end").getPoint))
     
     
     // OTHER METHODS    ---------------------

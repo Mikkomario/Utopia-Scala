@@ -1,8 +1,9 @@
 package utopia.reach.component.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener

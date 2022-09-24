@@ -7,9 +7,10 @@ import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -75,17 +76,17 @@ object AuthUtils
 						Vector()
 					else
 					{
-						val deniedParam = Constant("denied_access", deniedAccess)
+						val deniedParam = immutable.Constant("denied_access", deniedAccess)
 						if (urlFilter.successFilter.isDefined)
 							Vector(deniedParam)
 						else
-							Vector(typeless.Constant("was_success", errorMessage.isEmpty), deniedParam)
+							Vector(immutable.Constant("was_success", errorMessage.isEmpty), deniedParam)
 					}
 				}
 				// Appends possible error and state parameters
 				// State is added as a json value if it can be parsed
 				val allParams = Model.withConstants(stateParams) ++
-					preparation.flatMap { _.clientState }.map { typeless.Constant("state", _) } ++
+					preparation.flatMap { _.clientState }.map { immutable.Constant("state", _) } ++
 					errorMessage.notEmpty.map { Constant("error", _) }
 				// Redirects the user
 				val parametersString = allParams.attributesWithValue

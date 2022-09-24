@@ -1,10 +1,10 @@
 package utopia.paradigm.color
 
-import utopia.flow.collection.mutable.Pointer
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.generic.ColorType

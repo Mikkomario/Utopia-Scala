@@ -2,12 +2,14 @@ package utopia.disciple.http.response
 
 import java.io.InputStream
 import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.parse.{JSONReader, JsonParser, XmlReader}
-import utopia.flow.util.AutoClose._
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.AutoClose._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.xml.XmlReader
 
 import scala.io.{Codec, Source}
 import scala.util.{Failure, Success, Try}

@@ -4,7 +4,7 @@ import java.io.{InputStream, OutputStream}
 import java.nio.charset.Charset
 
 import utopia.access.http.ContentType
-import utopia.flow.util.AutoClose._
+import utopia.flow.parse.AutoClose._
 
 import scala.util.Try
 

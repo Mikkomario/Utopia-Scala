@@ -1,10 +1,12 @@
 package utopia.flow.time
 
 import TimeExtensions._
-import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.generic.{FromModelFactoryWithSchema, LocalDateType, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.LocalDateType
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.DateRange.dateFormat
 
 import java.time.LocalDate

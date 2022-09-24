@@ -1,6 +1,6 @@
 package utopia.citadel.database.model.description
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.citadel.model.cached.DescriptionLinkTable
 import utopia.vault.model.immutable.Storable
 

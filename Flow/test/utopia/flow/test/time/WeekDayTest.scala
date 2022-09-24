@@ -1,6 +1,6 @@
 package utopia.flow.test.time
 
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.WeekDay
 import utopia.flow.time.WeekDay.{Monday, Sunday, Thursday, Tuesday, Wednesday}
 import utopia.flow.time.TimeExtensions._

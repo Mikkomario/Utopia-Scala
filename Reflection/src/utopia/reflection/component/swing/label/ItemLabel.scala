@@ -1,7 +1,8 @@
 package utopia.reflection.component.swing.label
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeEvent, ChangeListener}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}

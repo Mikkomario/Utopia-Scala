@@ -1,8 +1,7 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ActionQueue
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{ActionQueue, ThreadPool}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 

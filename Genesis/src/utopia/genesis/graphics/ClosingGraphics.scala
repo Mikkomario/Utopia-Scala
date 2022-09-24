@@ -1,8 +1,9 @@
 package utopia.genesis.graphics
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
-import utopia.flow.util.Extender
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.Extender
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D

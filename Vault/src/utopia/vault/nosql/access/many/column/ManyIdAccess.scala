@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.many.column
 
-import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.nosql.access.template.column.IdAccess
 import utopia.vault.nosql.factory.FromResultFactory
 

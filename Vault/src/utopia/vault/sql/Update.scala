@@ -1,8 +1,8 @@
 package utopia.vault.sql
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
 import utopia.vault.model.immutable.{Column, Table}

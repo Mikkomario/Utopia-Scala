@@ -1,12 +1,14 @@
 package utopia.metropolis.model.post
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.typeless.{PropertyDeclaration, Value}
+import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
@@ -17,7 +19,7 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
 {
 	private val schema = ModelDeclaration(PropertyDeclaration("familiarity_id", IntType))
 	
-	override def apply(model: typeless.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		// Either language id or language code must be specified
 		val languageId = valid("language_id").int
 		val languageCode = valid("language_code").string.flatMap { _.trim.notEmpty }

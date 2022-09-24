@@ -1,7 +1,7 @@
 package utopia.flow.async
 
-import utopia.flow.async.process.Wait
-import utopia.flow.time.{WaitTarget, WaitUtils}
+import utopia.flow.async.process.{Wait, WaitUtils}
+import utopia.flow.time.WaitUtils
 import utopia.flow.util.CollectionExtensions._
 
 import scala.collection.immutable.VectorBuilder

@@ -1,10 +1,11 @@
 package utopia.metropolis.model.stored.user
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.{Constant, PropertyDeclaration}
+import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.generic.IntType
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.{StoredFromModelFactory, StyledStoredModelConvertible}
 

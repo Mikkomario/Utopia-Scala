@@ -1,9 +1,8 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
-
 import java.time.Instant
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.animation.{Animation, AnimationLike}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler

@@ -1,11 +1,12 @@
 package utopia.flow.test.generic
 
-import utopia.flow.collection.mutable.typeless.Model
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.{immutable, mutable}
-import utopia.flow.generic.{DataType, SimpleConstantGenerator, SimpleVariableGenerator}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JSONReader
+import utopia.flow.generic.SimpleConstantGenerator
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.{SimpleConstantGenerator, SimpleVariableGenerator}
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.mutable.{DataType, Model}
+import utopia.flow.parse.json.JSONReader
 import utopia.flow.util.StringExtensions._
 
 /**

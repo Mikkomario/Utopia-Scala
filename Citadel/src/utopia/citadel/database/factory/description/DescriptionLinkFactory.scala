@@ -1,8 +1,8 @@
 package utopia.citadel.database.factory.description
 
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.description.DescriptionLinkData
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

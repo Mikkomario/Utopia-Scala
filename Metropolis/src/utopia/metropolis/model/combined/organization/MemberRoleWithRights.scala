@@ -1,11 +1,11 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.partial.organization.MemberRoleLinkData
 import utopia.metropolis.model.stored.organization.MemberRoleLink
 

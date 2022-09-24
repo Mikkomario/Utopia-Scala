@@ -2,8 +2,8 @@ package utopia.citadel.database.model.device
 
 import java.time.Instant
 import utopia.citadel.database.factory.device.ClientDeviceFactory
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.partial.device.ClientDeviceData
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.model.immutable.StorableWithFactory

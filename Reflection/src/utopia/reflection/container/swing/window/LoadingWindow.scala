@@ -4,9 +4,9 @@ import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process
 import utopia.flow.async.process.Delay
-import utopia.flow.event.ChangingLike
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable

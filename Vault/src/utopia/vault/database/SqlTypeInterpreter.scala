@@ -1,6 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.columnlength.ColumnLengthLimit
 
 /**

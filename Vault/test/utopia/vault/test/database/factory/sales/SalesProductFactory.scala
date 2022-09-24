@@ -1,6 +1,6 @@
 package utopia.vault.test.database.factory.sales
 
-import utopia.flow.collection.value.typeless.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.test.database.VaultTestTables

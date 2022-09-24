@@ -3,10 +3,10 @@ package utopia.flow.test.time
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ProcessState.{Cancelled, Completed, NotStarted, Running, Stopped}
 import utopia.flow.async.ShutdownReaction.{Cancel, DelayShutdown, SkipDelay}
-import utopia.flow.async.process.Wait
+import utopia.flow.async.process.{Wait, WaitUtils}
 import utopia.flow.async.context.{CloseHook, ThreadPool}
-import utopia.flow.generic.DataType
-import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 

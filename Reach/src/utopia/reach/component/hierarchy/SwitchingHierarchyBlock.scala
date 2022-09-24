@@ -1,6 +1,6 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reach.component.template.ReachComponentLike
 
 /**

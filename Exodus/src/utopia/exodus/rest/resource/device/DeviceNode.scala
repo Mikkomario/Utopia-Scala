@@ -5,7 +5,7 @@ import utopia.access.http.Status.{NotFound, Unauthorized}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.device.DbClientDevice
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path

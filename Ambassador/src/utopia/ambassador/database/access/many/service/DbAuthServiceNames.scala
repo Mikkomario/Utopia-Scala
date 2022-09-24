@@ -1,8 +1,8 @@
 package utopia.ambassador.database.access.many.service
 
 import utopia.ambassador.database.AmbassadorTables
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyColumnAccess
 import utopia.vault.nosql.template.Indexed

@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.many.organization
 
 import utopia.citadel.database.model.organization.{OrganizationDeletionCancellationModel, OrganizationDeletionModel}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.partial.organization.OrganizationDeletionCancellationData
 import utopia.vault.database.Connection

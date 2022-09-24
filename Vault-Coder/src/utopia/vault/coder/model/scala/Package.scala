@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala
 
-import utopia.flow.parse.Regex
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.scala.Package.separatorRegex

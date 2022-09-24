@@ -2,7 +2,7 @@ package utopia.exodus.database.access.many.auth
 
 import java.time.Instant
 import utopia.exodus.database.model.auth.ScopeModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed

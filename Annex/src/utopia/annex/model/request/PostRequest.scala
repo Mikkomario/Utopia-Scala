@@ -4,11 +4,12 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.model.Spirit
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ModelType}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.PropertyDeclaration
+import utopia.flow.generic.model.mutable.ModelType
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
 
 object PostRequest
 {
@@ -42,7 +43,7 @@ object PostRequest
 	private case class PostRequestFactory[+S <: Spirit with ModelConvertible](spiritFactory: FromModelFactory[S])
 		extends FromModelFactory[PostRequest[S]]
 	{
-		override def apply(model: typeless.Model[Property]) = baseSchema.validate(model).toTry.flatMap { valid =>
+		override def apply(model: Model[Property]) = baseSchema.validate(model).toTry.flatMap { valid =>
 			spiritFactory(valid("spirit").getModel).map { spirit =>
 				PostRequest(spirit, valid("method").string.flatMap(Method.parse).getOrElse(Post))
 			}

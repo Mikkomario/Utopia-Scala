@@ -1,7 +1,9 @@
 package utopia.reach.component.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image

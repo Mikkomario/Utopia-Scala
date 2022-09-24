@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.flow.event.Fixed
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.input.text.TextField
 import utopia.reach.container.ReachCanvas

@@ -1,7 +1,7 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Model
 
 /**
  * A row represents a single row in a query result set. A row can contain columns from multiple

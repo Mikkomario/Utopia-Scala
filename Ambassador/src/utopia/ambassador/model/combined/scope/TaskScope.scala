@@ -2,7 +2,7 @@ package utopia.ambassador.model.combined.scope
 
 import utopia.ambassador.model.partial.scope.ScopeData
 import utopia.ambassador.model.stored.scope.{Scope, TaskScopeLink}
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * Combines Scope with taskLink data

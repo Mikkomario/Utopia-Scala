@@ -1,7 +1,7 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.paradigm.generic.ParadigmDataType

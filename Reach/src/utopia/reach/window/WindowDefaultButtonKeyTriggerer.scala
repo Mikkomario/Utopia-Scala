@@ -1,7 +1,7 @@
 package utopia.reach.window
 
-import utopia.flow.collection.template.Viewable
-import utopia.flow.event.AlwaysTrue
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.Viewable
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.view.GlobalKeyboardEventHandler

@@ -1,6 +1,7 @@
 package utopia.flow.test.generic
 
-import utopia.flow.generic.{ConversionHandler, DataType}
+import utopia.flow.generic.casting.ConversionHandler
+import utopia.flow.generic.model.mutable.DataType
 
 /**
   * Prints all data type conversion routes that are used

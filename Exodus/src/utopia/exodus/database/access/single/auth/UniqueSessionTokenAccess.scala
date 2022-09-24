@@ -4,8 +4,8 @@ import java.time.Instant
 import utopia.exodus.database.factory.auth.SessionTokenFactory
 import utopia.exodus.database.model.auth.SessionTokenModel
 import utopia.exodus.model.stored.auth.SessionToken
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection

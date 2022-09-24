@@ -3,7 +3,7 @@ package utopia.exodus.database.access.many.auth
 import utopia.exodus.database.factory.auth.EmailValidationAttemptFactory
 import utopia.exodus.database.model.auth.EmailValidationAttemptModel
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed

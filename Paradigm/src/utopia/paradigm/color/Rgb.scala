@@ -1,12 +1,13 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
@@ -44,7 +45,7 @@ object Rgb extends SureFromModelFactory[Rgb]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def parseFrom(model: typeless.Model[Property]) = {
+	override def parseFrom(model: Model[Property]) = {
 		val r = model("red", "r").getDouble
 		val g = model("green", "g").getDouble
 		val b = model("blue", "b").getDouble

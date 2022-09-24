@@ -3,7 +3,7 @@ package utopia.citadel.database.access.many.description
 import utopia.citadel.database.access.many.description.LinkedDescriptionsAccessLike.LinkedDescriptionsSubView
 import utopia.citadel.database.factory.description.LinkedDescriptionFactory
 import utopia.citadel.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.LinkedDescription

@@ -1,6 +1,6 @@
 package utopia.reach.focus
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 /**
   * A focus listener used for tracking focus status

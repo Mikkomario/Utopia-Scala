@@ -2,10 +2,10 @@ package utopia.exodus.util
 
 import utopia.access.http.Status
 import utopia.citadel.util.CitadelContext
-import utopia.flow.collection.immutable.caching.lazily.Lazy
-import utopia.flow.collection.template.caching.LazyLike
-import utopia.flow.generic.EnvironmentNotSetupException
+import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.LazyLike
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.Full
 import utopia.vault.database.ConnectionPool

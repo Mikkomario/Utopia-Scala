@@ -1,7 +1,7 @@
 package utopia.reach.component.wrapper
 
-import utopia.flow.collection.value.iterable.Pair
-import utopia.flow.event.ChangingLike
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reach.component.template.ReachComponentLike
 
 import scala.language.implicitConversions

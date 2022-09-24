@@ -1,10 +1,10 @@
 package utopia.nexus.rest
 
 import utopia.access.http.Status._
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.util.AutoClose._
+import utopia.flow.parse.AutoClose._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.nexus.http.Path._

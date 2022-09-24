@@ -1,8 +1,10 @@
 package utopia.reach.component.input.text
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.flow.parse.Regex
+import utopia.flow.event.AlwaysTrue
+import utopia.flow.parse.string.Regex
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler

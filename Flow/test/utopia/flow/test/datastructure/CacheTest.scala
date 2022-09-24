@@ -2,14 +2,14 @@ package utopia.flow.test.datastructure
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.WaitUtils
 import utopia.flow.caching.multi._
 import utopia.flow.caching.single.{ClearableSingleCache, ExpiringSingleCache, SingleAsyncCache, SingleTryCache}
 import utopia.flow.collection.immutable.caching
 import utopia.flow.collection.immutable.caching.cache.TryCache
-import utopia.flow.collection.mutable.Pointer
-import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.Pointer
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}

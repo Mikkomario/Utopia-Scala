@@ -1,7 +1,7 @@
 package utopia.scribe.database.factory.logging
 
-import utopia.flow.collection.template.typeless.{Model, Property}
 import utopia.flow.datastructure.template
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.scribe.database.ScribeTables
 import utopia.scribe.model.enumeration.Severity
 import utopia.scribe.model.partial.logging.ProblemData

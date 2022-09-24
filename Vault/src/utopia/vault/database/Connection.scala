@@ -1,28 +1,28 @@
 package utopia.vault.database
 
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.{Constant, Value}
+import utopia.flow.collection.value.typeless.Value
 
 import java.nio.file.Path
-import utopia.flow.generic.EnvironmentNotSetupException
-
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.SQLException
 import utopia.flow.datastructure.immutable.Value
+import utopia.flow.error.EnvironmentNotSetupException
 
 import java.sql.PreparedStatement
-import utopia.flow.parse.ValueConverterManager
-
 import java.sql.Types
 import java.sql.ResultSet
 import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success, Try}
-import utopia.flow.generic.IntType
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueConverterManager
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.parse.string.IterateLines
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.AutoClose._
-import utopia.flow.util.IterateLines
+import utopia.flow.parse.AutoClose._
 import utopia.vault.database.Connection.settings
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.sql.SqlSegment
@@ -631,13 +631,13 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             {
                 if (hasContentOutsideTables)
                     Model.withConstants(nonColumnIndices.map { case (name, sqlType, index) =>
-                        Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+                        immutable.Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
                 else
                     Model.empty
             }
             // NB: view.force is added in order to create a concrete map
             rowBuffer += Row(columnIndices.view.mapValues { data =>
-                Model.withConstants(data.map { case (column, sqlType, index) => typeless.Constant(column.name,
+                Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
                 Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
             }.toMap, otherData)
         }

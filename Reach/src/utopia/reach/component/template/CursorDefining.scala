@@ -1,7 +1,7 @@
 package utopia.reach.component.template
 
-import utopia.flow.collection.template.Viewable
-import utopia.flow.collection.value.View
+import utopia.flow.view.immutable.View
+import utopia.flow.view.template.Viewable
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.cursor.{Cursor, CursorType}

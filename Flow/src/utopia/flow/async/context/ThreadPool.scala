@@ -1,9 +1,10 @@
 package utopia.flow.async.context
 
-import utopia.flow.collection.mutable.async.{VolatileFlag, VolatileList}
+import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.collection.mutable.iterator.Counter
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.Counter
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.VolatileFlag
 
 import java.util.concurrent.{Executor, TimeUnit}
 import scala.concurrent.duration.{Duration, FiniteDuration}

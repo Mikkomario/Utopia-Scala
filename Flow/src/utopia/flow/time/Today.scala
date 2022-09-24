@@ -1,12 +1,11 @@
 package utopia.flow.time
 
-import utopia.flow.collection.value.typeless.Value
-
 import scala.language.implicitConversions
-import utopia.flow.generic.ValueConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.RichComparable
 import utopia.flow.time.TimeExtensions.ExtendedLocalDate
-import utopia.flow.util.RichComparable
 
 import java.time.{LocalDate, Period}
 

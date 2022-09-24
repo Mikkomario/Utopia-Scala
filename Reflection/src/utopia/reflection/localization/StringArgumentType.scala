@@ -1,8 +1,8 @@
 package utopia.reflection.localization
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
 
 object StringArgumentType
 {

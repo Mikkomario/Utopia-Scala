@@ -5,7 +5,7 @@ import utopia.access.http.Status.{Forbidden, NotFound}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.ExodusScope.{ReadOrganizationData, ReadPersonalData}
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle.Simple

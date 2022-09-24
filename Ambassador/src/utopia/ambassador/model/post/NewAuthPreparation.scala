@@ -2,10 +2,10 @@ package utopia.ambassador.model.post
 
 import utopia.ambassador.model.enumeration.AuthCompletionType
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.metropolis.model.error.IllegalPostModelException
 
 import scala.util.{Failure, Success}

@@ -7,7 +7,7 @@ import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.model.enumeration.ExodusScope.CreateOrganization
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewOrganization
 import utopia.nexus.http.Path

@@ -1,8 +1,10 @@
 package utopia.reach.component.label.image
 
-import utopia.flow.collection.value.iterable.Pair
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}

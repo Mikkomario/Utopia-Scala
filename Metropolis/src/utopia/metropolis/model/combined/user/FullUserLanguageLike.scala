@@ -1,8 +1,8 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.collection.value.typeless.Constant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.metropolis.model.DeepExtender
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.user.UserLanguageLink

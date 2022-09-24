@@ -1,10 +1,10 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.async.process.Loop
+import utopia.flow.generic.model.mutable.DataType
 
 import java.awt.Color
 import javax.swing.JLabel
-import utopia.flow.generic.DataType
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.template.{JStackableWrapper, JWrapper}

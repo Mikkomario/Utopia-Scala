@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.display
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 /**
   * This refreshable implementation uses pointers for storing its contents

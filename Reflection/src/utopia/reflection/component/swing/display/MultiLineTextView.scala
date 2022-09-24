@@ -19,7 +19,7 @@ import utopia.reflection.shape._
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import LengthExtensions._
-import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.reflection.text.Font
 
 object MultiLineTextView

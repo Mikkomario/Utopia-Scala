@@ -1,6 +1,6 @@
 package utopia.reflection.component.context
 
-import utopia.flow.util.ScopeUsable
+import utopia.flow.operator.ScopeUsable
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.{ColorScheme, ComponentColor}
 import utopia.reflection.shape.Margins

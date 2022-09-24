@@ -1,7 +1,7 @@
 package utopia.paradigm.motion.motion2d
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.Velocity2DType
 import utopia.paradigm.generic.ParadigmValue._

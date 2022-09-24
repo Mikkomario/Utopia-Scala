@@ -3,8 +3,8 @@ package utopia.ambassador.database.model.token
 import utopia.ambassador.database.factory.token.AuthTokenScopeLinkFactory
 import utopia.ambassador.model.partial.token.AuthTokenScopeLinkData
 import utopia.ambassador.model.stored.token.AuthTokenScopeLink
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 

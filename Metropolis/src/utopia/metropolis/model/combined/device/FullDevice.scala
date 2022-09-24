@@ -1,13 +1,13 @@
 package utopia.metropolis.model.combined.device
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
-import utopia.flow.collection.value.typeless.Constant
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.template
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.combined.description.SimplyDescribed
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.device.ClientDevice
@@ -17,7 +17,7 @@ object FullDevice extends FromModelFactory[FullDevice]
 {
 	// IMPLEMENTED	----------------------
 	
-	override def apply(model: typeless.Model[Property]) =
+	override def apply(model: Model[Property]) =
 		DescribedClientDevice(model).map { device =>
 			FullDevice(device, model("user_ids").getVector.flatMap { _.int }.toSet)
 		}

@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import utopia.flow.collection.template.caching.CacheLike
+import utopia.flow.collection.template.CacheLike
 
 object MappingCacheView
 {

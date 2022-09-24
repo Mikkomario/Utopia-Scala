@@ -1,6 +1,6 @@
 package utopia.citadel.database.access.many.user
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.nosql.view.NonDeprecatedView
 import utopia.vault.sql.SqlExtensions._

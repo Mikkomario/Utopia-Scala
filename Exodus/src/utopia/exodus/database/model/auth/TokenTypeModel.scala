@@ -6,8 +6,8 @@ import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.factory.auth.TokenTypeFactory
 import utopia.exodus.model.partial.auth.TokenTypeData
 import utopia.exodus.model.stored.auth.TokenType
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 

@@ -1,6 +1,6 @@
 package utopia.nexus.rest.scalable
 
-import utopia.flow.collection.immutable.caching.lazily.Lazy
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Context
 import utopia.nexus.result.Result

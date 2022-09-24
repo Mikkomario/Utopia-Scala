@@ -3,10 +3,10 @@ package utopia.courier.test
 import utopia.courier.controller.read.{EmailBuilder, EmailReader}
 import utopia.courier.model.Authentication
 import utopia.courier.model.read.{ImapReadSettings, PopReadSettings, ReadSettings}
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path

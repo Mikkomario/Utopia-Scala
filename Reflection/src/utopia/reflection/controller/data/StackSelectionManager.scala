@@ -1,9 +1,9 @@
 package utopia.reflection.controller.data
 
 import java.awt.event.KeyEvent
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler

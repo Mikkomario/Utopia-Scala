@@ -1,7 +1,7 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.operator.EqualsFunction
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.display.Refreshable

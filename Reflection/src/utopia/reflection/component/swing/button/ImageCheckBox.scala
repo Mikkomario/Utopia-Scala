@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.button
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.template.input.InteractionWithPointer
 import utopia.reflection.component.swing.label.ImageLabel

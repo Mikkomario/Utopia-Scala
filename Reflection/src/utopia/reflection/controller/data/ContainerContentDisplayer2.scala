@@ -1,8 +1,8 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.collection.mutable.async.Volatile
-import utopia.flow.event.ChangingLike
 import utopia.flow.operator.EqualsFunction
+import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.component.template.ComponentLike2
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.container.template.mutable.MutableMultiContainer2

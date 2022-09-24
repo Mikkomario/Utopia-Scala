@@ -1,5 +1,7 @@
 package utopia.flow.collection.template
 
+import utopia.flow.view.template.Viewable
+
 import scala.collection.immutable.VectorBuilder
 
 /**

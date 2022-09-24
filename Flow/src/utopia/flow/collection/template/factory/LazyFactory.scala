@@ -1,8 +1,8 @@
 package utopia.flow.collection.template.factory
 
-import utopia.flow.collection.immutable.caching.lazily.Lazy
 import utopia.flow.collection.mutable.iterator.PollableOnce
-import utopia.flow.collection.template.caching.LazyLike
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.LazyLike
 
 /**
   * A common trait for factories that produce lazy collections

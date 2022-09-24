@@ -1,7 +1,7 @@
 package utopia.flow.test.collection
 
-import utopia.flow.collection.immutable.caching.lazily.Lazy
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 
 /**
   * Tests lazy collection implementations

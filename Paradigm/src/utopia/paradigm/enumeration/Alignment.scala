@@ -1,6 +1,6 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}

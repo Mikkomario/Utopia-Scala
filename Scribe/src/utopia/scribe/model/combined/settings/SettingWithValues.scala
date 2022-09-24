@@ -1,6 +1,6 @@
 package utopia.scribe.model.combined.settings
 
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 import utopia.scribe.model.partial.settings.SettingFieldData
 import utopia.scribe.model.stored.settings.{SettingField, SettingValue}
 

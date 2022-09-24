@@ -2,11 +2,13 @@ package utopia.reach.window
 import utopia.flow.async.process
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.{Constant, Model}
+import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.event.{AlwaysTrue, ChangingLike}
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.enumeration.Direction2D
 import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
@@ -139,7 +141,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 						Some(key -> field.field)
 					case Right(value) =>
 						// Stores values in the buffer
-						resultBuffer += typeless.Constant(key, value)
+						resultBuffer += Constant(key, value)
 						None
 				}
 			}.find { _.isDefined }.flatten

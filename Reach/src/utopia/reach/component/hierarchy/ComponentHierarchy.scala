@@ -1,6 +1,6 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike

@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack
 
-import utopia.flow.collection.mutable.Pointer
+import utopia.flow.view.mutable.Pointer
 
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.paradigm.enumeration.Axis2D

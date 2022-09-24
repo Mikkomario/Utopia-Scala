@@ -3,7 +3,7 @@ package utopia.ambassador.model.combined.token
 import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * Combines scope information to an access or refresh token

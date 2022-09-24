@@ -1,6 +1,7 @@
 package utopia.flow.util.console
 
-import utopia.flow.parse.{JsonParser, Regex}
+import utopia.flow.parse.json.JsonParser
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.console.Command.whiteSpacesOutsideQuotationsRegex
 
 object Command

@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.reflection.color.ComponentColor

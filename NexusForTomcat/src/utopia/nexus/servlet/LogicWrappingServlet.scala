@@ -4,7 +4,7 @@ import utopia.access.http.Method
 import utopia.access.http.Status.BadRequest
 import utopia.flow.operator.EqualsExtensions._
 import HttpExtensions._
-import utopia.flow.parse.JsonParser
+import utopia.flow.parse.json.JsonParser
 import utopia.nexus.http.ServerSettings
 
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}

@@ -1,13 +1,14 @@
 package utopia.vault.coder.model.datatype
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.ModelValidationFailedException
 import utopia.flow.datastructure.immutable.ModelValidationFailedException
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.generic.{FromModelFactory, StringType}
-import utopia.flow.parse.Regex
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.ModelValidationFailedException
+import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Name, NamingRules}

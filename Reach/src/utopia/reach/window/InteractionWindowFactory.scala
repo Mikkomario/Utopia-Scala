@@ -1,8 +1,8 @@
 package utopia.reach.window
 
 import utopia.flow.async.AsyncExtensions.RichFuture
-import utopia.flow.event.ChangingLike
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton

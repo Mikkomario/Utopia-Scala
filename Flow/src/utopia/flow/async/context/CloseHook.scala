@@ -2,7 +2,7 @@ package utopia.flow.async.context
 
 import utopia.flow.async.process.Breakable
 import utopia.flow.collection.immutable.WeakList
-import utopia.flow.collection.mutable.async.VolatileList
+import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}

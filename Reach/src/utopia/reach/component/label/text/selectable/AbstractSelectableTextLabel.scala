@@ -1,10 +1,12 @@
 package utopia.reach.component.label.text.selectable
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling._

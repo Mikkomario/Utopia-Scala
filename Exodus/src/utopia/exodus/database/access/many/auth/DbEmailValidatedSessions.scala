@@ -1,7 +1,7 @@
 package utopia.exodus.database.access.many.auth
 
 import utopia.exodus.model.stored.auth.EmailValidatedSession
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.NonDeprecatedView
 import utopia.vault.sql.SqlExtensions._
 

@@ -1,8 +1,8 @@
 package utopia.vault.test.database
 
-import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 

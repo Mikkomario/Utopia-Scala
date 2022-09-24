@@ -1,8 +1,8 @@
 package utopia.flow.util
 
 import CollectionExtensions._
-import utopia.flow.collection.mutable.caching.lazily.ResettableLazy
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
+import utopia.flow.view.mutable.caching.ResettableLazy
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings

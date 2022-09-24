@@ -2,7 +2,7 @@ package utopia.nexus.result
 
 import utopia.nexus.http.Request
 import utopia.access.http.Status
-import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.http.Response
 
 import java.nio.charset.StandardCharsets

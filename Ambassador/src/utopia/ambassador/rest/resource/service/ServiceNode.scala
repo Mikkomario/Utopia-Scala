@@ -15,8 +15,9 @@ import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.collection.template.MapLike
 import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.Constant
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -71,7 +72,7 @@ class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirecto
 						case Full => describedScopes.map { _.toModel }
 					}
 					Result.Success(service.toModel ++ Vector(
-						typeless.Constant("scopes", scopeModels),
+						immutable.Constant("scopes", scopeModels),
 						Constant("authorized_task_ids", taskIds)
 					))
 				case None => Result.Failure(NotFound, s"$target is not a valid service")

@@ -4,7 +4,7 @@ import utopia.ambassador.database.access.many.token.ManyAuthTokensWithScopesAcce
 import utopia.ambassador.database.factory.token.AuthTokenWithScopesFactory
 import utopia.ambassador.database.model.scope.ScopeModel
 import utopia.ambassador.model.combined.token.AuthTokenWithScopes
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.view.SubView

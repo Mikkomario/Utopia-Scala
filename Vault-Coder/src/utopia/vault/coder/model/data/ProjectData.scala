@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.Version
 import utopia.vault.coder.model.scala.Package
 

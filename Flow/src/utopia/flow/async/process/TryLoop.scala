@@ -1,7 +1,5 @@
 package utopia.flow.async.process
 
-import utopia.flow.time.WaitTarget
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Try}

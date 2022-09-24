@@ -1,7 +1,6 @@
 package utopia.flow.async.process
 
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget
 import utopia.flow.time.WaitTarget.Until
 import utopia.flow.util.CollectionExtensions.RichTry
 

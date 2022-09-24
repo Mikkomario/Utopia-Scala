@@ -1,7 +1,7 @@
 package utopia.annex.model.schrodinger
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration

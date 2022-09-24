@@ -1,11 +1,12 @@
 package utopia.metropolis.model.combined.user
 
 import utopia.flow.collection.template.typeless
-import utopia.flow.collection.template.typeless.Property
 import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.datastructure.template
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.{FromModelFactory, IntType, ModelType}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.mutable.{IntType, ModelType}
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.stored.user.{UserLanguageLink, UserSettings}
 
@@ -14,7 +15,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
 {
 	private val schema = ModelDeclaration("id" -> IntType, "settings" -> ModelType)
 	
-	override def apply(model: typeless.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		UserSettings(valid("settings").getModel).map { settings =>
 			UserWithLinks(settings,
 				valid("language_links").getVector.flatMap { _.model }.flatMap { UserLanguageLink(_).toOption },

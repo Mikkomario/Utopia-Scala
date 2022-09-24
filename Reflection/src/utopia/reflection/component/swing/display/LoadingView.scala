@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.label.TextLabel

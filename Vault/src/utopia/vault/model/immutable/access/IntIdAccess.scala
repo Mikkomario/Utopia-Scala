@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable.access
 
-import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 
 /**
  * This implementation of SingleIdAccess supports int ids

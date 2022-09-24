@@ -1,7 +1,5 @@
 package utopia.flow.operator
 
-import utopia.flow.util.SelfComparable
-
 import scala.language.implicitConversions
 
 object IntLike

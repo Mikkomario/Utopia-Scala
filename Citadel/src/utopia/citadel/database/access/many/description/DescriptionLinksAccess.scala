@@ -3,7 +3,7 @@ package utopia.citadel.database.access.many.description
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.description.DescriptionLinkModelFactory
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess

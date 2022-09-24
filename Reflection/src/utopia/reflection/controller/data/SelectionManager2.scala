@@ -1,8 +1,8 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionWithPointers}
 

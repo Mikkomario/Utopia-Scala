@@ -1,9 +1,10 @@
 package utopia.nexus.result
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Request
 import utopia.access.http.{Status, StatusGroup}
-import utopia.flow.collection.value.typeless.{Model, Value}
+import utopia.flow.collection.value.typeless.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.http.Response
 
 /**

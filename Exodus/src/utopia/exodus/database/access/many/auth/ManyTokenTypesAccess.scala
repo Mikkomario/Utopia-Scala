@@ -6,7 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.factory.auth.TokenTypeFactory
 import utopia.exodus.database.model.auth.TokenTypeModel
 import utopia.exodus.model.stored.auth.TokenType
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed

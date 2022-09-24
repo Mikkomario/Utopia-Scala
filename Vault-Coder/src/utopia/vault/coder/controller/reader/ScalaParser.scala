@@ -1,12 +1,11 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.flow.collection.immutable.MutatingOnce
 import utopia.flow.collection.mutable.builder.MultiMapBuilder
 import utopia.flow.collection.mutable.iterator.PollingIterator
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.{IterateLines, Regex}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.IterateLines
+import utopia.flow.view.immutable.MutatingOnce
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
 import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}

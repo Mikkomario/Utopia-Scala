@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.label
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Axis.{X, Y}

@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.collection.value.iterable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

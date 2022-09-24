@@ -1,6 +1,8 @@
 package utopia.reach.component.label.text
 
-import utopia.flow.event.{AlwaysFalse, ChangingLike, Fixed}
+import utopia.flow.event.AlwaysFalse
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
+import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy

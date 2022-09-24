@@ -3,11 +3,11 @@ package utopia.exodus.model.partial.auth
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
-import utopia.flow.collection.value.typeless.Model
 
 import java.time.Instant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection

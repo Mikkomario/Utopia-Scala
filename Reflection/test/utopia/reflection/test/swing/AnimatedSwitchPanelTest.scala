@@ -1,8 +1,8 @@
 package utopia.reflection.test.swing
 
-import java.awt.event.KeyEvent
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import java.awt.event.KeyEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.{EmptyLabel, TextLabel}

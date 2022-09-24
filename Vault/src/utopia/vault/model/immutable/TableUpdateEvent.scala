@@ -1,8 +1,8 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.collection.value.typeless.Value
 import utopia.flow.datastructure.template.Model
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.{Model, Property}
 
 /**
   * Represents an event caused by an update targeting a table

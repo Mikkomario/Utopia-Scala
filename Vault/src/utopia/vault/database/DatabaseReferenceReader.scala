@@ -1,8 +1,8 @@
 package utopia.vault.database
 
-import utopia.flow.collection.template.typeless.{Model, Property}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.StringType
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.template.{Model, Property}
 import utopia.vault.sql.Select
 import utopia.vault.sql.Where
 import utopia.vault.sql.SqlExtensions._

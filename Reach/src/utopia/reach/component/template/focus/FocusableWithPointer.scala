@@ -1,6 +1,6 @@
 package utopia.reach.component.template.focus
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.ChangingLike
 
 /**
   * A common trait for focusable components which have a pointer that describes their focus state

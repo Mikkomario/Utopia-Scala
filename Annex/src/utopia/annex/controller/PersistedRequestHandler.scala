@@ -2,9 +2,9 @@ package utopia.annex.controller
 
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestNotSent, Response}
-import utopia.flow.collection.value.typeless.Model
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Model
 
 /**
   * Used for handling responses for requests that were created and persisted during the previous use session(s)
