@@ -2,7 +2,7 @@ package utopia.reach.component.template
 
 import java.awt.event.KeyEvent
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
@@ -32,7 +32,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	/**
 	  * @return The current state of this button
 	  */
-	def statePointer: ChangingLike[ButtonState]
+	def statePointer: Changing[ButtonState]
 	
 	/**
 	  * Triggers the actions associated with this button

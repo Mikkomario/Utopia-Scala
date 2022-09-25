@@ -3,7 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.listener.ChangeDependency
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.{ChangingLike, ListenableLazyWrapper}
+import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
 
 object LazyMergeMirror
 {
@@ -17,7 +17,7 @@ object LazyMergeMirror
 	  * @tparam Reflection Type of merge function result
 	  * @return A new lazily merging mirror
 	  */
-	def of[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])(merge: (O1, O2) => Reflection) =
+	def of[O1, O2, Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection) =
 	{
 		// Uses lazy mapping or even lazy wrapping if possible
 		if (source1.isChanging)
@@ -39,7 +39,7 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])
+class LazyMergeMirror[O1, O2, Reflection](source1: Changing[O1], source2: Changing[O2])
                                          (merge: (O1, O2) => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {

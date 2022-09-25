@@ -1,13 +1,13 @@
 package utopia.flow.collection.mutable
 
 import utopia.flow.collection.template.MultiLazyLike
-import utopia.flow.view.mutable.caching.ResettableLazyLike
+import utopia.flow.view.mutable.caching.ResettableLazy
 
 object ResettableMultiLazy
 {
 	// TYPES    ---------------------------------
 	
-	type ResettableMultiLazy[-K, +V] = ResettableMultiLazyLike[K, V, ResettableLazyLike[V]]
+	type ResettableMultiLazy[-K, +V] = ResettableMultiLazyLike[K, V, ResettableLazy[V]]
 	
 	
 	// OTHER    ---------------------------------
@@ -19,13 +19,13 @@ object ResettableMultiLazy
 	  * @tparam P Type of lazy containers used
 	  * @return A resettable cache based on lazy containers
 	  */
-	def apply[K, V, P <: ResettableLazyLike[V]](cacheForKey: K => P): ResettableMultiLazyLike[K, V, P] =
+	def apply[K, V, P <: ResettableLazy[V]](cacheForKey: K => P): ResettableMultiLazyLike[K, V, P] =
 		new FunctionalResettableMultiLazy[K, V, P](cacheForKey)
 	
 	
 	// NESTED   ---------------------------------
 	
-	private class FunctionalResettableMultiLazy[K, V, P <: ResettableLazyLike[V]](makeCache: K => P)
+	private class FunctionalResettableMultiLazy[K, V, P <: ResettableLazy[V]](makeCache: K => P)
 		extends ResettableMultiLazyLike[K, V, P]
 	{
 		// ATTRIBUTES   -------------------------
@@ -53,7 +53,7 @@ object ResettableMultiLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.10
   */
-trait ResettableMultiLazyLike[-K, +V, +P <: ResettableLazyLike[V]] extends MultiLazyLike[K, V, P]
+trait ResettableMultiLazyLike[-K, +V, +P <: ResettableLazy[V]] extends MultiLazyLike[K, V, P]
 {
 	// ABSTRACT --------------------------
 	

@@ -23,7 +23,7 @@ object RefreshingLazy
 	  * @tparam A Type of stored item
 	  * @return A new lazy container
 	  */
-	def after[A](threshold: Duration)(make: => A): ResettableLazyLike[A] = threshold.finite match
+	def after[A](threshold: Duration)(make: => A): ResettableLazy[A] = threshold.finite match
 	{
 		case Some(finiteDuration) => after(finiteDuration)(make)
 		case None => ResettableLazy(make)
@@ -44,11 +44,11 @@ object RefreshingLazy
   * @author Mikko Hilpinen
   * @since 29.10.2021, v1.14
   */
-class RefreshingLazy[+A](generator: => A)(expirationPerItem: A => Duration) extends ResettableLazyLike[A]
+class RefreshingLazy[+A](generator: => A)(expirationPerItem: A => Duration) extends ResettableLazy[A]
 {
 	// ATTRIBUTES   ---------------------------
 	
-	private val cache: ResettableLazyLike[A] = ResettableLazy(generator)
+	private val cache: ResettableLazy[A] = ResettableLazy(generator)
 	// None when not calculated
 	// Some(None) when infinite
 	// Some(Some(Instant)) when finite

@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
-import utopia.flow.view.template.eventful.{Changing, ChangingLike}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
 object MergeMirror
 {
@@ -15,11 +15,10 @@ object MergeMirror
 	 * @tparam R Merged / mapped item type
 	 * @return A new mirror
 	 */
-	def of[O1, O2, R](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])(f: (O1, O2) => R) =
+	def of[O1, O2, R](firstSource: Changing[O1], secondSource: Changing[O2])(f: (O1, O2) => R) =
 	{
 		// Uses mapping functions or even a fixed value if possible
-		if (firstSource.isChanging)
-		{
+		if (firstSource.isChanging) {
 			if (secondSource.isChanging)
 				new MergeMirror(firstSource, secondSource)(f)
 			else
@@ -43,16 +42,13 @@ object MergeMirror
  * @tparam O2 Type of the second mirror origin (value from second source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-class MergeMirror[+O1, +O2, Reflection](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])
+class MergeMirror[+O1, +O2, Reflection](firstSource: Changing[O1], secondSource: Changing[O2])
                                        (merge: (O1, O2) => Reflection)
-	extends Changing[Reflection]
+	extends AbstractChanging[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	
 	private var _value = merge(firstSource.value, secondSource.value)
-	
-	override var listeners = Vector[ChangeListener[Reflection]]()
-	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	
 	// INITIAL CODE ------------------------------

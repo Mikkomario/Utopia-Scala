@@ -3,7 +3,7 @@ package utopia.reach.container.wrapper
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.template.CacheLike
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
 import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -58,9 +58,9 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam P Value pointer type
 	  * @return A new swapper container
 	  */
-	def apply[A, C <: ReachComponentLike, P <: ChangingLike[A]](valuePointer: P,
-																customDrawers: Vector[CustomDrawer] = Vector())
-															   (makeContent: A => OpenComponent[C, _]) =
+	def apply[A, C <: ReachComponentLike, P <: Changing[A]](valuePointer: P,
+	                                                        customDrawers: Vector[CustomDrawer] = Vector())
+	                                                       (makeContent: A => OpenComponent[C, _]) =
 		new CachingViewSwapper[A, C, P](parentHierarchy, valuePointer, customDrawers)(makeContent)
 	
 	/**
@@ -73,9 +73,9 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam A Type of items being mirrored
 	  * @return A new swapper container
 	  */
-	def generic[A](valuePointer: ChangingLike[A], customDrawers: Vector[CustomDrawer] = Vector())
+	def generic[A](valuePointer: Changing[A], customDrawers: Vector[CustomDrawer] = Vector())
 				  (makeContent: A => OpenComponent[ReachComponentLike, _]) =
-		apply[A, ReachComponentLike, ChangingLike[A]](valuePointer, customDrawers)(makeContent)
+		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
 case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFactory, context: N)
@@ -105,9 +105,9 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 	  * @tparam P Type of value pointer used
 	  * @return A new swapper
 	  */
-	def apply[A, C <: ReachComponentLike, P <: ChangingLike[A]](valuePointer: P,
-																customDrawers: Vector[CustomDrawer] = Vector())
-															   (makeContent: (F, A) => C) =
+	def apply[A, C <: ReachComponentLike, P <: Changing[A]](valuePointer: P,
+	                                                        customDrawers: Vector[CustomDrawer] = Vector())
+	                                                       (makeContent: (F, A) => C) =
 		factory[A, C, P](valuePointer, customDrawers) { item => Open.using(contentFactory) { makeContent(_, item) } }
 	
 	/**
@@ -118,9 +118,9 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 	  * @tparam A Type of mirrored value
 	  * @return A new swapper
 	  */
-	def generic[A](valuePointer: ChangingLike[A], customDrawers: Vector[CustomDrawer] = Vector())
+	def generic[A](valuePointer: Changing[A], customDrawers: Vector[CustomDrawer] = Vector())
 				  (makeContent: (F, A) => ReachComponentLike) =
-		apply[A, ReachComponentLike, ChangingLike[A]](valuePointer, customDrawers)(makeContent)
+		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
 class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >: N, F]]
@@ -138,9 +138,9 @@ class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >
 	  * @tparam P Type of value pointer used
 	  * @return A new swapper
 	  */
-	def apply[A, C <: ReachComponentLike, P <: ChangingLike[A]](valuePointer: P,
-																customDrawers: Vector[CustomDrawer] = Vector())
-															   (makeContent: (F[N], A) => C) =
+	def apply[A, C <: ReachComponentLike, P <: Changing[A]](valuePointer: P,
+	                                                        customDrawers: Vector[CustomDrawer] = Vector())
+	                                                       (makeContent: (F[N], A) => C) =
 		factory[A, C, P](valuePointer, customDrawers) { item =>
 			Open.withContext(contentFactory, context) { makeContent(_, item) }
 		}
@@ -153,9 +153,9 @@ class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >
 	  * @tparam A Type of mirrored value
 	  * @return A new swapper
 	  */
-	def generic[A](valuePointer: ChangingLike[A], customDrawers: Vector[CustomDrawer] = Vector())
+	def generic[A](valuePointer: Changing[A], customDrawers: Vector[CustomDrawer] = Vector())
 				  (makeContent: (F[N], A) => ReachComponentLike) =
-		apply[A, ReachComponentLike, ChangingLike[A]](valuePointer, customDrawers)(makeContent)
+		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
 /**
@@ -171,10 +171,10 @@ class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >
   * @tparam C Type of wrapped component
   * @tparam P Type of value pointer used
   */
-class CachingViewSwapper[A, +C <: ReachComponentLike, +P <: ChangingLike[A]]
+class CachingViewSwapper[A, +C <: ReachComponentLike, +P <: Changing[A]]
 (override val parentHierarchy: ComponentHierarchy, override val valuePointer: P,
  override val customDrawers: Vector[CustomDrawer] = Vector())(makeContent: A => OpenComponent[C, _])
-	extends CustomDrawReachComponent with InputWithPointer[A, ChangingLike[A]]
+	extends CustomDrawReachComponent with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	-------------------------------
 	

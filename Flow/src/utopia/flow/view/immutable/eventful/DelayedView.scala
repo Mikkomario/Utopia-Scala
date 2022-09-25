@@ -2,11 +2,11 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.Wait
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.event.listener. ChangeListener
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
-import utopia.flow.view.template.eventful.{Changing, ChangingLike}
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -23,7 +23,7 @@ object DelayedView
 	  * @tparam A Type of item values
 	  * @return A new delayed view into the item (where all change events are delayed at least by <i>delay</i>)
 	  */
-	def of[A](source: ChangingLike[A], delay: => Duration)(implicit exc: ExecutionContext) =
+	def of[A](source: Changing[A], delay: => Duration)(implicit exc: ExecutionContext) =
 	{
 		// Won't wrap non-changing items
 		if (source.isChanging)
@@ -59,8 +59,8 @@ object DelayedView
   * @param exc Implicit execution context
   * @tparam A Type of original pointer value
   */
-class DelayedView[A](val source: ChangingLike[A], delay: FiniteDuration)(implicit exc: ExecutionContext)
-	extends Changing[A]
+class DelayedView[A](val source: Changing[A], delay: FiniteDuration)(implicit exc: ExecutionContext)
+	extends ChangingWrapper[A]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -95,14 +95,9 @@ class DelayedView[A](val source: ChangingLike[A], delay: FiniteDuration)(implici
 	})
 	
 	
-	// COMPUTED -----------------------------
+	// IMPLEMENTED -----------------------------
 	
-	// Delegates change handling to the value pointer
-	override def value = valuePointer.value
-	override def listeners = valuePointer.listeners
-	override def listeners_=(newListeners: Vector[ChangeListener[A]]) = valuePointer.listeners = newListeners
-	override def dependencies = valuePointer.dependencies
-	override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
-		valuePointer.dependencies = newDependencies
+	override protected def wrapped = source
+	
 	override def isChanging = source.isChanging || isWaitingFlag.isSet
 }

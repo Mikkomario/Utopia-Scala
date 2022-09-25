@@ -10,7 +10,7 @@ import utopia.flow.async.process.Wait
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.Now
 import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,7 +56,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	/**
 	  * @return A read-only pointer that shows whether this system is currently online (true) or offline (false)
 	  */
-	def isOnlinePointer: Changing[Boolean] = isOnlineFlag
+	def isOnlinePointer: AbstractChanging[Boolean] = isOnlineFlag
 	
 	
 	// OTHER    ----------------------------------

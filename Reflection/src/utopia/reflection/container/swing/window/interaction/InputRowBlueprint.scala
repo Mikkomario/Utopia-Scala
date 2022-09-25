@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.localization.LocalizedString
 
@@ -16,4 +16,4 @@ import utopia.reflection.localization.LocalizedString
   *                      fields.
   */
 class InputRowBlueprint(val fieldName: LocalizedString, val field: AwtStackable,
-						val rowVisibilityPointer: Option[ChangingLike[Boolean]] = None, val spansWholeRow: Boolean = true)
+                        val rowVisibilityPointer: Option[Changing[Boolean]] = None, val spansWholeRow: Boolean = true)

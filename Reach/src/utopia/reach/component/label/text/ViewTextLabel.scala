@@ -1,7 +1,7 @@
 package utopia.reach.component.label.text
 
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -50,9 +50,9 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def apply[A](contentPointer: ChangingLike[A], stylePointer: ChangingLike[TextDrawContext],
-				 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
+	def apply[A](contentPointer: Changing[A], stylePointer: Changing[TextDrawContext],
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
 		new ViewTextLabel(parentHierarchy, contentPointer, stylePointer, displayFunction, additionalDrawers,
 			allowTextShrink)
 	
@@ -70,12 +70,12 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def withStaticStyle[A](contentPointer: ChangingLike[A], font: Font,
-						   displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-						   textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-						   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
-						   allowTextShrink: Boolean = false) =
+	def withStaticStyle[A](contentPointer: Changing[A], font: Font,
+	                       displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                       textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+	                       insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+	                       additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+	                       allowTextShrink: Boolean = false) =
 		apply(contentPointer,
 			Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)),
 			displayFunction, additionalDrawers, allowTextShrink)
@@ -88,9 +88,9 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def forText(contentPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
-				additionalDrawers: Seq[CustomDrawer] = Vector(),
-				allowTextShrink: Boolean = false) =
+	def forText(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
+	            additionalDrawers: Seq[CustomDrawer] = Vector(),
+	            allowTextShrink: Boolean = false) =
 		apply[LocalizedString](contentPointer, stylePointer, DisplayFunction.identity, additionalDrawers,
 			allowTextShrink)
 	
@@ -107,11 +107,11 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def forTextWithStaticStyle(contentPointer: ChangingLike[LocalizedString], font: Font,
-						   textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-						   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
-						   allowTextShrink: Boolean = false) =
+	def forTextWithStaticStyle(contentPointer: Changing[LocalizedString], font: Font,
+	                           textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+	                           insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+	                           additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+	                           allowTextShrink: Boolean = false) =
 		withStaticStyle[LocalizedString](contentPointer, font, DisplayFunction.identity, textColor, alignment, insets,
 			betweenLinesMargin, additionalDrawers, allowLineBreaks, allowTextShrink)
 }
@@ -133,10 +133,10 @@ object ContextualViewTextLabelFactory
 		  * @param additionalDrawers Additional custom drawing (default = empty)
 		  * @return A new label
 		  */
-		def withCustomBackground[A](contentPointer: ChangingLike[A], background: ComponentColor,
-									displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-									isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
-									additionalDrawers: Seq[CustomDrawer] = Vector()) =
+		def withCustomBackground[A](contentPointer: Changing[A], background: ComponentColor,
+		                            displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+		                            isHintPointer: Changing[Boolean] = AlwaysFalse,
+		                            additionalDrawers: Seq[CustomDrawer] = Vector()) =
 		{
 			f.mapContext { _.inContextWithBackground(background) }(contentPointer, displayFunction, isHintPointer,
 				BackgroundDrawer(background) +: additionalDrawers)
@@ -153,11 +153,11 @@ object ContextualViewTextLabelFactory
 		  * @param additionalDrawers Additional custom drawing (default = empty)
 		  * @return A new label
 		  */
-		def withBackground[A](contentPointer: ChangingLike[A], role: ColorRole,
-							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							  preferredShade: ColorShade = Standard,
-							  isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
-							  additionalDrawers: Seq[CustomDrawer] = Vector()) =
+		def withBackground[A](contentPointer: Changing[A], role: ColorRole,
+		                      displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+		                      preferredShade: ColorShade = Standard,
+		                      isHintPointer: Changing[Boolean] = AlwaysFalse,
+		                      additionalDrawers: Seq[CustomDrawer] = Vector()) =
 			withCustomBackground(contentPointer, f.context.color(role, preferredShade), displayFunction,
 				isHintPointer, additionalDrawers)
 	}
@@ -192,9 +192,9 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	  * @param additionalDrawers Additional custom drawing (default = empty)
 	  * @return A new label
 	  */
-	def apply[A](contentPointer: ChangingLike[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
-				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
+	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             isHintPointer: Changing[Boolean] = AlwaysFalse,
+	             additionalDrawers: Seq[CustomDrawer] = Vector()) =
 	{
 		val stylePointer = isHintPointer.map { isHint => TextDrawContext.createContextual(isHint)(context) }
 		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, context.allowTextShrink)
@@ -208,8 +208,8 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	  * @param additionalDrawers Additional custom drawing (default = empty)
 	  * @return A new label
 	  */
-	def forText(contentPointer: ChangingLike[LocalizedString], isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
-				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
+	def forText(contentPointer: Changing[LocalizedString], isHintPointer: Changing[Boolean] = AlwaysFalse,
+	            additionalDrawers: Seq[CustomDrawer] = Vector()) =
 		apply[LocalizedString](contentPointer, DisplayFunction.identity, isHintPointer, additionalDrawers)
 }
 
@@ -218,11 +218,11 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
   * @author Mikko Hilpinen
   * @since 17.10.2020, v0.1
   */
-class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: ChangingLike[A],
-					   stylePointer: ChangingLike[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					   additionalDrawers: Seq[CustomDrawer] = Vector(),
-					   override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with TextComponent2 with PoolWithPointer[A, ChangingLike[A]]
+class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
+                        stylePointer: Changing[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                        additionalDrawers: Seq[CustomDrawer] = Vector(),
+                        override val allowTextShrink: Boolean = false)
+	extends CustomDrawReachComponent with TextComponent2 with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
 	

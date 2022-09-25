@@ -1,10 +1,8 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.AbstractChanging
 import utopia.paradigm.shape.shape2d.Vector2DLike
 
 import java.time.Instant
@@ -19,12 +17,9 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
 	+S <: MovementStatusLike[X, V, A, _], H]
 (maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.Zero)
-	extends MovementHistoryLike[X, V, A, S] with Changing[H]
+	extends AbstractChanging[H] with MovementHistoryLike[X, V, A, S]
 {
 	// ATTRIBUTES	-----------------------
-	
-	override var listeners = Vector[ChangeListener[H]]()
-	override var dependencies = Vector[ChangeDependency[H]]()
 	
 	private var _positionHistory = Vector[(X, Instant)]()
 	private var _velocityHistory = Vector[(V, Instant)]()

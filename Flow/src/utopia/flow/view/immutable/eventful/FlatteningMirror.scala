@@ -3,7 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.{ChangingLike, ChangingWrapper}
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 object FlatteningMirror
 {
@@ -15,7 +15,7 @@ object FlatteningMirror
 	  * @tparam Reflection Type of map result pointer values
 	  * @return A new pointer that always contains the value of the latest map result pointer value
 	  */
-	def apply[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => ChangingLike[Reflection]) = {
+	def apply[Origin, Reflection](source: Changing[Origin])(f: Origin => Changing[Reflection]) = {
 		// Case: Mutating origin => Constructs a proper mirror
 		if (source.isChanging)
 			new FlatteningMirror[Origin, Reflection](source)(f)
@@ -31,7 +31,7 @@ object FlatteningMirror
   * @author Mikko Hilpinen
   * @since 22.9.2022, v1.17
   */
-class FlatteningMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => ChangingLike[Reflection])
+class FlatteningMirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Changing[Reflection])
 	extends ChangingWrapper[Reflection]
 {
 	// ATTRIBUTES   -----------------------
@@ -50,7 +50,7 @@ class FlatteningMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Orig
 	pointerPointer.value.addListener(valueUpdatingListener)
 	
 	// Listener that listens to the source pointer and moves the aforementioned listener between mid-pointers
-	pointerPointer.addDependency(ChangeDependency { event: ChangeEvent[ChangingLike[Reflection]] =>
+	pointerPointer.addDependency(ChangeDependency { event: ChangeEvent[Changing[Reflection]] =>
 		event.oldValue.removeListener(valueUpdatingListener)
 		event.newValue.addListener(valueUpdatingListener)
 		// Also updates the simulated value when pointers change

@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
-import utopia.flow.view.template.eventful.{Changing, ChangingLike}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
 object Mirror
 {
@@ -13,7 +13,7 @@ object Mirror
 	 * @tparam R Reflected / mapped item type
 	 * @return A new mirror
 	 */
-	def of[O, R](source: ChangingLike[O])(f: O => R) =
+	def of[O, R](source: Changing[O])(f: O => R) =
 	{
 		if (source.isChanging)
 			new Mirror(source)(f)
@@ -31,14 +31,11 @@ object Mirror
  * @tparam Origin Type of the mirror origin (value from source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-class Mirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection) extends Changing[Reflection]
+class Mirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection) extends AbstractChanging[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	
 	private var _value = f(source.value)
-	
-	var listeners = Vector[ChangeListener[Reflection]]()
-	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	
 	// INITIAL CODE ------------------------------

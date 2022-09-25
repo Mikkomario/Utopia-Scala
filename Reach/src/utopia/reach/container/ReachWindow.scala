@@ -1,11 +1,10 @@
 package utopia.reach.container
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, ChangeFuture}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.{Changing, ChangingLike}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
 import scala.concurrent.{ExecutionContext, Promise}
 
@@ -17,8 +16,8 @@ import scala.concurrent.{ExecutionContext, Promise}
   * @since 6.2.2021, v0.1
   */
 // TODO: Likely remove this class entirely
-class ReachWindow private(visibilityPointer: ChangingLike[Boolean])
-                         (makeContent: ChangingLike[Boolean] => ReachCanvas2)
+class ReachWindow private(visibilityPointer: Changing[Boolean])
+                         (makeContent: Changing[Boolean] => ReachCanvas2)
                          (implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES	-------------------------------
@@ -48,7 +47,7 @@ class ReachWindow private(visibilityPointer: ChangingLike[Boolean])
 	// NESTED	-----------------------------------
 	
 	// TODO: Change state to false until displayed
-	private object WindowConnectionState extends Changing[Boolean]
+	private object WindowConnectionState extends AbstractChanging[Boolean]
 	{
 		// ATTRIBUTES	---------------------------
 		
@@ -64,9 +63,6 @@ class ReachWindow private(visibilityPointer: ChangingLike[Boolean])
 			else
 				Left(ResettableLazy { !closeFuture.isCompleted && visibilityPointer.value })
 		}
-		
-		override var listeners = Vector[ChangeListener[Boolean]]()
-		override var dependencies = Vector[ChangeDependency[Boolean]]()
 		
 		
 		// INITIAL CODE	---------------------------

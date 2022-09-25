@@ -1,7 +1,7 @@
 package utopia.reflection.controller.data
 
 import utopia.flow.operator.EqualsFunction
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.display.Refreshable
@@ -17,7 +17,7 @@ object ContainerContentDisplayer
 	/**
 	 * Short version of typical pointer used in these methods
 	 */
-	private type P[X] = ChangingLike[Vector[X]]
+	private type P[X] = Changing[Vector[X]]
 	
 	/**
 	 * Creates a content displayer for immutable items that don't represent state of any other object. No two different
@@ -95,7 +95,7 @@ object ContainerContentDisplayer
   * @param makeItem A function for producing new displays
   */
 class ContainerContentDisplayer[A, Container <: MultiContainer[Display] with Stackable,
-	Display <: Stackable with Refreshable[A], +P <: ChangingLike[Vector[A]]]
+	Display <: Stackable with Refreshable[A], +P <: Changing[Vector[A]]]
 (protected val container: Container, override val contentPointer: P,
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => Display) extends ContentDisplayer[A, Display, P]

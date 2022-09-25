@@ -3,10 +3,9 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, LazyListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 
 object ListenableLazy
 {
@@ -44,7 +43,7 @@ object ListenableLazy
 		
 		// IMPLEMENTED  -------------------------------
 		
-		override def stateView: ChangingLike[Option[A]] = StateView
+		override def stateView: Changing[Option[A]] = StateView
 		
 		override def current = generated
 		
@@ -70,7 +69,7 @@ object ListenableLazy
 		
 		// NESTED   --------------------------------
 		
-		private object StateView extends ChangingLike[Option[A]]
+		private object StateView extends Changing[Option[A]]
 		{
 			// ATTRIBUTES   ------------------------
 			
@@ -132,22 +131,6 @@ object ListenableLazy
 				}
 			 */
 			
-			override def map[B](f: Option[A] => B) = Mirror.of(this)(f)
-			
-			override def lazyMap[B](f: Option[A] => B) = LazyMirror.of(this)(f)
-			
-			override def mergeWith[B, R](other: ChangingLike[B])(f: (Option[A], B) => R) =
-				MergeMirror.of(this, other)(f)
-			
-			override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (Option[A], B, C) => R) =
-				TripleMergeMirror.of(this, first, second)(merge)
-			
-			override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (Option[A], B) => R) =
-				LazyMergeMirror.of(this, other)(f)
-			
-			override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) =
-				DelayedView.of(this, threshold)
-			
 			
 			// OTHER    -------------------------------
 			
@@ -181,7 +164,7 @@ trait ListenableLazy[+A] extends Lazy[A]
 	  * @return A view to the state of this lazy, which also provides access to change events concerning this
 	  *         instance's state
 	  */
-	def stateView: ChangingLike[Option[A]]
+	def stateView: Changing[Option[A]]
 	
 	/**
 	  * @return A future of the first available value of this lazy container

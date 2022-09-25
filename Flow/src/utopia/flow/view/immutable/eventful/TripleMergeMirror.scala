@@ -1,7 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
-import utopia.flow.view.template.eventful.{Changing, ChangingLike}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
 object TripleMergeMirror
 {
@@ -18,7 +17,7 @@ object TripleMergeMirror
 	 * @tparam R Type of merge result
 	 * @return A new pointer that will contain the merged value
 	 */
-	def of[O1, O2, O3, R](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2], thirdSource: ChangingLike[O3])
+	def of[O1, O2, O3, R](firstSource: Changing[O1], secondSource: Changing[O2], thirdSource: Changing[O3])
 	                     (merge: (O1, O2, O3) => R) =
 	{
 		// Uses mapping functions or even a fixed value if possible
@@ -53,14 +52,11 @@ object TripleMergeMirror
  * @author Mikko Hilpinen
  * @since 30.1.2021, v1.9
  */
-class TripleMergeMirror[+O1, +O2, +O3, Reflection](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2],
-                                                thirdSource: ChangingLike[O3])(merge: (O1, O2, O3) => Reflection)
-	extends Changing[Reflection]
+class TripleMergeMirror[+O1, +O2, +O3, Reflection](firstSource: Changing[O1], secondSource: Changing[O2],
+                                                   thirdSource: Changing[O3])(merge: (O1, O2, O3) => Reflection)
+	extends AbstractChanging[Reflection]
 {
 	// ATTRIBUTES   -----------------------------
-	
-	override var listeners = Vector[ChangeListener[Reflection]]()
-	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	private var _value = merge(firstSource.value, secondSource.value, thirdSource.value)
 	

@@ -4,7 +4,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,7 +41,7 @@ object ChangeFuture
   * @author Mikko Hilpinen
   * @since 9.12.2020, v1.9
   */
-class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: ExecutionContext) extends ChangingLike[A]
+class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: ExecutionContext) extends Changing[A]
 {
 	// ATTRIBUTES	------------------------------
 	
@@ -107,30 +107,20 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	override def map[B](f: A => B) =
 		if (isCompleted) Fixed(f(value)) else new ChangeFuture[B](f(placeHolder), future.map(f))
 	
-	override def lazyMap[B](f: A => B) =
-		if (isCompleted) Lazy.listenable { f(value) } else new LazyMirror(this)(f)
-	
-	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
-	{
+	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = {
 		if (other.isChanging)
 			MergeMirror.of(this, other)(f)
 		else
 			map { f(_, other.value) }
 	}
 	
-	override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (A, B, C) => R) =
-		TripleMergeMirror.of(this, first, second)(merge)
-	
-	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
+	override def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
 	{
 		if (other.isChanging)
 			LazyMergeMirror.of(this, other)(f)
 		else
 			lazyMap { f(_, other.value) }
 	}
-	
-	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) =
-		DelayedView.of(this, threshold)
 	
 	override def value = _value
 }

@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.view.immutable.View
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -12,7 +12,7 @@ import utopia.reflection.localization.LocalizedString
   * @author Mikko Hilpinen
   * @since 17.10.2020, v2
   */
-case class TextViewDrawer(textPointer: ChangingLike[LocalizedString], stylePointer: View[TextDrawContext],
+case class TextViewDrawer(textPointer: Changing[LocalizedString], stylePointer: View[TextDrawContext],
                           override val drawLevel: DrawLevel = Normal, allowMultipleLines: Boolean = true)
 	extends utopia.reflection.component.drawing.template.TextDrawerLike
 {

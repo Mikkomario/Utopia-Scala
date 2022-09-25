@@ -1,9 +1,8 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.{Resettable, Pointer}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.AbstractChanging
 
 object ResettableFlag
 {
@@ -17,14 +16,11 @@ object ResettableFlag
 	
 	// NESTED   -----------------------
 	
-	private class _ResettableFlag extends ResettableFlag with Changing[Boolean] with Pointer[Boolean]
+	private class _ResettableFlag extends AbstractChanging[Boolean] with ResettableFlag with Pointer[Boolean]
 	{
 		// ATTRIBUTES   -----------------------
 		
 		private var _value = false
-		
-		override var listeners = Vector[ChangeListener[Boolean]]()
-		override var dependencies = Vector[ChangeDependency[Boolean]]()
 		
 		lazy val view = new FlagView(this)
 		

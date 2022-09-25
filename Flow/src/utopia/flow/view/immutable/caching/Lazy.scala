@@ -53,14 +53,14 @@ object Lazy
 	  * @tparam A Type of the specified value
 	  * @return A no-op lazy that simply wraps the value
 	  */
-	def initialized[A](value: A) = LazyWrapper(value)
+	def initialized[A](value: A) = PreInitializedLazy(value)
 	/**
 	  * @param value A pre-calculated value
 	  * @tparam A Type of that value
 	  * @return That value wrapped as a lazy
 	  */
 	@deprecated("Please use .initialized instead", "v2.0")
-	def wrap[A](value: A) = LazyWrapper(value)
+	def wrap[A](value: A) = PreInitializedLazy(value)
 	
 	
 	// NESTED   ------------------------

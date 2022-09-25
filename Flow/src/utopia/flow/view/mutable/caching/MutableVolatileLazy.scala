@@ -17,7 +17,7 @@ object MutableVolatileLazy
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
-class MutableVolatileLazy[A](generator: => A) extends MutableLazyLike[A]
+class MutableVolatileLazy[A](generator: => A) extends MutableLazy[A]
 {
 	// ATTRIBUTES	---------------------
 	

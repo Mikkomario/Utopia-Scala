@@ -5,7 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AsyncMirror.AsyncMirrorValue
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.template.eventful.{ChangingLike, ChangingWrapper}
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -27,7 +27,7 @@ object AsyncMirror
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def tryCatching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection,
+	def tryCatching[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection,
 	                                    skipInitialProcess: Boolean = false)
 	                                   (map: Origin => Future[Try[Reflection]])
 	                                   (implicit exc: ExecutionContext, logger: Logger) =
@@ -55,7 +55,7 @@ object AsyncMirror
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def catching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection,
+	def catching[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection,
 	                                 skipInitialProcess: Boolean = false)
 	                                (map: Origin => Future[Reflection])
 	                                (implicit exc: ExecutionContext, logger: Logger) =
@@ -85,7 +85,7 @@ object AsyncMirror
 	  * @tparam Reflection Mapping result type after merging
 	  * @return A new asynchronous mirror
 	  */
-	def apply[Origin, Result, Reflection](source: ChangingLike[Origin], placeHolder: Reflection,
+	def apply[Origin, Result, Reflection](source: Changing[Origin], placeHolder: Reflection,
 	                                      skipInitialProcess: Boolean = false)
 	                                     (map: Origin => Future[Result])
 	                                     (merge: (Reflection, Try[Result]) => Reflection)
@@ -158,7 +158,7 @@ object AsyncMirror
   * @tparam Result Mapping result type before merging
   * @tparam Reflection Mapping result type after merging
   */
-class AsyncMirror[Origin, Result, Reflection](val source: ChangingLike[Origin], initialPlaceHolder: Reflection,
+class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], initialPlaceHolder: Reflection,
                                               skipInitialProcess: Boolean = false)
                                              (f: Origin => Future[Result])
                                              (merge: (Reflection, Try[Result]) => Reflection)

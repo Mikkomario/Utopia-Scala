@@ -1,27 +1,23 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
 /**
   * Classes with this trait generate change events when they mutate
   * @author Mikko Hilpinen
   * @since 25.5.2019, v1.4.1
   */
-class PointerWithEvents[A](initialValue: A) extends Pointer[A] with Changing[A]
+class PointerWithEvents[A](initialValue: A) extends AbstractChanging[A] with Pointer[A]
 {
 	// ATTRIBUTES	----------------
 	
 	private var _value = initialValue
 	
-	override var listeners = Vector[ChangeListener[A]]()
-	override var dependencies = Vector[ChangeDependency[A]]()
-	
 	/**
 	 * A read-only view into this pointer
 	 */
-	lazy val view: Changing[A] = new View()
+	lazy val view: Changing[A] = ChangingWrapper(this)
 	
 	
 	// IMPLEMENTED	----------------
@@ -53,24 +49,4 @@ class PointerWithEvents[A](initialValue: A) extends Pointer[A] with Changing[A]
 	
 	@deprecated("Please assign directly to .value instead", "v1.9")
 	def set(newVal: A) = value = newVal
-	
-	
-	// NESTED   --------------------
-	
-	private class View extends Changing[A]
-	{
-		override def value = PointerWithEvents.this.value
-		
-		override def isChanging = PointerWithEvents.this.isChanging
-		
-		override def listeners = PointerWithEvents.this.listeners
-		
-		override def listeners_=(newListeners: Vector[ChangeListener[A]]) =
-			PointerWithEvents.this.listeners = newListeners
-		
-		override def dependencies = PointerWithEvents.this.dependencies
-		
-		override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
-			PointerWithEvents.this.dependencies = newDependencies
-	}
 }

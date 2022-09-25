@@ -2,7 +2,7 @@ package utopia.reach.component.input.check
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -70,11 +70,11 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new switch
 	  */
 	def apply(actorHandler: ActorHandler, color: Color,
-			  knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-			  valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-			  customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
+	          knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
+	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+	          enabledPointer: Changing[Boolean] = AlwaysTrue,
+	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 		new Switch(parentHierarchy, actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset,
 			valuePointer, enabledPointer, animationDuration, customDrawers, focusListeners)
 }
@@ -99,8 +99,8 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
 	  * @return A new switch
 	  */
 	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, colorRole: ColorRole = Secondary,
-			  customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
+	          enabledPointer: Changing[Boolean] = AlwaysTrue, colorRole: ColorRole = Secondary,
+	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 			 (implicit animationContext: AnimationContextLike) =
 	{
 		val knobR = context.margins.medium * 0.75
@@ -118,12 +118,12 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
   * @since 19.11.2020, v0.1
   */
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
-			 knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-			 override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-			 additionalDrawers: Vector[CustomDrawer] = Vector(),
-			 additionalFocusListeners: Seq[FocusListener] = Vector())
+             knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
+             override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+             enabledPointer: Changing[Boolean] = AlwaysTrue,
+             animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+             additionalDrawers: Vector[CustomDrawer] = Vector(),
+             additionalFocusListeners: Seq[FocusListener] = Vector())
 	extends CustomDrawReachComponent with ButtonLike with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	--------------------------------

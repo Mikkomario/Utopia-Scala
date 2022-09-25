@@ -4,7 +4,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
@@ -69,7 +69,7 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: ChangingLike[Vector[A]]]
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[ComponentColor], contentPointer: P,
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), direction: Axis2D = Y,
 	 layout: StackLayout = Fit, margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
@@ -100,7 +100,7 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: ChangingLike[Vector[A]]]
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 direction: Axis2D = Y, layout: StackLayout = Fit, margin: StackLength = context.defaultStackMargin,
 	 cap: StackLength = StackLength.fixedZero, sameItemCheck: Option[(A, A) => Boolean] = None)
@@ -114,7 +114,7 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
   * @author Mikko Hilpinen
   * @since 19.12.2020, v0.1
   */
-class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: ChangingLike[Vector[A]]]
+class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[ComponentColor],
  override val contentPointer: P, override val valuePointer: PointerWithEvents[Option[A]], direction: Axis2D,
  layout: StackLayout, margin: StackLength, cap: StackLength,

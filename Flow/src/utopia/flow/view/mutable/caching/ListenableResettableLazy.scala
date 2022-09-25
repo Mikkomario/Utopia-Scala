@@ -1,9 +1,9 @@
 package utopia.flow.view.mutable.caching
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener, LazyListener, LazyResetListener, ResettableLazyListener}
+import utopia.flow.event.listener.{LazyListener, LazyResetListener, ResettableLazyListener}
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.concurrent.{Future, Promise}
 
@@ -23,7 +23,7 @@ object ListenableResettableLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.9.2
   */
-class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A] with ListenableLazy[A]
+class ListenableResettableLazy[A](generator: => A) extends ResettableLazy[A] with ListenableLazy[A]
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -46,7 +46,7 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def stateView: Changing[Option[A]] = StateView
+	override def stateView: AbstractChanging[Option[A]] = StateView
 	
 	override def current = _value
 	
@@ -62,8 +62,7 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 		newValue
 	}
 	
-	override def valueFuture = _value match
-	{
+	override def valueFuture = _value match {
 		case Some(value) => Future.successful(value)
 		case None => nextValueFuture
 	}
@@ -112,14 +111,8 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 	
 	// NESTED   -------------------------------
 	
-	private object StateView extends Changing[Option[A]]
+	private object StateView extends AbstractChanging[Option[A]]
 	{
-		// ATTRIBUTES  -----------------------
-		
-		override var listeners = Vector[ChangeListener[Option[A]]]()
-		override var dependencies = Vector[ChangeDependency[Option[A]]]()
-		
-		
 		// IMPLEMENTED  ----------------------
 		
 		override def isChanging = true

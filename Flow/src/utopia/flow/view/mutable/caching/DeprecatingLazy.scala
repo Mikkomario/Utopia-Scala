@@ -17,7 +17,7 @@ object DeprecatingLazy
  * @author Mikko Hilpinen
  * @since 27.2.2022, v1.15
  */
-class DeprecatingLazy[A](generator: => A, tester: A => Boolean) extends ResettableLazyLike[A]
+class DeprecatingLazy[A](generator: => A, tester: A => Boolean) extends ResettableLazy[A]
 {
 	// ATTRIBUTES   --------------------------
 	

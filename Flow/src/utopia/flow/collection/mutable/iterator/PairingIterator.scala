@@ -13,7 +13,7 @@ class PairingIterator[A](start: => A, source: Iterator[A]) extends Iterator[Pair
 {
 	// ATTRIBUTES   ---------------------------
 	
-	private val nextFirstPointer = new MutableLazy[A](start)
+	private val nextFirstPointer = MutableLazy[A](start)
 	
 	
 	// COMPUTED -------------------------------

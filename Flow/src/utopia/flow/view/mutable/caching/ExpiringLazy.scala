@@ -61,13 +61,13 @@ object ExpiringLazy
   */
 class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
                       (implicit exc: ExecutionContext)
-	extends ResettableLazyLike[A]
+	extends ResettableLazy[A]
 {
 	// ATTRIBUTES   --------------------------
 	
 	private implicit val log: Logger = SysErrLogger
 	
-	private val cache: ResettableLazyLike[A] = ResettableVolatileLazy(generator)
+	private val cache: ResettableLazy[A] = ResettableVolatileLazy(generator)
 	private val expirationProcessPointer = VolatileOption[Process]()
 	
 	

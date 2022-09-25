@@ -26,7 +26,7 @@ object View
   * @since 4.11.2020, v1.9
   * @tparam A Type of value viewable though this wrapper
   */
-trait View[+A]
+trait View[+A] extends Any
 {
 	// ABSTRACT	----------------------------
 	

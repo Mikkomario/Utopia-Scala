@@ -15,7 +15,7 @@ object ResettableVolatileLazy
   * @author Mikko Hilpinen
   * @since 4.11.2020, v1.9
   */
-class ResettableVolatileLazy[A](generator: => A) extends ResettableLazyLike[A]
+class ResettableVolatileLazy[A](generator: => A) extends ResettableLazy[A]
 {
 	// ATTRIBUTES	-------------------------
 	

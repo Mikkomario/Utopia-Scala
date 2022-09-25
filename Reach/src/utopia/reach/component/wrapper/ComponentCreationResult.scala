@@ -1,7 +1,7 @@
 package utopia.reach.component.wrapper
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.template.ReachComponentLike
 
 import scala.language.implicitConversions
@@ -25,7 +25,7 @@ object ComponentCreationResult
 	/**
 	  * Component creation result wrapping multiple components that have individual visibility states
 	  */
-	type SwitchableCreations[C, R] = CreationsResult[C, ChangingLike[Boolean], R]
+	type SwitchableCreations[C, R] = CreationsResult[C, Changing[Boolean], R]
 	
 	
 	// IMPLICIT	------------------------------
@@ -48,7 +48,7 @@ object ComponentCreationResult
 		new ComponentCreationResult[Vector[C], Unit](components, ())
 	
 	implicit def componentAndVisibilityPointersToResult[C <: ReachComponentLike]
-	(components: IterableOnce[(C, ChangingLike[Boolean])]): SwitchableCreations[C, Unit] =
+	(components: IterableOnce[(C, Changing[Boolean])]): SwitchableCreations[C, Unit] =
 		apply(components.iterator.map { case (c, p) => apply(c, p) })
 	
 	implicit def containerVectorToResult[P](containers: Vector[ComponentWrapResult[P, _, _]]): CreationWrapper[Vector[P]] =

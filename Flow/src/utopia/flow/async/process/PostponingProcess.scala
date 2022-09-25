@@ -4,7 +4,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.ExecutionContext
 
@@ -26,19 +26,19 @@ object PostponingProcess
 	  * @tparam U Arbitrary function result type
 	  * @return A new process ready to be started (i.e. not yet started)
 	  */
-	def apply[U](targetPointer: ChangingLike[WaitTarget], waitLock: AnyRef = new AnyRef,
+	def apply[U](targetPointer: Changing[WaitTarget], waitLock: AnyRef = new AnyRef,
 	             shutdownReaction: Option[ShutdownReaction] = None, isRestartable: Boolean = true)
-	            (f: ChangingLike[Boolean] => U)
+	            (f: Changing[Boolean] => U)
 	            (implicit exc: ExecutionContext, logger: Logger): PostponingProcess =
 		new FunctionalPostponingProcess(targetPointer, waitLock, shutdownReaction, isRestartable)(f)
 	
 	
 	// NESTED   ----------------------------
 	
-	private class FunctionalPostponingProcess[U](targetPointer: ChangingLike[WaitTarget], waitLock: AnyRef,
+	private class FunctionalPostponingProcess[U](targetPointer: Changing[WaitTarget], waitLock: AnyRef,
 	                                             shutdownReaction: Option[ShutdownReaction],
 	                                             override val isRestartable: Boolean)
-	                                            (f: ChangingLike[Boolean] => U)
+	                                            (f: Changing[Boolean] => U)
 	                                            (implicit exc: ExecutionContext, logger: Logger)
 		extends PostponingProcess(targetPointer, waitLock, shutdownReaction)
 	{
@@ -52,7 +52,7 @@ object PostponingProcess
   * @author Mikko Hilpinen
   * @since 12.9.2022, v1.17
   */
-abstract class PostponingProcess(waitTargetPointer: ChangingLike[WaitTarget], waitLock: AnyRef = new AnyRef,
+abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLock: AnyRef = new AnyRef,
                                  shutdownReaction: Option[ShutdownReaction] = None)
                                 (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, shutdownReaction)

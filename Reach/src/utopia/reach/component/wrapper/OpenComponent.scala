@@ -1,7 +1,7 @@
 package utopia.reach.component.wrapper
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
@@ -335,7 +335,7 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  * @return A result with the wrapping parent container, the wrapped component and component creation result
 	  */
 	@throws[IllegalStateException]
-	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: ChangingLike[Boolean] = AlwaysTrue) =
+	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: Changing[Boolean] = AlwaysTrue) =
 	{
 		hierarchy.complete(parent, switchPointer)
 		creation.in(parent)

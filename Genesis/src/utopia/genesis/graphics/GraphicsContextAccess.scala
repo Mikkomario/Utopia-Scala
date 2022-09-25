@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 
 /**
   * Used for accessing a graphics context at any time for read operations
@@ -15,7 +15,7 @@ trait GraphicsContextAccess
 	/**
 	  * @return A readable pointer to the current graphics context
 	  */
-	def graphicsContextPointer: ChangingLike[GraphicsContext]
+	def graphicsContextPointer: Changing[GraphicsContext]
 	
 	
 	// COMPUTED --------------------------

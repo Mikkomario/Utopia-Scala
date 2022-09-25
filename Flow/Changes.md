@@ -4,9 +4,15 @@
 ### Breaking Changes
 - Reorganized the package structure
 - Renamed **template.Model** to **ModelLike**
+- **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
+  - **ChangingLike**, then was renamed to **Changing** instead
+- Removed the implicit class for **Changing** of **Boolean**, moved these methods to **FlagLike** and 
+  added an implicit conversion, which is available through `import utopia.flow.view.template.eventful.FlatLike.wrap`
 - The following traits were renamed and replaced an existing class with the same name
   - **Viewable** and **Settable** to **View** and **Pointer**
   - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**
+  - **ResettableLazyLike** and **MutableLazyLike** to **ResettableLazy** and **MutableLazy**
+- Renamed **LazyWrapper** to **PreInitializedLazy**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
 - **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
@@ -15,6 +21,9 @@
 - Deprecated **Node** in favor of **Viewable**
 - Deprecated **NullSafe** in favor of `Option.apply(...)`
 - Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
+### Other Changes
+- **Changing(Like)** `.map(...)`, `.flatMap(...)`, `.lazyMap(...)`, `.mergeWith(...)`, `.lazyMergeWith(...)` 
+  and `.delayedBy(...)` are no longer abstract
 
 ## v1.17 (in development)
 ### Breaking Changes

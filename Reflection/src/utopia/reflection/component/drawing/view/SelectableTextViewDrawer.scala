@@ -3,7 +3,7 @@ package utopia.reflection.component.drawing.view
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
@@ -16,9 +16,9 @@ import utopia.genesis.graphics.MeasuredText
   * @author Mikko Hilpinen
   * @since 4.11.2020, v2
   */
-case class SelectableTextViewDrawer(textPointer: ChangingLike[MeasuredText], stylePointer: View[TextDrawContext],
-                                    selectedRangesPointer: ChangingLike[Iterable[Range]] = Fixed(Vector()),
-                                    caretPositionPointer: ChangingLike[Option[Int]] = Fixed(None),
+case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePointer: View[TextDrawContext],
+                                    selectedRangesPointer: Changing[Iterable[Range]] = Fixed(Vector()),
+                                    caretPositionPointer: Changing[Option[Int]] = Fixed(None),
                                     highlightedTextColorPointer: View[Color] = View(Color.textBlack),
                                     highlightedBackgroundPointer: View[Option[Color]] = View(None),
                                     caretColorPointer: View[Color] = Fixed(Color.textBlack),

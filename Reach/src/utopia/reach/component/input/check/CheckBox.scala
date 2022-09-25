@@ -2,7 +2,7 @@ package utopia.reach.component.input.check
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
@@ -64,9 +64,9 @@ class CheckBoxFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new check box
 	  */
 	def apply(onImage: Image, offImage: Image, onHoverColor: Color, offHoverColor: Color, hoverRadius: Double = 0.0,
-			  valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
-			  focusListeners: Seq[FocusListener] = Vector()) =
+	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+	          enabledPointer: Changing[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
+	          focusListeners: Seq[FocusListener] = Vector()) =
 		new CheckBox(parentHierarchy, onImage, offImage, onHoverColor, offHoverColor, hoverRadius, valuePointer,
 			enabledPointer, customDrawers, focusListeners)
 }
@@ -91,9 +91,9 @@ case class ContextualCheckBoxFactory[+N <: ColorContextLike](factory: CheckBoxFa
 	  * @return A new check box
 	  */
 	def apply(onIcon: SingleColorIcon, offIcon: SingleColorIcon,
-			  valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
-			  focusListeners: Seq[FocusListener] = Vector(), selectionColorRole: ColorRole = Secondary) =
+	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+	          enabledPointer: Changing[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
+	          focusListeners: Seq[FocusListener] = Vector(), selectionColorRole: ColorRole = Secondary) =
 	{
 		val selectedColor = context.color(selectionColorRole)
 		factory(onIcon.asImageWithColor(selectedColor), offIcon.singleColorImage, selectedColor,
@@ -142,8 +142,8 @@ case class FullContextualCheckBoxFactory[+N <: ColorContextLike](factory: Contex
 	  * @return A new check box
 	  */
 	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
-			  focusListeners: Seq[FocusListener] = Vector()) =
+	          enabledPointer: Changing[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
+	          focusListeners: Seq[FocusListener] = Vector()) =
 	{
 		factory(onIcon, offIcon, valuePointer, enabledPointer, customDrawers, focusListeners, selectionColorRole)
 	}
@@ -155,10 +155,10 @@ case class FullContextualCheckBoxFactory[+N <: ColorContextLike](factory: Contex
   * @since 25.2.2021, v0.1
   */
 class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Image, onHoverColor: Color,
-			   offHoverColor: Color, hoverRadius: Double = 0.0,
-			   override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, additionalDrawers: Vector[CustomDrawer] = Vector(),
-			   additionalFocusListeners: Seq[FocusListener] = Vector())
+               offHoverColor: Color, hoverRadius: Double = 0.0,
+               override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+               enabledPointer: Changing[Boolean] = AlwaysTrue, additionalDrawers: Vector[CustomDrawer] = Vector(),
+               additionalFocusListeners: Seq[FocusListener] = Vector())
 	extends ReachComponentWrapper with ButtonLike with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	---------------------------

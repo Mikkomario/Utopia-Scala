@@ -1,6 +1,6 @@
 package utopia.reach.component.template.focus
 
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 
 /**
   * A common trait for focusable components which have a pointer that describes their focus state
@@ -14,7 +14,7 @@ trait FocusableWithPointer extends FocusableWithState
 	/**
 	  * @return A pointer to this component's current focus state (true when focused, false when not)
 	  */
-	def focusPointer: ChangingLike[Boolean]
+	def focusPointer: Changing[Boolean]
 	
 	
 	// IMPLEMENTED	--------------------------

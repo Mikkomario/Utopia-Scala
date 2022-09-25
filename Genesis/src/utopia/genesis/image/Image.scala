@@ -3,7 +3,7 @@ package utopia.genesis.image
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.operator.LinearScalable
-import utopia.flow.view.immutable.caching.{Lazy, LazyWrapper}
+import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
 import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
@@ -28,7 +28,7 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector2D.identity, 1.0, None, LazyWrapper(PixelTable.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, None, PreInitializedLazy(PixelTable.empty))
 	
 	/**
 	  * Creates a new image
@@ -527,7 +527,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	def mapPixelTable(f: PixelTable => PixelTable) = {
 		if (source.isDefined) {
 			val newPixels = f(pixels)
-			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, LazyWrapper(newPixels))
+			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, PreInitializedLazy(newPixels))
 		}
 		else
 			this

@@ -2,7 +2,7 @@ package utopia.reach.component.input.selection
 
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.paradigm.enumeration.Axis.Y
@@ -65,9 +65,9 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
 	  * @return A new radio button group
 	  */
 	def apply[A](options: Vector[(A, LocalizedString)], direction: Axis2D = Y,
-				 selectedColorRole: ColorRole = Secondary,
-				 backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
-				 customDrawers: Vector[CustomDrawer] = Vector()) =
+	             selectedColorRole: ColorRole = Secondary,
+	             backgroundColorPointer: Changing[ComponentColor] = Fixed(context.containerBackground),
+	             customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
 		if (options.isEmpty)
 			throw new IllegalArgumentException("There must be at least one available option")
@@ -90,9 +90,9 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
 	  * @return A new radio button group
 	  */
 	def withPointer[A](options: Vector[(A, LocalizedString)], valuePointer: PointerWithEvents[A], direction: Axis2D = Y,
-					   selectedColorRole: ColorRole = Secondary,
-					   backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
-					   customDrawers: Vector[CustomDrawer] = Vector()) =
+	                   selectedColorRole: ColorRole = Secondary,
+	                   backgroundColorPointer: Changing[ComponentColor] = Fixed(context.containerBackground),
+	                   customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
 		new RadioButtonGroup[A](parentHierarchy, options, valuePointer, backgroundColorPointer, direction,
 			selectedColorRole, customDrawers)
@@ -105,9 +105,9 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
   * @since 9.3.2021, v0.1
   */
 class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(A, LocalizedString)],
-						  override val valuePointer: PointerWithEvents[A],
-						  backgroundColorPointer: ChangingLike[ComponentColor], direction: Axis2D = Y,
-						  selectedColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector())
+                          override val valuePointer: PointerWithEvents[A],
+                          backgroundColorPointer: Changing[ComponentColor], direction: Axis2D = Y,
+                          selectedColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector())
 						 (implicit context: TextContext)
 	extends ReachComponentWrapper with Pool[Vector[A]] with InteractionWithPointer[A] with ManyFocusableWrapper
 {

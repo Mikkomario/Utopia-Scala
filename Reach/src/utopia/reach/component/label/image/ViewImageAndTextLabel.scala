@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -62,16 +62,16 @@ class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
-	def apply[A](itemPointer: ChangingLike[A], imagePointer: ChangingLike[Image], fontPointer: ChangingLike[Font],
-				 textColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
-				 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-				 textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-				 alignment: Alignment = Alignment.Left,
-				 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
-				 allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
-				 allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
-				 forceEqualBreadth: Boolean = false) =
+	def apply[A](itemPointer: Changing[A], imagePointer: Changing[Image], fontPointer: Changing[Font],
+	             textColorPointer: Changing[Color] = Fixed(Color.textBlack),
+	             imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	             textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	             alignment: Alignment = Alignment.Left,
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
+	             allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
+	             allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
+	             forceEqualBreadth: Boolean = false) =
 		new ViewImageAndTextLabel[A](parentHierarchy, itemPointer, imagePointer, fontPointer, textColorPointer,
 			imageInsetsPointer, textInsetsPointer, alignment, displayFunction, betweenLinesMargin, additionalDrawers,
 			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
@@ -107,14 +107,14 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
-	def withChangingStyle[A](itemPointer: ChangingLike[A], imagePointer: ChangingLike[Image],
-							 fontPointer: ChangingLike[Font] = Fixed(context.font),
-							 textColorPointer: ChangingLike[Color] = Fixed(context.textColor),
-							 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-							 textInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets),
-							 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							 additionalDrawers: Vector[CustomDrawer] = Vector(),
-							 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
+	def withChangingStyle[A](itemPointer: Changing[A], imagePointer: Changing[Image],
+	                         fontPointer: Changing[Font] = Fixed(context.font),
+	                         textColorPointer: Changing[Color] = Fixed(context.textColor),
+	                         imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	                         textInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets),
+	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                         additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                         useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
 		factory[A](itemPointer, imagePointer, fontPointer, textColorPointer, imageInsetsPointer, textInsetsPointer,
 			context.textAlignment, displayFunction, context.betweenLinesMargin.optimal, additionalDrawers,
 			context.allowLineBreaks, context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize,
@@ -134,10 +134,10 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
-	def apply[A](itemPointer: ChangingLike[A], imagePointer: ChangingLike[Image], imageInsets: StackInsets = StackInsets.any,
-				 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 additionalDrawers: Vector[CustomDrawer], useLowPriorityImageSize: Boolean = false,
-				 forceEqualBreadth: Boolean = false) =
+	def apply[A](itemPointer: Changing[A], imagePointer: Changing[Image], imageInsets: StackInsets = StackInsets.any,
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             additionalDrawers: Vector[CustomDrawer], useLowPriorityImageSize: Boolean = false,
+	             forceEqualBreadth: Boolean = false) =
 		withChangingStyle[A](itemPointer, imagePointer, imageInsetsPointer = Fixed(imageInsets),
 			displayFunction = displayFunction, additionalDrawers = additionalDrawers,
 			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)
@@ -154,11 +154,11 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  *                          (depending on alignment) (default = false)
 	  * @return A new label
 	  */
-	def withIcon[A](itemPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
-					imageInsets: StackInsets = StackInsets.any,
-					displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
-					forceEqualBreadth: Boolean = false) =
+	def withIcon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
+	                imageInsets: StackInsets = StackInsets.any,
+	                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
+	                forceEqualBreadth: Boolean = false) =
 		apply(itemPointer, iconPointer.map { _.singleColorImage }, imageInsets, displayFunction, customDrawers,
 			useLowPriorityImageSize, forceEqualBreadth)
 	
@@ -176,12 +176,12 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  *                          (depending on alignment) (default = false)
 	  * @return A new label
 	  */
-	def withColouredIcon[A](itemPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
-							rolePointer: ChangingLike[ColorRole], preferredShade: ColorShade = Standard,
-							imageInsets: StackInsets = StackInsets.any,
-							displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
-							forceEqualBreadth: Boolean = false) =
+	def withColouredIcon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
+	                        rolePointer: Changing[ColorRole], preferredShade: ColorShade = Standard,
+	                        imageInsets: StackInsets = StackInsets.any,
+	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                        customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
+	                        forceEqualBreadth: Boolean = false) =
 		apply(itemPointer, iconPointer.mergeWith(rolePointer) { (icon, role) =>
 			icon.asImageWithColor(context.color(role, preferredShade)) }, imageInsets, displayFunction, customDrawers,
 			useLowPriorityImageSize, forceEqualBreadth)
@@ -202,12 +202,12 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
-	def withIconAndChangingBackground[A](itemPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
-										 rolePointer: ChangingLike[ColorRole], preferredShade: ColorShade = Standard,
-										 imageInsets: StackInsets = StackInsets.any,
-										 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-										 customDrawers: Vector[CustomDrawer] = Vector(),
-										 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
+	def withIconAndChangingBackground[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
+	                                     rolePointer: Changing[ColorRole], preferredShade: ColorShade = Standard,
+	                                     imageInsets: StackInsets = StackInsets.any,
+	                                     displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                                     customDrawers: Vector[CustomDrawer] = Vector(),
+	                                     useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
 	{
 		val backgroundPointer = rolePointer.map { context.color(_, preferredShade) }
 		val backgroundDrawer = BackgroundViewDrawer(backgroundPointer.map { c => c })
@@ -227,17 +227,17 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
   * @author Mikko Hilpinen
   * @since 9.11.2020, v0.1
   */
-class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPointer: ChangingLike[A],
-							   val imagePointer: ChangingLike[Image], fontPointer: ChangingLike[Font],
-							   textColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
-							   imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-							   textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-							   alignment: Alignment = Alignment.Left,
-							   displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							   betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
-							   allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
-							   allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
-							   forceEqualBreadth: Boolean = false)
+class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPointer: Changing[A],
+                               val imagePointer: Changing[Image], fontPointer: Changing[Font],
+                               textColorPointer: Changing[Color] = Fixed(Color.textBlack),
+                               imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                               textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                               alignment: Alignment = Alignment.Left,
+                               displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                               betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
+                               allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
+                               allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
+                               forceEqualBreadth: Boolean = false)
 	extends ReachComponentWrapper with ConstrainableWrapper
 {
 	// ATTRIBUTES	-------------------------------

@@ -2,7 +2,7 @@ package utopia.reflection.controller.data
 
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.template.ComponentLike2
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.container.template.mutable.MutableMultiContainer2
@@ -12,7 +12,7 @@ object ContainerSingleSelectionManager
 	/**
 	  * Short version of typical pointer used in these methods
 	  */
-	private type P[X] = ChangingLike[Vector[X]]
+	private type P[X] = Changing[Vector[X]]
 	
 	/**
 	  * Short version for a refreshable display component
@@ -89,7 +89,7 @@ object ContainerSingleSelectionManager
   * @author Mikko Hilpinen
   * @since 19.12.2020, v2
   */
-class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with ComponentLike2, +PA <: ChangingLike[Vector[A]]]
+class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with ComponentLike2, +PA <: Changing[Vector[A]]]
 (container: MutableMultiContainer2[W, Display], contentPointer: PA,
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)

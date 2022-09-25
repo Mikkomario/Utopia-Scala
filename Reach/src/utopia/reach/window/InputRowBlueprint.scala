@@ -1,7 +1,8 @@
 package utopia.reach.window
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.HorizontalDirection
 import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -30,7 +31,7 @@ object InputRowBlueprint
 	def using[C, Top, N <: Top, F[X <: Top] <: ContextualComponentFactory[X, _ >: Top, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: Top, _, F], key: String,
 	 displayName: LocalizedString  = LocalizedString.empty,
-	 fieldAlignment: Alignment = Alignment.Right, visibilityPointer: ChangingLike[Boolean] = AlwaysTrue,
+	 fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
 	 isScalable: Boolean = true)(createField: F[N] => ManagedField[C]) =
 		apply[C, N](key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
 			createField(factory.withContext(hierarchy, context))
@@ -50,8 +51,8 @@ object InputRowBlueprint
   *                    Accepts component creation hierarchy and context.
   */
 case class InputRowBlueprint[+C, -N](key: String, displayName: LocalizedString = LocalizedString.empty,
-									 fieldAlignment: Alignment = Alignment.Right,
-									 visibilityPointer: ChangingLike[Boolean] = AlwaysTrue, isScalable: Boolean = true)
+                                     fieldAlignment: Alignment = Alignment.Right,
+                                     visibilityPointer: Changing[Boolean] = AlwaysTrue, isScalable: Boolean = true)
 									(createField: (ComponentHierarchy, N) => ManagedField[C])
 {
 	// COMPUTED	-----------------------------

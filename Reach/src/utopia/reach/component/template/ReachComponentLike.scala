@@ -1,7 +1,7 @@
 package utopia.reach.component.template
 
 import utopia.flow.collection.immutable.Tree
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
@@ -29,15 +29,15 @@ trait ReachComponentLike extends Stackable2
 	/**
 	  * @return A pointer to the current position of this component
 	  */
-	def positionPointer: ChangingLike[Point]
+	def positionPointer: Changing[Point]
 	/**
 	  * @return A pointer to the current size of this component
 	  */
-	def sizePointer: ChangingLike[Size]
+	def sizePointer: Changing[Size]
 	/**
 	  * @return A pointer to the current bounds (position + size) of this component
 	  */
-	def boundsPointer: ChangingLike[Bounds]
+	def boundsPointer: Changing[Bounds]
 	
 	/**
 	  * @return Hierarchy containing all this component's parents. This hierarchy should be static/unchanging,

@@ -8,7 +8,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -32,7 +32,7 @@ object Process
 	  */
 	def apply[U](waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
 	             isRestartable: Boolean = true)
-	            (f: => ChangingLike[Boolean] => U)
+	            (f: => Changing[Boolean] => U)
 	            (implicit exc: ExecutionContext, logger: Logger): Process =
 		new FunctionProcess[U](waitLock, shutdownReaction, isRestartable)(f)
 	
@@ -41,7 +41,7 @@ object Process
 	
 	private class FunctionProcess[U](waitLock: AnyRef, shutdownReaction: ShutdownReaction = Cancel,
 	                                 override val isRestartable: Boolean)
-	                                (f: => ChangingLike[Boolean] => U)
+	                                (f: => Changing[Boolean] => U)
 	                                (implicit exc: ExecutionContext, logger: Logger)
 		extends Process(waitLock, Some(shutdownReaction))
 	{

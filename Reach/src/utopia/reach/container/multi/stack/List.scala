@@ -6,7 +6,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -32,7 +32,7 @@ import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 
-case class ListRowContext(parentHierarchy: SeedHierarchyBlock, selectionPointer: Lazy[ChangingLike[Boolean]],
+case class ListRowContext(parentHierarchy: SeedHierarchyBlock, selectionPointer: Lazy[Changing[Boolean]],
                           rowIndex: Int)
 
 case class ListRowContent(components: IterableOnce[ReachComponentLike], context: ListRowContext, action: () => Unit)
@@ -70,10 +70,10 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of additional result created
 	  * @return A new list (wrap result)
 	  */
-	def apply[R](group: SegmentGroup, contextBackgroundPointer: ChangingLike[ComponentColor],
-				 insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
-				 columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
-				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
+	def apply[R](group: SegmentGroup, contextBackgroundPointer: Changing[ComponentColor],
+	             insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
+	             columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
+	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
 	{
 		val rowDirection = group.rowDirection
@@ -208,7 +208,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 
 private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
                        backgroundPointer: View[ComponentColor],
-                       selectedComponentPointer: ChangingLike[Option[ReachComponentLike]],
+                       selectedComponentPointer: Changing[Option[ReachComponentLike]],
                        keyPressedPointer: View[Boolean])
 	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener with Handleable
 {

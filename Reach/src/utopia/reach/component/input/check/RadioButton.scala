@@ -2,7 +2,8 @@ package utopia.reach.component.input.check
 
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
@@ -55,9 +56,9 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 	 * @return A new radio button
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
-	             backgroundColorPointer: ChangingLike[ComponentColor], diameter: Double,
+	             backgroundColorPointer: Changing[ComponentColor], diameter: Double,
 	             hoverExtraRadius: Double, ringWidth: Double = 1.0, selectedColorRole: ColorRole = ColorRole.Secondary,
-	             enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
+	             enabledPointer: Changing[Boolean] = AlwaysTrue,
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector())(implicit colorScheme: ColorScheme) =
 		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
@@ -96,8 +97,8 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
 	             selectedColorRole: ColorRole = ColorRole.Secondary,
-	             enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-	             backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
+	             enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             backgroundColorPointer: Changing[ComponentColor] = Fixed(context.containerBackground),
 	             sizeModifier: Double = ComponentCreationDefaults.radioButtonScalingFactor,
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector()) =
@@ -117,19 +118,18 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
  * @since 30.1.2021, v0.1
  */
 class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
-					 representing: A, backgroundColorPointer: ChangingLike[ComponentColor],
-					 diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
-					 selectedColorRole: ColorRole = Secondary, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					 additionalDrawers: Vector[CustomDrawer] = Vector(),
-					 additionalFocusListeners: Seq[FocusListener] = Vector())
+                     representing: A, backgroundColorPointer: Changing[ComponentColor],
+                     diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
+                     selectedColorRole: ColorRole = Secondary, enabledPointer: Changing[Boolean] = AlwaysTrue,
+                     additionalDrawers: Vector[CustomDrawer] = Vector(),
+                     additionalFocusListeners: Seq[FocusListener] = Vector())
                     (implicit colorScheme: ColorScheme)
 	extends CustomDrawReachComponent with ButtonLike
 {
 	// ATTRIBUTES   ---------------------------------
 	
 	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
-	override val statePointer =
-	{
+	override val statePointer = {
 		if (enabledPointer.isAlwaysTrue)
 			baseStatePointer.view
 		else

@@ -6,7 +6,7 @@ import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -253,7 +253,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
                 stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with CustomDrawableWrapper
-		with InputWithPointer[A, ChangingLike[A]]
+		with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES   -------------------------
 	

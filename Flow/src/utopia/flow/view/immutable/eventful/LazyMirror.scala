@@ -3,7 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.listener.ChangeDependency
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.{ChangingLike, ListenableLazyWrapper}
+import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
 
 object LazyMirror
 {
@@ -14,7 +14,7 @@ object LazyMirror
 	  * @tparam R Type of item after mapping
 	  * @return A lazily mirrored view to specified pointer
 	  */
-	def of[O, R](pointer: ChangingLike[O])(f: O => R) =
+	def of[O, R](pointer: Changing[O])(f: O => R) =
 	{
 		if (pointer.isChanging)
 			new LazyMirror(pointer)(f)
@@ -33,7 +33,7 @@ object LazyMirror
   * @tparam Origin Type of item before mirroring
   * @tparam Reflection Type of item after mirroring
   */
-class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection)
+class LazyMirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	--------------------------

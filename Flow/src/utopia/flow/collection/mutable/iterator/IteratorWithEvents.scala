@@ -2,7 +2,7 @@ package utopia.flow.collection.mutable.iterator
 
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.{ChangingLike, ChangingWrapper}
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 /**
   * Wraps an iterator, adding support for change events
@@ -30,7 +30,7 @@ class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterat
 	
 	override def isChanging = hasNext
 	
-	override def map[B](f: A => B): Iterator[B] with ChangingLike[B] =
+	override def map[B](f: A => B): Iterator[B] with Changing[B] =
 		new MappingIteratorWithEvents[A, B](this)(f)
 	
 	
@@ -50,7 +50,7 @@ class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterat
 	
 	// NESTED   --------------------
 	
-	private class MappingIteratorWithEvents[O, R](source: Iterator[O] with ChangingLike[O])(f: O => R)
+	private class MappingIteratorWithEvents[O, R](source: Iterator[O] with Changing[O])(f: O => R)
 		extends ChangingWrapper[R] with Iterator[R]
 	{
 		// ATTRIBUTES   ------------
@@ -76,7 +76,7 @@ class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterat
 			n
 		}
 		
-		override def map[B](f: R => B): Iterator[B] with ChangingLike[B] =
+		override def map[B](f: R => B): Iterator[B] with Changing[B] =
 			new MappingIteratorWithEvents[R, B](this)(f)
 	}
 }

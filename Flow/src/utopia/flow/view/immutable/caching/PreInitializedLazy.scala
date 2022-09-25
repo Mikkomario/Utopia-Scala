@@ -6,7 +6,7 @@ package utopia.flow.view.immutable.caching
   * @author Mikko Hilpinen
   * @since 12.11.2020, v1.9
   */
-case class LazyWrapper[+A](value: A) extends Lazy[A]
+case class PreInitializedLazy[+A](value: A) extends Lazy[A]
 {
 	override def current = Some(value)
 }

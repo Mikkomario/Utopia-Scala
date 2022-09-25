@@ -2,7 +2,7 @@ package utopia.reach.window
 
 import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
@@ -59,7 +59,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], ChangingLike[Boolean])
+	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], Changing[Boolean])
 	
 	/**
 	  * @return Result provided when no result is gained through interacting with the buttons

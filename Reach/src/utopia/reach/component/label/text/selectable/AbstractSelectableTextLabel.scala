@@ -6,7 +6,7 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling._
@@ -43,10 +43,10 @@ import scala.util.Try
 // TODO: Create a password mode where text is not displayed nor copyable
 abstract class AbstractSelectableTextLabel
 (override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
- textPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
- selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
- selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
- caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
+ textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
+ selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
+ selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
+ caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
  override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2 with Focusable with CursorDefining

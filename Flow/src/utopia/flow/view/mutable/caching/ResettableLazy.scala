@@ -2,19 +2,23 @@ package utopia.flow.view.mutable.caching
 
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.Resettable
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
 object ResettableLazy
 {
+	// OTHER    ----------------------
+	
 	/**
 	  * Creates a new lazily initialized wrapper
 	  * @param make A function for generating the wrapped item when it is requested (may be called multiple times)
 	  * @tparam A Type of wrapped item
 	  * @return A new lazy wrapper
 	  */
-	def apply[A](make: => A) = new ResettableLazy[A](make)
+	def apply[A](make: => A): ResettableLazy[A] = new _ResettableLazy[A](make)
 	
 	/**
 	  * Creates a listenable lazily initialized wrapper
@@ -36,39 +40,95 @@ object ResettableLazy
 			case Some(finite) => ExpiringLazy.after(finite)(make)
 			case None => apply(make)
 		}
+	
+	
+	// NESTED   ----------------------
+	
+	private class _ResettableLazy[A](generator: => A) extends ResettableLazy[A]
+	{
+		// ATTRIBUTES	---------------------------
+		
+		private var _value: Option[A] = None
+		
+		
+		// IMPLEMENTED	---------------------------
+		
+		override def reset() = {
+			if (_value.isDefined) {
+				_value = None
+				true
+			}
+			else
+				false
+		}
+		
+		override def current = _value
+		
+		override def value = _value match
+		{
+			case Some(value) => value
+			case None =>
+				val newValue = generator
+				_value = Some(newValue)
+				newValue
+		}
+	}
 }
 
 /**
-  * This lazily initialized container allows one to request a new value initialization
+  * A common trait for lazily initialized containers which allow the wrapped value to be reset, so that it is generated
+  * possibly multiple times
   * @author Mikko Hilpinen
   * @since 4.11.2020, v1.9
   */
-class ResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
+trait ResettableLazy[+A] extends Lazy[A] with Resettable
 {
-	// ATTRIBUTES	---------------------------
+	// OTHER	----------------------
 	
-	private var _value: Option[A] = None
-	
-	
-	// IMPLEMENTED	---------------------------
-	
-	override def reset() = {
-		if (_value.isDefined) {
-			_value = None
-			true
-		}
-		else
-			false
+	/**
+	  * Retrieves a value from this lazy and resets it afterwards
+	  * @return The value in this lazy before the reset
+	  */
+	def pop() = {
+		val result = value
+		reset()
+		result
+	}
+	/**
+	  * Retrieves a value from this lazy, if one has already been initialized, and resets it afterwards (if necessary)
+	  * @return The value in this lazy before the reset. None if this lazy didn't have an initialized value.
+	  */
+	def popCurrent() = {
+		val result = current
+		if (result.nonEmpty)
+			reset()
+		result
 	}
 	
-	override def current = _value
+	/**
+	  * Resets this lazy instance and immediately requests a new value
+	  * @return The newly generated and stored value
+	  */
+	def newValue() = {
+		reset()
+		value
+	}
 	
-	override def value = _value match
-	{
-		case Some(value) => value
-		case None =>
-			val newValue = generator
-			_value = Some(newValue)
-			newValue
+	/**
+	  * Keeps the current value only if it fulfills the specified condition
+	  * @param keepCondition A condition for the currently cached value to keep
+	  * @return Whether the state of this lazy container changed
+	  */
+	def filter(keepCondition: A => Boolean) = filterNot { c => !keepCondition(c) }
+	/**
+	  * Clears the current value if it matches the specified condition
+	  * @param resetCondition A condition on which the cached item is cleared
+	  * @return Whether the state of this lazy container changed
+	  */
+	def filterNot(resetCondition: A => Boolean) = {
+		if (current.exists(resetCondition))
+			reset()
+		else
+			false
 	}
 }

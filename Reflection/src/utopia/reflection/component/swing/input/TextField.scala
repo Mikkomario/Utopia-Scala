@@ -9,7 +9,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.flow.view.template.eventful.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
@@ -252,7 +252,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
 				   initialAlignment: Alignment = Alignment.Left,
 				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
-	extends JWrapper with CachingStackable with InputWithPointer[A, ChangingLike[A]] with Alignable with Focusable
+	extends JWrapper with CachingStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
 		with CustomDrawableWrapper with StackLeaf
 {
 	// ATTRIBUTES	----------------------
