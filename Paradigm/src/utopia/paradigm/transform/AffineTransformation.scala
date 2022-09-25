@@ -1,16 +1,10 @@
 package utopia.paradigm.transform
 
-import utopia.flow.collection.value.typeless
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.{ModelLike, ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
@@ -33,7 +27,7 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
     
     // IMPLEMENTED  --------------------------
     
-    override def parseFrom(model: Model[Property]) =
+    override def parseFrom(model: ModelLike[Property]) =
         apply(model("translation", "position").getVector2D, LinearTransformation.parseFrom(model))
     
     

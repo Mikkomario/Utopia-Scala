@@ -1,10 +1,9 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.event._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, AsyncMirror}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, AsyncMirror, FlatteningMirror}
 import utopia.flow.view.template.{ListenableLazyLike, Viewable}
 
 import scala.concurrent.duration.Duration

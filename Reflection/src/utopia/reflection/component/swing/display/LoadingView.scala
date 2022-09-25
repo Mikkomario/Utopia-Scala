@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.display
 
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.enumeration.Direction2D.Up

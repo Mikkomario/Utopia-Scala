@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.event.ChangeListener
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

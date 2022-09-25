@@ -1,8 +1,6 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.value.typeless
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.metropolis.model.DeepExtender
@@ -30,11 +28,10 @@ case class DeletionWithCancellations(deletion: Deletion, cancellations: Vector[D
 	
 	override def wrapped = deletion
 	
-	override def toModel =
-	{
+	override def toModel = {
 		val base = deletion.toModel
 		if (isCancelled)
-			base + immutable.Constant("cancellations", cancellations.map { _.toModel })
+			base + Constant("cancellations", cancellations.map { _.toModel })
 		else
 			base
 	}

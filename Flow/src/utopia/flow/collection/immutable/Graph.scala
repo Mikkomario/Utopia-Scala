@@ -59,8 +59,8 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 		// Collects graphs from nodes until all nodes have been collected
 		var pulledGraphs = Set[Graph[N, E]]()
 		nodes.foreach { startNode =>
-			if (!pulledGraphs.exists { _.contains(startNode.content) })
-				pulledGraphs += subGraphFrom(startNode.content)
+			if (!pulledGraphs.exists { _.contains(startNode.value) })
+				pulledGraphs += subGraphFrom(startNode.value)
 		}
 		pulledGraphs
 	}
@@ -126,7 +126,7 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 * @return A graph that contains only the specified node and the nodes connected to that node directly or indirectly
 	 */
 	def subGraphFrom(startNode: N) = copy(connections = node(startNode).allNodes.flatMap { n =>
-		n.leavingEdges.map { e => (n.content, e.content, e.end.content) } })
+		n.leavingEdges.map { e => (n.value, e.value, e.end.value) } })
 	
 	/**
 	 * Maps the contents of this graph
@@ -291,13 +291,13 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	
 	// NESTED	----------------------------
 	
-	private case class GNode(content: N) extends GraphViewNode[N, E]
+	private case class GNode(value: N) extends GraphViewNode[N, E]
 	{
 		// May include edges to other way as well
 		override lazy val leavingEdges = {
-			val singleWay = edgesByStartNode.getOrElse(content, Set())
+			val singleWay = edgesByStartNode.getOrElse(value, Set())
 			if (isTwoWayBound)
-				singleWay ++ edgesByEndNode.getOrElse(content, Set())
+				singleWay ++ edgesByEndNode.getOrElse(value, Set())
 			else
 				singleWay
 		}
@@ -305,7 +305,7 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 		override protected def repr = this
 	}
 	
-	private case class GEdge(content: E, endContent: N) extends GraphViewEdge[N, E]
+	private case class GEdge(value: E, endContent: N) extends GraphViewEdge[N, E]
 	{
 		override lazy val end = nodesByContent(endContent)
 	}

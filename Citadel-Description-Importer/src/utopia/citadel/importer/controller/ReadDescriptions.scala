@@ -5,8 +5,7 @@ import utopia.citadel.database.access.many.description.{DbClientDeviceDescriptio
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.model.description.DescriptionModel
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser

@@ -1,8 +1,7 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 
 /**
   * Represents an event caused by an update targeting a table
@@ -25,7 +24,7 @@ object TableUpdateEvent
 	  * @param insertedModels Models that were inserted to the table (property names as keys)
 	  * @param generatedKeys Row ids that were generated for the new data (if table uses auto-increment indexing)
 	  */
-	case class DataInserted(table: Table, insertedModels: Seq[Model[Property]], generatedKeys: Vector[Value])
+	case class DataInserted(table: Table, insertedModels: Seq[ModelLike[Property]], generatedKeys: Vector[Value])
 		extends TableUpdateEvent
 	{
 		override def tableName = table.name

@@ -181,7 +181,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @param model Model being tested
       * @return Whether the model is likely to be valid
       */
-    def isProbablyValid(model: template.Model[Property]) =
+    def isProbablyValid(model: template.ModelLike[Property]) =
     {
         // Checks whether there are any missing or empty required properties
         declarations.filterNot { _.hasDefault }.forall { declaration => model(declaration.names).isDefined } &&
@@ -195,7 +195,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @return Validation results that either contain the modified model or a reason for validation failure (either
       *         missing properties or failed casting)
       */
-    def validate(model: template.Model[Property]): ModelValidationResult =
+    def validate(model: template.ModelLike[Property]): ModelValidationResult =
     {
         // First checks for missing attributes
         val missing = declarations.filter { d => d.names.forNone(model.containsNonEmpty) }
@@ -217,7 +217,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                     case Some(declaration) =>
                         att.value.castTo(declaration.dataType) match {
                             // Case: Casting succeeded
-                            case Some(castValue) => castBuilder += immutable.Constant(declaration.name, castValue)
+                            case Some(castValue) => castBuilder +=Constant(declaration.name, castValue)
                             // Case: Casting failed
                             case None =>
                                 castFailedBuilder += (Constant(declaration.name, att.value) -> declaration.dataType)
@@ -268,7 +268,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                                 ModelValidationResult.success(model,
                                     Model.withConstants(resultConstants ++
                                         childResults.map { case (childName, result) =>
-                                            immutable.Constant(childName, result.success.get) }))
+                                           Constant(childName, result.success.get) }))
                         }
                     }
                 }

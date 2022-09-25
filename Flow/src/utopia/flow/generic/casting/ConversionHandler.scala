@@ -1,6 +1,7 @@
 package utopia.flow.generic.casting
 
 import utopia.flow.collection.mutable.GraphNode
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.{Conversion, Value}
 import utopia.flow.generic.model.mutable.DataType
@@ -113,7 +114,7 @@ object ConversionHandler
 		// Also, if new conversion is better or as good, replaces the existing connection
 		val existingConnection = sourceNode.edgeTo(targetNode)
 		
-		if (existingConnection.forall { _.content.reliability <= conversion.reliability })
+		if (existingConnection.forall { _.value.reliability <= conversion.reliability })
 			sourceNode.setConnection(targetNode, ConversionStep(caster, conversion))
 	}
 	
@@ -129,23 +130,23 @@ object ConversionHandler
 			// Prefers direct routes
 			val directEdges = origin.edgesTo(target)
 			if (directEdges.nonEmpty)
-				Some(ConversionRoute(Vector(directEdges.map { _.content }.minBy { _.cost })))
+				Some(ConversionRoute(Vector(directEdges.map { _.value }.minBy { _.cost })))
 			else {
 				// If multiple cheapest routes are found, considers the return route, also
-				val routes = origin.cheapestRoutesTo(target) { _.content.cost }._1.minGroupBy { _.size }
+				val routes = origin.cheapestRoutesTo(target) { _.value.cost }._1.minGroupBy { _.size }
 				if (routes.size > 1) {
 					// (Route, Number of irrevokable steps, return cost)
 					val routesWithReturnCosts = routes.map { route =>
 						val returnRoutes = route.dropRight(1)
-							.map { edge => edge.end.cheapestRouteTo(origin) { _.content.cost } }
+							.map { edge => edge.end.cheapestRouteTo(origin) { _.value.cost } }
 						(route, returnRoutes.count { _.isEmpty },
-							returnRoutes.flatten.foldLeft(0) { _ + _.foldLeft(0) { _ + _.content.cost } })
+							returnRoutes.flatten.foldLeft(0) { _ + _.foldLeft(0) { _ + _.value.cost } })
 					}
 					val bestRoute = routesWithReturnCosts.minGroupBy { _._2 }.minBy { _._3 }._1
-					Some(ConversionRoute(bestRoute.map { _.content }))
+					Some(ConversionRoute(bestRoute.map { _.value }))
 				}
 				else
-					routes.headOption.map { r => ConversionRoute(r.map { _.content }) }
+					routes.headOption.map { r => ConversionRoute(r.map { _.value }) }
 			}
 		})
 	

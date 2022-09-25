@@ -1,6 +1,5 @@
 package utopia.flow.view.mutable.caching
 
-import utopia.flow.event.ResettableLazyListener
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, LazyListener, LazyResetListener, ResettableLazyListener}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.ListenableLazyLike

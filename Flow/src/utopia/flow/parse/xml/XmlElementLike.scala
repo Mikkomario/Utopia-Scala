@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.xml.XmlElementLike.isAllowedInContent
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
@@ -151,7 +152,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Right(attributes.attributes)
             // Case: Attributes and value are defined => wraps them into a model, possibly overwriting 'value' attribute
             else
-                Right((attributes + immutable.Constant("value", value)).attributes)
+                Right((attributes +Constant("value", value)).attributes)
         }
         // Case: Wraps a single child => Attempts to convert it into a single property
         else if (children.size == 1)
@@ -174,7 +175,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Case: All children have the same name and can therefore be expressed as a single array
         else if (children.map { _.localName }.toSet.size == 1) {
             // val childName = children.head.name
-            val childrenProperty = immutable.Constant(localName, groupChildren(children))
+            val childrenProperty =Constant(localName, groupChildren(children))
             propertyWithAttributes(childrenProperty)
         }
         else
@@ -182,7 +183,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             val childConstants = children.map { _.localName }.distinct.map { childName =>
                 val children = childrenWithName(childName)
                 if (children.size > 1)
-                    immutable.Constant(childName, groupChildren(children))
+                   Constant(childName, groupChildren(children))
                 else
                     children.head.toConstants match {
                         case Left(constant) =>
@@ -197,7 +198,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Right(childConstants)
             else if (childConstants.exists { c => attributes.contains(c.name) })
                 Right(Vector(
-                    immutable.Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
+                   Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
             else
                 Right(attributes.attributes ++ childConstants)
         }

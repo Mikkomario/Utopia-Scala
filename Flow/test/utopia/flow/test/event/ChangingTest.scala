@@ -1,6 +1,6 @@
 package utopia.flow.test.event
 
-import utopia.flow.async.process.Delay
+import utopia.flow.async.process.{Delay, Wait}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

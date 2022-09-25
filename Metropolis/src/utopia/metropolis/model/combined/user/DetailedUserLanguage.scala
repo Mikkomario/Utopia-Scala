@@ -25,7 +25,7 @@ case class DetailedUserLanguage(userLink: UserLanguageLink, language: DescribedL
 	override def wrapped = userLink.data
 	
 	override def toModel =
-		userLink.toModel + immutable.Constant("language", language.toModel) + immutable.Constant("familiarity", familiarity.toModel)
+		userLink.toModel +Constant("language", language.toModel) +Constant("familiarity", familiarity.toModel)
 	
 	override def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]) =
 		language.toSimpleModelUsing(descriptionRoles) +

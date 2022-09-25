@@ -1,8 +1,6 @@
 package utopia.flow.test.generic
 
-import utopia.flow.collection.template.typeless
-import utopia.flow.datastructure.template
-import utopia.flow.generic.model
+import utopia.flow.generic.model.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
@@ -13,7 +11,7 @@ import scala.util.{Failure, Success}
 
 object TestModel extends FromModelFactory[TestModel]
 {
-    def apply(model: model.template.Model[Property]) =
+    def apply(model: template.ModelLike[Property]) =
     {
         val name = model("name").string
         

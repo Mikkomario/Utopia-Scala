@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.caching
 
+import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.caching.DeprecatingLazy
 import utopia.flow.view.template.LazyLike
 

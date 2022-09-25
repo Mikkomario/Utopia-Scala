@@ -1,6 +1,5 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.ChangeListener
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.template.eventful.Changing

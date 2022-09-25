@@ -2,7 +2,6 @@ package utopia.citadel.database.factory.device
 
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.device.ClientDeviceUserModel
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.device.ClientDeviceUserData
 import utopia.metropolis.model.stored.device.ClientDeviceUser

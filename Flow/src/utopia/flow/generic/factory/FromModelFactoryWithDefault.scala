@@ -1,7 +1,7 @@
 package utopia.flow.generic.factory
 
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 
 /**
   * A common trait for factories which process model data, but which can also provide a backup in
@@ -23,5 +23,5 @@ trait FromModelFactoryWithDefault[+A] extends FromModelFactory[A] with FromValue
 	  * @param model A model from which an item should be parsed.
 	  * @return The parsed item (or the default result)
 	  */
-	def getFromModel(model: Model[Property]) = apply(model).getOrElse(default)
+	def getFromModel(model: ModelLike[Property]) = apply(model).getOrElse(default)
 }

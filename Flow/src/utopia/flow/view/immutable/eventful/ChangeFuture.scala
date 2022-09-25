@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.caching.Lazy

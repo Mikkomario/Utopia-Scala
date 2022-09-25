@@ -1,6 +1,5 @@
 package utopia.reach.component.input.text
 
-import utopia.flow.event.AlwaysTrue
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents

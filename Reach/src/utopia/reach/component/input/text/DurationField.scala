@@ -2,7 +2,6 @@ package utopia.reach.component.input.text
 
 import utopia.flow.async.process
 import utopia.flow.async.process.Delay
-import utopia.flow.event.AlwaysTrue
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}

@@ -1,8 +1,6 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.value.typeless
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.view.template.Extender
@@ -39,7 +37,7 @@ case class OrganizationDeletionWithCancellations(deletion: OrganizationDeletion,
 	{
 		val base = deletion.toModel
 		if (isCancelled)
-			base + immutable.Constant("cancellations", cancellations.map { _.toModel })
+			base + Constant("cancellations", cancellations.map { _.toModel })
 		else
 			base
 	}

@@ -1,10 +1,7 @@
 package utopia.flow.test.parse
 
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.XmlReader
 import utopia.flow.parse.xml.XmlReader
-import utopia.flow.time.Now
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.StringFrom
 

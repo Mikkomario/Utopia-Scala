@@ -4,7 +4,6 @@ import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.database.model.token.AuthTokenModel
 import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.model.immutable.Model
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

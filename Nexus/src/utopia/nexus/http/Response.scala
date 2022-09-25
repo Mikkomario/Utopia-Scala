@@ -13,8 +13,6 @@ import utopia.access.http.Status
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
 import utopia.access.http.ContentType
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 object Response

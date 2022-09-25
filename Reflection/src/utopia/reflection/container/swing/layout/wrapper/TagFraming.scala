@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper

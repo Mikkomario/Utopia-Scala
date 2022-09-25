@@ -1,9 +1,8 @@
 package utopia.flow.test.generic
 
-import utopia.flow.generic._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.{DeclarationConstantGenerator, DeclarationVariableGenerator}
-import utopia.flow.generic.model.immutable.PropertyDeclaration
+import utopia.flow.generic.model.immutable.{ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.{BooleanType, DataType, IntType, Model, StringType}
 
 /**

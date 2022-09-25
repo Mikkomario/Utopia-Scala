@@ -1,13 +1,18 @@
 package utopia.flow.parse.file
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.PollableOnce
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.IterateLines
+import utopia.flow.parse.AutoClose._
+import utopia.flow.util.StringExtensions._
 
 import java.awt.Desktop
 import java.io._
 import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 import scala.io.Codec
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -59,12 +64,12 @@ object FileExtensions
 		/**
 		  * @return File name portion of this path
 		  */
-		def fileName = p.getFileName.toOption.map { _.toString }.getOrElse("")
+		def fileName = Option(p.getFileName).map { _.toString }.getOrElse("")
 		
 		/**
 		  * @return File name portion of this path, without the extension portion (such as ".txt")
 		  */
-		def fileNameWithoutExtension = p.getFileName.toOption match {
+		def fileNameWithoutExtension = Option(p.getFileName) match {
 			case Some(part) => part.toString.untilLast(".")
 			case None => ""
 		}
@@ -98,7 +103,7 @@ object FileExtensions
 		/**
 		  * @return A parent path for this path. None if this path is already a root path
 		  */
-		def parentOption = p.getParent.toOption
+		def parentOption = Option(p.getParent)
 		
 		/**
 		  * @return A parent path for this path. Return this path if already a root path

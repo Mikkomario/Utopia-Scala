@@ -218,7 +218,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	def allNodeContent =
 	{
 		val buffer = new VectorBuilder[N]
-		foreach { buffer += _.content }
+		foreach { buffer += _.value }
 		buffer.result().toSet
 	}
 	
@@ -230,7 +230,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	{
 		val connectionsBuffer = new VectorBuilder[(N, E, N)]
 		foreach { node => node.leavingEdges.foreach { edge =>
-			val newConnection = (node.content, edge.content, edge.end.content)
+			val newConnection = (node.value, edge.value, edge.end.value)
 			connectionsBuffer += newConnection
 		} }
 		Graph(connectionsBuffer.result().toSet)
@@ -246,7 +246,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	{
 		val newTraversedNodes = traversedNodes + this
 		val children = endNodes.filterNot { traversedNodes.contains(_) }.map { _._toTreeWithoutEdges(newTraversedNodes) }
-		Tree(content, children.toVector)
+		Tree(value, children.toVector)
 	}
 	
 	/**
@@ -262,7 +262,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  * @param edgeType The content of the traversed edge(s)
 	  * @return The node(s) at the end of the edge(s)
 	  */
-	def /(edgeType: E) = leavingEdges.filter { _.content == edgeType }.map { _.end }
+	def /(edgeType: E) = leavingEdges.filter { _.value == edgeType }.map { _.end }
 	
 	/**
 	  * Traverses a deep path that consists of edges between nodes

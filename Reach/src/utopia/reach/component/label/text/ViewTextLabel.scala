@@ -1,6 +1,5 @@
 package utopia.reach.component.label.text
 
-import utopia.flow.event.AlwaysFalse
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color

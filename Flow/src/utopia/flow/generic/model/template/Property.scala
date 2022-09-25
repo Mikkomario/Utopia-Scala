@@ -3,6 +3,7 @@ package utopia.flow.generic.model.template
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JsonConvertible
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.template.Viewable
 
 /**

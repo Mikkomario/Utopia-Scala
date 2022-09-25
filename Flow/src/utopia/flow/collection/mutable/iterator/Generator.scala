@@ -25,6 +25,7 @@ object Generator
 * @author Mikko Hilpinen
 * @since 12.5.2018
 **/
+// TODO: Rename InfiniteIterator and rework a little
 trait Generator[+T]
 {
     // ABSTRACT    ------------------

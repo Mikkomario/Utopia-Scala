@@ -1,11 +1,10 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.{immutable, mutable}
-import utopia.flow.generic.SimpleConstantGenerator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.{SimpleConstantGenerator, SimpleVariableGenerator}
-import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.generic.model.mutable.{DataType, Model}
+import utopia.flow.generic.model.mutable
+import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JSONReader
 import utopia.flow.util.StringExtensions._
 
@@ -43,18 +42,18 @@ object ModelTest extends App
 	assert(model1.attributes.size == 3)
 	
 	// 2) model with default value
-	val model2 = new Model(generator2)
+	val model2 = new mutable.Model(generator2)
 	assert(model2.findExisting("Test").isEmpty)
 	assert(model2("Test").content.get == 0)
 	
 	// 3) immutable model with no default value
 	val constants = Vector(Constant("Test1", 1), Constant("Test2", 2))
-	val model3 = immutable.Model.withConstants(constants)
+	val model3 = Model.withConstants(constants)
 	
 	assert(model3.attributeGenerator == model3.attributeGenerator)
 	assert(model3.attributeGenerator == new SimpleConstantGenerator())
 	
-	assert(model3 == immutable.Model.withConstants(constants))
+	assert(model3 == Model.withConstants(constants))
 	assert(model3.attributes.size == 2)
 	assert(model3("Test1").content.get == 1)
 	
@@ -77,7 +76,7 @@ object ModelTest extends App
 	
 	// 4) Immutable model with a default value
 	val generator3 = new SimpleConstantGenerator(0)
-	val model5 = immutable.Model.withConstants(constants, generator3)
+	val model5 = Model.withConstants(constants, generator3)
 	
 	assert(model5 != model3)
 	assert(model5("nonexisting").content.get == 0)
@@ -89,7 +88,7 @@ object ModelTest extends App
 	val model6 = mutable.Model(Vector("a" -> 1, "b" -> 2))
 	assert(model6.attributes.size == 2)
 	
-	val model7 = immutable.Model(Vector("a" -> 1, "b" -> 2))
+	val model7 = Model(Vector("a" -> 1, "b" -> 2))
 	assert(model7.attributes.size == 2)
 	
 	// Tests immutable model filter

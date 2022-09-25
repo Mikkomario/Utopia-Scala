@@ -56,18 +56,18 @@ object StackHierarchyManager
 	/**
 	  * @return Pulls an awt component from the registered components, provided that any are available
 	  */
-	def anyComponent = graph.valuesIterator.find { _.content.isInstanceOf[AwtComponentRelated] }
+	def anyComponent = graph.valuesIterator.find { _.value.isInstanceOf[AwtComponentRelated] }
 		.map { _.asInstanceOf[AwtComponentRelated].component }
 	
 	private def nodeToString(node: Node): String =
 	{
 		val children = node.endNodes
 		if (children.isEmpty)
-			node.content.toString
+			node.value.toString
 		else if (children.size == 1)
-			s"${node.content.toString} -> ${nodeToString(children.head)}"
+			s"${node.value.toString} -> ${nodeToString(children.head)}"
 		else
-			s"${node.content.toString} -> [${children.map(nodeToString).mkString(", ")}]"
+			s"${node.value.toString} -> [${children.map(nodeToString).mkString(", ")}]"
 	}
 	
 	
@@ -89,7 +89,7 @@ object StackHierarchyManager
 		case Some(id) =>
 			// Case: Master component
 			if (id.isMasterId)
-				graph.get(id.masterId).map { _.content }.toVector
+				graph.get(id.masterId).map { _.value }.toVector
 			// Case: Child component
 			else
 				graph.get(id.masterId) match
@@ -97,7 +97,7 @@ object StackHierarchyManager
 					case Some(masterNode) =>
 						// Collects the whole component path
 						val builder = new VectorBuilder[Stackable]()
-						builder += masterNode.content
+						builder += masterNode.value
 						var lastNode = masterNode
 						var remainingIds = id.parts.drop(1)
 						while (remainingIds.nonEmpty)
@@ -105,7 +105,7 @@ object StackHierarchyManager
 							(lastNode/remainingIds.head).headOption match
 							{
 								case Some(nextNode) =>
-									builder += nextNode.content
+									builder += nextNode.value
 									lastNode = nextNode
 									remainingIds = remainingIds.drop(1)
 								// Case: Path was invalid / broken => adds the component to the end and finishes
@@ -180,7 +180,7 @@ object StackHierarchyManager
 			
 			// Validates the necessary master items
 			val masterNodes = itemIds.map { _.masterId }.flatMap { index => graph.get(index) }
-			masterNodes.foreach { _.content.updateLayout() }
+			masterNodes.foreach { _.value.updateLayout() }
 			
 			// Validates the deeper levels
 			val nextIds = itemIds.flatMap { _.tail }
@@ -193,12 +193,12 @@ object StackHierarchyManager
 	{
 		// Finds the next set of nodes to validate
 		val currentLevelIds = remainingIds.map { _.head }
-		val nextNodes = nodes.flatMap { _.leavingEdges.filter { e => currentLevelIds.contains(e.content) }.map { _.end } }
+		val nextNodes = nodes.flatMap { _.leavingEdges.filter { e => currentLevelIds.contains(e.value) }.map { _.end } }
 		
 		if (nextNodes.nonEmpty)
 		{
 			// Validates the items
-			nextNodes.foreach { _.content.updateLayout() }
+			nextNodes.foreach { _.value.updateLayout() }
 			
 			// Traverses to the next level, if necessary
 			val nextIds = remainingIds.flatMap { _.tail }
@@ -217,7 +217,7 @@ object StackHierarchyManager
 			val groups = remainingIds.groupBy { _.length == maxIdLength }
 			
 			val longest = groups.getOrElse(true, Set())
-			longest.foreach { nodeOptionForId(_).foreach { _.content.resetCachedSize() } }
+			longest.foreach { nodeOptionForId(_).foreach { _.value.resetCachedSize() } }
 			
 			// Shortened ids are treated on another recursive round
 			val nextIds = longest.flatMap { _.parentId } ++ groups.getOrElse(false, Set())
@@ -245,7 +245,7 @@ object StackHierarchyManager
 						graphForId(itemId).disconnectAll(node)
 					
 					// Removes any child nodes
-					node.foreach { ids -= _.content.stackId }
+					node.foreach { ids -= _.value.stackId }
 				case None =>
 					// If, for some reason, the node was already removed, makes sure the id is removed as well
 					ids -= item.stackId
@@ -286,7 +286,7 @@ object StackHierarchyManager
 						parentNode.disconnectDirect(childNode)
 						// Updates the ids of grandchildren (and their children) to not include the removed old parent's id
 						childNode.foreach { c =>
-							val grandChildStackId = c.content.stackId
+							val grandChildStackId = c.value.stackId
 							ids.get(grandChildStackId).foreach { grandChildId =>
 								ids(grandChildStackId) = grandChildId.dropUntil(childIndex)
 							}
@@ -313,7 +313,7 @@ object StackHierarchyManager
 					// will not modify or insert it
 					graph.get(childIndex).foreach { childNode =>
 						// Updates all child ids
-						childNode.foreach { n => ids(n.content.stackId) = newParentId + ids(n.content.stackId) }
+						childNode.foreach { n => ids(n.value.stackId) = newParentId + ids(n.value.stackId) }
 						// Removes the child from master nodes and attaches it to the new parent
 						graph -= childIndex
 						newParentNode.connect(childNode, childIndex)
@@ -358,7 +358,7 @@ object StackHierarchyManager
 					val childIndex = childId.last
 					(parentNode / childIndex).headOption.foreach { childNode =>
 						parentNode.disconnectDirect(childNode)
-						childNode.foreach { c => ids(c.content.stackId) = ids(c.content.stackId).dropUntil(childIndex) }
+						childNode.foreach { c => ids(c.value.stackId) = ids(c.value.stackId).dropUntil(childIndex) }
 						
 						// Makes the child a master
 						graph(childIndex) = childNode

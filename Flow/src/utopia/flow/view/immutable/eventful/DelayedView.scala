@@ -1,10 +1,11 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.context.CloseHook
+import utopia.flow.async.process.Wait
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.template.eventful.{Changing, ChangingLike}
 
 import java.time.Instant

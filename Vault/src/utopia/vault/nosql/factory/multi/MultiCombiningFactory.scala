@@ -1,7 +1,5 @@
 package utopia.vault.nosql.factory.multi
 
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.vault.nosql.factory.CombiningFactoryLike
 

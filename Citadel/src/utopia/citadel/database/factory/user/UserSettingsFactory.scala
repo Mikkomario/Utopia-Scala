@@ -2,7 +2,6 @@ package utopia.citadel.database.factory.user
 
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.user.UserSettingsModel
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings

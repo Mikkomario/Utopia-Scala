@@ -2,7 +2,7 @@ package utopia.vault.database
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.StringType
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.vault.sql.Select
 import utopia.vault.sql.Where
 import utopia.vault.sql.SqlExtensions._
@@ -45,9 +45,9 @@ object DatabaseReferenceReader
                     keys("tableName").in(tableOptions) && 
                     keys("referencedTableName").in(tableOptions))).rows.map(_.toModel)
             
-            def findTable(keyName: String, row: Model[Property]) = tables.find(
+            def findTable(keyName: String, row: ModelLike[Property]) = tables.find(
                     _.name == row(keyName).stringOr()).get
-            def findColumn(table: Table, keyName: String, row: Model[Property]) = 
+            def findColumn(table: Table, keyName: String, row: ModelLike[Property]) =
                     table.columnWithColumnName(row(keyName).stringOr())
             
             results.map( row => 

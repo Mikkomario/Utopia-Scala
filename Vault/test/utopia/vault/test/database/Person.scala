@@ -1,6 +1,5 @@
 package utopia.vault.test.database
 
-import utopia.flow.datastructure.immutable
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now

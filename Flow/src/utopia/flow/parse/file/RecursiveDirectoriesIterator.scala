@@ -1,5 +1,6 @@
 package utopia.flow.parse.file
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.Flag
 

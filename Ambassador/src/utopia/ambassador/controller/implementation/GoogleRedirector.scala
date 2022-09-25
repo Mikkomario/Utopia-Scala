@@ -5,10 +5,8 @@ import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.vault.database.Connection
 
 import scala.collection.immutable.VectorBuilder
@@ -57,7 +55,7 @@ case class GoogleRedirector(shouldUserSelectAccount: Boolean = false, shouldAlwa
 		))
 		// Adds scopes if they are not empty
 		val scopesConstant = if (scopes.isEmpty) None else
-			Some(immutable.Constant("scope", scopes.map { _.name }.mkString(" ")))
+			Some(Constant("scope", scopes.map { _.name }.mkString(" ")))
 		// Reads user email address for login_hint parameter
 		val hintConstant = DbUser(preparation.userId).settings.email.map { email => Constant("login_hint", email) }
 		

@@ -3,9 +3,9 @@ package utopia.flow.parse.file.search
 import java.nio.file.Path
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.async.VolatileLazy
 import utopia.flow.collection.immutable.Tree
 import utopia.flow.parse.file.search.ExcavationStatus.{Finished, Passed, Started, Unexplored}
+import utopia.flow.view.immutable.caching.VolatileLazy
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.{ExecutionContext, Future}

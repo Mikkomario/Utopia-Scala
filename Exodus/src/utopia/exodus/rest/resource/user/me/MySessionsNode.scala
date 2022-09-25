@@ -11,9 +11,7 @@ import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.collection.value.typeless
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.post.NewSessionRequest
@@ -198,7 +196,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 			val sessionTokenModel = newSessionToken.withScopeInfo(scopePerId).toModelWith(sessionTokenString, style)
 			val resultModel = newRefreshToken match {
 				case Some((refreshToken, refreshTokenString)) =>
-					sessionTokenModel + immutable.Constant("refresh_token",
+					sessionTokenModel +Constant("refresh_token",
 						refreshToken.withScopeInfo(scopePerId).toModelWith(refreshTokenString, style))
 				case None => sessionTokenModel
 			}

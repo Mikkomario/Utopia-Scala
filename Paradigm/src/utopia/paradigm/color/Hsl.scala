@@ -1,12 +1,11 @@
 package utopia.paradigm.color
 
-import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DoubleType
-import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.ApproximatelyEquatable
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle

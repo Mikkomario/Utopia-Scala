@@ -1,7 +1,6 @@
 package utopia.vault.test.app
 
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.JSONReader
 import utopia.flow.parse.json.{JSONReader, JsonParser}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.test.TestContext._

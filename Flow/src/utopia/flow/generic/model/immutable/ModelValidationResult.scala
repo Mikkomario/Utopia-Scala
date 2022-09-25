@@ -13,21 +13,21 @@ object ModelValidationResult
 	  * @param missingDeclarations Declarations that were missing or empty
 	  * @return A result for missing properties
 	  */
-	def missing(original: template.Model[Property], missingDeclarations: Set[PropertyDeclaration]) =
+	def missing(original: template.ModelLike[Property], missingDeclarations: Set[PropertyDeclaration]) =
 		ModelValidationResult(original, missingProperties = missingDeclarations)
 	/**
 	 *  @param original Original model
 	  * @param failedConversions Conversions that failed (original attribute -> desired data type)
 	  * @return A result for cast failure
 	  */
-	def castFailed(original: template.Model[Property], failedConversions: Set[(Constant, DataType)]) =
+	def castFailed(original: template.ModelLike[Property], failedConversions: Set[(Constant, DataType)]) =
 		ModelValidationResult(original, invalidConversions = failedConversions)
 	/**
 	 * @param original Original model
 	 * @param missingChildren Expected child model declarations that couldn't be found from the model
 	 * @return A failure result
 	 */
-	def missingChildren(original: template.Model[Property], missingChildren: Map[String, ModelDeclaration]) =
+	def missingChildren(original: template.ModelLike[Property], missingChildren: Map[String, ModelDeclaration]) =
 		ModelValidationResult(original, missingChildren = missingChildren)
 	
 	/**
@@ -35,7 +35,7 @@ object ModelValidationResult
 	  * @param validated Successfully validated model
 	  * @return A result for successful validation
 	  */
-	def success(original: template.Model[Property], validated: Model) =
+	def success(original: template.ModelLike[Property], validated: Model) =
 		ModelValidationResult(original, success = Some(validated))
 }
 
@@ -48,7 +48,7 @@ object ModelValidationResult
   * @param invalidConversions Properties that failed to convert to desired data type
  *  @param missingChildren Missing declared child declarations
   */
-case class ModelValidationResult private(original: template.Model[Property], success: Option[Model] = None,
+case class ModelValidationResult private(original: template.ModelLike[Property], success: Option[Model] = None,
                                          missingProperties: Set[PropertyDeclaration] = Set(),
                                          invalidConversions: Set[(Constant, DataType)] = Set(),
                                          missingChildren: Map[String, ModelDeclaration] = Map())

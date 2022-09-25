@@ -1,11 +1,9 @@
 package utopia.metropolis.model.stored.user
 
-import utopia.flow.collection.value.typeless.PropertyDeclaration
-import utopia.flow.datastructure.template
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.IntType
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.{StoredFromModelFactory, StyledStoredModelConvertible}
 
@@ -31,7 +29,7 @@ object UserLanguageLink extends StoredFromModelFactory[UserLanguageLink, UserLan
 	  * @param model Model being parsed
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
-	def apply(userId: Int, model: Model[Property]): Try[UserLanguageLink] =
+	def apply(userId: Int, model: ModelLike[Property]): Try[UserLanguageLink] =
 		idSchema.validate(model).toTry.flatMap { valid =>
 			UserLanguageLinkData(userId, model).map { data => UserLanguageLink(valid("id").getInt, data) }
 		}

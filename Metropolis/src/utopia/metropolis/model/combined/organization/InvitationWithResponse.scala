@@ -1,12 +1,9 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.value.typeless
-import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.partial.organization.InvitationData
@@ -16,7 +13,7 @@ import scala.util.Success
 
 object InvitationWithResponse extends FromModelFactory[InvitationWithResponse]
 {
-	override def apply(model: Model[Property]) =
+	override def apply(model: ModelLike[Property]) =
 		Invitation(model).flatMap { invitation =>
 			model("response").model match
 			{
@@ -46,12 +43,12 @@ case class InvitationWithResponse(invitation: Invitation, response: Option[Invit
 	
 	override def wrapped = invitation.data
 	
-	override def toModel = invitation.toModel + immutable.Constant("response", response.map { _.toModel })
+	override def toModel = invitation.toModel + Constant("response", response.map { _.toModel })
 	override def toSimpleModel =
 	{
 		val base = invitation.toModel
 		response match {
-			case Some(response) => base + immutable.Constant("response", response.toSimpleModel)
+			case Some(response) => base + Constant("response", response.toSimpleModel)
 			case None => base
 		}
 	}

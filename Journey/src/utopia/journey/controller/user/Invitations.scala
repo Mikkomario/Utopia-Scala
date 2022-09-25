@@ -11,7 +11,6 @@ import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.annex.model.schrodinger.CachedFindSchrodinger
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.parse.file.FileExtensions._
@@ -49,7 +48,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 	{
 		// Logs possible load errors
 		loadErrors.headOption.foreach { error =>
-			log(error, s"Failed to handle persisted requests (${loadErrors.size} errors)")
+			logger(error, s"Failed to handle persisted requests (${loadErrors.size} errors)")
 		}
 	}
 	
@@ -81,7 +80,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously
-		schrodinger.completeWith(queue.push(request)) { _.vector(DetailedInvitation).parsed } { log(_) }
+		schrodinger.completeWith(queue.push(request)) { _.vector(DetailedInvitation).parsed } { logger(_) }
 		
 		schrodinger.view
 	}
@@ -112,9 +111,8 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 						cached.update { _.filterNot { _.id == invitationId } }
 						hiddenIds -= invitationId
 						Success(activeCached)
-					case Response.Failure(status, message) =>
-						status match
-						{
+					case Response.Failure(status, message, _) =>
+						status match {
 							case Unauthorized => Failure(new UnauthorizedRequestException(
 								message.getOrElse("Unauthorized to answer the invitation")))
 							case Forbidden => Failure(new RequestDeniedException(message.getOrElse(
@@ -153,14 +151,11 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		
 		override def handle(result: Either[RequestNotSent, Response]) =
 		{
-			result match
-			{
+			result match {
 				case Right(response) =>
-					response match
-					{
-						case Response.Success(status, body) =>
-							body match
-							{
+					response match {
+						case Response.Success(status, body, _) =>
+							body match {
 								case c: Content =>
 									c.single(InvitationWithResponse).parsed match
 									{
@@ -169,18 +164,18 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 											val invitationId = invitation.id
 											cached.update { _.filterNot { _.id == invitationId } }
 											hiddenIds -= invitationId
-										case Failure(error) => log(error,
+										case Failure(error) => logger(error,
 											"Couldn't interpret response to invitation answer")
 									}
-								case Empty => log(s"Invitation answer response didn't contain a body. Status: $status")
+								case Empty => logger(s"Invitation answer response didn't contain a body. Status: $status")
 							}
-						case Response.Failure(status, message) => log(new RequestFailedException(message.getOrElse(
+						case Response.Failure(status, message, _) => logger(new RequestFailedException(message.getOrElse(
 							s"Server rejected invitation answer. Status: $status")))
 					}
 				case Left(notSent) =>
 					notSent match
 					{
-						case RequestFailed(error) => log(error, "Failed to send invitation answer")
+						case RequestFailed(error) => logger(error, "Failed to send invitation answer")
 						case RequestWasDeprecated => () // Ignored
 					}
 			}

@@ -4,8 +4,8 @@ import utopia.flow.event.listener.PropertyChangeListener
 import utopia.flow.event.model.PropertyChangeEvent
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template
+import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.template.Property
-import utopia.flow.generic.SimpleConstantGenerator
 import utopia.flow.generic.factory.{PropertyGenerator, SimpleConstantGenerator, SimpleVariableGenerator}
 
 import scala.collection.immutable.HashMap
@@ -45,8 +45,9 @@ object Model
  * @tparam Attribute The type of attribute stored within this model
  * @param attributeGenerator The variable generator used for generating new values on this model
  */
+// TODO: Rename to MutableModel (?)
 class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Attribute])
-    extends template.Model[Attribute]
+    extends template.ModelLike[Attribute]
 {
     // ATTRIBUTES    --------------
     
@@ -102,7 +103,7 @@ class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Att
     /**
      * Updates values of multiple attributes in this model
      */
-    def update(data: template.Model[Property]): Unit = data.attributes.foreach(update)
+    def update(data: template.ModelLike[Property]): Unit = data.attributes.foreach(update)
     
     /**
      * Adds a new attribute to this model. If an attribute with the same name already exists, it 

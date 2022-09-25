@@ -1,7 +1,6 @@
 package utopia.flow.test.generic
 
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.JSONReader
 import utopia.flow.parse.json.{JSONReader, JsonParser}
 
 import scala.collection.immutable.HashMap

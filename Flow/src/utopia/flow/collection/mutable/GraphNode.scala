@@ -11,7 +11,7 @@ import scala.collection.immutable.HashSet
  * @author Mikko Hilpinen
  * @since 28.10.2016
  */
-class GraphNode[N, E](var content: N) extends template.GraphNode[N, E, GraphNode[N, E], GraphEdge[N, E, GraphNode[N, E]]]
+class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N, E], GraphEdge[N, E, GraphNode[N, E]]]
 {
     // TYPES    --------------------
     
@@ -31,7 +31,7 @@ class GraphNode[N, E](var content: N) extends template.GraphNode[N, E, GraphNode
     /**
       * @return A copy of this mutable node
       */
-    def copy() = new GraphNode(content, leavingEdges)
+    def copy() = new GraphNode(value, leavingEdges)
     
     /**
      * Connects this node to another node, creating a new edge. This will always create a new edge, 

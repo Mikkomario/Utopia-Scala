@@ -1,5 +1,6 @@
 package utopia.reach.component.input.text
 
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
@@ -9,27 +10,27 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
+import utopia.reach.component.input.InputValidationResult.Default
 import utopia.reach.component.input.{Field, FieldState, InputValidationResult}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.template.focus.{FocusableWithState, MutableFocusableWrapper}
 import utopia.reach.component.wrapper.Open
+import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
+import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localizer}
-import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
-import utopia.reach.component.input.InputValidationResult.Default
-import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
 import utopia.reflection.util.ComponentCreationDefaults

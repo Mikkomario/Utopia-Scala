@@ -1,8 +1,7 @@
 package utopia.vault.database
 
-import utopia.flow.caching.multi.TryCache
 import utopia.flow.collection.immutable.caching
-import utopia.flow.collection.immutable.caching.cache.TryCache
+import utopia.flow.collection.immutable.caching.cache.{Cache, ExpiringCache}
 import utopia.flow.collection.template.CacheLike
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._

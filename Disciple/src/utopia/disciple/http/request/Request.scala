@@ -2,11 +2,6 @@ package utopia.disciple.http.request
 
 import utopia.access.http.{Headers, Method}
 import utopia.access.http.Method._
-import utopia.flow.collection.template.typeless
-import utopia.flow.collection.value
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.template
 import utopia.flow.generic.model
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 
@@ -69,7 +64,7 @@ case class Request(requestUri: String, method: Method = Get, params: Model = Mod
     /**
      * Adds multiple new parameters to this request
      */
-    def ++(params: model.template.Model[Constant]) = copy(params = this.params ++ params)
+    def ++(params: model.template.ModelLike[Constant]) = copy(params = this.params ++ params)
     
     
     // OTHER METHODS    ----------------

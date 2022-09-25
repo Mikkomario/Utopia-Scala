@@ -1,9 +1,8 @@
 package utopia.vault.model.immutable
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.immutable.{ModelDeclaration, Value}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
 import utopia.vault.model.error.NoReferenceFoundException
@@ -202,5 +201,5 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	  * @param model A model to validate
 	  * @return A validated copy of that model. Failure if the model didn't contain all required properties.
 	  */
-	def validate(model: Model[Property]) = requirementDeclaration.validate(model).toTry
+	def validate(model: ModelLike[Property]) = requirementDeclaration.validate(model).toTry
 }

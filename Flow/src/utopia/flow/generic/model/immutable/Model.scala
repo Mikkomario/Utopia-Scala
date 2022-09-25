@@ -3,7 +3,7 @@ package utopia.flow.generic.model.immutable
 import utopia.flow.collection
 import utopia.flow.generic.model.mutable.{ModelType, Variable}
 import utopia.flow.generic.model.{mutable, template}
-import utopia.flow.generic.factory.{PropertyGenerator, SimpleVariableGenerator}
+import utopia.flow.generic.factory.{PropertyGenerator, SimpleConstantGenerator, SimpleVariableGenerator}
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.Equatable
 
@@ -77,7 +77,7 @@ object Model
  */
 class Model private(val attributeMap: Map[String, Constant], protected val attributeOrder: Vector[String],
                     val attributeGenerator: PropertyGenerator[Constant])
-    extends template.Model[Constant] with Equatable with ValueConvertible
+    extends template.ModelLike[Constant] with Equatable with ValueConvertible
 {
     // COMP. PROPERTIES    -------
     
@@ -132,7 +132,7 @@ class Model private(val attributeMap: Map[String, Constant], protected val attri
      * Creates a new model that contains the attributes from both of the models. The new model 
      * will still use this model's attribute generator
      */
-    def ++(other: template.Model[Constant]): Model = this ++ other.attributes
+    def ++(other: template.ModelLike[Constant]): Model = this ++ other.attributes
     
     /**
      * Creates a new model without the provided attribute
@@ -153,7 +153,7 @@ class Model private(val attributeMap: Map[String, Constant], protected val attri
     /**
      * Creates a new model without any attributes within the provided model
      */
-    def --(other: template.Model[Constant]): Model = withoutAttributes(other.attributes.toSet)
+    def --(other: template.ModelLike[Constant]): Model = withoutAttributes(other.attributes.toSet)
     
     
     // OTHER METHODS    ------

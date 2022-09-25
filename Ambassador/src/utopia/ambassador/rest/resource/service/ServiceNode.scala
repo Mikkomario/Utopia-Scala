@@ -14,7 +14,6 @@ import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.collection.template.MapLike
-import utopia.flow.collection.value.typeless
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant

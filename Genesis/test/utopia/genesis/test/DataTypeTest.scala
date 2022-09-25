@@ -5,7 +5,6 @@ import utopia.paradigm.generic.{BoundsType, CircleType, LineType, ParadigmDataTy
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.{ModelType, VectorType}
-import utopia.flow.parse.JSONReader
 import utopia.flow.parse.json.{JSONReader, JsonParser}
 import utopia.paradigm.shape.shape3d.Vector3D
 

@@ -1,6 +1,5 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.event.ChangeListener
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 
 import scala.concurrent.ExecutionContext

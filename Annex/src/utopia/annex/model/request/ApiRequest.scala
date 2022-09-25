@@ -1,8 +1,6 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 /**

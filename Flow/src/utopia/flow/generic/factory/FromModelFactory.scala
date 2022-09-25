@@ -1,7 +1,6 @@
 package utopia.flow.generic.factory
 
-import utopia.flow.generic.model.template.{Model, Property}
-import utopia.flow.parse.JSONReader
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.parse.json.{JSONReader, JsonParser}
 
 import scala.util.Try
@@ -20,7 +19,7 @@ trait FromModelFactory[+A]
 	  * @param model Model data is parsed from
 	  * @return an instance parsed from model data. Failure if no instance could be parsed.
 	  */
-	def apply(model: Model[Property]): Try[A]
+	def apply(model: ModelLike[Property]): Try[A]
 	
 	
 	// OTHER METHODS   --------------------------

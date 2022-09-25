@@ -1,13 +1,11 @@
 package utopia.journey.model
 
 import utopia.annex.model.Spirit
-import utopia.flow.collection.value.typeless.PropertyDeclaration
-import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.IntType
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.metropolis.model.post.NewInvitationResponse
 
 object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpirit]
@@ -19,7 +17,7 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def apply(model: Model[Property]) = NewInvitationResponse(model).flatMap { response =>
+	override def apply(model: ModelLike[Property]) = NewInvitationResponse(model).flatMap { response =>
 		schema.validate(model).toTry.map { valid => InvitationResponseSpirit(valid("invitation_id").getInt, response) }
 	}
 	
@@ -58,7 +56,7 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 	  * @param model a model being tested
 	  * @return Whether the specified model is likely to be a valid response spirit model
 	  */
-	def isProbablyValidModel(model: Model[Property]) = NewInvitationResponse.schema.isProbablyValid(model) &&
+	def isProbablyValidModel(model: ModelLike[Property]) = NewInvitationResponse.schema.isProbablyValid(model) &&
 		schema.isProbablyValid(model)
 }
 

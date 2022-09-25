@@ -1,10 +1,10 @@
 package utopia.flow.test.generic
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.generic.casting.ConversionHandler
+import utopia.flow.generic.model.enumeration.ConversionReliability
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.{AnyType, DataType, DoubleType, InstantType, IntType, LocalDateTimeType, StringType}
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}

@@ -1,12 +1,9 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.collection.template.typeless
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.template
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, Value}
 import utopia.flow.generic.model.mutable.{StringType, VectorType}
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
@@ -18,7 +15,7 @@ object NewUser extends FromModelFactory[NewUser]
 {
 	private val schema = ModelDeclaration("name" -> StringType, "password" -> StringType, "languages" -> VectorType)
 	
-	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: ModelLike[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		// Languages must be parseable
 		valid("languages").getVector.tryMap { v => NewLanguageProficiency(v.getModel) }.flatMap { languages =>
 			// Also, email address must be valid (if specified)

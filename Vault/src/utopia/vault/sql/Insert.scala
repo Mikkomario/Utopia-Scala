@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, Triggers}
@@ -27,7 +27,7 @@ object Insert
      * match those of the table are used
      * @return Results of the insert operation, which contain generated auto-increment keys where applicable
      */
-    def apply(table: Table, rows: Seq[Model[Property]])(implicit connection: Connection) =
+    def apply(table: Table, rows: Seq[ModelLike[Property]])(implicit connection: Connection) =
     {
         if (rows.isEmpty)
             Result.empty
@@ -90,7 +90,7 @@ object Insert
      * used
      * @return Results of the insert, which may contain a possibly generated auto-increment key (if applicable)
      */
-    def apply(table: Table, row: Model[Property])(implicit connection: Connection): Result = apply(table, Vector(row))
+    def apply(table: Table, row: ModelLike[Property])(implicit connection: Connection): Result = apply(table, Vector(row))
     
     /**
      * Inserts multiple rows into an sql database. This statement is not combined with other statements and targets a
@@ -98,6 +98,6 @@ object Insert
      * @param table the table into which the rows are inserted
      * @return Results of the insert operation, which contain generated auto-increment keys where applicable
      */
-    def apply(table: Table, first: Model[Property], second: Model[Property], more: Model[Property]*)
+    def apply(table: Table, first: ModelLike[Property], second: ModelLike[Property], more: ModelLike[Property]*)
              (implicit connection: Connection): Result = apply(table, Vector(first, second) ++ more)
 }

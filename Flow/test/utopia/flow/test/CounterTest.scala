@@ -1,6 +1,6 @@
 package utopia.flow.test
 
-import utopia.flow.collection.mutable.iterator.Counter
+import utopia.flow.collection.mutable.iterator.{Counter, Generator}
 
 /**
   * Tests Counter class

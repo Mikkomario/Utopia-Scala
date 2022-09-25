@@ -1,14 +1,11 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.template.typeless
-import utopia.flow.collection.value
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable
-import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.partial.organization.InvitationData
@@ -17,7 +14,7 @@ import utopia.metropolis.model.stored.user.UserSettings
 
 object DetailedInvitation extends FromModelFactory[DetailedInvitation]
 {
-	override def apply(model: Model[Property]) =
+	override def apply(model: template.ModelLike[Property]) =
 		InvitationWithResponse(model).map { base =>
 			val organization = model("organization").model.flatMap { DescribedOrganization(_).toOption }
 				.getOrElse { DescribedOrganization(base.organizationId, Set()) }

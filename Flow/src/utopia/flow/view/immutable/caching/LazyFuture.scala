@@ -1,5 +1,7 @@
 package utopia.flow.view.immutable.caching
 
+import utopia.flow.async.AsyncExtensions._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 object LazyFuture

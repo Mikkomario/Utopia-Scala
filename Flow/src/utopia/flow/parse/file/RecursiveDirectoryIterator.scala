@@ -1,5 +1,6 @@
 package utopia.flow.parse.file
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.parse.file.FileExtensions._
 

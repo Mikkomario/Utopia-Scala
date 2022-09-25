@@ -1,12 +1,11 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.template.typeless
-import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.PointType
@@ -28,7 +27,7 @@ object Point extends FromModelFactory[Point]
     
 	// IMPLEMENTED  ---------------------------
 	
-    def apply(model: Model[Property]) = Success(
+    def apply(model: template.ModelLike[Property]) = Success(
             Point(model("x").getDouble, model("y").getDouble))
 	
 	

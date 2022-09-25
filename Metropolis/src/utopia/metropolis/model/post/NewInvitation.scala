@@ -1,13 +1,11 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.collection.template.typeless
-import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.datastructure.template
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.mutable.{IntType, StringType}
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
@@ -19,7 +17,7 @@ object NewInvitation extends FromModelFactory[NewInvitation]
 {
 	private val schema = ModelDeclaration("recipient_email" -> StringType, "role_id" -> IntType)
 	
-	override def apply(model: Model[Property]) = {
+	override def apply(model: ModelLike[Property]) = {
 		schema.validate(model).toTry.flatMap { model =>
 			// Makes sure the email address formatting is correct
 			val emailAddress = model("recipient_email").getString

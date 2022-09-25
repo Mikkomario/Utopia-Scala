@@ -1,15 +1,12 @@
 package utopia.metropolis.model.partial.description
 
-import utopia.flow.collection.value.typeless.PropertyDeclaration
-
 import java.time.Instant
-import utopia.flow.datastructure.template.Model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.IntType
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.time.Now
 import utopia.metropolis.model.stored.description.Description
 
@@ -53,7 +50,7 @@ object DescriptionLinkDataOld
 	private class DescriptionLinkDataFromModelFactory[+D <: ModelConvertible](descriptionFactory: FromModelFactory[D])
 		extends FromModelFactory[DescriptionLinkDataOld[D]]
 	{
-		override def apply(model: Model[Property]) = commonSchema.validate(model).toTry.flatMap { valid =>
+		override def apply(model: ModelLike[Property]) = commonSchema.validate(model).toTry.flatMap { valid =>
 			descriptionFactory(valid).map { description => DescriptionLinkDataOld[D](valid("target_id"), description,
 				valid("link_created")) }
 		}

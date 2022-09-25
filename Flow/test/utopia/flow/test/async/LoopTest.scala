@@ -2,7 +2,7 @@ package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.async.process.WaitUtils
+import utopia.flow.async.process.{Loop, WaitUtils}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.process.WaitTarget.Until
 import utopia.flow.util.logging.{Logger, SysErrLogger}

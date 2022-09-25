@@ -1,7 +1,6 @@
 package utopia.vault.database
 
 import java.sql.Types
-import utopia.flow.generic.BooleanType
 
 import java.sql.Date
 import java.sql.Timestamp

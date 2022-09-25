@@ -1,7 +1,6 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.organization.OrganizationDeletionCancellationData
 import utopia.metropolis.model.stored.organization.OrganizationDeletionCancellation

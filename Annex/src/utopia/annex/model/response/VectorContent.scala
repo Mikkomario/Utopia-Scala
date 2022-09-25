@@ -1,6 +1,5 @@
 package utopia.annex.model.response
 
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.collection.CollectionExtensions._

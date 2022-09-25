@@ -1,6 +1,5 @@
 package utopia.trove.database
 
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version

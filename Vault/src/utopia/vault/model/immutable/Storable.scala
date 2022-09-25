@@ -1,11 +1,9 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.template.typeless
 import utopia.vault.sql.SqlExtensions._
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.template
-import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.generic.factory.DeclarationConstantGenerator
 import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
@@ -23,7 +21,7 @@ object Storable
       * @param model A model that contains data
       * @return A new storable instance based on the model
       */
-    def apply(table: Table, model: Model[Property]): Storable = new StorableWrapper(table, model)
+    def apply(table: Table, model: template.ModelLike[Property]): Storable = new StorableWrapper(table, model)
 }
 
 /**
@@ -314,7 +312,7 @@ trait Storable extends ModelConvertible
     }
 }
 
-private class StorableWrapper(override val table: Table, val model: Model[Property]) extends StorableWithFactory[Storable]
+private class StorableWrapper(override val table: Table, val model: template.ModelLike[Property]) extends StorableWithFactory[Storable]
 {
     override lazy val factory = FromRowModelFactory(table)
     

@@ -51,11 +51,11 @@ object GraphTest extends App
 	// The cheapest route (weights considered) should be 1 -> 2 -> 3 -> 5
 	println()
 	node1.routesTo(node5).foreach { route =>
-		println(s"- ${route.map { e => s"to ${e.end.content} (${e.content})" }.mkString(" => ")} (${ route.foldLeft(0) { _ + _.content } })")
+		println(s"- ${route.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")} (${ route.foldLeft(0) { _ + _.value } })")
 	}
 	println()
-	val cheapestRoutes = node1.cheapestRoutesTo(node5) { _.content }
-	cheapestRoutes._1.foreach { r => println(r.map { e => s"to ${e.end.content} (${e.content})" }.mkString(" => ")) }
+	val cheapestRoutes = node1.cheapestRoutesTo(node5) { _.value }
+	cheapestRoutes._1.foreach { r => println(r.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")) }
 	println(cheapestRoutes._2)
 	/*
 	val cheapestRoute = node1.cheapestRouteTo(node5) { edge => edge.content }

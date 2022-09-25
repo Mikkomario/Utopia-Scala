@@ -1,6 +1,5 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.value.typeless.PropertyDeclaration
 import utopia.flow.generic.model.immutable.{PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.References

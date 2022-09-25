@@ -3,7 +3,7 @@ package utopia.flow.parse.xml
 import utopia.flow.collection.immutable.TreeLike
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model
+import utopia.flow.generic.model.template
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.StringType
 import utopia.flow.generic.model.template.Property
@@ -17,7 +17,7 @@ object XmlElement extends FromModelFactory[XmlElement]
 {
     // IMPLEMENTED  -----------------------
     
-    def apply(model: model.template.Model[Property]): Try[XmlElement] = {
+    def apply(model: template.ModelLike[Property]): Try[XmlElement] = {
         model("name").string.map { name =>
             val namespacedName = {
                 if (name.contains(':')) {
@@ -46,7 +46,7 @@ object XmlElement extends FromModelFactory[XmlElement]
      * were missing.
      */
     // TODO: Handle vector value types and instead of model, accept value
-    def apply(name: NamespacedString, model: model.template.Model[Property]): XmlElement =
+    def apply(name: NamespacedString, model: template.ModelLike[Property]): XmlElement =
     {
         // Value is either in 'value' or 'text' attribute
         val valueAttribute = model.findExisting("value")

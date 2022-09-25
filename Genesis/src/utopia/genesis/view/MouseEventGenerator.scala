@@ -1,6 +1,7 @@
 package utopia.genesis.view
 
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.view.mutable.async.VolatileOption
 
 import java.awt.{Component, MouseInfo}
 import java.awt.event.{MouseEvent, MouseListener, MouseWheelListener}

@@ -1,14 +1,10 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.collection.template.typeless
-import utopia.flow.collection.value
-import utopia.flow.collection.value.typeless.PropertyDeclaration
-import utopia.flow.datastructure.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.ModelType
-import utopia.flow.generic.model.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.partial.organization.MembershipData
@@ -20,7 +16,7 @@ object DetailedMembership extends FromModelFactory[DetailedMembership]
 	private val schema = ModelDeclaration(PropertyDeclaration("user_data", ModelType))
 	
 	// Validates model, then parses membership and settings (if possible)
-	override def apply(model: Model[Property]) =
+	override def apply(model: ModelLike[Property]) =
 		schema.validate(model).toTry.flatMap { valid =>
 			Membership(valid).flatMap { membership =>
 				UserSettings(valid("user_data").getModel).map { settings =>

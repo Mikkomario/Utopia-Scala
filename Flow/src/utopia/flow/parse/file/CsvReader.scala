@@ -1,7 +1,9 @@
 package utopia.flow.parse.file
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.parse.string.{IterateLines, Regex}
+import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path
 import scala.io.Codec

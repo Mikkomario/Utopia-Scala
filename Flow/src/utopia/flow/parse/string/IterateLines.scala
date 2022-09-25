@@ -1,5 +1,7 @@
 package utopia.flow.parse.string
 
+import utopia.flow.parse.AutoClose._
+
 import java.io.{File, InputStream}
 import java.nio.charset.Charset
 import java.nio.file.Path

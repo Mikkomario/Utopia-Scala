@@ -2,6 +2,7 @@ package utopia.flow.parse.string
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.Viewable
 

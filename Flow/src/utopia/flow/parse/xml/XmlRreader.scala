@@ -1,7 +1,7 @@
 package utopia.flow.parse.xml
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.StringType
 import utopia.flow.parse.json.JSONReader
 import utopia.flow.parse.AutoClose._

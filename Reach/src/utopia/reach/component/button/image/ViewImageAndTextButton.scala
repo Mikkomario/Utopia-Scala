@@ -1,6 +1,5 @@
 package utopia.reach.component.button.image
 
-import utopia.flow.event.AlwaysTrue
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.ChangingLike

@@ -1,13 +1,12 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.collection.template.typeless
-import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.datastructure.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.IntType
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.Description
@@ -21,7 +20,7 @@ object LinkedDescription extends FromModelFactory[LinkedDescription]
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def apply(model: Model[Property]) =
+	override def apply(model: template.ModelLike[Property]) =
 		linkSchema.validate(model).toTry.flatMap { model =>
 			Description(model).map { description =>
 				LinkedDescription(description, model("link_id"), model("target_id"))

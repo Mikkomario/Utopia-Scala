@@ -1,5 +1,6 @@
 package utopia.flow.generic.casting
 
+import utopia.flow.generic.model.enumeration.ConversionReliability.NO_CONVERSION
 import utopia.flow.generic.model.immutable.{Conversion, Value}
 import utopia.flow.generic.model.mutable.DataType
 

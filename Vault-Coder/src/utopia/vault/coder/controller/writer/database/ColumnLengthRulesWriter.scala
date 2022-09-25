@@ -1,8 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, NamingRules}

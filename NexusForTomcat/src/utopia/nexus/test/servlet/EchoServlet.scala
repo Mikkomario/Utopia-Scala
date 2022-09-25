@@ -9,10 +9,9 @@ import utopia.nexus.http.Response
 import javax.servlet.annotation.MultipartConfig
 import utopia.nexus.servlet.HttpExtensions._
 import utopia.nexus.http.ServerSettings
-import utopia.flow.datastructure.mutable
+import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.JSONReader
 import utopia.flow.parse.json.{JSONReader, JsonParser}
 import utopia.nexus.http.Body
 

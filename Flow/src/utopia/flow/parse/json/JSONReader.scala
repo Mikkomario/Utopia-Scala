@@ -2,7 +2,7 @@ package utopia.flow.parse.json
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
-import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.{DoubleType, IntType, LongType}
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.collection.CollectionExtensions._
@@ -172,7 +172,7 @@ object JSONReader extends JsonParser
 				{
 					// In case of a simple string, parses it and assigns it to a constant
 					// Expects the string to contain an assignment portion, which is not parsed of course
-					buffer += immutable.Constant(propertyName, parseStringAssignment(data.json, quoteRange.end,
+					buffer +=Constant(propertyName, parseStringAssignment(data.json, quoteRange.end,
 						separatorBeforeEvent.get))
 					
 					// Moves to the next separator afterwards
@@ -199,7 +199,7 @@ object JSONReader extends JsonParser
 				}
 				else
 				{
-					buffer += immutable.Constant(propertyName, parseStringAssignment(data.json, quoteRange.end, range.end))
+					buffer +=Constant(propertyName, parseStringAssignment(data.json, quoteRange.end, range.end))
 					isCompleted = true
 				}
 			}

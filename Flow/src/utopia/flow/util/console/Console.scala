@@ -1,14 +1,13 @@
 package utopia.flow.util.console
 
 import utopia.flow.async.process.Breakable
-import utopia.flow.async.Volatile
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.Viewable
 

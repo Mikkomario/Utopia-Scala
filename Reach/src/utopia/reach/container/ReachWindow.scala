@@ -1,6 +1,6 @@
 package utopia.reach.container
 
-import utopia.flow.event.ChangeListener
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, ChangeFuture}

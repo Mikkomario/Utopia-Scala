@@ -2,8 +2,6 @@ package utopia.disciple.http.response
 
 import java.io.InputStream
 import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.flow.collection.value.typeless.Value
-import utopia.flow.datastructure.immutable.Value
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.generic.casting.ValueConversions._

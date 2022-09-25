@@ -3,13 +3,11 @@ package utopia.annex.model.request
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.model.Spirit
-import utopia.flow.collection.template.typeless
-import utopia.flow.datastructure.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.PropertyDeclaration
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.ModelType
-import utopia.flow.generic.model.template.{Model, ModelConvertible, Property}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 
 object PostRequest
 {
@@ -43,7 +41,7 @@ object PostRequest
 	private case class PostRequestFactory[+S <: Spirit with ModelConvertible](spiritFactory: FromModelFactory[S])
 		extends FromModelFactory[PostRequest[S]]
 	{
-		override def apply(model: Model[Property]) = baseSchema.validate(model).toTry.flatMap { valid =>
+		override def apply(model: ModelLike[Property]) = baseSchema.validate(model).toTry.flatMap { valid =>
 			spiritFactory(valid("spirit").getModel).map { spirit =>
 				PostRequest(spirit, valid("method").string.flatMap(Method.parse).getOrElse(Post))
 			}
@@ -73,8 +71,8 @@ trait PostRequest[+S <: Spirit with ModelConvertible] extends ApiRequest
 	
 	override def isDeprecated = false
 	
-	override def persistingModel = Some(Model(Vector("method" -> method.toString,
-		"spirit" -> spirit.toModel)))
+	override def persistingModel =
+		Some(Model(Vector("method" -> method.toString, "spirit" -> spirit.toModel)))
 	
 	def method: Method = Post
 	

@@ -1,7 +1,6 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.IntType
 import utopia.flow.generic.model.mutable.{BooleanType, DoubleType, FloatType, IntType, LongType}
 import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Today

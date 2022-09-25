@@ -1,6 +1,6 @@
 package utopia.flow.generic.factory
 
-import utopia.flow.generic.model
+import utopia.flow.generic.model.template
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.template.Property
 
@@ -28,5 +28,5 @@ trait FromModelFactoryWithSchema[+A] extends FromModelFactory[A]
 	
 	// IMPLEMENTED	------------------
 	
-	override def apply(model: model.template.Model[Property]) = schema.validate(model).toTry.map(fromValidatedModel)
+	override def apply(model: template.ModelLike[Property]) = schema.validate(model).toTry.map(fromValidatedModel)
 }

@@ -1,6 +1,7 @@
 package utopia.flow.generic.model.template
 
 import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonConvertible
 
@@ -10,7 +11,7 @@ import utopia.flow.parse.json.JsonConvertible
   * @since 26.11.2016
   * @tparam Attribute The type of the properties stored within this model
   */
-trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConvertible
+trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with JsonConvertible
 {
 	// ABSTRACT    --------------
 	

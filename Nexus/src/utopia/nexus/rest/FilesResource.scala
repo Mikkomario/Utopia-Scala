@@ -3,7 +3,6 @@ package utopia.nexus.rest
 import utopia.access.http.Method._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.NullSafe._
-import utopia.flow.datastructure.immutable
 import utopia.nexus.http.Path
 import utopia.nexus.http.Response
 
@@ -61,17 +60,11 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         val targetFilePath = targetFilePathFrom(remainingPath)
         
         if (Files.isDirectory(targetFilePath))
-        {
             Response.fromModel(makeDirectoryModel(targetFilePath.toFile, context.request.targetUrl))
-        }
         else if (Files.isRegularFile(targetFilePath))
-        {
             Response.fromFile(targetFilePath)
-        }
         else
-        {
             Response.empty(NotFound)
-        }
     }
     
     private def handlePost(remainingPath: Option[Path])(implicit context: Context) = 
@@ -79,10 +72,8 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         val request = context.request
         
         if (request.body.isEmpty)
-        {
             Response.plainText("No files were provided", BadRequest, 
                     request.headers.preferredCharsetOrUTF8)
-        }
         else
         {
             val counter = new Counter(1)
@@ -130,7 +121,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         val files = allFiles.getOrElse(false, Vector()).map { directoryAddress + "/" + _.getName }
         val directories = allFiles.getOrElse(true, Vector()).map { directoryAddress + "/" + _.getName }
         
-        immutable.Model(Vector("files" -> files.toVector, "directories" -> directories.toVector))
+        Model(Vector("files" -> files.toVector, "directories" -> directories.toVector))
     }
     
     private def upload(part: StreamedBody, partName: String, remainingPath: Option[Path])(implicit context: Context) = 

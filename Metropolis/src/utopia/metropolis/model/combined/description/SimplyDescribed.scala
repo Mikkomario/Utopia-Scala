@@ -1,7 +1,5 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.collection.value.typeless.Model
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.collection.CollectionExtensions._

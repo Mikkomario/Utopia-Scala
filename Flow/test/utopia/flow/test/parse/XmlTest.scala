@@ -3,8 +3,7 @@ package utopia.flow.test.parse
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.XmlWriter
-import utopia.flow.parse.xml.XmlReader
+import utopia.flow.parse.xml.{XmlElement, XmlReader, XmlWriter}
 import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Paths

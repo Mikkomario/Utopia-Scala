@@ -1,7 +1,6 @@
 package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.template.Viewable
 
 import scala.collection.immutable.VectorBuilder
 
@@ -12,9 +11,12 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 1.11.2016
   */
-trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Viewable[A]
+trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]]
 {
 	// ABSTRACT   --------------------
+	
+	// TODO: Replace with a new property "name" - or "identifier"
+	def content: A
 	
 	/**
 	  * @return "This" instance

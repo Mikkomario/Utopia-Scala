@@ -2,6 +2,7 @@ package utopia.reach.component.input
 
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.ChangingLike
 import utopia.paradigm.color.Color

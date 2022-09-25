@@ -3,7 +3,6 @@ package utopia.flow.test.parse
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.Namespace
 import utopia.flow.parse.xml.{Namespace, XmlElement}
 
 /**

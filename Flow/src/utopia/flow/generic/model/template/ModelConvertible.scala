@@ -1,5 +1,6 @@
 package utopia.flow.generic.model.template
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonConvertible
 

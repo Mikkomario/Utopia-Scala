@@ -2,7 +2,6 @@ package utopia.annex.controller
 
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestNotSent, Response}
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 

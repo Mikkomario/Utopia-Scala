@@ -1,7 +1,6 @@
 package utopia.reach.test
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.event.AlwaysTrue
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmDataType

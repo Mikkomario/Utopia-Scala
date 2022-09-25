@@ -1,6 +1,5 @@
 package utopia.reach.component.button.text
 
-import utopia.flow.event.AlwaysTrue
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.ChangingLike
