@@ -13,7 +13,7 @@ import utopia.ambassador.rest.util.ServiceTarget
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.Constant
@@ -29,7 +29,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
-class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthRedirector])
+class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors: MapAccess[Int, AuthRedirector])
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES   -------------------------

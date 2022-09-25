@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.AnyType
 import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
@@ -136,7 +136,7 @@ object DeepMap
   * @since 25.12.2021, v1.14.1
   */
 case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, V], V]])
-	extends MapLike[Iterable[K], V] with Iterable[(Vector[K], V)] with ModelConvertible
+	extends MapAccess[Iterable[K], V] with Iterable[(Vector[K], V)] with ModelConvertible
 {
 	// COMPUTED -------------------------------
 	

@@ -21,7 +21,7 @@ import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.Now
@@ -42,7 +42,7 @@ import scala.util.{Failure, Success, Try}
   * @param configurations A map-like object for acquiring correct configurations for each targeted service.
   *                       Accepts a service id and returns the applicable configurations.
   */
-class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
+class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 {
 	/**
 	  * Acquires session authentications needed to perform the specified task.

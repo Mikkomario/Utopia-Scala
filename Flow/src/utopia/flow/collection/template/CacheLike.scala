@@ -7,7 +7,7 @@ import utopia.flow.collection.immutable.caching.cache.{KeyMappingCache, MappingC
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
-trait CacheLike[-Key, +Value] extends MapLike[Key, Value]
+trait CacheLike[-Key, +Value] extends MapAccess[Key, Value]
 {
 	// ABSTRACT ---------------------------
 	

@@ -1,6 +1,6 @@
 package utopia.flow.parse.file.container
 
-import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.parse.file.container.SaveTiming.Immediate
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext
 class ObjectMapFileContainer[A <: ModelConvertible](fileLocation: Path, factory: FromModelFactory[A],
                                                     saveLogic: SaveTiming = Immediate)
                                                    (implicit jsonParser: JsonParser, exc: ExecutionContext, logger: Logger)
-	extends FileContainer[Map[String, A]](fileLocation) with MapLike[String, A]
+	extends FileContainer[Map[String, A]](fileLocation) with MapAccess[String, A]
 {
 	// INITIAL CODE	---------------------------
 	

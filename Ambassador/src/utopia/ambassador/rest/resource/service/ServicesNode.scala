@@ -7,7 +7,7 @@ import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -23,7 +23,7 @@ import utopia.vault.database.Connection
   * @param redirectors Cache for acquiring redirector implementations. Takes service ids.
   * @param name Name of this node (default = "services")
   */
-class ServicesNode(tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthRedirector],
+class ServicesNode(tokenAcquirer: AcquireTokens, redirectors: MapAccess[Int, AuthRedirector],
                    override val name: String = "services")
 	extends Resource[AuthorizedContext]
 {

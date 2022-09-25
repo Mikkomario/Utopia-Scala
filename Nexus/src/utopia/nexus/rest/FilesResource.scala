@@ -2,7 +2,6 @@ package utopia.nexus.rest
 
 import utopia.access.http.Method._
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.util.NullSafe._
 import utopia.nexus.http.Path
 import utopia.nexus.http.Response
 
@@ -87,7 +86,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
             if (successes.isEmpty)
             {
                 // TODO: For some reason, the error message only tells the directory which couldn't be created
-                val errorMessage = uploadResults.head.failed.get.getMessage.toOption
+                val errorMessage = Option(uploadResults.head.failed.get.getMessage)
                 errorMessage.map(Response.plainText(_, Forbidden)).getOrElse(Response.empty(Forbidden))
             }
             else

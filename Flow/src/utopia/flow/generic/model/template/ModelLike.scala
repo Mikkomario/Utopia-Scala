@@ -1,9 +1,17 @@
 package utopia.flow.generic.model.template
 
-import utopia.flow.collection.template.MapLike
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonConvertible
+
+object ModelLike
+{
+	/**
+	  * The most generic model type
+	  */
+	type AnyModel = ModelLike[Property]
+}
 
 /**
   * Models are used for storing named values
@@ -11,7 +19,7 @@ import utopia.flow.parse.json.JsonConvertible
   * @since 26.11.2016
   * @tparam Attribute The type of the properties stored within this model
   */
-trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with JsonConvertible
+trait ModelLike[+Attribute <: Property] extends MapAccess[String, Value] with JsonConvertible
 {
 	// ABSTRACT    --------------
 	
@@ -61,7 +69,6 @@ trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with Json
 	  * @see hasOnlyEmptyValues
 	  */
 	def isEmpty = attributeMap.isEmpty
-	
 	/**
 	  * @return Whether this model contains attributes. Notice that it doesn't matter whether the attributes
 	  *         have a value or not.
@@ -73,7 +80,6 @@ trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with Json
 	  * @return Whether this model specifies any non-empty values
 	  */
 	def hasNonEmptyValues = attributeMap.values.exists { _.value.isDefined }
-	
 	/**
 	  * @return Whether all values in this model are empty
 	  */
@@ -115,7 +121,6 @@ trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with Json
 	  */
 	def apply(attNames: IterableOnce[String]): Value =
 		attNames.iterator.map(apply).find { _.isDefined }.getOrElse(Value.empty)
-	
 	/**
 	  * Finds an attribute value in this model, possibly searching from alternative properties.
 	  * May generate one or more new attributes.
@@ -134,7 +139,6 @@ trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with Json
 	  *         exists
 	  */
 	def findExisting(attName: String) = attributeMap.get(attName.toLowerCase())
-	
 	def findExisting(attNames: IterableOnce[String]): Option[Attribute] = attNames.findMap(findExisting)
 	
 	/**
@@ -149,7 +153,6 @@ trait ModelLike[+Attribute <: Property] extends MapLike[String, Value] with Json
 	  * @param attName the name of the attribute
 	  */
 	def contains(attName: String) = attributeMap.contains(attName.toLowerCase)
-	
 	/**
 	  * @param attName Name of searched attribute
 	  * @return Whether this model contains a non-empty attribute with the specified name

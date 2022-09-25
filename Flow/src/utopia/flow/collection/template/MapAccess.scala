@@ -2,12 +2,12 @@ package utopia.flow.collection.template
 
 import scala.language.implicitConversions
 
-object MapLike
+object MapAccess
 {
 	// IMPLICIT ----------------------------
 	
 	// Implicitly converts functions to map-like items
-	implicit def functionToMapLike[K, V](f: K => V): MapLike[K, V] = new MapLikeFunction[K, V](f)
+	implicit def functionToMapLike[K, V](f: K => V): MapAccess[K, V] = new MapLikeFunction[K, V](f)
 	
 	
 	// NESTED   ----------------------------
@@ -18,7 +18,7 @@ object MapLike
 	  * @tparam K Type of keys used
 	  * @tparam V Types of values returned
 	  */
-	class MapLikeFunction[-K, +V](f: K => V) extends MapLike[K, V]
+	class MapLikeFunction[-K, +V](f: K => V) extends MapAccess[K, V]
 	{
 		override def apply(key: K) = f(key)
 	}
@@ -30,7 +30,7 @@ object MapLike
   * @author Mikko Hilpinen
   * @since 20.7.2021, v1.11
   */
-trait MapLike[-K, +V]
+trait MapAccess[-K, +V]
 {
 	/**
 	  * Accesses an individual value in this structure
