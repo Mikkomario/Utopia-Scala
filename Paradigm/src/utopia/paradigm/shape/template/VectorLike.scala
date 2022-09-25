@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, LinearMeasurable, LinearScalable}
+import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, HasLength, LinearScalable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.angular.Angle
@@ -42,7 +42,7 @@ object VectorLike
   * @tparam Repr the concrete implementing class
   */
 trait VectorLike[+Repr <: VectorLike[Repr]]
-	extends LinearScalable[Repr] with Combinable[Repr, Dimensional[Double]] with LinearMeasurable
+	extends LinearScalable[Repr] with Combinable[Dimensional[Double], Repr] with HasLength
 		with Dimensional[Double] with VectorProjectable[Repr]
 		with CanBeAboutZero[Dimensional[Double], Repr]
 {
@@ -78,7 +78,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * Calculates the scalar projection of this vector over the other vector. This is the same as
 	  * the length of this vector's projection over the other vector
 	  */
-	def scalarProjection(other: Dimensional[Double] with LinearMeasurable) = dot(other) / other.length
+	def scalarProjection(other: Dimensional[Double] with HasLength) = dot(other) / other.length
 	
 	override def ~==(other: Dimensional[Double]) = super[Dimensional].~==(other)
 	

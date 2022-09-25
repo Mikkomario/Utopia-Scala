@@ -59,7 +59,7 @@ object CodeLine
   * @author Mikko Hilpinen
   * @since 27.9.2021, v1.1
   */
-case class CodeLine(indentation: Int, code: String) extends Combinable[CodeLine, String]
+case class CodeLine(indentation: Int, code: String) extends Combinable[String, CodeLine]
 {
 	// ATTRIBUTES   ------------------------
 	

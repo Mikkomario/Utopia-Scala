@@ -19,7 +19,7 @@ import scala.concurrent.duration.Duration
   */
 trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	+Repr <: Change[V, _] /*with Arithmetic[Change[V, _], Repr]*/ ]
-	extends Change[V, Repr] with Combinable[Repr, Change[V, _]] with Dimensional[LinearAcceleration]
+	extends Change[V, Repr] with Combinable[Change[V, _], Repr] with Dimensional[LinearAcceleration]
 		with VectorProjectable[Repr] with CanBeAboutZero[Change[Change[Dimensional[Double], _], _], Repr]
 {
 	// ABSTRACT	-----------------------

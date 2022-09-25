@@ -39,8 +39,8 @@ object VelocityTest extends App
 	
 	assert(v1.abs == v1)
 	assert((-v1).abs == v1)
-	assert(v1.positiveOrZero == v1)
-	assert((-v1).positiveOrZero == LinearVelocity.zero)
+	assert(v1.minZero == v1)
+	assert((-v1).minZero == LinearVelocity.zero)
 	assert(v1.average(v2) == LinearVelocity(1.5))
 	assert(v1.decreasePreservingDirection(LinearVelocity(1.2)) == LinearVelocity.zero)
 	assert(v1.decreasePreservingDirection(LinearVelocity(0.5)) == v3)

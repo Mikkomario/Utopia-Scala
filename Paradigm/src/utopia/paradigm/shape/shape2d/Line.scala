@@ -6,7 +6,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.LinearMeasurable
+import utopia.flow.operator.HasLength
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.LineType
@@ -89,7 +89,7 @@ object Line extends FromModelFactory[Line]
  */
 case class Line(points: Pair[Point])
     extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
-        with LinearMeasurable with Transformable[Line] with Bounded
+        with HasLength with Transformable[Line] with Bounded
 {
     // ATTRIBUTES    -------------------
     

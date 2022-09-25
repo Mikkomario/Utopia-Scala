@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
   * @since Genesis 14.7.2020, v2.3
   */
 trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Transition, Repr]]
-	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Repr, Change[Dimensional[Double], _]]
+	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Change[Dimensional[Double], _], Repr]
 		with CanBeAboutZero[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
 		with VectorProjectable[Repr]
 {

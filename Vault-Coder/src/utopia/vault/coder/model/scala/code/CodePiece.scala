@@ -2,7 +2,7 @@ package utopia.vault.coder.model.scala.code
 
 import utopia.flow.generic.factory.FromValueFactory
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.Combinable.SelfCombinable
 import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.Referencing
 
@@ -39,7 +39,7 @@ object CodePiece extends FromValueFactory[CodePiece]
   * @since 9.10.2021, v1.1.1
   */
 case class CodePiece(text: String, references: Set[Reference] = Set())
-	extends Referencing with Combinable[CodePiece, CodePiece]
+	extends Referencing with SelfCombinable[CodePiece]
 {
 	// COMPUTED ------------------------------
 	

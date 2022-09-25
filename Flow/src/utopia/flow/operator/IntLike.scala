@@ -1,5 +1,7 @@
 package utopia.flow.operator
 
+import utopia.flow.operator.Combinable.SelfCombinable
+
 import scala.language.implicitConversions
 
 object IntLike
@@ -31,5 +33,5 @@ object IntLike
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait IntLike[Repr] extends Any with Multiplicable[Repr] with LinearMeasurable with Combinable[Repr, Repr]
+trait IntLike[Repr] extends Any with Multiplicable[Repr] with HasLength with SelfCombinable[Repr]
 	with SelfComparable[Repr] with SignedOrZero[Repr]

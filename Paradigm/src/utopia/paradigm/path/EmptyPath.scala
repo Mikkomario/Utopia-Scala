@@ -1,13 +1,13 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.LinearMeasurable
+import utopia.flow.operator.HasLength
 
 /**
   * This path doesn't move anywhere from a single point
   * @author Mikko Hilpinen
   * @since Genesis 20.6.2019, v2.1+
   */
-case class EmptyPath[P](point: P) extends Path[P] with LinearMeasurable
+case class EmptyPath[P](point: P) extends Path[P] with HasLength
 {
 	override def start = point
 	

@@ -123,7 +123,7 @@ object Angle
  * @since Genesis 30.6.2017
  */
 case class Angle private(radians: Double)
-    extends LinearScalable[Angle] with Combinable[Angle, Rotation] with SelfComparable[Angle] with ValueConvertible
+    extends LinearScalable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle] with ValueConvertible
 {
     // ATTRIBUTES    ------------------
     

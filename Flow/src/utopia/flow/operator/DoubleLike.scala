@@ -1,5 +1,7 @@
 package utopia.flow.operator
 
+import utopia.flow.operator.Combinable.SelfCombinable
+
 import scala.language.implicitConversions
 
 object DoubleLike
@@ -31,5 +33,5 @@ object DoubleLike
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait DoubleLike[Repr] extends Any with LinearScalable[Repr] with Combinable[Repr, Repr] with SignedOrZero[Repr]
-	with SelfComparable[Repr] with LinearMeasurable
+trait DoubleLike[Repr] extends Any with LinearScalable[Repr] with SelfCombinable[Repr] with SignedOrZero[Repr]
+	with SelfComparable[Repr] with HasLength

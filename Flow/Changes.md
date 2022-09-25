@@ -15,11 +15,13 @@
 - Renamed **LazyWrapper** to **PreInitializedLazy**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
+- Rearranged type parameters in **Combinable** and **Scalable**
 - Renamed **Equatable** to **EqualsBy**, and changed its `public def properties: IterableOnce` to 
   `protected def equalsProperties: Iterable`
 - Renamed **ApproximatelyEquatable** to **ApproxEquals**
 - Renamed **Zeroable** to **CanBeZero** and **ApproximatelyZeroable** to **CanBeAboutZero**
   - **CanBeZero** now also requires an implementation for a new abstract property `zero: Repr`
+- Renamed **LinearMeasurable** to **HasLength**
 - **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
 ### Deprecations

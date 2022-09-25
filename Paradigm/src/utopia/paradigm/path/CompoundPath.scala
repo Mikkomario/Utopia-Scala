@@ -1,6 +1,6 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.LinearMeasurable
+import utopia.flow.operator.HasLength
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.path.Path.PathWithDistance
 
@@ -23,7 +23,7 @@ object CompoundPath
   * @author Mikko Hilpinen
   * @since Genesis 20.6.2019, v2.1+
   */
-case class CompoundPath[+P](parts: Vector[PathWithDistance[P]]) extends Path[P] with LinearMeasurable
+case class CompoundPath[+P](parts: Vector[PathWithDistance[P]]) extends Path[P] with HasLength
 {
 	// ATTRIBUTES   -------------------
 	
