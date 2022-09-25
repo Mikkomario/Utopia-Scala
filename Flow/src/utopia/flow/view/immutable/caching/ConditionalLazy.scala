@@ -1,7 +1,5 @@
 package utopia.flow.view.immutable.caching
 
-import utopia.flow.view.template.LazyLike
-
 object ConditionalLazy
 {
 	/**
@@ -30,7 +28,7 @@ object ConditionalLazy
   * @author Mikko Hilpinen
   * @since 7.11.2021, v1.14.1
   */
-class ConditionalLazy[A](generate: => (A, Boolean)) extends LazyLike[A]
+class ConditionalLazy[A](generate: => (A, Boolean)) extends Lazy[A]
 {
 	// ATTRIBUTES   ----------------------------
 	

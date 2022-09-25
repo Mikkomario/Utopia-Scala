@@ -9,7 +9,6 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.Viewable
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.io.StdIn
@@ -28,8 +27,8 @@ object Console
 	 * @param jsonParser Implicit json parser for command argument handling
 	 * @return A new console
 	 */
-	def apply(commandsPointer: Viewable[Iterable[Command]], prompt: String = "",
-	          terminatorPointer: Viewable[Boolean] = Fixed(false), closeCommandName: String = "")
+	def apply(commandsPointer: View[Iterable[Command]], prompt: String = "",
+	          terminatorPointer: View[Boolean] = Fixed(false), closeCommandName: String = "")
 	         (implicit jsonParser: JsonParser) =
 		new Console(commandsPointer, prompt, terminatorPointer, closeCommandName)
 	
@@ -61,7 +60,7 @@ object Console
 	def terminating(commands: Iterable[Command], prompt: String = "", closeCommandName: String = "")
 	               (testTermination: => Boolean)
 	               (implicit jsonParser: JsonParser) =
-		apply(View(commands), prompt, Viewable(testTermination), closeCommandName)
+		apply(View(commands), prompt, View(testTermination), closeCommandName)
 }
 
 /**
@@ -74,8 +73,8 @@ object Console
  * @param closeCommandName Name of the command that closes this console (default = empty = no close command is used)
  * @param jsonParser Implicit json parser for command argument handling
  */
-class Console(commandsPointer: Viewable[Iterable[Command]], prompt: String = "",
-              terminatorPointer: Viewable[Boolean] = View(false), closeCommandName: String = "")
+class Console(commandsPointer: View[Iterable[Command]], prompt: String = "",
+              terminatorPointer: View[Boolean] = View(false), closeCommandName: String = "")
              (implicit jsonParser: JsonParser)
 	extends Runnable with Breakable
 {

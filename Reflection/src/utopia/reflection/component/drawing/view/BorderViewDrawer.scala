@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.view.template.Viewable
+import utopia.flow.view.immutable.View
 import utopia.reflection.component.drawing.template
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -14,7 +14,7 @@ import utopia.reflection.shape.Border
   * @param borderPointer Pointer from which the border is being drawn
   * @param drawLevel Depth where this drawer is used (default = Normal)
   */
-case class BorderViewDrawer(borderPointer: Viewable[Border], drawLevel: DrawLevel = Normal)
+case class BorderViewDrawer(borderPointer: View[Border], drawLevel: DrawLevel = Normal)
 	extends template.BorderDrawerLike
 {
 	// IMPLEMENTED	--------------------------

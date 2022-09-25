@@ -3,7 +3,6 @@ package utopia.flow.collection.immutable.caching.iterable
 import utopia.flow.collection.mutable.builder.LazyBuilder
 import utopia.flow.collection.template.factory.LazyFactory
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{IterableFactory, IterableOps, mutable}
@@ -20,19 +19,19 @@ object LazyIterable extends IterableFactory[LazyIterable] with LazyFactory[LazyI
 	override def empty[A]: LazyIterable[A] = _empty
 	
 	override def newBuilder[A] =
-		LazyBuilder { v: Vector[LazyLike[A]] => new LazyIterable[A](CachingIterable.from(v)) }.precalculated
+		LazyBuilder { v: Vector[Lazy[A]] => new LazyIterable[A](CachingIterable.from(v)) }.precalculated
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case l: LazyIterable[A] => l
-		case c: CachingIterable[A] => new LazyIterable[A](c.map(Lazy.wrap))
-		case c => new LazyIterable[A](CachingIterable(c.iterator.map(Lazy.wrap)))
+		case c: CachingIterable[A] => new LazyIterable[A](c.map(Lazy.initialized))
+		case c => new LazyIterable[A](CachingIterable(c.iterator.map(Lazy.initialized)))
 	}
 	
 	
 	// OTHER    ------------------------------
 	
 	def apply[A]() = empty[A]
-	def apply[A](items: IterableOnce[LazyLike[A]]) = new LazyIterable[A](CachingIterable(items))
+	def apply[A](items: IterableOnce[Lazy[A]]) = new LazyIterable[A](CachingIterable(items))
 }
 
 /**
@@ -40,7 +39,7 @@ object LazyIterable extends IterableFactory[LazyIterable] with LazyFactory[LazyI
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
-class LazyIterable[+A] private(wrapped: CachingIterable[LazyLike[A]])
+class LazyIterable[+A] private(wrapped: CachingIterable[Lazy[A]])
 	extends Iterable[A] with IterableOps[A, LazyIterable, LazyIterable[A]] with LazySeqLike[A, LazyIterable]
 {
 	// COMPUTED -----------------------------
@@ -89,7 +88,7 @@ class LazyIterable[+A] private(wrapped: CachingIterable[LazyLike[A]])
 	
 	override def map[B](f: A => B) = LazyIterable(wrapped.iterator.map { a => Lazy { f(a.value) } })
 	override def flatMap[B](f: A => IterableOnce[B]) =
-		LazyIterable(iterator.flatMap { a => f(a).iterator.map(Lazy.wrap) })
+		LazyIterable(iterator.flatMap { a => f(a).iterator.map(Lazy.initialized) })
 	
 	override def take(n: Int) = new LazyIterable(wrapped.take(n))
 	override def takeRight(n: Int) = new LazyIterable(wrapped.takeRight(n))
@@ -102,7 +101,7 @@ class LazyIterable[+A] private(wrapped: CachingIterable[LazyLike[A]])
 	
 	// OTHER    -----------------------------
 	
-	def ++[B >: A](items: IterableOnce[LazyLike[B]]) = LazyIterable(wrapped ++ items)
+	def ++[B >: A](items: IterableOnce[Lazy[B]]) = LazyIterable(wrapped ++ items)
 	
 	/**
 	  * Maps the items in this iterable with two levels of caching: 1) The number of items and 2) the content of items
@@ -110,5 +109,5 @@ class LazyIterable[+A] private(wrapped: CachingIterable[LazyLike[A]])
 	  * @tparam B Type of the lazily initialized items
 	  * @return Lazy map results
 	  */
-	def lazyFlatMap[B](f: A => IterableOnce[LazyLike[B]]) = LazyIterable(iterator.flatMap { a => f(a) })
+	def lazyFlatMap[B](f: A => IterableOnce[Lazy[B]]) = LazyIterable(iterator.flatMap { a => f(a) })
 }

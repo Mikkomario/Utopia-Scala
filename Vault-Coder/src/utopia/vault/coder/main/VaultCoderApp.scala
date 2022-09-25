@@ -4,7 +4,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.file.container.ObjectMapFileContainer
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.time.Today
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
@@ -40,7 +40,7 @@ object VaultCoderApp extends App
 	
 	implicit val logger: Logger = SysErrLogger
 	implicit val codec: Codec = Codec.UTF8
-	implicit val jsonParser: JsonParser = JSONReader
+	implicit val jsonParser: JsonParser = JsonReader
 	implicit val exc: ExecutionContext = new ThreadPool("vault-coder").executionContext
 	lazy val projects = new ObjectMapFileContainer("projects.json", ProjectPaths)
 	val arguments = CommandArguments(Vector(

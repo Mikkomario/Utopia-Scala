@@ -1,7 +1,7 @@
 package utopia.flow.generic.factory
 
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 
 import scala.util.Try
 
@@ -29,7 +29,7 @@ trait FromModelFactory[+A]
 	  * parsed or if the instance couldn't be parsed from read data.
 	  */
 	@deprecated("Please use fromJson instead")
-	def fromJSON(json: String) = JSONReader(json).map(v => apply(v.getModel)).flatten
+	def fromJSON(json: String) = JsonReader(json).map(v => apply(v.getModel)).flatten
 	
 	/**
 	  * Parses an instance from a JSON string. Returns none if either the JSON string couldn't be

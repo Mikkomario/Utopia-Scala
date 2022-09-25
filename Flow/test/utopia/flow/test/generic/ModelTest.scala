@@ -5,7 +5,7 @@ import utopia.flow.generic.factory.{SimpleConstantGenerator, SimpleVariableGener
 import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.json.JSONReader
+import utopia.flow.parse.json.JsonReader
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -100,7 +100,7 @@ object ModelTest extends App
 	assert(model3Filtered2("Test2").isEmpty)
 	assert(model3Filtered2("Test1").intOr() == 1)
 	
-	val parsedModel = JSONReader.apply(
+	val parsedModel = JsonReader.apply(
 		"{\"CODE\": \"05601JZ\", \"MFR\": \"LANNING CHARLES A\", \"MODEL\": \"ROTORWAY EXEC\", \"TYPE-ACFT\": \"6\", \"TYPE-ENG\": \"1\", \"AC-CAT\": \"3\", \"BUILD-CERT-IND\": \"1\", \"NO-ENG\": \"1\", \"NO-SEATS\": \"2\", \"AC-WEIGHT\": \"CLASS 1\", \"SPEED\": \"0\"}")
 		.get.getModel
 	println(parsedModel)

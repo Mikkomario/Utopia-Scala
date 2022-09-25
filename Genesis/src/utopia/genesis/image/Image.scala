@@ -2,10 +2,8 @@ package utopia.genesis.image
 
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.NullSafe._
 import utopia.flow.operator.LinearScalable
 import utopia.flow.view.immutable.caching.{Lazy, LazyWrapper}
-import utopia.flow.view.template.LazyLike
 import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
@@ -61,9 +59,9 @@ object Image
 		if (readClass.isDefined || Files.exists(path))
 		{
 			// ImageIO and class may return null. Image is read through class, if one is provided
-			val readResult = Try { readClass.map { c => c.getResourceAsStream("/" + path.toString).toOption
-				.flatMap { _.consume { stream => ImageIO.read(stream).toOption } } }
-				.getOrElse { ImageIO.read(path.toFile).toOption } }
+			val readResult = Try { readClass.map { c => Option(c.getResourceAsStream("/" + path.toString))
+				.flatMap { _.consume { stream => Option(ImageIO.read(stream)) } } }
+				.getOrElse { Option(ImageIO.read(path.toFile)) } }
 			
 			readResult.flatMap
 			{
@@ -171,7 +169,7 @@ object Image
   */
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
-						 private val _pixels: LazyLike[PixelTable])
+						 private val _pixels: Lazy[PixelTable])
 	extends ImageLike with LinearScalable[Image] with SizedLike[Image]
 {
 	// ATTRIBUTES	----------------

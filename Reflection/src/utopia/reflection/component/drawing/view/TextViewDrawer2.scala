@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.view.template.Viewable
+import utopia.flow.view.immutable.View
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -11,8 +11,8 @@ import utopia.genesis.graphics.MeasuredText
   * @author Mikko Hilpinen
   * @since 17.10.2020, v2
   */
-case class TextViewDrawer2(textPointer: Viewable[MeasuredText], stylePointer: Viewable[TextDrawContext],
-						   override val drawLevel: DrawLevel = Normal)
+case class TextViewDrawer2(textPointer: View[MeasuredText], stylePointer: View[TextDrawContext],
+                           override val drawLevel: DrawLevel = Normal)
 	extends utopia.reflection.component.drawing.template.TextDrawerLike2
 {
 	// IMPLEMENTED	----------------------------

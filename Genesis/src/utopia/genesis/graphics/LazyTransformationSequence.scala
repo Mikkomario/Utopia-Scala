@@ -1,7 +1,6 @@
 package utopia.genesis.graphics
 
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
@@ -28,7 +27,7 @@ object LazyTransformationSequence
   * @param transformation A transformation to apply on top of the parent sequence
   */
 class LazyTransformationSequence(val parent: Option[LazyTransformationSequence], transformation: Matrix3D)
-	extends LazyLike[Matrix3D]
+	extends Lazy[Matrix3D]
 		with LinearTransformable[LazyTransformationSequence] with AffineTransformable[LazyTransformationSequence]
 {
 	// ATTRIBUTES   --------------------------

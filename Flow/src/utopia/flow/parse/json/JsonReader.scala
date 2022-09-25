@@ -1,11 +1,11 @@
 package utopia.flow.parse.json
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.{DoubleType, IntType, LongType}
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.json.JsonReadEvent.{ArrayEnd, ArrayStart, Assignment, ObjectEnd, ObjectStart, Quote, Separator}
 
 import java.io.{File, InputStream}
 import scala.collection.immutable.VectorBuilder
@@ -17,7 +17,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 22.7.2019, v1.6+
   */
-object JSONReader extends JsonParser
+object JsonReader extends JsonParser
 {
 	val defaultEncoding = Codec.UTF8
 	
@@ -117,7 +117,7 @@ object JSONReader extends JsonParser
 	}
 	
 	// Event count should be increased for this event already when calling this method
-	private def parse(eventType: JSONReadEvent, range: Range, data: Data, startState: State): Result =
+	private def parse(eventType: JsonReadEvent, range: Range, data: Data, startState: State): Result =
 	{
 		eventType match
 		{
@@ -473,7 +473,7 @@ private case class Result(parsed: Value, newState: State)
 
 private case class State(usedSeparatorCount: Int, usedEventCount: Int)
 
-private case class Data(json: String, eventRanges: Seq[(Range, JSONReadEvent)], separatorIndices: Seq[Int])
+private case class Data(json: String, eventRanges: Seq[(Range, JsonReadEvent)], separatorIndices: Seq[Int])
 {
 	val eventCount = eventRanges.size
 	val separatorCount = separatorIndices.size

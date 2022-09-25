@@ -35,7 +35,7 @@ object DataTypeTest extends App
 	assert(StringType.isOfType(AnyType))
 	assert(!StringType.isOfType(DoubleType))
 	
-	assert(ConversionReliability.DANGEROUS < ConversionReliability.NO_CONVERSION)
+	assert(ConversionReliability.Dangerous < ConversionReliability.NoConversion)
 	
 	val str = "123.45".toValue
 	val str2 = "true".toValue

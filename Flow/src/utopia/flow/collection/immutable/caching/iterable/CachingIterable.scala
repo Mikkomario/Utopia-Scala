@@ -3,7 +3,7 @@ package utopia.flow.collection.immutable.caching.iterable
 import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
 import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.template.Viewable
+import utopia.flow.view.immutable.View
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
@@ -40,7 +40,7 @@ object CachingIterable extends IterableFactory[CachingIterable]
 	  * @return A caching iterable based on that iterator
 	  */
 	def apply[A](source: IterableOnce[A]) = new CachingIterable[A](source.iterator)
-	def apply[A](items: Viewable[A]*) = new CachingIterable[A](items.iterator.map { _.value })
+	def apply[A](items: View[A]*) = new CachingIterable[A](items.iterator.map { _.value })
 	
 	/**
 	  * @param item A single item (lazily initialized / call-by-name)

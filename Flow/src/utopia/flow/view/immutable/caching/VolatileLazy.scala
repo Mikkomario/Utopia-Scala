@@ -1,7 +1,5 @@
 package utopia.flow.view.immutable.caching
 
-import utopia.flow.view.template.LazyLike
-
 object VolatileLazy
 {
 	/**
@@ -17,7 +15,7 @@ object VolatileLazy
   * @author Mikko Hilpinen
   * @since 4.11.2020, v1.9
   */
-class VolatileLazy[A](generator: => A) extends LazyLike[A]
+class VolatileLazy[A](generator: => A) extends Lazy[A]
 {
 	// ATTRIBUTES	--------------------------------
 	

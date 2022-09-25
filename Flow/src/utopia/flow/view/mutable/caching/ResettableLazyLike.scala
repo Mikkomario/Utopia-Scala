@@ -1,7 +1,7 @@
 package utopia.flow.view.mutable.caching
 
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Resettable
-import utopia.flow.view.template.LazyLike
 
 /**
   * A common trait for lazily initialized containers which allow the wrapped value to be reset, so that it is generated
@@ -9,7 +9,7 @@ import utopia.flow.view.template.LazyLike
   * @author Mikko Hilpinen
   * @since 4.11.2020, v1.9
   */
-trait ResettableLazyLike[+A] extends LazyLike[A] with Resettable
+trait ResettableLazyLike[+A] extends Lazy[A] with Resettable
 {
 	// OTHER	----------------------
 	

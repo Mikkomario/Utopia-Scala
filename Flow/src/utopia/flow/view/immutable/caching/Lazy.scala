@@ -1,23 +1,27 @@
 package utopia.flow.view.immutable.caching
 
+import utopia.flow.collection.mutable.iterator.PollableOnce
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.caching.DeprecatingLazy
-import utopia.flow.view.template.LazyLike
 
 object Lazy
 {
-	/**
-	  * @param make A function for filling this lazy container when a value is requested (only called up to once)
-	  * @tparam A Type of wrapped value
-	  * @return A new lazy container
-	  */
-	def apply[A](make: => A) = new Lazy[A](make)
+	// OTHER    ------------------------
 	
 	/**
-	  * Creates a new lazy container that supports events
+	  * Creates a new lazily initialized container
+	  * @param make A function for filling this lazy container when a value is requested the first time
+	  * @tparam A Type of the wrapped value
+	  * @return A new lazily initialized container
+	  */
+	def apply[A](make: => A): Lazy[A] = new _Lazy[A](make)
+	
+	/**
+	  * Creates a new lazy container that fires an event when it is first initialized
 	  * @param make A function for generating the stored value when it is first requested
 	  * @tparam A Type of wrapped value
-	  * @return A new lazy container that supports events
+	  * @return A new lazily initialized container
 	  */
 	def listenable[A](make: => A) = ListenableLazy(make)
 	/**
@@ -28,12 +32,12 @@ object Lazy
 	  */
 	def weak[A <: AnyRef](make: => A) = WeakLazy(make)
 	/**
-	 * Creates a new lazy container which may auto-reset itself under certain conditions
-	 * @param make A function for generating a new value
-	 * @param testValidity A function for testing whether a stored value is still valid (should be kept)
-	 * @tparam A Type of stored item
-	 * @return A new lazy container
-	 */
+	  * Creates a new lazy container which may auto-reset itself under certain conditions
+	  * @param make A function for generating a new value
+	  * @param testValidity A function for testing whether a stored value is still valid (should be kept)
+	  * @tparam A Type of stored item
+	  * @return A new lazy container
+	  */
 	def deprecating[A](make: => A)(testValidity: A => Boolean) = DeprecatingLazy(make)(testValidity)
 	/**
 	  * @param make A function for creating an item when it is requested
@@ -44,38 +48,87 @@ object Lazy
 	  */
 	def conditional[A](make: => A)(test: A => Boolean) = ConditionalLazy(make)(test)
 	/**
+	  * Creates a pre-initialized lazy container
+	  * @param value A pre-initialized value
+	  * @tparam A Type of the specified value
+	  * @return A no-op lazy that simply wraps the value
+	  */
+	def initialized[A](value: A) = LazyWrapper(value)
+	/**
 	  * @param value A pre-calculated value
 	  * @tparam A Type of that value
 	  * @return That value wrapped as a lazy
 	  */
+	@deprecated("Please use .initialized instead", "v2.0")
 	def wrap[A](value: A) = LazyWrapper(value)
+	
+	
+	// NESTED   ------------------------
+	
+	private class _Lazy[+A](generator: => A) extends Lazy[A]
+	{
+		// ATTRIBUTES	-------------------------
+		
+		private lazy val _value = generator
+		private var initialized = false
+		
+		
+		// IMPLEMENTED	-------------------------
+		
+		override def isInitialized = initialized
+		
+		override def nonInitialized = !initialized
+		
+		override def current = if (initialized) Some(_value) else None
+		
+		override def value = {
+			if (!initialized)
+				initialized = true
+			_value
+		}
+	}
 }
 
 /**
-  * A view to a value that is lazily initialized
+  * A common trait for lazily initialized value wrappers
   * @author Mikko Hilpinen
-  * @since 4.11.2020, v1.9
+  * @since 17.12.2019, v1.6.1
+  * @tparam A Type of wrapped value
   */
-class Lazy[+A](generator: => A) extends LazyLike[A]
+trait Lazy[+A] extends View[A]
 {
-	// ATTRIBUTES	-------------------------
+	// ABSTRACT	-----------------------
 	
-	private lazy val _value = generator
-	private var initialized = false
+	/**
+	  * @return Current value of this lazily initialized container
+	  */
+	def current: Option[A]
 	
 	
-	// IMPLEMENTED	-------------------------
+	// COMPUTED	------------------------
 	
-	override def isInitialized = initialized
+	/**
+	  * @return Value in this container (cached or generated)
+	  */
+	@deprecated("Please use .value instead", "v1.9")
+	def get = value
 	
-	override def nonInitialized = !initialized
+	/**
+	  * @return Whether this lazily initialized wrapper has already been initialized
+	  */
+	def isInitialized = current.nonEmpty
+	/**
+	  * @return Whether this lazily initialized wrapper hasn't been initialized yet
+	  */
+	def nonInitialized = current.isEmpty
 	
-	override def current = if (initialized) Some(_value) else None
+	/**
+	  * @return A lazily initialized iterator based on the contents of this lazy container
+	  */
+	def iterator = PollableOnce { value }
 	
-	override def value =
-	{
-		if (!initialized)
-			initialized = true
-		_value
-	}
+	
+	// IMPLEMENTED	---------------------
+	
+	override def toString = current.map(c => s"Lazy($c)") getOrElse "Lazy"
 }

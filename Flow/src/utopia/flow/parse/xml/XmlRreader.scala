@@ -3,7 +3,7 @@ package utopia.flow.parse.xml
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.StringType
-import utopia.flow.parse.json.JSONReader
+import utopia.flow.parse.json.JsonReader
 import utopia.flow.parse.AutoClose._
 
 import java.io._
@@ -122,7 +122,7 @@ object XmlReader
     /**
       * Parses a value from a string
       */
-    private[parse] def valueFromString(s: String) = JSONReader(s).toOption.getOrElse(s.toValue)
+    private[parse] def valueFromString(s: String) = JsonReader(s).toOption.getOrElse(s.toValue)
 }
 
 /**

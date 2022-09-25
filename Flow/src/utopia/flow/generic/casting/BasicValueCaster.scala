@@ -4,9 +4,9 @@ import utopia.flow.collection.immutable.Pair
 import ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
-import utopia.flow.generic.model.enumeration.ConversionReliability.{CONTEXT_LOSS, DANGEROUS, DATA_LOSS, MEANING_LOSS, PERFECT}
+import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
 import utopia.flow.generic.model.mutable.{AnyType, BooleanType, DataType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
-import utopia.flow.parse.json.JSONReader
+import utopia.flow.parse.json.JsonReader
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
@@ -31,84 +31,84 @@ object BasicValueCaster extends ValueCaster
 	override lazy val conversions = Set(
 		// Any type can be converted to a string using .toString, although some conversions may be considered more
 		// plausible
-		Conversion(AnyType, StringType, DATA_LOSS),
-		immutable.Conversion(IntType, StringType, CONTEXT_LOSS),
-		immutable.Conversion(DoubleType, StringType, CONTEXT_LOSS),
-		immutable.Conversion(LongType, StringType, CONTEXT_LOSS),
-		immutable.Conversion(InstantType, StringType, CONTEXT_LOSS),
-		immutable.Conversion(ModelType, StringType, CONTEXT_LOSS),
+		Conversion(AnyType, StringType, DataLoss),
+		immutable.Conversion(IntType, StringType, ContextLoss),
+		immutable.Conversion(DoubleType, StringType, ContextLoss),
+		immutable.Conversion(LongType, StringType, ContextLoss),
+		immutable.Conversion(InstantType, StringType, ContextLoss),
+		immutable.Conversion(ModelType, StringType, ContextLoss),
 		// Conversions to Int
-		immutable.Conversion(DoubleType, IntType, DATA_LOSS),
-		immutable.Conversion(LongType, IntType, DATA_LOSS),
-		immutable.Conversion(FloatType, IntType, DATA_LOSS),
-		immutable.Conversion(BooleanType, IntType, CONTEXT_LOSS),
-		immutable.Conversion(DaysType, IntType, CONTEXT_LOSS),
-		immutable.Conversion(StringType, IntType, DANGEROUS),
+		immutable.Conversion(DoubleType, IntType, DataLoss),
+		immutable.Conversion(LongType, IntType, DataLoss),
+		immutable.Conversion(FloatType, IntType, DataLoss),
+		immutable.Conversion(BooleanType, IntType, ContextLoss),
+		immutable.Conversion(DaysType, IntType, ContextLoss),
+		immutable.Conversion(StringType, IntType, Dangerous),
 		// Conversions to Double
-		immutable.Conversion(IntType, DoubleType, PERFECT),
-		immutable.Conversion(FloatType, DoubleType, PERFECT),
-		immutable.Conversion(LongType, DoubleType, PERFECT),
-		immutable.Conversion(DurationType, DoubleType, CONTEXT_LOSS),
-		immutable.Conversion(StringType, DoubleType, DANGEROUS),
+		immutable.Conversion(IntType, DoubleType, Perfect),
+		immutable.Conversion(FloatType, DoubleType, Perfect),
+		immutable.Conversion(LongType, DoubleType, Perfect),
+		immutable.Conversion(DurationType, DoubleType, ContextLoss),
+		immutable.Conversion(StringType, DoubleType, Dangerous),
 		// Conversions to Float
-		immutable.Conversion(IntType, FloatType, PERFECT),
-		immutable.Conversion(DoubleType, FloatType, DATA_LOSS),
-		immutable.Conversion(LongType, FloatType, DATA_LOSS),
-		immutable.Conversion(StringType, FloatType, DANGEROUS),
+		immutable.Conversion(IntType, FloatType, Perfect),
+		immutable.Conversion(DoubleType, FloatType, DataLoss),
+		immutable.Conversion(LongType, FloatType, DataLoss),
+		immutable.Conversion(StringType, FloatType, Dangerous),
 		// Conversions to Long
-		immutable.Conversion(IntType, LongType, PERFECT),
-		immutable.Conversion(DoubleType, LongType, DATA_LOSS),
-		immutable.Conversion(FloatType, LongType, DATA_LOSS),
-		immutable.Conversion(InstantType, LongType, DATA_LOSS),
-		immutable.Conversion(DurationType, LongType, CONTEXT_LOSS),
-		immutable.Conversion(DaysType, LongType, CONTEXT_LOSS),
-		immutable.Conversion(StringType, LongType, DANGEROUS),
+		immutable.Conversion(IntType, LongType, Perfect),
+		immutable.Conversion(DoubleType, LongType, DataLoss),
+		immutable.Conversion(FloatType, LongType, DataLoss),
+		immutable.Conversion(InstantType, LongType, DataLoss),
+		immutable.Conversion(DurationType, LongType, ContextLoss),
+		immutable.Conversion(DaysType, LongType, ContextLoss),
+		immutable.Conversion(StringType, LongType, Dangerous),
 		// Conversions to Boolean
-		immutable.Conversion(IntType, BooleanType, MEANING_LOSS),
-		immutable.Conversion(StringType, BooleanType, DANGEROUS),
+		immutable.Conversion(IntType, BooleanType, MeaningLoss),
+		immutable.Conversion(StringType, BooleanType, Dangerous),
 		// Conversions to Instant
-		immutable.Conversion(LongType, InstantType, PERFECT),
-		immutable.Conversion(LocalDateTimeType, InstantType, PERFECT),
-		immutable.Conversion(DurationType, InstantType, MEANING_LOSS),
-		immutable.Conversion(DaysType, InstantType, MEANING_LOSS),
-		immutable.Conversion(StringType, InstantType, DANGEROUS),
+		immutable.Conversion(LongType, InstantType, Perfect),
+		immutable.Conversion(LocalDateTimeType, InstantType, Perfect),
+		immutable.Conversion(DurationType, InstantType, MeaningLoss),
+		immutable.Conversion(DaysType, InstantType, MeaningLoss),
+		immutable.Conversion(StringType, InstantType, Dangerous),
 		// Conversions to LocalDate
-		immutable.Conversion(LocalDateTimeType, LocalDateType, DATA_LOSS),
-		immutable.Conversion(DaysType, LocalDateType, MEANING_LOSS),
-		immutable.Conversion(StringType, LocalDateType, DANGEROUS),
+		immutable.Conversion(LocalDateTimeType, LocalDateType, DataLoss),
+		immutable.Conversion(DaysType, LocalDateType, MeaningLoss),
+		immutable.Conversion(StringType, LocalDateType, Dangerous),
 		// Conversions to LocalTime
-		immutable.Conversion(LocalDateTimeType, LocalTimeType, DATA_LOSS),
-		immutable.Conversion(DurationType, LocalTimeType, MEANING_LOSS),
-		immutable.Conversion(StringType, LocalTimeType, DANGEROUS),
+		immutable.Conversion(LocalDateTimeType, LocalTimeType, DataLoss),
+		immutable.Conversion(DurationType, LocalTimeType, MeaningLoss),
+		immutable.Conversion(StringType, LocalTimeType, Dangerous),
 		// Conversions to LocalDateTime
-		immutable.Conversion(InstantType, LocalDateTimeType, DATA_LOSS),
-		immutable.Conversion(LocalDateType, LocalDateTimeType, PERFECT),
-		immutable.Conversion(StringType, LocalDateTimeType, DANGEROUS),
-		immutable.Conversion(PairType, LocalDateTimeType, DANGEROUS),
+		immutable.Conversion(InstantType, LocalDateTimeType, DataLoss),
+		immutable.Conversion(LocalDateType, LocalDateTimeType, Perfect),
+		immutable.Conversion(StringType, LocalDateTimeType, Dangerous),
+		immutable.Conversion(PairType, LocalDateTimeType, Dangerous),
 		// Conversions to Duration
-		immutable.Conversion(DaysType, DurationType, PERFECT),
-		immutable.Conversion(LocalTimeType, DurationType, CONTEXT_LOSS),
-		immutable.Conversion(LongType, DurationType, PERFECT),
-		immutable.Conversion(IntType, DurationType, PERFECT),
-		immutable.Conversion(DoubleType, DurationType, PERFECT),
-		immutable.Conversion(InstantType, DurationType, CONTEXT_LOSS),
-		immutable.Conversion(ModelType, DurationType, DANGEROUS),
-		immutable.Conversion(StringType, DurationType, DANGEROUS),
+		immutable.Conversion(DaysType, DurationType, Perfect),
+		immutable.Conversion(LocalTimeType, DurationType, ContextLoss),
+		immutable.Conversion(LongType, DurationType, Perfect),
+		immutable.Conversion(IntType, DurationType, Perfect),
+		immutable.Conversion(DoubleType, DurationType, Perfect),
+		immutable.Conversion(InstantType, DurationType, ContextLoss),
+		immutable.Conversion(ModelType, DurationType, Dangerous),
+		immutable.Conversion(StringType, DurationType, Dangerous),
 		// Conversions to Days
-		immutable.Conversion(DurationType, DaysType, DATA_LOSS),
-		immutable.Conversion(IntType, DaysType, PERFECT),
-		immutable.Conversion(LocalDateType, DaysType, CONTEXT_LOSS),
+		immutable.Conversion(DurationType, DaysType, DataLoss),
+		immutable.Conversion(IntType, DaysType, Perfect),
+		immutable.Conversion(LocalDateType, DaysType, ContextLoss),
 		// Conversions to Vector
-		immutable.Conversion(AnyType, VectorType, MEANING_LOSS),
-		immutable.Conversion(PairType, VectorType, CONTEXT_LOSS),
+		immutable.Conversion(AnyType, VectorType, MeaningLoss),
+		immutable.Conversion(PairType, VectorType, ContextLoss),
 		// Conversions to Pair
-		immutable.Conversion(VectorType, PairType, DANGEROUS),
-		immutable.Conversion(LocalDateTimeType, PairType, CONTEXT_LOSS),
-		immutable.Conversion(LocalTimeType, PairType, CONTEXT_LOSS),
-		immutable.Conversion(StringType, PairType, DANGEROUS),
+		immutable.Conversion(VectorType, PairType, Dangerous),
+		immutable.Conversion(LocalDateTimeType, PairType, ContextLoss),
+		immutable.Conversion(LocalTimeType, PairType, ContextLoss),
+		immutable.Conversion(StringType, PairType, Dangerous),
 		// Conversions to Model
-		immutable.Conversion(DurationType, ModelType, CONTEXT_LOSS),
-		immutable.Conversion(StringType, ModelType, DANGEROUS)
+		immutable.Conversion(DurationType, ModelType, ContextLoss),
+		immutable.Conversion(StringType, ModelType, Dangerous)
 	)
 	
 	
@@ -387,7 +387,7 @@ object BasicValueCaster extends ValueCaster
 				case None => d.toMillis
 			}
 			Some(Model.from("value" -> len, "unit" -> unitString.getOrElse[String]("ms")))
-		case StringType => JSONReader.apply(value.getString).toOption.filter { _.isOfType(ModelType) }.map { _.getModel }
+		case StringType => JsonReader.apply(value.getString).toOption.filter { _.isOfType(ModelType) }.map { _.getModel }
 		case _ => None
 	}
 	

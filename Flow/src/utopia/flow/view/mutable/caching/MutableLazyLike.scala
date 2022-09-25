@@ -1,13 +1,13 @@
 package utopia.flow.view.mutable.caching
 
-import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.Pointer
 
 /**
   * A common trait for lazy container implementations which allow outside manipulation
   * @author Mikko Hilpinen
   * @since 22.7.2020, v1.8
   */
-trait MutableLazyLike[A] extends ResettableLazyLike[A] with Settable[A]
+trait MutableLazyLike[A] extends ResettableLazyLike[A] with Pointer[A]
 {
 	// OTHER	----------------------
 	

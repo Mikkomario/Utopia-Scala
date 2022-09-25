@@ -1,7 +1,6 @@
 package utopia.genesis.graphics
 
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 import utopia.paradigm.shape.shape2d.{Matrix2D, Polygonic}
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
@@ -20,8 +19,8 @@ object LazyClip
   * @author Mikko Hilpinen
   * @since 28.1.2022, v2.6.3
   */
-class LazyClip(parent: Either[LazyLike[Polygonic], (LazyClip, LazyLike[Matrix3D])])
-	extends LazyLike[Polygonic] with LinearTransformable[LazyClip] with AffineTransformable[LazyClip]
+class LazyClip(parent: Either[Lazy[Polygonic], (LazyClip, Lazy[Matrix3D])])
+	extends Lazy[Polygonic] with LinearTransformable[LazyClip] with AffineTransformable[LazyClip]
 {
 	// ATTRIBUTES   -----------------------------
 	
@@ -52,7 +51,7 @@ class LazyClip(parent: Either[LazyLike[Polygonic], (LazyClip, LazyLike[Matrix3D]
 	// Returns materials used in clipping calculation. Either:
 	// Right: A pre-calculated clipping shape in current transformation context
 	// Left: Some clipping shape + transformation to apply to that shape (lazy)
-	private def materials: Either[(Polygonic, LazyLike[Matrix3D]), Polygonic] = cache.current match {
+	private def materials: Either[(Polygonic, Lazy[Matrix3D]), Polygonic] = cache.current match {
 		case Some(shape) => Right(shape)
 		case None =>
 			parent match {
@@ -75,5 +74,5 @@ class LazyClip(parent: Either[LazyLike[Polygonic], (LazyClip, LazyLike[Matrix3D]
 	
 	override def transformedWith(transformation: Matrix2D): LazyClip =
 		new LazyClip(Right(this -> Lazy { transformation.to3D }))
-	override def transformedWith(transformation: Matrix3D) = new LazyClip(Right(this -> Lazy.wrap(transformation)))
+	override def transformedWith(transformation: Matrix3D) = new LazyClip(Right(this -> Lazy.initialized(transformation)))
 }

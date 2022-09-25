@@ -1,21 +1,21 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.event.listener.LazyListener
-import utopia.flow.view.template.ListenableLazyLike
+import utopia.flow.view.immutable.eventful.ListenableLazy
 
 /**
   * Common trait for wrappers for listenable lazy containers
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.9.2
   */
-trait ListenableLazyWrapper[+A] extends ListenableLazyLike[A]
+trait ListenableLazyWrapper[+A] extends ListenableLazy[A]
 {
 	// ABSTRACT -------------------------------
 	
 	/**
 	  * @return Wrapped listenable lazy instance
 	  */
-	protected def wrapped: ListenableLazyLike[A]
+	protected def wrapped: ListenableLazy[A]
 	
 	
 	// IMPLEMENTED  --------------------------

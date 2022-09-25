@@ -1,6 +1,6 @@
 package utopia.flow.generic.casting
 
-import utopia.flow.generic.model.enumeration.ConversionReliability.NO_CONVERSION
+import utopia.flow.generic.model.enumeration.ConversionReliability.NoConversion
 import utopia.flow.generic.model.immutable.{Conversion, Value}
 import utopia.flow.generic.model.mutable.DataType
 
@@ -15,7 +15,7 @@ class SuperTypeCaster(val types: Set[DataType]) extends ValueCaster
 {
     // Allows conversion to any supertype
     override lazy val conversions = types.flatMap { dataType => dataType.superType.map { 
-        superType => Conversion(dataType, superType, NO_CONVERSION) } }
+        superType => Conversion(dataType, superType, NoConversion) } }
     
     // No conversion is required since the value already represents an instance of the supertype
     override def cast(value: Value, toType: DataType) = Some(value)

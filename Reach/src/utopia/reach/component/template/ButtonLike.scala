@@ -1,7 +1,7 @@
 package utopia.reach.component.template
 
 import java.awt.event.KeyEvent
-import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.ChangingLike
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
@@ -90,8 +90,8 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	  * @param hotKeys Keys used for triggering this button even while it doesn't have focus (default = empty)
 	  * @param triggerKeys Keys used for triggering this button while it has focus (default = space & enter)
 	  */
-	protected def setup(statePointer: Settable[ButtonState], hotKeys: Set[HotKey] = Set(),
-						triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys) =
+	protected def setup(statePointer: Pointer[ButtonState], hotKeys: Set[HotKey] = Set(),
+	                    triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys) =
 	{
 		// When connected to the main hierarchy, enables focus management and key listening
 		val triggerKeyListener =
@@ -141,14 +141,14 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	  * A listener used for updating this button's focus state
 	  * @param statePointer A pointer for updating this button's state
 	  */
-	protected class ButtonDefaultFocusListener(statePointer: Settable[ButtonState]) extends FocusChangeListener
+	protected class ButtonDefaultFocusListener(statePointer: Pointer[ButtonState]) extends FocusChangeListener
 	{
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
 			statePointer.update { _.copy(isInFocus = event.hasFocus) }
 	}
 	
-	private class ButtonKeyListener(statePointer: Settable[ButtonState], hotKeys: Set[HotKey],
-									requiresFocus: Boolean = true)
+	private class ButtonKeyListener(statePointer: Pointer[ButtonState], hotKeys: Set[HotKey],
+	                                requiresFocus: Boolean = true)
 		extends KeyStateListener
 	{
 		// ATTRIBUTES	---------------------------
@@ -189,7 +189,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled && (!requiresFocus || hasFocus)
 	}
 	
-	private class ButtonMouseListener(statePointer: Settable[ButtonState]) extends MouseButtonStateListener
+	private class ButtonMouseListener(statePointer: Pointer[ButtonState]) extends MouseButtonStateListener
 		with MouseMoveListener
 	{
 		// ATTRIBUTES	----------------------------

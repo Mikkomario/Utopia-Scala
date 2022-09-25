@@ -3,7 +3,6 @@ package utopia.flow.collection.immutable.caching.iterable
 import utopia.flow.collection.mutable.builder.LazyBuilder
 import utopia.flow.collection.template.factory.LazyFactory
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{IndexedSeqOps, SeqFactory, mutable}
@@ -26,8 +25,8 @@ object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case l: LazyVector[A] => l
-		case s: IndexedSeq[A] => new LazyVector[A](s.map(Lazy.wrap))
-		case _ => new LazyVector[A](source.iterator.map(Lazy.wrap).toIndexedSeq)
+		case s: IndexedSeq[A] => new LazyVector[A](s.map(Lazy.initialized))
+		case _ => new LazyVector[A](source.iterator.map(Lazy.initialized).toIndexedSeq)
 	}
 	
 	
@@ -39,7 +38,7 @@ object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
 	  * @tparam A Type of underlying items
 	  * @return A new lazy vector
 	  */
-	def apply[A](items: IndexedSeq[LazyLike[A]]) = new LazyVector[A](items)
+	def apply[A](items: IndexedSeq[Lazy[A]]) = new LazyVector[A](items)
 	/**
 	  * @tparam A Type of vector contents
 	  * @return Creates a new empty lazy vector
@@ -50,10 +49,10 @@ object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
 	  * @tparam A Type of wrapped items
 	  * @return A new lazy vector
 	  */
-	def apply[A](items: LazyLike[A]*): LazyVector[A] = apply(items.toIndexedSeq)
+	def apply[A](items: Lazy[A]*): LazyVector[A] = apply(items.toIndexedSeq)
 	
-	override def apply[A](items: IterableOnce[LazyLike[A]]) = items match {
-		case s: IndexedSeq[LazyLike[A]] => new LazyVector[A](s)
+	override def apply[A](items: IterableOnce[Lazy[A]]) = items match {
+		case s: IndexedSeq[Lazy[A]] => new LazyVector[A](s)
 		case i => new LazyVector[A](i.iterator.toIndexedSeq)
 	}
 	
@@ -78,7 +77,7 @@ object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
   * @author Mikko Hilpinen
   * @since 22.7.2022, v1.16
   */
-class LazyVector[+A] private(wrapped: IndexedSeq[LazyLike[A]])
+class LazyVector[+A] private(wrapped: IndexedSeq[Lazy[A]])
 	extends IndexedSeqOps[A, LazyVector, LazyVector[A]] with IndexedSeq[A] with LazySeqLike[A, LazyVector]
 {
 	// COMPUTED ------------------------------
@@ -118,17 +117,17 @@ class LazyVector[+A] private(wrapped: IndexedSeq[LazyLike[A]])
 	  */
 	override def map[B](f: A => B) = new LazyVector[B](wrapped.map { l => Lazy { f(l.value) } })
 	
-	override def prepended[B >: A](elem: B) = new LazyVector[B](wrapped.prepended(Lazy.wrap(elem)))
+	override def prepended[B >: A](elem: B) = new LazyVector[B](wrapped.prepended(Lazy.initialized(elem)))
 	
 	override def take(n: Int) = new LazyVector(wrapped.take(n))
 	override def takeRight(n: Int) = new LazyVector(wrapped.takeRight(n))
 	override def drop(n: Int) = new LazyVector(wrapped.drop(n))
 	override def dropRight(n: Int) = new LazyVector(wrapped.dropRight(n))
 	
-	override def appended[B >: A](elem: B) = new LazyVector[B](wrapped.appended(Lazy.wrap(elem)))
+	override def appended[B >: A](elem: B) = new LazyVector[B](wrapped.appended(Lazy.initialized(elem)))
 	override def prependedAll[B >: A](prefix: IterableOnce[B]) =
-		new LazyVector[B](wrapped.prependedAll(prefix.iterator.map(Lazy.wrap)))
+		new LazyVector[B](wrapped.prependedAll(prefix.iterator.map(Lazy.initialized)))
 	override def appendedAll[B >: A](suffix: IterableOnce[B]) =
-		new LazyVector[B](wrapped.appendedAll(suffix.iterator.map(Lazy.wrap)))
-	override def padTo[B >: A](len: Int, elem: B) = new LazyVector[B](wrapped.padTo(len, Lazy.wrap(elem)))
+		new LazyVector[B](wrapped.appendedAll(suffix.iterator.map(Lazy.initialized)))
+	override def padTo[B >: A](len: Int, elem: B) = new LazyVector[B](wrapped.padTo(len, Lazy.initialized(elem)))
 }

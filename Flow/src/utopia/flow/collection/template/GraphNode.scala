@@ -3,7 +3,7 @@ package utopia.flow.collection.template
 import utopia.flow.collection.immutable.{Graph, Tree}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.template.GraphNode.{AnyNode, PathsFinder}
-import utopia.flow.view.template.Viewable
+import utopia.flow.view.immutable.View
 
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
@@ -178,7 +178,7 @@ object GraphNode
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends Viewable[N]
+trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends View[N]
 {
     // TYPES    --------------------
 	

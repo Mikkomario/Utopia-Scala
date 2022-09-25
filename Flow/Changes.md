@@ -1,5 +1,21 @@
 # Utopia Flow - List of Changes
 
+## v2.0 (in development)
+### Breaking Changes
+- Reorganized the package structure
+- Renamed **template.Model** to **ModelLike**
+- The following traits were renamed and replaced an existing class with the same name
+  - **Viewable** and **Settable** to **View** and **Pointer**
+  - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**
+- Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
+- Moved **JsonReadEvent** types under the **JsonReadEvent** object
+- **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
+- Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
+### Deprecations
+- Deprecated **Node** in favor of **Viewable**
+- Deprecated **NullSafe** in favor of `Option.apply(...)`
+- Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
+
 ## v1.17 (in development)
 ### Breaking Changes
 - Removed `~==` and `!~==` from **StringExtensions**, as they are now made available through **EqualsExtensions**

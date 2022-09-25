@@ -1,7 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
-import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Changing
 
 /**
@@ -9,7 +9,7 @@ import utopia.flow.view.template.eventful.Changing
   * @author Mikko Hilpinen
   * @since 25.5.2019, v1.4.1
   */
-class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
+class PointerWithEvents[A](initialValue: A) extends Pointer[A] with Changing[A]
 {
 	// ATTRIBUTES	----------------
 	

@@ -8,7 +8,7 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.{DataType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
@@ -25,7 +25,7 @@ object ContainerTest extends App
 	DataType.setup()
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
-	implicit val jsonParser: JsonParser = JSONReader
+	implicit val jsonParser: JsonParser = JsonReader
 	
 	val container = new ObjectMapFileContainer("Flow/test/test-container.json", TestObject)
 	

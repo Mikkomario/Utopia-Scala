@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.async
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 object Volatile
@@ -19,7 +19,7 @@ object Volatile
 * @author Mikko Hilpinen
 * @since 27.3.2019
 **/
-class Volatile[A](@volatile private var _value: A) extends Changing[A] with Settable[A]
+class Volatile[A](@volatile private var _value: A) extends Changing[A] with Pointer[A]
 {
     // ATTRIBUTES   ----------------
     

@@ -1,7 +1,5 @@
 package utopia.flow.view.immutable
 
-import utopia.flow.view.template.Viewable
-
 object MutatingOnce
 {
 	/**
@@ -20,7 +18,7 @@ object MutatingOnce
   * @author Mikko Hilpinen
   * @since 2.11.2021, v1.14
   */
-class MutatingOnce[+A](initialValue: A, nextValue: => A) extends Viewable[A]
+class MutatingOnce[+A](initialValue: A, nextValue: => A) extends View[A]
 {
 	// ATTRIBUTES   ----------------------------
 	

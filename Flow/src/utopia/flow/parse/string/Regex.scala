@@ -2,9 +2,9 @@ package utopia.flow.parse.string
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.Viewable
 
 import java.util.regex.{Matcher, Pattern}
 import scala.collection.immutable.VectorBuilder
@@ -266,7 +266,7 @@ case class Regex(string: String)
 	  */
 	// Implementation is based on Matcher.replaceAll(String)
 	// The main point of this function is to allow for the lazy initiation of the replacement
-	def replaceAll(str: String, replacement: Viewable[String]) = {
+	def replaceAll(str: String, replacement: View[String]) = {
 		val matcher = pattern.matcher(str)
 		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile { r => r }
 		if (findResultsIterator.hasNext) {

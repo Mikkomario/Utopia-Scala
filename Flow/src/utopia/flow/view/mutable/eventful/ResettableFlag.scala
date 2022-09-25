@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.immutable.eventful.FlagView
-import utopia.flow.view.mutable.{Resettable, Settable}
+import utopia.flow.view.mutable.{Resettable, Pointer}
 import utopia.flow.view.template.eventful.Changing
 
 object ResettableFlag
@@ -17,7 +17,7 @@ object ResettableFlag
 	
 	// NESTED   -----------------------
 	
-	private class _ResettableFlag extends ResettableFlag with Changing[Boolean] with Settable[Boolean]
+	private class _ResettableFlag extends ResettableFlag with Changing[Boolean] with Pointer[Boolean]
 	{
 		// ATTRIBUTES   -----------------------
 		
@@ -72,7 +72,7 @@ object ResettableFlag
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait ResettableFlag extends Flag with Resettable with Settable[Boolean]
+trait ResettableFlag extends Flag with Resettable with Pointer[Boolean]
 {
 	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
 }

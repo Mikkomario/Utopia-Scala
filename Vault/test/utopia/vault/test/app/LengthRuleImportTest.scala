@@ -1,7 +1,7 @@
 package utopia.vault.test.app
 
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.test.TestContext._
 import utopia.vault.database.ConnectionPool
@@ -14,7 +14,7 @@ import utopia.vault.database.columnlength.ColumnLengthRules
   */
 object LengthRuleImportTest extends App
 {
-	implicit val jsonParser: JsonParser = JSONReader
+	implicit val jsonParser: JsonParser = JsonReader
 	implicit val cPool: ConnectionPool = new ConnectionPool()
 	
 	DataType.setup()

@@ -3,8 +3,8 @@ package utopia.flow.view.template.eventful
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, AsyncMirror, FlatteningMirror}
-import utopia.flow.view.template.{ListenableLazyLike, Viewable}
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, AsyncMirror, FlatteningMirror, ListenableLazy}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -90,7 +90,7 @@ object ChangingLike
   * @author Mikko Hilpinen
   * @since 26.5.2019, v1.9
   */
-trait ChangingLike[+A] extends Viewable[A]
+trait ChangingLike[+A] extends View[A]
 {
 	// ABSTRACT	---------------------
 	
@@ -159,7 +159,7 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @tparam B Mapping result type
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
-	def lazyMap[B](f: A => B): ListenableLazyLike[B]
+	def lazyMap[B](f: A => B): ListenableLazy[B]
 	
 	/**
 	  * @param other Another changing item
@@ -186,7 +186,7 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that lazily merges the values from both of these items
 	  */
-	def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ListenableLazyLike[R]
+	def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ListenableLazy[R]
 	
 	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event

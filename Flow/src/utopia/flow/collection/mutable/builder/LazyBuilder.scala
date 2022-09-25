@@ -2,7 +2,6 @@ package utopia.flow.collection.mutable.builder
 
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
@@ -16,7 +15,7 @@ object LazyBuilder
 	  * @tparam To Type of resulting collection type
 	  * @return A new builder
 	  */
-	def apply[A, To](f: Vector[LazyLike[A]] => To) = new LazyBuilder[A, To](f)
+	def apply[A, To](f: Vector[Lazy[A]] => To) = new LazyBuilder[A, To](f)
 	
 	/**
 	  * Creates a new lazy vector builder
@@ -31,11 +30,11 @@ object LazyBuilder
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
-class LazyBuilder[A, +To](f: Vector[LazyLike[A]] => To) extends mutable.Builder[LazyLike[A], To]
+class LazyBuilder[A, +To](f: Vector[Lazy[A]] => To) extends mutable.Builder[Lazy[A], To]
 {
 	// ATTRIBUTES   ------------------------
 	
-	private val wrapped = new VectorBuilder[LazyLike[A]]()
+	private val wrapped = new VectorBuilder[Lazy[A]]()
 	
 	
 	// COMPUTED ----------------------------
@@ -51,13 +50,13 @@ class LazyBuilder[A, +To](f: Vector[LazyLike[A]] => To) extends mutable.Builder[
 	override def clear() = wrapped.clear()
 	override def result() = f(wrapped.result())
 	
-	override def addOne(elem: LazyLike[A]) = {
+	override def addOne(elem: Lazy[A]) = {
 		wrapped.addOne(elem)
 		this
 	}
 	
 	override def sizeHint(size: Int) = wrapped.sizeHint(size)
-	override def addAll(xs: IterableOnce[LazyLike[A]]) = {
+	override def addAll(xs: IterableOnce[Lazy[A]]) = {
 		wrapped.addAll(xs)
 		this
 	}
@@ -89,7 +88,7 @@ class LazyBuilder[A, +To](f: Vector[LazyLike[A]] => To) extends mutable.Builder[
 		override def sizeHint(size: Int) = super.sizeHint(size)
 		
 		override def addAll(xs: IterableOnce[A]) = {
-			LazyBuilder.this.addAll(xs.iterator.map(Lazy.wrap))
+			LazyBuilder.this.addAll(xs.iterator.map(Lazy.initialized))
 			this
 		}
 		

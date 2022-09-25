@@ -1,6 +1,6 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
@@ -155,7 +155,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	// ATTRIBUTES	------------------------
 	
 	private var _components = Vector[C]()
-	private var pointers = Map[Int, Settable[Boolean]]()
+	private var pointers = Map[Int, Pointer[Boolean]]()
 	
 	private var _direction = initialDirection
 	private var _layout = initialLayout

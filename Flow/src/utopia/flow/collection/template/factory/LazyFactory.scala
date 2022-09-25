@@ -2,7 +2,6 @@ package utopia.flow.collection.template.factory
 
 import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 
 /**
   * A common trait for factories that produce lazy collections
@@ -26,12 +25,12 @@ trait LazyFactory[+Coll[X]]
 	  * @tparam A Type of lazily initialized items
 	  * @return A new collection with those items
 	  */
-	def apply[A](items: IterableOnce[LazyLike[A]]): Coll[A]
+	def apply[A](items: IterableOnce[Lazy[A]]): Coll[A]
 	
 	
 	// OTHER    ----------------------------
 	
-	def apply[A](first: LazyLike[A], more: LazyLike[A]*): Coll[A] = apply(first +: more)
+	def apply[A](first: Lazy[A], more: Lazy[A]*): Coll[A] = apply(first +: more)
 	
 	/**
 	  * Creates a new collection containing only a single item

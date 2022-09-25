@@ -4,14 +4,14 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.util.StringExtensions._
-import utopia.flow.view.template.Viewable
+import utopia.flow.view.immutable.View
 
 /**
   * Properties are named and contain a value in a certain data type
   * @author Mikko Hilpinen
   * @since 26.11.2016
   */
-trait Property extends JsonConvertible with Viewable[Value]
+trait Property extends JsonConvertible with View[Value]
 {
 	// ABSTRACT    ---------------
 	

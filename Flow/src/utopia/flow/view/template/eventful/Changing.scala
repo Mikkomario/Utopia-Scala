@@ -4,8 +4,7 @@ import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.{DelayedView, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
-import utopia.flow.view.template.{ListenableLazyLike, Viewable}
+import utopia.flow.view.immutable.eventful.{DelayedView, Fixed, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -72,7 +71,7 @@ trait Changing[A] extends ChangingLike[A]
 	
 	override def map[B](f: A => B) = Mirror.of(this)(f)
 	
-	override def lazyMap[B](f: A => B): ListenableLazyLike[B] = LazyMirror.of(this)(f)
+	override def lazyMap[B](f: A => B): ListenableLazy[B] = LazyMirror.of(this)(f)
 	
 	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{
@@ -91,7 +90,7 @@ trait Changing[A] extends ChangingLike[A]
 	                               (merge: (A, B, C) => R): ChangingLike[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
 	
-	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ListenableLazyLike[R] =
+	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ListenableLazy[R] =
 	{
 		if (other.isChanging)
 		{
@@ -120,7 +119,7 @@ trait Changing[A] extends ChangingLike[A]
 	  * @param event A change event to fire (should be lazily initialized)
 	  */
 	protected def fireEvent(event: ChangeEvent[A]) = _fireEvent(View(event))
-	private def _fireEvent(event: Viewable[ChangeEvent[A]]) = {
+	private def _fireEvent(event: View[ChangeEvent[A]]) = {
 		// Informs the dependencies first
 		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event.value) }
 		// Then the listeners (may remove some listeners in the process)

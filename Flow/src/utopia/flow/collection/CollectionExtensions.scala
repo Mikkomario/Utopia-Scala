@@ -6,7 +6,6 @@ import utopia.flow.collection.mutable.iterator.{FoldingIterator, GroupIterator, 
 import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.LazyLike
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
@@ -262,7 +261,7 @@ object CollectionExtensions
 		  * @tparam B Type of the lazily initialized items
 		  * @return A lazily initialized collection containing the mapping results
 		  */
-		def lazyFlatMap[B](f: A => IterableOnce[LazyLike[B]]) = LazyIterable[B](i.iterator.flatMap(f))
+		def lazyFlatMap[B](f: A => IterableOnce[Lazy[B]]) = LazyIterable[B](i.iterator.flatMap(f))
 		
 		/**
 		  * Divides / maps the items in this collection to two groups

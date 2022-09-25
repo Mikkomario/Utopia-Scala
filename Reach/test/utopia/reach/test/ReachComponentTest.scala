@@ -42,7 +42,7 @@ object ReachComponentTest extends App
 	
 	def focusReporter(componentName: String) = FocusListener { event => println(s"$componentName: $event") }
 	
-	val windowPointer = new Pointer[Option[Window[_]]](None)
+	val windowPointer = Pointer[Option[Window[_]]](None)
 	val result = ReachCanvas(cursors) { canvasHierarchy =>
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
 			.build(Mixed).column() { factories =>

@@ -6,7 +6,7 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.parse.xml.XmlReader
 
 import scala.io.{Codec, Source}
@@ -197,7 +197,7 @@ object ResponseParser
 			parsers.find { _.defaultEncoding == encoding } match
 			{
 				case Some(parser) => parser(stream)
-				case None => JSONReader(stream, encoding)
+				case None => JsonReader(stream, encoding)
 			}
 		}
 		else if (headers.contentType.exists { _.subType ~== "xml" })

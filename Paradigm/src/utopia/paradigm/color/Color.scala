@@ -145,7 +145,7 @@ object Color
 		else
 		{
 			// Combines the total rgb and alpha values of the colors (weights by color alpha)
-			val totals = RgbChannel.values.map { _ -> new Pointer(0.0) }.toMap
+			val totals = RgbChannel.values.map { _ -> Pointer(0.0) }.toMap
 			var totalAlpha = 0.0
 			colors.foreach { color =>
 				color.ratios.foreach { case (channel, ratio) => totals(channel).update { _ + ratio * color.alpha } }

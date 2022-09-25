@@ -1,7 +1,5 @@
 package utopia.flow.view.immutable.caching
 
-import utopia.flow.view.template.LazyLike
-
 import scala.ref.WeakReference
 
 object WeakLazy
@@ -20,7 +18,7 @@ object WeakLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.10
   */
-class WeakLazy[A <: AnyRef](generator: => A) extends LazyLike[A]
+class WeakLazy[A <: AnyRef](generator: => A) extends Lazy[A]
 {
 	// ATTRIBUTES   ------------------------
 	

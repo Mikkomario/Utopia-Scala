@@ -14,7 +14,7 @@ import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeo
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.parse.json.{JSONReader, JsonParser}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.parse.AutoClose._
 
@@ -54,7 +54,7 @@ object Gateway
 	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
 	  * @return
 	  */
-	def apply(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	def apply(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
 	          maxConnectionsTotal: Int = 10,
 	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
@@ -86,7 +86,7 @@ object Gateway
 	  * @param customizeClient A function for customizing the http client when it is first created
 	  * @return
 	  */
-	def custom(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	def custom(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
 	           maxConnectionsTotal: Int = 10,
 	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
@@ -123,7 +123,7 @@ object Gateway
   *                                 (using .toString). This mostly affects string values, whether they should be
   *                                 wrapped in quotation marks or not. (default = true = use json value format)
 **/
-class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
               parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,

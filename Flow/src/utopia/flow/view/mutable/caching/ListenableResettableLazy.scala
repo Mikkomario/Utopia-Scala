@@ -1,8 +1,8 @@
 package utopia.flow.view.mutable.caching
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, LazyListener, LazyResetListener, ResettableLazyListener}
+import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.ListenableLazyLike
 import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.{Future, Promise}
@@ -23,7 +23,7 @@ object ListenableResettableLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.9.2
   */
-class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A] with ListenableLazyLike[A]
+class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A] with ListenableLazy[A]
 {
 	// ATTRIBUTES   ------------------------------
 	
