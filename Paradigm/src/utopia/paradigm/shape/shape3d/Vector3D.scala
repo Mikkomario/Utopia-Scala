@@ -251,6 +251,8 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	
 	// IMPLEMENTED	--------------------
 	
+	override def zero = Vector3D.zero
+	
 	override def toString = s"($x, $y, $z)"
 	
 	override def repr = this

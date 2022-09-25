@@ -20,7 +20,7 @@ object IntLike
 		
 		override def isPositive = i > 0
 		
-		override protected def zero = 0
+		override def zero = 0
 		
 		override def compareTo(o: IntWrapper) = i - o.i
 	}

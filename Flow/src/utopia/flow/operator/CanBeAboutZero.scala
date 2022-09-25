@@ -7,14 +7,28 @@ package utopia.flow.operator
   * @tparam A Type of item to which this item may be compared
   * @tparam Repr actual representation type of this item
   */
-trait ApproximatelyZeroable[-A, +Repr] extends Any with ApproximatelyEquatable[A] with Zeroable[Repr]
+trait CanBeAboutZero[-A, +Repr] extends Any with ApproxEquals[A] with CanBeZero[Repr]
 {
+	// ABSTRACT ---------------------
+	
 	/**
 	  * @return Whether this item is very close to zero
 	  */
 	def isAboutZero: Boolean
+	
+	
+	// COMPUTED ---------------------
+	
 	/**
 	  * @return Whether this item is not very close to zero
 	  */
 	def isNotAboutZero = !isAboutZero
+	
+	
+	// OTHER    ---------------------
+	
+	/**
+	  * @return None if about zero, Some(this) otherwise
+	  */
+	def notCloseZero = if (isAboutZero) None else Some(repr)
 }

@@ -15,12 +15,25 @@
 - Renamed **LazyWrapper** to **PreInitializedLazy**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
+- Renamed **Equatable** to **EqualsBy**, and changed its `public def properties: IterableOnce` to 
+  `protected def equalsProperties: Iterable`
+- Renamed **ApproximatelyEquatable** to **ApproxEquals**
+- Renamed **Zeroable** to **CanBeZero** and **ApproximatelyZeroable** to **CanBeAboutZero**
+  - **CanBeZero** now also requires an implementation for a new abstract property `zero: Repr`
 - **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
 ### Deprecations
 - Deprecated **Node** in favor of **Viewable**
 - Deprecated **NullSafe** in favor of `Option.apply(...)`
 - Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
+- **SignedOrZero**: Deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
+### New Methods
+- **CanBeAboutZero**
+  - Added `.notCloseZero`
+- **CanBeZero**
+  - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
+- **Signed**
+  - Added a number of new utility functions
 ### Other Changes
 - **Changing(Like)** `.map(...)`, `.flatMap(...)`, `.lazyMap(...)`, `.mergeWith(...)`, `.lazyMergeWith(...)` 
   and `.delayedBy(...)` are no longer abstract

@@ -1,6 +1,6 @@
 package utopia.reflection.shape.stack
 
-import utopia.flow.operator.Equatable
+import utopia.flow.operator.EqualsBy
 import utopia.flow.collection.CollectionExtensions._
 import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 
@@ -143,7 +143,7 @@ object StackLength
 **/
 class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None,
 				  val priority: LengthPriority = Normal)
-	extends Equatable with StackInsetsConvertible
+	extends EqualsBy with StackInsetsConvertible
 {
     // ATTRIBUTES    ------------------------
 	
@@ -250,7 +250,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	
 	override def toInsets = StackInsets.symmetric(this)
 	
-	def properties = Vector(min, optimal, max, priority)
+	protected def equalsProperties: Iterable[Any] = Vector(min, optimal, max, priority)
 	
 	override def toString =
 	{

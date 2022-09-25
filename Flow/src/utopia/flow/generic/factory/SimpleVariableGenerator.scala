@@ -9,5 +9,5 @@ import utopia.flow.generic.model.mutable.Variable
 class SimpleVariableGenerator(defaultValue: Value = Value.empty) extends
         SimplePropertyGenerator(new Variable(_, _), defaultValue)
 {
-    override def properties = Vector(defaultValue)    
+    protected override def equalsProperties: Iterable[Any] = Vector(defaultValue)
 }

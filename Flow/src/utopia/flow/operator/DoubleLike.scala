@@ -20,7 +20,7 @@ object DoubleLike
 		
 		override def repr = this
 		
-		override protected def zero = 0.0
+		override def zero = 0.0
 		
 		override def compareTo(o: DoubleWrapper) = d.compareTo(o.d)
 	}

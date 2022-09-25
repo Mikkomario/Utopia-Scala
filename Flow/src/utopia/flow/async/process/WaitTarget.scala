@@ -1,6 +1,6 @@
 package utopia.flow.async.process
 
-import utopia.flow.operator.Zeroable
+import utopia.flow.operator.CanBeZero
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today, WeekDay}
 
@@ -16,7 +16,7 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
-sealed trait WaitTarget extends Zeroable[WaitTarget]
+sealed trait WaitTarget extends CanBeZero[WaitTarget]
 {
     // ABSTRACT    --------------
     
@@ -38,6 +38,8 @@ sealed trait WaitTarget extends Zeroable[WaitTarget]
     
     
 	// COMPUTED    --------------
+    
+    override def zero = WaitTarget.zero
     
     /**
      * Whether this wait target has a maximum duration

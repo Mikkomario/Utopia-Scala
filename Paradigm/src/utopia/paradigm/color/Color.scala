@@ -2,7 +2,7 @@ package utopia.paradigm.color
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.angular.Angle
@@ -190,7 +190,7 @@ object Color
   * @since Genesis 24.4.2019, v1+
   */
 case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
-	extends RgbLike[Color] with HslLike[Color] with ApproximatelyEquatable[Color] with ValueConvertible
+	extends RgbLike[Color] with HslLike[Color] with ApproxEquals[Color] with ValueConvertible
 {
 	// ATTRIBUTES	----------------------
 	

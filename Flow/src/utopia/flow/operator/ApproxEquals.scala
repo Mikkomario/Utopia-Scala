@@ -5,7 +5,7 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 1.8.2017
   */
-trait ApproximatelyEquatable[-A] extends Any
+trait ApproxEquals[-A] extends Any
 {
 	// ABSTRACT ---------------------
 	

@@ -1,7 +1,7 @@
 package utopia.access.http
 
 import utopia.flow.error.EnvironmentNotSetupException
-import utopia.flow.operator.Equatable
+import utopia.flow.operator.EqualsBy
 
 object Status
 {
@@ -246,7 +246,7 @@ object Status
   *                    status is only temporary (see 'isTemporary' for more details)
  */
 class Status(val name: String, val code: Int, val isTemporary: Boolean = false, val doNotRepeat: Boolean = false)
-    extends Equatable
+    extends EqualsBy
 {
     // ATTRIBUTES    -----------------------
     
@@ -258,7 +258,7 @@ class Status(val name: String, val code: Int, val isTemporary: Boolean = false, 
     
     // IMPLEMENTED    ----------------------
     
-    override def properties = Vector(code)
+    protected override def equalsProperties = Vector(code)
     
     override def toString = s"$name ($code)"
 }

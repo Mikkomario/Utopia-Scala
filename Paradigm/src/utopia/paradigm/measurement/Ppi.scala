@@ -54,7 +54,7 @@ case class Ppi(value: Double) extends DoubleLike[Ppi]
 	
 	override def +(other: Ppi) = Ppi(value + other.value)
 	
-	override protected def zero = Ppi.zero
+	override def zero = Ppi.zero
 	
 	override def compareTo(o: Ppi) =
 	{

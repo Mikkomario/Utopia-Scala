@@ -17,5 +17,5 @@ object SimpleConstantGenerator
 class SimpleConstantGenerator(defaultValue: Value = Value.empty)
     extends SimplePropertyGenerator[Constant](Constant.apply, defaultValue)
 {
-    override def properties = Vector(defaultValue)
+    protected override def equalsProperties: Iterable[Any] = Vector(defaultValue)
 }

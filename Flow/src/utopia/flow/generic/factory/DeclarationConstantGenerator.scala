@@ -6,5 +6,5 @@ class DeclarationConstantGenerator(declaration: ModelDeclaration,
         defaultValue: Value = Value.empty) extends
         DeclarationPropertyGenerator(Constant.apply, declaration, defaultValue)
 {
-    override def properties = Vector(declaration, defaultValue)    
+    protected override def equalsProperties: Iterable[Any] = Vector(declaration, defaultValue)
 }

@@ -7,7 +7,7 @@ import utopia.flow.generic.model.mutable.DoubleType
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.LinearVelocityType
@@ -66,7 +66,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
   */
 case class LinearVelocity(override val amount: Double, override val duration: Duration)
 	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity]
-		with ApproximatelyZeroable[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
+		with CanBeAboutZero[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
 {
 	// IMPLEMENTED	--------------------
 	
@@ -85,7 +85,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	// The amount and the duration may cancel each other out
 	override def isPositive = nonZero && (if (amount > 0) duration >= Duration.Zero else duration < Duration.Zero)
 	
-	override protected def zero = LinearVelocity.zero
+	override def zero = LinearVelocity.zero
 	
 	override implicit def toValue: Value = new Value(Some(this), LinearVelocityType)
 	

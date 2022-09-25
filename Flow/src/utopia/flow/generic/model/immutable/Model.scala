@@ -5,7 +5,7 @@ import utopia.flow.generic.model.mutable.{ModelType, Variable}
 import utopia.flow.generic.model.{mutable, template}
 import utopia.flow.generic.factory.{PropertyGenerator, SimpleConstantGenerator, SimpleVariableGenerator}
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.Equatable
+import utopia.flow.operator.EqualsBy
 
 object Model
 {
@@ -77,7 +77,7 @@ object Model
  */
 class Model private(val attributeMap: Map[String, Constant], protected val attributeOrder: Vector[String],
                     val attributeGenerator: PropertyGenerator[Constant])
-    extends template.ModelLike[Constant] with Equatable with ValueConvertible
+    extends template.ModelLike[Constant] with EqualsBy with ValueConvertible
 {
     // COMP. PROPERTIES    -------
     
@@ -95,7 +95,7 @@ class Model private(val attributeMap: Map[String, Constant], protected val attri
     
     // IMPLEMENTED METHODS    ----
     
-    override def properties = Vector(attributeMap, attributeGenerator)
+    protected override def equalsProperties: Iterable[Any] = Vector(attributeMap, attributeGenerator)
     
     override def toValue = new Value(Some(this), ModelType)
     

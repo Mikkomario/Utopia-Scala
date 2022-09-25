@@ -6,7 +6,7 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DoubleType
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.{AngleType, HslType}
@@ -68,7 +68,7 @@ object Hsl extends FromModelFactoryWithSchema[Hsl]
   * @param luminosity Color luminosity [0, 1] where 0 is black and 1 is white
   */
 case class Hsl private(override val hue: Angle, override val saturation: Double, override val luminosity: Double)
-	extends HslLike[Hsl] with ApproximatelyEquatable[HslLike[_]] with ValueConvertible with ModelConvertible
+	extends HslLike[Hsl] with ApproxEquals[HslLike[_]] with ValueConvertible with ModelConvertible
 {
 	// COMPUTED	------------------
 	

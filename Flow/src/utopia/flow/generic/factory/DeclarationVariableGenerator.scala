@@ -11,5 +11,5 @@ import utopia.flow.generic.model.mutable.Variable
 class DeclarationVariableGenerator(declaration: ModelDeclaration, defaultValue: Value = Value.empty)
         extends DeclarationPropertyGenerator(new Variable(_, _), declaration, defaultValue)
 {
-    override def properties = Vector(declaration, defaultValue)    
+    protected override def equalsProperties: Iterable[Any] = Vector(declaration, defaultValue)
 }

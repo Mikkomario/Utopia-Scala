@@ -4,7 +4,6 @@ import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image,
 import java.awt.geom.AffineTransform
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, MultiDimensional, Point, ShapeConvertible, Size}
-import utopia.flow.util.NullSafe._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.transform.{AffineTransformable, AffineTransformation, JavaAffineTransformConvertible, LinearTransformable}
@@ -532,7 +531,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         graphics.setFont(font)
         
         // Sets rendering hints based on desktop settings
-        Try { Toolkit.getDefaultToolkit.getDesktopProperty("awt.font.desktophints").toOption
+        Try { Option(Toolkit.getDefaultToolkit.getDesktopProperty("awt.font.desktophints"))
             .map { _.asInstanceOf[java.util.Map[_, _]] }.foreach(graphics.setRenderingHints) }
     }
     

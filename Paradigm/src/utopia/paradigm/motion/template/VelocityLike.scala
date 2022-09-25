@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.{ApproximatelyZeroable, Combinable, LinearScalable}
+import utopia.flow.operator.{CanBeAboutZero, Combinable, LinearScalable}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.shape2d.Vector2DLike
@@ -15,14 +15,15 @@ import scala.concurrent.duration.Duration
   */
 trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Transition, Repr]]
 	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Repr, Change[Dimensional[Double], _]]
-		with ApproximatelyZeroable[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
+		with CanBeAboutZero[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
 		with VectorProjectable[Repr]
 {
 	// ABSTRACT	-----------------
 	
+	/**
+	  * @return The amount of transition within the duration of this instance
+	  */
 	def transition: Transition
-	
-	protected def zeroTransition: Transition
 	
 	/**
 	  * Creates a new copy of this instance
@@ -34,6 +35,11 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	
 	
 	// COMPUTED	-----------------
+	
+	/**
+	  * @return A zero transition
+	  */
+	def zeroTransition = transition.zero
 	
 	/**
 	  * @return A linear copy of this velocity, based on transition amount / length

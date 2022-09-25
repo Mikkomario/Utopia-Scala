@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.operator.{ApproximatelyZeroable, Combinable, EqualsFunction, LinearMeasurable, LinearScalable}
+import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, LinearMeasurable, LinearScalable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.angular.Angle
@@ -44,7 +44,7 @@ object VectorLike
 trait VectorLike[+Repr <: VectorLike[Repr]]
 	extends LinearScalable[Repr] with Combinable[Repr, Dimensional[Double]] with LinearMeasurable
 		with Dimensional[Double] with VectorProjectable[Repr]
-		with ApproximatelyZeroable[Dimensional[Double], Repr]
+		with CanBeAboutZero[Dimensional[Double], Repr]
 {
 	// ABSTRACT	---------------------
 	

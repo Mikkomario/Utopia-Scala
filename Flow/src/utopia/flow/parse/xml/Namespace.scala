@@ -1,7 +1,7 @@
 package utopia.flow.parse.xml
 
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproximatelyEquatable, EqualsFunction, ScopeUsable}
+import utopia.flow.operator.{ApproxEquals, EqualsFunction, ScopeUsable}
 
 object Namespace
 {
@@ -25,7 +25,7 @@ object Namespace
   * @author Mikko Hilpinen
   * @since 20.6.2022, v1.15.1
   */
-case class Namespace(name: String) extends ScopeUsable[Namespace] with ApproximatelyEquatable[Namespace]
+case class Namespace(name: String) extends ScopeUsable[Namespace] with ApproxEquals[Namespace]
 {
 	// COMPUTED -------------------------
 	

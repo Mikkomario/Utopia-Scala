@@ -2,7 +2,7 @@ package utopia.vault.coder.model.enumeration
 
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.operator.{ApproximatelyEquatable, ScopeUsable}
+import utopia.flow.operator.{ApproxEquals, ScopeUsable}
 import utopia.vault.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated, Text, UnderScore}
 
@@ -11,7 +11,7 @@ import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphena
   * @author Mikko Hilpinen
   * @since 20.8.2022, v1.6
   */
-sealed trait NameContext extends ScopeUsable[NameContext] with ApproximatelyEquatable[NameContext]
+sealed trait NameContext extends ScopeUsable[NameContext] with ApproxEquals[NameContext]
 {
 	// ABSTRACT -----------------------
 	

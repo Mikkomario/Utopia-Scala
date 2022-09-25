@@ -73,8 +73,7 @@ case class Velocity3D(transition: Vector3D, override val duration: Duration)
 	
 	// IMPLEMENTED	-------------
 	
-	override protected def zeroTransition = Vector3D.zero
-	override protected def zeroAmount = zeroTransition
+	override def zero = Velocity3D.zero
 	
 	override implicit def toValue: Value = new Value(Some(this), Velocity3DType)
 	

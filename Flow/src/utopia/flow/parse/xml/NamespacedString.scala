@@ -1,7 +1,7 @@
 package utopia.flow.parse.xml
 
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproximatelyEquatable, EqualsFunction, Equatable}
+import utopia.flow.operator.{ApproxEquals, EqualsFunction, EqualsBy}
 import utopia.flow.util.StringExtensions._
 
 import scala.language.implicitConversions
@@ -42,7 +42,7 @@ object NamespacedString
   * @since 31.7.2022, v1.16
   */
 case class NamespacedString(local: String)(implicit val namespace: Namespace)
-	extends Equatable with ApproximatelyEquatable[NamespacedString]
+	extends EqualsBy with ApproxEquals[NamespacedString]
 {
 	// COMPUTED ---------------------------------
 	
@@ -63,7 +63,7 @@ case class NamespacedString(local: String)(implicit val namespace: Namespace)
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def properties = Vector(local, namespace)
+	protected override def equalsProperties: Iterable[Any] = Vector(local, namespace)
 	
 	override def toString = if (hasNamespace) s"$namespace:$local" else local
 	

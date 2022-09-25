@@ -5,7 +5,7 @@ import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.operator.ApproxEquals
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable, AnimatedLinearTransformation}
@@ -66,7 +66,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
                                 shear: Vector2D = Vector2D.zero) extends LinearTransformationLike[LinearTransformation]
     with JavaAffineTransformConvertible with LinearTransformable[Matrix2D] with AffineTransformable[Matrix3D]
     with AnimatedLinearTransformable[AnimatedLinearTransformation]
-    with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproximatelyEquatable[LinearTransformation]
+    with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproxEquals[LinearTransformation]
     with ValueConvertible with ModelConvertible
 {
     // ATTRIBUTES   -----------------

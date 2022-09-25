@@ -128,7 +128,7 @@ case class Size(override val dimensions2D: Pair[Double])
     
     override def isPositive = dimensions2D.forall { _ > 0 }
     
-    override protected def zero = Size.zero
+    override def zero = Size.zero
     
     override def buildCopy(vector: Vector2D) = Size(vector.x, vector.y)
     override def buildCopy(vector: Vector3D) = Size(vector.x, vector.y)

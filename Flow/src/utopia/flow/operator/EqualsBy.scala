@@ -6,7 +6,7 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 6.11.2016
   */
-trait Equatable extends Equals
+trait EqualsBy extends Equals
 {
 	// COMPUTED PROPS    -----------------
 	
@@ -14,14 +14,14 @@ trait Equatable extends Equals
 	  * The properties that define whether this instance equals with another instance. Two instances
 	  * of same class, which also have equal properties are considered equal
 	  */
-	def properties: IterableOnce[Any]
+	protected def equalsProperties: Iterable[Any]
 	
 	
 	// IMPLEMENTED METHODS    ------------
 	
-	override def canEqual(a: Any) = this.getClass.isInstance(a)
+	override def canEqual(a: Any) = getClass.isInstance(a)
 	
-	override def hashCode() = properties.iterator.foldLeft(1)((result, property) => 31 * result + property.hashCode())
+	override def hashCode() = equalsProperties.foldLeft(1)((result, property) => 31 * result + property.hashCode())
 	
-	override def equals(a: Any) = canEqual(a) && this.hashCode() == a.hashCode()
+	override def equals(a: Any) = canEqual(a) && hashCode() == a.hashCode()
 }

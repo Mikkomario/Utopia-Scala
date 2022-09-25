@@ -2,7 +2,7 @@ package utopia.paradigm.angular
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.{ApproximatelyEquatable, Combinable, LinearScalable, SelfComparable, Zeroable}
+import utopia.flow.operator.{ApproxEquals, Combinable, LinearScalable, SelfComparable, CanBeZero}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
@@ -107,7 +107,7 @@ object Rotation
 **/
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
 	extends LinearScalable[Rotation] with Combinable[Rotation, Rotation]
-		with Zeroable[Rotation] with SelfComparable[Rotation] with ApproximatelyEquatable[Rotation]
+		with CanBeZero[Rotation] with SelfComparable[Rotation] with ApproxEquals[Rotation]
 		with ValueConvertible
 {
 	// PROPS    --------------------------
@@ -193,6 +193,8 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	
 	
 	// IMPLEMENTED    --------------------
+	
+	override def zero = Rotation.zero
 	
 	/**
 	  * @return Whether this rotation is exactly zero

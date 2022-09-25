@@ -98,6 +98,8 @@ case class Vector2D(override val dimensions2D: Pair[Double])
 	
 	// IMPLEMENTED	-----------------------------
 	
+	override def zero = Vector2D.zero
+	
 	override def in2D = this
 	
 	override implicit def toValue: Value = new Value(Some(this), Vector2DType)

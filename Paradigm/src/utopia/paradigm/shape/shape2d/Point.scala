@@ -112,6 +112,12 @@ case class Point(override val dimensions2D: Pair[Double])
 {
     // IMPLEMENTED    -----------------
 	
+	override def zero = Point.origin
+	override def repr = this
+	
+	override def toValue = new Value(Some(this), PointType)
+	override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
+	
 	override def toString = dimensions2D.toString()
 	
 	override def buildCopy(vector: Vector2D) = Point(vector.dimensions2D)
@@ -127,11 +133,7 @@ case class Point(override val dimensions2D: Pair[Double])
 			Point(dimensions.head)
 	}
 	
-	override def toValue = new Value(Some(this), PointType)
-    
-    override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
 	
-	override def repr = this
 	
 	
 	// COMPUTED	-----------------------

@@ -7,20 +7,12 @@ import utopia.flow.operator.Sign.{Negative, Positive}
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait SignedOrZero[+Repr] extends Any with Signed[Repr] with Zeroable[Repr]
+trait SignedOrZero[+Repr] extends Any with Signed[Repr] with CanBeZero[Repr]
 {
-	// ABSTRACT -------------------------
-	
-	/**
-	  * @return A zero value copy of this item
-	  */
-	protected def zero: Repr
-	
-	
 	// COMPUTED    ----------------------
 	
 	/**
-	  * @return Whether this item is positive or zero (<=0)
+	  * @return Whether this item is positive or zero (>=0)
 	  */
 	def isPositiveOrZero = isPositive || isZero
 	/**
@@ -34,12 +26,25 @@ trait SignedOrZero[+Repr] extends Any with Signed[Repr] with Zeroable[Repr]
 	def signOption: Option[Sign] = if (isPositive) Some(Positive) else if (isZero) None else Some(Negative)
 	
 	/**
+	  * @return A copy of this item that's at least zero.
+	  *         I.e. if this item is below zero, returns zero. Otherwise returns this.
+	  */
+	def minZero = if (isPositive) repr else zero
+	/**
+	  * @return A copy of this item that's at most zero.
+	  *         I.e. if this item is above zero, returns zero. Otherwise returns this.
+	  */
+	def maxZero = if (isPositive) zero else repr
+	
+	/**
 	  * @return A positive or zero value copy of this item
 	  */
+	@deprecated("Please use minZero instead", "v2.0")
 	def positiveOrZero = if (isPositive) repr else zero
 	/**
 	  * @return A negative or zero value of this item
 	  */
+	@deprecated("Please use maxZero instead", "v2.0")
 	def negativeOrZero = if (isPositive) zero else repr
 	
 	
