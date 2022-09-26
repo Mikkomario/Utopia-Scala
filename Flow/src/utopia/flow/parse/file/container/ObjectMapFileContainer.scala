@@ -34,7 +34,7 @@ class ObjectMapFileContainer[A <: ModelConvertible](fileLocation: Path, factory:
 	override protected def toValue(item: Map[String, A]) =
 		Model.withConstants(item.map { case (key, obj) => Constant(key, obj.toModel) })
 	override protected def fromValue(value: Value) =
-		value.getModel.attributes.flatMap { a => a.value.model.flatMap { factory(_).toOption }.map { a.name -> _ } }
+		value.getModel.properties.flatMap { a => a.value.model.flatMap { factory(_).toOption }.map { a.name -> _ } }
 			.toMap
 	
 	

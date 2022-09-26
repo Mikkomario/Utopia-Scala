@@ -19,7 +19,6 @@ trait Property extends JsonConvertible with View[Value]
 	  * The name of the property
 	  */
 	def name: String
-	
 	/**
 	  * The data type of this property and its contents
 	  */
@@ -32,7 +31,6 @@ trait Property extends JsonConvertible with View[Value]
 	  * @return Whether this property has no value
 	  */
 	def isEmpty = value.isEmpty
-	
 	/**
 	  * @return Whether this property has a non-empty value
 	  */

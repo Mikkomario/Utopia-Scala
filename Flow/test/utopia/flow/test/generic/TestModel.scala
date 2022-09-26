@@ -19,7 +19,7 @@ object TestModel extends FromModelFactory[TestModel]
         if (name.isDefined)
         {
             val level = model("level").intOr(1)
-            val stats = model("stats").modelOr().toMap { _.int }
+            val stats = model("stats").getModel.toPartialMap { _.int }
             val title = model("title").string
             
             Success(new TestModel(name.get, level, stats, title))

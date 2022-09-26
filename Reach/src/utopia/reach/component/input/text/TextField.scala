@@ -525,5 +525,6 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	/**
 	  * Clears this field of all text
 	  */
+	// TODO: This goes against the immutable nature of this field
 	def clear() = textContentPointer.value = ""
 }

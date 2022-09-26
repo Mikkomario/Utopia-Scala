@@ -117,7 +117,7 @@ object ColumnLengthRule
 								// Applies the larger length limit immediately
 								val nullStr = if (column.allowsNull) "" else " NOT NULL"
 								val incrementStr = if (column.usesAutoIncrement) " AUTO_INCREMENT" else ""
-								val defaultStr = column.defaultValue match {
+								val defaultStr = column.defaultValue.notEmpty match {
 									case Some(defaultValue) =>
 										defaultValue.dataType match {
 											case StringType => s" '$defaultValue'"

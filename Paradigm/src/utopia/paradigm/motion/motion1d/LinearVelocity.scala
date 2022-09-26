@@ -44,7 +44,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 				else
 					Failure(new ModelValidationFailedException(
 						s"Required property 'duration' is missing. Specified properties: [${
-							model.attributesWithValue.map { _.name }.mkString(", ") }]"))
+							model.nonEmptyProperties.map { _.name }.mkString(", ") }]"))
 		}
 	}
 	

@@ -1,53 +1,53 @@
 package utopia.flow.generic.model.immutable
 
-import utopia.flow.collection
+import utopia.flow.generic.factory.PropertyFactory
+import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.{ModelType, Variable}
-import utopia.flow.generic.model.{mutable, template}
-import utopia.flow.generic.factory.{PropertyGenerator, SimpleConstantGenerator, SimpleVariableGenerator}
-import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
 import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.EqualsExtensions._
 
 object Model
 {
     // ATTRIBUTES    -------------------
     
     /**
-     * An empty model with a simple constant generator
+     * An empty model with a basic constant generator
      */
-    val empty = Model.withConstants(Vector())
+    val empty = new Model(Map(), Vector(), PropertyFactory.forConstants)
     
     
     // OPERATORS    --------------------
     
     /**
-      * Creates a new model that uses constants and a basic attribute generator
-      * @param constants The constants for the model
-      * @param attributeGenerator Attribute generator to use (default = simple constant generator)
-      * @return A new model
+      * Creates a new model that contains the specified constants
+      * @param constants Model properties
+      * @param propFactory Property factory to use when generating new properties (default = basic constant generator)
+      * @return A new model containing the specified properties
       */
     def withConstants(constants: Iterable[Constant],
-                      attributeGenerator: PropertyGenerator[Constant] = SimpleConstantGenerator) =
+                      propFactory: PropertyFactory[Constant] = PropertyFactory.forConstants) =
     {
         // Filters out duplicates (case-insensitive) (if there are duplicates, last instance is used)
-        val attributeMap = constants.groupBy { _.name.toLowerCase() }.map { case (name, atts) => name -> atts.last }
+        val attributeMap = constants.groupBy { _.name.toLowerCase }.map { case (name, props) => name -> props.last }
         val attributeOrder = constants.map { _.name.toLowerCase }.toVector.distinct
-        new Model(attributeMap, attributeOrder, attributeGenerator)
+        new Model(attributeMap, attributeOrder, propFactory)
     }
     
     /**
-     * Creates a new model with input format that is more friendly to literals
-     * @param content The attribute name value pairs used for generating the model's attributes
-     * @param generator The attribute generator that will generate the attributes
-     * @return The newly generated model
+     * Creates a new model from key value pairs
+     * @param content The name value -pairs used for generating the model's properties
+     * @param propFactory The property factory that is used to build the properties in this model
+     * @return A new model
      */
-    def apply(content: Iterable[(String, Value)], generator: PropertyGenerator[Constant]) =
-            withConstants(content.map { case (name, value) => generator(name, Some(value)) }, generator)
+    def apply(content: Iterable[(String, Value)], propFactory: PropertyFactory[Constant]) =
+            withConstants(content.map { case (name, value) => propFactory(name, value) }, propFactory)
     /**
-      * Creates a new model
-      * @param content A list of name-value pairs that will be used as attributes
-      * @return A new model with specified attributes
+      * Creates a new model from key value pairs
+      * @param content The name value -pairs used for generating the model's properties
+      * @return A new model
       */
-    def apply(content: Iterable[(String, Value)]): Model = apply(content, SimpleConstantGenerator)
+    def apply(content: Iterable[(String, Value)]): Model = apply(content, PropertyFactory.forConstants)
     
     /**
       * @param first First name-value pair
@@ -60,13 +60,13 @@ object Model
      * Converts a map of valueConvertible elements into a model format. The generator the model 
      * uses can be specified as well.
      * @param content The map that is converted to model attributes
-     * @param generator the attirbute generator that will generate the attributes 
+     * @param propFactory the attirbute generator that will generate the attributes
      * (simple constant generator used by default)
      * @return The newly generated model
      */
-    def fromMap[C1](content: Map[String, C1], generator: PropertyGenerator[Constant] = SimpleConstantGenerator)
+    def fromMap[C1](content: Map[String, C1], propFactory: PropertyFactory[Constant] = PropertyFactory.forConstants)
                    (implicit f: C1 => ValueConvertible) =
-            withConstants(content.map { case (name, value) => generator(name, Some(value.toValue)) }, generator)
+            withConstants(content.map { case (name, value) => propFactory(name, value.toValue) }, propFactory)
 }
 
 /**
@@ -75,9 +75,10 @@ object Model
  * @author Mikko Hilpinen
  * @since 29.11.2016
  */
-class Model private(val attributeMap: Map[String, Constant], protected val attributeOrder: Vector[String],
-                    val attributeGenerator: PropertyGenerator[Constant])
-    extends template.ModelLike[Constant] with EqualsBy with ValueConvertible
+class Model private(override val propertyMap: Map[String, Constant],
+                    override protected val propertyOrder: Vector[String],
+                    propFactory: PropertyFactory[Constant])
+    extends ModelLike[Constant] with EqualsBy with ValueConvertible
 {
     // COMP. PROPERTIES    -------
     
@@ -85,96 +86,109 @@ class Model private(val attributeMap: Map[String, Constant], protected val attri
      * A version of this model where all empty values have been filtered out
      */
     def withoutEmptyValues = {
-        val emptyKeys = attributeMap.view.filter { _._2.isEmpty }.keySet
+        val emptyKeys = propertyMap.view.filter { _._2.isEmpty }.keySet
         if (emptyKeys.isEmpty)
             this
         else
-            new Model(attributeMap -- emptyKeys, attributeOrder.filterNot(emptyKeys.contains), attributeGenerator)
+            new Model(propertyMap -- emptyKeys, propertyOrder.filterNot(emptyKeys.contains), propFactory)
     }
+    
+    /**
+      * @return A mutable copy of this model
+      */
+    def mutableCopy: mutable.Model[Variable] = mutableCopyUsing(PropertyFactory.forVariables)
     
     
     // IMPLEMENTED METHODS    ----
     
-    protected override def equalsProperties: Iterable[Any] = Vector(attributeMap, attributeGenerator)
+    protected override def equalsProperties: Iterable[Any] = Vector(propertyMap)
     
     override def toValue = new Value(Some(this), ModelType)
     
-    override def generateAttribute(attName: String) = attributeGenerator(attName, None)
+    override def newProperty(attName: String) = propFactory(attName)
     
     
     // OPERATORS    --------------
     
     /**
-     * Creates a new model with the provided attribute added
+     * Creates a new model with the provided property added
      */
-    def +(attribute: Constant) = withAttributes(attributes :+ attribute)
+    def +(prop: Constant) = withProperties(properties :+ prop)
     /**
-      * @param attribute A new attribute (key + value pair)
-      * @return A copy of this model with that attribute
+      * @param prop A new property as a key value -pair
+      * @return A copy of this model with that property added
       */
-    def +(attribute: (String, Value)): Model = this + attributeGenerator(attribute._1, Some(attribute._2))
+    def +(prop: (String, Value)): Model = this + propFactory(prop._1, prop._2)
     /**
-     * @param attribute An attribute
-     * @return A copy of this model with that attribute added (prepended)
+     * @param prop A property
+     * @return A copy of this model with that property prepended
      */
-    def +:(attribute: Constant) = withAttributes(attribute +: attributes)
+    def +:(prop: Constant) = withProperties(prop +: properties)
     /**
-      * @param attribute An attribute (key + value)
-      * @return A copy of this model with that attribute added (prepended)
+      * @param prop A property as a key value -pair
+      * @return A copy of this model with that property prepended
       */
-    def +:(attribute: (String, Value)): Model = attributeGenerator(attribute._1, Some(attribute._2)) +: this
+    def +:(prop: (String, Value)): Model = propFactory(prop._1, prop._2) +: this
     
     /**
-     * Creates a new model with the provided attributes added
+     * Creates a new model with the specified properties added
      */
-    def ++(attributes: IterableOnce[Constant]) = withAttributes(this.attributes ++ attributes)
+    def ++(props: IterableOnce[Constant]) = withProperties(this.properties ++ props)
     /**
-     * Creates a new model that contains the attributes from both of the models. The new model 
-     * will still use this model's attribute generator
+     * Creates a new model that contains properties from both of these models.
+      * The resulting model will still use this model's property factory.
      */
-    def ++(other: template.ModelLike[Constant]): Model = this ++ other.attributes
+    def ++(other: ModelLike[Constant]): Model = this ++ other.properties
     
     /**
-     * Creates a new model without the provided attribute
+     * Creates a new model without the exact specified property
      */
-    def -(attribute: Constant) = withAttributes(attributes.filterNot { _ == attribute })
+    def -(prop: Property) = withProperties(properties.filterNot { _ == prop })
     /**
-     * Creates a new model without an attribute with the provided name (case-insensitive)
+     * @return A copy of this model without a property with the specified name (case-insensitive)
      */
-    def -(attributeName: String) = {
-        val lowerName = attributeName.toLowerCase
-        new Model(attributeMap - lowerName, attributeOrder.filterNot { _ == lowerName }, attributeGenerator)
+    def -(propName: String) = {
+        val lowerName = propName.toLowerCase
+        if (propertyMap.contains(lowerName))
+            new Model(propertyMap - lowerName, propertyOrder.filterNot { _ == lowerName }, propFactory)
+        else
+            this
     }
     
     /**
-     * Creates a new model without the provided attributes
+     * Creates a copy of this model without any property listed in the specified collection (case-insensitive)
      */
-    def --(attributeNames: Iterable[String]) = without(attributeNames)
+    def --(propNames: IterableOnce[String]) = without(propNames)
     /**
-     * Creates a new model without any attributes within the provided model
+     * Creates a new model without any properties listed in the specified model (with the exact same values)
      */
-    def --(other: template.ModelLike[Constant]): Model = withoutAttributes(other.attributes.toSet)
+    def --(other: ModelLike[Constant]): Model = withoutProperties(other.properties.toSet)
     
     
     // OTHER METHODS    ------
     
     /**
-     * Creates a new model with the same generator but different attributes
+     * Creates a copy of this model with the same property factory,
+      * but different properties
      */
-    def withAttributes(attributes: Iterable[Constant]) = Model.withConstants(attributes, attributeGenerator)
+    def withProperties(props: Iterable[Constant]) = Model.withConstants(props, propFactory)
+    @deprecated("Replaced with .withProperties(Iterable)", "v2.0")
+    def withAttributes(attributes: Iterable[Constant]) = withProperties(attributes)
     /**
       * @param attributes Attributes to remove from this model
       * @return A copy of this model with none of the specified attributes
       */
-    def withoutAttributes(attributes: Set[Constant]) =
-        withAttributes(this.attributes.filterNot(attributes.contains))
+    def withoutProperties(attributes: Set[Constant]) =
+        withProperties(this.properties.filterNot(attributes.contains))
+    @deprecated("Replaced with .withoutProperties(Set)", "v2.0")
+    def withoutAttributes(attributes: Set[Constant]) = withoutProperties(attributes)
     /**
       * @param keys Names of the keys to remove (case-insensitive)
       * @return A copy of this model with the specified keys removed
       */
-    def without(keys: Iterable[String]) = {
-        val lowerKeys = keys.map { _.toLowerCase }.toSet
-        new Model(attributeMap -- lowerKeys, attributeOrder.filterNot(lowerKeys.contains), attributeGenerator)
+    def without(keys: IterableOnce[String]) = {
+        val lowerKeys = keys.iterator.map { _.toLowerCase }.toSet
+        new Model(propertyMap -- lowerKeys, propertyOrder.filterNot(lowerKeys.contains), propFactory)
     }
     /**
       * @param firstKey Name of the first key to remove (case-insensitive)
@@ -184,40 +198,50 @@ class Model private(val attributeMap: Map[String, Constant], protected val attri
     def without(firstKey: String, moreKeys: String*): Model = without(firstKey +: moreKeys)
     
     /**
-     * Creates a new model with the same attributes but a different attribute generator
+      * @param propFactory A new property factory to use
+     * @return A copy of this model with the specified property factory being used
      */
-    def withGenerator(generator: PropertyGenerator[Constant]) = new Model(attributeMap, attributeOrder, generator)
+    def withFactory(propFactory: PropertyFactory[Constant]) = new Model(propertyMap, propertyOrder, propFactory)
+    @deprecated("Replaced with .withFactory(PropertyFactory)", "v2.0")
+    def withGenerator(generator: PropertyFactory[Constant]) = withFactory(generator)
     
     /**
-     * Creates a copy of this model with filtered attributes
+     * Creates a copy of this model with filtered properties
      */
-    def filter(f: Constant => Boolean) = withAttributes(attributes.filter(f))
+    def filter(f: Constant => Boolean) = withProperties(properties.filter(f))
     /**
-     * Creates a copy of this model with filtered attributes. The result model only contains 
-     * attributes not included by the filter
+     * Creates a copy of this model with filtered properties.
+      * The result model only contains properties not included by the filter
      */
-    def filterNot(f: Constant => Boolean) = withAttributes(attributes.filterNot(f))
+    def filterNot(f: Constant => Boolean) = withProperties(properties.filterNot(f))
     
     /**
-      * Renames multiple attiributes in this model
-      * @param renames The attribute name changes (old -> new)
-      * @return A copy of this model with renamed attributes
+      * Renames multiple properties in this model
+      * @param renames The property name changes (old -> new)
+      * @return A copy of this model with renamed properties
       */
-    def renamed(renames: Iterable[(String, String)]) = withAttributes(attributes.map {
-        a => renames.find { _._1 == a.name }.map { n => a.withName(n._2) } getOrElse a })
+    def renamed(renames: Iterable[(String, String)]) = {
+        val renamedProps = properties.map { prop =>
+            renames.find { _._1 ~== prop.name } match {
+                case Some((_, newName)) => prop.withName(newName)
+                case None => prop
+            }
+        }
+        withProperties(renamedProps)
+    }
     /**
-      * @param oldName Old attribute name
-      * @param newName New attribute name
-      * @return A copy of this model with that one attribute renamed
+      * @param oldName Old property name
+      * @param newName New property name
+      * @return A copy of this model with that one property renamed
       */
     def renamed(oldName: String, newName: String): Model = renamed(Vector(oldName -> newName))
     
     /**
-      * Maps the attributes within this model
-      * @param f A mapping function for attributes
+      * Maps the properties within this model
+      * @param f A mapping function for properties
       * @return A mapped copy of this model
       */
-    def map(f: Constant => Constant) = withAttributes(attributes.map(f))
+    def map(f: Constant => Constant) = withProperties(properties.map(f))
     /**
       * Maps the attribute names within this model
       * @param f A mapping function for attribute names
@@ -230,22 +254,13 @@ class Model private(val attributeMap: Map[String, Constant], protected val attri
       * @return A mapped copy of this model
       */
     def mapValues(f: Value => Value) =
-        new Model(attributeMap.view.mapValues { _.mapValue(f) }.toMap, attributeOrder, attributeGenerator)
+        new Model(propertyMap.view.mapValues { _.mapValue(f) }.toMap, propertyOrder, propFactory)
     
     /**
      * Creates a mutable copy of this model
-     * @param generator The property generator used for creating the properties of the new model
-     * @return A mutable copy of this model using the provided property generator
+     * @param factory The property factory used for creating the properties of the new model
+     * @return A mutable copy of this model using the specified property generator
      */
-    def mutableCopy[T <: Variable](generator: PropertyGenerator[T]) =
-    {
-        val copy = new mutable.Model(generator)
-        attributes.foreach { att => copy(att.name) = att.value }
-        
-        copy
-    }
-    /**
-      * @return A mutable copy of this model
-      */
-    def mutableCopy(): mutable.Model[Variable] = mutableCopy(new SimpleVariableGenerator())
+    def mutableCopyUsing[P <: Variable](factory: PropertyFactory[P]) =
+        mutable.Model.withVariables(properties.map { prop => factory(prop.name, prop.value) }, factory)
 }

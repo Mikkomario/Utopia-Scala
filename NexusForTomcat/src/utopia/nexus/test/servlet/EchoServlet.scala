@@ -49,7 +49,7 @@ class EchoServlet extends HttpServlet
         buffer.update("headers", Model.fromMap(request.headers.fields))
         buffer.update("parts", request.body.toVector.map(partToModel))
         
-        Response.fromModel(buffer.immutableCopy()).update(res)
+        Response.fromModel(buffer.immutableCopy).update(res)
     }
     
     override def doPost(request: HttpServletRequest, response: HttpServletResponse) = doGet(request, response)

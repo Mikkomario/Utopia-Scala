@@ -62,7 +62,7 @@ trait Readable extends Storable
 	def setAndUpdate(data: template.ModelLike[Property])(implicit connection: Connection) =
 	{
 	    set(data)
-	    updateProperties(data.attributeNames)
+	    updateProperties(data.propertyNames)
 	}
 	
 	/**

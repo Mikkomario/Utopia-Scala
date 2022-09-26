@@ -8,6 +8,7 @@ import utopia.flow.generic.model.mutable.Variable
  * @author Mikko Hilpinen
  * @since 11.12.2016
  */
+@deprecated("Please use ModelDeclaration.toVariableFactory instead", "v2.0")
 class DeclarationVariableGenerator(declaration: ModelDeclaration, defaultValue: Value = Value.empty)
         extends DeclarationPropertyGenerator(new Variable(_, _), declaration, defaultValue)
 {

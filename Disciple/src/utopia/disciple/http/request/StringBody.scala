@@ -36,7 +36,7 @@ object StringBody
 	def urlEncodedForm(content: ModelLike[Property], charset: Charset = StandardCharsets.ISO_8859_1) =
 	{
 		// Produces the url-encoded string
-		val parameters = content.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
+		val parameters = content.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 		// Wraps the string in a body
 		/*
 		val builder = new URIBuilder()

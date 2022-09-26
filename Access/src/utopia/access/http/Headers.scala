@@ -52,7 +52,7 @@ object Headers extends FromModelFactory[Headers]
     
     override def apply(model: template.ModelLike[Property]) =
     {
-        val fields = model.attributesWithValue
+        val fields = model.nonEmptyProperties
             .flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap
         Success(new Headers(fields))
     }

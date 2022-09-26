@@ -7,6 +7,13 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
 object Variable
 {
     /**
+      * @param name Name of this variable
+      * @param initialValue Initial value for this variable
+      * @return A new variable
+      */
+    def apply(name: String, initialValue: Value) = new Variable(name, initialValue)
+    
+    /**
       * Creates a new empty variable
       * @param name The name of this variable
       * @param dataType The data type of this variable
@@ -23,6 +30,7 @@ object Variable
  * @param initialContent The initial content of the variable. This determines the data type of the
  * variable
  */
+// TODO: Convert into a trait (or two)
 class Variable(override val name: String, initialContent: Value)
     extends PointerWithEvents[Value](initialContent) with Property
 {

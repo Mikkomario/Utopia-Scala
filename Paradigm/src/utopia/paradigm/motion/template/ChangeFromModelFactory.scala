@@ -35,7 +35,7 @@ trait ChangeFromModelFactory[+A, Amount <: CanBeAboutZero[Amount, _]] extends Fr
 	// IMPLEMENTED  ----------------------
 	
 	override def apply(model: ModelLike[Property]) =
-		model.findExisting("amount")
+		model.existing("amount")
 			.toTry { new ModelValidationFailedException(s"Required property 'amount' is missing from $model") }
 			.flatMap { p => amountFromValue(p.value) }
 			.flatMap { amount =>

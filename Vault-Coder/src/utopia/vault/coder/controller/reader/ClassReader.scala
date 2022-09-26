@@ -41,7 +41,7 @@ object ClassReader
 		val root = v.getModel
 		
 		// Parses custom data types (must succeed)
-		root("data_types", "types").getModel.attributes.tryMap { c =>
+		root("data_types", "types").getModel.properties.tryMap { c =>
 			c.value.model
 				.toTry { DataTypeException(
 					s"Custom data types must be presented as json objects. '$v' is not a model.") }
@@ -85,7 +85,7 @@ object ClassReader
 				}
 			val allEnumerations = enumerations ++ referencedEnumerations
 			
-			val classData = root("classes", "class").getModel.attributes.flatMap { packageAtt =>
+			val classData = root("classes", "class").getModel.properties.flatMap { packageAtt =>
 				packageAtt.value.model match {
 					case Some(classModel) =>
 						Some(classFrom(classModel, packageAtt.name, allEnumerations, customTypesMap, author))
@@ -183,7 +183,7 @@ object ClassReader
 				}
 			// Case: Old-school enumeration syntax using an object
 			case Right(enumsModelValue) =>
-				enumsModelValue.getModel.attributes.map { enumAtt =>
+				enumsModelValue.getModel.properties.map { enumAtt =>
 					Enum(enumAtt.name.capitalize, enumPackage,
 						enumAtt.value.getVector.zipWithIndex.map { case (v, index) =>
 							v.model match {
@@ -396,7 +396,7 @@ object ClassReader
 	{
 		// Matches model properties against class properties
 		val properties = ClassPropName.use { implicit c =>
-			model.attributesWithValue.flatMap { att =>
+			model.nonEmptyProperties.flatMap { att =>
 				val attName = Name.contextual(att.name)
 				parentClass.properties.find { _.name ~== attName }.map { _ -> att.value }
 			}.toMap

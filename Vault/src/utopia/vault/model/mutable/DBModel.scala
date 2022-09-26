@@ -1,6 +1,5 @@
 package utopia.vault.model.mutable
 
-import utopia.flow.generic.factory.DeclarationVariableGenerator
 import utopia.flow.generic.model.mutable.{Model, Variable}
 import utopia.flow.generic.model.template.Property
 import utopia.flow.generic.model.template
@@ -33,14 +32,15 @@ object DBModel
 * @author Mikko Hilpinen
 * @since 22.5.2018
 **/
-class DBModel(override val table: Table) extends Model[Variable](
-        new DeclarationVariableGenerator(table.toModelDeclaration)) with Storable with Readable
+class DBModel(override val table: Table)
+    extends Model[Variable](Vector(), table.toModelDeclaration.toVariableFactory) with Storable with Readable
 {
     // COMPUTED    -------------------
     
-	override def valueProperties = attributes.map { v => v.name -> v.value }
+	override def valueProperties = properties.map { v => v.name -> v.value }
 	
-	override def set(data: template.ModelLike[Property]) = update(data)
+	override def set(data: template.ModelLike[Property]) =
+        data.properties.foreach { p => update(p.name, p.value) }
 }
 
 /**
@@ -52,7 +52,7 @@ class DBModelFactory(override val table: Table, override val defaultOrdering: Op
     override def apply(model: template.ModelLike[Property]) =
     {
         val storable = new DBModel(table)
-        storable ++= model.attributes.map { p => new Variable(p.name, p.value) }
+        storable ++= model.properties.map { p => new Variable(p.name, p.value) }
     
         Success(storable)
     }

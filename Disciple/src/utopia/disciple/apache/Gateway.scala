@@ -314,7 +314,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 	{
 	    val builder = new URIBuilder(baseUri)
 		// May encode parameter values
-	    params.attributes.foreach { a => builder.addParameter(a.name, paramValue(a.value)) }
+	    params.properties.foreach { a => builder.addParameter(a.name, paramValue(a.value)) }
 	    builder.build()
 	}
 	
@@ -335,7 +335,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 	        None
 	    else
 	    {
-	        val paramsList = params.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
+	        val paramsList = params.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, StandardCharsets.UTF_8))
 	    }
 	}

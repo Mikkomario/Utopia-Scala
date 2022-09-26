@@ -49,17 +49,17 @@ object XmlElement extends FromModelFactory[XmlElement]
     def apply(name: NamespacedString, model: template.ModelLike[Property]): XmlElement =
     {
         // Value is either in 'value' or 'text' attribute
-        val valueAttribute = model.findExisting("value")
+        val valueAttribute = model.existing("value")
         val value = valueAttribute.map(_.value).orElse(
-                model.findExisting("text").map(_.value)).getOrElse(Value.emptyWithType(StringType))
+                model.existing("text").map(_.value)).getOrElse(Value.emptyWithType(StringType))
         
         // There may be some unused / non-standard attributes in the model
-        val unspecifiedAttributes = model.attributes.filter(att => 
+        val unspecifiedAttributes = model.properties.filter(att =>
             att.name != valueAttribute.map(_.name).getOrElse("text") && att.name != "attributes" && 
             att.name != "children" && att.name != "name")
         
         // Children are either read from 'children' attribute or from the unused attributes
-        val specifiedChildren = model.findExisting("children").map { _.value.getVector.flatMap(
+        val specifiedChildren = model.existing("children").map { _.value.getVector.flatMap(
                 _.model).flatMap { apply(_).toOption } }
         val children = specifiedChildren.getOrElse {
             // Expects model type but parses other types as well
@@ -86,7 +86,7 @@ object XmlElement extends FromModelFactory[XmlElement]
         }
         
         // Attributes are either read from 'attributes' attribute or from the unused attributes
-        val specifiedAttributes = model.findExisting("attributes").map { _.value.getModel }
+        val specifiedAttributes = model.existing("attributes").map { _.value.getModel }
         val attributes = specifiedAttributes.getOrElse {
             if (specifiedChildren.isDefined)
                 Model.withConstants(unspecifiedAttributes.map { att => Constant(att.name, att.value) })
@@ -95,7 +95,7 @@ object XmlElement extends FromModelFactory[XmlElement]
                 Model.empty
         }
         // Processes attribute namespaces, also
-        val namespacedAttributes = attributes.attributes.map { c =>
+        val namespacedAttributes = attributes.properties.map { c =>
             if (c.name.contains(':')) {
                 val (namespacePart, namePart) = c.name.splitAtFirst(":")
                 Namespace(namespacePart) -> c.withName(namePart)

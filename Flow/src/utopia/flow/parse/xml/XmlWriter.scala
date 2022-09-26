@@ -175,7 +175,7 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      */
     def write(element: XmlElement): Unit = {
         val attributes = element.attributeMap.flatMap { case (namespace, model) =>
-            model.attributes.map { c => namespace(c.name) -> c.value.getString }
+            model.properties.map { c => namespace(c.name) -> c.value.getString }
         }
         writeElement(element.name, attributes, element.text) { element.children.foreach(write) }
     }

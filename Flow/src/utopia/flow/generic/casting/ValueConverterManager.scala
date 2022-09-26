@@ -3,8 +3,6 @@ package utopia.flow.generic.casting
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType
 
-import scala.collection.immutable.HashMap
-
 /**
  * An instance of this class is able to process values using possibly multiple different converters.
  * The instance is mutable since converters may be introduced as necessary.
@@ -15,13 +13,13 @@ class ValueConverterManager[Result](initialConverters: Iterable[ValueConverter[R
 {
     // PROPERTIES    -----------
     
-    private var converters = HashMap[DataType, ValueConverter[Result]]()
+    private var converters = Map[DataType, ValueConverter[Result]]()
     
     
     // INITIAL CODE    ---------
     
     // Adds the initial converters
-    initialConverters.foreach { introduce }
+    initialConverters.foreach(introduce)
     
     
     // OTHER METHODS    --------
@@ -32,8 +30,8 @@ class ValueConverterManager[Result](initialConverters: Iterable[ValueConverter[R
      * previous one.
      * @param converter The converter that is added to this manager interface
      */
-    def introduce(converter: ValueConverter[Result]) = converter.supportedTypes.foreach {
-            converters += Tuple2(_, converter) }
+    def introduce(converter: ValueConverter[Result]) =
+        converters ++= converter.supportedTypes.map { _ -> converter }
     
     /**
      * Processes a value using the introduced converters
@@ -41,24 +39,17 @@ class ValueConverterManager[Result](initialConverters: Iterable[ValueConverter[R
      * @return The converted value or None if the value was empty or no suitable converter could be
      * found for the value
      */
-    def apply(value: Value) = 
-    {
+    def apply(value: Value) = {
         // Casts the value to a compatible type
-        val casted = ConversionHandler.cast(value, converters.keySet)
-        
         // Only non-empty values are converted
-        if (casted.exists { _.isDefined })
-        {
+        ConversionHandler.cast(value, converters.keySet).filter { _.isDefined }.flatMap { casted =>
             // Searches for a direct converter first, then an indirect converter
-            converters.get(casted.get.dataType) match
-            {
-                case Some(directConverter) => Some(directConverter(casted.get, casted.get.dataType))
+            converters.get(casted.dataType) match {
+                case Some(directConverter) => Some(directConverter(casted, casted.dataType))
                 case None =>
-                    converters.keys.find { casted.get.dataType isOfType _ }
-                        .map { wrappedType => converters(wrappedType)(casted.get, wrappedType) }
+                    converters.keys.find(casted.dataType.isOfType)
+                        .map { wrappedType => converters(wrappedType)(casted, wrappedType) }
             }
         }
-        else
-            None
     }
 }

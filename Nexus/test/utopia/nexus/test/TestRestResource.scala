@@ -15,11 +15,11 @@ import utopia.nexus.rest.ResourceSearchResult.{Error, Follow, Ready}
 private object TestRestResource
 {
     // Parses all model type children from a model
-    private def childrenFromModel(model: ModelLike[Property]) = model.attributes.flatMap(attribute =>
+    private def childrenFromModel(model: ModelLike[Property]) = model.properties.flatMap(attribute =>
             attribute.value.model.map(attribute.name -> _)).map { case (name, subModel) => new TestRestResource(name, subModel) }
     
     // Separates "normal" values from model type values
-    private def nonChildValuesFromModel(model: ModelLike[Constant]) = model.attributes.filter(_.value.model.isEmpty)
+    private def nonChildValuesFromModel(model: ModelLike[Constant]) = model.properties.filter(_.value.model.isEmpty)
 }
 
 /**
@@ -113,7 +113,7 @@ class TestRestResource(val name: String, initialValues: ModelLike[Constant] = Mo
     private def handlePut(parameters: ModelLike[Constant]) =
     {
         // Cannot delete any existing children with PUT
-        if (children.exists(child => parameters.findExisting(child.name).isDefined))
+        if (children.exists(child => parameters.existing(child.name).isDefined))
             Response.plainText("Modification of children is not allowed in PUT", Forbidden)
         else
         {

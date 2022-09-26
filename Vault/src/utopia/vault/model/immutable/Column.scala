@@ -23,7 +23,7 @@ import scala.util.{Failure, Success}
   * @param usesAutoIncrement Whether this column uses auto-increment
  */
 case class Column(propertyName: String, columnName: String, tableName: String, override val dataType: DataType,
-                  override val defaultValue: Option[Value] = None,
+                  override val defaultValue: Value = Value.empty,
                   allowsNull: Boolean = true, isPrimary: Boolean = false, usesAutoIncrement: Boolean = false)
         extends PropertyDeclaration with ConditionElement with Joinable
 {

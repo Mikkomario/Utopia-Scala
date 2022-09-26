@@ -101,6 +101,7 @@ trait InteractionWindowFactory[A]
 	  * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
 	  * @return A future of the closing of the dialog, with a selected result (or default if none was selected)
 	  */
+	// TODO: Should return the window itself, also
 	def display(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None) =
 	{
 		implicit val exc: ExecutionContext = executionContext

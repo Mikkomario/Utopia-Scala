@@ -29,4 +29,5 @@ object PropertyChangeEvent
   * @param oldValue The old value for the property
   * @param newValue The new value for the property
   */
+// TODO: Use ChangeEvent for values
 case class PropertyChangeEvent(propertyName: String, oldValue: Value, newValue: Value)

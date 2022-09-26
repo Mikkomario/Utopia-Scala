@@ -38,7 +38,7 @@ case class Row(columnData: Map[Table, Model], otherData: Model = Model.empty)
      * The indices for each of the contained table
      */
     def indices = columnData.flatMap { case (table, model) => table.primaryColumn.flatMap { column =>
-            model.findExisting(column.name).map { constant => (table, constant.value) } } }
+            model.existing(column.name).map { constant => (table, constant.value) } } }
     
     /**
       * @return An index from this row. If this row contains data from multiple tables, please use index(Table) or
@@ -50,8 +50,8 @@ case class Row(columnData: Map[Table, Model], otherData: Model = Model.empty)
       * @return The first value found from this row. Should only be used when just a single value is requested
       */
     def value = columnData.values.find { _.hasNonEmptyValues }.flatMap {
-        _.attributesWithValue.headOption.map { _.value } } orElse
-        otherData.attributesWithValue.headOption.map { _.value } getOrElse Value.empty
+        _.nonEmptyProperties.headOption.map { _.value } } orElse
+        otherData.nonEmptyProperties.headOption.map { _.value } getOrElse Value.empty
     
     
     // IMPLEMENTED  ---------------------------

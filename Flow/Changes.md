@@ -13,6 +13,12 @@
   - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**
   - **ResettableLazyLike** and **MutableLazyLike** to **ResettableLazy** and **MutableLazy**
 - Renamed **LazyWrapper** to **PreInitializedLazy**
+- Renamed all attribute -related functions and references in **ModelLike** to property -related counterparts
+- Changes relating to variants of **Model**:
+  - Mutable **Model** now accepts different constructor parameters
+  - Rewrote parts of the **Model** classes
+  - Changes to **PropertyGenerator**, which is now **PropertyFactory**
+    - The `value` parameter in `.apply(...)` is no longer an **Option**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
 - Rearranged type parameters in **Combinable** and **Scalable**
@@ -26,10 +32,13 @@
 - **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
 ### Deprecations
+- Deprecated all previous **PropertyGenerator** sub-classes in favor of the new **PropertyFactory** object functions
 - Deprecated **Node** in favor of **Viewable**
 - Deprecated **NullSafe** in favor of `Option.apply(...)`
 - Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
 - **SignedOrZero**: Deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
+### New Features
+- Added **NoOpLogger** object
 ### New Methods
 - **CanBeAboutZero**
   - Added `.notCloseZero`

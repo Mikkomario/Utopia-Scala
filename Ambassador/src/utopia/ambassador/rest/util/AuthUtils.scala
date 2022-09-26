@@ -87,7 +87,7 @@ object AuthUtils
 					preparation.flatMap { _.clientState }.map {Constant("state", _) } ++
 					errorMessage.notEmpty.map { Constant("error", _) }
 				// Redirects the user
-				val parametersString = allParams.attributesWithValue
+				val parametersString = allParams.nonEmptyProperties
 					.map { att => s"${att.name}=${att.value.toJson}" }.mkString("&")
 				val finalUrl = if (baseUrl.contains('?')) s"$baseUrl&$parametersString" else s"$baseUrl?$parametersString"
 				Result.Redirect(finalUrl)

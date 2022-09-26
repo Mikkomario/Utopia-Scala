@@ -58,7 +58,7 @@ trait AuthRedirector
 		val defaultParameters = Model(Vector("response_type" -> "code", "redirect_uri" -> settings.redirectUrl,
 			"client_id" -> settings.clientId, "state" -> state))
 		val extraParameters = extraParametersFor(settings, preparation, scopes)
-		val allAttributes = defaultParameters.attributesWithValue ++ extraParameters.attributesWithValue
+		val allAttributes = defaultParameters.nonEmptyProperties ++ extraParameters.nonEmptyProperties
 		
 		// Creates a query parameters string
 		val attributes = parameterEncoding match

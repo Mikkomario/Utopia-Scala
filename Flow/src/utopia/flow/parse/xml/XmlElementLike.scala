@@ -149,10 +149,10 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Left(Constant(localName, value))
             // Case: Empty element with attributes => returns those
             else if (text.isEmpty)
-                Right(attributes.attributes)
+                Right(attributes.properties)
             // Case: Attributes and value are defined => wraps them into a model, possibly overwriting 'value' attribute
             else
-                Right((attributes +Constant("value", value)).attributes)
+                Right((attributes +Constant("value", value)).properties)
         }
         // Case: Wraps a single child => Attempts to convert it into a single property
         else if (children.size == 1)
@@ -200,13 +200,13 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Right(Vector(
                    Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
             else
-                Right(attributes.attributes ++ childConstants)
+                Right(attributes.properties ++ childConstants)
         }
     }
     
     // Eg. 'att1="abc" att2="3"'
     private def attributesString =
-        attributeMap.flatMap { case (namespace, model) => model.attributes.map { att =>
+        attributeMap.flatMap { case (namespace, model) => model.properties.map { att =>
             val attName = if (namespace.isEmpty) att.name else s"${namespace.name}:${att.name}"
             s"$attName=${att.value.getString.quoted}"
         } }.mkString(" ")
@@ -370,6 +370,6 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         else if (attributes.contains(property.name) && property.name.toLowerCase != "attributes")
             Right(Vector(immutable.Constant("attributes", attributes), property))
         else
-            Right((attributes + property).attributes)
+            Right((attributes + property).properties)
     }
 }

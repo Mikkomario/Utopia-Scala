@@ -1,7 +1,6 @@
 package utopia.flow.test.generic
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.{DeclarationConstantGenerator, DeclarationVariableGenerator}
 import utopia.flow.generic.model.immutable.{ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.{BooleanType, DataType, IntType, Model, StringType}
 
@@ -38,7 +37,7 @@ object ModelDeclarationTest extends App
 	
 	// Tests constant generation
 	// 1) Generator with no default value
-	val generator1 = new DeclarationConstantGenerator(modelDec2)
+	val generator1 = modelDec2.toConstantFactory
 	
 	assert(generator1("test1").value.isEmpty)
 	assert(generator1("test2").value.isDefined)
@@ -46,15 +45,17 @@ object ModelDeclarationTest extends App
 	assert(generator1("not here").value.isEmpty)
 	
 	// 2) Generator with a default value
+	/*
 	val generator2 = new DeclarationConstantGenerator(modelDec2, 0)
 	
 	assert(generator2("test1").value.isDefined)
 	assert(generator2("test3").value.dataType == StringType)
 	assert(generator2("test4").value.content.get == false)
 	assert(generator2("something else").value.isDefined)
+	 */
 	
 	// Quick test of variable generation
-	val generator4 = new DeclarationVariableGenerator(modelDec2)
+	val generator4 = modelDec2.toVariableFactory
 	
 	assert(generator4("test4", Some(1)).value.content.get == true)
 	
@@ -66,10 +67,10 @@ object ModelDeclarationTest extends App
 	val testModel5 = Model(Vector("test1" -> "Hello"))
 	val testModel6 = Model(Vector("test1" -> 12, "test2" -> "Hello"))
 	
-	assert(modelDec.validate(testModel1).success.get.attributes.size == 3)
+	assert(modelDec.validate(testModel1).success.get.properties.size == 3)
 	assert(modelDec.validate(testModel2).missingProperties.size == 1)
-	assert(modelDec.validate(testModel3).success.get.attributes.size == 3)
-	assert(modelDec.validate(testModel4).success.get.attributes.size == 4)
+	assert(modelDec.validate(testModel3).success.get.properties.size == 3)
+	assert(modelDec.validate(testModel4).success.get.properties.size == 4)
 	assert(modelDec.validate(testModel5).invalidConversions.size == 1)
 	assert(modelDec.validate(testModel6).invalidConversions.size == 1)
 	

@@ -4,7 +4,6 @@ import utopia.vault.sql.SqlExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
-import utopia.flow.generic.factory.DeclarationConstantGenerator
 import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
@@ -79,7 +78,7 @@ trait Storable extends ModelConvertible
     
     // IMPLEMENTED  ----------------------------------
     
-    override def toModel = Model(valueProperties, new DeclarationConstantGenerator(declaration))
+    override def toModel = Model(valueProperties, declaration.toConstantFactory)
     
     
     // OTHER METHODS    ------------------------------
@@ -305,7 +304,7 @@ trait Storable extends ModelConvertible
     {
         val model = toModel
         // Converts each defined (non-empty) attribute + column to a condition
-        val conditions = table.columns.flatMap { c => model.findExisting(c.name).map { _.value }.filter {
+        val conditions = table.columns.flatMap { c => model.existing(c.name).map { _.value }.filter {
             _.isDefined }.map { makePart(c, _) } }
         // Merges the specified conditions using AND
         conditions.head.combineWith(conditions.drop(1), combineOperator)
@@ -316,5 +315,5 @@ private class StorableWrapper(override val table: Table, val model: template.Mod
 {
     override lazy val factory = FromRowModelFactory(table)
     
-    override def valueProperties = model.attributes.map { c => c.name -> c.value }
+    override def valueProperties = model.properties.map { c => c.name -> c.value }
 }

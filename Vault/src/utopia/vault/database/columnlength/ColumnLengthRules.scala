@@ -97,7 +97,7 @@ object ColumnLengthRules
 	  */
 	def loadFrom(path: Path)(implicit jsonParser: JsonParser, exc: ExecutionContext, connectionPool: ConnectionPool) =
 		jsonParser(path).map { json =>
-			val limits = json.getModel.attributes.flatMap { dbAtt =>
+			val limits = json.getModel.properties.flatMap { dbAtt =>
 				loadFromDbModel(dbAtt.name, dbAtt.value.getModel)
 			}
 			specifics ++= DeepMap(limits)
@@ -127,9 +127,9 @@ object ColumnLengthRules
 	private def loadFromDbModel(dbName: String, model: Model)
 	                           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
-		model.attributes.flatMap { tableAtt =>
+		model.properties.flatMap { tableAtt =>
 			val tableName = tableAtt.name
-			tableAtt.value.getModel.attributes.flatMap { columnAtt =>
+			tableAtt.value.getModel.properties.flatMap { columnAtt =>
 				val propName = columnAtt.name
 				val value = columnAtt.value.getString.toLowerCase
 				val limit = value match {

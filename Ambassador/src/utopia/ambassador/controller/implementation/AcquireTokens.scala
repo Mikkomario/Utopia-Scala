@@ -236,7 +236,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 						case None =>
 							logger(new NoSuchElementException(
 								s"No 'scope' attribute in response body. Available properties: [${
-									response.body.attributesWithValue.map { _.name }.mkString(", ")}]"),
+									response.body.nonEmptyProperties.map { _.name }.mkString(", ")}]"),
 								"No scope attribute in token response body")
 							Vector()
 					}
@@ -284,7 +284,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 				else
 					Failure(new NoSuchElementException(
 						s"No 'access_token' or 'refresh_token' property in the response. Available keys: [${
-							response.body.attributesWithValue.map { _.name }.mkString(", ")}]"))
+							response.body.nonEmptyProperties.map { _.name }.mkString(", ")}]"))
 			}
 			// Case: Failure
 			else

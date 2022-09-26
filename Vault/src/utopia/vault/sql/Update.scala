@@ -60,7 +60,7 @@ object Update
      */
     def apply(target: SqlTarget, set: Map[Table, template.ModelLike[Property]]) =
     {
-        val valueSet = set.flatMap { case (table, model) => model.attributes.flatMap { 
+        val valueSet = set.flatMap { case (table, model) => model.properties.flatMap {
                 property => table.find(property.name).map { (_, property.value) } } }
         columns(target, valueSet)
     }

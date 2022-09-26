@@ -6,6 +6,7 @@ import utopia.flow.generic.model.mutable.Variable
 /**
  * SimpleVariableGenerator is just another way to create a simple property generator for variables
  */
+@deprecated("Please use PropertyFactory.variable instead", "v2.0")
 class SimpleVariableGenerator(defaultValue: Value = Value.empty) extends
         SimplePropertyGenerator(new Variable(_, _), defaultValue)
 {
