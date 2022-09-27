@@ -24,7 +24,7 @@ object ModelTest extends App
 	
 	// Tests models
 	// 1) Model with no default value
-	val model1 = mutable.Model()
+	val model1 = mutable.MutableModel()
 	model1("Test") = 2
 	model1("Another") = "Hello"
 	
@@ -40,7 +40,7 @@ object ModelTest extends App
 	assert(model1.properties.size == 3)
 	
 	// 2) model with default value
-	val model2 = mutable.Model.using(generator2)
+	val model2 = mutable.MutableModel.using(generator2)
 	assert(model2.existing("Test").isEmpty)
 	assert(model2("Test").content.get == 0)
 	
@@ -59,7 +59,7 @@ object ModelTest extends App
 	assert(renamed1.properties.size == 2)
 	assert(renamed1("Test2").getInt == 2)
 	
-	val mutableModel2 = mutable.Model()
+	val mutableModel2 = mutable.MutableModel()
 	mutableModel2("Test1") = 1
 	mutableModel2("Test2") = 2
 	assert(mutableModel2.immutableCopy == model3)
@@ -80,7 +80,7 @@ object ModelTest extends App
 	println(model5.toString())
 	
 	// Tests other model generator functions
-	val model6 = mutable.Model(Vector("a" -> 1, "b" -> 2))
+	val model6 = mutable.MutableModel(Vector("a" -> 1, "b" -> 2))
 	assert(model6.properties.size == 2)
 	
 	val model7 = Model(Vector("a" -> 1, "b" -> 2))

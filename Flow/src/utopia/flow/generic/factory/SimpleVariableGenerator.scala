@@ -8,7 +8,7 @@ import utopia.flow.generic.model.mutable.Variable
  */
 @deprecated("Please use PropertyFactory.variable instead", "v2.0")
 class SimpleVariableGenerator(defaultValue: Value = Value.empty) extends
-        SimplePropertyGenerator(new Variable(_, _), defaultValue)
+        SimplePropertyGenerator(Variable(_, _), defaultValue)
 {
     protected override def equalsProperties: Iterable[Any] = Vector(defaultValue)
 }

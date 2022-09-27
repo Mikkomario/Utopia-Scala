@@ -80,7 +80,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @return This model declaration as a variable factory.
       *         Utilizes information about property types, default values and alternative property names.
       */
-    def toVariableFactory = toPropertyFactory(Variable.apply)
+    def toVariableFactory = toPropertyFactory { Variable(_, _) }
     
     
     // IMPLEMENTED  -----------

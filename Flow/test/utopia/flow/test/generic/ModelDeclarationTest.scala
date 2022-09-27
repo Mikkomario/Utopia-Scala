@@ -2,7 +2,7 @@ package utopia.flow.test.generic
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.{BooleanType, DataType, IntType, Model, StringType}
+import utopia.flow.generic.model.mutable.{BooleanType, DataType, IntType, MutableModel, StringType}
 
 /**
  *
@@ -60,12 +60,12 @@ object ModelDeclarationTest extends App
 	assert(generator4("test4", Some(1)).value.content.get == true)
 	
 	// Tests model validation
-	val testModel1 = Model(Vector("test1" -> 12, "test2" -> 5))
-	val testModel2 = Model(Vector("test2" -> 17, "test3" -> 11))
-	val testModel3 = Model(Vector("test1" -> 12))
-	val testModel4 = Model(Vector("test1" -> 12, "test4" -> "Hello"))
-	val testModel5 = Model(Vector("test1" -> "Hello"))
-	val testModel6 = Model(Vector("test1" -> 12, "test2" -> "Hello"))
+	val testModel1 = MutableModel(Vector("test1" -> 12, "test2" -> 5))
+	val testModel2 = MutableModel(Vector("test2" -> 17, "test3" -> 11))
+	val testModel3 = MutableModel(Vector("test1" -> 12))
+	val testModel4 = MutableModel(Vector("test1" -> 12, "test4" -> "Hello"))
+	val testModel5 = MutableModel(Vector("test1" -> "Hello"))
+	val testModel6 = MutableModel(Vector("test1" -> 12, "test2" -> "Hello"))
 	
 	assert(modelDec.validate(testModel1).success.get.properties.size == 3)
 	assert(modelDec.validate(testModel2).missingProperties.size == 1)

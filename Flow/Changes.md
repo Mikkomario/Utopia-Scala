@@ -3,7 +3,6 @@
 ## v2.0 (in development)
 ### Breaking Changes
 - Reorganized the package structure
-- Renamed **template.Model** to **ModelLike**
 - **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
   - **ChangingLike**, then was renamed to **Changing** instead
 - Removed the implicit class for **Changing** of **Boolean**, moved these methods to **FlagLike** and 
@@ -15,8 +14,13 @@
 - Renamed **LazyWrapper** to **PreInitializedLazy**
 - Renamed all attribute -related functions and references in **ModelLike** to property -related counterparts
 - Changes relating to variants of **Model**:
-  - Mutable **Model** now accepts different constructor parameters
+  - Renamed **template.Model** to **ModelLike** and **mutable.Model** to **MutableModel**
+  - **MutableModel** now accepts different constructor parameters
   - Rewrote parts of the **Model** classes
+  - **Variable** is now a trait and not a class
+    - **Variable** class (private) now also allows for more customization and behaves differently at default
+  - Rewrote **PropertyChangeEvent** and event management in **MutableModel**
+    - **PropertyChangeListener**`.onPropertyChanged(...)` is now `.onPropertyChange(...)`
   - Changes to **PropertyGenerator**, which is now **PropertyFactory**
     - The `value` parameter in `.apply(...)` is no longer an **Option**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
@@ -33,10 +37,11 @@
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
 ### Deprecations
 - Deprecated all previous **PropertyGenerator** sub-classes in favor of the new **PropertyFactory** object functions
-- Deprecated **Node** in favor of **Viewable**
+- Deprecated **Node** in favor of **View**
 - Deprecated **NullSafe** in favor of `Option.apply(...)`
 - Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
-- **SignedOrZero**: Deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
+- In **SignedOrZero**, deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
+- Deprecated a bunch of method in **Model** classes in favor of their renamed counterparts
 ### New Features
 - Added **NoOpLogger** object
 ### New Methods

@@ -1,5 +1,8 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
+    <JavaCodeStyleSettings>
+      <option name="JD_ADD_BLANK_AFTER_DESCRIPTION" value="false" />
+    </JavaCodeStyleSettings>
     <ScalaCodeStyleSettings>
       <option name="classCountToUseImportOnDemand" value="7" />
       <option name="KEEP_ONE_LINE_LAMBDAS_IN_ARG_LIST" value="true" />
@@ -9,6 +12,7 @@
       <option name="TYPE_ANNOTATION_PROTECTED_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_UNIT_TYPE" value="false" />
       <option name="SD_BLANK_LINE_BEFORE_TAGS" value="false" />
+      <option name="SD_KEEP_BLANK_LINES_BETWEEN_TAGS" value="true" />
     </ScalaCodeStyleSettings>
     <codeStyleSettings language="JAVA">
       <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />

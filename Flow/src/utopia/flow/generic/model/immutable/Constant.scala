@@ -20,7 +20,7 @@ case class Constant(name: String, value: Value) extends Property
 	/**
 	  * Converts this constant to a variable
 	  */
-	def toVariable = new Variable(name, value)
+	def toVariable = Variable(name, value)
 	
 	
 	// OTHER METHODS    ------------

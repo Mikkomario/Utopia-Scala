@@ -96,7 +96,7 @@ class Model private(override val propertyMap: Map[String, Constant],
     /**
       * @return A mutable copy of this model
       */
-    def mutableCopy: mutable.Model[Variable] = mutableCopyUsing(PropertyFactory.forVariables)
+    def mutableCopy: mutable.MutableModel[Variable] = mutableCopyUsing(PropertyFactory.forVariables)
     
     
     // IMPLEMENTED METHODS    ----
@@ -262,5 +262,5 @@ class Model private(override val propertyMap: Map[String, Constant],
      * @return A mutable copy of this model using the specified property generator
      */
     def mutableCopyUsing[P <: Variable](factory: PropertyFactory[P]) =
-        mutable.Model.withVariables(properties.map { prop => factory(prop.name, prop.value) }, factory)
+        mutable.MutableModel.withVariables(properties.map { prop => factory(prop.name, prop.value) }, factory)
 }

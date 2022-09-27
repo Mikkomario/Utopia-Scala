@@ -27,7 +27,7 @@ object PropertyFactory
 	/**
 	  * A basic property factory that yields variables
 	  */
-	val forVariables = apply { new Variable(_, _) }
+	val forVariables = apply { Variable(_, _) }
 	
 	
 	// IMPLICIT    ------------------------
@@ -94,7 +94,7 @@ object PropertyFactory
 	  * @return A new variable factory
 	  */
 	def variableWithDefault(defaultValue: Value, requireCastingSuccess: Boolean = false) =
-		withDefault(defaultValue, requireCastingSuccess) { new Variable(_, _) }
+		withDefault(defaultValue, requireCastingSuccess) { Variable(_, _) }
 	
 	/**
 	  * Creates a new property factory that, before assigning a value, casts it to a specific data type
@@ -130,7 +130,7 @@ object PropertyFactory
 	  * @return A new variable factory
 	  */
 	def variableOfType(targetType: DataType) =
-		castingTo(targetType, requireCastingSuccess = true) { new Variable(_, _) }
+		castingTo(targetType, requireCastingSuccess = true) { Variable(_, _) }
 	
 	
 	// NESTED   ------------------------

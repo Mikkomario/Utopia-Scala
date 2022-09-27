@@ -5,11 +5,13 @@ import utopia.flow.collection.immutable.Pair
 object ChangeEvent
 {
 	/**
-	  * @param values The old and the new value
+	  * Creates a new change event
+	  * @param oldValue The value before this change occurred
+	  * @param newValue The value after this change occurred
 	  * @tparam A Type of changed value
-	  * @return A new change event based on the specified pair
+	  * @return A new change event
 	  */
-	def apply[A](values: Pair[A]): ChangeEvent[A] = apply(values.first, values.second)
+	def apply[A](oldValue: A, newValue: A): ChangeEvent[A] = apply(Pair(oldValue, newValue))
 }
 
 /**
@@ -17,19 +19,27 @@ object ChangeEvent
   * @author Mikko Hilpinen
   * @since 25.5.2019, v1+
   * @tparam A the type of changed item
-  * @param oldValue The previous value
-  * @param newValue The new value
+  * @param values The old and the new value
   */
-case class ChangeEvent[+A](oldValue: A, newValue: A)
+case class ChangeEvent[+A](values: Pair[A])
 {
-	// OTHER    ---------------------------------
+	// COMPUTED    ---------------------------------
+	
+	/**
+	  * @return The value before this change occurred
+	  */
+	def oldValue = values.first
+	/**
+	  * @return The value after this change occurred
+	  */
+	def newValue = values.second
 	
 	/**
 	  * @return A pair containing:
 	  *         - 1: The old value
 	  *         - 2: The new value
 	  */
-	def toPair = Pair(oldValue, newValue)
+	def toPair = values
 	
 	
 	// IMPLEMENTED	-----------------------------
@@ -38,6 +48,24 @@ case class ChangeEvent[+A](oldValue: A, newValue: A)
 	
 	
 	// OTHER	---------------------------------
+	
+	/**
+	  * Maps this change event with a function that modifies a pair
+	  * @param f A function that modifies a pair
+	  * @tparam B Type of resulting pair contents
+	  * @return A mapped copy of this change event, using the modified value pair
+	  */
+	def mapAsPair[B](f: Pair[A] => Pair[B]) = ChangeEvent(f(values))
+	
+	/**
+	  * Maps the old and the new value in this event
+	  * @param f A mapping function for the old and the new value (called twice)
+	  * @tparam B Type of new values
+	  * @return A copy of this change event with mapped values
+	  */
+	def map[B](f: A => B) = mapAsPair { _.map(f) }
+	
+	// TODO: Rename functions
 	
 	/**
 	  * Converts this change event to a string using a custom toString for the changed values

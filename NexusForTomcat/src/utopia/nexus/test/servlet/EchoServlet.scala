@@ -41,7 +41,7 @@ class EchoServlet extends HttpServlet
     {
         val request = req.toRequest.get
         
-        val buffer = mutable.Model()
+        val buffer = mutable.MutableModel()
         buffer.update("method", request.method.toString())
         buffer.update("url", request.targetUrl)
         buffer.update("path", request.path.map(_.toString()))
