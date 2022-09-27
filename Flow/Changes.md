@@ -38,6 +38,7 @@
 - Renamed **MapLike** to **MapAccess**
 - **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
+- In **UncertainBoolean**, renamed a number of functions. Also renamed **Undefined** to **Uncertain**.
 ### Deprecations
 - Deprecated all previous **PropertyGenerator** sub-classes in favor of the new **PropertyFactory** object functions
 - Deprecated **Node** in favor of **View**

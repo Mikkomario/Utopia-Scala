@@ -1,7 +1,7 @@
 package utopia.flow.async.process
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
+import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.Changing
@@ -94,7 +94,7 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 							Certain(state.isNotBroken)
 						// Case: Wait target was switched during waiting => Starts over with the new wait target
 						else if (resetFlag.getAndReset())
-							Undefined
+							Uncertain
 						// Case: Wait target was reached => Moves to execution
 						else
 							Certain(true)

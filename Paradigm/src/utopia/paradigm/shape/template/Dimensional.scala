@@ -2,7 +2,7 @@ package utopia.paradigm.shape.template
 
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
+import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 
@@ -159,7 +159,7 @@ trait Dimensional[+A]
 			Certain(false)
 		// Case: f yielded false for some and true for some => Undefined
 		else if (sidesCount < zippedDimensions.size)
-			Undefined
+			Uncertain
 		// Case: f yielded true for all items => True
 		else
 			Certain(true)

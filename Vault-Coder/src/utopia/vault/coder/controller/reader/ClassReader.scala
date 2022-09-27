@@ -108,7 +108,7 @@ object ClassReader
 								else if (!(combo.childName ~== childClass.name.singular) &&
 									(combo.childName ~== childClass.name.plural))
 									MultiCombined
-								else if (combo.alwaysLinked.isTrue)
+								else if (combo.alwaysLinked.isCertainlyTrue)
 									Combined
 								else
 									PossiblyCombined
