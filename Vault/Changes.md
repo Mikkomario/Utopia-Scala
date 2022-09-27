@@ -1,5 +1,8 @@
 # Utopia Vault - List of Changes
 
+## v1.14.1 (in development)
+Adjusting to **Flow** v2.0 changes
+
 ## v1.14 (in development)
 ### Breaking Changes
 - **SingleChronoRowModelAccess**`.latest` now returns an access-point, not the read item

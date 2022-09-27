@@ -19,9 +19,9 @@ object Hsl extends FromModelFactoryWithSchema[Hsl]
 	// ATTRIBUTES   ----------------
 	
 	override val schema = ModelDeclaration(Vector(
-		PropertyDeclaration("hue", Vector("h"), AngleType),
-		PropertyDeclaration("saturation", Vector("s"), DoubleType),
-		PropertyDeclaration("luminosity", Vector("luminance", "l"), DoubleType)
+		PropertyDeclaration("hue", AngleType, Vector("h")),
+		PropertyDeclaration("saturation", DoubleType, Vector("s")),
+		PropertyDeclaration("luminosity", DoubleType, Vector("luminance", "l"))
 	))
 	
 	

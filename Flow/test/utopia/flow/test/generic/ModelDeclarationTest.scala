@@ -15,10 +15,10 @@ object ModelDeclarationTest extends App
 	
 	// Tests property declarations
 	val prop1 = PropertyDeclaration("test1", IntType)
-	val prop2 = PropertyDeclaration("test2", 0)
+	val prop2 = PropertyDeclaration.withDefault("test2", 0)
 	
 	// (not the usual use case but possible)
-	val prop3 = PropertyDeclaration("test3", StringType, Some(3))
+	val prop3 = PropertyDeclaration("test3", StringType, defaultValue = Some(3))
 	
 	assert(prop1 == PropertyDeclaration("test1", IntType))
 	assert(prop1.defaultValue.isEmpty)

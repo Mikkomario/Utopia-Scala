@@ -26,8 +26,8 @@ object ModelDeclaration
       * Creates a new model declaration
       * @param declarations Property declarations
       */
-    def apply(declarations: Seq[PropertyDeclaration]) = new ModelDeclaration(declarations.distinctWith {
-        case (a, b) => a.name.equalsIgnoreCase(b.name) }.toSet, Map())
+    def apply(declarations: Seq[PropertyDeclaration]) =
+        new ModelDeclaration(declarations.distinctWith { case (a, b) => a.name.equalsIgnoreCase(b.name) }.toSet, Map())
     
     /**
       * Creates a model declaration with a single property
@@ -53,6 +53,23 @@ object ModelDeclaration
      */
     def apply(declaration: (String, DataType)): ModelDeclaration =
         apply(PropertyDeclaration(declaration._1, declaration._2))
+    
+    /**
+      * Creates a new declaration that consists of all optional properties
+      * @param first The first property as a name data type -pair
+      * @param more More similar properties
+      * @return A new declaration
+      */
+    def optional(first: (String, DataType), more: (String, DataType)*) =
+        apply((first +: more).map { case (name, dt) => PropertyDeclaration.optional(name, dt) })
+    /**
+      * Creates a new declaration that consists of properties with default values
+      * @param first First property name, default value -pair
+      * @param more More similar properties
+      * @return A new declaration
+      */
+    def defaults(first: (String, Value), more: (String, Value)*) =
+        apply((first +: more).map { case (name, default) => PropertyDeclaration.withDefault(name, default) })
 }
 
 /**
@@ -120,6 +137,12 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
      */
     def -(declaration: PropertyDeclaration) = copy(declarations = declarations - declaration)
     /**
+      * @param declared A declared property or child name
+      * @return A copy of this declaration without that property or child
+      */
+    def -(declared: String) = copy(declarations = declarations.filterNot { _.name ~== declared },
+        childDeclarations = childDeclarations.filterNot { _._1 ~== declared })
+    /**
      * Creates a new declaration without any of the provided declarations
      */
     def --(declarations: IterableOnce[PropertyDeclaration]) = copy(declarations = this.declarations -- declarations)
@@ -162,8 +185,8 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
      * @throws NoSuchElementException if there is no such declaration
      */
     @throws(classOf[NoSuchElementException])
-    def get(propertyName: String) = find(propertyName).getOrElse(
-            throw new NoSuchElementException(s"No property named '$propertyName' declared"))
+    def get(propertyName: String) = find(propertyName)
+        .getOrElse(throw new NoSuchElementException(s"No property named '$propertyName' declared"))
     /**
      * Finds a child declaration with the provided name or throws
      * @param childName Name of the targeted child (case-sensitive)
@@ -212,7 +235,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     {
         // First checks for missing attributes
         val missing = declarations.filter { d => d.names.forNone(model.containsNonEmpty) }
-        val (missingNonDefaults, missingDefaults) = missing.divideBy { _.defaultValue.isDefined }
+        val (missingNonDefaults, missingDefaults) = missing.divideBy { d => d.hasDefault || d.isOptional }
         
         // Declarations with default values are replaced with their defaults
         if (missingNonDefaults.nonEmpty)
@@ -222,7 +245,8 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
             // Tries to convert all declared model properties to required types
             // and checks that each declared (non-default) property has been defined
             val keepBuilder = new VectorBuilder[Constant]()
-            val castBuilder = new VectorBuilder[Constant]()
+            // Contains also whether the property is optional
+            val castBuilder = new VectorBuilder[(Constant, Boolean)]()
             val castFailedBuilder = new VectorBuilder[(Constant, DataType)]()
     
             model.nonEmptyProperties.foreach { att =>
@@ -230,7 +254,8 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                     case Some(declaration) =>
                         att.value.castTo(declaration.dataType) match {
                             // Case: Casting succeeded
-                            case Some(castValue) => castBuilder +=Constant(declaration.name, castValue)
+                            case Some(castValue) =>
+                                castBuilder += (Constant(declaration.name, castValue) -> declaration.isOptional)
                             // Case: Casting failed
                             case None =>
                                 castFailedBuilder += (Constant(declaration.name, att.value) -> declaration.dataType)
@@ -249,15 +274,17 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                 // Makes sure all required values have a non-empty value associated with them
                 // (works for strings, models and vectors)
                 val castValues = castBuilder.result()
-                val emptyValues = castValues.filter { c => valueIsEmpty(c.value) }
+                val emptyValues = castValues.filter { case (c, optional) => !optional && valueIsEmpty(c.value) }
                 
                 if (emptyValues.nonEmpty)
                     ModelValidationResult.missing(model,
-                        declarations.filter { d => emptyValues.exists { c => d.names.exists { _ ~== c.name } } })
+                        declarations.filter { d =>
+                            emptyValues.exists { case (c, optional) => !optional && d.names.exists { _ ~== c.name } }
+                        })
                 else
                 {
-                    val resultConstants = keepBuilder.result() ++ castValues ++ missingDefaults.map {
-                        d => Constant(d.name, d.defaultValue) }
+                    val resultConstants = keepBuilder.result() ++ castValues.map { _._1 } ++
+                        missingDefaults.map { d => Constant(d.name, d.defaultValue) }
                     
                     // Also validates all declared children
                     val missingChildren = childDeclarations

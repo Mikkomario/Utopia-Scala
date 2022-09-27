@@ -43,6 +43,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	/**
 	  * A model declaration based on the required (not null) columns in this table
 	  */
+	@deprecated("toModelDeclaration now includes information about column nullability / optionality", "v1.14.1")
 	lazy val requirementDeclaration = ModelDeclaration(columns.filterNot { _.allowsNull })
 	
 	
@@ -201,5 +202,5 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	  * @param model A model to validate
 	  * @return A validated copy of that model. Failure if the model didn't contain all required properties.
 	  */
-	def validate(model: ModelLike[Property]) = requirementDeclaration.validate(model).toTry
+	def validate(model: ModelLike[Property]) = toModelDeclaration.validate(model).toTry
 }

@@ -21,8 +21,11 @@
     - **Variable** class (private) now also allows for more customization and behaves differently at default
   - Rewrote **PropertyChangeEvent** and event management in **MutableModel**
     - **PropertyChangeListener**`.onPropertyChanged(...)` is now `.onPropertyChange(...)`
-  - Changes to **PropertyGenerator**, which is now **PropertyFactory**
+  - Changes to **PropertyGenerator**, which is now **PropertyFactory**:
     - The `value` parameter in `.apply(...)` is no longer an **Option**
+  - Changed to **PropertyDeclaration**:
+    - Renamed and modified constructors
+    - Added a new abstract property: `isOptional: Boolean`
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
 - Rearranged type parameters in **Combinable** and **Scalable**
@@ -43,6 +46,7 @@
 - In **SignedOrZero**, deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
 - Deprecated a bunch of method in **Model** classes in favor of their renamed counterparts
 ### New Features
+- **ModelDeclarations** now support optional properties
 - Added **NoOpLogger** object
 ### New Methods
 - **CanBeAboutZero**
