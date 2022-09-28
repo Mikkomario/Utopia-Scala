@@ -1,29 +1,25 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection
+import utopia.flow.collection.template
+import utopia.flow.collection.template.TreeLike.AnyTree
 import utopia.flow.operator.EqualsExtensions.ApproxEquals
 
 /**
-  * This TreeNode implementation is immutable and safe to reference from multiple places
+  * A common trait for immutable trees
   * @author Mikko Hilpinen
   * @since 4.11.2016
   */
-trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template.TreeLike[A, NodeType]
+trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr]
 {
 	// ABSTRACT --------------------
 	
 	/**
-	  * @return "This" node
-	  */
-	def repr: NodeType
-	
-	/**
-	  * Creates a copy of this node
-	  * @param content  New content to assign (default = current content)
+	  * Creates a copy of this tree
+	  * @param nav  New navigational element to assign to this node (default = current nav)
 	  * @param children New children to assign (default = current children)
 	  * @return A (modified) copy of this node
 	  */
-	protected def createCopy(content: A = nav, children: Seq[NodeType] = children): NodeType
+	protected def createCopy(nav: A = nav, children: Seq[Repr] = children): Repr
 	
 	
 	// COMPUTED --------------------
@@ -31,63 +27,64 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	/**
 	  * @return A copy of this tree without any child nodes included
 	  */
-	def withoutChildren = createCopy(children = Vector())
+	def withoutChildren = createCopy(children = Vector[Repr]())
 	
 	
-	// OPERATORS    ----------------
+	// OTHER    ----------------
 	
 	/**
-	  * Creates a new tree that contains a new child node
-	  * @param tree The child node in the new tree
-	  * @return a copy of this tree with the provided child tree
+	  * Creates a copy of this tree that contains a new child node
+	  * @param tree A child node to add
+	  * @return a copy of this tree with the provided child tree added
 	  */
-	def +(tree: NodeType) = createCopy(children = children :+ tree)
-	
+	def +(tree: Repr) = createCopy(children = children :+ tree)
 	/**
 	  * Creates a new tree that contains a child node with specified content
 	  * @param nodeContent Child node content
 	  * @return A copy of this tree with child node added
 	  */
-	def +(nodeContent: A): NodeType = this + newNode(nodeContent)
+	def +(nodeContent: A): Repr = this + newNode(nodeContent)
 	
 	/**
-	  * Creates a new copy of this tree where the provided tree doesn't occur. Removes the element from even child
-	  * trees
+	  * Creates a new copy of this tree where the specified tree doesn't occur anywhere.
 	  * @param tree The tree that is not included in the copy
 	  * @return A copy of this tree without the provided tree
 	  */
-	def -(tree: collection.template.TreeLike[_, _]): NodeType = createCopy(children = children.filterNot { _ == tree } map { _ - tree })
-	
+	def -(tree: AnyTree): Repr =
+		createCopy(children = children.filterNot { _ == tree } map { _ - tree })
 	/**
-	  * Creates a new copy of this tree where specified content never occurs. Removes the content from every child,
-	  * including grandchildren etc.
-	  * @param removedContent The content to be removed
-	  * @return A tree without the specified content
+	  * Creates a new copy of this tree where specified navigational element never occurs.
+	  * Removes the content from every child, including grand children etc.
+	  * @param removedNav The navigational element to be removed
+	  * @return A tree without the nodes matching the specified navigational element
 	  */
-	def -(removedContent: A) = filterChildren {  _.nav !~== removedContent }
-	
-	
-	// OTHER METHODS    -------------
+	def -(removedNav: A): Repr =
+		createCopy(children = children.filterNot { _.nav ~== removedNav }.map { _ - removedNav })
 	
 	/**
 	  * Creates a new copy of this tree without the provided direct child node
 	  * @param child The child node that is removed from the direct children under this tree
 	  */
-	def withoutChild(child: TreeLike[_, _]) = createCopy(children = children.filterNot { _ == child })
+	def withoutChild(child: AnyTree) = createCopy(children = children.filterNot { _ == child })
+	/**
+	  * Creates a copy of this tree without direct children matching the specified navigational element
+	  * @param nav A navigational element to exclude directly from under this node
+	  * @return A copy of this tree without that nav item included in the direct children
+	  */
+	def withoutDirect(nav: A) = createCopy(children = children.filterNot { _.nav ~== nav })
 	
 	/**
-	  * Creates a copy of this node with the direct child nodes modified
-	  * @param f A function that accepts the child nodes of this node and returns a modified list
+	  * Creates a copy of this node with modified direct child nodes
+	  * @param f A function that accepts the child nodes of this node and returns a modified copy
 	  * @return A modified copy of this node
 	  */
-	def modifyChildren(f: Seq[NodeType] => Seq[NodeType]) = createCopy(children = f(children))
-	
+	def modifyChildren(f: Seq[Repr] => Seq[Repr]): Repr = createCopy(children = f(children))
 	/**
 	  * Creates a copy of this node with its direct children mapped
 	  * @param f A mapping function for direct child nodes
 	  * @return A mapped copy of this node
 	  */
-	def mapChildren(f: NodeType => NodeType) = createCopy(children = children.map(f))
+	def mapChildren(f: Repr => Repr) = createCopy(children = children.map(f))
 	
 	/**
 	  * Maps children which are reachable using the specified content path
@@ -96,7 +93,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * @param f    A mapping function that modifies the node(s) at the end of the specified path
 	  * @return A modified copy of this tree
 	  */
-	def mapPath(path: Seq[A])(f: NodeType => NodeType): NodeType = {
+	def mapPath(path: Seq[A])(f: Repr => Repr): Repr = {
 		path.headOption match {
 			case Some(nextStep) =>
 				if (path.size == 1)
@@ -108,7 +105,6 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 			case None => f(repr)
 		}
 	}
-	
 	/**
 	  * Maps children which are reachable using the specified content path
 	  * @param start First step (content) on the path
@@ -117,53 +113,46 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * @param f     A mapping function that modifies the node(s) at the end of the specified path
 	  * @return A modified copy of this tree
 	  */
-	def mapPath(start: A, next: A, more: A*)(f: NodeType => NodeType): NodeType =
-		mapPath(Vector(start, next) ++ more)(f)
+	def mapPath(start: A, next: A, more: A*)(f: Repr => Repr): Repr = mapPath(Vector(start, next) ++ more)(f)
 	
+	/**
+	  * Filters the children directly under this node
+	  * @param f A function that determines whether a direct child should be kept attached to this node
+	  * @return A filtered copy of this tree
+	  */
+	def filterDirect(f: Repr => Boolean) = createCopy(children = children.filter(f))
+	/**
+	  * Filters this whole tree structure using the specified filter function
+	  * @param f A filtering function that determines which nodes should be kept
+	  * @return A filtered copy of this tree
+	  */
+	def filter(f: Repr => Boolean): Repr = createCopy(children = children.filter(f).map { _.filter(f) })
+	/**
+	  * Filters the children directly under this node
+	  * @param f A function that determines whether a direct child should be kept attached to this node.
+	  *          Accepts the navigational element representing a child tree.
+	  * @return A filtered copy of this tree
+	  */
+	def filterDirectByNav(f: A => Boolean) = filterDirect { n => f(n.nav) }
+	/**
+	  * Filters this whole tree structure using the specified filter function
+	  * @param f A filtering function that determines which nodes should be kept.
+	  *          Accepts the navigational element representing a node.
+	  * @return A filtered copy of this tree
+	  */
+	def filterByNav(f: A => Boolean) = filter { n => f(n.nav) }
 	/**
 	  * Filters all content in this tree
 	  * @param f A filter function
 	  * @return A new tree with all nodes filtered
 	  */
-	def filterContents(f: A => Boolean): NodeType =
-		createCopy(children = children.filter { c => f(c.nav) } map { _.filterContents(f) })
-	
+	@deprecated("Replaced with .filterByNav(...)", "v2.0")
+	def filterContents(f: A => Boolean): Repr = filterByNav(f)
 	/**
 	  * Filters the direct children of this tree
 	  * @param f A filter function
 	  * @return A filtered version of this tree
 	  */
-	def filterChildren(f: NodeType => Boolean) = createCopy(children = children.filter(f))
-	
-	/**
-	  * Replaces a node with a new version within this tree
-	  * @param oldNode The old node
-	  * @param newNode A replacement node
-	  * @return A copy of this tree with the node(s) replaced
-	  */
-	@deprecated("This function behaves unpredictably and will be removed", "v1.15")
-	def replace(oldNode: NodeType, newNode: NodeType): NodeType =
-	{
-		val replacementIndex = children.indexOf(oldNode)
-		if (replacementIndex >= 0)
-			createCopy(children = children.updated(replacementIndex, newNode))
-		else
-			createCopy(children = children.map { _.replace(oldNode, newNode) })
-	}
-	
-	/**
-	  * Finds a node and replaces it with a new version
-	  * @param find A find function used for identifying the node to be replaced
-	  * @param map  A mapping function that produces the replacement node
-	  * @return A copy of this tree with the node(s) replaced
-	  */
-	@deprecated("This function behaves in an unpredictable manner and will be removed", "v1.15")
-	def findAndReplace(find: NodeType => Boolean, map: NodeType => NodeType): NodeType =
-	{
-		val replacementIndex = children.indexWhere(find)
-		if (replacementIndex >= 0)
-			createCopy(children = children.updated(replacementIndex, map(children(replacementIndex))))
-		else
-			createCopy(children = children.map { _.findAndReplace(find, map) })
-	}
+	@deprecated("Replaced with .filterDirect(...)", "v2.0")
+	def filterChildren(f: Repr => Boolean) = filterDirect(f)
 }

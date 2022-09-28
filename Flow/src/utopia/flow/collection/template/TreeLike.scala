@@ -8,6 +8,18 @@ import utopia.flow.operator.EqualsFunction
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
 
+object TreeLike
+{
+	/**
+	  * Any implementation of TreeLike, regardless of the type of individual nodes
+	  */
+	type Tree[A] = TreeLike[A, _ <: TreeLike[A, _]]
+	/**
+	  * Any implementation of TreeLike, regardless of type
+	  */
+	type AnyTree = TreeLike[_, _]
+}
+
 /**
   * Tree nodes form individual trees. They can also be used as subtrees in other tree nodes. Like
   * other nodes, treeNodes contain / wrap certain type of content. A tree node can never contain
