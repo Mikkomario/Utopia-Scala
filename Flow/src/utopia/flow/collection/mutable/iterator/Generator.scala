@@ -1,5 +1,6 @@
 package utopia.flow.collection.mutable.iterator
 
+@deprecated("Please use iterator instead", "v2.0")
 object Generator
 {
     /**
@@ -25,7 +26,7 @@ object Generator
 * @author Mikko Hilpinen
 * @since 12.5.2018
 **/
-// TODO: Rename InfiniteIterator and rework a little
+@deprecated("Please use iterator instead", "v2.0")
 trait Generator[+T]
 {
     // ABSTRACT    ------------------

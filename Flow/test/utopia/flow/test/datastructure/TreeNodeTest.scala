@@ -1,6 +1,6 @@
 package utopia.flow.test.datastructure
 
-import utopia.flow.collection.mutable.Tree
+import utopia.flow.collection.mutable.MutableTree
 import utopia.flow.collection.template.TreeLike
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.collection.CollectionExtensions._
@@ -33,10 +33,10 @@ object TreeNodeTest extends App
                  5],
              6]
      */
-	val root = Tree(1)
-	val bottomNode = Tree(4)
-	root += Tree(2, Tree(3, bottomNode), Tree(5))
-	val secondChild = Tree(6)
+	val root = MutableTree(1)
+	val bottomNode = MutableTree(4)
+	root += MutableTree(2, MutableTree(3, bottomNode), MutableTree(5))
+	val secondChild = MutableTree(6)
 	root += secondChild
 	
 	// Performs tests on tree (not mutating)

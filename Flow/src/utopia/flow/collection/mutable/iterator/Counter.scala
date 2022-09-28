@@ -6,6 +6,7 @@ package utopia.flow.collection.mutable.iterator
 * @author Mikko Hilpinen
 * @since 12.5.2018
 **/
+@deprecated("Please use Iterator instead", "v2.0")
 class Counter(private val firstValue: Int, private val increment: Int = 1) extends Generator[Int]
 {
     // ATTRIBUTES    ------------------

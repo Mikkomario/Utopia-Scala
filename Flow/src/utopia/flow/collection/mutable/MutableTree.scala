@@ -3,16 +3,16 @@ package utopia.flow.collection.mutable
 import utopia.flow.collection.immutable
 import utopia.flow.operator.EqualsFunction
 
-object Tree
+object MutableTree
 {
-    def apply[T](content: T, children: Vector[Tree[T]] = Vector())(implicit equals: EqualsFunction[T]) =
-        new Tree(content, children)
+    def apply[T](content: T, children: Vector[MutableTree[T]] = Vector())(implicit equals: EqualsFunction[T]) =
+        new MutableTree(content, children)
     
-    def apply[T](content: T, child: Tree[T])(implicit equals: EqualsFunction[T]) =
-        new Tree(content, Vector(child))
+    def apply[T](content: T, child: MutableTree[T])(implicit equals: EqualsFunction[T]) =
+        new MutableTree(content, Vector(child))
     
-    def apply[T](content: T, firstC: Tree[T], secondC: Tree[T], more: Tree[T]*)(implicit equals: EqualsFunction[T]) =
-        new Tree(content, Vector(firstC, secondC) ++ more)
+    def apply[T](content: T, firstC: MutableTree[T], secondC: MutableTree[T], more: MutableTree[T]*)(implicit equals: EqualsFunction[T]) =
+        new MutableTree(content, Vector(firstC, secondC) ++ more)
 }
 
 /**
@@ -23,9 +23,9 @@ object Tree
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
-class Tree[A](var nav: A, initialChildren: Vector[Tree[A]] = Vector())
-             (implicit override val navEquals: EqualsFunction[A] = EqualsFunction.default)
-    extends TreeLike[A, Tree[A]]
+class MutableTree[A](var nav: A, initialChildren: Vector[MutableTree[A]] = Vector())
+                    (implicit override val navEquals: EqualsFunction[A] = EqualsFunction.default)
+    extends MutableTreeLike[A, MutableTree[A]]
 {
     // ATTRIBUTES    -----------------
     
@@ -49,10 +49,10 @@ class Tree[A](var nav: A, initialChildren: Vector[Tree[A]] = Vector())
     
     // Creates a new child node and attaches it to this tree
     override protected def newNode(content: A) = {
-        val node = new Tree(content)
+        val node = new MutableTree(content)
         _children :+= node
         node
     }
     
-    override protected def setChildren(newChildren: Seq[Tree[A]]) = _children = newChildren.toVector
+    override protected def setChildren(newChildren: Seq[MutableTree[A]]) = _children = newChildren.toVector
 }

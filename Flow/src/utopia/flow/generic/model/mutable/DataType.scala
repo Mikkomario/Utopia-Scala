@@ -1,7 +1,7 @@
 package utopia.flow.generic.model.mutable
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.mutable.Tree
+import utopia.flow.collection.mutable.MutableTree
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.casting.{BasicValueCaster, ConversionHandler, SuperTypeCaster}
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -131,7 +131,7 @@ object DataType
  */
 case class DataType(name: String, supportedClass: Class[_], superType: Option[DataType] = Some(AnyType))
 {
-    private val tree = new Tree(this)
+    private val tree = new MutableTree(this)
     
     // INITIAL CODE    -----------
     

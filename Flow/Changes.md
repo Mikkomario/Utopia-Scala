@@ -34,6 +34,7 @@
     - Leaves now includes the root node if it is empty. See `.leavesBelow` for the previous implementation.
     - Similarly, branches now include this node by default. `.branchesBelow` matches the previous 
       implementation (i.e. `.allBranches`)
+  - The mutable **Tree** is now **MutableTree** and mutable **TreeLike** is **MutableTreeLike**
   - **TreeLike** no longer extends **Node**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
@@ -55,6 +56,7 @@
 - Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
 - In **SignedOrZero**, deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
 - Deprecated a bunch of method in **Model** classes in favor of their renamed counterparts
+- Deprecated **Generator** and **Counter**
 ### New Features
 - **ModelDeclarations** now support optional properties
 - Added **NoOpLogger** object

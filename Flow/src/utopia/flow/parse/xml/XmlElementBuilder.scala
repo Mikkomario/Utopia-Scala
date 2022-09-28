@@ -1,6 +1,6 @@
 package utopia.flow.parse.xml
 
-import utopia.flow.collection.mutable.TreeLike
+import utopia.flow.collection.mutable.MutableTreeLike
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.StringType
@@ -28,7 +28,7 @@ object XmlElementBuilder
   */
 class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Value.emptyWithType(StringType),
                         initialAttributeMap: Map[Namespace, Model] = Map())
-	extends XmlElementLike[XmlElementBuilder] with TreeLike[NamespacedString, XmlElementBuilder]
+	extends XmlElementLike[XmlElementBuilder] with MutableTreeLike[NamespacedString, XmlElementBuilder]
 {
 	// ATTRIBUTES   --------------------------------
 	
