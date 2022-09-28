@@ -32,5 +32,7 @@ trait ListenableLazyWrapper[+A] extends ListenableLazy[A]
 	
 	override def removeListener(listener: Any) = wrapped.removeListener(listener)
 	
-	override def map[B](f: A => B) = wrapped.map(f)
+	override def map[B](f: A => B): ListenableLazy[B] = wrapped.map(f)
+	
+	override protected def mapToListenable[B](f: A => B) = wrapped.map(f)
 }

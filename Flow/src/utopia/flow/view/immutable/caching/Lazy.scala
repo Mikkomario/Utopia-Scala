@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.caching
 
-import utopia.flow.collection.mutable.iterator.PollableOnce
+import utopia.flow.collection.immutable.caching.iterable.LazySeq
+import utopia.flow.collection.mutable.iterator.{LazyInitIterator, PollableOnce}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.caching.DeprecatingLazy
@@ -131,4 +132,22 @@ trait Lazy[+A] extends View[A]
 	// IMPLEMENTED	---------------------
 	
 	override def toString = current.map(c => s"Lazy($c)") getOrElse "Lazy"
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * Lazily maps this container's content
+	  * @param f A mapping function applied when the new content is requested
+	  * @tparam B Type of mapping result
+	  * @return Lazily initialized mapping results
+	  */
+	def map[B](f: A => B) = Lazy { f(value) }
+	/**
+	  * Lazily maps this container's content
+	  * @param f A mapping function applied lazily. Yields 0-n values (via iterator).
+	  * @tparam B Type of individual map results
+	  * @return A lazily initialized collection based on the mapping results
+	  */
+	def flatMap[B](f: A => IterableOnce[B]) = LazySeq.from[B](LazyInitIterator { f(value) })
 }

@@ -60,6 +60,7 @@
 - Deprecated **Generator** and **Counter**
 ### New Features
 - **ModelDeclarations** now support optional properties
+- Added **LazyTree** and **LazyInitIterator**
 - Added **NoOpLogger** object
 ### New Methods
 - **CanBeAboutZero**

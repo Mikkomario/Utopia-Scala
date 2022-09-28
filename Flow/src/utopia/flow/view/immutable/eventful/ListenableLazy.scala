@@ -64,7 +64,7 @@ object ListenableLazy
 		override def removeListener(listener: Any) =
 			queuedListeners = queuedListeners.filterNot { _ == listener }
 		
-		override def map[B](f: A => B) = ListenableLazy { f(value) }
+		override def mapToListenable[B](f: A => B) = ListenableLazy { f(value) }
 		
 		
 		// NESTED   --------------------------------
@@ -188,7 +188,13 @@ trait ListenableLazy[+A] extends Lazy[A]
 	  * @tparam B Mapping function result type
 	  * @return A lazily initialized container based on lazily mapped contents of this lazy
 	  */
-	def map[B](f: A => B): ListenableLazy[B]
+	protected def mapToListenable[B](f: A => B): ListenableLazy[B]
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	// Had to use this convoluted way of overriding map because of some strange builder problems
+	override def map[B](f: A => B): ListenableLazy[B] = mapToListenable(f)
 	
 	
 	// OTHER    -------------------------------
