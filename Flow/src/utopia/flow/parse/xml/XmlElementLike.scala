@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.xml.XmlElementLike.isAllowedInContent
 import utopia.flow.util.StringExtensions._
 
@@ -175,7 +176,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Case: All children have the same name and can therefore be expressed as a single array
         else if (children.map { _.localName }.toSet.size == 1) {
             // val childName = children.head.name
-            val childrenProperty =Constant(localName, groupChildren(children))
+            val childrenProperty =Constant(localName, groupChildren(children.toVector))
             propertyWithAttributes(childrenProperty)
         }
         else
@@ -183,7 +184,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             val childConstants = children.map { _.localName }.distinct.map { childName =>
                 val children = childrenWithName(childName)
                 if (children.size > 1)
-                   Constant(childName, groupChildren(children))
+                   Constant(childName, groupChildren(children.toVector))
                 else
                     children.head.toConstants match {
                         case Left(constant) =>
@@ -195,7 +196,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                     }
             }
             if (attributes.isEmpty)
-                Right(childConstants)
+                Right(childConstants.toVector)
             else if (childConstants.exists { c => attributes.contains(c.name) })
                 Right(Vector(
                    Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
@@ -214,10 +215,12 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     
     // IMPLEMENTED  ----------------------------
     
+    override implicit def navEquals: EqualsFunction[NamespacedString] = NamespacedString.approxEquals
+    
     /**
       * @return The "content" of this xml element, as it appears in a tree. I.e. the name of this xml element.
       */
-    override def content = name
+    override def nav = name
     
     override def toModel: Model =
     {
@@ -246,8 +249,6 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         
         Model(atts.result())
     }
-    
-    override def containsDirect(content: NamespacedString) = this.content ~== content
     
     
     // OTHER METHODS    ------------------------
@@ -350,14 +351,12 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         }
     }
     
-    private def groupChildren(children: Vector[XmlElementLike[_]]): Value =
-    {
+    private def groupChildren(children: Vector[XmlElementLike[_]]): Value = {
         val childResults = children.map { _.toConstants }
         if (childResults.forall { _.isLeft })
             childResults.flatMap { _.leftOption }.map { _.value }
         else
-            childResults.map
-            {
+            childResults.map {
                 case Left(constant) => Model.withConstants(Vector(constant))
                 case Right(constants) => Model.withConstants(constants)
             }

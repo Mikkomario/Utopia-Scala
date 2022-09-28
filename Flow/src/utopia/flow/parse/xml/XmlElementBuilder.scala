@@ -16,7 +16,7 @@ object XmlElementBuilder
 	  */
 	def apply[X <: XmlElementLike[X]](element: X): XmlElementBuilder = {
 		val builder = new XmlElementBuilder(element.name, element.value, element.attributeMap)
-		builder.children = element.children.map { apply(_) }
+		builder.children = element.children.map { apply(_) }.toVector
 		builder
 	}
 }
@@ -51,7 +51,7 @@ class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Val
 		node
 	}
 	
-	override protected def setChildren(newChildren: Vector[XmlElementBuilder]) = children = newChildren
+	override protected def setChildren(newChildren: Seq[XmlElementBuilder]) = children = newChildren.toVector
 	
 	
 	// OTHER    -----------------------------------

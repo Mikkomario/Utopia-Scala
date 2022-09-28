@@ -17,7 +17,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * Updates the children of this treelike
 	  * @param newChildren The new children
 	  */
-	protected def setChildren(newChildren: Vector[NodeType]): Unit
+	protected def setChildren(newChildren: Seq[NodeType]): Unit
 	
 	
 	// OPERATORS    -----------------

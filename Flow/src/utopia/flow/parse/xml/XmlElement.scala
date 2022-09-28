@@ -195,8 +195,8 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
     
     override protected def newNode(content: NamespacedString) = XmlElement(content)
     
-    override protected def createCopy(content: NamespacedString, children: Vector[XmlElement]) =
-        copy(name = content, children = children)
+    override protected def createCopy(content: NamespacedString, children: Seq[XmlElement]) =
+        copy(name = content, children = children.toVector)
     
     
     // OTHER METHODS    ------------------------

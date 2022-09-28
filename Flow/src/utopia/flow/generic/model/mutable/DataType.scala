@@ -154,7 +154,7 @@ case class DataType(name: String, supportedClass: Class[_], superType: Option[Da
     /**
      * All types deriving from this data type
      */
-    def subTypes = typeHierarchy.nodesBelow.map { _.content }
+    def subTypes = typeHierarchy.nodesBelow.map { _.nav }
     
     
     // IMPLEMENTED METHODS    ----

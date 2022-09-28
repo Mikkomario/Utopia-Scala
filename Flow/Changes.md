@@ -26,6 +26,15 @@
   - Changed to **PropertyDeclaration**:
     - Renamed and modified constructors
     - Added a new abstract property: `isOptional: Boolean`
+- Changes relating to variants of **Tree**:
+  - `.content` is now `.nav`
+  - Replaced the abstract `.containsDirect(A)` with `.navEquals: EqualsFunction[A]`
+  - Rewrote and renamed a number of functions
+    - For example, branches now contain node references instead of just the nav or content references
+    - Leaves now includes the root node if it is empty. See `.leavesBelow` for the previous implementation.
+    - Similarly, branches now include this node by default. `.branchesBelow` matches the previous 
+      implementation (i.e. `.allBranches`)
+  - **TreeLike** no longer extends **Node**
 - Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
 - Moved **JsonReadEvent** types under the **JsonReadEvent** object
 - Rearranged type parameters in **Combinable** and **Scalable**

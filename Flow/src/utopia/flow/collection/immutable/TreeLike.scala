@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection
+import utopia.flow.operator.EqualsExtensions.ApproxEquals
 
 /**
   * This TreeNode implementation is immutable and safe to reference from multiple places
@@ -22,7 +23,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * @param children New children to assign (default = current children)
 	  * @return A (modified) copy of this node
 	  */
-	protected def createCopy(content: A = content, children: Vector[NodeType] = children): NodeType
+	protected def createCopy(content: A = nav, children: Seq[NodeType] = children): NodeType
 	
 	
 	// COMPUTED --------------------
@@ -63,7 +64,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * @param removedContent The content to be removed
 	  * @return A tree without the specified content
 	  */
-	def -(removedContent: A) = filterChildren { !_.containsDirect(removedContent) }
+	def -(removedContent: A) = filterChildren {  _.nav !~== removedContent }
 	
 	
 	// OTHER METHODS    -------------
@@ -79,7 +80,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * @param f A function that accepts the child nodes of this node and returns a modified list
 	  * @return A modified copy of this node
 	  */
-	def modifyChildren(f: Vector[NodeType] => Vector[NodeType]) = createCopy(children = f(children))
+	def modifyChildren(f: Seq[NodeType] => Seq[NodeType]) = createCopy(children = f(children))
 	
 	/**
 	  * Creates a copy of this node with its direct children mapped
@@ -99,10 +100,10 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 		path.headOption match {
 			case Some(nextStep) =>
 				if (path.size == 1)
-					mapChildren { c => if (c.containsDirect(nextStep)) f(c) else c }
+					mapChildren { c => if (c.nav ~== nextStep) f(c) else c }
 				else {
 					val remaining = path.tail
-					mapChildren { c => if (c.containsDirect(nextStep)) c.mapPath(remaining)(f) else c }
+					mapChildren { c => if (c.nav ~== nextStep) c.mapPath(remaining)(f) else c }
 				}
 			case None => f(repr)
 		}
@@ -125,7 +126,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends collection.template
 	  * @return A new tree with all nodes filtered
 	  */
 	def filterContents(f: A => Boolean): NodeType =
-		createCopy(children = children.filter { c => f(c.content) } map { _.filterContents(f) })
+		createCopy(children = children.filter { c => f(c.nav) } map { _.filterContents(f) })
 	
 	/**
 	  * Filters the direct children of this tree

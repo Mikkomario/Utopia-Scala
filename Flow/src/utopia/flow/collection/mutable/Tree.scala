@@ -19,12 +19,12 @@ object Tree
  * Tree nodes form individual trees. They can also be used as subtrees in other tree nodes. Like 
  * other nodes, treeNodes contain / wrap certain type of content. A tree node can never contain 
  * itself below itself.
- * @param content The contents of this node
+ * @param nav The contents of this node
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
-class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())
-             (implicit equals: EqualsFunction[A] = EqualsFunction.default)
+class Tree[A](var nav: A, initialChildren: Vector[Tree[A]] = Vector())
+             (implicit override val navEquals: EqualsFunction[A] = EqualsFunction.default)
     extends TreeLike[A, Tree[A]]
 {
     // ATTRIBUTES    -----------------
@@ -38,7 +38,7 @@ class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())
      * Creates an immutable copy of this tree
      * @return An immutable copy of this tree
      */
-    def immutableCopy: immutable.Tree[A] = immutable.Tree(content, children.map { _.immutableCopy })
+    def immutableCopy: immutable.Tree[A] = immutable.Tree(nav, children.map { _.immutableCopy })
     
     
     // IMPLEMENTED PROPERTIES    -----
@@ -47,8 +47,6 @@ class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())
     
     def children = _children
     
-    override def containsDirect(content: A) = equals(this.content, content)
-    
     // Creates a new child node and attaches it to this tree
     override protected def newNode(content: A) = {
         val node = new Tree(content)
@@ -56,5 +54,5 @@ class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())
         node
     }
     
-    override protected def setChildren(newChildren: Vector[Tree[A]]) = _children = newChildren
+    override protected def setChildren(newChildren: Seq[Tree[A]]) = _children = newChildren.toVector
 }

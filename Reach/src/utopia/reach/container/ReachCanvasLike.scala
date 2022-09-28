@@ -68,15 +68,7 @@ trait ReachCanvasLike
 	  * @param targetContentSize Size to assign for the managed component
 	  */
 	def updateWholeLayout(targetContentSize: Size) = currentContent.foreach { content =>
-		val branches = content.toTree.allBranches
-		val updateQueues: Set[Seq[ReachComponentLike]] =
-		{
-			if (branches.isEmpty)
-				Set(Vector(content))
-			else
-				branches.map { content +: _ }.toSet
-		}
-		updateLayout(updateQueues, targetContentSize)
+		updateLayout(content.toTree.branchesIterator.map { _.map { _.nav } }.toSet, targetContentSize)
 	}
 	
 	/**

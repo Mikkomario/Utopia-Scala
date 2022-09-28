@@ -104,6 +104,7 @@ trait ReachComponentLike extends Stackable2
 	  * @return A tree representation of this component hierarchy (root node represents this component and branches
 	  *         below it are this component's children)
 	  */
+	// TODO: Use a lazily initialized tree when that becomes available
 	def toTree: Tree[ReachComponentLike] = Tree(this, children.toVector.map { _.toTree })
 	
 	/**
