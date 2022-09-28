@@ -38,6 +38,19 @@ class CompoundingVectorBuilder[A](initialState: Vector[A] = Vector.empty)
 		case None => lastResult
 	}
 	
+	/**
+	  * @return The current size of this builder's results
+	  */
+	def currentSize = {
+		val default = knownSize
+		if (default < 0) currentState.size else default
+	}
+	/**
+	  * @return The currently known minimum size of this builder.
+	  *         The actual size may be larger, but not smaller, than the returned size.
+	  */
+	def minSize = Some(knownSize).filter { _ >= 0 }.getOrElse(lastResult.size)
+	
 	
 	// IMPLEMENTED  --------------------------
 	
@@ -106,11 +119,30 @@ class CompoundingVectorBuilder[A](initialState: Vector[A] = Vector.empty)
 	// OTHER    -----------------------------
 	
 	/**
-	  * @return The current size of this builder's results
+	  * @param index Targeted index
+	  * @return The item in this builder at that index
 	  */
-	def currentSize = {
-		val default = knownSize
-		if (default < 0) currentState.size else default
+	def apply(index: Int) = {
+		if (index < 0)
+			throw new IllegalArgumentException(s"apply with index $index")
+		else if (index < lastResult.size)
+			lastResult(index)
+		else
+			currentState(index)
+	}
+	/**
+	  * @param index Targeted index
+	  * @return The item in this builder at that index. None the index was not in range of this builder's contents.
+	  */
+	def getOption(index: Int) = {
+		if (index < 0)
+			None
+		else if (index < lastResult.size)
+			Some(lastResult(index))
+		else {
+			val v = currentState
+			v.lift(index)
+		}
 	}
 	
 	

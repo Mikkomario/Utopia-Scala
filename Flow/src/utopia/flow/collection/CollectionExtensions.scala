@@ -1,7 +1,7 @@
 package utopia.flow.collection
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.caching.iterable.{CachingIterable, LazyIterable, LazyVector}
+import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.mutable.iterator.{FoldingIterator, GroupIterator, IteratorWithEvents, LimitedLengthIterator, PairingIterator, PollableOnce, PollingIterator, TerminatingIterator, ZipPadIterator}
 import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
 import utopia.flow.util.logging.Logger
@@ -211,7 +211,7 @@ object CollectionExtensions
 		/**
 		  * @return A version of this collection that caches iteration results
 		  */
-		def caching = CachingIterable.from(i)
+		def caching = CachingSeq.from(i)
 		
 		/**
 		  * Checks whether the specified condition matches none of the items in this collection
@@ -253,7 +253,7 @@ object CollectionExtensions
 		  * @tparam B Mapping result type
 		  * @return A lazily initialized collection containing the mapping results
 		  */
-		def lazyMap[B](f: A => B) = LazyIterable[B](i.iterator.map { a => Lazy { f(a) } })
+		def lazyMap[B](f: A => B) = LazySeq[B](i.iterator.map { a => Lazy { f(a) } })
 		
 		/**
 		  * Lazily maps the contents of this collection
@@ -261,7 +261,7 @@ object CollectionExtensions
 		  * @tparam B Type of the lazily initialized items
 		  * @return A lazily initialized collection containing the mapping results
 		  */
-		def lazyFlatMap[B](f: A => IterableOnce[Lazy[B]]) = LazyIterable[B](i.iterator.flatMap(f))
+		def lazyFlatMap[B](f: A => IterableOnce[Lazy[B]]) = LazySeq[B](i.iterator.flatMap(f))
 		
 		/**
 		  * Divides / maps the items in this collection to two groups

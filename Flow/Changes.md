@@ -45,8 +45,9 @@
 - Renamed **Zeroable** to **CanBeZero** and **ApproximatelyZeroable** to **CanBeAboutZero**
   - **CanBeZero** now also requires an implementation for a new abstract property `zero: Repr`
 - Renamed **LinearMeasurable** to **HasLength**
+- **CachingIterable** is now **CachingSeq** and **LazyIterable** is now **LazySeq**
 - Renamed **MapLike** to **MapAccess**
-- **TreeLike**, **GraphNode** and **GraphEdge** no longer extend **Node**
+- **GraphNode** and **GraphEdge** no longer extend **Node**
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
 - In **UncertainBoolean**, renamed a number of functions. Also renamed **Undefined** to **Uncertain**.
 ### Deprecations
