@@ -39,9 +39,15 @@ object Package
 	// Flow
 	
 	lazy val flowGenerics = flow/"generic"
+	lazy val typeCasting = flowGenerics/"casting"
+	lazy val genericModels = flowGenerics/"model"
+	lazy val immutableGenericModels = genericModels/"immutable"
+	lazy val genericModelTemplates = genericModels/"template"
 	lazy val flowTime = flow/"time"
 	lazy val flowUtils = flow/"util"
+	@deprecated
 	lazy val struct = flow/"datastructure"
+	@deprecated
 	lazy val immutableStruct = struct/"immutable"
 	
 	// Vault
