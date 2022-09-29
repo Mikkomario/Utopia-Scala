@@ -46,6 +46,7 @@
   - **CanBeZero** now also requires an implementation for a new abstract property `zero: Repr`
 - Renamed **LinearMeasurable** to **HasLength**
 - **CachingIterable** is now **CachingSeq** and **LazyIterable** is now **LazySeq**
+  - Both also contain new functions
 - Renamed **MapLike** to **MapAccess**
 - **GraphNode** and **GraphEdge** no longer extend **Node**
 - Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
@@ -58,6 +59,7 @@
 - In **SignedOrZero**, deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
 - Deprecated a bunch of method in **Model** classes in favor of their renamed counterparts
 - Deprecated **Generator** and **Counter**
+- Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
 ### New Features
 - **ModelDeclarations** now support optional properties
 - Added **LazyTree** and **LazyInitIterator**
@@ -67,11 +69,20 @@
   - Added `.notCloseZero`
 - **CanBeZero**
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
+- **Lazy**
+  - Added `.map(...)` and `.flatMap(...)`
+- **Path**
+  - Added `.toTree`
 - **Signed**
   - Added a number of new utility functions
+- **Tree** (object)
+  - Added a new recursive constructor: `.iterate(...)`
+- **View**
+  - Added `.valueIterator`
 ### Other Changes
 - **Changing(Like)** `.map(...)`, `.flatMap(...)`, `.lazyMap(...)`, `.mergeWith(...)`, `.lazyMergeWith(...)` 
   and `.delayedBy(...)` are no longer abstract
+- **Path** `.parentOption` (via **FileExtensions**) now converts the path to a root path, if necessary
 
 ## v1.17 (in development)
 ### Breaking Changes

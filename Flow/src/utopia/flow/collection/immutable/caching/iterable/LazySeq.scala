@@ -46,9 +46,19 @@ class LazySeq[+A] private(wrapped: CachingSeq[Lazy[A]])
 	// COMPUTED -----------------------------
 	
 	/**
+	  * @return The currently initialized portion of this sequence
+	  */
+	def current = wrapped.current.flatMap { _.current }
+	
+	/**
 	  * @return A lazily initialized vector containing all elements from this iterable collection
 	  */
 	def toLazyVector = LazyVector(wrapped.toVector)
+	
+	/**
+	  * @return Whether this sequence has been completely initialized and there is no lazy computation to perform
+	  */
+	def isFullyCached = wrapped.isFullyCached && wrapped.forall { _.isInitialized }
 	
 	
 	// IMPLEMENTED  -------------------------

@@ -96,7 +96,14 @@ class CachingSeq[+A](source: Iterator[A])
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def iterator: Iterator[A] = new AppendIfNecessaryIterator()
+	override def iterator: Iterator[A] = {
+		// Case: Fully cached => Uses the faster and simpler Vector iterator
+		if (isFullyCached)
+			builder.currentState.iterator
+		// Case: Not fully cached => Uses an iterator that initializes items when necessary (default)
+		else
+			new AppendIfNecessaryIterator()
+	}
 	
 	override def empty = CachingSeq.empty
 	override def iterableFactory = CachingSeq

@@ -126,6 +126,7 @@ trait Lazy[+A] extends View[A]
 	/**
 	  * @return A lazily initialized iterator based on the contents of this lazy container
 	  */
+	@deprecated("Please use .valueIterator instead", "v2.0")
 	def iterator = PollableOnce { value }
 	
 	

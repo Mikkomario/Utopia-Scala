@@ -1,5 +1,7 @@
 package utopia.flow.view.immutable
 
+import utopia.flow.collection.mutable.iterator.PollableOnce
+
 object View
 {
 	// OTHER	-----------------------------
@@ -14,8 +16,7 @@ object View
 	
 	// NESTED	-----------------------------
 	
-	private class ViewWrapper[+A](_value: => A) extends View[A]
-	{
+	private class ViewWrapper[+A](_value: => A) extends View[A] {
 		override def value = _value
 	}
 }
@@ -34,4 +35,12 @@ trait View[+A] extends Any
 	  * @return The wrapped value
 	  */
 	def value: A
+	
+	
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return An iterator of length 1 that returns the value of this view
+	  */
+	def valueIterator: Iterator[A] = PollableOnce(value)
 }
