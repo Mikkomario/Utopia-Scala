@@ -21,7 +21,7 @@ object IteratorTest extends App
 	assert(iter1.poll == 3)
 	assert(iter1.collectWhile { _ <= 10 }.size == 8)
 	assert(iter1.next() == 11)
-	assert(iter1.takeNext(10).size == 10)
+	assert(iter1.take(10).size == 10)
 	assert(iter1.poll == 22)
 	iter1.collectWhile { _ < 100 }
 	assert(iter1.poll == 100)

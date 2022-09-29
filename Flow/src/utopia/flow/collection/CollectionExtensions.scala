@@ -1184,8 +1184,7 @@ object CollectionExtensions
 		  * @return Items to and including the one accepted by the specified condition. All remaining items of this
 		  *         iterator if the specified condition was never met.
 		  */
-		def collectTo(stopCondition: A => Boolean) =
-		{
+		def collectTo(stopCondition: A => Boolean) = {
 			val builder = new VectorBuilder[A]()
 			var found = false
 			while (i.hasNext && !found) {

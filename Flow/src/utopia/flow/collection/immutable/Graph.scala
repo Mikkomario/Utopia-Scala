@@ -26,6 +26,19 @@ object Graph
 	 * @return A new graph
 	 */
 	def twoWayBound[N, E](connections: Set[(N, E, N)]) = Graph(connections, isTwoWayBound = true)
+	
+	/*
+	/**
+	  * Creates a new graph
+	  * @param connections Connections that form this graph
+	  * @param isTwoWayBound Whether the specified connections go both ways
+	  * @tparam N Type of node content in this graph
+	  * @tparam E Type of edge content in this graph
+	  * @return A new graph with the specified connections
+	  */
+	def apply[N, E](connections: Iterable[(N, E, N)], isTwoWayBound: Boolean = false) =
+		new Graph[N, E](connections, isTwoWayBound)
+	 */
 }
 
 /**
@@ -34,6 +47,7 @@ object Graph
  * @author Mikko Hilpinen
  * @since 25.4.2020, v1.8
  */
+// TODO: Make lazy
 case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = false)
 {
 	// ATTRIBUTES	------------------------
@@ -296,10 +310,11 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 		// May include edges to other way as well
 		override lazy val leavingEdges = {
 			val singleWay = edgesByStartNode.getOrElse(value, Set())
+			// TODO: Unnecessary conversions from Set to Vector (fix once going lazy)
 			if (isTwoWayBound)
-				singleWay ++ edgesByEndNode.getOrElse(value, Set())
+				singleWay.toVector ++ edgesByEndNode.getOrElse(value, Set())
 			else
-				singleWay
+				singleWay.toVector
 		}
 		
 		override protected def repr = this

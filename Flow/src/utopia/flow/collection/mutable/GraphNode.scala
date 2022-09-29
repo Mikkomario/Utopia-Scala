@@ -1,10 +1,11 @@
 package utopia.flow.collection.mutable
 
 import utopia.flow.collection.immutable.GraphEdge
+import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template
 import utopia.flow.collection.template.GraphNode.AnyNode
 
-import scala.collection.immutable.HashSet
+import scala.collection.mutable
 
 /**
  * Graph nodes contain content and are connected to other graph nodes via edges
@@ -21,7 +22,7 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
     
     // IMPLEMENTED    --------------
     
-    var leavingEdges: Set[Edge] = HashSet()
+    var leavingEdges = Vector[Edge]()
     
     override protected def repr = this
     
@@ -39,7 +40,7 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
      * @param node The node this node will be connected to
      * @param edgeContent The contents for the edge that is generated
      */
-    def connect(node: Node, edgeContent: E) = leavingEdges += GraphEdge(edgeContent, node)
+    def connect(node: Node, edgeContent: E) = leavingEdges :+= GraphEdge(edgeContent, node)
     
     /**
      * Replaces any existing connections to a certain node with a new edge
@@ -62,8 +63,23 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
     def disconnectDirect(node: AnyNode) = leavingEdges = leavingEdges.filterNot(edge => edge.end == node)
     
     /**
-      * Disconnects every node in this graph from the specified node
+      * Disconnects every node in this graph from the specified node, except those nodes that are accessible
+      * only through the specified node.
       * @param node A node
       */
-    def disconnectAll(node: AnyNode) = foreach { _.disconnectDirect(node) }
+    def disconnectTotally(node: AnyNode) = {
+        val visitedNodes = mutable.Set[Any](this)
+        OrderedDepthIterator(Iterator.single(repr)) { start =>
+            start.leavingEdges = start.leavingEdges.filterNot { _.end == node }
+            start.leavingEdges.flatMap { edge =>
+                val node = edge.end
+                if (visitedNodes.contains(node))
+                    None
+                else
+                    Some(node)
+            }
+        }.foreach { _ => () }
+    }
+    @deprecated("Please use .disconnectTotally(...) instead", "v2.0")
+    def disconnectAll(node: AnyNode) = disconnectTotally(node)
 }

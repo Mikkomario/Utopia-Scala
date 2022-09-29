@@ -58,7 +58,7 @@ object AsyncMirror
 	def catching[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection,
 	                                 skipInitialProcess: Boolean = false)
 	                                (map: Origin => Future[Reflection])
-	                                (implicit exc: ExecutionContext, logger: Logger) =
+	                                (implicit exc: ExecutionContext, logger: Logger): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
 		apply[Origin, Reflection, Reflection](source, placeHolder, skipInitialProcess)(map) { (previous, result) =>
 			result.getOrMap { error =>
@@ -89,7 +89,7 @@ object AsyncMirror
 	                                      skipInitialProcess: Boolean = false)
 	                                     (map: Origin => Future[Result])
 	                                     (merge: (Reflection, Try[Result]) => Reflection)
-	                                     (implicit exc: ExecutionContext) =
+	                                     (implicit exc: ExecutionContext): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
 		// Case: Mapping required => constructs a proper mirror
 		if (source.isChanging || !skipInitialProcess)

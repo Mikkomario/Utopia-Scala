@@ -58,69 +58,23 @@ object CachingSeq extends SeqFactory[CachingSeq]
   * @since 24.7.2022, v1.16
   */
 class CachingSeq[+A](source: Iterator[A])
-	extends Seq[A] with SeqOps[A, CachingSeq, CachingSeq[A]]
+	extends AbstractCachingIterable[A, CompoundingVectorBuilder[A @uncheckedVariance], Vector[A]](
+		source, new CompoundingVectorBuilder[A]())
+		with Seq[A] with SeqOps[A, CachingSeq, CachingSeq[A]]
 {
 	// ATTRIBUTES   ----------------------------
 	
-	// Builder will only be fed items from the source iterator, hence allowing @uncheckedVariance
-	private val builder: CompoundingVectorBuilder[A @uncheckedVariance] = new CompoundingVectorBuilder[A]()
-	
-	override lazy val length = builder.currentSize + AppendingIterator.size
-	
-	
-	// COMPUTED --------------------------------
-	
-	/**
-	  * @return The currently cached items
-	  */
-	def current = builder.currentState
-	
-	/**
-	  * @return Whether this collection has reached its final state (assuming constant source iterator)
-	  */
-	def isFullyCached = !source.hasNext
-	
-	/**
-	  * @return The size of this collection that's available without any processing.
-	  *         The actual size of this collection may be larger, but not smaller, than this value.
-	  */
-	def minSize = builder.minSize
-	/**
-	  * @return The current amount of cached items in this collection.
-	  *         The actual size of this collection may be larger, but not smaller, than this value.
-	  *         Calculation of this value may require some item allocation,
-	  *         but doesn't take any new items from the source iterator (i.e. doesn't cache any new items).
-	  */
-	def currentSize = builder.size
+	override lazy val length = super[AbstractCachingIterable].size
 	
 	
 	// IMPLEMENTED  ----------------------------
-	
-	override def iterator: Iterator[A] = {
-		// Case: Fully cached => Uses the faster and simpler Vector iterator
-		if (isFullyCached)
-			builder.currentState.iterator
-		// Case: Not fully cached => Uses an iterator that initializes items when necessary (default)
-		else
-			new AppendIfNecessaryIterator()
-	}
 	
 	override def empty = CachingSeq.empty
 	override def iterableFactory = CachingSeq
 	
 	override def toVector =
-		if (source.hasNext) builder.currentState ++ AppendingIterator else builder.currentState
+		if (source.hasNext) builder.currentState ++ cacheRemaining() else builder.currentState
 	override def toIndexedSeq = toVector
-	
-	override def isEmpty = builder.isEmpty && source.isEmpty
-	
-	// Doesn't record the intermediate state unless necessary
-	override def head = builder.headOption.getOrElse { AppendingIterator.next() }
-	override def headOption = builder.headOption.orElse { AppendingIterator.nextOption() }
-	
-	override def last = if (isFullyCached) builder.currentState.last else AppendingIterator.last
-	override def lastOption =
-		if (isFullyCached) builder.currentState.lastOption else AppendingIterator.lastOption
 	
 	override def knownSize = if (isFullyCached) builder.knownSize else -1
 	
@@ -131,48 +85,19 @@ class CachingSeq[+A](source: Iterator[A])
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, CachingSeq[A]] =
 		CachingSeq.newBuilder
 	
-	override def lengthCompare(otherSize: Int) = {
-		val knownSize = builder.knownSize
-		val knownSizeCompare = knownSize.compareTo(otherSize)
-		// Case: Result can be determined with the size of cached contents => Doesn't iterate forward
-		if (knownSizeCompare > 1)
-			knownSizeCompare
-		// Case: Comparison result unknown with the known size alone
-		else {
-			val appendSize = AppendingIterator.take(otherSize - knownSize + 1).size
-			(knownSize + appendSize).compareTo(otherSize)
-		}
-	}
-	override def lengthCompare(that: Iterable[_]) = {
-		val kn = that.knownSize
-		if (kn < 0)
-			super.sizeCompare(that)
-		else
-			sizeCompare(kn)
-	}
+	override def lengthCompare(otherSize: Int) = super[AbstractCachingIterable].sizeCompare(otherSize)
+	override def lengthCompare(that: Iterable[_]) = super[AbstractCachingIterable].sizeCompare(that)
 	
 	override def reverse = CachingSeq(reverseIterator)
 	override protected def reversed = reverse
 	override def reverseIterator =
-		AppendingIterator.toVector.reverseIterator ++ builder.currentState.reverseIterator
+		cacheRemaining().reverseIterator ++ builder.currentState.reverseIterator
 	
 	// Avoids calculating the total length of this collection, if at all possible
-	override def isDefinedAt(idx: Int) = {
-		if (idx < 0)
-			false
-		else if (idx < builder.minSize)
-			true
-		else {
-			val cachedSize = builder.size
-			if (idx < cachedSize)
-				true
-			else
-				AppendingIterator.drop(idx - cachedSize).hasNext
-		}
-	}
+	override def isDefinedAt(idx: Int) = if (idx < 0) false else sizeCompare(idx) > 0
 	
 	override def padTo[B >: A](len: Int, elem: B) = {
-		if (len <= minSize || len <= currentSize)
+		if (sizeCompare(len) >= 0)
 			this
 		else
 			super.padTo(len, elem)
@@ -189,37 +114,9 @@ class CachingSeq[+A](source: Iterator[A])
 		if (index < 0)
 			None
 		else
-			builder.getOption(index).orElse { AppendingIterator.drop(index - builder.size).nextOption() }
-	}
-	
-	
-	// NESTED   ---------------------------
-	
-	// Appends every encountered item, skips builder items
-	private object AppendingIterator extends Iterator[A]
-	{
-		override def hasNext = source.hasNext
-		override def next() = {
-			val n = source.next()
-			builder += n
-			n
-		}
-	}
-	
-	// Reads builder items, appends to builder if necessary
-	private class AppendIfNecessaryIterator extends Iterator[A]
-	{
-		private val builderSource = builder.iterator
-		
-		override def hasNext = builderSource.hasNext || source.hasNext
-		
-		override def next() = {
-			// Appends a new item to the builder if would otherwise run out of items
-			if (builderSource.isEmpty)
-				builder += source.next()
-			// Always reads the items through the builder iterator in order to avoid duplicates
-			// Assumes that the builder iterator updates upon +=
-			builderSource.next()
-		}
+			builder.getOption(index).orElse {
+				val diff = index - builder.size
+				cacheNext(diff + 1).getOption(diff)
+			}
 	}
 }

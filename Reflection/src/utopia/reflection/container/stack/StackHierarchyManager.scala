@@ -2,7 +2,6 @@ package utopia.reflection.container.stack
 
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.collection.immutable.GraphEdge
-import utopia.flow.collection.mutable.iterator.Counter
 import utopia.flow.collection.mutable.{GraphNode, VolatileList}
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
@@ -30,7 +29,7 @@ object StackHierarchyManager
 	
 	// ATTRIBUTES	---------------------
 	
-	private val indexCounter = new Counter(1)
+	private val indexCounter = Iterator.iterate(1) { _ + 1 }
 	// Stackable -> id, used for finding parents
 	private val ids = mutable.HashMap[Int, StackId]()
 	// Id -> Node -> Children, used for finding children
@@ -235,17 +234,16 @@ object StackHierarchyManager
 		// Removes the provided item and each child from both ids and graph
 		ids.get(item.stackId).foreach { itemId =>
 			// Finds correct id and node
-			nodeOptionForId(itemId) match
-			{
+			nodeOptionForId(itemId) match {
 				case Some(node) =>
 					// Removes the node from graph
 					if (itemId.isMasterId)
 						graph -= itemId.masterId
 					else
-						graphForId(itemId).disconnectAll(node)
+						graphForId(itemId).disconnectTotally(node)
 					
 					// Removes any child nodes
-					node.foreach { ids -= _.value.stackId }
+					node.allNodesIterator.foreach { ids -= _.value.stackId }
 				case None =>
 					// If, for some reason, the node was already removed, makes sure the id is removed as well
 					ids -= item.stackId
@@ -285,7 +283,7 @@ object StackHierarchyManager
 						// Disconnects the child node
 						parentNode.disconnectDirect(childNode)
 						// Updates the ids of grandchildren (and their children) to not include the removed old parent's id
-						childNode.foreach { c =>
+						childNode.allNodesIterator.foreach { c =>
 							val grandChildStackId = c.value.stackId
 							ids.get(grandChildStackId).foreach { grandChildId =>
 								ids(grandChildStackId) = grandChildId.dropUntil(childIndex)
@@ -313,7 +311,7 @@ object StackHierarchyManager
 					// will not modify or insert it
 					graph.get(childIndex).foreach { childNode =>
 						// Updates all child ids
-						childNode.foreach { n => ids(n.value.stackId) = newParentId + ids(n.value.stackId) }
+						childNode.allNodesIterator.foreach { n => ids(n.value.stackId) = newParentId + ids(n.value.stackId) }
 						// Removes the child from master nodes and attaches it to the new parent
 						graph -= childIndex
 						newParentNode.connect(childNode, childIndex)
@@ -358,7 +356,9 @@ object StackHierarchyManager
 					val childIndex = childId.last
 					(parentNode / childIndex).headOption.foreach { childNode =>
 						parentNode.disconnectDirect(childNode)
-						childNode.foreach { c => ids(c.value.stackId) = ids(c.value.stackId).dropUntil(childIndex) }
+						childNode.allNodesIterator.foreach { c =>
+							ids(c.value.stackId) = ids(c.value.stackId).dropUntil(childIndex)
+						}
 						
 						// Makes the child a master
 						graph(childIndex) = childNode

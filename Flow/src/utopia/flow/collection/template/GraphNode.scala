@@ -2,11 +2,14 @@ package utopia.flow.collection.template
 
 import utopia.flow.collection.immutable.{Graph, Tree}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template.GraphNode.{AnyNode, PathsFinder}
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 
 import scala.annotation.tailrec
-import scala.collection.immutable.VectorBuilder
+import scala.collection.mutable
 import scala.math.Ordered.orderingToOrdered
 
 object GraphNode
@@ -178,7 +181,8 @@ object GraphNode
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends View[N]
+trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]]
+	extends View[N]
 {
     // TYPES    --------------------
 	
@@ -188,60 +192,174 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     // ABSTRACT --------------------
 	
 	/**
-	  * @return The edges leaving this node
+	  * @return The edges leaving this node.
 	  */
-    def leavingEdges: Set[Edge]
+    def leavingEdges: Seq[Edge]
 	
+	/**
+	  * @return This node
+	  */
 	protected def repr: GNode
     
     
     // COMPUTED PROPERTIES    -------
-    
-    /**
-     * The nodes accessible from this node
-     */
-    def endNodes = leavingEdges.map { _.end }
 	
 	/**
-	  * @return All nodes accessible from this node, including this node
+	  * The nodes accessible from this node
 	  */
-	def allNodes =
-	{
-		val buffer = new VectorBuilder[GNode]()
-		foreach(buffer.+=)
-		buffer.result().toSet
+	def endNodes = leavingEdges.map { _.end }.distinct
+	
+	/**
+	  * @return An iterator that returns all nodes within this graph, starting with this one.
+	  *         The iterator is not specifically ordered, but iterates by traversing through this graph.
+	  *         See: .orderedAllNodesIterator if you want an ordered iterator.
+	  */
+	def allNodesIterator = {
+		val visitedNodes = mutable.Set[Any](this)
+		_allNodesIterator(visitedNodes)
+	}
+	private def _allNodesIterator(visitedNodes: mutable.Set[Any]): Iterator[GNode] = {
+		Iterator.single(repr) ++ leavingEdges.iterator.flatMap { edge =>
+			val node = edge.end
+			if (visitedNodes.contains(node))
+				None
+			else {
+				visitedNodes += node
+				node._allNodesIterator(visitedNodes)
+			}
+		}
+	}
+	/**
+	  * @return An iterator that returns all nodes within this graph, starting with this one.
+	  *         The iterator is ordered in a way that the nodes are returned from closest to furthest.
+	  */
+	def orderedAllNodesIterator = {
+		val visitedNodes = mutable.Set[Any](this)
+		OrderedDepthIterator(Iterator.single(repr)) { start =>
+			start.leavingEdges.iterator.flatMap { edge =>
+				val node = edge.end
+				if (visitedNodes.contains(node))
+					None
+				else {
+					visitedNodes += node
+					Some(node)
+				}
+			}
+		}
 	}
 	
+	/**
+	  * @return An iterator that returns all shortest routes that appear within this node.
+	  *         In situations where there would be multiple equally short routes,
+	  *         only the first encountered route is returned.
+	  *
+	  *         The resulting routes / nodes are listed in order of length;
+	  *         Empty route to this node is returned first,
+	  *         then routes of length 1 to this node's siblings, then routes of length 2 and so on.
+	  *
+	  *         The values returned by the returned iterator consist of two parts:
+	  *         1) Route to the node in question as a vector of edges
+	  *         2) The node at the end of that route
+	  */
+	def shortestRoutesIterator = {
+		val visitedNodes = mutable.Set[Any](this)
+		OrderedDepthIterator(Iterator.single(Vector[Edge]() -> repr)) { case (route, lastNode) =>
+			lastNode.leavingEdges.iterator.flatMap { edge =>
+				val node = edge.end
+				if (visitedNodes.contains(node))
+					None
+				else {
+					visitedNodes += node
+					Some((route :+ edge) -> node)
+				}
+			}
+		}
+	}
+	
+	/**
+	  * @return An iterator that returns all edges that appear within this graph.
+	  *         The edges are not returned in any specific order, except that all edges belonging to a single node
+	  *         are returned in sequence.
+	  */
+    def allEdgesIterator = allNodesIterator.flatMap { _.leavingEdges }
+	/**
+	  * @return An iterator that returns all values within the nodes in this graph.
+	  *         The values are not returned in any specific order, except that the value of this node is returned first.
+	  */
+	def allValuesIterator = allNodesIterator.map { _.value }
+	/**
+	  * @return An iterator that returns all values within the nodes in this graph.
+	  *         The iterator is ordered so that it returns first the values of nodes closest to this node,
+	  *         starting from this node itself. The iterator then moves further one layer at a time.
+	  */
+	def orderedAllValuesIterator = orderedAllNodesIterator.map { _.value }
+	
+	/**
+	  * @return All nodes that appear within this graph, including this node
+	  */
+	def allNodes = allNodesIterator.toSet
+	/**
+	  * @return All edges that appear within this graph
+	  */
+	def allEdges = allEdgesIterator.toSet
+	/**
+	  * @return All distinct values that appear within this graph
+	  */
+	def allValues = allValuesIterator.toSet
 	/**
 	 * @return Content of all nodes linked with this node, including the contents of this node
 	 */
-	def allNodeContent =
-	{
-		val buffer = new VectorBuilder[N]
-		foreach { buffer += _.value }
-		buffer.result().toSet
-	}
+	@deprecated("Replaced with .allValues")
+	def allNodeContent = allValues
 	
 	/**
 	 * Converts this node to a graph
 	 * @return A graph based on this node's connections
 	 */
 	def toGraph =
-	{
-		val connectionsBuffer = new VectorBuilder[(N, E, N)]
-		foreach { node => node.leavingEdges.foreach { edge =>
-			val newConnection = (node.value, edge.value, edge.end.value)
-			connectionsBuffer += newConnection
-		} }
-		Graph(connectionsBuffer.result().toSet)
+		Graph(allNodesIterator
+			.flatMap { node => node.leavingEdges.map { edge => (node.value, edge.value, edge.end.value) } }.toSet)
+	
+	/**
+	  * @return A lazily initialized tree based on this graph.
+	  *         This node will appear as the root of the tree.
+	  *         Other nodes may appear in multiple locations, but never twice in a single branch.
+	  *         Each tree node contains a reference to a graph node.
+	  *
+	  *         For example, if node A connects to nodes B and C, which both connect to node D,
+	  *         which then connects to node E, the resulting branches would be:
+	  *         A -> B -> D -> E,
+	  *         A -> C -> D -> E.
+	  *         Notice how D and E appear twice.
+	  *
+	  *         The resulting tree may be considered to consist of unique paths within this graph that all start
+	  *         from this node and never traverse one node twice.
+	  *
+	  *         Please note that the resulting tree will be very large for graphs with a large number of edges.
+	  */
+	def toTree = _toTree(Set(this))
+	private def _toTree(traversedNodes: Set[Any]): LazyTree[GNode] = {
+		// Remembers which nodes have been visited (branch-specific)
+		val newTraversed = traversedNodes + this
+		// Creates the tree lazily
+		LazyTree(Lazy(repr), leavingEdges.iterator.flatMap { edge =>
+			val node = edge.end
+			// Case: A node would be a parent of this node in the tree => ends
+			if (newTraversed.contains(node))
+				None
+			// Case: Unique node within this branch => Converts it to a tree lazily, also
+			else
+				Some(node._toTree(newTraversed))
+		}.caching)
 	}
 	
 	/**
 	 * Converts this graph to a tree
 	 * @return A tree from this node
 	 */
+	@deprecated("Please use toTree instead", "v2.0")
 	def toTreeWithoutEdges = _toTreeWithoutEdges(Set())
-	
+	@deprecated("Please use _toTree instead", "v2.0")
 	private def _toTreeWithoutEdges(traversedNodes: Set[Any]): Tree[N] =
 	{
 		val newTraversedNodes = traversedNodes + this
@@ -263,25 +381,21 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  * @return The node(s) at the end of the edge(s)
 	  */
 	def /(edgeType: E) = leavingEdges.filter { _.value == edgeType }.map { _.end }
-	
 	/**
 	  * Traverses a deep path that consists of edges between nodes
-	  * @param path The content of the edges to travel in sequence, starting from edges of this node
+	  * @param path The content of the edges to travel in sequence, starting from edges of this node.
+	  *             An empty path is considered to point to this node.
 	  * @return The node(s) at the end of the path
 	  */
-	def /(path: Seq[E]): Set[GNode] =
-	{
+	def /(path: Seq[E]): Set[GNode] = {
 		if (path.isEmpty)
-			Set()
-		else
-		{
-			var current = /(path.head)
-			path.drop(1).foreach { p => current = current.flatMap { _ / p } }
-			
+			Set(repr)
+		else {
+			var current = /(path.head).toSet
+			path.drop(1).foreach { p => current = current.flatMap { _/p } }
 			current
 		}
 	}
-	
 	/**
 	  * Traverses a deep path that consists of edges between nodes
 	  * @param first The first edge to traverse
@@ -293,20 +407,23 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     
     
     // OTHER METHODS    ------------
-    
-	def isDirectlyConnectedTo(other: AnyNode) = edgeTo(other).isDefined
+	
+	/**
+	  * @param other Another node
+	  * @return Whether this node contains a direct connection to the specified node
+	  */
+	def isDirectlyConnectedTo(other: AnyNode) = leavingEdges.exists { _.end == other }
 	
     /**
      * Finds an edge pointing to another node, if there is one
      * @param other The node this node may be connected to
      * @return an edge connecting the two nodes, if there is one. If there are multiple edges
-     * pointing toward the specified node, returns one of them chosen randomly.
+     * pointing toward the specified node, returns the first one encountered.
      * @see edgesTo(GraphNode[_, _])
      */
     def edgeTo(other: AnyNode) = leavingEdges.find { _.end == other }
-    
     /**
-     * Finds all edges pointing from this node to the provided node.
+     * Finds all edges pointing from this node to the specified node.
      * @param other another node
      * @return The edges pointing towards the provided node from this node
      */
@@ -500,23 +617,19 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * however, a single empty route will be returned. The end node will always be at the end of
      * each route and nowhere else. If there are no connecting routes, an empty array is returned.
      */
-    def routesTo(node: AnyNode): Set[Route] =
-	{
+    def routesTo(node: AnyNode): Seq[Route] = {
 		// If trying to find routes to self, will have to handle limitations a bit differently
-		if (node == this)
-		{
-			leavingEdges.find { _.end == this } match
-			{
-				case Some(zeroRoute) => Set(Vector(zeroRoute))
+		if (node == this) {
+			leavingEdges.find { _.end == this } match {
+				case Some(zeroRoute) => Vector(Vector(zeroRoute))
 				case None => leavingEdges.flatMap { e => e.end.routesTo(this, Set()).map { route => e +: route } }
 			}
 		}
 		else
 			routesTo(node, Set())
 	}
-    
     // Uses recursion
-    private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Set[Route] =
+    private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Seq[Route] =
     {
 		// Tries to find the destination from each connected edge that leads to a new node
 		val newVisitedNodes = visitedNodes + this
@@ -525,7 +638,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
 		availableEdges.find { _.end == node } match
 		{
-			case Some(directRoute) => Set(Vector(directRoute))
+			case Some(directRoute) => Vector(Vector(directRoute))
 			case None =>
 				// If there didn't exist a direct path, tries to find an indirect one
 				// Attaches this element at the beginning of each returned route (if there were any returned)
@@ -538,35 +651,33 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  * @param other Another node
 	  * @return Whether this node is at all connected to the specified node
 	  */
-	def isConnectedTo(other: AnyNode) = traverseWhile { _.isDirectlyConnectedTo(other) }
+	def isConnectedTo(other: AnyNode) = allNodesIterator.contains(other)
 	
 	/**
 	  * Traverses this graph until the provided operation returns true
 	  * @param operation An operation performed on each node until it returns true
 	  * @return Whether the operation ever returned true
 	  */
-	def traverseWhile(operation: GNode => Boolean) = traverseUntil
-	{
-		n =>
-			val result = operation(n)
-			if (result) Some(result) else None
+	@deprecated("Please use allNodesIterator instead", "v2.0")
+	def traverseWhile(operation: GNode => Boolean) = traverseUntil { n =>
+		val result = operation(n)
+		if (result) Some(result) else None
 	} getOrElse false
-	
 	/**
 	  * Traverses this graph until a node is found that produces a result
 	  * @param operation An operation performed on each node until a suitable one is found
 	  * @tparam B Operation result type
 	  * @return Final operation result. None if operation returned None on all nodes
 	  */
+	@deprecated("Please use allNodesIterator instead", "v2.0")
 	def traverseUntil[B](operation: GNode => Option[B]): Option[B] = traverseUntil(operation, Set())
-	
-	private def traverseUntil[B](operation: GNode => Option[B], traversedNodes: Set[GNode]): Option[B] =
-	{
+	@deprecated("Please use allNodesIterator instead", "v2.0")
+	private def traverseUntil[B](operation: GNode => Option[B], traversedNodes: Set[GNode]): Option[B] = {
 		val nodes = traversedNodes + repr
 		
 		// Performs the operation on self first
 		// If that didn't yield a result, tries children instead
-		operation(repr).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
+		operation(repr).orElse(endNodes.toSet.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
 	}
 	
 	/**
@@ -574,8 +685,9 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  * @param operation An operation
 	  * @tparam U Arbitary result type
 	  */
+	@deprecated("Please use allNodesIterator instead", "v2.0")
 	def foreach[U](operation: GNode => U): Unit = foreach(operation, Set())
-	
+	@deprecated("Please use allNodesIterator instead", "v2.0")
 	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] =
 	{
 		val newTraversedNodes = traversedNodes + this

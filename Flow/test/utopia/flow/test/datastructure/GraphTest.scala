@@ -26,8 +26,8 @@ object GraphTest extends App
 	node1.connect(node4, 4)
 	node4.connect(node5, 4)
 	
-	assert(node1.allNodeContent == Set(1, 2, 3, 4, 5))
-	assert(node2.allNodeContent == Set(2, 3, 5))
+	assert(node1.allValues == Set(1, 2, 3, 4, 5))
+	assert(node2.allValues == Set(2, 3, 5))
 	
 	// Makes sure there are correct number of edges in nodes
 	assert(node1.leavingEdges.size == 2)
