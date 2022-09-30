@@ -2,12 +2,11 @@ package utopia.flow.collection.immutable.caching.iterable
 
 import utopia.flow.collection.mutable.builder.CompoundingMapBuilder
 import utopia.flow.collection.mutable.iterator.PollableOnce
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.{MapOps, VectorBuilder}
-import scala.collection.{IterableFactory, MapFactory, SeqFactory, mutable}
+import scala.collection.{MapFactory, mutable}
 
 object CachingMap extends MapFactory[CachingMap]
 {
@@ -15,6 +14,7 @@ object CachingMap extends MapFactory[CachingMap]
 	
 	override def from[K, V](source: IterableOnce[(K, V)]) = source match {
 		case c: CachingMap[K, V] => c
+		case map: Map[K, V] => initialized(map)
 		case c => new CachingMap[K, V](c.iterator)
 	}
 	
@@ -40,11 +40,17 @@ object CachingMap extends MapFactory[CachingMap]
 	  * only lazily. Modifications to that iterator from other sources will affect the resulting collection
 	  * (and are not recommended).
 	  * @param source A source iterator
+	  * @param preCached Already cached items that don't need to be lazily initialized (default = empty)
 	  * @tparam K Type of keys returned by that iterator
 	  * @tparam V Type of values returned by that iterator
 	  * @return A caching map based on that iterator
 	  */
-	def apply[K, V](source: IterableOnce[(K, V)]) = new CachingMap[K, V](source.iterator)
+	def apply[K, V](source: IterableOnce[(K, V)], preCached: Map[K, V] = Map[K, V]()) = {
+		if (preCached.isEmpty)
+			from[K, V](source)
+		else
+			new CachingMap[K, V](source.iterator, preCached)
+	}
 	def apply[K, V](items: View[(K, V)]*) = new CachingMap[K, V](items.iterator.map { _.value })
 	
 	/**
@@ -55,7 +61,7 @@ object CachingMap extends MapFactory[CachingMap]
 	  */
 	def single[K, V](item: => (K, V)) = new CachingMap[K, V](PollableOnce(item))
 	
-	def fromFunctions[K, V](items: (() => (K, V))*): CachingMap[K, V] = apply(items.map { _() })
+	def fromFunctions[K, V](items: (() => (K, V))*): CachingMap[K, V] = new CachingMap[K, V](items.iterator.map { _() })
 }
 
 /**
@@ -76,21 +82,18 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 	override def get(key: K) = builder.get(key).orElse { cacheIterator.find { _._1 == key }.map { _._2 } }
 	
 	override def removed(key: K) = {
-		if (builder.contains(key))
-			new CachingMap[K, V](cacheIterator, builder.currentState)
-		else if (isFullyCached)
-			this
+		// Fully caches this map when removing keys
+		if (builder.contains(key) || cacheRemaining().exists { _._1 == key })
+			CachingMap.initialized(fullyCached() - key)
 		else
-			new CachingMap[K, V](cacheIterator.filterNot { _._1 == key }, builder.currentState)
+			this
 	}
 	override def updated[V1 >: V](key: K, value: V1) = {
-		if (builder.contains(key))
-			new CachingMap[K, V1](cacheIterator, builder.currentState.updated(key, value))
-		else if (isFullyCached)
-			CachingMap.initialized(builder.currentState.updated(key, value))
+		// Fully caches this map when updating
+		if (builder.contains(key) || cacheRemaining().exists { _._1 == key })
+			CachingMap.initialized(fullyCached().updated(key, value))
 		else
-			new CachingMap[K, V1](Iterator.single(key -> value) ++ cacheIterator.filterNot { _._1 == key },
-				builder.currentState)
+			new CachingMap[K, V1](Iterator.single(key -> value), fullyCached())
 	}
 	
 	override def empty = CachingMap.empty[K, V]
@@ -104,11 +107,13 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 	
 	override def removedAll(keys: IterableOnce[K]) = {
 		if (isFullyCached)
-			CachingMap.initialized(builder.currentState -- keys)
+			CachingMap.initialized(fullyCached() -- keys)
 		else {
 			val k = keys.iterator.toSet
-			new CachingMap[K, V](cacheIterator.filterNot { case (key, _) => k.contains(key) },
-				builder.currentState -- k)
+			if (k.isEmpty)
+				this
+			else
+				new CachingMap[K, V](iterator.filterNot { case (key, _) => k.contains(key) })
 		}
 	}
 	
@@ -118,8 +123,12 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 	override def contains(key: K) = builder.contains(key) || cacheIterator.exists { _._1 == key }
 	override def isDefinedAt(key: K) = contains(key)
 	
-	override def concat[V2 >: V](suffix: IterableOnce[(K, V2)]) =
-		new CachingMap[K, V2](cacheIterator ++ suffix, builder.currentState)
+	override def concat[V2 >: V](suffix: IterableOnce[(K, V2)]) = {
+		if (isFullyCached)
+			new CachingMap[K, V2](suffix.iterator, fullyCached())
+		else
+			new CachingMap[K, V2](iterator ++ suffix)
+	}
 	
 	
 	// OTHER    ------------------------------

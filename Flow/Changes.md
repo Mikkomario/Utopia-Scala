@@ -62,7 +62,7 @@
 - Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
 ### New Features
 - **ModelDeclarations** now support optional properties
-- Added **LazyTree** and **LazyInitIterator**
+- Added **CachingMap**, **LazyTree** and **LazyInitIterator**
 - Added **NoOpLogger** object
 ### New Methods
 - **CanBeAboutZero**

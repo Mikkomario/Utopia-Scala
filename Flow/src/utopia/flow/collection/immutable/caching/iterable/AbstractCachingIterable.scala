@@ -121,6 +121,19 @@ abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @unchecked
 	// OTHER    ---------------------------
 	
 	/**
+	  * Caches all remaining items from the source iterator and returns a fully built collection
+	  * @return A fully cached / built collection
+	  */
+	def fullyCached() = {
+		if (isFullyCached)
+			builder.currentState
+		else {
+			source.foreach { builder += _ }
+			builder.currentState
+		}
+	}
+	
+	/**
 	  * @return An iterator that returns items that have not yet been cached by this collection,
 	  *         except that they become cached the moment they're returned by this iterator.
 	  */
