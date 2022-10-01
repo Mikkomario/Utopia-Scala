@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable
 
 import utopia.flow.collection.mutable.iterator.PollableOnce
+import utopia.flow.view.immutable.caching.Lazy
 
 object View
 {
@@ -18,6 +19,8 @@ object View
 	
 	private class ViewWrapper[+A](_value: => A) extends View[A] {
 		override def value = _value
+		
+		override def mapValue[B](f: A => B) = Lazy { f(_value) }
 	}
 }
 
@@ -43,4 +46,15 @@ trait View[+A] extends Any
 	  * @return An iterator of length 1 that returns the value of this view
 	  */
 	def valueIterator: Iterator[A] = PollableOnce(value)
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Creates a new view that yields a mapped value of this view
+	  * @param f A mapping function to apply
+	  * @tparam B Type of mapping result
+	  * @return A new view that yields the mapped value / values
+	  */
+	def mapValue[B](f: A => B): View[B] = MappingView(this)(f)
 }

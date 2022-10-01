@@ -57,6 +57,26 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def removeDependency(dependency: Any): Unit
 	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * @return Whether this item will <b>never</b> change its value
+	  */
+	def isFixed: Boolean = !isChanging
+	/**
+	  * @return The current fixed value of this pointer (will continue to remain the same)
+	  */
+	def fixedValue = if (isChanging) None else Some(value)
+	
+	
+	// IMPLEMENTED  -----------------
+	
+	override def mapValue[B](f: A => B) = map(f)
+	
+	
+	// OTHER	--------------------
+	
 	/**
 	  * @param valueCondition A condition for finding a suitable future
 	  * @return A future where this changing instance's value triggers the specified condition the first time
@@ -95,14 +115,14 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] = MergeMirror.of(this, other)(f)
 	/**
-	 * @param first Another changing item
-	 * @param second Yet another changing item
-	 * @param merge A merge function
-	 * @tparam B Type of the second changing item
-	 * @tparam C Type of the third changing item
-	 * @tparam R Type of merge result
-	 * @return A mirror that merges the values from all three of these items
-	 */
+	  * @param first Another changing item
+	  * @param second Yet another changing item
+	  * @param merge A merge function
+	  * @tparam B Type of the second changing item
+	  * @tparam C Type of the third changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from all three of these items
+	  */
 	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R): Changing[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
 	/**
@@ -123,21 +143,6 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def delayedBy(threshold: Duration)(implicit exc: ExecutionContext): Changing[A] =
 		DelayedView.of(this, threshold)
-	
-	
-	// COMPUTED	--------------------
-	
-	/**
-	  * @return Whether this item will <b>never</b> change its value
-	  */
-	def isFixed: Boolean = !isChanging
-	/**
-	  * @return The current fixed value of this pointer (will continue to remain the same)
-	  */
-	def fixedValue = if (isChanging) None else Some(value)
-	
-	
-	// OTHER	--------------------
 	
 	/**
 	  * @param condition A condition to test fixed values with

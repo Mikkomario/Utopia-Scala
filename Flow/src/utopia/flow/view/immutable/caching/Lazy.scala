@@ -87,6 +87,8 @@ object Lazy
 				initialized = true
 			_value
 		}
+		
+		override def mapValue[B](f: A => B) = Lazy { f(value) }
 	}
 }
 

@@ -16,7 +16,7 @@ object ViewGraphEdge
   * @author Mikko Hilpinen
   * @since 30.9.2022, v2.0
   */
-class ViewGraphEdge[N, E](valueView: View[E], endView: View[ViewGraphNode[N, E]])
+class ViewGraphEdge[N, E](val valueView: View[E], val endView: View[ViewGraphNode[N, E]])
 	extends GraphEdge[E, ViewGraphNode[N, E]]
 {
 	override def end = endView.value

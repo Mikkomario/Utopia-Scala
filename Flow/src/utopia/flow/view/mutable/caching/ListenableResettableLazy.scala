@@ -92,12 +92,13 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazy[A] wit
 		resetListeners = resetListeners.filterNot { _ == listener }
 	}
 	
-	override protected def mapToListenable[B](f: A => B) =
-	{
+	override protected def mapToListenable[B](f: A => B) = {
 		val newLazy = ListenableResettableLazy { f(value) }
 		addResetListener(LazyResetListener.onAnyReset { newLazy.reset() })
 		newLazy
 	}
+	
+	override def mapValue[B](f: A => B): ListenableLazy[B] = mapToListenable(f)
 	
 	
 	// OTHER    -------------------------------
