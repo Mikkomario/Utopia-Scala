@@ -8,8 +8,8 @@ import utopia.flow.collection.template.GraphNode
   * @author Mikko Hilpinen
   * @since 28.10.2016
   */
-case class GraphEdge[N, E, GNode <: GraphNode[N, E, GNode, _]](override val value: E, override val end: GNode)
-	extends template.GraphEdge[N, E, GNode]
+case class GraphEdge[+A, +Node](override val value: A, override val end: Node)
+	extends template.GraphEdge[A, Node]
 {
 	// OTHER METHODS    ----------
 	
@@ -17,11 +17,12 @@ case class GraphEdge[N, E, GNode <: GraphNode[N, E, GNode, _]](override val valu
 	  * Creates a new edge that has different content
 	  * @param content The contents of the new edge
 	  */
-	def withContent(content: E) = GraphEdge[N, E, GNode](content, end)
+	// TODO: Rename
+	def withContent[B](content: B) = GraphEdge(content, end)
 	
 	/**
 	  * Creates a new edge that has a different end node
 	  * @param node The node the new edge points towards
 	  */
-	def pointingTo[B, G <: GraphNode[B, E, G, _]](node: G): GraphEdge[B, E, G] = GraphEdge(value, node)
+	def pointingTo[N2](node: N2): GraphEdge[A, N2] = GraphEdge(value, node)
 }

@@ -25,6 +25,7 @@ object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case l: LazyVector[A] => l
+		case s: LazySeq[A] => new LazyVector[A](s.lazyContents.toIndexedSeq)
 		case s: IndexedSeq[A] => new LazyVector[A](s.map(Lazy.initialized))
 		case _ => new LazyVector[A](source.iterator.map(Lazy.initialized).toIndexedSeq)
 	}
@@ -93,7 +94,7 @@ class LazyVector[+A] private(wrapped: IndexedSeq[Lazy[A]])
 	override def length = wrapped.length
 	
 	override protected def factory = LazyVector
-	override protected def lazyContents = wrapped
+	override def lazyContents = wrapped
 	
 	override def iterator = wrapped.iterator.map { _.value }
 	

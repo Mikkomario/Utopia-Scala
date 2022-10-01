@@ -5,8 +5,9 @@ import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.view.immutable.View
 
 import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.MapOps.WithFilter
 import scala.collection.immutable.{MapOps, VectorBuilder}
-import scala.collection.{MapFactory, mutable}
+import scala.collection.{IterableOps, MapFactory, mutable}
 
 object CachingMap extends MapFactory[CachingMap]
 {
@@ -76,6 +77,7 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 	extends AbstractCachingIterable[(K, V), CompoundingMapBuilder[K, V @uncheckedVariance], Map[K, V]](
 		source, new CompoundingMapBuilder[K, V](preCached))
 		with Map[K, V] with MapOps[K, V, CachingMap, CachingMap[K, V]]
+		with IterableOps[(K, V), CachingSeq, CachingMap[K, V]]
 {
 	// IMPLEMENTED  --------------------------
 	
@@ -105,6 +107,8 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 	override protected def newSpecificBuilder: mutable.Builder[(K, V @uncheckedVariance), CachingMap[K, V]] =
 		CachingMap.newBuilder
 	
+	override def withFilter(p: ((K, V)) => Boolean) = new FilteredView(p)
+	
 	override def removedAll(keys: IterableOnce[K]) = {
 		if (isFullyCached)
 			CachingMap.initialized(fullyCached() -- keys)
@@ -130,6 +134,17 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 			new CachingMap[K, V2](iterator ++ suffix)
 	}
 	
+	override def take(n: Int) = {
+		if (n <= 0)
+			CachingMap.empty[K, V]
+		else if (isFullyCached && sizeCompare(n) <= 0)
+			this
+		else if (builder.sizeCompare(n) >= 0)
+			CachingMap.initialized(builder.currentState.take(n))
+		else
+			new CachingMap[K, V](iterator.take(n))
+	}
+	
 	
 	// OTHER    ------------------------------
 	
@@ -139,4 +154,9 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 	  *         None if no item in this map contains that key, or if that key hasn't yet been cached.
 	  */
 	def getCached(key: K) = builder.get(key)
+	
+	
+	// NESTED   -----------------------------
+	
+	class FilteredView(p: ((K, V)) => Boolean) extends WithFilter[K, V, CachingSeq, CachingMap](CachingMap.this, p)
 }

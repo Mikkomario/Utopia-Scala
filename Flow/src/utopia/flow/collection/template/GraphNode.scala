@@ -15,9 +15,9 @@ import scala.math.Ordered.orderingToOrdered
 object GraphNode
 {
 	type AnyNode = GraphNode[_, _, _, _]
-	type AnyEdge = GraphEdge[_, _, _]
+	type AnyEdge = GraphEdge[_, _]
 	
-	private class PathsFinder[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode], C]
+	private class PathsFinder[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E, GNode], C]
 	(start: GNode, destinations: Set[GNode => Boolean], startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
 	(implicit ord: Ordering[C])
 	{
@@ -181,7 +181,7 @@ object GraphNode
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]]
+trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E, GNode]]
 	extends View[N]
 {
     // TYPES    --------------------
@@ -194,7 +194,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	/**
 	  * @return The edges leaving this node.
 	  */
-    def leavingEdges: Seq[Edge]
+    def leavingEdges: Iterable[Edge]
 	
 	/**
 	  * @return This node
@@ -207,7 +207,8 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	/**
 	  * The nodes accessible from this node
 	  */
-	def endNodes = leavingEdges.map { _.end }.distinct
+	// TODO: Use .distinctBy(Identity) instead?
+	def endNodes = leavingEdges.map { _.end }.toSet
 	
 	/**
 	  * @return An iterator that returns all nodes within this graph, starting with this one.
@@ -617,7 +618,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * however, a single empty route will be returned. The end node will always be at the end of
      * each route and nowhere else. If there are no connecting routes, an empty array is returned.
      */
-    def routesTo(node: AnyNode): Seq[Route] = {
+    def routesTo(node: AnyNode): Iterable[Route] = {
 		// If trying to find routes to self, will have to handle limitations a bit differently
 		if (node == this) {
 			leavingEdges.find { _.end == this } match {
@@ -629,7 +630,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 			routesTo(node, Set())
 	}
     // Uses recursion
-    private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Seq[Route] =
+    private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Iterable[Route] =
     {
 		// Tries to find the destination from each connected edge that leads to a new node
 		val newVisitedNodes = visitedNodes + this
@@ -677,7 +678,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 		
 		// Performs the operation on self first
 		// If that didn't yield a result, tries children instead
-		operation(repr).orElse(endNodes.toSet.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
+		operation(repr).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
 	}
 	
 	/**

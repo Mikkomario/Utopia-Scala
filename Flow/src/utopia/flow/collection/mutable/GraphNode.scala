@@ -12,12 +12,12 @@ import scala.collection.mutable
  * @author Mikko Hilpinen
  * @since 28.10.2016
  */
-class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N, E], GraphEdge[N, E, GraphNode[N, E]]]
+class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N, E], GraphEdge[E, GraphNode[N, E]]]
 {
     // TYPES    --------------------
     
     type Node = GraphNode[N, E]
-    type Edge = GraphEdge[N, E, Node]
+    type Edge = GraphEdge[E, Node]
     
     
     // IMPLEMENTED    --------------

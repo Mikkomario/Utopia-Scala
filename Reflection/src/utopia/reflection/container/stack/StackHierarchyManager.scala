@@ -24,7 +24,7 @@ object StackHierarchyManager
 	// TYPES	-------------------------
 	
 	private type Node = GraphNode[Stackable, Int]
-	private type Edge = GraphEdge[Stackable, Int, Node]
+	private type Edge = GraphEdge[Int, Node]
 	
 	
 	// ATTRIBUTES	---------------------

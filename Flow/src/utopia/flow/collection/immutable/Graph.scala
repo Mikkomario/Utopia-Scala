@@ -8,7 +8,7 @@ object Graph
 {
 	trait GraphViewNode[N, E] extends GraphNode[N, E, GraphViewNode[N, E], GraphViewEdge[N, E]]
 	
-	trait GraphViewEdge[N, E] extends GraphEdge[N, E, GraphViewNode[N, E]]
+	trait GraphViewEdge[N, E] extends GraphEdge[E, GraphViewNode[N, E]]
 	
 	/**
 	 * @param isTwoWayBound Whether the resulting graph should be two-way bound

@@ -24,6 +24,7 @@ object LazySeq extends SeqFactory[LazySeq] with LazyFactory[LazySeq]
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case l: LazySeq[A] => l
+		case v: LazyVector[A] => new LazySeq[A](CachingSeq.from(v.lazyContents))
 		case c: CachingSeq[A] => new LazySeq[A](c.map(Lazy.initialized))
 		case c => new LazySeq[A](CachingSeq(c.iterator.map(Lazy.initialized)))
 	}
@@ -41,32 +42,13 @@ object LazySeq extends SeqFactory[LazySeq] with LazyFactory[LazySeq]
   * @since 24.7.2022, v1.16
   */
 class LazySeq[+A] private(wrapped: CachingSeq[Lazy[A]])
-	extends Seq[A] with SeqOps[A, LazySeq, LazySeq[A]] with LazySeqLike[A, LazySeq]
+	extends AbstractLazyIterable[A](wrapped)
+		with Seq[A] with SeqOps[A, LazySeq, LazySeq[A]] with LazySeqLike[A, LazySeq]
 {
-	// COMPUTED -----------------------------
-	
-	/**
-	  * @return The currently initialized portion of this sequence
-	  */
-	def current = wrapped.current.flatMap { _.current }
-	
-	/**
-	  * @return A lazily initialized vector containing all elements from this iterable collection
-	  */
-	def toLazyVector = LazyVector(wrapped.toVector)
-	
-	/**
-	  * @return Whether this sequence has been completely initialized and there is no lazy computation to perform
-	  */
-	def isFullyCached = wrapped.isFullyCached && wrapped.forall { _.isInitialized }
-	
-	
 	// IMPLEMENTED  -------------------------
 	
-	override def iterator = wrapped.iterator.map { _.value }
-	
 	override protected def factory = LazySeq
-	override protected def lazyContents = wrapped
+	override def lazyContents = wrapped
 	
 	override def empty = LazySeq.empty
 	override def iterableFactory = LazySeq
@@ -81,19 +63,8 @@ class LazySeq[+A] private(wrapped: CachingSeq[Lazy[A]])
 	override def isEmpty = wrapped.isEmpty
 	override def length = wrapped.length
 	
-	// Doesn't record the intermediate state unless necessary
-	override def head = wrapped.head.value
-	override def headOption = wrapped.headOption.map { _.value }
-	// When querying for the last item, uses the vector state
-	override def last = wrapped.last.value
-	override def lastOption = wrapped.lastOption.map { _.value }
-	
 	override def tail = new LazySeq(wrapped.tail)
 	override def init = new LazySeq(wrapped.init)
-	
-	override def knownSize = wrapped.knownSize
-	
-	override def toIndexedSeq = toLazyVector
 	
 	override def lengthCompare(otherSize: Int) = wrapped.lengthCompare(otherSize)
 	override def lengthCompare(that: Iterable[_]) = wrapped.lengthCompare(that)

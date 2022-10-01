@@ -21,7 +21,7 @@ trait LazySeqLike[+A, +Coll[X]]
 	/**
 	  * @return Lazily initialized contents within this sequence
 	  */
-	protected def lazyContents: IterableOnce[Lazy[A]]
+	def lazyContents: Iterable[Lazy[A]]
 	
 	
 	// OTHER    -----------------------
