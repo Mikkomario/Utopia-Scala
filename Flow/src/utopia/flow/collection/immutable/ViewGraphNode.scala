@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.immutable.Graph.GraphViewNode
 import utopia.flow.collection.template.GraphNode
+import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -20,6 +20,8 @@ object ViewGraphNode
 	  */
 	def apply[N, E](value: View[N], leavingEdges: Iterable[ViewGraphEdge[N, E]]) =
 		new ViewGraphNode[N, E](value, leavingEdges)
+	
+	// def lazily[N, E]()
 }
 
 /**
@@ -33,7 +35,13 @@ class ViewGraphNode[N, E](valueView: View[N], override val leavingEdges: Iterabl
 {
 	// TYPES    --------------------------------
 	
+	/**
+	  * Type of nodes in this graph
+	  */
 	type Node = ViewGraphNode[N, E]
+	/**
+	  * Type of edges in this graph
+	  */
 	type Edge = ViewGraphEdge[N, E]
 	
 	
@@ -56,40 +64,34 @@ class ViewGraphNode[N, E](valueView: View[N], override val leavingEdges: Iterabl
 	  * @tparam E2 Type of new edge value
 	  * @return A new mapped node
 	  */
-	def mapAll[N2, E2](valueMap: N => N2)(edgeValueMap: E => E2) = {
-		val mappedNodes = mutable.Map[ViewGraphNode[N, E], ViewGraphNode[N2, E2]]()
-		_mapAll(mappedNodes)(valueMap)(edgeValueMap)
-	}
-	private def _mapAll[N2, E2](mappedNodes: mutable.Map[Node, ViewGraphNode[N2, E2]])
-	                           (valueMap: N => N2)(edgeMap: E => E2): ViewGraphNode[N2, E2] =
-	{
-		// Maps the edge end nodes lazily
-		val newEdges = leavingEdges.map { edge => ViewGraphEdge(edge.valueView.mapValue(edgeMap),
-			Lazy { mappedNodes.getOrElse(edge.end, edge.end._mapAll(mappedNodes)(valueMap)(edgeMap)) }) }
-		val result = ViewGraphNode(valueView.mapValue(valueMap), newEdges)
-		// Stores mapping results so that same nodes will map to same instances and infinite recursive loops are avoided
-		mappedNodes += (this -> result)
-		result
-	}
-	
+	def mapAll[N2, E2](valueMap: N => N2)(edgeValueMap: E => E2) =
+		_map { _.mapValue(valueMap) } { _.mapValue(edgeValueMap) }
 	/**
 	  * Maps all node values in this graph
 	  * @param f A mapping function applied to graph node values
 	  * @tparam N2 New node value type
 	  * @return A mapped copy of this node / graph
 	  */
-	def mapValues[N2](f: N => N2) = {
-		val mappedNodes = mutable.Map[ViewGraphNode[N, E], ViewGraphNode[N2, E]]()
-		_mapValues(mappedNodes)(f)
+	def mapValues[N2](f: N => N2) = _map { _.mapValue(f) }(Identity)
+	/**
+	  * Maps all edge values in this graph
+	  * @param f A mapping function applied to this graph's edge values
+	  * @tparam E2 Mapping result type
+	  * @return A mapped copy of this node / graph
+	  */
+	def mapEdgeValues[E2](f: E => E2) = _map(Identity) { _.mapValue(f) }
+	
+	private def _map[N2, E2](valueMap: View[N] => View[N2])(edgeMap: View[E] => View[E2]): ViewGraphNode[N2, E2] = {
+		val mappedNodes = mutable.Map[ViewGraphNode[N, E], ViewGraphNode[N2, E2]]()
+		_map(mappedNodes)(valueMap)(edgeMap)
 	}
-	// TODO: WET WET
-	private def _mapValues[N2](mappedNodes: mutable.Map[Node, ViewGraphNode[N2, E]])
-	                          (valueMap: N => N2): ViewGraphNode[N2, E] =
+	private def _map[N2, E2](mappedNodes: mutable.Map[Node, ViewGraphNode[N2, E2]])
+	                        (valueMap: View[N] => View[N2])(edgeMap: View[E] => View[E2]): ViewGraphNode[N2, E2] =
 	{
 		// Maps the edge end nodes lazily
-		val newEdges = leavingEdges.map { edge => ViewGraphEdge(edge.valueView,
-			Lazy { mappedNodes.getOrElse(edge.end, edge.end._mapValues(mappedNodes)(valueMap)) }) }
-		val result = ViewGraphNode(valueView.mapValue(valueMap), newEdges)
+		val newEdges = leavingEdges.map { edge => ViewGraphEdge(edgeMap(edge.valueView),
+			Lazy { mappedNodes.getOrElse(edge.end, edge.end._map(mappedNodes)(valueMap)(edgeMap)) }) }
+		val result = ViewGraphNode(valueMap(valueView), newEdges)
 		// Stores mapping results so that same nodes will map to same instances and infinite recursive loops are avoided
 		mappedNodes += (this -> result)
 		result
