@@ -7,6 +7,7 @@ import utopia.flow.collection.mutable.iterator.{Counter, Generator}
   * @author Mikko Hilpinen
   * @since 17.4.2019
   */
+@deprecated("Counter was deprecated", "v2.0")
 object CounterTest extends App
 {
 	val stringGen = Generator[String]("A") { _ + "A" }

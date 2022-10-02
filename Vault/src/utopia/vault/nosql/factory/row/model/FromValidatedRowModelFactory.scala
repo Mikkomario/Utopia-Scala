@@ -9,5 +9,5 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
   */
 trait FromValidatedRowModelFactory[+A] extends FromRowModelFactory[A] with FromModelFactoryWithSchema[A]
 {
-	override def schema = table.requirementDeclaration
+	override def schema = table.toModelDeclaration
 }

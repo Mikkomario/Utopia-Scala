@@ -2,7 +2,6 @@ package utopia.flow.async.context
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.collection.mutable.iterator.Counter
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
@@ -23,7 +22,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 {
     // ATTRIBUTES    ---------------------
     
-    private val indexCounter = new Counter(1)
+    private val indexCounter = Iterator.iterate(1) { _ + 1 }
     // Creates the core threads from the very beginning
     private val threads = VolatileList(Vector.fill(coreSize)(WorkerThread.core(nextCoreName()) { nextQueueTask() }))
     private val queue = VolatileList[Runnable]()

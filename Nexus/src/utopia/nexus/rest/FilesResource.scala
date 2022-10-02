@@ -10,7 +10,6 @@ import java.nio.file.Files
 import scala.util.Try
 import scala.util.Failure
 import utopia.access.http.Status._
-import utopia.flow.collection.mutable.iterator.Counter
 import utopia.flow.generic.model.immutable.Model
 
 import java.time.LocalDateTime
@@ -75,7 +74,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
                     request.headers.preferredCharsetOrUTF8)
         else
         {
-            val counter = new Counter(1)
+            val counter = Iterator.iterate(1) { _ + 1 }
             val nameFromParam = request.parameters("filename").string.orElse(request.parameters("name").string)
             val partNames = request.body.map(p => p.name.getOrElse(nameFromParam.getOrElse(
                     "upload_" + LocalDateTime.now()) + (if (request.body.size > 1) "_" + counter.next() else "")))

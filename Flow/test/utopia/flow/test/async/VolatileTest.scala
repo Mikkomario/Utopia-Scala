@@ -7,6 +7,7 @@ import utopia.flow.view.mutable.async.VolatileFlag
  * @author Mikko Hilpinen
  * @since 17.4.2019
  */
+@deprecated("Needs to be rewritten", "v2.0")
 object VolatileTest extends App
 {
 	// Tests volatile flag logic

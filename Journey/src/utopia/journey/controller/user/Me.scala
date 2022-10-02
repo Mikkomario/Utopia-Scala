@@ -66,6 +66,6 @@ class Me(queueSystem: QueueSystem, loginEmail: Option[String])
 		case Success(user) =>
 			userWasChanged = !previousUserId.contains(user.id)
 			container.current = Some(user)
-		case Failure(error) => log(error, "User data retrieval failed")
+		case Failure(error) => logger(error, "User data retrieval failed")
 	}
 }
