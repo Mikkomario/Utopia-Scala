@@ -111,7 +111,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 						cached.update { _.filterNot { _.id == invitationId } }
 						hiddenIds -= invitationId
 						Success(activeCached)
-					case Response.Failure(status, message) =>
+					case Response.Failure(status, message, _) =>
 						status match
 						{
 							case Unauthorized => Failure(new UnauthorizedRequestException(
@@ -157,7 +157,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 				case Right(response) =>
 					response match
 					{
-						case Response.Success(status, body) =>
+						case Response.Success(status, body, _) =>
 							body match
 							{
 								case c: Content =>
@@ -173,7 +173,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 									}
 								case Empty => log(s"Invitation answer response didn't contain a body. Status: $status")
 							}
-						case Response.Failure(status, message) => log(new RequestFailedException(message.getOrElse(
+						case Response.Failure(status, message, _) => log(new RequestFailedException(message.getOrElse(
 							s"Server rejected invitation answer. Status: $status")))
 					}
 				case Left(notSent) =>

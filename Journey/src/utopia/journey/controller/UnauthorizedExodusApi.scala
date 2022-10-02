@@ -64,7 +64,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		post("users", newUser.toModel).tryMapIfSuccess
 		{
 			// Checks response status and parses user data from the body
-			case Response.Success(status, body) =>
+			case Response.Success(status, body, _) =>
 				body match
 				{
 					case c: Content =>
@@ -90,7 +90,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 					case Empty => Failure(new EmptyResponseException(
 						s"Expected to receive new user data. Instead received an empty response with status $status"))
 				}
-			case Response.Failure(status, message) =>
+			case Response.Failure(status, message, _) =>
 				Failure(new RequestFailedException(message.getOrElse(s"Received $status when posting new user")))
 		}
 	}
@@ -108,7 +108,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		
 		post("devices", device.toModel,
 			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {
-			case Response.Success(status, body) =>
+			case Response.Success(status, body, _) =>
 				body match
 				{
 					case c: Content =>
@@ -161,7 +161,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	{
 		get(s"devices/$deviceId/device-key",
 			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {
-			case Response.Success(status, body) =>
+			case Response.Success(status, body, _) =>
 				body.value.string match
 				{
 					case Some(key) =>
@@ -184,7 +184,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		}
 		
 		get(s"devices/$deviceId/session-key", headersMod = modHeaders).tryMapIfSuccess {
-			case Response.Success(status, body) =>
+			case Response.Success(status, body, _) =>
 				body.value.string match
 				{
 					case Some(key) => Success(new ExodusApi(gateway, rootPath, credentials, key))
