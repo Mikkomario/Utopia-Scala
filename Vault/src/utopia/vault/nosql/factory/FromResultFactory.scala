@@ -176,6 +176,7 @@ trait FromResultFactory[+A]
 	  * @param connection Database connection (implicit)
 	  * @return Whether there exists data in the DB for specified condition
 	  */
+	// TODO: Add join support
 	def exists(where: Condition)(implicit connection: Connection) = Exists(target, where)
 	/**
 	  * Checks whether the specified index is valid

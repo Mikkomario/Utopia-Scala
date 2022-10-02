@@ -120,10 +120,20 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: FiniteDuration) e
 					// This clearance process continues as long as there are pending requests to clear
 					while (pendingRequests.nonEmpty) {
 						// Waits the smallest possible time until performing the next request
-						nextAvailableRequestTime.foreach { Wait(_, waitLock) }
-						// Records request time and performs it asynchronously
-						requestTimes :+= Now
-						pendingRequests.pop().foreach { _(true) }
+						// If the wait is interrupted, stops, cancelling all pending requests
+						val shouldContinue = nextAvailableRequestTime match {
+							case Some(nextWaitTarget) => Wait(nextWaitTarget, waitLock)
+							case None => true
+						}
+						// Case: Normal operation => continues
+						if (shouldContinue) {
+							// Records request time and performs the request asynchronously
+							requestTimes :+= Now
+							pendingRequests.pop().foreach { _(true) }
+						}
+						// Case: Interrupted during Wait
+						else
+							stop()
 					}
 				}
 			}

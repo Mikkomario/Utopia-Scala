@@ -103,16 +103,15 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
         c.optionIndexOf(item).map { i =>
             if (c.size == 1)
                 Bounds(Point.origin, size)
-            else
-            {
+            else {
                 // Includes half of the area between items (if there is no item, uses cap)
-                val top = if (i > 0) (item.coordinateAlong(direction) - c(i - 1).maxCoordinateAlong(direction)) / 2 else
-                    item.coordinateAlong(direction)
-                val bottom = if (i < c.size - 1) (c(i + 1).coordinateAlong(direction) - item.maxCoordinateAlong(direction)) / 2 else
-                    length - item.maxCoordinateAlong(direction)
+                val top = if (i > 0) (item.position.along(direction) - c(i - 1).maxAlong(direction)) / 2 else
+                    item.position.along(direction)
+                val bottom = if (i < c.size - 1) (c(i + 1).position.along(direction) - item.maxAlong(direction)) / 2 else
+                    length - item.maxAlong(direction)
                 
                 // Also includes the whole stack breadth
-                Bounds(item.position - direction(top), item.size.withDimension(breadth, direction.perpendicular) +
+                Bounds(item.position - direction(top), item.size.withDimension(direction.perpendicular(breadth)) +
                     direction(top + bottom))
             }
         }
@@ -128,14 +127,12 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
         val p = relativePoint.along(direction)
         val c = components
         // Finds the first item past the relative point
-        c.indexWhereOption { _.coordinateAlong(direction) > p }.map
-        {
-            nextIndex =>
-                // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
-                if (nextIndex == 0 || c(nextIndex).coordinateAlong(direction) - p < p - c(nextIndex - 1).maxCoordinateAlong(direction))
-                    c(nextIndex)
-                else
-                    c(nextIndex - 1)
+        c.indexWhereOption { _.position.along(direction) > p }.map { nextIndex =>
+            // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
+            if (nextIndex == 0 || c(nextIndex).position.along(direction) - p < p - c(nextIndex - 1).maxAlong(direction))
+                c(nextIndex)
+            else
+                c(nextIndex - 1)
             
         }.orElse(c.lastOption)
     }

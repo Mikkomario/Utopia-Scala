@@ -2,15 +2,21 @@ package utopia.paradigm.shape.template
 
 import utopia.flow.operator.{ApproximatelyZeroable, Combinable, EqualsFunction, LinearMeasurable, LinearScalable}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
+import utopia.paradigm.shape.shape1d.Vector1D
 
-import scala.collection.immutable.VectorBuilder
 import scala.math.Ordering.Double.TotalOrdering
 
 object VectorLike
 {
+	/**
+	  * A type alias representing a vector of any length with any 'Repr'
+	  */
+	type V = VectorLike[_]
+	
 	/**
 	  * Approximate equals function for VectorLike elements
 	  */
@@ -47,16 +53,14 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param dimensions A set of dimensions
 	  * @return A parsed version of the dimensions
 	  */
-	def buildCopy(dimensions: Seq[Double]): Repr
+	def buildCopy(dimensions: IndexedSeq[Double]): Repr
 	
 	
 	// IMPLEMENTED	-----------------
 	
 	override def isZero = dimensions.forall { _ == 0.0 }
-	
 	override def isAboutZero = dimensions.forall { _ ~== 0.0 }
-	
-	override protected def zeroDimension = 0.0
+	override def zeroDimension = 0.0
 	
 	override def length = math.sqrt(this dot this)
 	
@@ -80,6 +84,12 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	
 	
 	// COMPUTED	---------------------
+	
+	/**
+	  * @return This vector separated to individual 1-dimensional components
+	  */
+	def components =
+		dimensions.zipWithIndex.map { case (length, index) => Vector1D(length, Axis(index)) }
 	
 	/**
 	  * This vector with length of 1
@@ -131,49 +141,23 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  */
 	def +(dimensions: Iterable[Double]) = combineWithDimensions(dimensions) { _ + _ }
 	/**
-	  * @param x X translation
-	  * @param more Y, Z, ... translation
-	  * @return A translated version of this element
-	  */
-	@deprecated("This method will be removed. Please use another variation of + instead", "v2.3")
-	def +(x: Double, more: Double*) = combineWithDimensions(x +: more) { _ + _ }
-	/**
-	  * @param adjust Translation on target axis
-	  * @param axis Target axis
-	  * @return A copy of this element with one dimension translated
-	  */
-	@deprecated("Please use the tuple version of this method instead", "v2.6")
-	def +(adjust: Double, axis: Axis) = mapAxis(axis) { _ + adjust }
-	/**
 	  * @param directionalAdjust Axis adjust combo
 	  * @return A copy of this vector with specified dimension appended
 	  */
+	@deprecated("Please use +(Vector1D) instead", "v1.1")
 	def +(directionalAdjust: (Axis, Double)) = mapAxis(directionalAdjust._1) { _ + directionalAdjust._2 }
 	
-	/**
-	  * @param adjust Translation on target axis
-	  * @param axis Target axis
-	  * @return A copy of this element with one dimension translated
-	  */
-	@deprecated("Please use the tuple version of this method instead", "v2.6")
-	def -(adjust: Double, axis: Axis) = this + (axis -> -adjust)
 	/**
 	  * @param directionalAdjust An axis adjust combo
 	  * @return A copy of this vector with specified dimension subtracted
 	  */
+	@deprecated("Please use -(Vector1D) instead", "v1.1")
 	def -(directionalAdjust: (Axis, Double)) = mapAxis(directionalAdjust._1) { _ - directionalAdjust._2 }
 	/**
 	  * @param dimensions Dimensions to subtract
 	  * @return A copy of this vector with specified dimensions subtracted
 	  */
 	def -(dimensions: Iterable[Double]) = combineWithDimensions(dimensions) { _ - _ }
-	/**
-	  * @param x X translation (negative)
-	  * @param more Y, Z, ... translation (negative)
-	  * @return A translated version of this element
-	  */
-	@deprecated("This method will be removed. Please use another variation of - instead", "v2.3")
-	def -(x: Double, more: Double*) = combineWithDimensions(x +: more) { _ - _ }
 	
 	/**
 	  * @param dimensions Dimensions to use as multipliers (missing dimensions will be treated as 1)
@@ -189,22 +173,8 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param directedMultiplier Amount axis combo
 	  * @return A copy of this vector multiplied only along the specified axis
 	  */
+	@deprecated("Please use scaledAlong(Double, Axis) instead", "v1.1")
 	def *(directedMultiplier: (Axis, Double)) = mapAxis(directedMultiplier._1) { _ * directedMultiplier._2 }
-	/**
-	  * @param n A multiplier for specified axis
-	  * @param axis Target axis
-	  * @return A copy of this element with one dimension multiplied
-	  */
-	@deprecated("Please use the tuple version of this method instead", "v2.6")
-	def *(n: Double, axis: Axis) = mapAxis(axis) { _ * n }
-	/**
-	 * @param x X modifier
-	 * @param y Y modifier
-	 * @param more Z, etc. modifiers (optional)
-	 * @return A modified copy of this vectorlike instance
-	 */
-	@deprecated("This method will be removed, please use another variation of *", "v2.3")
-	def *(x: Double, y: Double, more: Double*) = combineWithDimensions(Vector(x, y) ++ more) { _ * _ }
 	
 	/**
 	  * @param dimensions Dimensions to use as dividers. 0s and missing dimensions are ignored (treated as 1)
@@ -220,18 +190,18 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param directedDivider A divider axis combination
 	  * @return A copy of this vector divided along the specified axis
 	  */
+	@deprecated("Please use dividedAlong(Double, Axis) instead", "v1.1")
 	def /(directedDivider: (Axis, Double)) = if (directedDivider._2 == 0) repr else
 		mapAxis(directedDivider._1) { _ / directedDivider._2 }
-	/**
-	  * @param n A divider for target axis
-	  * @param axis Target axis
-	  * @return This element divided on specified axis
-	  */
-	@deprecated("Please use the tuple version of this method instead", "v2.6")
-	def /(n: Double, axis: Axis) = if (n == 0) repr else mapAxis(axis) { _ / n }
 	
 	
 	// OTHER	--------------------------
+	
+	/**
+	  * @param axis Targeted axis
+	  * @return A component of this vector applicable to that axis
+	  */
+	def componentAlong(axis: Axis) = Vector1D(dimensions.getOrElse(axis.index, zeroDimension), axis)
 	
 	/**
 	  * The dot product between this and another vector
@@ -248,53 +218,52 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param f A mapping function that also takes dimension index (0 for the first dimension)
 	  * @return A mapped copy of this vector
 	  */
-	def mapWithIndex(f: (Double, Int) => Double) = buildCopy(
-		dimensions.zipWithIndex.map { case (d, i) => f(d, i) })
+	def mapWithIndex(f: (Double, Int) => Double) =
+		buildCopy(dimensions.zipWithIndex.map { case (d, i) => f(d, i) })
+	/**
+	  * Maps all dimensional components of this vector, forming a new vector
+	  * @param f A mapping function applied for all components of this vector
+	  * @return A mapped copy of this vector
+	  */
+	def mapComponents(f: Vector1D => Double) = buildCopy(components.map(f))
 	/**
 	  * @param f A mapping function that also takes targeted axis
 	  * @return A mapped copy of this vector
 	  */
+	@deprecated("Please use mapComponents instead", "v1.1")
 	def mapWithAxis(f: (Double, Axis) => Double) = buildCopy(
-		dimensions.zip(Vector(X, Y, Z)).map { case (d, a) => f(d, a) })
-	/**
-	  * Transforms a coordinate of this vectorlike element and returns the transformed element
-	  * @param f The map function that maps a current coordinate into a new coordinate
-	  * @param along the axis that specifies the mapped coordinate
-	  * @return A copy of this element with the mapped coordinate
-	  */
-	@deprecated("Replaced with mapAxis", "v2.1")
-	def map(f: Double => Double, along: Axis) =
-	{
-		val myDimensions = dimensions
-		val mapIndex = indexForAxis(along)
-		
-		if (myDimensions.size <= mapIndex)
-			repr
-		else
-		{
-			val firstPart = myDimensions.take(mapIndex) :+ f(myDimensions(mapIndex))
-			buildCopy(firstPart ++ myDimensions.drop(mapIndex + 1))
-		}
-	}
+		dimensions.zip(Vector[Axis](X, Y, Z)).map { case (d, a) => f(d, a) })
 	/**
 	  * Maps a single coordinate in this vectorlike element
 	  * @param axis Targeted axis
 	  * @param f A mapping function
 	  * @return A copy of this vectorlike element with mapped coordinate
 	  */
-	def mapAxis(axis: Axis)(f: Double => Double) =
-	{
+	def mapAxis(axis: Axis)(f: Double => Double) = {
 		val myDimensions = dimensions
-		val mapIndex = indexForAxis(axis)
+		val mapIndex = axis.index
 		
 		if (myDimensions.size <= mapIndex)
 			buildCopy(myDimensions.padTo(mapIndex, 0.0) :+ f(0.0))
-		else
-		{
+		else {
 			val firstPart = myDimensions.take(mapIndex) :+ f(myDimensions(mapIndex))
 			buildCopy(firstPart ++ myDimensions.drop(mapIndex + 1))
 		}
 	}
+	
+	/**
+	  * Scales this vector along a singular axis. The other axes remain unaffected.
+	  * @param vector A vector that determines the scaling factor (via length) and the affected axis (vector's axis)
+	  * @return A copy of this vector where one component has been scaled using the specified modifier
+	  */
+	def scaledAlong(vector: Vector1D) = mapAxis(vector.axis) { _ * vector.length }
+	/**
+	  * Divides this vector along a singular axis. The other axes remain unaffected.
+	  * Please note that this vector will remain unaffected if divided by zero.
+	  * @param vector A vector that determines the dividing factor (via length) and the affected axis (vector's axis)
+	  * @return A copy of this vector where one component has been divided with the specified modifier
+	  */
+	def dividedAlong(vector: Vector1D) = if (vector.isZero) repr else mapAxis(vector.axis) { _ / vector.length }
 	
 	/**
 	  * Merges this vectorlike element with another element using a merge function. Dimensions not present in one of the
@@ -303,8 +272,9 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param merge A merge function
 	  * @return A new element with merged or copied dimensions
 	  */
-	def combineWith(other: Dimensional[Double])(merge: (Double, Double) => Double) =
-		combineWithDimensions(other.dimensions)(merge)
+	def combineWith[A](other: Dimensional[A])(merge: (Double, A) => Double) =
+		buildCopy(dimensions.zipPad(other.dimensions, zeroDimension, other.zeroDimension)
+			.map { case (a, b) => merge(a, b) })
 	/**
 	  * Merges this vectorlike element with specified dimensions using a merge function.
 	  * Dimensions not present in one of the elements will be treated as 0
@@ -313,22 +283,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @return A new element with merged or copied dimensions
 	  */
 	def combineWithDimensions(dimensions: Iterable[Double])(merge: (Double, Double) => Double) =
-	{
-		val myDimensions = this.dimensions
-		val otherDimensions = dimensions
-		
-		val builder = new VectorBuilder[Double]()
-		
-		// Merges common indices
-		myDimensions.zip(otherDimensions).foreach { case (a, b) => builder += merge(a, b) }
-		// Adds pairless items
-		if (myDimensions.size > otherDimensions.size)
-			myDimensions.drop(otherDimensions.size).foreach { builder += merge(_, 0.0) }
-		else if (otherDimensions.size > myDimensions.size)
-			otherDimensions.drop(myDimensions.size).foreach { builder += merge(0.0, _) }
-		
-		buildCopy(builder.result())
-	}
+		buildCopy(this.dimensions.zipPad(dimensions, 0.0).map { case (a, b) => merge(a, b) })
 	
 	/**
 	  * @param other Another vectorlike element
@@ -356,42 +311,39 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	def bottomRight(other: Dimensional[Double]) = combineWith(other) { _ max _ }
 	
 	/**
+	  * @param dimension A dimension to replace the matching dimension on this vector
+	  * @return A copy of this vector with the specific component replacing one of this vector's components
+	  */
+	def withDimension(dimension: Vector1D) = {
+		val targetIndex = dimension.axis.index
+		val myDimensions = dimensions
+		val newDimensions = {
+			if (targetIndex < myDimensions.size)
+				myDimensions.updated(targetIndex, dimension.length)
+			else
+				myDimensions.padTo(targetIndex, zeroDimension) :+ dimension.length
+		}
+		buildCopy(newDimensions)
+	}
+	/**
 	  * Creates a copy of this vectorlike instance with a single dimension replaced
 	  * @param amount New amount for the specified dimension
 	  * @param axis Axis that determines target dimension
 	  * @return A copy of this vectorlike instance with specified dimension replaced
 	  */
-	def withDimension(amount: Double, axis: Axis) =
-	{
-		val targetIndex = indexForAxis(axis)
-		val myDimensions = dimensions
-		val newDimensions =
-		{
-			if (targetIndex < myDimensions.size)
-				myDimensions.updated(targetIndex, amount)
-			else
-				myDimensions.padTo(targetIndex, 0.0) :+ amount
-		}
-		buildCopy(newDimensions)
-	}
+	@deprecated("Please use withDimension(Vector1D) instead", "v1.1")
+	def withDimension(amount: Double, axis: Axis): Repr = withDimension(Vector1D(amount, axis))
 	
 	/**
 	  * @param axis Target axis
 	  * @return Whether this vectorlike instance has a positive value for specified dimension
 	  */
 	def isPositiveAlong(axis: Axis) = along(axis) >= 0
-	
 	/**
 	  * @param axis Target axis
 	  * @return A copy of this vectorlike instance with a non-negative value for the specified dimension
 	  */
-	def positiveAlong(axis: Axis) =
-	{
-		if (isPositiveAlong(axis))
-			repr
-		else
-			withDimension(0.0, axis)
-	}
+	def positiveAlong(axis: Axis) = if (isPositiveAlong(axis)) repr else withDimension(Vector1D.zeroAlong(axis))
 	
 	/**
 	  * Creates a new vector with the same direction with this vector
@@ -418,8 +370,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * Calculates the directional difference between these two vectors. The difference is
 	  * absolute (always positive) and doesn't specify the direction of the difference.
 	  */
-	def angleDifference(other: VectorLike[_ <: VectorLike[_]]) =
-	{
+	def angleDifference(other: VectorLike[_ <: VectorLike[_]]) = {
 		// This vector is used as the 'x'-axis, while a perpendicular vector is used as the 'y'-axis
 		// The other vector is then measured against these axes
 		val x: VectorLike[_] = other.projectedOver[VectorLike[Repr]](this)
@@ -443,7 +394,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param axis Target axis
 	  * @return Whether this vector is parallel to the specified axis
 	  */
-	def isParallelWith(axis: Axis): Boolean = isParallelWith(axis.toUnitVector)
+	def isParallelWith(axis: Axis): Boolean = isParallelWith(axis.unit)
 	
 	/**
 	  * Checks whether this vector is perpendicular to another vector (ie. (1, 0) vs. (0, 1))
@@ -453,5 +404,34 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	  * @param axis Target axis
 	  * @return Whether this vector is perpendicular to the specified axis
 	  */
-	def isPerpendicularTo(axis: Axis): Boolean = isPerpendicularTo(axis.toUnitVector)
+	def isPerpendicularTo(axis: Axis): Boolean = isPerpendicularTo(axis.unit)
+	
+	/**
+	  * @param other Another dimensional item
+	  * @return True if this vector is smaller or equal on all dimensions, compared to the other item.
+	  *         False if this vector is larger on all dimensions, compared to the other item.
+	  *         Undefined otherwise.
+	  */
+	def <=(other: Dimensional[Double]) = compareDimensions(other) { _ <= _ }
+	/**
+	  * @param other Another dimensional item
+	  * @return True if this vector is larger or equal on all dimensions, compared to the other item.
+	  *         False if this vector is smaller on all dimensions, compared to the other item.
+	  *         Undefined otherwise.
+	  */
+	def >=(other: Dimensional[Double]) = compareDimensions(other) { _ >= _ }
+	/**
+	  * @param other Another dimensional item
+	  * @return True if this vector is larger on all dimensions, compared to the other item.
+	  *         False if this vector is smaller or equal on all dimensions, compared to the other item.
+	  *         Undefined otherwise.
+	  */
+	def <(other: Dimensional[Double]) = compareDimensions(other) { _ < _ }
+	/**
+	  * @param other Another dimensional item
+	  * @return True if this vector is larger on all dimensions, compared to the other item.
+	  *         False if this vector is smaller or equal on all dimensions, compared to the other item.
+	  *         Undefined otherwise.
+	  */
+	def >(other: Dimensional[Double]) = compareDimensions(other) { _ > _ }
 }

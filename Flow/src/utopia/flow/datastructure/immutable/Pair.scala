@@ -41,6 +41,13 @@ object Pair
 	  * @return That item twice
 	  */
 	def twice[A](item: A) = apply(item, item)
+	
+	/**
+	  * @param item An item or function that will be called twice (call-by-name)
+	  * @tparam A Type of item stored in this pair
+	  * @return A new pair with two values of the specified function
+	  */
+	def fill[A](item: => A) = apply(item, item)
 }
 
 /**
@@ -63,6 +70,15 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	def toMap = Map(Negative -> first, Positive -> second)
 	
 	def unary_- = reverse
+	
+	/**
+	  * @return Whether the two values in this pair are equal
+	  */
+	def isSymmetric = first == second
+	/**
+	  * @return Whether the two values in this pair are not equal
+	  */
+	def isNotSymmetric = !isSymmetric
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -215,6 +231,22 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  */
 	def mergeWith[B, C](other: Pair[B])(f: (A, B) => C) =
 		Pair(f(first, other.first), f(second, other.second))
+	
+	/**
+	  * Merges this pair with another pair, resulting in a pair containing the entries from both
+	  * @param other Another pair
+	  * @tparam B Type of items in the other pair
+	  * @return A pair that combines the values of both of these pairs in tuples
+	  */
+	def zip[B](other: Pair[B]) = Pair((first, other.first), (second, other.second))
+	
+	/**
+	  * Compares the two values in this pair using the specified function
+	  * @param f A function for comparing two values with each other
+	  * @tparam B Type of function result
+	  * @return Function result
+	  */
+	def compareWith[B](f: (A, A) => B) = f(first, second)
 	
 	
 	// NESTED   ------------------------------

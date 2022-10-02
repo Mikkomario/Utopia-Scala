@@ -1,6 +1,8 @@
 # Utopia Annex - List of Changes
 
-## v1.3 (in development)
+## v1.3 - 02.10.2022
+This update introduces some smaller utility additions which aim to make this module more scalable.  
+Most of the changes relate to the **ContainerUpdateLoop** class.
 ### Breaking Changes
 - **Response** (including **Success** and **Failure**) now contains headers
 - **ContainerUpdateLoop** now requires  the `.requestTimeContainer` as a **FileContainer** of **Instant** **Options**

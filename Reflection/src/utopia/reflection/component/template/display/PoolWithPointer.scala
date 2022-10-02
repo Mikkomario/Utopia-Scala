@@ -2,6 +2,14 @@ package utopia.reflection.component.template.display
 
 import utopia.flow.event.{ChangeListener, ChangingLike}
 
+object PoolWithPointer
+{
+	/**
+	  * A pool with a generic pointer
+	  */
+	type ChangingPool[A] = PoolWithPointer[A, ChangingLike[A]]
+}
+
 /**
   * This pool provides access to a changing element
   * @author Mikko Hilpinen

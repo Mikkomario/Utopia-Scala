@@ -102,7 +102,6 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @param changeListener A listener that should be informed (call by name)
 	  */
 	def addListener(changeListener: => ChangeListener[A]): Unit
-	
 	/**
 	  * Registers a new listener to be informed whenever this item's value changes
 	  * @param simulatedOldValue A simulated 'old' value for this changing item to inform the listener of
@@ -124,23 +123,35 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @param dependency A dependency to add (call by name)
 	  */
 	def addDependency(dependency: => ChangeDependency[A]): Unit
+	/**
+	  * Removes a change dependency from being activated in the future
+	  * @param dependency A dependency to remove from this item
+	  */
+	def removeDependency(dependency: Any): Unit
 	
 	/**
 	  * @param valueCondition A condition for finding a suitable future
-	  * @param exc Implicit execution context
 	  * @return A future where this changing instance's value triggers the specified condition the first time
-	  *         (immediately completed if current value already triggers the condition). Please note that the future
-	  *         might never complete.
+	  *         (immediately completed if current value already triggers the condition).
+	  *         Please note that the resulting future might never complete.
 	  */
-	def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext): Future[A]
+	def futureWhere(valueCondition: A => Boolean) = _futureWhere(valueCondition)
+	/**
+	  * @param valueCondition A condition for finding a suitable future
+	  * @return A future where this changing instance's value triggers the specified condition the first time
+	  *         (but not with this item's current value).
+	  *         Please note that the resulting future might never complete.
+	  */
+	def nextFutureWhere(valueCondition: A => Boolean) =
+		_futureWhere(valueCondition, disableImmediateTrigger = true)
 	
+	// TODO: Why are these abstract?
 	/**
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
 	  * @return A mirrored version of this item, using specified mapping function
 	  */
 	def map[B](f: A => B): ChangingLike[B]
-	
 	/**
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
@@ -156,7 +167,6 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @return A mirror that merges the values from both of these items
 	  */
 	def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ChangingLike[R]
-	
 	/**
 	 * @param first Another changing item
 	 * @param second Yet another changing item
@@ -167,7 +177,6 @@ trait ChangingLike[+A] extends Viewable[A]
 	 * @return A mirror that merges the values from all three of these items
 	 */
 	def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (A, B, C) => R): ChangingLike[R]
-	
 	/**
 	  * @param other Another changing item
 	  * @param f A merge function
@@ -192,7 +201,6 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @return Whether this item will <b>never</b> change its value
 	  */
 	def isFixed: Boolean = !isChanging
-	
 	/**
 	  * @return The current fixed value of this pointer (will continue to remain the same)
 	  */
@@ -206,7 +214,6 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @return Whether this changing item is fixed to a value that fulfils the specified condition
 	  */
 	def existsFixed(condition: A => Boolean) = if (isChanging) false else condition(value)
-	
 	/**
 	  * @param condition A condition to test fixed values with
 	  * @return This item if changing or not fixed to a value the specified condition returns true for
@@ -221,11 +228,42 @@ trait ChangingLike[+A] extends Viewable[A]
 	}
 	
 	/**
+	  * Adds a new listener that will be informed whenever this item changes
+	  * @param listener A function called whenever this item changes. Accepts a change event.
+	  * @tparam U Arbitrary result type
+	  */
+	def addContinuousListener[U](listener: ChangeEvent[A] => U) = addListener(ChangeListener.continuous(listener))
+	/**
+	  * Adds a new listener that will be informed whenever this item changes.
+	  * May create and fire a simulated change event for that listener.
+	  * @param simulatedOldValue A simulated "old value" for this item, compared to this item's current value
+	  * @param listener A listener function to call on change events
+	  * @tparam B Type of simulated value
+	  * @tparam U Arbitrary function result type
+	  */
+	def addContinuousListenerAndSimulateEvent[B >: A, U](simulatedOldValue: B)(listener: ChangeEvent[B] => U) =
+		addListenerAndSimulateEvent(simulatedOldValue)(ChangeListener.continuous(listener))
+	
+	/**
 	  * Adds a new function to be called whenever this item's value changes
 	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
 	  *                 change event itself
 	  */
-	def addAnyChangeListener(onChange: => Unit) = addListener(ChangeListener.onAnyChange(onChange))
+	def addContinuousAnyChangeListener[U](onChange: => U) =
+		addListener(ChangeListener.continuousOnAnyChange(onChange))
+	/**
+	  * Adds a new function to be called whenever this item's value changes
+	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
+	  *                 change event itself. Returns whether future change events should also trigger this function.
+	  */
+	def addAnyChangeListener(onChange: => DetachmentChoice) = addListener(ChangeListener.onAnyChange(onChange))
+	
+	/**
+	  * Calls the specified function when this item changes the next time
+	  * @param f A function that will be called when this item changes
+	  * @tparam U Arbitrary function result type
+	  */
+	def onNextChange[U](f: ChangeEvent[A] => U) = addListener(ChangeListener.once(f))
 	
 	/**
 	  * Adds a new dependency to this changing item
@@ -236,55 +274,93 @@ trait ChangingLike[+A] extends Viewable[A]
 		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
 	
 	/**
-	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that catches errors, returning a try
-	  * @param exc Implicit execution context
-	  * @tparam B Successful mapping result type
-	  * @return An asynchronously mapped view of this changing item
+	  * Maps this changing item with a function that yields changing items.
+	  * The resulting changing will match the value of the most recent map result.
+	  *
+	  * Please note that listeners and dependencies attached to the map results, and not to the result of this function,
+	  * will not be carried over to future map results.
+	  *
+	  * @param f A mapping function that yields changing items
+	  * @tparam B Type of values in the resulting items
+	  * @return A pointer to the current value of the last map result
 	  */
-	def tryMapAsync[B](placeHolderResult: B)(f: A => Try[B])
-					  (implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror.trying(this, placeHolderResult)(f)
+	def flatMap[B](f: A => ChangingLike[B]) = FlatteningMirror(this)(f)
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that may throw errors
-	  * @param exc Implicit execution context
-	  * @tparam B Successful mapping result type
-	  * @return An asynchronously mapped view of this changing item
-	  */
-	def mapAsyncCatching[B](placeHolderResult: B)(f: A => B)
-						   (implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror.catching(this, placeHolderResult)(f)
-	
-	/**
-	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that is not expected to throw errors (if it throws, those errors
-	  *          are printed yet not propagated)
-	  * @param exc Implicit execution context
-	  * @tparam B Mapping result type
-	  * @return An asynchronously mapped view of this changing item
-	  */
-	def mapAsync[B](placeHolderResult: B)(f: A => B)(implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror(this, placeHolderResult)(f)
-	
-	/**
-	  * Creates an asynchronously mapping view of this changing item
-	  * @param placeHolderResult Value placed in the view before the first value has been calculated
-	  * @param f A synchronous mapping function that may throw
-	  * @param merge A function for handling possible error cases and merging gained results with those
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function
+	  * @param merge A function for handling possible error cases and merging received results with those
 	  *              previously acquired
 	  * @param exc Implicit execution context
 	  * @tparam B Type of mapping result
 	  * @tparam R Type of merged / reduced mapping results
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsyncMerging[A2 >: A, B, R](placeHolderResult: R)(f: A2 => B)(merge: (R, Try[B]) => R)
-									  (implicit exc: ExecutionContext) =
-		new AsyncMirror[A2, B, R](this, placeHolderResult)(f)(merge)
+	def mapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
+	                           (f: A2 => Future[B])
+	                           (merge: (R, Try[B]) => R)
+	                           (implicit exc: ExecutionContext) =
+		AsyncMirror[A2, B, R](this, placeHolderResult, skipInitialMap)(f)(merge)
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function that may fail
+	  * @param merge A function for handling possible error cases and merging received results with those
+	  *              previously acquired
+	  * @param exc Implicit execution context
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def tryMapAsync[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	                  (merge: (B, Try[B]) => B)
+	                  (implicit exc: ExecutionContext) =
+		mapAsync(placeHolderResult, skipInitialMap)(f) { (previous, result) => merge(previous, result.flatten) }
+	/**
+	  * Creates an asynchronously mapping view of this changing item.
+	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
+	  * mapping was even requested / as if the value of this pointer didn't change.
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function
+	  * @param exc Implicit execution context
+	  * @param logger An implicit logger that will receive encountered errors
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsyncCatching[B](placeHolderResult: B, skipInitialMap: Boolean = false)
+	                       (f: A => Future[B])
+	                       (implicit exc: ExecutionContext, logger: Logger) =
+		AsyncMirror.catching(this, placeHolderResult, skipInitialMap)(f)
+	/**
+	  * Creates an asynchronously mapping view of this changing item.
+	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
+	  * mapping was even requested / as if the value of this pointer didn't change.
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                       should be skipped, and the placeholder be used instead.
+	  *                       Suitable for situations where the placeholder is a proper mapping result.
+	  *                       Default = false.
+	  * @param f An asynchronous mapping function that may fail
+	  * @param exc Implicit execution context
+	  * @param logger An implicit logger that will receive encountered errors
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsyncTryCatching[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	                          (implicit exc: ExecutionContext, logger: Logger) =
+		AsyncMirror.tryCatching(this, placeHolderResult, skipInitialMap)(f)
 	
 	/**
 	  * Simulates a change event for the specified listener, if necessary
@@ -292,65 +368,44 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @param simulatedOldValue A simulated old value for this item. A change event will be generated only if this
 	  *                          value is different from this item's current value.
 	  * @tparam B Type of the simulated value / listener
+	  * @return Whether the listener should be informed of future change events
 	  */
 	protected def simulateChangeEventFor[B >: A](listener: => ChangeListener[B], simulatedOldValue: B) =
 	{
 		val current = value
 		if (simulatedOldValue != current)
 			listener.onChangeEvent(ChangeEvent(simulatedOldValue, current))
+		else
+			DetachmentChoice.continue
 	}
 	
 	/**
 	  * A default implementation of the 'futureWhere' function
 	  * @param condition Condition to search for values with
-	  * @param exc An implicit execution context
 	  * @return A value future where the specified condition returns true (may never complete)
 	  */
-	protected def defaultFutureWhere(condition: A => Boolean)(implicit exc: ExecutionContext) =
+	protected def _futureWhere(condition: A => Boolean, disableImmediateTrigger: Boolean = false) =
 	{
-		// Only listens to changes while this instance is still changing
-		if (isChanging)
-		{
-			val listener = new FutureValueListener(value, condition)
-			addListener(listener)
-			// Will not need to listen anymore once the future has been completed
-			listener.future.foreach { _ => removeListener(listener) }
-			listener.future
-		}
-		else if (condition(value))
+		// Case: Completes with the current value
+		if (!disableImmediateTrigger && condition(value))
 			Future.successful(value)
+		// Case: May change => Listens to changes until the searched state is found
+		else if (isChanging) {
+			val promise = Promise[A]()
+			addListener { e =>
+				// Stops listening once the promise has completed
+				if (condition(e.newValue)) {
+					promise.trySuccess(e.newValue)
+					false
+				}
+				else
+					true
+			}
+			promise.future
+		}
+		// Case: Impossible to succeed
 		else
 			Future.never
-	}
-}
-
-private class FutureValueListener[A](initialValue: A, trigger: A => Boolean) extends ChangeListener[A]
-{
-	// ATTRIBUTES	-------------------
-	
-	private val promise = Promise[A]()
-	
-	
-	// INITIAL CODE	-------------------
-	
-	if (trigger(initialValue))
-		promise.success(initialValue)
-	
-	
-	// COMPUTED	-----------------------
-	
-	/**
-	  * @return Future for the first value that triggers the specified condition
-	  */
-	def future = promise.future
-	
-	
-	// IMPLEMENTED	-------------------
-	
-	override def onChangeEvent(event: ChangeEvent[A]) =
-	{
-		if (!promise.isCompleted && trigger(event.newValue))
-			promise.trySuccess(event.newValue)
 	}
 }
 

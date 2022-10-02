@@ -37,7 +37,7 @@ object SearchFromFieldTest extends App
 
 		field.content = Vector("The first string", "Another piece of text", "More text", "Lorem ipsum", "Tramboliini",
 			"Keijupuisto", "Ääkkösiä", "Pulppura", "Potentiaalinen koneisto")
-		field.addValueListener { println(_) }
+		field.valuePointer.addContinuousListener { println(_) }
 
 		val button = bc.forTextComponents.withTextAlignment(Center).forSecondaryColorButtons.use { implicit btnC =>
 			TextButton.contextual("OK") { println(field.value) }

@@ -120,7 +120,7 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	// INITIAL CODE	-------------------------
 	
 	// Revalidates and/or repaints this component whenever content or styling changes
-	measuredTextPointer.addListener { event =>
+	measuredTextPointer.addContinuousListener { event =>
 		if (event.compareBy { _.size })
 			repaint()
 		else

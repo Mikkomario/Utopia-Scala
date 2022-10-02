@@ -1,5 +1,8 @@
 package utopia.flow.async
 
+import utopia.flow.datastructure.immutable.FlagView
+import utopia.flow.datastructure.mutable.ResettableFlag
+
 object VolatileFlag
 {
     /**
@@ -15,18 +18,15 @@ object VolatileFlag
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](initialState)
+class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](initialState) with ResettableFlag
 {
+    // ATTRIBUTES   --------------
+    
+    override lazy val view = new FlagView(this)
+    
+    
     // COMPUTED    ---------------
     
-    /**
-     * Whether this flag is currently set
-     */
-    def isSet = value
-    /**
-      * @return Whether this flag isn't currently set
-      */
-    def isNotSet = !isSet
     /**
       * @return Whether this flag isn't currently set
       */
@@ -34,16 +34,23 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     def notSet = !isSet
     
     
-	// OTHER    ------------------
+    // IMPLEMENTED  ---------------
     
     /**
-     * Sets this flag (same as set(true))
-     */
-    def set(): Unit = value = true
+      * Sets this flag (same as !getAndSet(true))
+      * @return True if this flag was NOT previously set, i.e. the state of this flag was altered by this method call.
+      *         False if this flag was already set.
+      */
+    def set(): Boolean = !getAndSet(true)
     /**
-     * Resets this flag (same as set(false))
-     */
-    def reset() = value = false
+      * Resets this flag (same as getAndSet(false))
+      * @return True if this flag was previously set, i.e. the state of this flag was altered by this method call.
+      *         False if this flag was not set.
+      */
+    def reset() = getAndSet(false)
+    
+    
+	// OTHER    ------------------
     
     /**
      * Sets this flag and also returns the state before conversion
@@ -58,23 +65,24 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     /**
      * If this flag is not set, performs the operation. Locks this flag while the operation runs.
      */
+    @deprecated("Use of this function is discouraged, as it is prone to dead-locks. Please consider using if (isNotSet) instead", "v1.17")
     def doIfNotSet[U](action: => U) = lock { status => if (!status) action }
-    
     /**
      * If this flag is not set, performs the operation and then sets this flag. 
      * Locks this flag during the operation.
      */
+    @deprecated("Use of this function is discouraged, as it is prone to dead-locks. Please consider using if (set()) instead", "v1.17")
     def runAndSet[U](action: => U) = updateIf { !_ } { _ =>
         action
         true
     }
-    
     /**
       * Sets this flag and performs the provided function, but only if this flag is not yet set
       * @param f A function for producing a result
       * @tparam B Result type
       * @return Result if this flag was not set. None otherwise.
       */
+    @deprecated("Use of this function is discouraged, as it is prone to dead-locks. Please consider using if (set()) instead", "v1.17")
     def mapAndSet[B](f: => B) = pop { status =>
         if (status)
             None -> status

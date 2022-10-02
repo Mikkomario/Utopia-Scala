@@ -8,6 +8,7 @@ import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, Proj
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.vault.coder.model.datatype.PropertyType.ClassReference
+import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
 
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -30,7 +31,7 @@ object SqlWriter
 	  * @param codec      Implicit codec used when writing
 	  * @return Target path. Failure if writing failed.
 	  */
-	def apply(dbName: Option[String], classes: Seq[Class], targetPath: Path)
+	def apply(dbName: Option[Name], classes: Seq[Class], targetPath: Path)
 	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		// Doesn't write anything if no classes are included
@@ -43,7 +44,7 @@ object SqlWriter
 				val refs = c.properties.flatMap { _.dataType match {
 					case ClassReference(referencedTableName, _, _) =>
 						// References to the class' own table are ignored
-						Some(referencedTableName.tableName).filterNot { _ == tableName }
+						Some(referencedTableName.table).filterNot { _ == tableName }
 					case _ => None
 				} }
 				c.tableName -> refs.toSet
@@ -53,17 +54,18 @@ object SqlWriter
 			targetPath.writeUsing { writer =>
 				// Writes the header
 				writer.println("-- ")
-				writer.println(s"-- Database structure for ${setup.dbModuleName} models")
+				writer.println(s"-- Database structure for ${setup.dbModuleName.doc} models")
 				setup.version.foreach { v => writer.println(s"-- Version: $v") }
 				writer.println(s"-- Last generated: ${Today.toString}")
 				writer.println("--")
 				
 				// Writes the database introduction, if needed
 				dbName.foreach { dbName =>
+					val formattedDbName = dbName(DatabaseName)
 					writer.println()
-					writer.println(s"CREATE DATABASE IF NOT EXISTS `$dbName` ")
+					writer.println(s"CREATE DATABASE IF NOT EXISTS `$formattedDbName` ")
 					writer.println("\tDEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;")
-					writer.println(s"USE `$dbName`;")
+					writer.println(s"USE `$formattedDbName`;")
 				}
 				
 				// Groups the classes by package and writes them
@@ -163,7 +165,7 @@ object SqlWriter
 		lazy val classInitials = initialsMap(tableName)
 		def prefixColumn(column: DbProperty, parentType: PropertyType): String =
 			prefixColumnName(column.columnName, parentType match {
-				case ClassReference(table, _, _) => Some(table.tableName)
+				case ClassReference(table, _, _) => Some(table.table)
 				case _ => None
 			})
 		def prefixColumnName(colName: String, referredTableName: => Option[String] = None): String = {
@@ -176,7 +178,7 @@ object SqlWriter
 			else
 				colName
 		}
-		val idName = prefixColumnName(classToWrite.idName.columnName)
+		val idName = prefixColumnName(classToWrite.idName.column)
 		// [(Property -> [(DbProperty -> Full Column Name)])]
 		val namedProps = classToWrite.properties
 			.map { prop => prop -> prop.dbProperties.map { dbProp => dbProp -> prefixColumn(dbProp, prop.dataType) } }
@@ -222,10 +224,10 @@ object SqlWriter
 			val foreignKeyDeclarations = namedProps.flatMap { case (prop, columns) =>
 				prop.dataType match {
 					case ClassReference(rawReferencedTableName, rawColumnName, referenceType) =>
-						val refTableName = rawReferencedTableName.tableName
+						val refTableName = rawReferencedTableName.table
 						val refInitials = initialsMap(refTableName)
 						val refColumnName = {
-							val base = rawColumnName.columnName
+							val base = rawColumnName.column
 							if (setup.prefixSqlProperties)
 								refInitials + "_" + base
 							else
@@ -233,7 +235,7 @@ object SqlWriter
 						}
 						val columnName = columns.headOption match {
 							case Some((_, name)) => name
-							case None => prop.name.columnName
+							case None => prop.name.column
 						}
 						val constraintNameBase = {
 							val nameWithoutId = columnName.replace("_id", "")

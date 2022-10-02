@@ -44,7 +44,7 @@ object FactoryWriter
 			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
 				properties = propertiesFor(classToWrite, tablesRef),
 				methods = methodsFor(classToWrite, modelRef, dataRef),
-				description = s"Used for reading ${ classToWrite.name } data from the DB",
+				description = s"Used for reading ${ classToWrite.name.doc } data from the DB",
 				author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write()
@@ -78,7 +78,7 @@ object FactoryWriter
 		
 		// All objects define the table property (implemented)
 		builder += ComputedProperty("table", Set(tablesRef), isOverridden = true)(
-			s"${ tablesRef.target }.${ classToWrite.name.propName }")
+			s"${ tablesRef.target }.${ classToWrite.name.prop }")
 		// Timestamp-based factories also specify a creation time property name
 		if (classToWrite.recordsIndexedCreationTime)
 			classToWrite.timestampProperty.foreach { createdProp =>

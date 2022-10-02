@@ -37,7 +37,7 @@ trait RoundedBackgroundDrawerLike extends CustomDrawer
 				{
 					case Left(radius) =>
 						// Won't scale the radius over maximum (circular shape)
-						val maxRadius = bounds.minDimension / 2.0
+						val maxRadius = bounds.size.minDimension / 2.0
 						d.draw(bounds.toRoundedRectangleWithRadius(radius min maxRadius))
 					case Right(factor) => d.draw(bounds.toRoundedRectangle(factor))
 				}

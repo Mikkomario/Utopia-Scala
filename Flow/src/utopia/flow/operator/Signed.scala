@@ -37,6 +37,15 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	  */
 	def negativeAbs = if (isPositive) -this else repr
 	
+	/**
+	  * @return Some(this) if positive, None otherwise
+	  */
+	def ifPositive = if (isPositive) Some(repr) else None
+	/**
+	  * @return Some(this) if negative, None otherwise
+	  */
+	def ifNegative = if (isNegative) Some(repr) else None
+	
 	
 	// OTHER    --------------------------
 	

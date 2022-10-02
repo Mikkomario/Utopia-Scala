@@ -37,7 +37,9 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 		while (!shouldHurry && queue.nonEmpty) {
 			// Waits until its time to perform the next task
 			val expectedStartTime = queue.head._1
-			Wait(expectedStartTime, waitLock)
+			// If the wait is interrupted, this queue is also considered interrupted
+			if (!Wait(expectedStartTime, waitLock))
+				markAsInterrupted()
 			
 			// The tasks may have been altered and a notify may have broken the wait
 			if (!shouldHurry) {

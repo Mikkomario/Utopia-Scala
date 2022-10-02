@@ -2,6 +2,7 @@ package utopia.reflection.controller.data
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangingLike
+import utopia.flow.operator.EqualsFunction
 import utopia.reflection.component.template.ComponentLike2
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.container.template.mutable.MutableMultiContainer2
@@ -33,7 +34,7 @@ object ContainerSingleSelectionManager
 	def forStatelessItems[A, W, Display <: D[A]](container: MutableMultiContainer2[W, Display],
 												 contentPointer: P[A],
 												 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-												 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })
+												 equalsCheck: EqualsFunction[A] = EqualsFunction.default)
 												(makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer,
 			equalsCheck)(makeDisplay)
@@ -55,7 +56,7 @@ object ContainerSingleSelectionManager
 	  */
 	def forImmutableStates[A, W, Display <: D[A]](container: MutableMultiContainer2[W, Display], contentPointer: P[A],
 												  valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None))
-												 (sameItemCheck: (A, A) => Boolean)
+												 (sameItemCheck: EqualsFunction[A])
 												 (makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
@@ -77,7 +78,7 @@ object ContainerSingleSelectionManager
 	  */
 	def forMutableItems[A, W, Display <: D[A]](container: MutableMultiContainer2[W, Display], contentPointer: P[A],
 											   valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None))
-											  (sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)
+											  (sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])
 											  (makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
@@ -91,7 +92,7 @@ object ContainerSingleSelectionManager
 class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with ComponentLike2, +PA <: ChangingLike[Vector[A]]]
 (container: MutableMultiContainer2[W, Display], contentPointer: PA,
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
- sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
+ sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => W)
 	extends ContainerContentDisplayer2[A, W, Display, PA](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)
 		with SelectionManager2[A, Option[A], Display, PA]
@@ -99,8 +100,8 @@ class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Comp
 	// ATTRIBUTES	----------------------------
 	
 	// Updates the display value every time content is updated, because the display may change or be not found anymore
-	override lazy val selectedDisplayPointer = valuePointer.mergeWith(contentPointer) { (selected, _) =>
-		selected.flatMap(displayFor) }
+	override lazy val selectedDisplayPointer =
+		valuePointer.mergeWith(contentPointer) { (selected, _) => selected.flatMap(displayFor) }
 	
 	
 	// IMPLEMENTED	----------------------------

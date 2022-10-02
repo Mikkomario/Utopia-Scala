@@ -49,7 +49,7 @@ object TextLabelStackTest extends App
 	// Tests custom drawing
 	labels(1).addCustomDrawer() { (d, b) =>
 		d.withColor(Color.red.withAlpha(0.5).toAwt,
-			Color.red.toAwt).draw(b.shrinked(Size.square(4)))
+			Color.red.toAwt).draw(b.shrunk(Size.square(4)))
 	}
 
 	// Creates the frame and displays it

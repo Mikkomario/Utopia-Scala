@@ -1,14 +1,119 @@
 # Utopia Flow - List of Changes
 
-## v1.17 (in development)
+## v1.17 - 02.10.2022
+This version contains a few larger changes and a large number of little updates and additions here and there.  
+
+The more major changes include:
+- Handling of **InterruptedException** in **Wait** and classes that utilize **Wait** (namely various **Process** classes)
+- Changes to **ChangingLike** and **ChangeListener**, which enable temporary listeners
+- Changes relating to synchronization, i.e. to **Volatile** classes, in order to make the software more resistant 
+  to accidental deadlocks
+
+These, and other changes are listed in more detail below.
+
 ### Breaking Changes
 - Removed `~==` and `!~==` from **StringExtensions**, as they are now made available through **EqualsExtensions**
+- **ChangeListener**`.onChangeEvent(ChangeEvent)` is now expected to return a **DetachmentChoice** instance, 
+  which determines whether the listener will be removed from the applicable change event source
+  - This may cause build errors in certain cases. 
+    There are, however, implicit conversions from **Unit** (old use-case) and **Boolean** to **DetachmentChoice**, 
+    so the earlier implementations should work in most cases, also.
+  - **ChangingLike** implementations should also be altered in a manner which handles this return value. 
+    **Changing** already does this, covering most of the use-cases.
+- Altered **ChangingLike**`.futureWhere(...)` in following ways:
+  - **ChangingLike** trait now implements this function by itself, meaning that subclasses are no longer required to 
+    implement this function 
+  - This function no longer accepts an implicit execution context, since the default implementation doesn't require one
+- **ChangingLike** implementations are now required to implement `.removeDependency(Any)`
+- Altered `.current` implementations in **AsyncExtensions** in following ways:
+  - **Future**`.currentResult` now behaves as `.current` used to behave
+  - **Future**`.current` now behaves as `.currentSuccess` used to behave
+  - Removed **Future**`.currentSuccess` altogether
+- Rewrote the **AsyncMirror** class (matching **ChangingLike**`.mapAsync(...)` -variants)
+  - The mapping function must now return a **Future**
+  - The resulting pointer now also shows the mapping process state 
+    (e.g. whether an asynchronous mapping is occurring in another thread)
+  - `AsyncMirror.apply(...)` no longer catches errors but expects merging logic to be provided
+  - Renamed and modified **ChangingLike**`.mapAsync(...)` -variants
+- **ResettableLazyLike**`.reset()` is now required to return a **Boolean**
+- `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
+### Deprecations
+- Deprecated `.runAndSet(...)`, `.doIfNotSet(...)` and `.mapAndSet()` in **VolatileFlag**
+- Deprecated `.get` in **LazyFuture** in favor of `.value`, reflecting similar changes in past releases
 ### New Features
+- It is now possible to write change listeners that detach from the change event source automatically. 
+  Simply return `DetachmentChoice.detach`, `DetachmentChoice(shouldContinue = false)` or `false` in an 
+  `.onChange(ChangeEvent) ` function implementation to detach from the event source.
+- Added **PostponingProcess** class that behaves somewhat like **DelayedProcess**, but accepts a variable wait target
 - Added **ValueConvertibleFileContainer** and **ValueConvertibleOptionFileContainer** -classes
   - These are best utilized when combined with **ValueConversions** and **ValueUnwraps**
+- Added **Flag** and **ResettableFlag** -traits and implementations
+- Added **OptionsIterator** and **ZipPadIterator** classes
+- Added change event support for iterators
+  - See **IteratorWithEvents** and `.withEvents(...)` in **CollectionExtensions**
 ### New Methods
+- **ChangeEvent**
+  - Added `.toPair`
+  - Added `.toStringWith(A => String)`
+  - Added a new constructor variant that accepts a **Pair**
+- **ChangingLike**
+  - Added `.flatMap(...)` that is a map function that supports functions that yield changing items
+  - Added `.nextFutureWhere(...)` which works like `.futureWhere(...)`, except that it can't be triggered  
+    by the current value
+- **Either** (**CollectionExtensions**)
+  - Added new functions for eithers that contain items of the same type on both sides
+- **Future** (**AsyncExtensions**)
+  - Added `.waitWith(AnyRef, Duration)` that works like an interruptible `.waitFor()`
+  - Added `.currentSuccess` and `.currentFailure` to **Futures** which contain instances of **Try**
+- **Iterable** (**CollectionExtensions**)
+  - Added `.zipPad(...)` functions, which behave like `.zip(...)` but pad the shorter collection where necessary
+- **Iterator** (**CollectionExtensions**)
+  - Added `.zipPad(...)` functions (see **Iterable**)
+- **Option** (**CollectionExtensions**)
+  - Added `.mergeWith(Option)`
+- **Pair**
+  - Object
+    - Added `.fill(...)` that calls a call-by-name parameter twice
+  - Instance
+    - Added `.isSymmetric`, `.isNotSymmetric` and `.compareWith(...)`
+    - Added a `.zip(Pair)` that returns a **Pair**
+- **Path** (**FileExtensions**)
+  - Added `.parts` and `.partsIterator` and `.length`
+  - Added `.allDirectoriesIterator` and `.allSubDirectoriesIterator`
+  - Added `.relativeTo(Path)`
+  - Added `.take(Int)`, `.takeRight(Int)`, `.drop(Int)` and `.dropRight(Int)`
+- **Process**
+  - Added a protected `.markAsInterrupted()` -function that acts as a `.stop()`, but only alters the process' state
+- **Signed**
+  - Added `.ifPositive` and `.ifNegative`
 - **Value**
-  - Added a new variant of `.apply(...) `
+  - Added a new variant of `.apply(...)`
+- **Wait** (object)
+  - Added `.untilNotifiedWith(AnyRef)`, a variant of `.apply(...)`
+- **XmlReader** (object)
+  - Added `.parseString(String)`
+### Other Changes
+- Added proper handling for **InterruptedExceptions** in **Wait**
+  - **Wait** now properly breaks (stops) when it encounters an **InterruptedException**
+  - `Wait.apply(...)` now returns a boolean that indicates whether the wait was forcibly interrupted or not
+  - Modified the following classes to support interruptions, also:
+    - **DelayedProcess**
+    - **LoopingProcess**
+    - **TimedTasks**
+    - **ExpiringCache**
+    - **ExpiringLazy**
+    - **DelayedView**
+    - **KeptOpenWriter**
+  - **Future**`.raceWith(Future)` may now yield a failing future in case the process is interrupted with an 
+    **InterruptedException**
+- **XmlElement**`.toXml` now wraps element content in CDATA if there exist any unaccepted characters within the 
+  element's contents
+- Rewrote **Value**`.castTo(DataType, DataType)` so that it will cast to the closer data type
+- **Volatile**`.value` is no longer synchronized. For synchronized access, use `.synchronizedValue`
+- **VolatileFlag**.`set()` and `.reset()` now return booleans that indicate whether the flag state was actually modified
+- **PollingIterator** is now type covariant
+- **Process**`.registerToStopOnceJVMCloses()` ignores the call if it has uses **ShutdownReaction** of **Cancel**
+  - As a consequence, this function is no longer deprecated in **LoopingProcess**
 
 ## v1.16 - 18.08.2022
 This update adds a number of new collection functions, and even new collection types. 

@@ -1,11 +1,10 @@
 package utopia.flow.async
 
-import utopia.flow.time.WaitTarget
+import utopia.flow.time.{WaitTarget, WaitUtils}
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.logging.Logger
 
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -29,14 +28,44 @@ object AsyncExtensions
      */
 	implicit class RichFuture[A](val f: Future[A]) extends AnyVal
 	{
-		// TODO: Add interruptible waiting
-		
 	    /**
 	     * Waits for the result of this future (blocks) and returns it once it's ready
 	     * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 	     * @return The result of the future. A failure if this future failed or if timeout was reached
 	     */
-	    def waitFor(timeout: Duration = Duration.Inf) = Try { Await.ready(f, timeout).value.get }.flatten
+	    def waitFor(timeout: Duration = Duration.Inf) = Try { Await.result(f, timeout) }
+		/**
+		  * Blocks and waits for the result of this future.
+		  * Terminates on one of 3 conditions, whichever occurs first:
+		  * 1) Future resolves
+		  * 2) The specified timeout is reached (if specified)
+		  * 3) The specified wait lock is notified
+		  * @param waitLock Wait lock that is listened upon
+		  * @param timeout Maximum wait time (default = infinite)
+		  * @param exc Implicit execution context
+		  * @return Success if this future resolved successfully before the timeout was reached
+		  *         and before the wait lock was notified. Failure otherwise.
+		  */
+		def waitWith(waitLock: AnyRef, timeout: Duration = Duration.Inf)(implicit exc: ExecutionContext) = {
+			// If already completed, returns with completion value
+			f.value.getOrElse {
+				// If not, diverges into two paths:
+				// 1) Natural completion
+				// 2) Timeout completion, which may be triggered earlier if the waitLock is notified
+				val promise = Promise[A]()
+				Future {
+					// If completes naturally, also terminates the timeout wait
+					if (promise.tryComplete(waitFor(timeout)))
+						WaitUtils.notify(waitLock)
+				}
+				Future {
+					Wait.untilNotifiedWith(waitLock)
+					promise.tryFailure(new InterruptedException("Wait interrupted"))
+				}
+				// Returns whichever result is acquired first (blocks)
+				promise.future.waitFor(timeout)
+			}
+		}
 		
 		/**
 		  * Creates a copy of this future that will either succeed or fail before the specified timeout duration
@@ -53,12 +82,10 @@ object AsyncExtensions
 		 * @return Whether this future is still "empty" (not completed)
 		 */
 		def isEmpty = !f.isCompleted
-		
 		/**
 		  * @return Whether this future was already completed successfully
 		  */
 		def isSuccess = f.isCompleted && f.waitFor().isSuccess
-		
 		/**
 		  * @return Whether this future has already failed
 		  */
@@ -67,12 +94,11 @@ object AsyncExtensions
 		/**
 		  * @return The current result of this future. None if not completed yet
 		  */
-		def current = if (f.isCompleted) Some(waitFor()) else None
-		
+		def currentResult = if (f.isCompleted) Some(waitFor()) else None
 		/**
 		  * @return Current result of this future, if completed and successful. None otherwise.
 		  */
-		def currentSuccess = current.flatMap { _.toOption }
+		def current = currentResult.flatMap { _.toOption }
 		
 		/**
 		 * Makes this future "race" with another future so that only the earliest result is returned
@@ -81,8 +107,7 @@ object AsyncExtensions
 		 * @tparam B Type of return value
 		 * @return A future for the first completion of these two futures
 		 */
-		def raceWith[B >: A](other: Future[B])(implicit exc: ExecutionContext) =
-		{
+		def raceWith[B >: A](other: Future[B])(implicit exc: ExecutionContext) = {
 			if (f.isCompleted)
 				f
 			else if (other.isCompleted)
@@ -104,7 +129,9 @@ object AsyncExtensions
 					
 					// Waits until either future completes
 					wait.run()
-					resultPointer.value.get // Can call get because pointer is always set before wait is stopped
+					resultPointer.value.getOrElse {
+						throw new InterruptedException("Wait was interrupted before either future resolved")
+					}
 				}
 			}
 		}
@@ -127,7 +154,23 @@ object AsyncExtensions
 	
 	implicit class TryFuture[A](val f: Future[Try[A]]) extends AnyVal
 	{
-		// TODO: Add a variation of currentSuccess
+		/**
+		  * @return The current result of this future, but only if successful.
+		  *         I.e. Only returns a value if:
+		  *         a) This future is completed successfully AND
+		  *         b) This future contains a success
+		  */
+		def currentSuccess = f.current.flatMap { _.toOption }
+		/**
+		  * @return The current result of this future, but only if failure.
+		  *         Returns a failure if:
+		  *         a) This future is completed AND
+		  *         b) This future failed or contains a failure
+		  */
+		def currentFailure = f.currentResult.flatMap {
+			case Success(result) => result.failure
+			case Failure(error) => Some(error)
+		}
 		
 		/**
 		  * Waits for the result of this future (blocks) and returns it once it's ready
@@ -151,7 +194,6 @@ object AsyncExtensions
 		  * @return Whether this future already contains a success result
 		  */
 		def containsSuccess = f.isCompleted && waitForResult().isSuccess
-		
 		/**
 		  * @return Whether this future already contains a failure result
 		  */
@@ -165,7 +207,6 @@ object AsyncExtensions
 		  * @return A mapped version of this future
 		  */
 		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = f.map { r => r.map(map) }
-		
 		/**
 		  * If this future yields a successful result, maps that with a mapping function that may fail
 		  * @param map A mapping function for successful result. May fail.
@@ -175,7 +216,6 @@ object AsyncExtensions
 		  */
 		def tryMapIfSuccess[B](map: A => Try[B])(implicit exc: ExecutionContext) =
 			f.map { r => r.flatMap(map) }
-		
 		/**
 		  * If this future yields a successful result, maps it with an asynchronous mapping function.
 		  * @param map An asynchronous mapping function for successful result.
@@ -187,7 +227,6 @@ object AsyncExtensions
 			case Success(v) => map(v).map { Success(_) }
 			case Failure(e) => Future.successful(Failure(e))
 		}
-		
 		/**
 		  * If this future yields a successful result, maps it with an asynchronous mapping function that may fail
 		  * @param map An asynchronous mapping function for successful result. May yield a failure.
@@ -207,7 +246,6 @@ object AsyncExtensions
 		  * @tparam U Arbitrary result type
 		  */
 		def foreachSuccess[U](f: A => U)(implicit exc: ExecutionContext) = this.f.foreach { _.foreach(f) }
-		
 		/**
 		  * Calls the specified function if this future completes with a failure
 		  * @param f A function called for a failure result (throwable)
@@ -216,7 +254,6 @@ object AsyncExtensions
 		  */
 		def foreachFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) =
 			this.f.onComplete { _.flatten.failure.foreach(f) }
-		
 		/**
 		 * Calls the specified function when this future completes. Same as calling .onComplete and then .flatten
 		 * @param f A function that handles both success and failure cases

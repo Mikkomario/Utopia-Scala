@@ -26,9 +26,8 @@ class SingleColorIconCache(val imageReadDirectory: Path, standardIconSize: Optio
 	
 	private val cache = ReleasingCache.after[String, SingleColorIcon](cacheDuration) { imgName =>
 		val image = Image.readOrEmpty(imageReadDirectory/imgName)
-		standardIconSize match
-		{
-			case Some(size) => new SingleColorIcon(image.smallerThan(size))
+		standardIconSize match {
+			case Some(size) => new SingleColorIcon(image.fittingWithin(size))
 			case None => new SingleColorIcon(image)
 		}
 	}

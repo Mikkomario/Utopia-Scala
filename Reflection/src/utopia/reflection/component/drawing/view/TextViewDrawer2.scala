@@ -18,10 +18,8 @@ case class TextViewDrawer2(textPointer: Viewable[MeasuredText], stylePointer: Vi
 	// IMPLEMENTED	----------------------------
 	
 	override def text = textPointer.value
-	
 	override def font = stylePointer.value.font
-	
 	override def insets = stylePointer.value.insets
-	
 	override def color = stylePointer.value.color
+	override def alignment = stylePointer.value.alignment
 }

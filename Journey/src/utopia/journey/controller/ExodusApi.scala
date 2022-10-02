@@ -7,7 +7,7 @@ import utopia.annex.model.response.Response
 import utopia.disciple.http.request.StringBody
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.VolatileOption
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.UnauthorizedRequestException
@@ -53,7 +53,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 			LocalDevice.id match
 			{
 				case Some(deviceId) =>
-					sessionResetFuture.setOneIfEmptyAndGet {
+					sessionResetFuture.setOneIfEmpty {
 						val result = resetSession(deviceId)
 						result.onComplete { _ => sessionResetFuture.clear() }
 						result
@@ -74,10 +74,9 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 	private def resetSession(deviceId: Int)(implicit exc: ExecutionContext) =
 	{
 		get(s"devices/$deviceId/session-key", headersMod = resetSessionHeadersMod).tryMapIfSuccess {
-			case Response.Success(status, responseBody) =>
+			case Response.Success(status, responseBody, _) =>
 				// Reads the new session key from the response body and uses that from this point onwards
-				responseBody.value.string match
-				{
+				responseBody.value.string match {
 					case Some(newKey) =>
 						sessionKey = newKey
 						resetSessionThreshold = Now + 18.hours
@@ -85,7 +84,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 					case None => Failure(new RequestFailedException(
 						s"No new session key received in authorization response body ($status)"))
 				}
-			case Response.Failure(status, message) =>
+			case Response.Failure(status, message, _) =>
 				if (status == Unauthorized)
 					Failure(new UnauthorizedRequestException(
 						"Couldn't acquire a new session key with the old credentials"))

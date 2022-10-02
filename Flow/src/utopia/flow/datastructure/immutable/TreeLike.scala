@@ -143,7 +143,6 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
     @deprecated("This function behaves unpredictably and will be removed", "v1.15")
     def replace(oldNode: NodeType, newNode: NodeType): NodeType =
     {
-        // TODO: If necessary, modify this to replace ALL instances of oldNode and not just the first
         val replacementIndex = children.indexOf(oldNode)
         if (replacementIndex >= 0)
             createCopy(children = children.updated(replacementIndex, newNode))

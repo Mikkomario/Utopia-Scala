@@ -19,7 +19,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._
 
 import java.io.OutputStream
-import java.net.URLEncoder
+import java.net.{URI, URLEncoder}
 import java.nio.charset.StandardCharsets
 import java.util
 import java.util.concurrent.TimeUnit
@@ -281,29 +281,29 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	private def makeRequestBase(method: Method, baseUri: String, params: Model = Model.empty,
 	                            body: Option[HttpEntity]) =
 	{
-	    if (method == Get || method == Delete)
-	    {
+		def baseWith(uri: URI) = method match {
+			case Get => new HttpGet(uri)
+			case Delete => new HttpDelete(uri)
+			case Post => new HttpPost(uri)
+			case Put => new HttpPut(uri)
+			case Patch => new HttpPatch(uri)
+		}
+		
+	    if (method == Get || method == Delete) {
 	        // Adds the parameters to uri, no body is supported
 	        val uri = makeUriWithParams(baseUri, params)
-	        if (method == Get) new HttpGet(uri) else new HttpDelete(uri)
+		    baseWith(uri)
 	    }
-	    else if (body.isEmpty && allowBodyParameters)
-	    {
+	    else if (body.isEmpty && allowBodyParameters) {
 	        // If there is no body, adds the parameters as a body entity instead
-	        val base =
-			{
-				if (method == Post) new HttpPost(baseUri)
-				else if (method == Put) new HttpPut(baseUri)
-				else new HttpPatch(baseUri)
-			}
+	        val base = baseWith(new URI(baseUri))
 	        makeParametersEntity(params).foreach(base.setEntity)
 	        base
 	    }
-	    else
-	    {
+	    else {
 	        // If both a body and parameters were provided, adds params to uri
 	        val uri = makeUriWithParams(baseUri, params)
-	        val base = if (method == Post) new HttpPost(uri) else new HttpPut(uri)
+	        val base = baseWith(uri)
 	        base.setEntity(body.get)
 	        base
 	    }

@@ -80,8 +80,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 	/**
 	  * @return Current visibility state of this component
 	  */
-	def visibility = lastTransition.value.current.flatMap { _.toOption } match
-	{
+	def visibility = lastTransition.value.current match {
 		case Some(staticState) => staticState
 		case None => targetState.transitionIn
 	}

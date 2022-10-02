@@ -1,14 +1,16 @@
 package utopia.flow.test.file
 
 import utopia.flow.async.ThreadPool
-import utopia.flow.container.ObjectMapFileContainer
+import utopia.flow.container.{ObjectMapFileContainer, ValueConvertibleFileContainer}
 import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.{DataType, FromModelFactoryWithSchema, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 
 /**
@@ -26,6 +28,8 @@ object ContainerTest extends App
 	val container = new ObjectMapFileContainer("Flow/test/test-container.json", TestObject)
 	
 	container("test") = TestObject("test", 1)
+	
+	val container2 = new ValueConvertibleFileContainer[Option[Instant]]("Flow/test/test-container-2.json")
 	
 	object TestObject extends FromModelFactoryWithSchema[TestObject]
 	{

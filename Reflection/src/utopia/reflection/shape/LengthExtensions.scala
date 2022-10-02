@@ -275,7 +275,7 @@ object LengthExtensions
 		  * Positions an area next to another area within a third area using this alignment
 		  * @param areaToPosition Size of the area to position within the specified parameters.
 		  *                       Maximum lengths are not used.
-		  * @param referenceArea Area next to which this the new area will be placed. Should at least overlap with the
+		  * @param referenceArea Area next to which this new area will be placed. Should at least overlap with the
 		  *                      maximum bounds area (within)
 		  * @param within The area within which the resulting bounds must fit
 		  * @param optimalMargin Margin placed between the resulting bounds and the reference area
@@ -366,7 +366,8 @@ object LengthExtensions
 							actualPrimaryAxis), Size(assignedLength, optimalSecondaryLength, actualPrimaryAxis))
 					}
 				
-				// Case: Center alignment
+				// Case: Center alignment =>
+				// Positions the area at the center of the reference area, using its optimal size (or lower)
 				case None => Bounds.centered(referenceArea.center, areaToPosition.optimal).fittedInto(within)
 			}
 		}

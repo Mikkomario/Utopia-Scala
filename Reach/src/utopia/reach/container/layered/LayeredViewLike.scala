@@ -43,7 +43,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 			// Prefers the main layer size, but may be limited by other layers' min sizes
 			val mainLayerSize = mainLayer.stackSize
 			// Case: No expansion required
-			if (combinedLayerSize.min.fitsInto(mainLayerSize.optimal))
+			if (combinedLayerSize.min.fitsWithin(mainLayerSize.optimal))
 				mainLayerSize
 			// Case: Some lengths need to be adjusted
 			else
@@ -53,7 +53,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 	
 	// This view is opaque if the main layer is opaque or if there exists an opaque layer that spans this whole view
 	override def transparent = mainLayer.transparent &&
-		overlays.forall { case (l, _) => l.transparent || !size.fitsInto(l.size) }
+		overlays.forall { case (l, _) => l.transparent || !size.fitsWithin(l.size) }
 	
 	override def updateLayout() =
 	{

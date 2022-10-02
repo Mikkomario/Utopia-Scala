@@ -126,12 +126,18 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 			if (old.isCompleted) {
 				Future {
 					Iterator.unfold(Now + connectionKeepAlive) { waitTarget =>
-						Wait(waitTarget, waitLock)
-						
+						val uninterrupted = Wait(waitTarget, waitLock)
 						// Updates connection list and determines next close time
 						val (w, futures) = connections.pop { all =>
 							// Keeps connections that are still open
-							val (closing, open) = all.divideBy { _.isOpen }
+							val (closing, open) = {
+								// Case: Standard state => Keeps connections alive for a specific time
+								if (uninterrupted)
+									all.divideBy { _.isOpen }
+								// Case: Interrupted / scheduled to close => closes as many connections as possible
+								else
+									all.divideBy { _.isInUse }
+							}
 							val closeFutures = closing.map { _.tryClose() }
 							val lastLeaveTime = open.filterNot { _.isInUse }.map { _.lastLeaveTime }.minOption
 							

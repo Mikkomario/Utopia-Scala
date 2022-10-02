@@ -71,12 +71,10 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	  * @return Whether this string is empty
 	  */
 	def isEmpty = string.isEmpty
-	
 	/**
 	  * @return Whether this string contains characters
 	  */
 	def nonEmpty = string.nonEmpty
-	
 	/**
 	  * @return None if this string is empty. This string otherwise.
 	  */
@@ -96,4 +94,13 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	// IMPLEMENTED	----------
 	
 	override def toString = string
+	
+	
+	// OTHER    --------------
+	
+	/**
+	  * @param default String to return if this one is empty
+	  * @return This if not empty, otherwise the default string
+	  */
+	def nonEmptyOrElse(default: => Repr) = if (isEmpty) default else repr
 }

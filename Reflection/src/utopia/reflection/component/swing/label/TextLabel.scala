@@ -94,8 +94,8 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
 	component.setFont(initialFont.toAwt)
 	// Whenever context or text changes, revalidates this component
-	textPointer.addListener { _ => revalidate() }
-	stylePointer.addListener { e =>
+	textPointer.addContinuousAnyChangeListener { revalidate() }
+	stylePointer.addContinuousListener { e =>
 		if (e.newValue.font != e.oldValue.font)
 		{
 			component.setFont(e.newValue.font.toAwt)

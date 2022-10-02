@@ -67,11 +67,15 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 		case None => nextValueFuture
 	}
 	
-	override def reset() = _value.foreach { oldValue =>
-		// Clears the current value, then informs the listeners about the change
-		_value = None
-		resetListeners.foreach { _.onReset(oldValue) }
-		StateView.onValueReset(oldValue)
+	override def reset() = {
+		val wasSet = _value.isDefined
+		_value.foreach { oldValue =>
+			// Clears the current value, then informs the listeners about the change
+			_value = None
+			resetListeners.foreach { _.onReset(oldValue) }
+			StateView.onValueReset(oldValue)
+		}
+		wasSet
 	}
 	
 	override def addListener(listener: => LazyListener[A]) = listener match

@@ -60,8 +60,8 @@ sealed trait CombinationType
 	  */
 	def applyParamsWith(parentName: Name, childName: Name, parentRef: Reference, childRef: Reference)
 	                   (implicit naming: NamingRules) =
-		Parameters(Parameter(parentName.propName, parentRef),
-			Parameter(if (isOneToMany) childName.pluralPropName else childName.propName, childParamTypeFrom(childRef)))
+		Parameters(Parameter(parentName.prop, parentRef),
+			Parameter(if (isOneToMany) childName.props else childName.prop, childParamTypeFrom(childRef)))
 	
 	/**
 	  * @param parentName Name of the parent parameter

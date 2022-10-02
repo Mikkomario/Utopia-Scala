@@ -3,6 +3,7 @@ package utopia.reflection.image
 import utopia.flow.caching.multi.WeakCache
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
+import utopia.paradigm.shape.shape2d.{Size, SizedLike}
 import utopia.reflection.color.{ColorSet, ColorShade, ColorShadeVariant, ComponentColor}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
@@ -21,7 +22,7 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.2
   */
-class SingleColorIcon(val original: Image)
+class SingleColorIcon(val original: Image) extends SizedLike[SingleColorIcon]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -55,10 +56,7 @@ class SingleColorIcon(val original: Image)
 	
 	// COMPUTED	---------------------------
 	
-	/**
-	  * @return Size of this icon
-	  */
-	def size = original.size
+	
 	
 	/**
 	  * @return A full size version of this icon where icon size matches the source resolution
@@ -109,6 +107,15 @@ class SingleColorIcon(val original: Image)
 		case Dark => blackIndividualButton
 		case Light => whiteIndividualButton
 	}
+	
+	
+	// IMPLEMENTED  -----------------------
+	
+	override def repr = this
+	
+	override def size = original.size
+	
+	override def withSize(size: Size) = map { _.withSize(size) }
 	
 	
 	// OTHER	---------------------------

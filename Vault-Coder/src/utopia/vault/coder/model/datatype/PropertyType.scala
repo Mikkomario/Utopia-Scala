@@ -4,7 +4,8 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Enum, Name}
+import utopia.vault.coder.controller.writer.model.EnumerationWriter
+import utopia.vault.coder.model.data.{Class, Enum, Name, NamingRules}
 import utopia.vault.coder.model.datatype.BasicPropertyType.{DateTime, IntNumber}
 import utopia.vault.coder.model.datatype.PropertyType.TimeDuration.{fromValueReferences, toValueReferences}
 import utopia.vault.coder.model.enumeration.IntSize
@@ -78,7 +79,7 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	  * @param propName Name of the described property
 	  * @return A default documentation for that property. Empty if no documentation can / should be generated.
 	  */
-	def writeDefaultDescription(className: Name, propName: Name): String
+	def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String
 	
 	
 	// COMPUTED ------------------------
@@ -215,7 +216,7 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 		
 		override def concrete = ConcreteSingleColumnPropertyType.this
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			ConcreteSingleColumnPropertyType.this.writeDefaultDescription(className, propName)
 		
 		override def fromValueCode(valueCode: String) = optionFromValueCode(valueCode)
@@ -260,7 +261,7 @@ sealed trait BasicPropertyType extends ConcreteSingleColumnPropertyType
 	override def optionFromValueCode(valueCode: String) = s"$valueCode.$fromValuePropName"
 	override def optionToValueCode(optionCode: String) = CodePiece(optionCode, Set(Reference.valueConversions))
 	
-	override def writeDefaultDescription(className: Name, propName: Name) = ""
+	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 }
 
 object BasicPropertyType
@@ -278,7 +279,7 @@ object BasicPropertyType
 	  * @param propertyName Name specified for the property (optional)
 	  * @return Basic property type matching that specification. None if no match was found.
 	  */
-	def interpret(typeName: String, specifiedLength: Option[Int] = None, propertyName: Option[String] = None) =
+	def interpret(typeName: String, specifiedLength: Option[Int] = None, propertyName: Option[Name] = None) =
 	{
 		val lowerName = typeName
 		def _findWith(searches: Iterable[BasicPropertyType => Boolean]) =
@@ -331,11 +332,12 @@ object BasicPropertyType
 				v => v.defaultPropertyName.variants.exists { _.toLowerCase == lowerName }
 			)).orElse {
 				// Attempts to find with property name also
-				propertyName.map { _.toLowerCase }.flatMap { lowerName =>
+				propertyName.flatMap { name =>
+					val lowerName = name.singularIn(CamelCase.lower).toLowerCase
 					if (lowerName.startsWith("is") || lowerName.startsWith("was"))
 						Some(Bool)
 					else
-						objectValues.filter { _.defaultPropertyName.variants.exists(_.contains(lowerName)) }
+						objectValues.filter { _.defaultPropertyName ~== name }
 							.maxByOption { _.defaultPropertyName.singular.length }
 				}
 			}
@@ -454,6 +456,15 @@ object BasicPropertyType
 		override def defaultPropertyName = if (length < 100) "name" else "text"
 	}*/
 	
+	object IntNumber
+	{
+		/**
+		  * Creates a new int type with a specific maximum value
+		  * @param maxValue Maximum integer value
+		  * @return Type incorporating that maximum value
+		  */
+		def apply(maxValue: Int): IntNumber = apply(IntSize.fitting(maxValue).getOrElse(Default), Some(maxValue))
+	}
 	/**
 	  * Standard integer property type
 	  */
@@ -527,12 +538,13 @@ object PropertyType
 	  * @param propertyName Name specified for the property in question (optional)
 	  * @return A property type matching that specification. None if no match was found.
 	  */
-	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None): Option[PropertyType] =
+	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[Name] = None): Option[PropertyType] =
 	{
 		// Text length may be specified within parentheses after the type (E.g. "String(3)")
 		def appliedLength = typeName.afterFirst("(").untilFirst(")").int.orElse(length).getOrElse(255)
 		
-		typeName.toLowerCase match {
+		val lowerTypeName = typeName.toLowerCase
+		lowerTypeName.untilFirst("(") match {
 			case "requiredstring" | "nonemptystring" | "stringnotempty" | "textnotempty" =>
 				Some(NonEmptyText(appliedLength))
 			case "creation" | "created" => Some(CreationTime)
@@ -541,12 +553,12 @@ object PropertyType
 			case "expiration" | "expired" => Some(Expiration)
 			case "value" => Some(GenericValue(appliedLength))
 			case "days" => Some(DayCount)
-			case other =>
-				if (other.startsWith("text") || other.startsWith("string") || other.startsWith("varchar"))
+			case _ =>
+				if (lowerTypeName.startsWith("text") || lowerTypeName.startsWith("string") || lowerTypeName.startsWith("varchar"))
 					Some(Text(appliedLength))
-				else if (other.startsWith("option"))
-					interpret(other.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
-				else if (other.startsWith("duration"))
+				else if (lowerTypeName.startsWith("option"))
+					interpret(lowerTypeName.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
+				else if (lowerTypeName.startsWith("duration"))
 					Some(typeName.afterFirst("[").untilLast("]") match {
 						case "s" | "second" | "seconds" => TimeDuration.seconds
 						case "m" | "min" | "minute" | "minutes" => TimeDuration.minutes
@@ -554,14 +566,14 @@ object PropertyType
 						case _ => TimeDuration.millis
 					})
 				else
-					BasicPropertyType.interpret(other, length, propertyName)
+					BasicPropertyType.interpret(lowerTypeName, length, propertyName)
 						.orElse {
 							// If nothing else works, attempts to find the match with the specified property name
-							propertyName.map { _.toLowerCase }.flatMap { lowerName =>
+							propertyName.flatMap { name =>
 								val options = Vector(Text(length.getOrElse(255)), CreationTime, UpdateTime,
 									Deprecation, Expiration,
 									GenericValue(length.getOrElse(255)), DayCount) ++ TimeDuration.values
-								options.filter { _.defaultPropertyName.variants.exists { _.contains(lowerName) } }
+								options.filter { _.defaultPropertyName ~== name }
 									.maxByOption { _.defaultPropertyName.singular.length }
 							}
 						}
@@ -591,8 +603,8 @@ object PropertyType
 		override def optionFromValueCode(valueCode: String) = s"$valueCode.instant"
 		override def optionToValueCode(optionCode: String) =
 			CodePiece(optionCode, Set(Reference.valueConversions))
-		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"Time when this $className was added to the database"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"Time when this ${className.doc} was added to the database"
 	}
 	
 	/**
@@ -609,8 +621,8 @@ object PropertyType
 		override def optional = DateTime.optional
 		override def concrete = this
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"Time when this $className was last updated"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"Time when this ${className.doc} was last updated"
 	}
 	
 	/**
@@ -627,8 +639,8 @@ object PropertyType
 		override def optional = this
 		override def concrete = Expiration
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"Time when this $className became deprecated. None while this $className is still valid."
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"Time when this ${className.doc} became deprecated. None while this ${className.doc} is still valid."
 	}
 	
 	/**
@@ -644,8 +656,8 @@ object PropertyType
 		override def optional = Deprecation
 		override def concrete = this
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"Time when this $className expires / becomes invalid"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"Time when this ${className.doc} expires / becomes invalid"
 	}
 	
 	/**
@@ -673,7 +685,7 @@ object PropertyType
 		override def optionToValueCode(optionCode: String) =
 			CodePiece(s"$optionCode.map { _.length }", Set(Reference.valueConversions))
 		
-		override def writeDefaultDescription(className: Name, propName: Name) = ""
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
 	
 	object Text
@@ -710,7 +722,7 @@ object PropertyType
 		override def fromValuesCode(valuesCode: String) = s"$valuesCode.flatMap { _.string }"
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 		
-		override def writeDefaultDescription(className: Name, propName: Name) = ""
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
 	
 	// Works exactly like Text, except that
@@ -744,7 +756,7 @@ object PropertyType
 		override def fromValuesCode(valuesCode: String) = allowingEmpty.fromValuesCode(valuesCode)
 		override def toValueCode(instanceCode: String) = allowingEmpty.toValueCode(instanceCode)
 		
-		override def writeDefaultDescription(className: Name, propName: Name) = ""
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 		
 		
 		// NESTED   -------------------------
@@ -786,7 +798,8 @@ object PropertyType
 		override def fromValuesCode(valuesCode: String) = valuesCode
 		override def toValueCode(instanceCode: String) = instanceCode
 		
-		override def writeDefaultDescription(className: Name, propName: Name) = s"Generic $propName of this $className"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"Generic ${propName.doc} of this ${className.doc}"
 	}
 	
 	object TimeDuration
@@ -841,7 +854,8 @@ object PropertyType
 		override def optionToValueCode(optionCode: String) =
 			CodePiece(s"$optionCode.map { _$unitConversionCode }", toValueReferences)
 		
-		override def writeDefaultDescription(className: Name, propName: Name) = s"Duration of this $className"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"Duration of this ${className.doc}"
 	}
 	
 	/**
@@ -866,41 +880,129 @@ object PropertyType
 		
 		override def defaultPropertyName: Name = referencedTableName + "id"
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"${referencedColumnName.toText.singular.capitalize} of the $referencedTableName linked with this $className"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"${referencedColumnName.doc.capitalize} of the ${referencedTableName.doc} linked with this ${className.doc}"
 	}
 	
 	/**
 	  * Property type that accepts enumeration values
 	  * @param enumeration Enumeration from which the values are picked
 	  */
-	case class EnumValue(enumeration: Enum) extends ConcreteSingleColumnPropertyType
+	case class EnumValue(enumeration: Enum)(implicit naming: NamingRules) extends PropertyType
 	{
+		// ATTRIBUTES   ----------------------------
+		
+		override lazy val sqlConversions: Vector[SqlTypeConversion] =
+			enumeration.idType.sqlConversions.map { new EnumIdSqlConversion(_) }
+		
+		private lazy val findForId = s"${enumeration.name.enumName}.${EnumerationWriter.findForIdName(enumeration)}"
+		// private lazy val forIdName = EnumerationWriter.forIdName(enumeration)
+		
+		
 		// IMPLEMENTED  ---------------------------
 		
-		// Since there usually aren't a huge number of enumeration values, TINYINT is used
-		override def sqlType = SqlPropertyType("TINYINT", columnNameSuffix = "id")
+		private def colNameSuffix = enumeration.idPropName.column
+		
 		override def scalaType = enumeration.reference
 		
-		override def yieldsTryFromValue = true
+		override def optional: PropertyType = Optional
+		override def concrete = this
 		
-		override def nonEmptyDefaultValue = CodePiece.empty
+		override def nonEmptyDefaultValue = enumeration.defaultValue match {
+			case Some(default) =>
+				val valueName = default.name.enumValue
+				CodePiece(valueName, Set(enumeration.reference/valueName))
+			case None => CodePiece.empty
+		}
 		override def emptyValue = CodePiece.empty
 		
-		override def defaultPropertyName = enumeration.name.uncapitalize
+		override def defaultPropertyName = enumeration.name
 		
-		override def fromValueCode(valueCode: String) =
-			CodePiece(s"${enumeration.name}.forId($valueCode.getInt)", Set(enumeration.reference))
-		override def fromValuesCode(valuesCode: String) =
-			CodePiece(s"$valuesCode.flatMap { _.int }.flatMap(${enumeration.name}.findForId)",
-				Set(enumeration.reference))
-		override def toValueCode(instanceCode: String) = CodePiece(s"$instanceCode.id", Set(Reference.valueConversions))
-		override def optionFromValueCode(valueCode: String) =
-			CodePiece(s"$valueCode.int.flatMap(${enumeration.name}.findForId)", Set(enumeration.reference))
-		override def optionToValueCode(optionCode: String) =
-			CodePiece(s"$optionCode.map { _.id }", Set(Reference.valueConversions))
+		override def yieldsTryFromValue = enumeration.hasNoDefault
+		// NB: Doesn't support multi-column enumeration id types
+		override def fromValueCode(valueCodes: Vector[String]) =
+			CodePiece(s"${enumeration.name.enumName}.fromValue(${valueCodes.head})", Set(enumeration.reference))
+		override def fromValuesCode(valuesCode: String) = {
+			val idFromValueCode = enumeration.idType.fromValueCode(Vector("v"))
+			idFromValueCode.mapText { convertToId =>
+				s"$valuesCode.map { v => $convertToId }.flatMap($findForId)"
+			}.referringTo(enumeration.reference)
+		}
+		override def toValueCode(instanceCode: String) =
+			enumeration.idType.toValueCode(s"$instanceCode.${enumeration.idPropName.prop}")
 		
-		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"${enumeration.name} of this $className"
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+			s"${enumeration.name.doc.capitalize} of this ${className.doc}"
+		
+		private object Optional extends PropertyType
+		{
+			private lazy val idType = enumeration.idType.optional
+			override lazy val sqlConversions: Vector[SqlTypeConversion] =
+				idType.sqlConversions.map { new EnumIdOptionSqlConversion(_) }
+			
+			override def scalaType = ScalaType.option(EnumValue.this.scalaType)
+			
+			override def nonEmptyDefaultValue = CodePiece.empty
+			override def emptyValue = CodePiece.none
+			
+			override def defaultPropertyName = EnumValue.this.defaultPropertyName
+			
+			override def optional = this
+			override def concrete = EnumValue.this
+			
+			override def yieldsTryFromValue = false
+			
+			override def fromValueCode(valueCodes: Vector[String]) =
+				idType.fromValueCode(valueCodes)
+					.mapText { id =>
+						// Types which are at the same time concrete and non-concrete, are handled a bit differently
+						def fromConcrete = s"$findForId($id)"
+						idType match {
+							case Text(_) => fromConcrete
+							case NonEmptyText(_) => fromConcrete
+							case GenericValue(_) => fromConcrete
+							case t =>
+								if (t.concrete == t)
+									fromConcrete
+								else
+									s"$id.flatMap($findForId)"
+						}
+					}
+					.referringTo(enumeration.reference)
+			override def fromValuesCode(valuesCode: String) =
+				idType.fromValuesCode(valuesCode)
+					.mapText { ids => s"$ids.flatMap($findForId)" }
+					.referringTo(enumeration.reference)
+			override def toValueCode(instanceCode: String) =
+				idType.toValueCode(s"e.${enumeration.idPropName.prop}")
+					.mapText { idToValue => s"$instanceCode.map { e => $idToValue }.getOrElse(Value.empty)" }
+					.referringTo(Reference.value)
+			
+			override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
+				EnumValue.this.writeDefaultDescription(className, propName)
+			
+			private class EnumIdOptionSqlConversion(idConversion: SqlTypeConversion) extends SqlTypeConversion
+			{
+				override lazy val target = idConversion.target.copy(columnNameSuffix = colNameSuffix)
+				
+				override def origin = scalaType
+				override def intermediate = idConversion.intermediate
+				
+				override def midConversion(originCode: String) =
+					idConversion.midConversion(s"e.${enumeration.idPropName.prop}")
+						.mapText { fromId => s"$originCode.map { e => $fromId }" }
+			}
+		}
+		
+		private class EnumIdSqlConversion(idConversion: SqlTypeConversion) extends SqlTypeConversion
+		{
+			override lazy val target = idConversion.target.copy(columnNameSuffix = colNameSuffix)
+			
+			override def origin = scalaType
+			override def intermediate = idConversion.intermediate
+			
+			override def midConversion(originCode: String) =
+				idConversion.midConversion(s"$originCode.${enumeration.idPropName.prop}")
+		}
 	}
 }

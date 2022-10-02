@@ -1,5 +1,8 @@
 # Utopia Trove - List of Changes
 
+## v1.1.4 - 02.10.2022
+New build compatible with **Flow** v1.17
+
 ## v1.1.3
 ### Other Changes
 - Updated **DatabaseVersion**`.toString` implementation

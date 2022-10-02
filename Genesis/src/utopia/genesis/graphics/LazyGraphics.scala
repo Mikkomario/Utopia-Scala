@@ -230,7 +230,7 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	def reducedToBounds(clippingBounds: Bounds) = withClip {
 		this.clippingBounds match {
 			case Some(existingBounds) =>
-				clippingBounds.within(existingBounds).getOrElse(clippingBounds.withSize(Size.zero))
+				clippingBounds.intersectionWith(existingBounds).getOrElse(clippingBounds.withSize(Size.zero))
 			case None => clippingBounds
 		}
 	}

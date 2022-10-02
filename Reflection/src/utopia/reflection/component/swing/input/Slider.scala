@@ -270,7 +270,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			progressPointer.map { range(_) }
 	}
 	
-	private val defaultRepainter: ChangeListener[Any] = _ => repaint()
+	private val defaultRepainter = ChangeListener.continuousOnAnyChange { repaint() }
 	private var animator: Option[Animator] = None
 	
 	private var _state = ButtonState.default
@@ -496,21 +496,19 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = isMoving
 		
-		override def onChangeEvent(event: ChangeEvent[Double]) =
-		{
-			if (pressed)
-			{
+		override def onChangeEvent(event: ChangeEvent[Double]) = {
+			if (pressed) {
 				targetProgress = event.newValue
 				if (!isMoving)
 					repaint()
 			}
-			else
-			{
+			else {
 				startProgress = calculatedProgress
 				targetProgress = event.newValue
 				passedDuration = Duration.Zero
 				isMoving = true
 			}
+			true
 		}
 	}
 	

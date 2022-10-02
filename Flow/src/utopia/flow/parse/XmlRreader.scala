@@ -3,7 +3,7 @@ package utopia.flow.parse
 import utopia.flow.util.AutoClose._
 import utopia.flow.generic.ValueConversions._
 
-import java.io.{File, FileInputStream, InputStream, InputStreamReader, Reader}
+import java.io.{BufferedInputStream, ByteArrayInputStream, File, FileInputStream, InputStream, InputStreamReader, Reader}
 import java.nio.charset.Charset
 import javax.xml.stream.XMLInputFactory
 import java.nio.charset.StandardCharsets
@@ -110,6 +110,17 @@ object XmlReader
       */
     def parseFile(file: Path, charset: Charset = StandardCharsets.UTF_8) =
         Try(new FileInputStream(file.toFile).consume { parseStream(_, charset) }).flatten
+    
+    /**
+     * Parses an xml element from a string
+     * @param xml A string representing an xml element
+     * @return Xml element read from the string. May contain a failure.
+     */
+    def parseString(xml: String) = {
+        val charset = StandardCharsets.UTF_8
+        Try { new BufferedInputStream(new ByteArrayInputStream(xml.getBytes(charset))) }
+            .flatMap { _.consume { parseStream(_, charset) } }
+    }
     
     /**
       * Parses a value from a string

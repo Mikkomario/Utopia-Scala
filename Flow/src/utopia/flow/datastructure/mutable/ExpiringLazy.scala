@@ -1,13 +1,12 @@
 package utopia.flow.datastructure.mutable
 
-import utopia.flow.async.{ResettableVolatileLazy, Wait}
+import utopia.flow.async.{DelayedProcess, Process, ResettableVolatileLazy, VolatileOption}
 import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
-import java.time.Instant
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ExpiringLazy
@@ -54,7 +53,8 @@ object ExpiringLazy
 }
 
 /**
-  * A lazy container that automatically resets its contents after a while. Resetting is performed asynchronously.
+  * A lazy container that automatically resets its contents after a while.
+  * Resetting is performed asynchronously.
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.10
   */
@@ -64,56 +64,41 @@ class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val waitLock = new AnyRef
+	private implicit val log: Logger = SysErrLogger
+	
 	private val cache: ResettableLazyLike[A] = ResettableVolatileLazy(generator)
-	
-	private var nextWaitThreshold: Option[Instant] = None
-	
-	
-	// COMPUTED ------------------------------
-	
-	def isResetting = nextWaitThreshold.isDefined
+	private val expirationProcessPointer = VolatileOption[Process]()
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def reset() =
-	{
-		_reset()
-		WaitUtils.notify(waitLock)
+	override def reset() = {
+		// Cancels the scheduled expiration
+		expirationProcessPointer.pop().foreach { _.stop() }
+		cache.reset()
 	}
 	
 	override def current = cache.current
 	
-	override def value = current match
-	{
+	override def value = current match {
 		case Some(value) => value
 		case None =>
 			// Acquires the new value
 			val newValue = cache.value
-			// Schedules a reset event if one is not scheduled already (otherwise extends the wait)
+			// Checks when the value should be reset
 			expirationPerItem(newValue).finite.foreach { waitDuration =>
-				val wasWaiting = nextWaitThreshold.isDefined
-				nextWaitThreshold = Some(Now + waitDuration)
-				if (!wasWaiting)
-				{
-					Future {
-						while (nextWaitThreshold.exists { Now < _ }) {
-							nextWaitThreshold.foreach { Wait(_, waitLock) }
-						}
-						_reset()
-					}
+				// Case: Reset scheduled => schedules a reset
+				if (waitDuration > Duration.Zero) {
+					val newExpiration = DelayedProcess.hurriable(Now + waitDuration) { _ => cache.reset() }
+					// If there was another reset pending, cancels that first
+					expirationProcessPointer.getAndSet { Some(newExpiration) }.foreach { _.stopIfRunning() }
+					newExpiration.runAsync()
 				}
+				// Case: The item is immediately marked as expired =>
+				// resets the underlying cache without scheduling a new reset
+				else
+					cache.reset()
 			}
 			newValue
-	}
-	
-	
-	// OTHER    ------------------------------
-	
-	private def _reset() =
-	{
-		nextWaitThreshold = None
-		cache.reset()
 	}
 }

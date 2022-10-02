@@ -1,9 +1,10 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator, ZipPadIterator}
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.event.IteratorWithEvents
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.util.logging.Logger
 
@@ -457,6 +458,38 @@ object CollectionExtensions
 		  */
 		def minGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
 			maxGroupBy(f)(bf, ord.reverse)
+		
+		/**
+		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
+		  * collections are included in the resulting collection.
+		  * @param other Another collection
+		  * @param myPadding Padding to use for this collection, if shorter (call-by-name)
+		  * @param theirPadding Padding to use for the other collection, if shorter (call-by-name)
+		  * @param bf Implicit BuildFrom
+		  * @tparam B Type of items in the other collection
+		  * @tparam To Type of resulting collection
+		  * @return A collection that contains tuples where the first values are from this collection and
+		  *         the second values are from the other collection.
+		  */
+		def zipPad[B, To](other: Iterable[B], myPadding: => iter.A, theirPadding: => B)
+		                 (implicit bf: BuildFrom[Repr, (iter.A, B), To]) =
+		{
+			val ops = iter(coll)
+			bf.fromSpecific(coll)(ZipPadIterator(ops.iterator, other.iterator, myPadding, theirPadding))
+		}
+		/**
+		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
+		  * collections are included in the resulting collection.
+		  * @param other Another collection
+		  * @param padding Padding to use for the shorter collection, if one exists (call-by-name)
+		  * @param bf Implicit BuildFrom
+		  * @tparam To Type of resulting collection
+		  * @return A collection that contains tuples where the first values are from this collection and
+		  *         the second values are from the other collection.
+		  */
+		def zipPad[To](other: Iterable[iter.A], padding: => iter.A)
+		              (implicit bf: BuildFrom[Repr, (iter.A, iter.A), To]): To =
+			zipPad[iter.A, To](other, padding, padding)
 	}
 	
 	implicit def iterableOperations[Repr](coll: Repr)
@@ -1001,7 +1034,7 @@ object CollectionExtensions
 		  * iterator should be used afterwards.
 		  * @return A copy of this iterator that allows polling (checking of the next item without advancing)
 		  */
-		def pollable = new PollingIterator[A](i)
+		def pollable = PollingIterator[A](i)
 		
 		/**
 		  * Finds the last item accessible from this iterator. Consumes all items in this iterator.
@@ -1187,14 +1220,11 @@ object CollectionExtensions
 		  * @return The first item in this iterator that fulfills the condition.
 		  *         None if none of the items in this iterator fulfilled the condition.
 		  */
-		def nextWhere(condition: A => Boolean) =
-		{
-			if (i.hasNext)
-			{
+		def nextWhere(condition: A => Boolean) = {
+			if (i.hasNext) {
 				var current = i.next()
 				var foundResult = condition(current)
-				while (!foundResult && i.hasNext)
-				{
+				while (!foundResult && i.hasNext) {
 					current = i.next()
 					foundResult = condition(current)
 				}
@@ -1301,6 +1331,36 @@ object CollectionExtensions
 		  *         return [XA, AB, BC]
 		  */
 		def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
+		
+		/**
+		  * Zips this iterator with another, possibly padding one of them.
+		  * Neither of these two source iterators should be used afterwards.
+		  * @param other Another iterator
+		  * @param myPadding Padding to use for this iterator (call-by-name)
+		  * @param theirPadding Padding to use for the other iterator (call-by-name)
+		  * @tparam B Type of items in the other iterator
+		  * @return An iterator that takes from both of these iterators and zips the results,
+		  *         padding if one depletes before the other
+		  */
+		def zipPad[B](other: Iterator[B], myPadding: => A, theirPadding: => B) =
+			ZipPadIterator(i, other, myPadding, theirPadding)
+		/**
+		  * Zips this iterator with another, possibly padding one of them.
+		  * Neither of these two source iterators should be used afterwards.
+		  * @param other Another iterator
+		  * @param padding Padding to use for the iterator that depletes first (call-by-name)
+		  * @return An iterator that takes from both of these iterators and zips the results,
+		  *         padding if one depletes before the other
+		  */
+		def zipPad(other: Iterator[A], padding: => A) = ZipPadIterator(i, other, padding)
+		
+		/**
+		  * Creates a copy of this iterator that supports change events
+		  * @param initialValue The value of the resulting iterator until next() is called for the first time
+		  * @tparam B Type of items in the resulting iterator
+		  * @return A copy of this iterator that supports change events
+		  */
+		def withEvents[B >: A](initialValue: B) = new IteratorWithEvents[B](initialValue, i)
 	}
 	
 	
@@ -1317,6 +1377,25 @@ object CollectionExtensions
 		{
 			case Some(v) => Success(v)
 			case None => Failure(generateFailure)
+		}
+		
+		/**
+		  * Merges this option with another option using the following logic:
+		  * 1) If neither of these options are defined, returns None
+		  * 2) If only one of these options is defined, returns that option
+		  * 3) If both of these options are defined, merges the two values into a new option
+		  * @param other Another option
+		  * @param merge Function to use when both of these options contain a value
+		  * @tparam B Type of the other option (super-type of this option)
+		  * @return Merge result, as described above
+		  */
+		def mergeWith[B >: A](other: Option[B])(merge: (A, B) => B) = o match {
+			case Some(a) =>
+				other match {
+					case Some(b) => Some(merge(a, b))
+					case None => Some(a)
+				}
+			case None => other
 		}
 	}
 	
@@ -1426,6 +1505,44 @@ object CollectionExtensions
 		{
 			case Right(r) => Right(rightMap(r))
 			case Left(l) => Left(leftMap(l))
+		}
+	}
+	
+	implicit class RichSingleTypeEither[A](val e: Either[A, A]) extends AnyVal
+	{
+		/**
+		  * @return Left or right side value, whichever is defined
+		  */
+		def either = e match {
+			case Left(l) => l
+			case Right(r) => r
+		}
+		/**
+		  * @return A pair based on this either, where the non-occupied side receives None and the occupied side
+		  *         receives Some
+		  */
+		def toPair = e match {
+			case Left(l) => Pair(Some(l), None)
+			case Right(r) => Pair(None, Some(r))
+		}
+		
+		/**
+		  * @param f A mapping function
+		  * @tparam B Mapping result type
+		  * @return Mapping result, keeping the same side
+		  */
+		def mapEither[B](f: A => B) = e match {
+			case Left(l) => Left(f(l))
+			case Right(r) => Right(f(r))
+		}
+		/**
+		  * @param f A mapping function
+		  * @tparam B Mapping result type
+		  * @return Mapping function result, whether from left or from right
+		  */
+		def mapEitherToSingle[B](f: A => B) = e match {
+			case Left(l) => f(l)
+			case Right(r) => f(r)
 		}
 	}
 	

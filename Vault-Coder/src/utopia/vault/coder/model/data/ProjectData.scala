@@ -21,8 +21,8 @@ import utopia.vault.coder.model.scala.Package
   * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
   * @param prefixColumnNames Whether column names should have a prefix
   */
-case class ProjectData(projectName: String, modelPackage: Package, databasePackage: Package,
-                       databaseName: Option[String], enumerations: Vector[Enum],
+case class ProjectData(projectName: Name, modelPackage: Package, databasePackage: Package,
+                       databaseName: Option[Name], enumerations: Vector[Enum],
                        classes: Vector[Class], combinations: Vector[CombinationData], instances: Vector[Instance],
                        namingRules: NamingRules, version: Option[Version], modelCanReferToDB: Boolean,
                        prefixColumnNames: Boolean)

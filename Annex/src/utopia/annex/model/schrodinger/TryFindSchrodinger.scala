@@ -35,16 +35,13 @@ class TryFindSchrodinger[I](localResult: Try[I]) extends Schrodinger[Try[I], Try
 	{
 		result.onComplete {
 			case Success(result) =>
-				result match
-				{
+				result match {
 					case Right(response) =>
-						response match
-						{
-							case Response.Success(_, body) => complete(parse(body))
-							case Response.Failure(status, message) =>
+						response match {
+							case Response.Success(_, body, _) => complete(parse(body))
+							case Response.Failure(status, message, _) =>
 								val errorMessage = message.getOrElse(s"Received a response with status $status")
-								val error = status match
-								{
+								val error = status match {
 									case Unauthorized => new UnauthorizedRequestException(errorMessage)
 									case Forbidden => new RequestDeniedException(errorMessage)
 									case _ => new RequestFailedException(errorMessage)
@@ -52,8 +49,7 @@ class TryFindSchrodinger[I](localResult: Try[I]) extends Schrodinger[Try[I], Try
 								complete(Failure(error))
 						}
 					case Left(notSent) =>
-						notSent match
-						{
+						notSent match {
 							case RequestFailed(error) => complete(Failure(error))
 							case RequestWasDeprecated => complete(localResult)
 						}

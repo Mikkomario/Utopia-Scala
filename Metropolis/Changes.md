@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.1.2 (in development)
+## v2.1.2 - 02.10.2022
 Supports changes in **Flow** v1.17
 
 ## v2.1.1 - 18.08.2022

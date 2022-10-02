@@ -33,6 +33,20 @@ object FileExtensions
 		// COMPUTED ----------------------------
 		
 		/**
+		  * @return Names of the parts that form this path
+		  */
+		def parts = (0 to p.getNameCount).map { p.getName(_).toString }
+		/**
+		  * @return An iterator that returns the names of the parts that form this path
+		  */
+		def partsIterator = (0 to p.getNameCount).iterator.map { p.getName(_).toString }
+		
+		/**
+		  * @return The length of this path, as a number of parts
+		  */
+		def length = p.getNameCount
+		
+		/**
 		 * @return A json representation of this path (uses / as the directory separator)
 		 */
 		def toJson = p.toString.replace("\\", "/")
@@ -68,17 +82,6 @@ object FileExtensions
 		 *         for files without type.
 		 */
 		def fileType = fileName.afterLast(".")
-		
-		/**
-		 * @param another A sub-path
-		 * @return This path extended with another path
-		 */
-		def /(another: Path) = p.resolve(another)
-		/**
-		 * @param another A sub-path
-		 * @return This path extended with another path
-		 */
-		def /(another: String) = p.resolve(another)
 		
 		/**
 		 * @return An absolute path based on this path (if this path is already absolute, returns this)
@@ -124,10 +127,29 @@ object FileExtensions
 		  * @return An iterator that accesses all child paths within this directory.
 		  *         The iterator may terminate and return failure on read failures.
 		  */
-		def allChildrenIterator = children match
-		{
+		def allChildrenIterator = children match {
 			case Success(children) => children.iterator.flatMap { new RecursiveDirectoryIterator(_) }
 			case Failure(error) => PollableOnce(Failure(error))
+		}
+		/**
+		  * @return An iterator that returns all sub-directories of this directory, their sub-directories and so-on.
+		  *         Includes the regular files with each directory, also.
+		  */
+		def allSubDirectoriesIterator = children match {
+			case Success(children) =>
+				children.iterator.filter { _.isDirectory }.flatMap { new RecursiveDirectoriesIterator(_) }
+			case Failure(error) => PollableOnce(Failure(error))
+		}
+		/**
+		  * @return An iterator that returns this directory, all sub-directories under this directory,
+		  *         all their sub-directories, and so on.
+		  *         The regular files under each directory are also included.
+		  */
+		def allDirectoriesIterator = {
+			if (isDirectory)
+				new RecursiveDirectoriesIterator(p)
+			else
+				Iterator.empty
 		}
 		
 		/**
@@ -228,6 +250,70 @@ object FileExtensions
 		// OTHER    -------------------------------
 		
 		/**
+		  * @param another A sub-path
+		  * @return This path extended with another path
+		  */
+		def /(another: Path) = p.resolve(another)
+		/**
+		  * @param another A sub-path
+		  * @return This path extended with another path
+		  */
+		def /(another: String) = p.resolve(another)
+		
+		/**
+		  * @param count Number of elements to take (from the root)
+		  * @return A path containing at most 'count' elements, matching this path for its whole length
+		  */
+		def take(count: Int) =
+			if (count >= p.getNameCount) p else if (count <= 0) Paths.get("") else p.subpath(0, count)
+		/**
+		  * @param n Number of elements to drop (from the root)
+		  * @return A copy of this path without the first n parts.
+		  *         I.e. a copy of this path that's relative to the nth element in this path.
+		  */
+		def drop(n: Int) = {
+			if (n <= 0)
+				p
+			else {
+				val l = length
+				if (n >= l)
+					Paths.get("")
+				else
+					p.subpath(n, l)
+			}
+		}
+		/**
+		  * @param count Number of elements to take (from the right)
+		  * @return A copy of this path that's at most 'count' length, with the same last item
+		  */
+		def takeRight(count: Int) = {
+			if (count <= 0)
+				Paths.get("")
+			else {
+				val l = length
+				if (count >= l)
+					p
+				else
+					p.subpath(l - count, l)
+			}
+		}
+		/**
+		  * @param n Number of elements to drop from the right
+		  * @return The nth parent of this path
+		  */
+		def dropRight(n: Int) = {
+			if (n <= 0)
+				p
+			else {
+				val l = length
+				if (n >= l)
+					Paths.get("")
+				else
+					p.subpath(0, l - n)
+			}
+		}
+		
+		/**
 		  * Iterates over the children of this directory
 		  * @param f A function that accepts an iterator that returns all paths that are the children of this directory.
 		  *          Receives an empty iterator in case this is not an existing directory. The function may throw.
@@ -300,6 +386,41 @@ object FileExtensions
 		}
 		def commonParentWith(other: Path, second: Path, more: Path*): (Option[Path], Path, Seq[Path]) =
 			commonParentWith(Vector(other, second) ++ more)
+		
+		/**
+		  * @param other Another path, which may be some parent of this path
+		  * @return Either:
+		  *         - Right: A path relative to the 'other' path that represents the same element / file as this path
+		  *         - Left: This path that is not relative to the other path
+		  */
+		def relativeTo(other: Path) = {
+			// Standardizes both paths, so that they're normalized and either both absolute or relative
+			val standardize = {
+				if (p.isAbsolute != other.isAbsolute)
+					{ path: Path => path.normalize().absolute }
+				else
+					{ path: Path => path.normalize() }
+			}
+			
+			val a = standardize(p)
+			val b = standardize(other)
+			val aLength = a.getNameCount
+			val bLength = b.getNameCount
+			
+			// Case: The other path is longer than this one => can't be a parent
+			if (bLength > aLength)
+				Left(a)
+			// Case: The other path is a parent of this path => Returns the remaining portion as a relative path
+			else if ((0 to bLength).forall { i => b.getName(i) == a.getName(i) }) {
+				if (bLength == aLength)
+					Right(Paths.get(""))
+				else
+					Right(a.subpath(bLength, aLength))
+			}
+			// Case: The other path is not a parent of this path
+			else
+				Left(a)
+		}
 		
 		/**
 		 * @param childFileName Name of a child file
@@ -757,10 +878,12 @@ object FileExtensions
 		  * @tparam U Arbitrary result type
 		  * @return This path. Failure if the writing process, or the function, threw an exception.
 		  */
-		// TODO: Add a variant of this function that appends
-		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) = writeWith { stream =>
-			stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
-		}
+		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) =
+			_writeUsing(append = false)(writer)
+		def _writeUsing[U](append: Boolean)(writer: PrintWriter => U)(implicit codec: Codec) =
+			_writeWith(append) { stream =>
+				stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
+			}
 		private def _writeWith[U](append: Boolean)(writer: BufferedOutputStream => U) =
 			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
 				.map { _ => p }
@@ -801,6 +924,15 @@ object FileExtensions
 		  * @return This path. Failure if writing function threw or stream couldn't be opened
 		  */
 		def appendWith[U](writer: BufferedOutputStream => U) = _writeWith(append = true)(writer)
+		/**
+		  * Appends new lines to a file utilizing a PrintWriter
+		  * @param writer A function that uses a PrintWriter
+		  * @param codec Implicit codec used when writing the file
+		  * @tparam U Arbitrary result type
+		  * @return This path. Failure if the writing process, or the specified function, threw an exception.
+		  */
+		def appendUsing[U](writer: PrintWriter => U)(implicit codec: Codec) =
+			_writeUsing(append = true)(writer)
 		/**
 		  * Writes the specified text lines to the end of this file
 		  * @param lines Lines to write to the file

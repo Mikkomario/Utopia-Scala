@@ -1,5 +1,32 @@
 # Utopia Reflection - List of Changes
 
+## v2.0-alpha-9 - 02.10.2022
+This update mostly reflects changes in Flow v1.17 and Paradigm v1.1.  
+There are also some pretty neat little changes that make a big difference in certain use-cases, 
+like **ColorRole** no longer being sealed.
+### Breaking Changes
+- **TypeOrSearch** search function is now required to return a **Future**
+- **ContainerContentDisplayer** now uses **EqualsFunction** instead of standard functions
+### Deprecations
+- In **Area**
+  - Deprecated `.coordinateAlong(Axis2D)` and `.maxCoordinateAlong(Axis2D)` in favor of 
+    `.position.along(Axis)` and `.maxAlong(Axis)`
+  - Deprecated `.setCoordinate(Double, Axis2D)` and `.setLength(Double, Axis2D)` in favor of 
+   ` .setCoordinate(Vector1D)` and `.setLength(Vector1D)`
+  - Deprecated `.adjustCoordinate(Double, Axis2D)` in favor of `.translate(Dimensional)`
+  - Deprecated `.adjustLength(Double, Axis2D)` in favor of `.size += axis(adjustment)`
+### New Methods
+- **Area**
+  - Added a number of new methods
+- **LocalStringLike**
+  - Added `.nonEmptyOrElse(...)`
+- **StackLength**
+  - Added `.notExpanding` and `.notShrinking`
+### Other Changes
+- **ColorRole** is no longer sealed, enabling custom color roles
+- **Area** now extends **Bounded**
+- **SingleColorIcon** now extends **SizedLike**
+
 ## v2.0-alpha-8 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0. 
 An important bugfix is also included, which previously caused deadlocks.

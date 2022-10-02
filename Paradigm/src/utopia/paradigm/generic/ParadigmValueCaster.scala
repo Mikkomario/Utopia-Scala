@@ -310,7 +310,7 @@ object ParadigmValueCaster extends ValueCaster
         case LineType =>
             val line = value.getLine
             Some(Vector[Value](line.start, line.end))
-        case PolygonType => Some(value.getPolygon.corners.map { _.toValue })
+        case PolygonType => Some(value.getPolygon.corners.map { _.toValue }.toVector)
         case Matrix2DType => Some(value.getMatrix2D.dimensions.map { _.toValue }.toVector)
         case Matrix3DType => Some(value.getMatrix3D.dimensions.toVector.map { _.toValue })
         case RgbType => Some(value.getRgb.toVector.map { r => r })

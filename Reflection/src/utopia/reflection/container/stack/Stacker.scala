@@ -132,55 +132,48 @@ object Stacker
 			targets.foreach { _() }
 			
 			// Positions the components length-wise (first components with margin and then the final component)
-			var cursor = area.position.along(stackAxis) + caps.head.value
-			visibleComponents.zip(margins).foreach
-			{
-				case (component, marginPointer) =>
-					component.setCoordinate(cursor, stackAxis)
-					cursor += component.lengthAlong(stackAxis) + marginPointer.value
+			var cursor = area.position.componentAlong(stackAxis) + caps.head.value
+			visibleComponents.zip(margins).foreach { case (component, marginPointer) =>
+				component.setCoordinate(cursor)
+				cursor += component.lengthAlong(stackAxis) + marginPointer.value
 			}
-			visibleComponents.last.setCoordinate(cursor, stackAxis)
+			visibleComponents.last.setCoordinate(cursor)
 			
 			// Handles the breadth of the components too, as well as their perpendicular positioning
 			val breadthAxis = stackAxis.perpendicular
 			val newBreadth = area.size.along(breadthAxis)
-			visibleComponents.foreach
-			{
-				component =>
-					val breadth = component.stackSize.along(breadthAxis)
-					
-					// Component breadth may be affected by minimum and maximum
-					val newComponentBreadth =
-					{
-						if (breadth.min > newBreadth)
-							breadth.min
-						else if (breadth.max.exists { newBreadth > _ })
-							breadth.max.get
+			visibleComponents.foreach { component =>
+				val breadth = component.stackSize.along(breadthAxis)
+				
+				// Component breadth may be affected by minimum and maximum
+				val newComponentBreadth = {
+					if (breadth.min > newBreadth)
+						breadth.min
+					else if (breadth.max.exists { newBreadth > _ })
+						breadth.max.get
+					else {
+						// In fit-style stacks, stack breadth is used over component optimal
+						// whereas in other styles optimal is prioritized
+						if (layout == Fit)
+							newBreadth
 						else
-						{
-							// In fit-style stacks, stack breadth is used over component optimal
-							// whereas in other styles optimal is prioritized
-							if (layout == Fit)
-								newBreadth
-							else
-								newBreadth min breadth.optimal
-						}
+							newBreadth min breadth.optimal
 					}
-					
-					component.setLength(newComponentBreadth, breadthAxis)
-					
-					// Component positioning depends on the layout
-					val newComponentPosition =
-					{
-						if (layout == Leading)
-							0
-						else if (layout == Trailing)
-							newBreadth - newComponentBreadth
-						else
-							(newBreadth - newComponentBreadth) / 2
-					}
-					
-					component.setCoordinate(area.position.along(breadthAxis) + newComponentPosition, breadthAxis)
+				}
+				
+				component.setLength(breadthAxis(newComponentBreadth))
+				
+				// Component positioning depends on the layout
+				val newComponentPosition = {
+					if (layout == Leading)
+						0
+					else if (layout == Trailing)
+						newBreadth - newComponentBreadth
+					else
+						(newBreadth - newComponentBreadth) / 2
+				}
+				
+				component.setCoordinate(area.position.componentAlong(breadthAxis) + newComponentPosition)
 			}
 		}
 	}
@@ -301,7 +294,7 @@ object Stacker
 	{
 		def length = target.stackSize.along(direction)
 		
-		def setLength(length: Double) = target.setLength(length, direction)
+		def setLength(length: Double) = target.setLength(direction(length))
 	}
 	
 	private class GapLengthAdjust(val target: Pointer[Double], val length: StackLength) extends LengthAdjust

@@ -141,7 +141,7 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	
 	override def dimensions2D = Pair(horizontal, vertical)
 	
-	override protected def zeroDimension = Middle
+	override def zeroDimension = Middle
 	
 	override def x = horizontal
 	override def y = vertical

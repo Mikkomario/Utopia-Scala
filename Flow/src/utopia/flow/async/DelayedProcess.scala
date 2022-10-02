@@ -138,6 +138,9 @@ abstract class DelayedProcess(waitLock: AnyRef = new AnyRef, shutdownReaction: O
 		// Starts with the delay first (which may be interrupted)
 		val wait = currentWait.value
 		wait.run()
+		// If the wait was forcibly interrupted, considers this whole process as broken (InterruptedException case)
+		if (wait.state.isBroken && state.isNotBroken)
+			markAsInterrupted()
 		// Runs the process, unless otherwise determined by state & shutdown rules
 		if (state.isNotBroken && (!isShutDown || shutdownReaction.forall { _.finishBeforeShutdown }))
 			afterDelay()

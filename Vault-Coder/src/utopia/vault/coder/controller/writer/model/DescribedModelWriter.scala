@@ -31,7 +31,7 @@ object DescribedModelWriter
 	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		val className = (classPrefix +: classToWrite.name).className
-		val modelParamName = classToWrite.name.propName
+		val modelParamName = classToWrite.name.prop
 		
 		File(setup.combinedModelPackage/classToWrite.packageName,
 			ObjectDeclaration(className, Vector(Reference.describedFactory(modelRef, ScalaType.basic(className)))),
@@ -57,7 +57,7 @@ object DescribedModelWriter
 				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true,
 					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))(
 					"wrapped.toModel")),
-				description = s"Combines ${ classToWrite.name } with the linked descriptions",
+				description = s"Combines ${ classToWrite.name.doc } with the linked descriptions",
 				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true
 			)
 		).write()

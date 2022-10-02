@@ -55,9 +55,41 @@
       ]
     }
   },
-  "enumerations": {
-    "WeightUnit": ["Kilogram", "Pound"]
-  },
+  "enums": [
+    {
+      "name": "WeightUnit",
+      "values": [
+        {
+          "name": "Kilogram",
+          "doc": "Kilograms (Kg) from the metric system"
+        },
+        {
+          "name": "Pound",
+          "doc": "Pound (lbs) from the imperial system"
+        }
+      ],
+      "default": "Kilogram",
+      "doc": "Represents a unit of weight"
+    },
+    {
+      "name": "LicenseType",
+      "id_name": "code",
+      "id_type": "NonEmptyString(5)",
+      "doc": "Represents a type of car manufacturer license",
+      "values": [
+        {
+          "name": "Limited",
+          "id": "\"AH204\"",
+          "doc": "The limited (standard) AH204 license"
+        },
+        {
+          "name": "Vip",
+          "id": "\"XX777\"",
+          "doc": "The secret XX777 license"
+        }
+      ]
+    }
+  ],
   "classes": {
     "test": [
       {
@@ -75,6 +107,11 @@
             "length": 12,
             "index": true,
             "doc": "The unique identifier of this manufacturer company"
+          },
+          {
+            "name": "license",
+            "type": "Option[Enum[LicenseType]]",
+            "doc": "License of this manufacturer, if known"
           }
         ]
       },
@@ -107,6 +144,24 @@
           },
           {
             "type": "creation"
+          }
+        ]
+      },
+      {
+        "name": "CarOwnership",
+        "props": [
+          {
+            "ref": "car"
+          },
+          {
+            "name": "ownerName",
+            "length": 32
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "type": "deprecation"
           }
         ]
       }

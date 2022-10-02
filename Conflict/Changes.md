@@ -1,5 +1,8 @@
 # Utopia Conflict - List of Changes
 
+## v1.4.1 - 02.10.2022
+New build compatible with **Flow** v1.17.
+
 ## v1.4 - 18.08.2022
 This update reflects changes in **Flow** v1.16 and **Genesis** v3.0
 ### Breaking Changes

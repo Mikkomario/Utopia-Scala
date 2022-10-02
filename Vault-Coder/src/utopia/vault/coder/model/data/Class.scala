@@ -4,6 +4,7 @@ import utopia.vault.coder.model.datatype.BasicPropertyType.{IntNumber, LongNumbe
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration, UpdateTime}
+import utopia.vault.coder.model.enumeration.NameContext.{ColumnName, DbModelPropName}
 
 object Class
 {
@@ -74,6 +75,7 @@ object Class
   * @param useLongId Whether to use long instead of int in the id property
   * @param writeGenericAccess Whether a generic access trait should be written for this class (includes combos)
   */
+// TODO: customTableName should be Option[Name]
 case class Class(name: Name, customTableName: Option[String], idName: Name, properties: Vector[Property],
                  packageName: String, comboIndexColumnNames: Vector[Vector[String]],
                  descriptionLinkName: Option[Name], description: String, author: String, useLongId: Boolean,
@@ -177,10 +179,11 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	  * @param naming Implicit naming rules
 	  * @return Table name used for this class
 	  */
-	def tableName(implicit naming: NamingRules) = customTableName.getOrElse { name.tableName }
+	def tableName(implicit naming: NamingRules) = customTableName.getOrElse { name.table }
 	/**
 	  * @param naming Implicit naming rules
 	  * @return Name used for this class' id property in database model string literals
 	  */
-	def idDatabasePropName(implicit naming: NamingRules) = naming.dbModelProp.convert(idName.columnName, naming.column)
+	def idDatabasePropName(implicit naming: NamingRules) =
+		naming(DbModelPropName).convert(idName.column, naming(ColumnName))
 }

@@ -40,7 +40,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	  */
 	def linear = LinearVelocity(transition.length, duration)
 	
-	override protected def zeroDimension = LinearVelocity.zero
+	override def zeroDimension = LinearVelocity.zero
 	
 	/**
 	  * @return Direction of this velocity vector

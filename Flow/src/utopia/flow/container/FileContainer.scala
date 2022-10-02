@@ -1,19 +1,16 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ProcessState.NotStarted
 import utopia.flow.async.ShutdownReaction.DelayShutdown
 import utopia.flow.async.{CloseHook, DelayedProcess, Process, Volatile, VolatileOption}
 import utopia.flow.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -127,6 +124,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		if (listen)
 			_current.addListenerAndSimulateEvent(empty) { _ =>
 				saveProcess.lock { _.foreach { _.runAsync(loopIfRunning = true) } }
+				true
 			}
 	}
 	
@@ -147,21 +145,5 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		}
 		else
 			empty
-	}
-	
-	
-	// NESTED	--------------------------------
-	
-	private class DelayedSaveHandler(delay: FiniteDuration)(implicit exc: ExecutionContext)
-		extends ChangeListener[A]
-	{
-		// ATTRIBUTES	------------------------
-		
-		private lazy val saveProcess = DelayedProcess.hurriable(delay) { _ => saveStatus().waitFor() }
-		
-		
-		// IMPLEMENTED	------------------------
-		
-		override def onChangeEvent(event: ChangeEvent[A]) = saveProcess.runAsync()
 	}
 }

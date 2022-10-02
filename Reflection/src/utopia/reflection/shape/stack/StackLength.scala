@@ -197,6 +197,15 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	def noLimits = copy(newMin = 0, newMax = None)
 	
 	/**
+	  * @return A copy of this stack length that doesn't shrink below its current optimum
+	  */
+	def notShrinking = copy(newMin = optimal)
+	/**
+	  * @return A copy of this stack length that doesn't expand above its current optimum
+	  */
+	def notExpanding = copy(newMax = Some(optimal))
+	
+	/**
 	  * @return A version of this stack length with no maximum value (same as noMax)
 	  */
 	def upscaling = noMax

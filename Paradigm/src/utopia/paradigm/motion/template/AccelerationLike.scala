@@ -36,7 +36,7 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	
 	override def dimensions = amount.dimensions.map { LinearAcceleration(_, duration) }
 	
-	override protected def zeroDimension = LinearAcceleration.zero
+	override def zeroDimension = LinearAcceleration.zero
 	
 	/**
 	  * @return Direction of this acceleration

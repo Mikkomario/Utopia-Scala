@@ -38,6 +38,16 @@ object IntSize
 	val values = Vector(Tiny, Small, Medium, Default)
 	
 	
+	// OTHER    ---------------------------
+	
+	/**
+	  * @param value An integer value
+	  * @return The smallest size that fits the specified value. None if no size fits.
+	  */
+	def fitting(value: Int) =
+		values.find { _.maxValue >= value }
+	
+	
 	// NESTED   ---------------------------
 	
 	case object Tiny extends IntSize

@@ -8,7 +8,7 @@ import utopia.genesis.graphics.Drawer3
 import utopia.genesis.util.Drawer
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size, Sized, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
@@ -17,7 +17,7 @@ import utopia.paradigm.transform.JavaAffineTransformConvertible
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2.4
   */
-trait ImageLike
+trait ImageLike extends Sized
 {
 	// ABSTRACT	--------------------
 	
@@ -40,11 +40,6 @@ trait ImageLike
 	  * @return Measurements of the original image data
 	  */
 	def sourceResolution: Size
-	
-	/**
-	  * @return Scaled / applied size of this image
-	  */
-	def size: Size
 	
 	/**
 	  * The bounds of this image when origin and size are both counted. The (0,0) coordinate is at the origin
@@ -80,16 +75,6 @@ trait ImageLike
 	  * @return Whether this image contains some data
 	  */
 	def nonEmpty = !isEmpty
-	
-	/**
-	  * @return The width of this image in pixels
-	  */
-	def width = size.width
-	
-	/**
-	  * @return The height of this image in pixels
-	  */
-	def height = size.height
 	
 	/**
 	  * @return Whether this image has a specified origin
@@ -179,7 +164,7 @@ trait ImageLike
 		{
 			case Some(pixels) => pixels(area / scaling)
 			case None =>
-				(area / scaling).within(Bounds(Point.origin, sourceResolution)) match
+				(area / scaling).intersectionWith(Bounds(Point.origin, sourceResolution)) match
 				{
 					case Some(insideArea) =>
 						if (insideArea.size.isPositive)

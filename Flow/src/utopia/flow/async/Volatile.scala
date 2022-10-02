@@ -1,7 +1,7 @@
 package utopia.flow.async
 
 import utopia.flow.datastructure.mutable.Settable
-import utopia.flow.event.{ChangeDependency, ChangeEvent, ChangeListener, Changing}
+import utopia.flow.event.{ChangeDependency, ChangeEvent, ChangeListener, Changing, ChangingWrapper}
 
 object Volatile
 {
@@ -21,13 +21,13 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
 {
     // ATTRIBUTES   ----------------
     
-    override var listeners = Vector[ChangeListener[A]]()
-    override var dependencies = Vector[ChangeDependency[A]]()
+    private var _listeners = Vector[ChangeListener[A]]()
+    private var _dependencies = Vector[ChangeDependency[A]]()
     
     /**
       * An immutable view of this volatile instance
       */
-    lazy val valueView: Changing[A] = new View()
+    lazy val valueView = ChangingWrapper(this)
     
     
     // COMPUTED    -----------------
@@ -38,13 +38,28 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     @deprecated("Please use .value instead", "v1.9")
     def get = value
     
+    /**
+      * @return The current value of this volatile container, accessed in a synchronized manner,
+      *         meaning that this function call will block while the value is being locked from another thread,
+      *         during an update or such. For non-synchronized access, which is perhaps faster but might be less
+      *         accurate, call `.value`
+      * @see value
+      */
+    def synchronizedValue = this.synchronized { _value }
+    
     
     // IMPLEMENTED  ----------------
     
-    override def value = this.synchronized { _value }
+    override def value = _value
     override def value_=(newValue: A) = lockAndSet { _ => () -> newValue }
     
     override def isChanging = true
+    
+    override def listeners = _listeners
+    override def listeners_=(newListeners: Vector[ChangeListener[A]]) = _listeners = newListeners
+    
+    override def dependencies = _dependencies
+    override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) = _dependencies = newDependencies
     
     /**
       * Safely updates the value in this container
@@ -144,24 +159,5 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
         changeEvent.foreach(fireEvent)
         // Returns the custom result
         result
-    }
-    
-    
-    // NESTED   ---------------------------
-    
-    private class View extends Changing[A]
-    {
-        override def listeners = Volatile.this.listeners
-    
-        override def listeners_=(newListeners: Vector[ChangeListener[A]]) = Volatile.this.listeners = newListeners
-        
-        override def dependencies = Volatile.this.dependencies
-    
-        override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
-            Volatile.this.dependencies = newDependencies
-    
-        override def isChanging = Volatile.this.isChanging
-    
-        override def value = Volatile.this.value
     }
 }

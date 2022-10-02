@@ -72,23 +72,23 @@ class DelayedView[A](val source: ChangingLike[A], delay: FiniteDuration)(implici
 	// INITIAL CODE -------------------------
 	
 	// Whenever source's value changes, delays change activation and updates future value
-	source.addListener { event =>
+	source.addListener(ChangeListener.continuous { event =>
 		changeReactionThreshold = Now + delay
 		latestReceivedValue = event.newValue
 		// If no waiting is currently active, starts one
-		isWaitingFlag.runAndSet {
-			Future
-			{
-				
+		if (isWaitingFlag.set())
+			Future {
 				// Waits until a pause in changes
-				while (Now < changeReactionThreshold && CloseHook.nonShutdown)
-					Wait(changeReactionThreshold, waitLock)
+				var waitNotBroken = true
+				while (waitNotBroken && Now < changeReactionThreshold && CloseHook.nonShutdown) {
+					// If the wait was interrupted, hurries to completion without waiting the prescribed time period
+					waitNotBroken = Wait(changeReactionThreshold, waitLock)
+				}
 				// Allows new wait and updates current value
 				isWaitingFlag.reset()
 				valuePointer.value = latestReceivedValue
 			}
-		}
-	}
+	})
 	
 	
 	// COMPUTED -----------------------------

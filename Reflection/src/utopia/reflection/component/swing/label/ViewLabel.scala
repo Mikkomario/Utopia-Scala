@@ -129,6 +129,9 @@ class ViewLabel[A](override val contentPointer: ChangingLike[A], displayFunction
 	
 	private object ContentUpdateListener extends ChangeListener[A]
 	{
-		override def onChangeEvent(event: ChangeEvent[A]) = label.text = displayFunction(event.newValue)
+		override def onChangeEvent(event: ChangeEvent[A]) = {
+			label.text = displayFunction(event.newValue)
+			true
+		}
 	}
 }

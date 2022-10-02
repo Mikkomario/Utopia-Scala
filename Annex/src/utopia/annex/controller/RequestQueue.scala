@@ -55,6 +55,6 @@ trait RequestQueue
 	  * @param request Request to push
 	  * @return Asynchronous request result (either received response or reason why the request wasn't continued)
 	  */
-	def push(request: ApiRequest) = queue.push {
-		master.pushSynchronous(request) }
+	def push(request: ApiRequest) =
+		queue.push { master.pushSynchronous(request) }
 }

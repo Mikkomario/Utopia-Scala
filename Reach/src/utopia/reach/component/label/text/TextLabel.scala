@@ -44,17 +44,17 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param alignment Text alignment (default = left)
 	  * @param insets Insets around the text (default = any insets, preferring zero)
 	  * @param betweenLinesMargin Margin placed between lines of text when line breaks are used (default = 0)
-	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param customDrawers Additional custom drawing (default = empty)
 	  * @param allowLineBreaks Whether line breaks in the text should be recognized and respected (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
-			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
-			  betweenLinesMargin: Double = 0.0, additionalDrawers: Seq[CustomDrawer] = Vector(),
-			  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+	          alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
+	          betweenLinesMargin: Double = 0.0, customDrawers: Seq[CustomDrawer] = Vector(),
+	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
 		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets,
-			betweenLinesMargin, allowLineBreaks), additionalDrawers, allowTextShrink)
+			betweenLinesMargin, allowLineBreaks), customDrawers, allowTextShrink)
 }
 
 object ContextualTextLabelFactory
@@ -138,7 +138,7 @@ class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: Loca
 	
 	override val measuredText = measure(text)
 	override val customDrawers = additionalDrawers.toVector :+
-		TextDrawer2(measuredText, drawContext.font, drawContext.insets, drawContext.color)
+		TextDrawer2(measuredText, drawContext.font, drawContext.insets, drawContext.color, drawContext.alignment)
 	
 	
 	// IMPLEMENTED	-----------------------------

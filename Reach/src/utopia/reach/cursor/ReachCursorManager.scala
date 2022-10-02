@@ -41,7 +41,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 			image.width.round.toInt, image.height.round.toInt)) }
 		val correctedImage = osCursorSize match
 		{
-			case Success(targetSize) => image.smallerThan(targetSize).paintedToCanvas(targetSize)
+			case Success(targetSize) => image.fittingWithin(targetSize).paintedToCanvas(targetSize)
 			case Failure(_) =>
 				if (image.alpha >= 1)
 					image

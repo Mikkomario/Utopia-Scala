@@ -8,35 +8,29 @@ trait Rectangular extends Parallelogramic
 	// ABSTRACT	-----------------
 	
 	/**
-	  * @return The lenght of the left / right (top to bottom) edge of this rectangular shape
+	  * @return The length of the left / right (top to bottom) edge of this rectangular shape
 	  */
-	def leftLength: Double
+	def rightEdgeLength: Double
 	
 	
 	// COMPUTED	-----------------
 	
 	/**
-	  * @return The width of this rectangle (not necessarily X-wise)
-	  */
-	def width = top.length
-	
-	/**
-	  * @return The height of this rectangle (not necessarily Y-wise)
-	  */
-	def height = left.length
-	
-	/**
 	  * @return The width or the height of this rectangle, whichever is larger
 	  */
-	def maxDimension = width max height
-	
+	@deprecated("Please use maxEdgeLength instead", "v1.1")
+	def maxDimension = maxEdgeLength
 	/**
 	  * @return The width or the height of this rectangle, whichever is smaller
 	  */
-	def minDimension = width min height
+	@deprecated("Please use minEdgeLength instead", "v1.1")
+	def minDimension = minEdgeLength
 	
 	
 	// IMPLEMENTED	-------------
 	
-	override def left = top.normal2D.withLength(leftLength)
+	override def rightEdge = topEdge.normal2D.withLength(rightEdgeLength)
+	
+	override def maxEdgeLength = rightEdgeLength max topEdge.length
+	override def minEdgeLength = rightEdgeLength min topEdge.length
 }

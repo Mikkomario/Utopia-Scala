@@ -48,11 +48,11 @@ class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 					case Right(response) =>
 						response match
 						{
-							case Response.Success(_, body) =>
+							case Response.Success(_, body, _) =>
 								val parseResult = parse(body)
 								parseResult.failure.foreach(recordError)
 								complete(parseResult)
-							case Response.Failure(status, message) =>
+							case Response.Failure(status, message, _) =>
 								val errorMessage = message match
 								{
 									case Some(m) => s"Invitation retrieval failed ($status). Response message: $m"

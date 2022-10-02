@@ -90,6 +90,14 @@ object ValueConversions
         def toValue = new Value(Some(v.map(f)), VectorType)
     }
     
+    implicit class ValueOfOption[V](val v: Option[V])(implicit f: V => ValueConvertible) extends ValueConvertible
+    {
+        override implicit def toValue: Value = v match {
+            case Some(v) => v.toValue
+            case None => Value.empty
+        }
+    }
+    
     /*
     implicit class ValueOfVectorConvertible[V](val v: Vector[V])(implicit f: V => ValueConvertible) extends ValueConvertible
     {

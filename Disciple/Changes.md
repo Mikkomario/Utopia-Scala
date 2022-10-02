@@ -1,7 +1,12 @@
 # Utopia Disciple - List of Changes
 
-## v1.5.3 (in development)
-Supports changes in **Flow** v1.17
+## v1.5.3 - 02.10.2022
+This update mostly supports the changes introduced in **Flow** v1.17, 
+but also contains a rather important bugfix.
+### Bugfixes
+- **Patch** method was previously converted to **Put** in some cases, fixed
+### Other Changes
+- **RequestRateLimiter** now handles thread interruptions, as well as JVM shutdowns, better
 
 ## v1.5.2 - 18.08.2022
 New Build / Supports changes in **Flow** v1.16

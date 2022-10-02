@@ -247,22 +247,21 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
       */
     def startEventGenerators(actorHandler: ActorHandler)(implicit exc: ExecutionContext) =
     {
-        generatorActivated.runAndSet
-        {
-			// Starts mouse listening
+        if (generatorActivated.set()) {
+            // Starts mouse listening
             val mouseEventGenerator = new MouseEventGenerator(content.component)
             actorHandler += mouseEventGenerator
             mouseEventGenerator.buttonHandler += MouseButtonStateListener() { e =>
                 content.distributeMouseButtonEvent(e); None }
             mouseEventGenerator.moveHandler += MouseMoveListener() { content.distributeMouseMoveEvent(_) }
             mouseEventGenerator.wheelHandler += MouseWheelListener() { content.distributeMouseWheelEvent(_) }
-			
+    
             GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
-            
-			// Starts key listening
+    
+            // Starts key listening
             val keyStatusListener = new KeyStatusListener()
             GlobalKeyboardEventHandler += keyStatusListener
-            
+    
             // Quits event listening once this window finally closes
             uponCloseAction.setOne(() =>
             {
@@ -299,7 +298,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
             original.toAwt.foreach { maxImage =>
                 val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
                 // Case: No smaller icons are allowed
-                if (maxSize.fitsInto(minSize))
+                if (maxSize.fitsWithin(minSize))
                     component.setIconImage(maxImage)
                 // Case: Multiple icon sizes allowed
                 else

@@ -1,5 +1,25 @@
 # Utopia Reflection - List of Changes
 
+## v3.1 - 02.10.2022
+This update reflects the changes in **Flow** v1.17 and **Paradigm** v1.1.  
+Most important updates concern the **Image** class, which had some of its methods renamed / replaced.
+### Breaking Changes
+- **Image**`.filling(Size)` no longer forces downscaling if the image already fills the specified area
+### Bugfixes
+- Empty **MeasuredText** now has a positive height, like in the previous **Reflection** implementation
+### Deprecations
+- In **Image**:
+  - Deprecated .fitting(Size) in favor of .fittingWithin(Vector2DLike, Boolean)
+    - Notice the change in functionality!
+  - Deprecated `.smallerThan(Size)` and `.largerThan(Size)` in favor of 
+    `.fittingWithin(Vector2DLike)` and `.filling(Dimensional)`
+  - Deprecated `.limitedAlong(Axis2D, Double)` in favor of `.fittingWithin(Vector1D)`
+    - Also deprecated `.withLimitedWidth(Double)` and `.withLimitedHeight(Double)` in favor of 
+      `.fittingWithinWidth(Double)` and `.fittingWithinHeight(Double)`
+      - Notice the change in functionality!
+### Other Changes
+- **ImageLike** now extends **Sized**, and **Image** extends **SizedLike**
+
 ## v3.0 - 18.08.2022
 A number of shape classes were moved to the new **Paradigm** module in this update. Applying this update will require 
 quite a lot of refactoring, unfortunately.

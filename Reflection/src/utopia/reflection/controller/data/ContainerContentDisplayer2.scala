@@ -2,6 +2,7 @@ package utopia.reflection.controller.data
 
 import utopia.flow.async.Volatile
 import utopia.flow.event.ChangingLike
+import utopia.flow.operator.EqualsFunction
 import utopia.reflection.component.template.ComponentLike2
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.container.template.mutable.MutableMultiContainer2
@@ -95,7 +96,7 @@ object ContainerContentDisplayer2
   */
 class ContainerContentDisplayer2[A, -W, Display <: Refreshable[A] with ComponentLike2, +P <: ChangingLike[Vector[A]]]
 (protected val container: MutableMultiContainer2[W, Display], override val contentPointer: P,
- sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
+ sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => W) extends ContentDisplayer[A, Display, P]
 {
 	// ATTRIBUTES   -----------------------

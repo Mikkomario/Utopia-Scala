@@ -1,5 +1,6 @@
 package utopia.reflection.test.swing
 
+import utopia.flow.event.ChangeEvent
 import utopia.flow.util.FileExtensions._
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image

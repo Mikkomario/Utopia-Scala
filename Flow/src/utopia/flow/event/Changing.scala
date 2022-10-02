@@ -58,16 +58,14 @@ trait Changing[A] extends ChangingLike[A]
 	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
 	{
 		val newListener = changeListener
-		listeners :+= newListener
-		simulateChangeEventFor[B](newListener, simulatedOldValue)
+		if (simulateChangeEventFor[B](newListener, simulatedOldValue).shouldContinue)
+			listeners :+= newListener
 	}
 	
 	override def removeListener(listener: Any) = listeners = listeners.filterNot { _ == listener }
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = dependencies :+= dependency
-	
-	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
-		defaultFutureWhere(valueCondition)
+	override def removeDependency(dependency: Any) = dependencies = dependencies.filterNot { _ == dependency }
 	
 	override def map[B](f: A => B) = Mirror.of(this)(f)
 	
@@ -119,12 +117,11 @@ trait Changing[A] extends ChangingLike[A]
 	  * @param event A change event to fire (should be lazily initialized)
 	  */
 	protected def fireEvent(event: ChangeEvent[A]) = _fireEvent(View(event))
-	private def _fireEvent(event: Viewable[ChangeEvent[A]]) =
-	{
+	private def _fireEvent(event: Viewable[ChangeEvent[A]]) = {
 		// Informs the dependencies first
 		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event.value) }
-		// Then the listeners
-		listeners.foreach { _.onChangeEvent(event.value) }
+		// Then the listeners (may remove some listeners in the process)
+		listeners = listeners.filter { _.onChangeEvent(event.value).shouldContinue }
 		// Finally performs the after-effects defined by the dependencies
 		afterEffects.foreach { _() }
 	}

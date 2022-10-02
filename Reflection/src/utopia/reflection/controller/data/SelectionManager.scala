@@ -120,16 +120,14 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 		{
 			// Tries to preserve selection after refresh (finds value that matches the previous selection and selects it)
 			value.foreach { currentValue =>
-				val newSelectedValue =
-				{
+				val newSelectedValue = {
 					val candidates = event.newValue.filter { representSameItem(_, currentValue) }
 					if (candidates.size < 2)
 						candidates.headOption
 					else
 						candidates.find { itemsAreEqual(_, currentValue) }.orElse(candidates.headOption)
 				}
-				newSelectedValue match
-				{
+				newSelectedValue match {
 					case Some(newFoundValue) =>
 						value = newSelectedValue
 						// May need to manually trigger selection display update
@@ -138,11 +136,15 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 					case None => value = None
 				}
 			}
+			true
 		}
 	}
 	
 	private class ValueUpdateListener extends ChangeListener[Option[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Option[A]]) = updateSelection(event.newValue)
+		override def onChangeEvent(event: ChangeEvent[Option[A]]) = {
+			updateSelection(event.newValue)
+			true
+		}
 	}
 }

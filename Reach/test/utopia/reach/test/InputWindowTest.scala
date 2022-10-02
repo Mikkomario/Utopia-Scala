@@ -8,7 +8,6 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
-import utopia.genesis.image.Image
 import utopia.genesis.util.ScreenExtensions._
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.reach.component.factory.ContextualMixed
@@ -28,9 +27,10 @@ import utopia.reach.component.input.text.{ContextualDurationFieldFactory, Contex
 import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
-import utopia.reflection.image.SingleColorIcon
+import utopia.reflection.image.SingleColorIconCache
 import utopia.reflection.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -46,8 +46,10 @@ object InputWindowTest extends App
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
 	
-	val selectedBoxIcon = new SingleColorIcon(Image.readFrom("Reach/test-images/check-box-selected.png").get)
-	val unselectedBoxIcon = new SingleColorIcon(Image.readFrom("Reach/test-images/check-box-empty.png").get)
+	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
+	val selectedBoxIcon = icons("check-box-selected.png")
+	val unselectedBoxIcon = icons("check-box-empty.png")
+	println(selectedBoxIcon.size)
 	
 	object TestWindows extends InputWindowFactory[Model, Unit]
 	{
@@ -55,8 +57,7 @@ object InputWindowTest extends App
 		
 		private val defaultFieldWidth = 5.cm.toScreenPixels.any
 		
-		override protected lazy val closeIcon =
-			new SingleColorIcon(Image.readFrom("Reflection/test-images/close.png").get)
+		override protected lazy val closeIcon = icons("close.png")
 		
 		override protected lazy val standardContext = baseContext.inContextWithBackground(colorScheme.primary)
 		

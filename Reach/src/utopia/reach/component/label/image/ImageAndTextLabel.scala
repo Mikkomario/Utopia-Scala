@@ -143,11 +143,12 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text:
 	
 	override protected val wrapped =
 	{
-		def makeTextLabel(hierarchy: ComponentHierarchy) = TextLabel(hierarchy).apply(text, font, textColor,
-			alignment, textInsets, betweenLinesMargin, allowLineBreaks = allowLineBreaks,
-			allowTextShrink = allowTextShrink)
-		def makeImageLabel(hierarchy: ComponentHierarchy) = ImageLabel(hierarchy).apply(image, imageInsets,
-			alignment.opposite, allowUpscaling = allowImageUpscaling, useLowPrioritySize = useLowPriorityImageSize)
+		def makeTextLabel(hierarchy: ComponentHierarchy) =
+			TextLabel(hierarchy).apply(text, font, textColor, alignment, textInsets, betweenLinesMargin,
+				allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
+		def makeImageLabel(hierarchy: ComponentHierarchy) =
+			ImageLabel(hierarchy).apply(image, imageInsets, alignment.opposite,
+				allowUpscaling = allowImageUpscaling, useLowPrioritySize = useLowPriorityImageSize)
 		
 		// If one of the provided items is empty, only creates one component
 		if (image.isEmpty)

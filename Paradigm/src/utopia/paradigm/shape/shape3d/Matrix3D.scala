@@ -193,13 +193,13 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	
 	override def repr = this
 	
-	override protected def buildCopy(columns: Seq[Vector3D]) =
+	override protected def buildCopy(columns: IndexedSeq[Vector3D]) =
 	{
 		val fullColumns = columns.padTo(3, Vector3D.zero)
 		Matrix3D(fullColumns.head, fullColumns(1), fullColumns(2))
 	}
 	
-	override protected def zeroDimension = Vector3D.zero
+	override def zeroDimension = Vector3D.zero
 	
 	override def transformedWith(transformation: Matrix3D) = transformation(this)
 	
@@ -239,7 +239,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  * @return A 2x2 matrix containing the remaining items
 	  */
 	def dropTo2D(transformationToDrop: Axis, dimensionToDrop: Axis): Matrix2D =
-		dropTo2D(indexForAxis(transformationToDrop), indexForAxis(dimensionToDrop))
+		dropTo2D(transformationToDrop.index, dimensionToDrop.index)
 	
 	/**
 	  * @param transformable An instance to transform

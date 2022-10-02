@@ -43,6 +43,7 @@ object YesNoWindow
   * @param getButtonContext A function for creating button creation context based on specified button color and
   *                         whether the button shall have an icon.
   */
+// TODO: Could utilize UncertainBoolean
 class YesNoWindow(override val standardContext: TextContextLike, override val title: LocalizedString,
                   val question: LocalizedString, icons: Map[Boolean, SingleColorIcon] = Map(),
                   colors: Map[Boolean, ButtonColor] = Map(), override val defaultResult: Boolean = false)

@@ -5,6 +5,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.transform.AffineTransformation
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
@@ -22,29 +23,25 @@ trait TextDrawerLike2 extends CustomDrawer
 	  * @return Text drawn by this drawer
 	  */
 	def text: MeasuredText
-	
 	/**
 	  * @return Font used when drawing text
 	  */
 	def font: Font
-	
 	/**
 	  * @return Insets placed around the text
 	  */
 	def insets: StackInsets
-	
 	/**
 	  * @return Color used when drawing text
 	  */
 	def color: Color
-	
-	
-	// COMPUTED	---------------------------------
-	
 	/**
 	  * @return Alignment used by this drawer to position the text
 	  */
-	def alignment = text.alignment
+	def alignment: Alignment
+	
+	
+	// COMPUTED	---------------------------------
 	
 	/**
 	  * @return The vertical margin to use when drawing multiple text lines

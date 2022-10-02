@@ -463,14 +463,9 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 		val numberOfLines = lines.size
 		
 		// In case there is only 0-1 line(s) of text, skips the more complex calculations
-		// Case: Empty string => 0 bounds
-		if (numberOfLines == 0)
-			Bounds.zero -> Vector()
-		// Case: Single line string => uses line bounds
-		else if (numberOfLines == 1)
-		{
+		if (numberOfLines <= 1) {
 			// Bounds of the line, where (0,0) is at text draw origin
-			val lineBounds = heightSettings.drawBounds(lines.head, context)
+			val lineBounds = heightSettings.drawBounds(lines.headOption.getOrElse(""), context)
 			// Top left coordinate of this text area, relative to (0,0) anchor position
 			val topLeft = alignment.positionAround(lineBounds.size)
 			// Line draw position relative to (0,0) anchor position
@@ -482,8 +477,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			
 			(areaBounds, Vector(areaBounds -> textStart))
 		}
-		else
-		{
+		else {
 			// Calculates size information about the whole set of lines
 			val rawLineBounds = lines.map { heightSettings.drawBounds(_, context) }
 			val totalWidth = rawLineBounds.map { _.width }.max

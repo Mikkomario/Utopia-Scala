@@ -162,7 +162,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	setHandCursor()
 	
 	// Because of size constraint, revalidates component whenever content updates
-	addContentListener { _ => revalidate() }
+	contentPointer.addContinuousAnyChangeListener { revalidate() }
 	
 	// Adds border drawing to the view
 	{
@@ -175,8 +175,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	}
 	
 	// Updates the item display whenever value changes
-	addValueListener { _.newValue match
-	{
+	valuePointer.addContinuousListener { _.newValue match {
 		case Some(selected) =>
 			textLabel.drawContext = valueSelectedContext
 			textLabel.text = displayFunction(selected)

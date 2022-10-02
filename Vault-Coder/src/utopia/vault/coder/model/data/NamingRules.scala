@@ -2,40 +2,21 @@ package utopia.vault.coder.model.data
 
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Model
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.SureFromModelFactory
 import utopia.flow.util.CollectionExtensions._
-import utopia.vault.coder.model.enumeration.NamingConvention
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
+import utopia.vault.coder.model.enumeration.{NameContext, NamingConvention}
 
-import scala.util.Success
-
-object NamingRules extends FromModelFactory[NamingRules]
+object NamingRules extends SureFromModelFactory[NamingRules]
 {
 	/**
 	  * The default naming rules
 	  */
-	val default = NamingRules()
+	val default = apply(Map[NameContext, NamingConvention]())
 	
-	override def apply(model: Model[template.Property]) = {
-		def rule(default: => NamingConvention, propNames: String*) =
-			propNames.findMap { model(_).string.flatMap(NamingConvention.forName) }.getOrElse(default)
-		Success(NamingRules(
-			// Database name
-			rule(UnderScore, "database_name", "database", "db_name", "db", "sql"),
-			// Table names
-			rule(UnderScore, "table", "sql", "db"),
-			// Column names
-			rule(UnderScore, "column", "col", "sql", "db"),
-			// Class names
-			rule(CamelCase.capitalized, "class", "instance", "object"),
-			// Property names
-			rule(CamelCase.lower, "property", "prop", "attribute", "att", "code"),
-			// Class properties as json properties
-			rule(UnderScore, "json", "model"),
-			// Class properties in db models
-			rule(CamelCase.lower, "db_prop", "db_model_prop", "db_model", "db", "prop", "model")
-		))
-	}
+	override def parseFrom(model: Model[template.Property]) =
+		apply(NameContext.values.flatMap { c =>
+			model(c.jsonProps).string.flatMap(NamingConvention.forName).map { c -> _ }
+		}.toMap)
 }
 
 /**
@@ -43,8 +24,19 @@ object NamingRules extends FromModelFactory[NamingRules]
   * @author Mikko Hilpinen
   * @since 3.2.2022, v1.4.1
   */
-case class NamingRules(database: NamingConvention = UnderScore, table: NamingConvention = UnderScore,
-                       column: NamingConvention = UnderScore,
-                       className: NamingConvention = CamelCase.capitalized,
-                       classProp: NamingConvention = CamelCase.lower, jsonProp: NamingConvention = UnderScore,
-                       dbModelProp: NamingConvention = CamelCase.lower)
+case class NamingRules(rules: Map[NameContext, NamingConvention])
+{
+	/**
+	  * @param context Implicit name context
+	  * @return Most appropriate naming convention for that context
+	  */
+	def contextual(implicit context: NameContext) = apply(context)
+	
+	/**
+	  * Finds either a custom-specified naming convention for the specified context, or returns context default
+	  * @param context A name context
+	  * @return Naming convention most appropriate for that context
+	  */
+	def apply(context: NameContext) =
+		rules.get(context).orElse { context.parentsIterator.findMap(rules.get) }.getOrElse(context.defaultNaming)
+}

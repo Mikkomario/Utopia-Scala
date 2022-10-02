@@ -1,211 +1,228 @@
 package utopia.flow.async
 
-import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike}
+import utopia.flow.async.AsyncMirror.AsyncMirrorValue
+import utopia.flow.event.{ChangeListener, ChangingLike, ChangingWrapper, Fixed}
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.CollectionExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object AsyncMirror
 {
 	/**
-	  * Creates a new asynchronous mirror
+	  * Creates a new asynchronous mirror where failures are simply logged and treated as if no mapping happened.
 	  * @param source A source pointer
-	  * @param placeHolder Value initially placed in this pointer
-	  * @param synchronousMap A mapping function that returns a try
+	  * @param placeHolder A placeholder for the first map result.
+	  *                    Used until a real value has been resolved.
+	  * @param skipInitialProcess Whether the initial source value should not be mapped.
+	  *                           Suitable for situations where the placeholder is accurate.
+	  *                           Default = false = immediately start mapping.
+	  * @param map An asynchronous mapping function that yields a success or a failure.
 	  * @param exc Implicit execution context
 	  * @param logger Implicit logger to record encountered errors with
 	  * @tparam Origin Original pointer value type
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def trying[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
-	                                (synchronousMap: Origin => Try[Reflection])
-	                                (implicit exc: ExecutionContext, logger: Logger) =
+	def tryCatching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection,
+	                                    skipInitialProcess: Boolean = false)
+	                                   (map: Origin => Future[Try[Reflection]])
+	                                   (implicit exc: ExecutionContext, logger: Logger) =
 	{
-		if (source.isChanging)
-			new AsyncMirror[Origin, Try[Reflection], Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
-				result.flatten match {
-					case Success(value) => value
-					case Failure(error) =>
-						logger(error)
-						previous
-				}
-			})
-		else
-			new ChangeFuture[Reflection](placeHolder, Future { synchronousMap(source.value).getOrElse(placeHolder) })
+		apply[Origin, Try[Reflection], Reflection](source, placeHolder, skipInitialProcess)(map) { (previous, result) =>
+			result.flatten.getOrMap { error =>
+				logger(error, s"Asynchronous mapping failed. Reverting back to $previous")
+				previous
+			}
+		}
 	}
 	
 	/**
-	  * Creates a new asynchronous mirror
+	  * Creates a new asynchronous mirror where failures are simply logged and treated as if no mapping happened.
 	  * @param source A source pointer
-	  * @param placeHolder Value initially placed in this pointer
-	  * @param synchronousMap A mapping function that is expected to throw exceptions once in a while
+	  * @param placeHolder A placeholder for the first map result.
+	  *                    Used until a real value has been resolved.
+	  * @param skipInitialProcess Whether the initial source value should not be mapped.
+	  *                           Suitable for situations where the placeholder is accurate.
+	  *                           Default = false = immediately start mapping.
+	  * @param map An asynchronous mapping function
 	  * @param exc Implicit execution context
 	  * @param logger Implicit logger to record encountered errors with
 	  * @tparam Origin Original pointer value type
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def catching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
-	                                (synchronousMap: Origin => Reflection)
+	def catching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection,
+	                                 skipInitialProcess: Boolean = false)
+	                                (map: Origin => Future[Reflection])
 	                                (implicit exc: ExecutionContext, logger: Logger) =
 	{
-		if (source.isChanging)
-			new AsyncMirror[Origin, Reflection, Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
-				result match
-				{
-					case Success(value) => value
-					case Failure(error) =>
-						logger(error)
-						previous
-				}
-			})
-		else
-			new ChangeFuture[Reflection](placeHolder, Future { synchronousMap(source.value) })
+		apply[Origin, Reflection, Reflection](source, placeHolder, skipInitialProcess)(map) { (previous, result) =>
+			result.getOrMap { error =>
+				logger(error, s"Asynchronous mapping failed. Reverts back to $previous")
+				previous
+			}
+		}
 	}
 	
 	/**
-	  * Creates a new asynchronous mirror
-	  * @param source A source pointer
-	  * @param placeHolder Value initially placed in this pointer
-	  * @param synchronousMap A mapping function that is expected to always succeed (if/when it throws,
-	  *                       errors are only printed but otherwise ignored)
+	  * Creates a new mirror that asynchronously maps the values of another pointer
+	  * @param source Pointer that's being mapped
+	  * @param placeHolder A placeholder for the first map result.
+	  *                    Used until a real value has been resolved.
+	  * @param skipInitialProcess Whether the initial source value should not be mapped.
+	  *                           Suitable for situations where the placeholder is accurate.
+	  *                           Default = false = immediately start mapping.
+	  * @param map An asynchronous mapping function
+	  * @param merge A function that merges mapping results and previously acquired value into a new pointer value.
+	  *              Handles possible mapping function errors, also.
 	  * @param exc Implicit execution context
-	  * @param logger Implicit logger to record encountered errors with
 	  * @tparam Origin Original pointer value type
-	  * @tparam Reflection Successful mapping result type
-	  * @return A new asynchronously mirroring pointer
+	  * @tparam Result Mapping result type before merging
+	  * @tparam Reflection Mapping result type after merging
+	  * @return A new asynchronous mirror
 	  */
-	def apply[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
-	                             (synchronousMap: Origin => Reflection)
-	                             (implicit exc: ExecutionContext, logger: Logger) =
-		catching[Origin, Reflection](source, placeHolder)(synchronousMap)
+	def apply[Origin, Result, Reflection](source: ChangingLike[Origin], placeHolder: Reflection,
+	                                      skipInitialProcess: Boolean = false)
+	                                     (map: Origin => Future[Result])
+	                                     (merge: (Reflection, Try[Result]) => Reflection)
+	                                     (implicit exc: ExecutionContext) =
+	{
+		// Case: Mapping required => constructs a proper mirror
+		if (source.isChanging || !skipInitialProcess)
+			new AsyncMirror[Origin, Result, Reflection](source, placeHolder, skipInitialProcess)(map)(merge)
+		// Case: Fixed source and no initial mapping required => Constructs a fixed pointer
+		else
+			Fixed(AsyncMirrorValue(placeHolder))
+	}
+	
+	
+	// NESTED   -------------------------
+	
+	object AsyncMirrorValue
+	{
+		// Async mirror values may be implicitly converted to their currently held value
+		implicit def autoUnwrap[R](v: AsyncMirrorValue[_, R]): R = v.current
+	}
+	
+	/**
+	  * A value state of an asynchronous mirror. Contains the currently held value, as well as information concerning
+	  * current and future processes.
+	  * @param current The last calculated value
+	  * @param activeOrigin The source value that's currently being processed.
+	  *                     None if no value is being processed at this time (default)
+	  * @param queuedOrigin The source value that's currently queued to be processed after the current process has
+	  *                     completed.
+	  *                     None if no process has been queued (default).
+	  * @tparam Origin The type of process origins
+	  * @tparam Reflection The type of resulting (asynchronously mapped) values
+	  */
+	case class AsyncMirrorValue[+Origin, +Reflection](current: Reflection, activeOrigin: Option[Origin] = None,
+	                                                  queuedOrigin: Option[Origin] = None)
+	{
+		// COMPUTED -------------------------
+		
+		/**
+		  * @return Whether a value is being processed asynchronously
+		  */
+		def isProcessing = activeOrigin.isDefined
+		/**
+		  * @return Whether no value is being processed asynchronously right now
+		  */
+		def isNotProcessing = !isProcessing
+		
+		/**
+		  * @return A copy of this value without the queued process
+		  */
+		def withoutQueue = copy(queuedOrigin = None)
+	}
 }
 
 /**
-  * This mirror (mapped view of a changed item) performs the mapping asynchronously and possibly with a delay, which
+  * This mirror (mapped view of a changed item) performs the mapping asynchronously, which
   * is useful when the mapping operation takes a while to complete and shouldn't freeze/block any of the active threads
   * while doing so.
   * @author Mikko Hilpinen
   * @since 23.9.2020, v1.9
   * @param source Pointer that's being mapped
-  * @param initialPlaceHolder First value in this pointer. Used until a real value arrives,
-  *                           which is immediately calculated asynchronously
-  * @param synchronousMap A synchronous mapping operation which may take a while to complete
-  * @param merge A function that merges mapping results and previously acquired value into a pointer value. Handles
-  *              possible mapping function errors in the process.
+  * @param initialPlaceHolder A placeholder for the first map result.
+  *                           Used until a real value has been resolved.
+  * @param f An asynchronous mapping function
+  * @param merge A function that merges mapping results and previously acquired value into a new pointer value.
+  *              Handles possible mapping function errors, also.
   * @param exc Implicit execution context
   * @tparam Origin Original pointer value type
   * @tparam Result Mapping result type before merging
   * @tparam Reflection Mapping result type after merging
   */
-class AsyncMirror[Origin, Result, Reflection](val source: ChangingLike[Origin], initialPlaceHolder: Reflection)
-                                             (synchronousMap: Origin => Result)
+class AsyncMirror[Origin, Result, Reflection](val source: ChangingLike[Origin], initialPlaceHolder: Reflection,
+                                              skipInitialProcess: Boolean = false)
+                                             (f: Origin => Future[Result])
                                              (merge: (Reflection, Try[Result]) => Reflection)
                                              (implicit exc: ExecutionContext)
-	extends Changing[Reflection]
+	extends ChangingWrapper[AsyncMirrorValue[Origin, Reflection]]
 {
 	// ATTRIBUTES   ------------------------
 	
-	override var listeners = Vector[ChangeListener[Reflection]]()
-	override var dependencies = Vector[ChangeDependency[Reflection]]()
-	
-	// Initial value may be calculated synchronously in order to always have some value available
-	// (asynchronous calculation is used if placeholder value is provided)
-	private val cachedValuePointer = Volatile(initialPlaceHolder)
-	// Contains: (value to map, mapping results (if arrived), queued source value (if required))
-	private val currentCalculation = Volatile[(Origin, Option[Reflection], Option[Origin])](
-		(source.value, Some(cachedValuePointer.value), None))
-	
 	/**
-	  * A pointer that notes whether this mirror is currently performing an asynchronous calculation
+	  * Type of value stored in this mirror
 	  */
-	lazy val isProcessingPointer = currentCalculation.map { _._2.isEmpty }
+	type Value = AsyncMirrorValue[Origin, Reflection]
+	
+	private val pointer = Volatile[Value](
+		AsyncMirrorValue(initialPlaceHolder, if (skipInitialProcess) None else Some(source.value)))
 	
 	
 	// INITIAL CODE ---------------------
 	
-	// If a placeholder value was provided, immediately starts a new calculation
-	currentCalculation.value = calculateNextValue(source.value)
+	// May immediately start to process the first value
+	if (!skipInitialProcess)
+		f(source.value).onComplete(resultsArrived)
 	
 	// Whenever source value changes, requests an asynchronous status update
-	source.addListener { event => requestCalculation(event.newValue) }
-	
-	
-	// COMPUTED	-------------------------
-	
-	/**
-	  * @return Whether this mirror is currently processing a change
-	  */
-	def isProcessing = isProcessingPointer.value
+	source.addListener(ChangeListener.continuous { event => requestCalculation(event.newValue) })
 	
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def isChanging = source.isChanging || isProcessing
-	
-	override def value = cachedValuePointer.value
+	override protected def wrapped = pointer
 	
 	
 	// OTHER    -------------------------
 	
-	private def requestCalculation(newOrigin: Origin) =
-	{
-		currentCalculation.update { case (oldOrigin, oldResult, queued) =>
-			// Checks whether currently active (or performed) calculation already handles this case
-			val isSameOrigin = oldOrigin == newOrigin
+	private def requestCalculation(newOrigin: Origin) = {
+		val shouldProcess = pointer.pop { current =>
 			// Case: A new calculation has already been queued
-			if (queued.isDefined)
-			{
-				// May skip it if current calculation already solves this one
-				if (isSameOrigin)
-					(newOrigin, oldResult, None)
-				// Or simply overwrites the queued calculation
+			if (current.queuedOrigin.isDefined) {
+				// Case: Current calculation solves this new item => skips the previously queued item
+				if (current.activeOrigin.contains(newOrigin))
+					false -> current.withoutQueue
+				// Case: New calculation is required => overwrites the queued calculation
 				else
-					(oldOrigin, oldResult, Some(newOrigin))
+					false -> current.copy(queuedOrigin = Some(newOrigin))
 			}
-			// Case: Current calculation handles same case
-			else if (isSameOrigin)
-				(newOrigin, oldResult, None)
-			// Case: Previous calculation has been completed and a new one should be started
-			else if (oldResult.isDefined)
-				calculateNextValue(newOrigin)
-			// Case: Previous calculation is still going on and needs to be completed first
+			// Case: Current calculation handles same case => Doesn't modify
+			else if (current.activeOrigin.contains(newOrigin))
+				false -> current
+			// Case: Previous calculation is still going on and needs to be completed first => queues this calculation
+			else if (current.isProcessing)
+				false -> current.copy(queuedOrigin = Some(newOrigin))
+			// Case: Previous calculation has been completed => Starts a new one
 			else
-				(oldOrigin, None, Some(newOrigin))
+				true -> current.copy(activeOrigin = Some(newOrigin))
 		}
+		if (shouldProcess)
+			f(newOrigin).onComplete(resultsArrived)
 	}
 	
-	private def resultsArrived(origin: Origin, result: Try[Result]): Unit =
+	private def resultsArrived(result: Try[Result]): Unit =
 	{
-		// Updates currently cached value, merging results into it
-		val (oldValue, newValue) = cachedValuePointer.pop { oldValue =>
-			val newValue = merge(oldValue, result)
-			(oldValue, newValue) -> newValue
+		val queued = pointer.pop { current =>
+			// Determines the new value by merging the result with the previous value
+			current.queuedOrigin -> AsyncMirrorValue(merge(current.current, result), current.queuedOrigin)
 		}
-		// Fires a change event
-		fireChangeEvent(oldValue)
-		
-		// cachedValuePointer.set(origin -> result)
-		// Updates calculation status, may start a new calculation immediately
-		currentCalculation.update { case (_, _, queued) =>
-			queued match
-			{
-				// Case: New calculation was already requested
-				case Some(nextOrigin) => calculateNextValue(nextOrigin)
-				// Case: No new calculation was requested yet
-				case None => (origin, Some(newValue), None)
-			}
-		}
-	}
-	
-	private def calculateNextValue(origin: Origin): (Origin, Option[Reflection], Option[Origin]) =
-	{
-		// Starts the new calculation
-		val calculation = Future { synchronousMap(origin) }
-		// Once that calculation is ready, updates results and may start a new one
-		calculation.onComplete { resultsArrived(origin, _) }
-		(origin, None, None)
+		// Starts a new computation (if needed)
+		queued.foreach { f(_).onComplete(resultsArrived) }
 	}
 }

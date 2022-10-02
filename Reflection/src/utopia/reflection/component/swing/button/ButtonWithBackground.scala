@@ -46,10 +46,9 @@ abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends B
 		initializeListeners(hotKeys, hotKeyChars)
 		
 		// Adds border drawing
-		if (borderWidth > 0)
-		{
+		if (borderWidth > 0) {
 			addCustomDrawer(BorderViewDrawer(borderPointer))
-			borderPointer.addListener { _ => repaint() }
+			borderPointer.addContinuousAnyChangeListener { repaint() }
 		}
 	}
 	

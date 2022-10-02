@@ -52,7 +52,7 @@ trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def serverResultFuture(implicit exc: ExecutionContext) = _serverResultFuture.get
+	override def serverResultFuture(implicit exc: ExecutionContext) = _serverResultFuture.value
 	
 	override def finalInstanceFuture(implicit exc: ExecutionContext) = serverResultFuture.map { r =>
 		instanceFrom(Some(r)) }

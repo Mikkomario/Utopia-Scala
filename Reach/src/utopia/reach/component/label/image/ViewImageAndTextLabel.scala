@@ -215,7 +215,7 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 			displayFunction = displayFunction, additionalDrawers = backgroundDrawer +: customDrawers,
 			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)
 		// Repaints this component whenever background color changes
-		backgroundPointer.addAnyChangeListener { label.repaint(Low) }
+		backgroundPointer.addContinuousAnyChangeListener { label.repaint(Low) }
 		label
 	}
 }

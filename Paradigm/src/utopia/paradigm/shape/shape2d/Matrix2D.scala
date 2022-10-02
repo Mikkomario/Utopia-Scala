@@ -199,13 +199,12 @@ case class Matrix2D(override val columns: Pair[Vector2D])
 	
 	override def dimensions2D = columns
 	
-	override protected def buildCopy(columns: Seq[Vector2D]) =
-	{
+	override protected def buildCopy(columns: IndexedSeq[Vector2D]) = {
 		val fullColumns = columns.padTo(2, Vector2D.zero)
 		Matrix2D(fullColumns.head, fullColumns(1))
 	}
 	
-	override protected def zeroDimension = Vector2D.zero
+	override def zeroDimension = Vector2D.zero
 	
 	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
 	

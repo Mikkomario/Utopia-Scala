@@ -40,12 +40,11 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 	override def components = container.components
 	
 	// Aligns the component and fits it into this container's area
-	override def updateLayout() =
-	{
+	override def updateLayout() = {
 		content.foreach { c =>
 			// Calculates new size
 			val mySize = size
-			val targetSize = c.stackSize.optimal.fittedInto(mySize)
+			val targetSize = c.stackSize.optimal.croppedToFitWithin(mySize)
 			
 			// Calculates new position
 			val targetPosition = alignment.position(targetSize, mySize)

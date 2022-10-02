@@ -325,7 +325,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 	// INITIAL CODE	------------------------------
 	
 	setup(baseStatePointer, hotKeys)
-	colorPointer.addListener { _ => repaint() }
+	colorPointer.addContinuousAnyChangeListener { repaint() }
 	
 	
 	// IMPLEMENTED	------------------------------

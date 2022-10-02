@@ -28,7 +28,7 @@ object TablesWriter
 	  */
 	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
-		val objectName = setup.dbModuleName + "Tables"
+		val objectName = (setup.dbModuleName + "Tables").objectName
 		// If there are no classes to write, omits this document (e.g. when only writing enumerations or something)
 		if (classes.isEmpty)
 			Success(Reference(setup.databasePackage, objectName))
@@ -69,19 +69,19 @@ object TablesWriter
 	}
 	
 	private def tablePropertyFrom(c: Class)(implicit naming: NamingRules) =
-		ComputedProperty(c.name.propName, description = tablePropertyDescriptionFrom(c))(
+		ComputedProperty(c.name.prop, description = tablePropertyDescriptionFrom(c))(
 			s"apply(${ c.tableName.quoted })")
 	private def descriptionLinkTablePropertyFrom(c: Class)(implicit naming: NamingRules) =
 	{
 		val linkProp = c.properties.head
-		LazyValue(c.name.propName, Set(Reference.descriptionLinkTable),
+		LazyValue(c.name.prop, Set(Reference.descriptionLinkTable),
 			description = tablePropertyDescriptionFrom(c))(
-			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.propName.quoted})")
+			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.prop.quoted})")
 	}
 	
-	private def tablePropertyDescriptionFrom(c: Class) =
+	private def tablePropertyDescriptionFrom(c: Class)(implicit naming: NamingRules) =
 	{
-		val baseDescription = s"Table that contains ${ c.name.pluralText }"
+		val baseDescription = s"Table that contains ${ c.name.pluralDoc }"
 		if (c.description.isEmpty)
 			baseDescription
 		else

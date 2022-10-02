@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.flow.collection.LazyVector
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.Transformable
 
@@ -14,75 +15,96 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	// ABSTRACT	------------------
 	
 	/**
-	  * @return The top left corner of this shape
+	  * @return The top-left corner of this shape
 	  */
-	def topLeft: Point
+	def topLeftCorner: Point
 	
 	/**
-	  * @return The top / bottom edge of this shape
+	  * @return The edge from the top-left corner of this shape to the top-right corner of this shape
 	  */
-	def top: Vector2D
-	
+	def topEdge: Vector2D
 	/**
-	  * @return The left / right edge of this shape
+	  * @return The edge from the top-right corner of this shape to the bottom-right corner of this shape
 	  */
-	def left: Vector2D
+	def rightEdge: Vector2D
 	
 	
 	// COMPUTED	------------------
 	
-	def topRight = topLeft + top
+	/**
+	  * @return The edge from bottom-right corner to the bottom-left corner
+	  */
+	def bottomEdge = -topEdge
+	/**
+	  * @return The edge from the bottom-left corner of this shape to the top-left corner of this shape
+	  */
+	def leftEdge = -rightEdge
 	
-	def bottomRight = topRight + left
-	
-	def bottomLeft = topLeft + left
+	/**
+	  * @return The top-right corner of this shape
+	  */
+	def topRightCorner = topLeftCorner + topEdge
+	/**
+	  * @return The bottom-right corner of this shape
+	  */
+	def bottomRightCorner = topRightCorner + rightEdge
+	/**
+	  * @return The bottom-left corner of this shape
+	  */
+	def bottomLeftCorner = topLeftCorner - leftEdge
 	
 	/**
 	  * @return The top side of this shape (left to right)
 	  */
-	def topEdge = Line(topLeft, topRight)
-	
+	def topSide = Line(topLeftCorner, topRightCorner)
 	/**
 	  * @return The right side of this shape (top to bottom)
 	  */
-	def rightEdge = Line(topRight, bottomRight)
-	
+	def rightSide = Line(topRightCorner, bottomRightCorner)
 	/**
 	  * @return The bottom side of this shape (right to left)
 	  */
-	def bottomEdge = Line(bottomRight, bottomLeft)
-	
+	def bottomSide = Line(bottomRightCorner, bottomLeftCorner)
 	/**
 	  * @return The left side of this shape (bottom to top)
 	  */
-	def leftEdge = Line(bottomLeft, topLeft)
+	def leftSide = Line(bottomLeftCorner, topLeftCorner)
 	
 	/**
-	  * @return The area of this 2D shape
+	  * @return The area of this shape
 	  */
-	def area = top.length * left.length
+	def area = topEdge.length * rightEdge.length
 	
 	
 	// IMPLEMENTED	--------------
 	
+	override def corners =
+		LazyVector.fromFunctions(() => topLeftCorner, () => topRightCorner, () => bottomRightCorner,
+			() => bottomLeftCorner)
+	override def edges = Vector(topEdge, rightEdge, bottomEdge, leftEdge)
+	
+	override def collisionAxes = Vector(topEdge, rightEdge).map { _.normal2D }
+	
+	override def bounds = {
+		val p1 = topLeftCorner
+		val p2 = p1 + topEdge + rightEdge
+		Bounds.between(p1, p2)
+	}
+	
+	override def center = topLeftCorner + (topEdge / 2) + (rightEdge / 2)
+	override def maxEdgeLength = topEdge.length max rightEdge.length
+	override def minEdgeLength = topEdge.length min rightEdge.length
+	
 	override def transformedWith(transformation: Matrix3D) = map { _ * transformation }
-	
 	override def transformedWith(transformation: Matrix2D) = map { _ * transformation }
-	
-	override def center = topLeft + (top / 2) + (left / 2)
-	
-	override def corners = Vector(topLeft, topRight, bottomRight, bottomLeft)
-	
-	override def collisionAxes = Vector(top, left).map { _.normal2D }
 	
 	
 	// OTHER	----------------
 	
-	private def map(f: Point => Point) =
-	{
-		val topLeft2 = f(topLeft)
-		val topRight2 = f(topRight).toVector
-		val bottomLeft2 = f(bottomLeft).toVector
+	private def map(f: Point => Point) = {
+		val topLeft2 = f(topLeftCorner)
+		val topRight2 = f(topRightCorner).toVector
+		val bottomLeft2 = f(bottomLeftCorner).toVector
 		
 		Parallelogram(topLeft2, topRight2 - topLeft2, bottomLeft2 - topLeft2)
 	}

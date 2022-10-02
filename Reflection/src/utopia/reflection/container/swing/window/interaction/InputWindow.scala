@@ -161,7 +161,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 				// Some rows have dependent visibility state
 				row.rowVisibilityPointer.foreach { pointer =>
 					rowComponent.visible = pointer.value
-					pointer.addListener { e => rowComponent.visible = e.newValue }
+					pointer.addContinuousListener { e => rowComponent.visible = e.newValue }
 				}
 				rowComponent
 			}

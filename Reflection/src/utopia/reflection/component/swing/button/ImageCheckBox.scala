@@ -31,7 +31,7 @@ class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys
 	// INITIAL CODE	---------------------
 	
 	initializeListeners(hotKeys, hotKeyChars)
-	valuePointer.addListener { _ => updateStyleForState(state) }
+	valuePointer.addContinuousAnyChangeListener { updateStyleForState(state) }
 	registerAction { () => value = !value }
 	setHandCursor()
 	component.setFocusable(true)

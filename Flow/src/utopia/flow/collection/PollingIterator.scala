@@ -4,28 +4,75 @@ import utopia.flow.datastructure.mutable.{PollableOnce, ResettableLazy}
 
 import scala.collection.immutable.VectorBuilder
 
+object PollingIterator
+{
+	// OTHER    ---------------------------
+	
+	/**
+	  * Wraps another iterator, adding polling functions
+	  * @param source The source iterator (shouldn't be used afterwards)
+	  * @tparam A Type of iterated items
+	  * @return A pollable copy of the source iterator
+	  */
+	def apply[A](source: Iterator[A]): PollingIterator[A] = new PollingIteratorImplementation[A](source)
+	
+	
+	// NESTED   ---------------------------
+	
+	private class PollingIteratorImplementation[A](source: Iterator[A]) extends PollingIterator[A]
+	{
+		// ATTRIBUTES   -------------------------
+		
+		private val pollCache = ResettableLazy { source.next() }
+		
+		
+		// IMPLEMENTED  -------------------------
+		
+		def poll = pollCache.value
+		
+		override def hasNext = pollCache.isInitialized || source.hasNext
+		
+		override def next() = pollCache.popCurrent().getOrElse { source.next() }
+		
+		override def skipPolled() = pollCache.reset()
+		
+		override def map[B](f: A => B) = pollCache.popCurrent() match {
+			case Some(polled) => PollableOnce(polled).map(f) ++ source.map(f)
+			case None => source.map(f)
+		}
+		override def flatMap[B](f: A => IterableOnce[B]) = pollCache.popCurrent() match
+		{
+			case Some(polled) => PollableOnce(polled).flatMap(f) ++ source.flatMap(f)
+			case None => source.flatMap(f)
+		}
+	}
+}
+
 /**
  * An iterator (wrapper) which enables one to poll the next item before consuming it
  * @author Mikko Hilpinen
  * @since 5.4.2021, v1.9
  */
-class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
+trait PollingIterator[+A] extends Iterator[A]
 {
-	// ATTRIBUTES   -------------------------
+	// ABSTRACT -----------------------------
 	
-	private val pollCache = ResettableLazy { source.next() }
+	/**
+	  * Checks the next available item in this iterator without consuming it
+	  * (Meaning: The next call of next() or poll() will still yield that same item)
+	  * @return The next item in this iterator
+	  * @throws NoSuchElementException If there are no more elements in this iterator
+	  */
+	@throws[NoSuchElementException]("If there are no more elements in this iterator")
+	def poll: A
+	
+	/**
+	  * Skips the polled item, if there was one
+	  */
+	def skipPolled(): Unit
 	
 	
 	// COMPUTED -----------------------------
-	
-	/**
-	 * Checks the next available item in this iterator without consuming it
-	 * (Meaning: The next call of next() or poll() will still yield that same item)
-	 * @return The next item in this iterator
-	 * @throws NoSuchElementException If there are no more elements in this iterator
-	 */
-	@throws[NoSuchElementException]("If there are no more elements in this iterator")
-	def poll = pollCache.value
 	
 	/**
 	 * Checks the next available item in this iterator without consuming it
@@ -35,29 +82,7 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	def pollOption = if (hasNext) Some(poll) else None
 	
 	
-	// IMPLEMENTED  -------------------------
-	
-	override def hasNext = pollCache.isInitialized || source.hasNext
-	
-	override def next() = pollCache.popCurrent().getOrElse { source.next() }
-	
-	override def map[B](f: A => B) = pollCache.popCurrent() match {
-		case Some(polled) => PollableOnce(polled).map(f) ++ source.map(f)
-		case None => source.map(f)
-	}
-	override def flatMap[B](f: A => IterableOnce[B]) = pollCache.popCurrent() match
-	{
-		case Some(polled) => PollableOnce(polled).flatMap(f) ++ source.flatMap(f)
-		case None => source.flatMap(f)
-	}
-	
-	
 	// OTHER    -----------------------------
-	
-	/**
-	  * Skips the polled item, if there was one
-	  */
-	def skipPolled() = pollCache.reset()
 	
 	/**
 	 * Takes the next item if a) there is one available and b) it fulfills the specified condition.
@@ -75,8 +100,7 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	  */
 	def pollToNextWhere(condition: A => Boolean) =
 	{
-		while (pollOption.exists { item => !condition(item) })
-		{
+		while (pollOption.exists { item => !condition(item) }) {
 			next()
 		}
 		pollOption
@@ -89,10 +113,8 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	 * @param condition A condition for continuing operations
 	 * @param f Function performed to items that fulfilled that condition
 	 */
-	def foreachWhile(condition: A => Boolean)(f: A => Unit) =
-	{
-		while (pollOption.exists(condition))
-		{
+	def foreachWhile(condition: A => Boolean)(f: A => Unit) = {
+		while (pollOption.exists(condition)) {
 			f(next())
 		}
 	}
@@ -111,8 +133,7 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	 * @param condition Condition that must be fulfilled for an item to be included
 	 * @return All of the consecutive items which fulfilled the specified condition
 	 */
-	def collectWhile(condition: A => Boolean) =
-	{
+	def collectWhile(condition: A => Boolean) = {
 		val resultsBuilder = new VectorBuilder[A]()
 		foreachWhile(condition) { resultsBuilder += _ }
 		resultsBuilder.result()

@@ -254,9 +254,9 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
                 val b = bounds.size.perpendicularTo(direction)
                 var lastStart = 0.0
-                var lastComponentBottom = components.head.maxCoordinateAlong(direction)
+                var lastComponentBottom = components.head.maxAlong(direction)
                 components.tail.foreach { c =>
-                    val componentPosition = c.coordinateAlong(direction)
+                    val componentPosition = c.position.along(direction)
         
                     val margin = (componentPosition - lastComponentBottom) / 2
                     val lastSegmentLength = lastComponentBottom - lastStart + margin

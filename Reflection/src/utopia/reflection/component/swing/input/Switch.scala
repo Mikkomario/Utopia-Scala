@@ -11,6 +11,7 @@ import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListene
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
+import utopia.paradigm.enumeration.Axis.Y
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
@@ -167,7 +168,10 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	private object StatusChangeListener extends ChangeListener[Boolean]
 	{
-		override def onChangeEvent(event: ChangeEvent[Boolean]) = SwitchDrawer2.updateTarget(event.newValue)
+		override def onChangeEvent(event: ChangeEvent[Boolean]) = {
+			SwitchDrawer2.updateTarget(event.newValue)
+			true
+		}
 	}
 	
 	private object SwitchDrawer2 extends CustomDrawer with Actor
@@ -200,7 +204,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			val height = (bounds.size.width * Switch.maxHeightRatio) min bounds.size.height
 			val r = height / 2 * 0.9
 			
-			val areaBounds = bounds.translatedBy(0, (bounds.height - height) / 2).withHeight(height)
+			val areaBounds = (bounds + Y(bounds.height - height) / 2).withHeight(height)
 			val minX = areaBounds.position.x + height / 2
 			val maxX = areaBounds.bottomRight.x - height / 2
 			

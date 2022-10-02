@@ -115,18 +115,21 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	
 	private object TargetUpdateListener extends ChangeListener[Double]
 	{
-		override def onChangeEvent(event: ChangeEvent[Double]) = ProgressDrawer.updateTargetProgress(event.newValue)
+		override def onChangeEvent(event: ChangeEvent[Double]) = {
+			ProgressDrawer.updateTargetProgress(event.newValue)
+			true
+		}
 	}
 	
 	private object InvisibleProgressListener extends ChangeListener[Double]
 	{
-		override def onChangeEvent(event: ChangeEvent[Double]) =
-		{
-			if (event.newValue >= 1)
-			{
+		override def onChangeEvent(event: ChangeEvent[Double]) = {
+			if (event.newValue >= 1) {
 				isCompletedFlag.set()
-				progressPointer.removeListener(this)
+				false
 			}
+			else
+				true
 		}
 	}
 	
@@ -188,7 +191,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 					drawer.onlyFill(barColor).draw(rounded)
 				else
 				{
-					val partial = barBounds.mapSize { _ * (X -> drawnProgress) }
+					val partial = barBounds.mapSize { _.scaledAlong(X(drawnProgress)) }
 					drawer.clippedTo(rounded).onlyFill(barColor).draw(partial)
 				}
 			}

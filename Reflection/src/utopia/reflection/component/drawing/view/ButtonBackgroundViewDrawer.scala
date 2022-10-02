@@ -48,7 +48,7 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: ChangingLike[Color], sta
 			// Draws the background, then the border
 			val backgroundArea = drawer.clipBounds match
 			{
-				case Some(clipArea) => bounds.within(clipArea)
+				case Some(clipArea) => bounds.intersectionWith(clipArea)
 				case None => Some(bounds)
 			}
 			backgroundArea.foreach { drawer.onlyFill(color).draw(_) }

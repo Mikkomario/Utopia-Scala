@@ -107,7 +107,7 @@ case class Vector2D(override val dimensions2D: Pair[Double])
 	
 	override def buildCopy(vector: Vector3D) = vector.in2D
 	
-	override def buildCopy(dimensions: Seq[Double]) =
+	override def buildCopy(dimensions: IndexedSeq[Double]) =
 	{
 		if (dimensions.size >= 2)
 			Vector2D(dimensions.head, dimensions(1))

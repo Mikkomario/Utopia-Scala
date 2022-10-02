@@ -43,7 +43,7 @@ object DbModelWriter
 	  * @param naming Naming rules to apply
 	  * @return Name of the property that refers to this property's db property name
 	  */
-	def attNameFrom(propName: Name)(implicit naming: NamingRules) = (propName + attNameSuffix).propName
+	def attNameFrom(propName: Name)(implicit naming: NamingRules) = (propName + attNameSuffix).prop
 	/**
 	  * @param prop A property
 	  * @param naming Naming rules to apply
@@ -55,7 +55,7 @@ object DbModelWriter
 	  * @param naming Naming rules to apply
 	  * @return Name of the property that refers to this property's column
 	  */
-	def columnNameFrom(propName: Name)(implicit naming: NamingRules) = (propName + columnNameSuffix).propName
+	def columnNameFrom(propName: Name)(implicit naming: NamingRules) = (propName + columnNameSuffix).prop
 	/**
 	  * @param prop A property
 	  * @param naming Naming rules to apply
@@ -84,7 +84,7 @@ object DbModelWriter
 		
 		// Converts each property to the "intermediate" state
 		val applyParametersCode = ("None" +: classToWrite.properties.flatMap { prop =>
-			val propAccessCode = s"data.${prop.name.propName}"
+			val propAccessCode = s"data.${prop.name.prop}"
 			prop.dataType.sqlConversions
 				.map { conversion => conversion.midConversion(propAccessCode) }
 		}).mkString(", ")
@@ -98,10 +98,10 @@ object DbModelWriter
 					val attName = attNameFrom(prop)
 					Vector(
 						ImmutableValue(attName,
-							description = s"Name of the property that contains ${ classToWrite.name } ${ prop.name }")(
+							description = s"Name of the property that contains ${ classToWrite.name.doc } ${ prop.name.doc }")(
 							prop.modelName.quoted),
 						ComputedProperty(columnNameFrom(prop),
-							description = s"Column that contains ${ classToWrite.name } ${ prop.name }")(
+							description = s"Column that contains ${ classToWrite.name.doc } ${ prop.name.doc }")(
 							s"table($attName)")
 					)
 				}.toVector ++ Vector(
@@ -117,24 +117,24 @@ object DbModelWriter
 						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
 						s"${ modelRef.target }(id.get${ if (classToWrite.useLongId) "Long" else "Int" }, data)"),
 					MethodDeclaration("withId", returnDescription = "A model with that id")(
-						Parameter("id", classToWrite.idType.toScala, description = s"A ${ classToWrite.name } id"))(
+						Parameter("id", classToWrite.idType.toScala, description = s"A ${ classToWrite.name.doc } id"))(
 						"apply(Some(id))")
 					// Also includes withX(...) methods for each property
 				) ++ classToWrite.properties.flatMap { withPropertyMethods(_) } ++
 					deprecation.iterator.flatMap { _.methods },
 				description = s"Used for constructing $className instances and for inserting ${
-					classToWrite.name.pluralText
+					classToWrite.name.pluralDoc
 				} to the database", author = classToWrite.author, since = DeclarationDate.versionedToday
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each appears in the "intermediate "(db property) state
 				constructionParams = Parameter("id", optionalIdType.toScala, optionalIdType.emptyValue,
-					description = s"${ classToWrite.name } database id") +:
+					description = s"${ classToWrite.name.doc } database id") +:
 					classToWrite.dbProperties.map { prop =>
 						val inputType = prop.conversion.intermediate
 						val defaultValue = inputType.emptyValue
 						// TODO: Parameter descriptions are missing
-						Parameter(prop.name.propName, inputType.scalaType, defaultValue)
+						Parameter(prop.name.prop, inputType.scalaType, defaultValue)
 					}.toVector,
 				// Extends StorableWithFactory[A]
 				extensions = Vector(Reference.storableWithFactory(modelRef)),
@@ -185,7 +185,7 @@ object DbModelWriter
 	}
 	
 	private def withMethodNameFor(prop: Named)(implicit naming: NamingRules): String = withMethodNameFor(prop.name)
-	private def withMethodNameFor(name: Name)(implicit naming: NamingRules) = (withMethodPrefix + name).propName
+	private def withMethodNameFor(name: Name)(implicit naming: NamingRules) = (withMethodPrefix + name).prop
 	
 	private def withPropertyMethods(property: Property, calledMethodName: String = "apply",
 	                                returnDescriptionStart: String = "A model containing only the specified ")
@@ -226,12 +226,12 @@ object DbModelWriter
 	                       returnDescriptionStart: String = "A model containing only the specified ")
 	                      (implicit naming: NamingRules) =
 	{
-		val paramName = source.name.propName
+		val paramName = source.name.prop
 		val constructionParamsCode = properties
-			.map { prop => s"${prop.name.propName} = " +: prop.conversion.midConversion(paramName) }
+			.map { prop => s"${prop.name.prop} = " +: prop.conversion.midConversion(paramName) }
 			.reduceLeft { _.append(_, ", ") }
 		MethodDeclaration(withMethodNameFor(source), constructionParamsCode.references,
-			returnDescription = s"$returnDescriptionStart${ source.name }$returnDescriptionAppendix")(
+			returnDescription = s"$returnDescriptionStart${ source.name.doc }$returnDescriptionAppendix")(
 			scala.Parameter(paramName, parameterType, description = paramDescription))(
 			s"$calledMethodName($constructionParamsCode)")
 	}
