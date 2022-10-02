@@ -1,6 +1,16 @@
 # Utopia Flow - List of Changes
 
-## v1.17 (in development)
+## v1.17 - 02.10.2022
+This version contains a few larger changes and a large number of little updates and additions here and there.  
+
+The more major changes include:
+- Handling of **InterruptedException** in **Wait** and classes that utilize **Wait** (namely various **Process** classes)
+- Changes to **ChangingLike** and **ChangeListener**, which enable temporary listeners
+- Changes relating to synchronization, i.e. to **Volatile** classes, in order to make the software more resistant 
+  to accidental deadlocks
+
+These, and other changes are listed in more detail below.
+
 ### Breaking Changes
 - Removed `~==` and `!~==` from **StringExtensions**, as they are now made available through **EqualsExtensions**
 - **ChangeListener**`.onChangeEvent(ChangeEvent)` is now expected to return a **DetachmentChoice** instance, 
@@ -29,7 +39,7 @@
 - `new PollingIterator(...)` is now hidden, please use `PollingIterator.apply(...)` instead
 ### Deprecations
 - Deprecated `.runAndSet(...)`, `.doIfNotSet(...)` and `.mapAndSet()` in **VolatileFlag**
-- Deprecated .get in LazyFuture in favor of .value, reflecting similar changes in past releases
+- Deprecated `.get` in **LazyFuture** in favor of `.value`, reflecting similar changes in past releases
 ### New Features
 - It is now possible to write change listeners that detach from the change event source automatically. 
   Simply return `DetachmentChoice.detach`, `DetachmentChoice(shouldContinue = false)` or `false` in an 

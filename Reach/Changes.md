@@ -1,6 +1,8 @@
 # Utopia Reach - List of Changes
 
-## v0.4 (in development)
+## v0.4 - 02.10.2022
+This update focuses on TextField customizability, adding a number of new ways to affect text highlighting and 
+input processing in **TextField**s.
 ### Breaking Changes
 - **TextField** input validation function is now required to return an **InputValidationResult** instead of a 
   **LocalizedString**

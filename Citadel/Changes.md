@@ -1,5 +1,8 @@
 # Utopia Disciple - List of changes
 
+## v2.1.2 - 02.10.2022
+New build compatible with **Flow** v1.17
+
 ## v2.1.1 - 18.08.2022
 New build - Supports changes in **Flow** v1.16
 

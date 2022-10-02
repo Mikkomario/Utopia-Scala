@@ -1,6 +1,9 @@
 # Utopia Paradigm - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 02.10.2022
+This is a relatively major update, most important addition in which is the **Vector1D** class.  
+This update also includes a number of size and bounds -related utility functions.  
+Also, a number of methods were renamed, with the previous versions deprecated.
 ### Breaking Changes
 - **Dimensional** -trait changed in ways that require changes from the implementing classes:
   - `.zeroDimension` is now **public** instead of protected

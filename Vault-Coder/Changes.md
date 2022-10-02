@@ -1,20 +1,28 @@
 # Utopia Vault Coder
 
-## v1.7 (in development)
+## v1.7 - 02.10.2022
+This relatively major update focuses on two completely new features:
+1. Enumeration customization and
+2. Markdown documentation generation
+
+Beside these, there are some smaller style fixes.
+
+Please note the **change in default json property naming style**, however, as that will most likely 
+**break your projects** in unexpected ways if not acted upon.
 ### Breaking Changes
 - The default naming style for json properties is now `camelCase` (previously was `underscore`)
-- Description access point naming updated (see **Bugfixes**)
-- Optional enumeration value code structure may be altered
+- Description access point naming updated (see [Bugfixes]())
+- Code which deals with optional enumeration values may be altered
 ### Bugfixes
-- Description access point naming previously yielded duplicate object names, now contains the proper suffix
-  "Descriptions"
+- Description access point naming (e.g. "DbTestDescriptions") previously yielded duplicate object names (e.g. "DbTest"), 
+  now contains the proper suffix "Descriptions"
 ### New Features
 - Added support for complex enumerations, meaning
-  - Custom id name and data type support
-  - Documentation support
-  - Default value support
-- Added markdown documentation writing
-- Documentation naming convention may now be altered
+  - **Custom id name and data type** support
+  - **Documentation** support
+  - **Default value** support
+- Added markdown **documentation** writing
+- Documentation naming convention, i.e. naming convention for scaladoc and markdown (new), may now be altered
 ### Other Changes
 - Factory implementations of `.fromValidatedModel(Model)` are now **protected** instead of public
 

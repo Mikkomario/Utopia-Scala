@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
-## v1.14 (in development)
+## v1.14 - 02.10.2022
+This update adds a number of functions to access points that utilize ordering, i.e. different variants of 
+min and max -accessing.
 ### Breaking Changes
 - **SingleChronoRowModelAccess**`.latest` now returns an access-point, not the read item
 ### Deprecations
@@ -11,7 +13,7 @@
 ### New Features
 - Added new **Log ErrorHandlingPrinciple**
 - Added a constructor to **LatestModelAccess**
-- SingleAccess max & min -functions now support joining
+- **SingleAccess** max & min -functions now support joining
 ### New Methods
 - **SingleModelAccess**
   - Added multiple new methods for reading max/min column values

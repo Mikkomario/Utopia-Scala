@@ -1,6 +1,9 @@
 # Utopia Reflection - List of Changes
 
-## v2.0-alpha-9 (in development)
+## v2.0-alpha-9 - 02.10.2022
+This update mostly reflects changes in Flow v1.17 and Paradigm v1.1.  
+There are also some pretty neat little changes that make a big difference in certain use-cases, 
+like **ColorRole** no longer being sealed.
 ### Breaking Changes
 - **TypeOrSearch** search function is now required to return a **Future**
 - **ContainerContentDisplayer** now uses **EqualsFunction** instead of standard functions
