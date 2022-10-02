@@ -1,10 +1,10 @@
 package utopia.paradigm.color
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.mutable.Pointer
-import utopia.flow.generic.ValueConvertible
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.generic.ColorType
@@ -145,7 +145,7 @@ object Color
 		else
 		{
 			// Combines the total rgb and alpha values of the colors (weights by color alpha)
-			val totals = RgbChannel.values.map { _ -> new Pointer(0.0) }.toMap
+			val totals = RgbChannel.values.map { _ -> Pointer(0.0) }.toMap
 			var totalAlpha = 0.0
 			colors.foreach { color =>
 				color.ratios.foreach { case (channel, ratio) => totals(channel).update { _ + ratio * color.alpha } }
@@ -190,7 +190,7 @@ object Color
   * @since Genesis 24.4.2019, v1+
   */
 case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
-	extends RgbLike[Color] with HslLike[Color] with ApproximatelyEquatable[Color] with ValueConvertible
+	extends RgbLike[Color] with HslLike[Color] with ApproxEquals[Color] with ValueConvertible
 {
 	// ATTRIBUTES	----------------------
 	

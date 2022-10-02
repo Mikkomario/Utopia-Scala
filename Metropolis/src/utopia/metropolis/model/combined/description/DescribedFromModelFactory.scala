@@ -1,7 +1,7 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.template.{ModelLike, Property}
 
 /**
   * A common trait for factories which parse models into described elements
@@ -22,7 +22,7 @@ trait DescribedFromModelFactory[A, +D] extends DescribedFactory[A, D] with FromM
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def apply(model: Model[Property]) = undescribedFactory(model).map { item =>
+	override def apply(model: ModelLike[Property]) = undescribedFactory(model).map { item =>
 		val descriptions = model("descriptions").getVector.flatMap { _.model }
 			.flatMap { LinkedDescription(_).toOption }.toSet
 		apply(item, descriptions)

@@ -1,10 +1,13 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Path
 

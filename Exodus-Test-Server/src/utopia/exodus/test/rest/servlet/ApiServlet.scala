@@ -6,11 +6,11 @@ import utopia.exodus.model.enumeration.ExodusScope._
 import utopia.exodus.rest.resource.ExodusResources
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
-import utopia.flow.async.ThreadPool
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.DataType
-import utopia.flow.parse.JsonParser
-import utopia.flow.util.FileExtensions._
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.JsonParser
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.nexus.http.{Path, ServerSettings}
 import utopia.nexus.rest.RequestHandler

@@ -1,7 +1,7 @@
 package utopia.reach.container
 
-import utopia.flow.datastructure.immutable.Tree
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.collection.immutable.Tree
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}

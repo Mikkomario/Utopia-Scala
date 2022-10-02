@@ -1,11 +1,11 @@
 package utopia.flow.test.file
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ThreadPool
-import utopia.flow.filesearch.Guild
-import utopia.flow.generic.DataType
-import utopia.flow.util.FileExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.parse.file.search.Guild
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext

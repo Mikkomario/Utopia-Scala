@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.flow.async.VolatileFlag
+import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.path.ProjectilePath

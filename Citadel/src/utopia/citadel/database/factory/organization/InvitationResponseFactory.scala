@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.stored.organization.InvitationResponse
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps

@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.stack.CachingStackable2

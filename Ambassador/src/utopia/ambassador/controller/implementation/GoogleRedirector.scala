@@ -5,8 +5,8 @@ import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.vault.database.Connection
 
 import scala.collection.immutable.VectorBuilder

@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.util.UncertainBoolean.{Certain, Undefined}
+import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 
 import scala.language.implicitConversions
 
@@ -22,62 +22,84 @@ sealed trait UncertainBoolean
 	// COMPUTED --------------------------
 	
 	/**
+	  * @return Whether this value is known for certain to be either true or false
+	  */
+	def isCertain = value.isDefined
+	/**
+	  * @return Whether it isn't known whether this value is true or false
+	  */
+	def isUncertain = !isCertain
+	
+	/**
 	 * @return True if this boolean value is known
 	 */
+	@deprecated("Please use .isCertain instead", "v2.0")
 	def isDefined = value.isDefined
 	/**
 	 * @return True if this boolean value is unknown / undefined
 	 */
+	@deprecated("Please use .isUncertain instead", "v2.0")
 	def isUndefined = value.isEmpty
 	
 	/**
-	 * @return Whether this boolean is known to be true
+	 * @return Whether this value is known to be true
 	 */
-	def isTrue = value.contains(true)
+	def isCertainlyTrue = value.contains(true)
+	@deprecated("Please use .isCertainlyTrue instead", "v2.0")
+	def isTrue = isCertainlyTrue
 	/**
 	 * @return Whether this boolean is known to be false
 	 */
-	def isFalse = value.contains(false)
+	def isCertainlyFalse = value.contains(false)
+	@deprecated("Please use .isCertainlyFalse instead", "v2.0")
+	def isFalse = isCertainlyFalse
 	/**
 	  * @return If this boolean is not known to be true
 	  */
-	def mayBeFalse = !isTrue
+	def mayBeFalse = !isCertainlyTrue
 	/**
 	  * @return If this boolean is not known to be false
 	  */
-	def mayBeTrue = !isFalse
+	def mayBeTrue = !isCertainlyFalse
 	
 	/**
-	 * @return The known value of this boolean or false
+	 * @return This value as a boolean. False if unknown.
 	 */
-	def get = getOrElse(false)
+	def toBoolean = getOrElse(false)
+	@deprecated("Please use toBoolean instead", "v2.0")
+	def get = toBoolean
+	
+	/**
+	  * @return An inversion of this value
+	  */
+	def unary_! = value match {
+		case Some(known) => Certain(!known)
+		case None => Uncertain
+	}
 	
 	
 	// OTHER    --------------------------
 	
 	/**
-	 * @param default Value returned for undefined booleans
-	 * @return This boolean value (if known) or the default value (if undefined)
+	 * @param default Value returned in uncertain cases
+	 * @return This value if known, otherwise the default value
 	 */
 	def getOrElse(default: => Boolean) = value.getOrElse(default)
-	
 	/**
-	 * @param other Another uncertain boolean value (call by name)
+	 * @param other Another uncertain boolean value (call-by-name)
 	 * @return This value if defined, otherwise the other value
 	 */
-	def orElse(other: => UncertainBoolean) = if (isDefined) this else other
+	def orElse(other: => UncertainBoolean) = if (isCertain) this else other
 	
 	/**
 	 * @param other Another known boolean value
 	 * @return AND of these two values (known if other is false or this value is known)
 	 */
-	def &&(other: Boolean): UncertainBoolean =
-	{
+	def &&(other: Boolean): UncertainBoolean = {
 		if (other)
-			value match
-			{
+			value match {
 				case Some(known) => Certain(known && other)
-				case None => Undefined
+				case None => Uncertain
 			}
 		else
 			Certain(false)
@@ -86,18 +108,15 @@ sealed trait UncertainBoolean
 	 * @param other Another boolean value
 	 * @return AND of these two values (known if either of these is known to be false or if both are known)
 	 */
-	def &&(other: UncertainBoolean): UncertainBoolean = other match
-	{
+	def &&(other: UncertainBoolean): UncertainBoolean = other match {
 		case Certain(known) => this && known
-		case Undefined => if (isFalse) Certain(false) else Undefined
+		case Uncertain => if (isCertainlyFalse) Certain(false) else Uncertain
 	}
-	
 	/**
 	 * @param other Another known boolean value
 	 * @return OR of these two values (known if other is true or if this value is known)
 	 */
-	def ||(other: Boolean) =
-	{
+	def ||(other: Boolean) = {
 		if (other)
 			Certain(true)
 		else
@@ -107,10 +126,9 @@ sealed trait UncertainBoolean
 	 * @param other Another boolean value
 	 * @return OR of these two values (known if either of these is known to be true or if both are known)
 	 */
-	def ||(other: UncertainBoolean): UncertainBoolean = other.value match
-	{
+	def ||(other: UncertainBoolean): UncertainBoolean = other.value match {
 		case Some(known) => this || known
-		case None => if (isTrue) Certain(true) else Undefined
+		case None => if (isCertainlyTrue) Certain(true) else Uncertain
 	}
 }
 
@@ -121,17 +139,22 @@ object UncertainBoolean
 	/**
 	 * All possible values of this enumeration
 	 */
-	lazy val values = Vector[UncertainBoolean](Certain(true), Certain(false), Undefined)
+	lazy val values = Vector[UncertainBoolean](Certain(true), Certain(false), Uncertain)
+	
+	
+	// COMPUTED -------------------------
+	
+	@deprecated("Please use Uncertain instead", "v2.0")
+	def Undefined = Uncertain
 	
 	
 	// IMPLICIT ------------------------------------
 	
 	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.value
 	
-	implicit def autoConvertFromOption(value: Option[Boolean]): UncertainBoolean = value match
-	{
+	implicit def autoConvertFromOption(value: Option[Boolean]): UncertainBoolean = value match {
 		case Some(known) => Certain(known)
-		case None => Undefined
+		case None => Uncertain
 	}
 	
 	implicit def autoConvertFromBoolean(boolean: Boolean): UncertainBoolean = Certain(boolean)
@@ -160,7 +183,7 @@ object UncertainBoolean
 	/**
 	 * Used when the boolean value is unknown
 	 */
-	case object Undefined extends UncertainBoolean
+	case object Uncertain extends UncertainBoolean
 	{
 		override def value = None
 	}

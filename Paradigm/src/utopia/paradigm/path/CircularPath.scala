@@ -1,6 +1,6 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.LinearMeasurable
+import utopia.flow.operator.HasLength
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
@@ -17,7 +17,7 @@ import utopia.paradigm.shape.shape2d.{Circle, Point}
   * @param direction The traversing direction along the circle
   */
 case class CircularPath(circle: Circle, startAngle: Angle = Angle.up, endAngle: Angle = Angle.up,
-                        direction: RotationDirection = Clockwise) extends Path[Point] with LinearMeasurable
+                        direction: RotationDirection = Clockwise) extends Path[Point] with HasLength
 {
 	// ATTRIBUTES	--------------------
 	

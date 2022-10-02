@@ -4,8 +4,8 @@ import java.time.Instant
 import utopia.exodus.database.factory.auth.DeviceTokenFactory
 import utopia.exodus.model.partial.auth.DeviceTokenData
 import utopia.exodus.model.stored.auth.DeviceToken
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.storable.deprecation.DeprecatableAfter

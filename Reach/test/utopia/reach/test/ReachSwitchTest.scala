@@ -1,7 +1,7 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.AlwaysTrue
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
 import utopia.reach.component.label.text.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}

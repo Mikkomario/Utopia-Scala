@@ -1,6 +1,6 @@
 package utopia.reflection.text
 
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.util.Screen
 
 import scala.language.implicitConversions

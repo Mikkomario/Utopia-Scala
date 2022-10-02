@@ -1,7 +1,7 @@
 package utopia.genesis.image
 
-import utopia.flow.datastructure.mutable.MutableLazy
-import utopia.flow.util.AutoClose._
+import utopia.flow.parse.AutoClose._
+import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, ImageTransform, IncreaseContrast, Invert, Sharpen, Threshold}

@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open

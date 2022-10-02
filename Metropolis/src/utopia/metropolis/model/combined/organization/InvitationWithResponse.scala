@@ -1,10 +1,10 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.FromModelFactory
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
@@ -13,7 +13,7 @@ import scala.util.Success
 
 object InvitationWithResponse extends FromModelFactory[InvitationWithResponse]
 {
-	override def apply(model: Model[Property]) =
+	override def apply(model: ModelLike[Property]) =
 		Invitation(model).flatMap { invitation =>
 			model("response").model match
 			{

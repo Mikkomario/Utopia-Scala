@@ -1,6 +1,6 @@
 package utopia.reach.container.wrapper.scrolling
 
-import utopia.flow.event.ChangeListener
+import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D

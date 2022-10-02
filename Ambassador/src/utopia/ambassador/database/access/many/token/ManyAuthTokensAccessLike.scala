@@ -1,7 +1,7 @@
 package utopia.ambassador.database.access.many.token
 
 import utopia.ambassador.database.model.token.AuthTokenModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed

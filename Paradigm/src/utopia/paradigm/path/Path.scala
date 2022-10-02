@@ -1,6 +1,6 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.LinearMeasurable
+import utopia.flow.operator.HasLength
 import utopia.paradigm.animation.AnimationLike
 import utopia.paradigm.path.Path.{CurvedPath, RepeatingPath, ReversePath}
 
@@ -11,7 +11,7 @@ object Path
 	/**
 	  * A common type of path that knows its length
 	  */
-	type PathWithDistance[+X] = Path[X] with LinearMeasurable
+	type PathWithDistance[+X] = Path[X] with HasLength
 	
 	
 	// EXTENSIONS   -------------

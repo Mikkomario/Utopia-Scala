@@ -1,7 +1,7 @@
 package utopia.paradigm.motion.motion2d
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConvertible
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.Velocity2DType
 import utopia.paradigm.generic.ParadigmValue._
@@ -64,13 +64,11 @@ case class Velocity2D(transition: Vector2D, override val duration: Duration)
 	
 	// IMPLEMENTED	-------------
 	
+	override def zero = Velocity2D.zero
+	
 	override def repr = this
 	
-	override protected def zeroTransition = Vector2D.zero
-	
 	override implicit def toValue: Value = new Value(Some(this), Velocity2DType)
-	
-	override protected def zeroAmount = Vector2D.zero
 	
 	override protected def buildCopy(transition: Vector2D, duration: Duration) = copy(transition, duration)
 	

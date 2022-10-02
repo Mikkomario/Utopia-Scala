@@ -1,7 +1,7 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.combined.description.{DescribedFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.organization.UserRole

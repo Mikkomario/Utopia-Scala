@@ -1,7 +1,7 @@
 package utopia.genesis.util
 
-import utopia.flow.async.VolatileFlag
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateHandler, KeyTypedHandler}
 import utopia.paradigm.shape.shape2d.Size

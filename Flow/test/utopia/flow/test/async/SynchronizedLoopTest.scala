@@ -1,10 +1,10 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.{Loop, SynchronizedLoops, ThreadPool}
-import utopia.flow.generic.DataType
-import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.{Loop, SynchronizedLoops, WaitUtils}
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.LocalTime

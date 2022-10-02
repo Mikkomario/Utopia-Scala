@@ -107,6 +107,8 @@ case class Vector1D(override val length: Double, axis: Axis = X) extends VectorL
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def zero = Vector1D.zeroAlong(axis)
+	
 	override def repr = this
 	
 	override def buildCopy(dimensions: IndexedSeq[Double]) = {

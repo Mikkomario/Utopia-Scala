@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.exodus.database.factory.user.UserPasswordFactory
 import utopia.exodus.database.model.user.UserPasswordModel
 import utopia.exodus.model.stored.user.UserPassword
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed

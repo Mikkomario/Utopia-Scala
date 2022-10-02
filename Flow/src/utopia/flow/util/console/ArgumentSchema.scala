@@ -1,7 +1,7 @@
 package utopia.flow.util.console
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 
 object ArgumentSchema
 {

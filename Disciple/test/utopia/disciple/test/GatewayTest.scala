@@ -1,18 +1,18 @@
 package utopia.disciple.test
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.access.http.ContentCategory._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.generic.DataType
 import utopia.access.http.Method._
 import utopia.access.http.Status
 import utopia.disciple.apache.Gateway
-import utopia.flow.datastructure.immutable.Model
 
 import java.io.File
 import utopia.disciple.http.request.{FileBody, Request}
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.DataType
 
 /**
  * Tests the Gateway interface

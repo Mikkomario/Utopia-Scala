@@ -1,28 +1,23 @@
 package utopia.vault.database
 
-import java.nio.file.Path
-import utopia.flow.generic.EnvironmentNotSetupException
-
-import java.sql.DriverManager
-import java.sql.Statement
-import java.sql.SQLException
-import utopia.flow.datastructure.immutable.{Constant, Lazy, Model, Value}
-
-import java.sql.PreparedStatement
-import utopia.flow.parse.ValueConverterManager
-
-import java.sql.Types
-import java.sql.ResultSet
-import scala.collection.immutable.HashSet
-import scala.util.{Failure, Success, Try}
-import utopia.flow.generic.IntType
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.AutoClose._
-import utopia.flow.util.IterateLines
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.error.EnvironmentNotSetupException
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueConverterManager
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.string.IterateLines
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.database.Connection.settings
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.sql.SqlSegment
+
+import java.nio.file.Path
+import java.sql.{DriverManager, PreparedStatement, ResultSet, SQLException, Statement, Types}
+import scala.collection.immutable.HashSet
+import scala.util.{Failure, Success, Try}
 
 object Connection
 {
@@ -628,7 +623,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             {
                 if (hasContentOutsideTables)
                     Model.withConstants(nonColumnIndices.map { case (name, sqlType, index) =>
-                        Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+                       Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
                 else
                     Model.empty
             }

@@ -1,7 +1,9 @@
 package utopia.reach.component.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
@@ -44,8 +46,8 @@ import utopia.reflection.util.ComponentCreationDefaults
   * @param backgroundPointer A pointer to the contextual background color
   */
 case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListener: FocusChangeListener,
-								textStylePointer: ChangingLike[TextDrawContext], promptDrawers: Vector[CustomDrawer],
-								backgroundPointer: ChangingLike[ComponentColor])
+                                textStylePointer: Changing[TextDrawContext], promptDrawers: Vector[CustomDrawer],
+                                backgroundPointer: Changing[ComponentColor])
 
 /**
   * A set of context variables provided when creating an additional right side label
@@ -54,7 +56,7 @@ case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListen
   * @param backgroundPointer Pointer to contextual background color
   * @tparam C Type of field contents
   */
-case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: ChangingLike[ComponentColor])
+case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: Changing[ComponentColor])
 
 object Field extends ContextInsertableComponentFactoryFactory[TextContextLike, FieldFactory, ContextualFieldFactory]
 {
@@ -107,16 +109,16 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new field
 	  */
 	def apply[C <: ReachComponentLike with Focusable]
-	(colorScheme: ColorScheme, isEmptyPointer: ChangingLike[Boolean],
-	 contextBackgroundPointer: ChangingLike[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+	(colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
+	 contextBackgroundPointer: Changing[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
 	 textInsets: StackInsets = StackInsets.any,
-	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
 	 hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
@@ -155,16 +157,16 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new field
 	  */
 	def withoutExtraLabel[C <: ReachComponentLike with Focusable]
-	(colorScheme: ColorScheme, isEmptyPointer: ChangingLike[Boolean],
-	 contextBackgroundPointer: ChangingLike[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+	(colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
+	 contextBackgroundPointer: Changing[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
 	 textInsets: StackInsets = StackInsets.any,
-	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
 	 hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
@@ -205,15 +207,15 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
 	  * @return A new field
 	  */
 	def apply[C <: ReachComponentLike with Focusable]
-	(isEmptyPointer: ChangingLike[Boolean],
-	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	(isEmptyPointer: Changing[Boolean],
+	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
 	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
-	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeField: (FieldCreationContext, N) => C)
@@ -251,15 +253,15 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
 	  * @return A new field
 	  */
 	def withoutExtraLabel[C <: ReachComponentLike with Focusable]
-	(isEmptyPointer: ChangingLike[Boolean],
-	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	(isEmptyPointer: Changing[Boolean],
+	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
 	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
-	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeField: (FieldCreationContext, N) => C) =
@@ -275,15 +277,15 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
   * @tparam C Type of wrapped field
   */
 class Field[C <: ReachComponentLike with Focusable]
-(parentHierarchy: ComponentHierarchy, colorScheme: ColorScheme, isEmptyPointer: ChangingLike[Boolean],
- contextBackgroundPointer: ChangingLike[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
- textInsets: StackInsets = StackInsets.any, fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
- rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None), iconOutsideMargins: StackSize = StackSize.any,
- highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
+(parentHierarchy: ComponentHierarchy, colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
+ contextBackgroundPointer: Changing[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+ textInsets: StackInsets = StackInsets.any, fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+ rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), iconOutsideMargins: StackSize = StackSize.any,
+ highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
  defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
  hintScaleFactor: Double = Field.defaultHintScaleFactor,
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
@@ -341,7 +343,7 @@ class Field[C <: ReachComponentLike with Focusable]
 		}
 	
 	private val editTextColorPointer = innerBackgroundPointer.map { _.defaultTextColor }
-	private val contentColorPointer: ChangingLike[Color] = highlightColorPointer
+	private val contentColorPointer: Changing[Color] = highlightColorPointer
 		.mergeWith(editTextColorPointer) { (highlight, default) =>
 			highlight match {
 				case Some(color) => color: Color
@@ -475,8 +477,8 @@ class Field[C <: ReachComponentLike with Focusable]
 		factory(framingContent, borderInsets.fixed, drawers).withResult(content.result)
 	}
 	
-	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: ChangingLike[Option[SingleColorIcon]],
-							   noMarginSide: Direction2D) =
+	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[Option[SingleColorIcon]],
+	                               noMarginSide: Direction2D) =
 	{
 		ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { (icon, bg) =>
 			icon match
@@ -487,7 +489,7 @@ class Field[C <: ReachComponentLike with Focusable]
 		}, iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 	}
 	
-	private def makeOpenViewImageLabel(pointer: ChangingLike[Option[SingleColorIcon]], noMarginSide: Direction2D) =
+	private def makeOpenViewImageLabel(pointer: Changing[Option[SingleColorIcon]], noMarginSide: Direction2D) =
 		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.map { _.isDefined })
 	
 	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
@@ -500,7 +502,7 @@ class Field[C <: ReachComponentLike with Focusable]
 				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 	}
 	
-	private def makeContentAndNameArea(fieldNamePointer: ChangingLike[LocalizedString]) =
+	private def makeContentAndNameArea(fieldNamePointer: Changing[LocalizedString]) =
 	{
 		Open.using(ViewStack) { stackFactory =>
 			stackFactory.builder(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
@@ -575,7 +577,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	
 	// Returns the generated open component (if any), along with its visibility pointer (if applicable)
-	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]] =
+	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponentLike, Changing[Boolean]]] =
 	{
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
@@ -604,7 +606,7 @@ class Field[C <: ReachComponentLike with Focusable]
 		}
 	}
 	
-	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: ChangingLike[LocalizedString]) =
+	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) =
 		factory.forText(textPointer, hintTextStylePointer, allowTextShrink = true)
 	
 	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) = {

@@ -5,7 +5,7 @@ import utopia.genesis.animation.animator.{SpriteDrawer, TransformingImageAnimato
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Size, Vector2D}
 import utopia.genesis.util.DefaultSetup
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.Transformation
 import utopia.paradigm.transform.AffineTransformation

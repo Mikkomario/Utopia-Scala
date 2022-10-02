@@ -1,6 +1,6 @@
 package utopia.reach.container.layered
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike

@@ -3,7 +3,7 @@ package utopia.ambassador.model.combined.scope
 import utopia.ambassador.model.partial.scope.ScopeData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.token.AuthTokenScopeLink
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * Combines Scope with tokenLink data

@@ -1,10 +1,10 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape2d.Vector2DLike
 
 import java.time.Instant

@@ -4,8 +4,8 @@ import java.time.Instant
 import utopia.ambassador.database.factory.process.AuthRedirectFactory
 import utopia.ambassador.model.partial.process.AuthRedirectData
 import utopia.ambassador.model.stored.process.AuthRedirect
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.storable.deprecation.Expiring

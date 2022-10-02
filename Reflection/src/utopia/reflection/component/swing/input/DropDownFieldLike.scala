@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.input
 
-import java.awt.event.KeyEvent
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import java.awt.event.KeyEvent
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.mutable.ActorHandler

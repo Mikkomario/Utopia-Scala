@@ -5,23 +5,21 @@ import utopia.nexus.http.Path
 import utopia.nexus.http.Response
 import utopia.nexus.http.ServerSettings
 import utopia.nexus.rest.Resource
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.ValueConversions.ValueOfString
+import utopia.flow.generic.casting.ValueConversions.ValueOfString
 import utopia.access.http.Status._
+import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.nexus.rest.Context
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow, Ready}
 
 private object TestRestResource
 {
     // Parses all model type children from a model
-    private def childrenFromModel(model: template.Model[Property]) = model.attributes.flatMap(attribute => 
+    private def childrenFromModel(model: ModelLike[Property]) = model.properties.flatMap(attribute =>
             attribute.value.model.map(attribute.name -> _)).map { case (name, subModel) => new TestRestResource(name, subModel) }
     
     // Separates "normal" values from model type values
-    private def nonChildValuesFromModel(model: template.Model[Constant]) = model.attributes.filter(_.value.model.isEmpty)
+    private def nonChildValuesFromModel(model: ModelLike[Constant]) = model.properties.filter(_.value.model.isEmpty)
 }
 
 /**
@@ -29,7 +27,7 @@ private object TestRestResource
  * @author Mikko Hilpinen
  * @since 10.10.2017
  */
-class TestRestResource(val name: String, initialValues: template.Model[Constant] = Model.empty)
+class TestRestResource(val name: String, initialValues: ModelLike[Constant] = Model.empty)
     extends Resource[Context]
 {
     // ATTRIBUTES    -----------------
@@ -97,7 +95,7 @@ class TestRestResource(val name: String, initialValues: template.Model[Constant]
             Model.withConstants(values ++ children.map(child => Constant(child.name,
                 (path / child.name).toServerUrl(context.settings).toValue))))
     
-    private def handlePost(path: Path, parameters: template.Model[Constant])(implicit context: Context) =
+    private def handlePost(path: Path, parameters: ModelLike[Constant])(implicit context: Context) =
     {
         implicit val settings: ServerSettings = context.settings
         children :+= new TestRestResource(path.lastElement, parameters)
@@ -112,10 +110,10 @@ class TestRestResource(val name: String, initialValues: template.Model[Constant]
         Response.empty()
     }
     
-    private def handlePut(parameters: template.Model[Constant]) =
+    private def handlePut(parameters: ModelLike[Constant]) =
     {
         // Cannot delete any existing children with PUT
-        if (children.exists(child => parameters.findExisting(child.name).isDefined))
+        if (children.exists(child => parameters.existing(child.name).isDefined))
             Response.plainText("Modification of children is not allowed in PUT", Forbidden)
         else
         {

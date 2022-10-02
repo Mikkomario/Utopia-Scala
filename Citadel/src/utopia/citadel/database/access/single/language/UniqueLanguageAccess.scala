@@ -3,8 +3,8 @@ package utopia.citadel.database.access.single.language
 import java.time.Instant
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

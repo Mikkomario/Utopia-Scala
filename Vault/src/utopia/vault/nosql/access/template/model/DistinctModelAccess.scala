@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.template.model
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.sql.{Condition, Update, Where}

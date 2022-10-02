@@ -1,7 +1,7 @@
 package utopia.exodus.database.access.many.auth
 
 import utopia.exodus.model.combined.auth.TypedToken
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._

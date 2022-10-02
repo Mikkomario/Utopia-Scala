@@ -1,7 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Polygonic, Size}
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
@@ -37,11 +36,11 @@ object LazyGraphics
   * @param newClipping A clipping to overwrite parent clipping with (lazy). None if no custom clipping is required.
   * @param isClippingDisabled Whether parent clipping should be ignored, i.e. not inherited (default = false)
   */
-class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
-                   newTransformation: Option[LazyLike[Matrix3D]] = None,
+class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
+                   newTransformation: Option[Lazy[Matrix3D]] = None,
                    mutation: Option[ClosingGraphics => Unit] = None, newClipping: Option[LazyClip] = None,
                    isClippingDisabled: Boolean = false)
-	extends AutoCloseable with LazyLike[ClosingGraphics]
+	extends AutoCloseable with Lazy[ClosingGraphics]
 		with LinearTransformable[LazyGraphics] with AffineTransformable[LazyGraphics]
 {
 	// ATTRIBUTES   -------------------------------
@@ -156,7 +155,7 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	// Left: Some graphics instance + changes to perform on that graphics instance:
 	//      1) Transformation to apply (lazy)
 	//      2) Mutations to apply (ordered)
-	private def materials: Either[(ClosingGraphics, Option[LazyLike[Matrix3D]], Seq[ClosingGraphics => Unit]), ClosingGraphics] =
+	private def materials: Either[(ClosingGraphics, Option[Lazy[Matrix3D]], Seq[ClosingGraphics => Unit]), ClosingGraphics] =
 		baseCache.current match {
 			// Case: Has already prepared a graphics object => uses that
 			case Some(graphics) => Right(graphics)
@@ -195,7 +194,7 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	
 	override def transformedWith(transformation: Matrix2D): LazyGraphics = transformedWith(transformation.to3D)
 	override def transformedWith(transformation: Matrix3D) =
-		new LazyGraphics(Right(this), newTransformation = Some(Lazy.wrap(transformation)),
+		new LazyGraphics(Right(this), newTransformation = Some(Lazy.initialized(transformation)),
 			newClipping = _clipping.map { clip => clip.transformedWith(transformation) })
 	
 	override def close() = baseCache.current.foreach { _.close() }

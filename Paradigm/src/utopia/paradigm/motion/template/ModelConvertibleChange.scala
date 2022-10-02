@@ -1,9 +1,9 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.{ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.operator.Zeroable
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
+import utopia.flow.operator.CanBeZero
 import utopia.flow.time.TimeExtensions._
 
 /**
@@ -11,15 +11,15 @@ import utopia.flow.time.TimeExtensions._
   * @author Mikko Hilpinen
   * @since 8.8.2022, v1.0
   */
-trait ModelConvertibleChange[+A <: ValueConvertible with Zeroable[A], +Repr <: Change[A, _]]
-	extends Change[A, Repr] with ModelConvertible with Zeroable[Repr]
+trait ModelConvertibleChange[+A <: ValueConvertible with CanBeZero[A], +Repr <: Change[A, _]]
+	extends Change[A, Repr] with ModelConvertible with CanBeZero[Repr]
 {
-	// ABSTRACT --------------------------
+	// COMPUTED --------------------------
 	
 	/**
 	  * @return A zero representation of the amount used by this change
 	  */
-	protected def zeroAmount: A
+	def zeroAmount = amount.zero
 	
 	
 	// IMPLEMENTED  ----------------------

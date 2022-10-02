@@ -1,8 +1,9 @@
 package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.stored.auth.{Token, TokenType}
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 
@@ -29,8 +30,8 @@ case class FullToken(token: Token, tokenType: TokenType, scopes: Vector[TokenSco
 	def toModelWith(tokenString: String, style: ModelStyle = Simple) = {
 		val base = token.toModelWith(tokenString)
 		base ++ (style match {
-			case Simple => Vector(Constant("type", tokenType.name), Constant("scopes", scopes.map { _.toSimpleModel }))
-			case Full => Vector(Constant("type", tokenType.toModel), Constant("scopes", scopes.map { _.toModel }))
+			case Simple => Vector(immutable.Constant("type", tokenType.name), Constant("scopes", scopes.map { _.toSimpleModel }))
+			case Full => Vector(immutable.Constant("type", tokenType.toModel), Constant("scopes", scopes.map { _.toModel }))
 		})
 	}
 }

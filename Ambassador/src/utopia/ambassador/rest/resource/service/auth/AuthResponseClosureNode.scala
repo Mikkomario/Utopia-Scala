@@ -13,7 +13,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result

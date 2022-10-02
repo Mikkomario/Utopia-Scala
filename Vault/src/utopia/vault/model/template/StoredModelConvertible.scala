@@ -1,8 +1,8 @@
 package utopia.vault.model.template
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * A common trait for model classes which contain a data portion with an integer database row id and which want

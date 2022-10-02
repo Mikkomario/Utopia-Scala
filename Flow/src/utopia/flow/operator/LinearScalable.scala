@@ -5,7 +5,7 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait LinearScalable[+Repr] extends Any with Scalable[Repr, Double] with Reversible[Repr]
+trait LinearScalable[+Repr] extends Any with Scalable[Double, Repr] with Reversible[Repr]
 {
 	// IMPLEMENTED  --------------------------
 	

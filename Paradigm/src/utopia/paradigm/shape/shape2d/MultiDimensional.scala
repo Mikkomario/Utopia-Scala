@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.template.Dimensional

@@ -67,7 +67,7 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	
 	override def length = ratio
 	
-	override protected def zero = ColorContrast(0)
+	override def zero = ColorContrast(0)
 	
 	def -(another: ColorContrast) = ColorContrast(ratio - another.ratio)
 	

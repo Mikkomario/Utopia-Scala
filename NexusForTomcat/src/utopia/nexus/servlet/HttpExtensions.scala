@@ -1,31 +1,18 @@
 package utopia.nexus.servlet
 
-import utopia.flow.util.NullSafe._
-
-import scala.jdk.CollectionConverters._
 import utopia.access.http.ContentCategory._
-import javax.servlet.http.HttpServletResponse
-import utopia.nexus.http.Response
-import javax.servlet.http.HttpServletRequest
-import utopia.nexus.http.Path
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.parse.JsonParser
-import utopia.flow.datastructure.immutable.Value
+import utopia.access.http.{ContentType, Cookie, Headers, Method}
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.JsonParser
+import utopia.nexus.http.{Path, Request, Response, ServerSettings, StreamedBody}
 
-import scala.util.{Success, Try}
-import utopia.nexus.http.Request
-import utopia.nexus.http.ServerSettings
-import utopia.access.http.Method
-import utopia.access.http.Headers
-import utopia.access.http.Cookie
-import utopia.access.http.ContentType
-import utopia.nexus.http.StreamedBody
-import javax.servlet.http.Part
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.io.{BufferedReader, InputStreamReader}
 import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.util
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse, Part}
+import scala.jdk.CollectionConverters._
+import scala.util.{Success, Try}
 
 /**
  * This object contains extensions that can be used with HttpServletRequest and HttpServletResponse 
@@ -78,36 +65,31 @@ object HttpExtensions
          */
         def toRequest(implicit settings: ServerSettings, jsonParser: JsonParser) =
         {
-            val method = r.getMethod.toOption.flatMap(Method.parse)
-            
-            if (method.isDefined)
-            {
-                val path = r.getRequestURI.toOption.flatMap(Path.parse)
-
+            Option(r.getMethod).flatMap(Method.parse).map { method =>
+                val path = Option(r.getRequestURI).flatMap(Path.parse)
+    
                 val paramValues = r.getParameterNames.asScala.map { pName =>
-                        (pName, parseQueryParam(r.getParameter(pName))) }.flatMap { case (name, value) =>
+                    (pName, parseQueryParam(r.getParameter(pName))) }.flatMap { case (name, value) =>
                     value.toOption.map { name -> _ } }
                 val parameters = Model(paramValues.toVector)
-
+    
                 val headers = Headers(r.getHeaderNames.asScala.map { hName => (hName, r.getHeader(hName)) }.toMap)
-
+    
                 val javaCookies = Option(r.getCookies).map { _.toVector }.getOrElse(Vector())
-                val cookies = javaCookies.map { javaCookie => Cookie(javaCookie.getName, 
-                        javaCookie.getValue.toOption.map { jsonParser.valueOf }.getOrElse(Value.empty),
-                        if (javaCookie.getMaxAge < 0) None else Some(javaCookie.getMaxAge), 
-                        javaCookie.getSecure) }
-                
+                val cookies = javaCookies.map { javaCookie => Cookie(javaCookie.getName,
+                    Option(javaCookie.getValue).map { jsonParser.valueOf }.getOrElse(Value.empty),
+                    if (javaCookie.getMaxAge < 0) None else Some(javaCookie.getMaxAge),
+                    javaCookie.getSecure) }
+    
                 val body = bodyFromRequest(r, headers).filter { !_.isEmpty }
                 /*
-                val uploads = Try(r.getParts).toOption.map { _.asScala.flatMap {part => 
-                        part.getContentType.toOption.flatMap(ContentType.parse).map { 
-                        new FileUpload(part.getName, part.getSize, _, part.getSubmittedFileName, 
+                val uploads = Try(r.getParts).toOption.map { _.asScala.flatMap {part =>
+                        part.getContentType.toOption.flatMap(ContentType.parse).map {
+                        new FileUpload(part.getName, part.getSize, _, part.getSubmittedFileName,
                         part.getInputStream, part.write) }}}*/
-                
-                Some(new Request(method.get, r.getRequestURL.toString, path, parameters, headers, body, cookies))
+    
+                new Request(method, r.getRequestURL.toString, path, parameters, headers, body, cookies)
             }
-            else
-                None
         }
         
         private def parseQueryParam(paramValue: String)(implicit settings: ServerSettings, jsonParser: JsonParser) =
@@ -136,12 +118,12 @@ object HttpExtensions
         private def partToBody(part: Part) =
         {
             val headers = parseHeaders(part.getHeaderNames, part.getHeader)
-            val contentType = part.getContentType.toOption.flatMap(ContentType.parse).getOrElse(Text.plain)
+            val contentType = Option(part.getContentType).flatMap(ContentType.parse).getOrElse(Text.plain)
             val charset = headers.charset.getOrElse(Charset.defaultCharset())
             
             new StreamedBody(new BufferedReader(new InputStreamReader(part.getInputStream, charset)), 
                     contentType, Some(part.getSize), headers, 
-                    part.getSubmittedFileName.toOption.orElse(part.getName.toOption))
+                   Option(part.getSubmittedFileName).orElse(Option(part.getName)))
         }
         
         private def parseHeaders(headerNames: util.Collection[String], getValue: String => String) =

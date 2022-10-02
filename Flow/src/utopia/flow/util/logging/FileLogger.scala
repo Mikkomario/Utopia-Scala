@@ -1,12 +1,12 @@
 package utopia.flow.util.logging
 
-import utopia.flow.datastructure.mutable.DeprecatingLazy
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.ErrorExtensions._
-import utopia.flow.util.FileExtensions._
-import utopia.flow.util.KeptOpenWriter
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.error.ErrorExtensions._
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.KeptOpenWriter
+import utopia.flow.view.mutable.caching.DeprecatingLazy
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext

@@ -1,8 +1,9 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.datastructure.immutable.{DeepMap, Model}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JsonParser
+import utopia.flow.collection.immutable.DeepMap
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.{Throw, TryCrop, TryExpand}
@@ -96,7 +97,7 @@ object ColumnLengthRules
 	  */
 	def loadFrom(path: Path)(implicit jsonParser: JsonParser, exc: ExecutionContext, connectionPool: ConnectionPool) =
 		jsonParser(path).map { json =>
-			val limits = json.getModel.attributes.flatMap { dbAtt =>
+			val limits = json.getModel.properties.flatMap { dbAtt =>
 				loadFromDbModel(dbAtt.name, dbAtt.value.getModel)
 			}
 			specifics ++= DeepMap(limits)
@@ -126,9 +127,9 @@ object ColumnLengthRules
 	private def loadFromDbModel(dbName: String, model: Model)
 	                           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
-		model.attributes.flatMap { tableAtt =>
+		model.properties.flatMap { tableAtt =>
 			val tableName = tableAtt.name
-			tableAtt.value.getModel.attributes.flatMap { columnAtt =>
+			tableAtt.value.getModel.properties.flatMap { columnAtt =>
 				val propName = columnAtt.name
 				val value = columnAtt.value.getString.toLowerCase
 				val limit = value match {

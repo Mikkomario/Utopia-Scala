@@ -1,12 +1,14 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ProcessState.{Completed, NotStarted, Running, Stopped}
-import utopia.flow.async.{ThreadPool, TimedTasks, Volatile, Wait}
-import utopia.flow.generic.DataType
+import utopia.flow.async.process.ProcessState.{Completed, NotStarted, Running, Stopped}
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.{TimedTasks, Wait}
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

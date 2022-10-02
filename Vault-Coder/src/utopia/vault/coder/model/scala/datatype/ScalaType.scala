@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.datatype
 
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.model.scala.code.CodePiece

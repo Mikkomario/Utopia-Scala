@@ -1,9 +1,8 @@
 package utopia.vault.sql
 
-import utopia.flow.datastructure.template.Model
-import utopia.flow.datastructure.template.Property
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.datastructure.immutable
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.Property
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
 import utopia.vault.model.immutable.{Column, Table}
@@ -59,9 +58,9 @@ object Update
      * as model keys, they will be converted to column names automatically
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, set: Map[Table, Model[Property]]) = 
+    def apply(target: SqlTarget, set: Map[Table, template.ModelLike[Property]]) =
     {
-        val valueSet = set.flatMap { case (table, model) => model.attributes.flatMap { 
+        val valueSet = set.flatMap { case (table, model) => model.properties.flatMap {
                 property => table.find(property.name).map { (_, property.value) } } }
         columns(target, valueSet)
     }
@@ -70,13 +69,13 @@ object Update
      * Creates an update segment that changes multiple values in a table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, set: Model[Property]): SqlSegment = apply(table, HashMap(table -> set))
+    def apply(table: Table, set: template.ModelLike[Property]): SqlSegment = apply(table, HashMap(table -> set))
     
     /**
      * Creates an update segment that changes the value of a single column in the table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, immutable.Model(Vector(key -> value)))
+    def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, Model(Vector(key -> value)))
     
     /**
      * Creates an update segment that updates the value of an individual column
@@ -94,7 +93,7 @@ object Update
      * @param set Set of changes for the table
      * @return An update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, table: Table, set: Model[Property]): SqlSegment = apply(target, HashMap(table -> set))
+    def apply(target: SqlTarget, table: Table, set: template.ModelLike[Property]): SqlSegment = apply(target, HashMap(table -> set))
     
     /**
      * Creates an update segment that changes a single value in a table
@@ -105,5 +104,5 @@ object Update
      * @return An update segment (select nothing segment if there's nothing to update)
      */
     def apply(target: SqlTarget, table: Table, key: String, value: Value): SqlSegment = apply(target, table,
-        immutable.Model(Vector(key -> value)))
+        Model(Vector(key -> value)))
 }

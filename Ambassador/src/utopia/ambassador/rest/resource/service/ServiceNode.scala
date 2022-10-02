@@ -13,9 +13,10 @@ import utopia.ambassador.rest.util.ServiceTarget
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.template.MapLike
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.collection.template.MapAccess
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.Constant
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -28,7 +29,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
-class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthRedirector])
+class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors: MapAccess[Int, AuthRedirector])
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES   -------------------------
@@ -70,7 +71,7 @@ class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirecto
 						case Full => describedScopes.map { _.toModel }
 					}
 					Result.Success(service.toModel ++ Vector(
-						Constant("scopes", scopeModels),
+						immutable.Constant("scopes", scopeModels),
 						Constant("authorized_task_ids", taskIds)
 					))
 				case None => Result.Failure(NotFound, s"$target is not a valid service")

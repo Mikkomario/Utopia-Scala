@@ -1,10 +1,10 @@
 package utopia.reflection.component.swing.input
 
 import java.time._
-
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeEvent, ChangeListener}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeEvent
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.Size

@@ -1,8 +1,8 @@
 package utopia.nexus.result
 
 import utopia.nexus.http.Request
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.access.http.Status
+import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.http.Response
 
 /**

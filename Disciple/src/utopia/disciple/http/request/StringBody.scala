@@ -7,7 +7,7 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.{Charset, StandardCharsets}
 import utopia.access.http.ContentCategory._
 import utopia.access.http.ContentType
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.generic.model.template.{ModelLike, Property}
 
 import scala.jdk.CollectionConverters._
 import scala.util.Success
@@ -33,10 +33,10 @@ object StringBody
 	  * @param charset Charset to use (default = http client default = ISO-8859-1)
 	  * @return A string body wrapping the content as a url-encoded form
 	  */
-	def urlEncodedForm(content: Model[Property], charset: Charset = StandardCharsets.ISO_8859_1) =
+	def urlEncodedForm(content: ModelLike[Property], charset: Charset = StandardCharsets.ISO_8859_1) =
 	{
 		// Produces the url-encoded string
-		val parameters = content.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
+		val parameters = content.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 		// Wraps the string in a body
 		/*
 		val builder = new URIBuilder()

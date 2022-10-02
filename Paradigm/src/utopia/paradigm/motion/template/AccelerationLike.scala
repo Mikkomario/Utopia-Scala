@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.{ApproximatelyZeroable, Combinable}
+import utopia.flow.operator.{CanBeAboutZero, Combinable}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -19,8 +19,8 @@ import scala.concurrent.duration.Duration
   */
 trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	+Repr <: Change[V, _] /*with Arithmetic[Change[V, _], Repr]*/ ]
-	extends Change[V, Repr] with Combinable[Repr, Change[V, _]] with Dimensional[LinearAcceleration]
-		with VectorProjectable[Repr] with ApproximatelyZeroable[Change[Change[Dimensional[Double], _], _], Repr]
+	extends Change[V, Repr] with Combinable[Change[V, _], Repr] with Dimensional[LinearAcceleration]
+		with VectorProjectable[Repr] with CanBeAboutZero[Change[Change[Dimensional[Double], _], _], Repr]
 {
 	// ABSTRACT	-----------------------
 	

@@ -2,8 +2,8 @@ package utopia.citadel.database.model.user
 
 import java.time.Instant
 import utopia.citadel.database.factory.user.UserFactory
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.partial.user.UserData
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection

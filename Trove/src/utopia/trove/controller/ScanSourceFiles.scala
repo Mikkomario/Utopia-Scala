@@ -1,8 +1,9 @@
 package utopia.trove.controller
 
 import java.nio.file.Path
-import utopia.flow.util.{IterateLines, Version}
-import utopia.flow.util.FileExtensions._
+import utopia.flow.util.Version
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.string.IterateLines
 import utopia.flow.util.StringExtensions._
 import utopia.trove.model.DatabaseStructureSource
 import utopia.trove.model.enumeration.SqlFileType

@@ -1,8 +1,8 @@
 package utopia.reach.test
 
-import utopia.flow.async.Loop
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.label.text.TextLabel

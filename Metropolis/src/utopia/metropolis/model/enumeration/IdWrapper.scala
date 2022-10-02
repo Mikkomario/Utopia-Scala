@@ -1,6 +1,6 @@
 package utopia.metropolis.model.enumeration
 
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * A common trait for database-originated enumeration value wrappers (code references to individual known ids)

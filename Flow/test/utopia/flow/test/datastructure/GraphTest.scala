@@ -1,6 +1,6 @@
 package utopia.flow.test.datastructure
 
-import utopia.flow.datastructure.mutable.GraphNode
+import utopia.flow.collection.mutable.GraphNode
 
 /**
  * This test tests the features implemented in graph, graphNode and graphEdge
@@ -26,8 +26,8 @@ object GraphTest extends App
 	node1.connect(node4, 4)
 	node4.connect(node5, 4)
 	
-	assert(node1.allNodeContent == Set(1, 2, 3, 4, 5))
-	assert(node2.allNodeContent == Set(2, 3, 5))
+	assert(node1.allValues == Set(1, 2, 3, 4, 5))
+	assert(node2.allValues == Set(2, 3, 5))
 	
 	// Makes sure there are correct number of edges in nodes
 	assert(node1.leavingEdges.size == 2)
@@ -51,11 +51,11 @@ object GraphTest extends App
 	// The cheapest route (weights considered) should be 1 -> 2 -> 3 -> 5
 	println()
 	node1.routesTo(node5).foreach { route =>
-		println(s"- ${route.map { e => s"to ${e.end.content} (${e.content})" }.mkString(" => ")} (${ route.foldLeft(0) { _ + _.content } })")
+		println(s"- ${route.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")} (${ route.foldLeft(0) { _ + _.value } })")
 	}
 	println()
-	val cheapestRoutes = node1.cheapestRoutesTo(node5) { _.content }
-	cheapestRoutes._1.foreach { r => println(r.map { e => s"to ${e.end.content} (${e.content})" }.mkString(" => ")) }
+	val cheapestRoutes = node1.cheapestRoutesTo(node5) { _.value }
+	cheapestRoutes._1.foreach { r => println(r.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")) }
 	println(cheapestRoutes._2)
 	/*
 	val cheapestRoute = node1.cheapestRouteTo(node5) { edge => edge.content }

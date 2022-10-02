@@ -1,24 +1,22 @@
 package utopia.nexus.rest
 
 import utopia.access.http.Method._
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.NullSafe._
-import utopia.flow.datastructure.immutable
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.http.Response
+
 import java.io.File
 import java.nio.file.Files
-
 import scala.util.Try
 import scala.util.Failure
-import utopia.flow.datastructure.immutable.Model
 import utopia.access.http.Status._
-import java.time.LocalDateTime
+import utopia.flow.collection.mutable.iterator.Counter
+import utopia.flow.generic.model.immutable.Model
 
+import java.time.LocalDateTime
 import utopia.nexus.http.StreamedBody
 
 import scala.util.Success
-import utopia.flow.util.Counter
 import utopia.nexus.rest.ResourceSearchResult.Ready
 
 /**
@@ -61,17 +59,11 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         val targetFilePath = targetFilePathFrom(remainingPath)
         
         if (Files.isDirectory(targetFilePath))
-        {
             Response.fromModel(makeDirectoryModel(targetFilePath.toFile, context.request.targetUrl))
-        }
         else if (Files.isRegularFile(targetFilePath))
-        {
             Response.fromFile(targetFilePath)
-        }
         else
-        {
             Response.empty(NotFound)
-        }
     }
     
     private def handlePost(remainingPath: Option[Path])(implicit context: Context) = 
@@ -79,10 +71,8 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         val request = context.request
         
         if (request.body.isEmpty)
-        {
             Response.plainText("No files were provided", BadRequest, 
                     request.headers.preferredCharsetOrUTF8)
-        }
         else
         {
             val counter = new Counter(1)
@@ -96,7 +86,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
             if (successes.isEmpty)
             {
                 // TODO: For some reason, the error message only tells the directory which couldn't be created
-                val errorMessage = uploadResults.head.failed.get.getMessage.toOption
+                val errorMessage = Option(uploadResults.head.failed.get.getMessage)
                 errorMessage.map(Response.plainText(_, Forbidden)).getOrElse(Response.empty(Forbidden))
             }
             else
@@ -130,7 +120,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         val files = allFiles.getOrElse(false, Vector()).map { directoryAddress + "/" + _.getName }
         val directories = allFiles.getOrElse(true, Vector()).map { directoryAddress + "/" + _.getName }
         
-        immutable.Model(Vector("files" -> files.toVector, "directories" -> directories.toVector))
+        Model(Vector("files" -> files.toVector, "directories" -> directories.toVector))
     }
     
     private def upload(part: StreamedBody, partName: String, remainingPath: Option[Path])(implicit context: Context) = 

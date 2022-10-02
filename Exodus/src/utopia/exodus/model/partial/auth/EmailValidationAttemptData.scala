@@ -1,8 +1,8 @@
 package utopia.exodus.model.partial.auth
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * Represents an attempted email validation. Provides additional information to an authentication token.

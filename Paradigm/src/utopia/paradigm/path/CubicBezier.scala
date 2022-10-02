@@ -1,7 +1,7 @@
 package utopia.paradigm.path
 
 import utopia.flow.operator.DoubleLike.DoubleWrapper
-import utopia.flow.operator.{Combinable, LinearMeasurable, LinearScalable}
+import utopia.flow.operator.{Combinable, HasLength, LinearScalable}
 
 object CubicBezier
 {
@@ -27,9 +27,9 @@ object CubicBezier
   * @param controlEnd The second control point
   * @param end The curve end point
   */
-case class CubicBezier[P <: Combinable[P, P] with LinearScalable[P] with LinearMeasurable]
+case class CubicBezier[P <: Combinable[P, P] with LinearScalable[P] with HasLength]
 (override val start: P, controlStart: P, controlEnd: P, override val end: P)
-	extends Path[P] with LinearMeasurable
+	extends Path[P] with HasLength
 {
 	// IMPLEMENTED	----------------------
 	

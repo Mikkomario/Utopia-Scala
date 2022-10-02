@@ -1,10 +1,7 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.flow.util.FileExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
@@ -21,6 +18,11 @@ import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
 import ManagedField._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.reach.component.input.check.{CheckBox, ContextualCheckBoxFactory}
 import utopia.reach.component.input.selection.{ContextualRadioButtonGroupFactory, RadioButtonGroup}
 import utopia.reach.component.input.text.{ContextualDurationFieldFactory, ContextualTextFieldFactory, DurationField, TextField}
@@ -124,8 +126,8 @@ object InputWindowTest extends App
 			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.noLineBreaksAllowed
 		
 		override protected def buildLayout(factories: ContextualMixed[ColorContext],
-										   content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
-										   context: Unit) =
+		                                   content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
+		                                   context: Unit) =
 		{
 			val framingMargin = margins.medium.downscaling x margins.medium.any
 			

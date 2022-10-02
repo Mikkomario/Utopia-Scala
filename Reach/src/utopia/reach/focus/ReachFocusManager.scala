@@ -1,10 +1,9 @@
 package utopia.reach.focus
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.operator.Sign
+import utopia.flow.operator.{CombinedOrdering, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.CombinedOrdering
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable

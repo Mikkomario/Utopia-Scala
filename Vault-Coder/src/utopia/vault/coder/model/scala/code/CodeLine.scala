@@ -1,9 +1,9 @@
 package utopia.vault.coder.model.scala.code
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Combinable
-import utopia.flow.parse.Regex
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.parse.string.Regex
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.scala.code.CodeLine.{maxLineLength, oneTimeRegexes, repeatableRegexes, tabWidth}
 
 object CodeLine
@@ -59,7 +59,7 @@ object CodeLine
   * @author Mikko Hilpinen
   * @since 27.9.2021, v1.1
   */
-case class CodeLine(indentation: Int, code: String) extends Combinable[CodeLine, String]
+case class CodeLine(indentation: Int, code: String) extends Combinable[String, CodeLine]
 {
 	// ATTRIBUTES   ------------------------
 	

@@ -6,14 +6,14 @@ import utopia.annex.controller.Api
 import utopia.annex.model.response.Response
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.disciple.http.request.StringBody
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestException}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.model.error.RequestFailedException
+import utopia.flow.generic.model.immutable.Value
 import utopia.journey.model.error.NoUserDataError
 import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.metropolis.model.combined.user.UserCreationResult
@@ -65,8 +65,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		{
 			// Checks response status and parses user data from the body
 			case Response.Success(status, body, _) =>
-				body match
-				{
+				body match {
 					case c: Content =>
 						c.single.parsed.flatMap { user =>
 							// Expects device id to always be returned in the response body
@@ -109,8 +108,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		post("devices", device.toModel,
 			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {
 			case Response.Success(status, body, _) =>
-				body match
-				{
+				body match {
 					case c: Content =>
 						c.single.parsed.map { device =>
 							// Stores new device data
@@ -162,8 +160,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		get(s"devices/$deviceId/device-key",
 			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {
 			case Response.Success(status, body, _) =>
-				body.value.string match
-				{
+				body.value.string match {
 					case Some(key) =>
 						// Registers the key, then uses it to acquire a session key
 						LocalDevice.key = key
@@ -185,8 +182,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		
 		get(s"devices/$deviceId/session-key", headersMod = modHeaders).tryMapIfSuccess {
 			case Response.Success(status, body, _) =>
-				body.value.string match
-				{
+				body.value.string match {
 					case Some(key) => Success(new ExodusApi(gateway, rootPath, credentials, key))
 					case None => Failure(new EmptyResponseException(
 						s"Expected a session key but received an empty response with status $status"))

@@ -1,12 +1,13 @@
 package utopia.metropolis.model.partial.user
 
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.time.Now
 import utopia.metropolis.model.StyledModelConvertible
 
@@ -34,7 +35,7 @@ object UserLanguageLinkData extends FromModelFactoryWithSchema[UserLanguageLinkD
 	  * @param model Model being parsed
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
-	def apply(userId: Int, model: template.Model[Property]): Try[UserLanguageLinkData] =
+	def apply(userId: Int, model: ModelLike[Property]): Try[UserLanguageLinkData] =
 		withoutUserSchema.validate(model).toTry.map { valid =>
 			UserLanguageLinkData(userId, valid("language_id"), valid("familiarity_id"))
 		}

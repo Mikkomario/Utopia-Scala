@@ -2,7 +2,7 @@ package utopia.exodus.database.access.many.auth
 
 import java.time.Instant
 import utopia.exodus.database.model.auth.TokenModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection

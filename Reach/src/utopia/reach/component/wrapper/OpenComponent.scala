@@ -1,23 +1,25 @@
 package utopia.reach.component.wrapper
 
-import scala.language.implicitConversions
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.context.BaseContextLike
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
-import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
-import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
+import utopia.reflection.component.context.BaseContextLike
+import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
+
+import scala.language.implicitConversions
 
 object Open
 {
@@ -333,7 +335,7 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  * @return A result with the wrapping parent container, the wrapped component and component creation result
 	  */
 	@throws[IllegalStateException]
-	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: ChangingLike[Boolean] = AlwaysTrue) =
+	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: Changing[Boolean] = AlwaysTrue) =
 	{
 		hierarchy.complete(parent, switchPointer)
 		creation.in(parent)

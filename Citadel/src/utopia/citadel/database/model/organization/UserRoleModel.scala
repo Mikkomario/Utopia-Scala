@@ -2,8 +2,8 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.factory.organization.UserRoleFactory
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.partial.organization.UserRoleData
 import utopia.metropolis.model.stored.organization.UserRole
 import utopia.vault.model.immutable.StorableWithFactory

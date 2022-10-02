@@ -1,10 +1,11 @@
 package utopia.paradigm.shape.shape3d
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
@@ -35,7 +36,7 @@ object Vector3D extends SureFromModelFactory[Vector3D]
     
     // IMPLEMENTED    ---------------------
 	
-	override def parseFrom(model: template.Model[Property]) =
+	override def parseFrom(model: template.ModelLike[Property]) =
 		Vector3D(model("x").getDouble, model("y").getDouble, model("z").getDouble)
     
     
@@ -249,6 +250,8 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
     
 	
 	// IMPLEMENTED	--------------------
+	
+	override def zero = Vector3D.zero
 	
 	override def toString = s"($x, $y, $z)"
 	

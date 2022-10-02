@@ -2,7 +2,7 @@ package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.exodus.model.stored.auth.{EmailValidationAttempt, Token}
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * A token with email validation information included

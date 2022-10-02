@@ -1,8 +1,9 @@
 package utopia.reach.component.input.selection
 
-import utopia.flow.datastructure.immutable.View
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.HandlerType
@@ -77,19 +78,19 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	  * @tparam P Type of content pointer used
 	  * @return A new field
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: ChangingLike[Vector[A]]]
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 rightExpandIcon: Option[SingleColorIcon] = None,
 	 rightCollapseIcon: Option[SingleColorIcon] = None,
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
-	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
 	 listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
 	 noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
-	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, sameItemCheck: Option[(A, A) => Boolean] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeDisplay: (ComponentHierarchy, A) => C)(implicit scrollingContext: ScrollingContextLike) =
@@ -150,16 +151,16 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	  * @tparam P Type of content pointer used
 	  * @return A new field
 	  */
-	def simple[A, P <: ChangingLike[Vector[A]]]
+	def simple[A, P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 rightExpandIcon: Option[SingleColorIcon] = None, rightCollapseIcon: Option[SingleColorIcon] = None,
 	 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	 noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
-	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
+	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
 	 sameItemCheck: Option[(A, A) => Boolean] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(implicit scrollingContext: ScrollingContextLike) =

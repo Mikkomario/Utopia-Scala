@@ -1,7 +1,7 @@
 package utopia.ambassador.database.access.many.process
 
 import utopia.ambassador.model.stored.process.AuthRedirect
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.NonDeprecatedView
 import utopia.vault.sql.SqlExtensions._
 

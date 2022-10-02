@@ -1,13 +1,14 @@
 package utopia.paradigm.motion.motion1d
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{DoubleType, FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
+import utopia.flow.generic.model.mutable.DoubleType
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
+import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.LinearVelocityType
 import utopia.paradigm.motion.motion2d.Velocity2D
@@ -33,7 +34,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { model =>
+	override def apply(model: template.ModelLike[Property]) = schema.validate(model).toTry.flatMap { model =>
 		val amount = model("amount").getDouble
 		model("duration").duration match {
 			case Some(duration) => Success(apply(amount, duration))
@@ -43,7 +44,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 				else
 					Failure(new ModelValidationFailedException(
 						s"Required property 'duration' is missing. Specified properties: [${
-							model.attributesWithValue.map { _.name }.mkString(", ") }]"))
+							model.nonEmptyProperties.map { _.name }.mkString(", ") }]"))
 		}
 	}
 	
@@ -65,7 +66,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
   */
 case class LinearVelocity(override val amount: Double, override val duration: Duration)
 	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity]
-		with ApproximatelyZeroable[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
+		with CanBeAboutZero[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
 {
 	// IMPLEMENTED	--------------------
 	
@@ -84,7 +85,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	// The amount and the duration may cancel each other out
 	override def isPositive = nonZero && (if (amount > 0) duration >= Duration.Zero else duration < Duration.Zero)
 	
-	override protected def zero = LinearVelocity.zero
+	override def zero = LinearVelocity.zero
 	
 	override implicit def toValue: Value = new Value(Some(this), LinearVelocityType)
 	

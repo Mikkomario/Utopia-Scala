@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.{DataTypeException, ModelType, VectorType}
+import utopia.flow.error.DataTypeException
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.{ModelType, VectorType}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, EnumerationValue, Instance, Name, NamingRules, ProjectData, Property}
 import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber
@@ -40,7 +41,7 @@ object ClassReader
 		val root = v.getModel
 		
 		// Parses custom data types (must succeed)
-		root("data_types", "types").getModel.attributes.tryMap { c =>
+		root("data_types", "types").getModel.properties.tryMap { c =>
 			c.value.model
 				.toTry { DataTypeException(
 					s"Custom data types must be presented as json objects. '$v' is not a model.") }
@@ -84,7 +85,7 @@ object ClassReader
 				}
 			val allEnumerations = enumerations ++ referencedEnumerations
 			
-			val classData = root("classes", "class").getModel.attributes.flatMap { packageAtt =>
+			val classData = root("classes", "class").getModel.properties.flatMap { packageAtt =>
 				packageAtt.value.model match {
 					case Some(classModel) =>
 						Some(classFrom(classModel, packageAtt.name, allEnumerations, customTypesMap, author))
@@ -107,7 +108,7 @@ object ClassReader
 								else if (!(combo.childName ~== childClass.name.singular) &&
 									(combo.childName ~== childClass.name.plural))
 									MultiCombined
-								else if (combo.alwaysLinked.isTrue)
+								else if (combo.alwaysLinked.isCertainlyTrue)
 									Combined
 								else
 									PossiblyCombined
@@ -182,7 +183,7 @@ object ClassReader
 				}
 			// Case: Old-school enumeration syntax using an object
 			case Right(enumsModelValue) =>
-				enumsModelValue.getModel.attributes.map { enumAtt =>
+				enumsModelValue.getModel.properties.map { enumAtt =>
 					Enum(enumAtt.name.capitalize, enumPackage,
 						enumAtt.value.getVector.zipWithIndex.map { case (v, index) =>
 							v.model match {
@@ -395,7 +396,7 @@ object ClassReader
 	{
 		// Matches model properties against class properties
 		val properties = ClassPropName.use { implicit c =>
-			model.attributesWithValue.flatMap { att =>
+			model.nonEmptyProperties.flatMap { att =>
 				val attName = Name.contextual(att.name)
 				parentClass.properties.find { _.name ~== attName }.map { _ -> att.value }
 			}.toMap

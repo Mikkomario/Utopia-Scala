@@ -3,9 +3,9 @@ package utopia.exodus.model.partial.auth
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
 
 /**

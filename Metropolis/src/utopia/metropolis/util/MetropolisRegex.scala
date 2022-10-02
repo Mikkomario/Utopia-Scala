@@ -1,6 +1,6 @@
 package utopia.metropolis.util
 
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 
 /**
   * A collection of regular expressions used in Metropolis -related features

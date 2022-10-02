@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.motion3d
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -54,9 +54,9 @@ case class Acceleration3D(override val amount: Velocity3D, override val duration
 	
 	// IMPLEMENTED	-------------------
 	
-	override def repr = this
+	override def zero = Acceleration3D.zero
 	
-	override protected def zeroAmount = Velocity3D.zero
+	override def repr = this
 	
 	override protected def buildCopy(amount: Velocity3D, duration: Duration) = copy(amount, duration)
 	

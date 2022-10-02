@@ -1,7 +1,9 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.async.VolatileFlag
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.color.Color
@@ -34,8 +36,8 @@ object ProgressBar
 	  * @param animationContext Component creation context for animations (implicit)
 	  * @return A new progress bar
 	  */
-	def contextual(stackSize: StackSize, progressPointer: ChangingLike[Double])(implicit context: ColorContextLike,
-																				animationContext: AnimationContextLike) =
+	def contextual(stackSize: StackSize, progressPointer: Changing[Double])(implicit context: ColorContextLike,
+	                                                                        animationContext: AnimationContextLike) =
 		new ProgressBar(animationContext.actorHandler, stackSize,
 			context.colorScheme.gray.forBackground(context.containerBackground),
 			context.colorScheme.secondary.forBackground(context.containerBackground), progressPointer,
@@ -48,8 +50,8 @@ object ProgressBar
   * @since 1.8.2019, v1+
   */
 class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
-				  progressPointer: ChangingLike[Double],
-				  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
+                  progressPointer: Changing[Double],
+                  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends StackableWrapper with CustomDrawableWrapper with SwingComponentRelated
 {
 	// ATTRIBUTES	---------------------

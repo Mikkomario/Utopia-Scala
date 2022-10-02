@@ -2,9 +2,9 @@ package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.partial.auth.ScopeData
 import utopia.exodus.model.stored.auth.{Scope, TokenScopeLink}
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 
 /**

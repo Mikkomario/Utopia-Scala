@@ -1,6 +1,6 @@
 package utopia.citadel.database.model
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.model.immutable.{DataDeletionRule, Table}
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.SqlExtensions._

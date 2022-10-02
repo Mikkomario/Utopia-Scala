@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 
 /**
  * This object is used for creating sql segments that limit the amount of resulting rows. 

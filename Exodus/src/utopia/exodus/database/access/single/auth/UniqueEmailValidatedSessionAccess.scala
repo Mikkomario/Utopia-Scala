@@ -4,8 +4,8 @@ import java.time.Instant
 import utopia.exodus.database.factory.auth.EmailValidatedSessionFactory
 import utopia.exodus.database.model.auth.EmailValidatedSessionModel
 import utopia.exodus.model.stored.auth.EmailValidatedSession
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

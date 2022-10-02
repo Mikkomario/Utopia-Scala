@@ -1,6 +1,6 @@
 package utopia.flow.time
 
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.SelfComparable
 
 import java.time.{DayOfWeek, LocalDate}
 import scala.language.implicitConversions

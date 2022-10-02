@@ -1,6 +1,6 @@
 package utopia.paradigm.measurement
 
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.SelfComparable
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, Meter, MilliMeter}
 
 object Distance

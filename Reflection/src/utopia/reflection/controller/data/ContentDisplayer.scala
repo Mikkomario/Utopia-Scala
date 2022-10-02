@@ -1,7 +1,9 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
 
 /**
@@ -13,7 +15,7 @@ import utopia.reflection.component.template.display.{PoolWithPointer, Refreshabl
  *  @tparam C Type of display component
  *  @tparam P Type of reflected content source
   */
-trait ContentDisplayer[A, +C <: Refreshable[A], +P <: ChangingLike[Vector[A]]] extends PoolWithPointer[Vector[A], P]
+trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] extends PoolWithPointer[Vector[A], P]
 {
 	// ABSTRACT	----------------------
 	

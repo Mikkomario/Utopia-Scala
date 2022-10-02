@@ -1,12 +1,12 @@
 package utopia.access.test
 
-import utopia.flow.generic.DataType
 import java.time.Instant
 import utopia.access.http.ContentCategory.Text
 import utopia.access.http.Headers
 import utopia.access.http.Method.Get
 import utopia.access.http.Method.Post
 import utopia.access.http.Method.Delete
+import utopia.flow.generic.model.mutable.DataType
 
 /**
  * This app tests use of headers

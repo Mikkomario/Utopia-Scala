@@ -3,15 +3,16 @@ package utopia.nexus.test.servlet
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Response
-import utopia.flow.generic.DataType
+
 import javax.servlet.annotation.MultipartConfig
 import utopia.nexus.servlet.HttpExtensions._
 import utopia.nexus.http.ServerSettings
-import utopia.flow.datastructure.mutable
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.generic.model.mutable
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.nexus.http.Body
 
 /**
@@ -31,7 +32,7 @@ class EchoServlet extends HttpServlet
     
     DataType.setup()
     private implicit val settings: ServerSettings = ServerSettings("http://localhost:9999")
-    private implicit val jsonParser: JsonParser = JSONReader
+    private implicit val jsonParser: JsonParser = JsonReader
     
     
     // IMPLEMENTED METHODS    ----------------
@@ -40,7 +41,7 @@ class EchoServlet extends HttpServlet
     {
         val request = req.toRequest.get
         
-        val buffer = mutable.Model()
+        val buffer = mutable.MutableModel()
         buffer.update("method", request.method.toString())
         buffer.update("url", request.targetUrl)
         buffer.update("path", request.path.map(_.toString()))
@@ -48,7 +49,7 @@ class EchoServlet extends HttpServlet
         buffer.update("headers", Model.fromMap(request.headers.fields))
         buffer.update("parts", request.body.toVector.map(partToModel))
         
-        Response.fromModel(buffer.immutableCopy()).update(res)
+        Response.fromModel(buffer.immutableCopy).update(res)
     }
     
     override def doPost(request: HttpServletRequest, response: HttpServletResponse) = doGet(request, response)

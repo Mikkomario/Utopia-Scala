@@ -1,9 +1,8 @@
 package utopia.vault.coder.model.enumeration
 
-import utopia.flow.collection.OptionsIterator
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.operator.ApproximatelyEquatable
-import utopia.flow.util.ScopeUsable
+import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.operator.{ApproxEquals, ScopeUsable}
 import utopia.vault.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated, Text, UnderScore}
 
@@ -12,7 +11,7 @@ import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphena
   * @author Mikko Hilpinen
   * @since 20.8.2022, v1.6
   */
-sealed trait NameContext extends ScopeUsable[NameContext] with ApproximatelyEquatable[NameContext]
+sealed trait NameContext extends ScopeUsable[NameContext] with ApproxEquals[NameContext]
 {
 	// ABSTRACT -----------------------
 	
@@ -64,7 +63,7 @@ sealed trait NameContext extends ScopeUsable[NameContext] with ApproximatelyEqua
 	  * @param naming Implicit naming rules
 	  * @return A name read from the specified model
 	  */
-	def from(model: Model[Property], disableGeneric: Boolean = false)(implicit naming: NamingRules): Option[Name] = {
+	def from(model: ModelLike[Property], disableGeneric: Boolean = false)(implicit naming: NamingRules): Option[Name] = {
 		// Searches with the json keys of this style first
 		_from(model, disableGeneric = true)
 			// Uses the generic key "name" if no default keys are specified (unless disabled)
@@ -94,7 +93,7 @@ sealed trait NameContext extends ScopeUsable[NameContext] with ApproximatelyEqua
 			}
 	}
 	
-	private def _from(model: Model[Property], disableGeneric: Boolean = false)(implicit naming: NamingRules): Option[Name] = {
+	private def _from(model: ModelLike[Property], disableGeneric: Boolean = false)(implicit naming: NamingRules): Option[Name] = {
 		// Looks for some specified property
 		val default = model(jsonProps).string.map { name => Name.interpret(name, style) }
 		// May use recursion for more generic keys (if not disabled)

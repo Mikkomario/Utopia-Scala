@@ -3,7 +3,7 @@ package utopia.disciple.http.response
 import java.io.InputStream
 
 import utopia.access.http.{Headers, Status}
-import utopia.flow.util.AutoClose._
+import utopia.flow.parse.AutoClose._
 
 import scala.util.Try
 

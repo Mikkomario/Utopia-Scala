@@ -1,11 +1,12 @@
 package utopia.paradigm.color
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
@@ -42,7 +43,7 @@ object Rgb extends SureFromModelFactory[Rgb]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def parseFrom(model: template.Model[Property]) = {
+	override def parseFrom(model: template.ModelLike[Property]) = {
 		val r = model("red", "r").getDouble
 		val g = model("green", "g").getDouble
 		val b = model("blue", "b").getDouble
@@ -142,7 +143,7 @@ object Rgb extends SureFromModelFactory[Rgb]
   * @since Genesis 24.4.2019, v1+
   */
 case class Rgb private(override val ratios: Map[RgbChannel, Double])
-	extends RgbLike[Rgb] with ApproximatelyEquatable[RgbLike[_]] with ValueConvertible with ModelConvertible
+	extends RgbLike[Rgb] with ApproxEquals[RgbLike[_]] with ValueConvertible with ModelConvertible
 {
 	// COMPUTED	------------------------
 	

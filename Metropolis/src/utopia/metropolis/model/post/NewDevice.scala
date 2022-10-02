@@ -1,9 +1,12 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.{IntType, StringType}
+import utopia.flow.generic.model.template.ModelConvertible
 
 @deprecated("This class will be removed in a future release", "v2.1")
 object NewDevice extends FromModelFactoryWithSchema[NewDevice]

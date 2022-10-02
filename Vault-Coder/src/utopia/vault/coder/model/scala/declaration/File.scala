@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.coder.controller.reader.ScalaParser
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.data.ProjectSetup

@@ -1,6 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 
 /**
  * SqlValueGenerators are able to generate value instances based on sql elements

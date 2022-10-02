@@ -1,8 +1,8 @@
 package utopia.metropolis.model.stored
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * A common trait for stored items that simply wrap model convertible data and add an id

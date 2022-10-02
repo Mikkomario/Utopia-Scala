@@ -1,8 +1,9 @@
 package utopia.scribe.model.enumeration
 
+import utopia.flow.operator.SelfComparable
+
 import java.util.NoSuchElementException
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.SelfComparable
+import utopia.flow.collection.CollectionExtensions._
 
 /**
   * Common trait for all Severity values

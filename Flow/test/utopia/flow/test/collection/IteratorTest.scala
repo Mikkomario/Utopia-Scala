@@ -1,8 +1,8 @@
 package utopia.flow.test.collection
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.datastructure.mutable.PollableOnce
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.mutable.iterator.PollableOnce
+import utopia.flow.collection.CollectionExtensions._
 
 /**
  * Tests iterator -related functions
@@ -21,7 +21,7 @@ object IteratorTest extends App
 	assert(iter1.poll == 3)
 	assert(iter1.collectWhile { _ <= 10 }.size == 8)
 	assert(iter1.next() == 11)
-	assert(iter1.takeNext(10).size == 10)
+	assert(iter1.take(10).size == 10)
 	assert(iter1.poll == 22)
 	iter1.collectWhile { _ < 100 }
 	assert(iter1.poll == 100)

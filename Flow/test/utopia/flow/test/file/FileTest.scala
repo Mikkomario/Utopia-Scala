@@ -1,7 +1,7 @@
 package utopia.flow.test.file
 
-import utopia.flow.generic.DataType
-import utopia.flow.util.FileExtensions._
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Path
 

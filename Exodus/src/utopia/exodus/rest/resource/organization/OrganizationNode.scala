@@ -8,7 +8,7 @@ import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.exodus.model.enumeration.ExodusScope.OrganizationActions
 import utopia.exodus.model.enumeration.ExodusTask.DeleteOrganization
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.partial.organization.OrganizationDeletionData

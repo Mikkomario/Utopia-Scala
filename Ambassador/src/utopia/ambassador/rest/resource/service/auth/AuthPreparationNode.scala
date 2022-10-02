@@ -17,8 +17,8 @@ import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -152,7 +152,7 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 				// Summary styling may vary based on client preference.
 				val style = session.modelStyle
 				// Includes the scopes to request
-				val scopesConstant = Constant("scopes",
+				val scopesConstant =Constant("scopes",
 					linkedScopes.toVector.map { _.toModelWith(style) })
 				// May include the redirect urls
 				val extraConstants = style match
@@ -160,7 +160,7 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 					case Simple => Vector(scopesConstant)
 					case Full =>
 						val baseRedirectsModel = Model.withConstants(preparation.redirectUrls
-							.map { case (filter, url) => Constant(filter.keyName, url) })
+							.map { case (filter, url) =>Constant(filter.keyName, url) })
 						// Appends the default redirect url if necessary
 						val redirectsModel =
 						{

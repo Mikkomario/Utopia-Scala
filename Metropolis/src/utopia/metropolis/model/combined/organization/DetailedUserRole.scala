@@ -1,9 +1,9 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.stored.description.DescriptionRole
 

@@ -1,10 +1,10 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.datastructure.immutable.{ModelValidationFailedException, Value}
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.FromModelFactory
-import utopia.flow.operator.ApproximatelyZeroable
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{ModelValidationFailedException, Value}
+import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.operator.CanBeAboutZero
+import utopia.flow.collection.CollectionExtensions._
 
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 8.8.2022, v1.0
   */
-trait ChangeFromModelFactory[+A, Amount <: ApproximatelyZeroable[Amount, _]] extends FromModelFactory[A]
+trait ChangeFromModelFactory[+A, Amount <: CanBeAboutZero[Amount, _]] extends FromModelFactory[A]
 {
 	// ABSTRACT --------------------------
 	
@@ -34,8 +34,8 @@ trait ChangeFromModelFactory[+A, Amount <: ApproximatelyZeroable[Amount, _]] ext
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def apply(model: Model[Property]) =
-		model.findExisting("amount")
+	override def apply(model: ModelLike[Property]) =
+		model.existing("amount")
 			.toTry { new ModelValidationFailedException(s"Required property 'amount' is missing from $model") }
 			.flatMap { p => amountFromValue(p.value) }
 			.flatMap { amount =>

@@ -1,10 +1,11 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.{Delay, ThreadPool, Wait}
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangeListener
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.{Delay, Wait}
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 import scala.concurrent.ExecutionContext
 

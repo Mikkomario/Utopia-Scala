@@ -1,6 +1,7 @@
 package utopia.citadel.util
 
-import utopia.flow.generic.{DataType, EnvironmentNotSetupException}
+import utopia.flow.error.EnvironmentNotSetupException
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.database.{Connection, ConnectionPool}
 

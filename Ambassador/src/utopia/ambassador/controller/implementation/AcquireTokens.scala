@@ -21,12 +21,12 @@ import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.datastructure.template.MapLike
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.collection.template.MapAccess
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.time.Instant
@@ -42,7 +42,7 @@ import scala.util.{Failure, Success, Try}
   * @param configurations A map-like object for acquiring correct configurations for each targeted service.
   *                       Accepts a service id and returns the applicable configurations.
   */
-class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
+class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 {
 	/**
 	  * Acquires session authentications needed to perform the specified task.
@@ -207,7 +207,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 			"redirect_uri" -> settings.redirectUrl))
 		val bodyModel = if (useAuthorizationHeader) baseBodyModel else
 			baseBodyModel ++ Vector("client_id" -> settings.clientId, "client_secret" -> settings.clientSecret)
-				.map { case (key, value) => Constant(key, value) }
+				.map { case (key, value) =>Constant(key, value) }
 		
 		Request(settings.tokenUrl, Post, headers = headers, body = Some(StringBody.urlEncodedForm(bodyModel)))
 	}
@@ -236,7 +236,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 						case None =>
 							logger(new NoSuchElementException(
 								s"No 'scope' attribute in response body. Available properties: [${
-									response.body.attributesWithValue.map { _.name }.mkString(", ")}]"),
+									response.body.nonEmptyProperties.map { _.name }.mkString(", ")}]"),
 								"No scope attribute in token response body")
 							Vector()
 					}
@@ -284,7 +284,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 				else
 					Failure(new NoSuchElementException(
 						s"No 'access_token' or 'refresh_token' property in the response. Available keys: [${
-							response.body.attributesWithValue.map { _.name }.mkString(", ")}]"))
+							response.body.nonEmptyProperties.map { _.name }.mkString(", ")}]"))
 			}
 			// Case: Failure
 			else

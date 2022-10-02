@@ -1,8 +1,8 @@
 package utopia.reach.container
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.VolatileList
-import utopia.flow.event.ChangingLike
+import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}

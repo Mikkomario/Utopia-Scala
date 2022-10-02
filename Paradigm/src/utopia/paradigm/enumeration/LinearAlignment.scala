@@ -48,7 +48,7 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	
 	// IMPLEMENTED  --------------------------
 	
-	override protected def zero = Middle
+	override def zero = Middle
 	
 	override def isPositive = direction.exists { _.isPositive }
 	override def isZero = direction.isEmpty

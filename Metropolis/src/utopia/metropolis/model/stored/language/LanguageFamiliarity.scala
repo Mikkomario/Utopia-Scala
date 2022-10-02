@@ -1,7 +1,7 @@
 package utopia.metropolis.model.stored.language
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.combined.description.LinkedDescription
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity

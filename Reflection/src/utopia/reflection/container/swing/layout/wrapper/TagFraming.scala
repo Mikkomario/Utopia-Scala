@@ -1,7 +1,8 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
-import utopia.flow.event.Fixed
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.view.RoundedBackgroundViewDrawer

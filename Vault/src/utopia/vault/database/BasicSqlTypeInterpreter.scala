@@ -1,14 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.generic.IntType
-import utopia.flow.generic.StringType
-import utopia.flow.generic.BooleanType
-import utopia.flow.generic.InstantType
-import utopia.flow.generic.LongType
-import utopia.flow.generic.FloatType
-import utopia.flow.generic.DoubleType
-import utopia.flow.generic.LocalDateType
-import utopia.flow.generic.LocalTimeType
+import utopia.flow.generic.model.mutable.{BooleanType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LocalTimeType, LongType, StringType}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.columnlength.ColumnNumberLimit.{BigIntLimit, IntLimit, MediumIntLimit, SmallIntLimit, TinyIntLimit}
 import utopia.vault.database.columnlength.ColumnTextLimit.{LongTextLimit, MediumTextLimit, TextLimit, TinyTextLimit, VarcharLimit}

@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.color.ColorRole.{Gray, Secondary}
 import utopia.reflection.color.ColorShade
 import utopia.reflection.color.ColorShade.Light
@@ -86,7 +86,7 @@ class TypeOrSearch
  searchDelay: Duration = Duration.Zero)
 (optionsForInput: String => Future[Seq[String]])
 (implicit scrollingContext: ScrollingContextLike, animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger)
-	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], ChangingLike[Vector[String]]]
+	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], Changing[Vector[String]]]
 {
 	// ATTRIBUTES   ----------------------------
 	

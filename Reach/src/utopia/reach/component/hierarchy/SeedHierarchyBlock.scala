@@ -1,12 +1,12 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.async.DelayedView
-import utopia.flow.event.{AlwaysTrue, ChangeDependency, ChangeEvent, ChangeListener, ChangingLike, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 
 /**
   * This component hierarchy block doesn't initially know it's parent hierarchy, but expects to connect to it
@@ -26,7 +26,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	override def parent = foundParent.getOrElse(Left(top))
 	
-	override def linkPointer: ChangingLike[Boolean] = LinkManager
+	override def linkPointer: Changing[Boolean] = LinkManager
 	
 	override def isThisLevelLinked = LinkManager.isThisLevelLinked
 	
@@ -42,7 +42,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponentLike, switchConditionPointer: ChangingLike[Boolean]) =
+	def complete(parent: ReachComponentLike, switchConditionPointer: Changing[Boolean]) =
 	{
 		foundParent match
 		{
@@ -69,7 +69,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def lockToTop(switchConditionPointer: ChangingLike[Boolean] = AlwaysTrue) = foundParent match
+	def lockToTop(switchConditionPointer: Changing[Boolean] = AlwaysTrue) = foundParent match
 	{
 		case Some(existingParent) =>
 			existingParent match
@@ -87,12 +87,12 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	// NESTED	------------------------------
 	
-	private object LinkManager extends ChangingLike[Boolean]
+	private object LinkManager extends Changing[Boolean]
 	{
 		// ATTRIBUTES	----------------------
 		
 		// Contains final link status (will be set once hierarchy completes)
-		private var finalManagedPointer: Option[ChangingLike[Boolean]] = None
+		private var finalManagedPointer: Option[Changing[Boolean]] = None
 		
 		// Holds listeners temporarily while there is no pointer to receive them yet
 		private var queuedListeners = Vector[ChangeListener[Boolean]]()
@@ -108,14 +108,12 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		override def isChanging = finalManagedPointer.forall { _.isChanging }
 		
-		override def value = finalManagedPointer match
-		{
+		override def value = finalManagedPointer match {
 			case Some(pointer) => pointer.value
 			case None => false
 		}
 		
-		override def addListener(changeListener: => ChangeListener[Boolean]) = finalManagedPointer match
-		{
+		override def addListener(changeListener: => ChangeListener[Boolean]) = finalManagedPointer match {
 			case Some(pointer) => pointer.addListener(changeListener)
 			case None => queuedListeners :+= changeListener
 		}
@@ -127,8 +125,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			simulateChangeEventFor(listener, simulatedOldValue)
 		}
 		
-		override def removeListener(changeListener: Any) =
-		{
+		override def removeListener(changeListener: Any) = {
 			queuedListeners = queuedListeners.filterNot { _ == changeListener }
 			finalManagedPointer.foreach { _.removeListener(changeListener) }
 		}
@@ -137,39 +134,22 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			finalManagedPointer.foreach { _.removeDependency(dependency) }
 		}
 		
-		override def addDependency(dependency: => ChangeDependency[Boolean]) = finalManagedPointer match
-		{
+		override def addDependency(dependency: => ChangeDependency[Boolean]) = finalManagedPointer match {
 			case Some(pointer) => pointer.addDependency(dependency)
 			case None => queuedDependencies :+= dependency
 		}
 		
-		override def map[B](f: Boolean => B) = Mirror.of(this)(f)
-		
-		override def lazyMap[B](f: Boolean => B) = LazyMirror.of(this)(f)
-		
-		override def mergeWith[B, R](other: ChangingLike[B])(f: (Boolean, B) => R) =
-			MergeMirror.of(this, other)(f)
-		
-		override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (Boolean, B, C) => R) =
-			TripleMergeMirror.of(this, first, second)(merge)
-		
-		override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (Boolean, B) => R) =
-			LazyMergeMirror.of(this, other)(f)
-		
-		override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) =
-			DelayedView.of(this, threshold)
-		
 		
 		// OTHER	--------------------------
 		
-		def onParentFound(defaultPointer: ChangingLike[Boolean],
-						  additionalConditionPointer: ChangingLike[Boolean]) =
+		def onParentFound(defaultPointer: Changing[Boolean],
+		                  additionalConditionPointer: Changing[Boolean]) =
 			specifyFinalPointer(defaultPointer && additionalConditionPointer)
 		
-		def onLinkedToCanvas(additionalConditionPointer: ChangingLike[Boolean]) =
+		def onLinkedToCanvas(additionalConditionPointer: Changing[Boolean]) =
 			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer)
 		
-		private def specifyFinalPointer(pointer: ChangingLike[Boolean]) =
+		private def specifyFinalPointer(pointer: Changing[Boolean]) =
 		{
 			// Updates the pointer(s)
 			finalManagedPointer = Some(pointer)

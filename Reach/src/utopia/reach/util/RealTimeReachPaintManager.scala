@@ -1,8 +1,8 @@
 package utopia.reach.util
 
-import utopia.flow.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.operator.Sign
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}

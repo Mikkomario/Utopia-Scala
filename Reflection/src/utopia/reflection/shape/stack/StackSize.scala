@@ -1,7 +1,8 @@
 package utopia.reflection.shape.stack
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.Combinable.SelfCombinable
+import utopia.flow.operator.LinearScalable
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Insets, MultiDimensional, Size, TwoDimensional}
@@ -127,7 +128,7 @@ object StackSize
 **/
 case class StackSize(override val dimensions2D: Pair[StackLength])
     extends TwoDimensional[StackLength] with StackInsetsConvertible with LinearScalable[StackSize]
-        with Combinable[StackSize, StackSize]
+        with SelfCombinable[StackSize]
 {
     // COMPUTED PROPERTIES    --------
     

@@ -1,9 +1,10 @@
 package utopia.reach.window
-import utopia.flow.async.Delay
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.event.{AlwaysTrue, ChangingLike}
+import utopia.flow.async.process.Delay
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Direction2D
 import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
@@ -79,8 +80,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @return Combined component
 	  */
 	protected def buildLayout(factories: ContextualMixed[ColorContext],
-							  content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
-							  context: N): ReachComponentLike
+	                          content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
+	                          context: N): ReachComponentLike
 	
 	/**
 	  * Specifies buttons to display on this dialog
@@ -93,7 +94,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  */
 	protected def specifyButtons(context: N,
 								 input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
-								 warn: (String, LocalizedString) => Unit): (Vector[WindowButtonBlueprint[A]], ChangingLike[Boolean])
+								 warn: (String, LocalizedString) => Unit): (Vector[WindowButtonBlueprint[A]], Changing[Boolean])
 	
 	/**
 	  * @return Text to display on the default close button. Empty if no default close button should be displayed.
@@ -213,7 +214,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	private def groupsToComponent(factories: ContextualMixed[ColorContext],
 								  groups: RowGroups[InputRowBlueprint[RowField, TextContext]],
 								  fieldsBuffer: VectorBuilder[(String, ManagedField[RowField])])
-								 (implicit context: FieldRowContext): (ReachComponentLike, ChangingLike[Boolean]) =
+								 (implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// Checks whether segmentation should be used
 		val segmentGroup =
@@ -258,7 +259,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 								 group: RowGroup[InputRowBlueprint[RowField, TextContext]],
 								 segmentGroup: Option[SegmentGroup],
 								 fieldsBuffer: VectorBuilder[(String, ManagedField[RowField])])
-								(implicit context: FieldRowContext): (ReachComponentLike, ChangingLike[Boolean]) =
+								(implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// If this group consists of multiple rows, wraps them in a stack. Otherwise presents the row as is
 		if (group.isSingleRow)
@@ -285,7 +286,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	private def actualizeRow(factories: ContextualMixed[ColorContext],
 							 blueprint: InputRowBlueprint[RowField, TextContext], segmentGroup: Option[SegmentGroup],
 							 fieldsBuilder: VectorBuilder[(String, ManagedField[RowField])])
-							(implicit context: FieldRowContext): (ReachComponentLike, ChangingLike[Boolean]) =
+							(implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// Case: Two components are used
 		if (blueprint.displaysName)

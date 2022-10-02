@@ -1,7 +1,7 @@
 package utopia.annex.model.schrodinger
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.async.LazyFuture
+import utopia.flow.view.immutable.caching.LazyFuture
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 import scala.concurrent.ExecutionContext
 

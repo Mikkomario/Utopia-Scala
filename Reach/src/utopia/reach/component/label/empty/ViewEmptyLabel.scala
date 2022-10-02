@@ -1,6 +1,7 @@
 package utopia.reach.component.label.empty
 
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -35,8 +36,8 @@ class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	 * @param customDrawersPointer Pointer to this label's custom drawers (default = always empty)
 	 * @return A new label
 	 */
-	def apply(stackSizePointer: ChangingLike[StackSize],
-	          customDrawersPointer: ChangingLike[Vector[CustomDrawer]] = Fixed(Vector())) =
+	def apply(stackSizePointer: Changing[StackSize],
+	          customDrawersPointer: Changing[Vector[CustomDrawer]] = Fixed(Vector())) =
 		new ViewEmptyLabel(parentHierarchy, stackSizePointer, customDrawersPointer)
 	
 	/**
@@ -45,7 +46,7 @@ class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	 * @param customDrawersPointer Pointer to this label's custom drawers
 	 * @return A new label
 	 */
-	def withStaticSize(stackSize: StackSize, customDrawersPointer: ChangingLike[Vector[CustomDrawer]]) =
+	def withStaticSize(stackSize: StackSize, customDrawersPointer: Changing[Vector[CustomDrawer]]) =
 		apply(Fixed(stackSize), customDrawersPointer)
 	
 	/**
@@ -54,7 +55,7 @@ class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	 * @param customDrawers Custom drawers to assign to this label
 	 * @return A new label
 	 */
-	def withStaticDrawers(stackSizePointer: ChangingLike[StackSize], customDrawers: Vector[CustomDrawer]) =
+	def withStaticDrawers(stackSizePointer: Changing[StackSize], customDrawers: Vector[CustomDrawer]) =
 		apply(stackSizePointer, Fixed(customDrawers))
 	
 	/**
@@ -63,7 +64,7 @@ class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	 * @param stackSizePointer Pointer to this label's stack size
 	 * @return A new label
 	 */
-	def withBackground(backgroundPointer: ChangingLike[Color], stackSizePointer: ChangingLike[StackSize]) =
+	def withBackground(backgroundPointer: Changing[Color], stackSizePointer: Changing[StackSize]) =
 	{
 		val label = withStaticDrawers(stackSizePointer, Vector(BackgroundViewDrawer(backgroundPointer)))
 		backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
@@ -97,7 +98,7 @@ case class ContextualViewEmptyLabelFactory[+N <: ColorContextLike](factory: View
 	 * @param preferredShade Preferred color shade to use
 	 * @return A new label
 	 */
-	def withBackgroundForRole(rolePointer: ChangingLike[ColorRole], stackSizePointer: ChangingLike[StackSize],
+	def withBackgroundForRole(rolePointer: Changing[ColorRole], stackSizePointer: Changing[StackSize],
 	                          preferredShade: ColorShade = Standard) =
 		factory.withBackground(rolePointer.map { context.color(_, preferredShade) }, stackSizePointer)
 }
@@ -107,8 +108,8 @@ case class ContextualViewEmptyLabelFactory[+N <: ColorContextLike](factory: View
  * @author Mikko Hilpinen
  * @since 29.1.2021, v0.1
  */
-class ViewEmptyLabel(override val parentHierarchy: ComponentHierarchy, val stackSizePointer: ChangingLike[StackSize],
-                     val customDrawersPointer: ChangingLike[Vector[CustomDrawer]]) extends CustomDrawReachComponent
+class ViewEmptyLabel(override val parentHierarchy: ComponentHierarchy, val stackSizePointer: Changing[StackSize],
+                     val customDrawersPointer: Changing[Vector[CustomDrawer]]) extends CustomDrawReachComponent
 {
 	// INITIAL CODE -------------------------------
 	

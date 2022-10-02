@@ -2,10 +2,9 @@ package utopia.exodus.util
 
 import utopia.access.http.Status
 import utopia.citadel.util.CitadelContext
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.template.LazyLike
-import utopia.flow.generic.EnvironmentNotSetupException
+import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.Full
 import utopia.vault.database.ConnectionPool
@@ -148,6 +147,6 @@ object ExodusContext
 	// NESTED	--------------------------------------
 	
 	private case class Data(defaultModelStyle: ModelStyle, uuidGenerator: UuidGenerator,
-	                        userScopeIds: LazyLike[Set[Int]], emailValidator: Option[EmailValidator],
+	                        userScopeIds: Lazy[Set[Int]], emailValidator: Option[EmailValidator],
 	                        logger: Logger, userEmailIsRequired: Boolean)
 }

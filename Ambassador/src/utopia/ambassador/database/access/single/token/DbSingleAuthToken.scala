@@ -3,7 +3,7 @@ package utopia.ambassador.database.access.single.token
 import utopia.ambassador.database.access.many.token.DbAuthTokenScopeLinks
 import utopia.ambassador.database.factory.token.AuthTokenWithScopesFactory
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 

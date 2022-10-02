@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable.access
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.nosql.factory.FromResultFactory
 
 /**

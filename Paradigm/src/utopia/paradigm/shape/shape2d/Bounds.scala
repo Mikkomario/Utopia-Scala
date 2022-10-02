@@ -1,10 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.LinearScalable
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
@@ -35,7 +35,7 @@ object Bounds extends FromModelFactory[Bounds]
     
     // OPERATORS    -----------------------
     
-    override def apply(model: template.Model[Property]) =
+    override def apply(model: template.ModelLike[Property]) =
         Success(Bounds(model("position").getPoint, model("size").getSize))
     
     /**
@@ -365,7 +365,7 @@ case class Bounds(position: Point, override val size: Size)
       * @param area Target area
       * @return These bounds fitted to the specified area.
       */
-    @deprecated("Please use positionedWithin(...) or fittedWithin(...) instead", "v1.1")
+    // TODO: Rename and/or refactor
     def fittedInto(area: Bounds) =
     {
         // Case: Already fits

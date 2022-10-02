@@ -1,11 +1,12 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Pair, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions.RichSeqLike
+import utopia.flow.collection.CollectionExtensions.RichSeqLike
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
@@ -35,7 +36,7 @@ object Vector2D extends SureFromModelFactory[Vector2D]
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def parseFrom(model: template.Model[Property]) =
+	override def parseFrom(model: template.ModelLike[Property]) =
 		apply(model("x").getDouble, model("y").getDouble)
 	
 	
@@ -96,6 +97,8 @@ case class Vector2D(override val dimensions2D: Pair[Double])
 	
 	
 	// IMPLEMENTED	-----------------------------
+	
+	override def zero = Vector2D.zero
 	
 	override def in2D = this
 	

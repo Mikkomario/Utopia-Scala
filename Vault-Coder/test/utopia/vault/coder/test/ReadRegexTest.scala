@@ -1,6 +1,6 @@
 package utopia.vault.coder.test
 
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationType}
 
 /**

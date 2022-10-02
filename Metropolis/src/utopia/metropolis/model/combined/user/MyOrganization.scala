@@ -1,11 +1,12 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible, ModelType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.generic.model.mutable.{IntType, ModelType}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.metropolis.model.DeepExtender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.combined.organization.{DescribedOrganization, UserRoleWithRights}
@@ -22,7 +23,7 @@ object MyOrganization extends FromModelFactory[MyOrganization]
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def apply(model: template.Model[Property]) =
+	override def apply(model: template.ModelLike[Property]) =
 		// Validates the model
 		schema.validate(model).toTry.flatMap { valid =>
 			// Parses organization data

@@ -1,7 +1,6 @@
 package utopia.flow.operator
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.util.SelfComparable
+import utopia.flow.collection.immutable.Pair
 
 /**
   * An enumeration for sign (positive or negative), which can also be used as binary direction enumeration
@@ -40,13 +39,11 @@ sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
 	  * @return 'i' length to this direction
 	  */
 	def *(i: Int) = if (isPositive) i else -i
-	
 	/**
 	  * @param d A double
 	  * @return 'd' length to this direction
 	  */
 	def *(d: Double) = if (isPositive) d else -d
-	
 	/**
 	  * @param r a reversible instance
 	  * @tparam R2 Repr of that instance
@@ -72,6 +69,7 @@ object Sign
 	  * @param item An item
 	  * @return Sign of that item. Positive in case of zero.
 	  */
+	@deprecated("Please use item.sign instead", "v2.0")
 	def of(item: SignedOrZero[_]): Sign = if (item.isPositiveOrZero) Positive else Negative
 	
 	/**
@@ -94,8 +92,7 @@ object Sign
 		override def opposite = Negative
 		override def repr = this
 		
-		override def compareTo(o: Sign) = o match
-		{
+		override def compareTo(o: Sign) = o match {
 			case Positive => 0
 			case Negative => 1
 		}
@@ -112,8 +109,7 @@ object Sign
 		override def opposite = Positive
 		override def repr = this
 		
-		override def compareTo(o: Sign) = o match
-		{
+		override def compareTo(o: Sign) = o match {
 			case Positive => -1
 			case Negative => 0
 		}

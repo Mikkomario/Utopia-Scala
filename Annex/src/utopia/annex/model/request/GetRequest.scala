@@ -1,7 +1,7 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method.Get
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 
 object GetRequest
 {

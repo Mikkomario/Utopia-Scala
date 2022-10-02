@@ -2,9 +2,7 @@ package utopia.reflection.component.swing.template
 
 import java.awt.Component
 import java.awt.event.MouseEvent
-
-import utopia.flow.datastructure.mutable.MutableLazy
-import utopia.flow.util.NullSafe._
+import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
 import utopia.genesis.handling.mutable._
@@ -107,8 +105,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
       * @return The parent component of this component (wrapped)
       */
-    override def parent: Option[AwtComponentWrapper] =  component.getParent.toOption.map {
-        new SimpleAwtComponentWrapper(_, Vector(this)) }
+    override def parent: Option[AwtComponentWrapper] =
+        Option(component.getParent).map { new SimpleAwtComponentWrapper(_, Vector(this)) }
     
     /**
       * @return Whether this component is currently visible
@@ -148,8 +146,9 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
       * @return The font metrics object for this component. None if font hasn't been specified.
       */
-    override def fontMetrics = component.getFont.toOption.map { component.getFontMetrics(_) } orElse
-        component.getGraphics.toOption.map { _.getFontMetrics }
+    override def fontMetrics =
+        Option(component.getFont).map { component.getFontMetrics(_) } orElse
+            Option(component.getGraphics).map { _.getFontMetrics }
     
     // Absolute position needs to be calculated separately since parent might wrap multiple windows
     override def absolutePosition = parentsInWindow.foldLeft(position) { _ + _.position }

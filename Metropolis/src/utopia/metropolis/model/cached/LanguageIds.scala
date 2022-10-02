@@ -1,7 +1,7 @@
 package utopia.metropolis.model.cached
 
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.util.Extender
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.Extender
 
 object LanguageIds
 {

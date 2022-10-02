@@ -7,7 +7,7 @@ import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.database.access.single.auth.DbDeviceToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result

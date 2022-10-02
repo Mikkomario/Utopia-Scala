@@ -1,5 +1,8 @@
 # Utopia Vault - List of Changes
 
+## v1.14.1 (in development)
+Adjusting to **Flow** v2.0 changes
+
 ## v1.14 - 02.10.2022
 This update adds a number of functions to access points that utilize ordering, i.e. different variants of 
 min and max -accessing.

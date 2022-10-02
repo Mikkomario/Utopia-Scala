@@ -7,6 +7,7 @@ package utopia.flow.util
  * @author Mikko Hilpinen
  * @since 28.8.2017
  */
+@deprecated("Please use Option.apply instead", "v2.0")
 object NullSafe
 {
     implicit class NullOption[T <: Object](val obj: T) extends AnyVal

@@ -2,7 +2,7 @@ package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.exodus.model.stored.auth.{Token, TokenType}
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * Common trait for tokens which include type information

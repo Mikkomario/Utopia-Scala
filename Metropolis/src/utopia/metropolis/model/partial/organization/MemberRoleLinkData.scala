@@ -1,10 +1,13 @@
 package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
 
 object MemberRoleLinkData extends FromModelFactoryWithSchema[MemberRoleLinkData]

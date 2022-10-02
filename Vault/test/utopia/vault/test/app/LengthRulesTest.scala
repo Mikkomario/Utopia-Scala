@@ -1,9 +1,9 @@
 package utopia.vault.test.app
 
-import utopia.flow.generic.DataType
-import utopia.flow.parse.{JSONReader, JsonParser}
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.{JsonReader, JsonParser}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.test.TestContext._
 import utopia.vault.database.{Connection, ConnectionPool}
@@ -22,7 +22,7 @@ import java.nio.file.Paths
 object LengthRulesTest extends App
 {
 	DataType.setup()
-	implicit val jsonParser: JsonParser = JSONReader
+	implicit val jsonParser: JsonParser = JsonReader
 	implicit val cPool: ConnectionPool = new ConnectionPool()
 	
 	val dbName = "vault_test"

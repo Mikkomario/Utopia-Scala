@@ -1,6 +1,6 @@
 package utopia.conflict.collision
 
-import utopia.flow.operator.Equatable
+import utopia.flow.operator.EqualsBy
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
@@ -18,7 +18,7 @@ import utopia.paradigm.shape.shape3d.Matrix3D
  */
 // TODO: Should accept a lazy set of collision points instead of a call-by-name function
 class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point]) extends LinearTransformable[Collision]
-    with AffineTransformable[Collision] with Equatable
+    with AffineTransformable[Collision] with EqualsBy
 {
     // ATTRIBUTES    ---------------------
     
@@ -30,7 +30,7 @@ class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point]) e
     
     // IMPLEMENTED  ----------------------
     
-    override def properties = Vector(mtv, collisionPoints)
+    protected override def equalsProperties = Vector(mtv, collisionPoints)
     
     
     // OPERATORS    ----------------------

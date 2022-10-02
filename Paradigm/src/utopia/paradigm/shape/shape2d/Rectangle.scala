@@ -1,10 +1,11 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{DoubleType, FromModelFactory, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
+import utopia.flow.generic.model.mutable.DoubleType
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.paradigm.generic.{PointType, Vector2DType}
 import utopia.paradigm.generic.ParadigmValue._
 
@@ -22,7 +23,7 @@ object Rectangle extends FromModelFactory[Rectangle]
 	  */
 	val schema = ModelDeclaration("topLeft" -> PointType, "top" -> Vector2DType, "rightEdgeLength" -> DoubleType)
 	
-	override def apply(model: template.Model[Property]): Try[Rectangle] = {
+	override def apply(model: template.ModelLike[Property]): Try[Rectangle] = {
 		schema.validate(model).toTry.map { valid =>
 			Rectangle(valid("topLeft").getPoint, valid("top").getVector2D, valid("rightEdgeLength").getDouble)
 		}

@@ -8,7 +8,7 @@ import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.post.UserSettingsUpdate
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.nexus.result.Result

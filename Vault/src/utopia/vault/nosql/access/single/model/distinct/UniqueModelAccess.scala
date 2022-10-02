@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.single.model.distinct
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.sql.Condition

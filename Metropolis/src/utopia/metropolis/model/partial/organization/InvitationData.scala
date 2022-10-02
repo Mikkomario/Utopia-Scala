@@ -1,12 +1,13 @@
 package utopia.metropolis.model.partial.organization
 
+
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, InstantType, IntType, ModelConvertible, ModelType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.mutable.{InstantType, IntType, ModelType}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 
@@ -15,7 +16,7 @@ object InvitationData extends FromModelFactory[InvitationData]
 	private val schema = ModelDeclaration("organization_id" -> IntType, "recipient_id" -> ModelType,
 		"starting_role_id" -> IntType, "expires" -> InstantType)
 	
-	override def apply(model: template.Model[Property]) =
+	override def apply(model: ModelLike[Property]) =
 		schema.validate(model).toTry.map { model =>
 			InvitationData(model("organization_id"), model("starting_role_id"), model("expires"),
 				model("recipient_id"), model("recipient_email"), model("message"), model("sender_id"),

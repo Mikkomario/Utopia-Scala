@@ -1,8 +1,8 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.collection.CollectionExtensions._
 
 /**
   * A column length limit that handles number (integer) values

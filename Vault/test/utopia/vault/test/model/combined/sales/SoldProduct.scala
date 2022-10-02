@@ -1,6 +1,6 @@
 package utopia.vault.test.model.combined.sales
 
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 import utopia.vault.test.model.partial.sales.SalesProductData
 import utopia.vault.test.model.stored.sales.{Purchase, SalesProduct}
 

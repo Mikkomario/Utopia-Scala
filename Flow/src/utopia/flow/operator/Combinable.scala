@@ -2,7 +2,12 @@ package utopia.flow.operator
 
 object Combinable
 {
-	implicit class Subtractable[+R, A <: Reversible[A]](val c: Combinable[R, A]) extends AnyVal
+	/**
+	  * A type where instances of that type can be combined together
+	  */
+	type SelfCombinable[Repr] = Combinable[Repr, Repr]
+	
+	implicit class Subtractable[A <: Reversible[A], +R](val c: Combinable[A, R]) extends AnyVal
 	{
 		/**
 		  * @param other Another item
@@ -11,7 +16,7 @@ object Combinable
 		def -(other: A): R = c + (-other)
 	}
 	
-	implicit class Averaging[+R <: LinearScalable[R], -A](val c: Combinable[R, A]) extends AnyVal
+	implicit class Averaging[-A, +R <: LinearScalable[R]](val c: Combinable[A, R]) extends AnyVal
 	{
 		/**
 		  * @param other Another item
@@ -26,7 +31,7 @@ object Combinable
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait Combinable[+Repr, -Addition] extends Any
+trait Combinable[-Addition, +Repr] extends Any
 {
 	/**
 	  * @param other An item to add to this one

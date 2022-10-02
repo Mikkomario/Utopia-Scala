@@ -1,8 +1,8 @@
 package utopia.nexus.servlet
 import utopia.access.http.Status
 import utopia.access.http.StatusGroup.ServerError
-import utopia.flow.generic.DataType
-import utopia.flow.parse.JsonParser
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
 import utopia.nexus.http.{Request, Response, ServerSettings}

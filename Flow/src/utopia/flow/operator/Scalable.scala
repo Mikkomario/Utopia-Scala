@@ -5,7 +5,7 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait Scalable[+Repr, -Scaler] extends Any
+trait Scalable[-Scaler, +Repr] extends Any
 {
 	// ABSTRACT ----------------------------
 	

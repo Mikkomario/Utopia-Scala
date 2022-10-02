@@ -1,8 +1,8 @@
 package utopia.metropolis.model.partial.description
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * Contains basic information concerning a link between a description and its target

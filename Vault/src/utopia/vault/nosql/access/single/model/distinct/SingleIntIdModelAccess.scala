@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.single.model.distinct
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.factory.FromResultFactory
 
 object SingleIntIdModelAccess

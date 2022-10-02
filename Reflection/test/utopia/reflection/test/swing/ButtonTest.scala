@@ -1,8 +1,8 @@
 package utopia.reflection.test.swing
 
-import java.nio.file.Paths
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import java.nio.file.Paths
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler

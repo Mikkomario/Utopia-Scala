@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Projectable.PointOrdering
 

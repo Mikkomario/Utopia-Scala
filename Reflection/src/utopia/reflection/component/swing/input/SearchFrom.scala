@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.input
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.reflection.color.ComponentColor
@@ -92,7 +92,7 @@ object SearchFrom
 	 selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
-	(makeNoResultsView: ChangingLike[String] => AwtStackable)
+	(makeNoResultsView: Changing[String] => AwtStackable)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
 	(implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
@@ -130,7 +130,7 @@ object SearchFrom
 								  shouldDisplayPopUpOnFocusGain: Boolean = true,
 								  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
 								  contentIsStateless: Boolean = true)
-								 (makeNoResultsView: ChangingLike[String] => AwtStackable)
+								 (makeNoResultsView: Changing[String] => AwtStackable)
 								 (implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
 		def makeField(item: A) = ItemLabel.contextual(item, displayFunction)
@@ -150,7 +150,7 @@ object SearchFrom
 	  * @param context Component creation context (implicit)
 	  * @return New label that adjusts itself based on changes in the search filter
 	  */
-	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: ChangingLike[String])
+	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[String])
 					  (implicit context: TextContextLike) =
 		ViewLabel.contextual(searchStringPointer,
 			new DisplayFunction[String](s => noResultsText.interpolated(Vector(s))))

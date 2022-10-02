@@ -1,6 +1,7 @@
 package utopia.reach.component.label.text.selectable
 
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -49,11 +50,11 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 	  *                        to conserve space when necessary (default = false)
 	  * @return A new selectable text label
 	  */
-	def apply(actorHandler: ActorHandler, textPointer: ChangingLike[LocalizedString],
-	          stylePointer: ChangingLike[TextDrawContext],
-	          selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
-	          selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
-	          caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
+	def apply(actorHandler: ActorHandler, textPointer: Changing[LocalizedString],
+	          stylePointer: Changing[TextDrawContext],
+	          selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
+	          selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
+	          caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
 	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector(),
 	          allowTextShrink: Boolean = false) =
@@ -82,7 +83,7 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 	  *                        to conserve space when necessary (default = false)
 	  * @return A new selectable text label
 	  */
-	def withStaticStyle(actorHandler: ActorHandler, textPointer: ChangingLike[LocalizedString], font: Font,
+	def withStaticStyle(actorHandler: ActorHandler, textPointer: Changing[LocalizedString], font: Font,
 	                    textColor: Color = Color.textBlack, selectedTextColor: Color = Color.textBlack,
 	                    selectionBackgroundColor: Option[Color] = None, caretColor: Color = Color.textBlack,
 	                    caretWidth: Double = 1.0, insets: StackInsets = StackInsets.any,
@@ -142,7 +143,7 @@ case class ContextualSelectableTextLabelFactory[+N <: TextContextLike](factory: 
 	  * @param focusListeners Focus listeners to assign to this label (default = empty)
 	  * @return A new selectable text label
 	  */
-	def apply(textPointer: ChangingLike[LocalizedString],
+	def apply(textPointer: Changing[LocalizedString],
 	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 	          customDrawers: Vector[CustomDrawer], focusListeners: Seq[FocusListener]) =
 	{
@@ -162,10 +163,10 @@ case class ContextualSelectableTextLabelFactory[+N <: TextContextLike](factory: 
   * @since 14.5.2021, v0.3
   */
 class SelectableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-                          val textPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
-                          selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
-                          selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
-                          caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
+                          val textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
+                          selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
+                          selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
+                          caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
                           caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
                           additionalCustomDrawers: Vector[CustomDrawer], additionalFocusListeners: Seq[FocusListener],
                           allowTextShrink: Boolean = false)

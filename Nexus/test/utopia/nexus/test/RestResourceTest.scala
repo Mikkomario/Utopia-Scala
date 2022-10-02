@@ -3,10 +3,10 @@ package utopia.nexus.test
 import utopia.access.http.Method
 import utopia.access.http.Method._
 import utopia.access.http.Status._
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JSONReader
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.JsonReader
 import utopia.flow.test.TestContext._
 import utopia.nexus.http.{Path, Request, Response, ServerSettings}
 import utopia.nexus.rest.{BaseContext, FilesResource, RequestHandler}
@@ -47,7 +47,7 @@ object RestResourceTest extends App
             None
     }
     
-    def stringToModel(s: String) = JSONReader(s).toOption.flatMap { _.model }
+    def stringToModel(s: String) = JsonReader(s).toOption.flatMap { _.model }
     
     def responseToModel(response: Response) = responseToString(response).flatMap(stringToModel)
     

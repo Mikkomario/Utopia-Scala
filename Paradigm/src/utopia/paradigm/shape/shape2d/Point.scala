@@ -1,9 +1,11 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Pair, Value}
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.PointType
@@ -25,7 +27,7 @@ object Point extends FromModelFactory[Point]
     
 	// IMPLEMENTED  ---------------------------
 	
-    def apply(model: utopia.flow.datastructure.template.Model[Property]) = Success(
+    def apply(model: template.ModelLike[Property]) = Success(
             Point(model("x").getDouble, model("y").getDouble))
 	
 	
@@ -110,6 +112,12 @@ case class Point(override val dimensions2D: Pair[Double])
 {
     // IMPLEMENTED    -----------------
 	
+	override def zero = Point.origin
+	override def repr = this
+	
+	override def toValue = new Value(Some(this), PointType)
+	override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
+	
 	override def toString = dimensions2D.toString()
 	
 	override def buildCopy(vector: Vector2D) = Point(vector.dimensions2D)
@@ -125,11 +133,7 @@ case class Point(override val dimensions2D: Pair[Double])
 			Point(dimensions.head)
 	}
 	
-	override def toValue = new Value(Some(this), PointType)
-    
-    override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
 	
-	override def repr = this
 	
 	
 	// COMPUTED	-----------------------

@@ -3,7 +3,7 @@ package utopia.annex.model.schrodinger
 import utopia.disciple.model.error.RequestFailedException
 import utopia.annex.model.response.RequestNotSent.RequestFailed
 import utopia.annex.model.response.{RequestNotSent, Response, ResponseBody}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}

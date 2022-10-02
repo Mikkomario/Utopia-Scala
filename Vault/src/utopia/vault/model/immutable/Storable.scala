@@ -1,10 +1,9 @@
 package utopia.vault.model.immutable
 
 import utopia.vault.sql.SqlExtensions._
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{DeclarationConstantGenerator, ModelConvertible}
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
@@ -21,7 +20,7 @@ object Storable
       * @param model A model that contains data
       * @return A new storable instance based on the model
       */
-    def apply(table: Table, model: template.Model[Property]): Storable = new StorableWrapper(table, model)
+    def apply(table: Table, model: template.ModelLike[Property]): Storable = new StorableWrapper(table, model)
 }
 
 /**
@@ -79,7 +78,7 @@ trait Storable extends ModelConvertible
     
     // IMPLEMENTED  ----------------------------------
     
-    override def toModel = Model(valueProperties, new DeclarationConstantGenerator(declaration))
+    override def toModel = Model(valueProperties, declaration.toConstantFactory)
     
     
     // OTHER METHODS    ------------------------------
@@ -305,16 +304,16 @@ trait Storable extends ModelConvertible
     {
         val model = toModel
         // Converts each defined (non-empty) attribute + column to a condition
-        val conditions = table.columns.flatMap { c => model.findExisting(c.name).map { _.value }.filter {
+        val conditions = table.columns.flatMap { c => model.existing(c.name).map { _.value }.filter {
             _.isDefined }.map { makePart(c, _) } }
         // Merges the specified conditions using AND
         conditions.head.combineWith(conditions.drop(1), combineOperator)
     }
 }
 
-private class StorableWrapper(override val table: Table, val model: template.Model[Property]) extends StorableWithFactory[Storable]
+private class StorableWrapper(override val table: Table, val model: template.ModelLike[Property]) extends StorableWithFactory[Storable]
 {
     override lazy val factory = FromRowModelFactory(table)
     
-    override def valueProperties = model.attributes.map { c => c.name -> c.value }
+    override def valueProperties = model.properties.map { c => c.name -> c.value }
 }

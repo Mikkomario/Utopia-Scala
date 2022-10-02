@@ -1,9 +1,9 @@
 package utopia.flow.test.parse
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.{Namespace, XmlElement}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.xml.{Namespace, XmlElement}
 
 /**
  * Tests Xml to string conversion

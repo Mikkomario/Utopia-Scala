@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.flow.datastructure.mutable.Settable
+import utopia.flow.view.mutable.Pointer
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.transform.AffineTransformation
@@ -22,7 +22,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	/**
 	  * @return A pointer that can store the latest draw settings (text top left position + scaling)
 	  */
-	protected def lastDrawStatusPointer: Settable[(Point, Vector2D)]
+	protected def lastDrawStatusPointer: Pointer[(Point, Vector2D)]
 	
 	/**
 	  * @return The text being drawn

@@ -4,7 +4,7 @@ import utopia.citadel.database.access.single.user.DbUserSettings
 import utopia.exodus.database.access.single.auth.DbSingleToken
 import utopia.exodus.model.combined.auth.{EmailValidationToken, ScopedToken, TypedToken}
 import utopia.exodus.model.partial.auth.TokenData
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.template.Stored
 

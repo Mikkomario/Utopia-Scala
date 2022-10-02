@@ -28,8 +28,7 @@ trait Reversible[+Repr] extends Any
 	  * @param sign A sign
 	  * @return Kept or reversed copy of this item, depending on the sign
 	  */
-	def *(sign: Sign) = sign match
-	{
+	def *(sign: Sign) = sign match {
 		case Positive => repr
 		case Negative => -this
 	}

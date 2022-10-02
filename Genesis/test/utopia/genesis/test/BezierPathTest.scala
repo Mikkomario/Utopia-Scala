@@ -1,6 +1,6 @@
 package utopia.genesis.test
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.test.TestContext._
 import utopia.paradigm.color.Color

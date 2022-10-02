@@ -1,8 +1,9 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.immutable.{ModelDeclaration, Pair, Value}
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.model.immutable.{ModelDeclaration, Value}
+import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.template.Joinable
@@ -42,6 +43,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	/**
 	  * A model declaration based on the required (not null) columns in this table
 	  */
+	@deprecated("toModelDeclaration now includes information about column nullability / optionality", "v1.14.1")
 	lazy val requirementDeclaration = ModelDeclaration(columns.filterNot { _.allowsNull })
 	
 	
@@ -200,5 +202,5 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	  * @param model A model to validate
 	  * @return A validated copy of that model. Failure if the model didn't contain all required properties.
 	  */
-	def validate(model: Model[Property]) = requirementDeclaration.validate(model).toTry
+	def validate(model: ModelLike[Property]) = toModelDeclaration.validate(model).toTry
 }

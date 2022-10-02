@@ -4,8 +4,8 @@ import utopia.access.http.StatusGroup.ServerError
 import utopia.access.http.{Headers, Status, StatusGroup}
 import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.http.response.BufferedResponse
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
 
 import scala.util.Try
 

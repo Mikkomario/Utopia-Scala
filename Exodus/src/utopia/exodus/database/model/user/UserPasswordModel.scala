@@ -4,8 +4,8 @@ import java.time.Instant
 import utopia.exodus.database.factory.user.UserPasswordFactory
 import utopia.exodus.model.partial.user.UserPasswordData
 import utopia.exodus.model.stored.user.UserPassword
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 

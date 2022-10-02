@@ -1,6 +1,6 @@
 package utopia.genesis.test
 
-import utopia.flow.util.{Counter, Generator}
+import utopia.flow.collection.mutable.iterator.Generator
 import utopia.paradigm.path.ProjectilePath
 
 /**

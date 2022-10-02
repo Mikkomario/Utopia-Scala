@@ -1,7 +1,6 @@
 package utopia.reflection.event
 
-import utopia.flow.operator.BinarySigned
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.{BinarySigned, SelfComparable}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
 

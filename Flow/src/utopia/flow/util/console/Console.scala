@@ -1,14 +1,14 @@
 package utopia.flow.util.console
 
-import utopia.flow.async.{Breakable, Volatile, VolatileFlag}
-import utopia.flow.datastructure.immutable.View
-import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.datastructure.template.Viewable
-import utopia.flow.event.Fixed
+import utopia.flow.async.process.Breakable
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.parse.JsonParser
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.parse.json.JsonParser
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
+import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.io.StdIn
@@ -27,8 +27,8 @@ object Console
 	 * @param jsonParser Implicit json parser for command argument handling
 	 * @return A new console
 	 */
-	def apply(commandsPointer: Viewable[Iterable[Command]], prompt: String = "",
-	          terminatorPointer: Viewable[Boolean] = Fixed(false), closeCommandName: String = "")
+	def apply(commandsPointer: View[Iterable[Command]], prompt: String = "",
+	          terminatorPointer: View[Boolean] = Fixed(false), closeCommandName: String = "")
 	         (implicit jsonParser: JsonParser) =
 		new Console(commandsPointer, prompt, terminatorPointer, closeCommandName)
 	
@@ -60,7 +60,7 @@ object Console
 	def terminating(commands: Iterable[Command], prompt: String = "", closeCommandName: String = "")
 	               (testTermination: => Boolean)
 	               (implicit jsonParser: JsonParser) =
-		apply(View(commands), prompt, Viewable(testTermination), closeCommandName)
+		apply(View(commands), prompt, View(testTermination), closeCommandName)
 }
 
 /**
@@ -73,8 +73,8 @@ object Console
  * @param closeCommandName Name of the command that closes this console (default = empty = no close command is used)
  * @param jsonParser Implicit json parser for command argument handling
  */
-class Console(commandsPointer: Viewable[Iterable[Command]], prompt: String = "",
-              terminatorPointer: Viewable[Boolean] = View(false), closeCommandName: String = "")
+class Console(commandsPointer: View[Iterable[Command]], prompt: String = "",
+              terminatorPointer: View[Boolean] = View(false), closeCommandName: String = "")
              (implicit jsonParser: JsonParser)
 	extends Runnable with Breakable
 {

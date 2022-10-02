@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel

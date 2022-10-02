@@ -6,9 +6,10 @@ import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.service.AuthServiceSettings
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -73,20 +74,20 @@ object AuthUtils
 						Vector()
 					else
 					{
-						val deniedParam = Constant("denied_access", deniedAccess)
+						val deniedParam =Constant("denied_access", deniedAccess)
 						if (urlFilter.successFilter.isDefined)
 							Vector(deniedParam)
 						else
-							Vector(Constant("was_success", errorMessage.isEmpty), deniedParam)
+							Vector(immutable.Constant("was_success", errorMessage.isEmpty), deniedParam)
 					}
 				}
 				// Appends possible error and state parameters
 				// State is added as a json value if it can be parsed
 				val allParams = Model.withConstants(stateParams) ++
-					preparation.flatMap { _.clientState }.map { Constant("state", _) } ++
+					preparation.flatMap { _.clientState }.map {Constant("state", _) } ++
 					errorMessage.notEmpty.map { Constant("error", _) }
 				// Redirects the user
-				val parametersString = allParams.attributesWithValue
+				val parametersString = allParams.nonEmptyProperties
 					.map { att => s"${att.name}=${att.value.toJson}" }.mkString("&")
 				val finalUrl = if (baseUrl.contains('?')) s"$baseUrl&$parametersString" else s"$baseUrl?$parametersString"
 				Result.Redirect(finalUrl)

@@ -4,9 +4,9 @@ import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.exodus.util.ExodusContext.logger
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.Connection
 
 import java.net.URLEncoder
@@ -58,7 +58,7 @@ trait AuthRedirector
 		val defaultParameters = Model(Vector("response_type" -> "code", "redirect_uri" -> settings.redirectUrl,
 			"client_id" -> settings.clientId, "state" -> state))
 		val extraParameters = extraParametersFor(settings, preparation, scopes)
-		val allAttributes = defaultParameters.attributesWithValue ++ extraParameters.attributesWithValue
+		val allAttributes = defaultParameters.nonEmptyProperties ++ extraParameters.nonEmptyProperties
 		
 		// Creates a query parameters string
 		val attributes = parameterEncoding match

@@ -1,6 +1,6 @@
 package utopia.vault.coder.test
 
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.datatype.PropertyType.{NonEmptyText, Text}
 

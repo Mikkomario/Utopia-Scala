@@ -3,7 +3,7 @@ package utopia.citadel.database.access.many.organization
 import java.time.Instant
 import utopia.citadel.database.factory.organization.UserRoleRightFactory
 import utopia.citadel.database.model.organization.UserRoleRightModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.organization.UserRoleRight
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess

@@ -1,8 +1,8 @@
 package utopia.reach.window
 
 import utopia.flow.async.AsyncExtensions.RichFuture
-import utopia.flow.event.ChangingLike
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
@@ -59,7 +59,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], ChangingLike[Boolean])
+	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], Changing[Boolean])
 	
 	/**
 	  * @return Result provided when no result is gained through interacting with the buttons
@@ -101,6 +101,7 @@ trait InteractionWindowFactory[A]
 	  * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
 	  * @return A future of the closing of the dialog, with a selected result (or default if none was selected)
 	  */
+	// TODO: Should return the window itself, also
 	def display(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None) =
 	{
 		implicit val exc: ExecutionContext = executionContext

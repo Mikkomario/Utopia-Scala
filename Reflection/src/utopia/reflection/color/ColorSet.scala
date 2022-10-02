@@ -1,6 +1,6 @@
 package utopia.reflection.color
 
-import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.reflection.color.ColorShade.{Dark, Light, Standard}

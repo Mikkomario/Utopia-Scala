@@ -1,6 +1,6 @@
 package utopia.reach.component.button.text
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike

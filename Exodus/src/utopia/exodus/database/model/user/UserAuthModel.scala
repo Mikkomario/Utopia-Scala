@@ -2,7 +2,7 @@ package utopia.exodus.database.model.user
 
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.util.PasswordHash
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 

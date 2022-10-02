@@ -4,7 +4,7 @@ import java.time.Instant
 import utopia.ambassador.database.factory.process.IncompleteAuthFactory
 import utopia.ambassador.database.model.process.IncompleteAuthModel
 import utopia.ambassador.model.stored.process.IncompleteAuth
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed

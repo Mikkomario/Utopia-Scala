@@ -1,7 +1,7 @@
 package utopia.flow.test
 
-import utopia.flow.parse.Regex
-import utopia.flow.parse.Regex.stringToRegex
+import utopia.flow.parse.string.Regex.stringToRegex
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 
 /**

@@ -6,7 +6,7 @@ import utopia.citadel.database.access.single.device.DbClientDevice
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.model.device.ClientDeviceUserModel
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.partial.device.ClientDeviceUserData
 import utopia.metropolis.model.post.NewDevice
 import utopia.nexus.http.Path

@@ -1,8 +1,9 @@
 package utopia.reach.component.input.text
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -65,15 +66,15 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether the drawn text should be shrank to conserve space when required (default = false)
 	  * @return A new label
 	  */
-	def apply(actorHandler: ActorHandler, stylePointer: ChangingLike[TextDrawContext],
-			  selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
-			  selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
-			  caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
-			  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-			  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			  allowSelectionWhileDisabled: Boolean = true, allowTextShrink: Boolean = false) =
+	def apply(actorHandler: ActorHandler, stylePointer: Changing[TextDrawContext],
+	          selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
+	          selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
+	          caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
+	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+	          textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+	          inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+	          enabledPointer: Changing[Boolean] = AlwaysTrue,
+	          allowSelectionWhileDisabled: Boolean = true, allowTextShrink: Boolean = false) =
 		new EditableTextLabel(parentHierarchy, actorHandler, stylePointer, selectedTextColorPointer,
 			selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowTextShrink)
@@ -97,10 +98,10 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 	  * @return a new label
 	  */
 	def apply(textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-			  allowSelectionWhileDisabled: Boolean = true) =
+	          inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+	          enabledPointer: Changing[Boolean] = AlwaysTrue,
+	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+	          allowSelectionWhileDisabled: Boolean = true) =
 	{
 		val selectionBackground = context.color(Secondary, Light)
 		val caretColor = context.colorScheme.secondary.bestAgainst(
@@ -120,14 +121,14 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 // TODO: Create a password mode where text is not displayed nor copyable
 // TODO: Should also support input modification (e.g. upper-casing)
 class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-                        baseStylePointer: ChangingLike[TextDrawContext],
-                        selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
-                        selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
-                        caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
+                        baseStylePointer: Changing[TextDrawContext],
+                        selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
+                        selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
+                        caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
                         caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
                         val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
                         inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-                        enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
+                        enabledPointer: Changing[Boolean] = AlwaysTrue,
                         allowSelectionWhileDisabled: Boolean = true, allowTextShrink: Boolean = false)
 	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler,
 		textPointer.map { _.noLanguageLocalizationSkipped },

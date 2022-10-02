@@ -1,10 +1,9 @@
 package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
-
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * Contains basic information about an organization deletion attempt

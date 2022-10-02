@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
-import utopia.flow.datastructure.immutable.Value
+
+import utopia.flow.generic.model.immutable.Value
 
 import scala.language.implicitConversions
 

@@ -1,8 +1,8 @@
 package utopia.vault.coder.util
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.parse.Regex
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.parse.string.Regex
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 /**

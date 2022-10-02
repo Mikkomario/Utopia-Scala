@@ -1,5 +1,91 @@
 # Utopia Flow - List of Changes
 
+## v2.0 (in development)
+### Breaking Changes
+- Reorganized the package structure
+- **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
+  - **ChangingLike**, then was renamed to **Changing** instead
+- Removed the implicit class for **Changing** of **Boolean**, moved these methods to **FlagLike** and
+  added an implicit conversion, which is available through `import utopia.flow.view.template.eventful.FlatLike.wrap`
+- The following traits were renamed and replaced an existing class with the same name
+  - **Viewable** and **Settable** to **View** and **Pointer**
+  - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**
+  - **ResettableLazyLike** and **MutableLazyLike** to **ResettableLazy** and **MutableLazy**
+- Renamed **LazyWrapper** to **PreInitializedLazy**
+- Renamed all attribute -related functions and references in **ModelLike** to property -related counterparts
+- Changes relating to variants of **Model**:
+  - Renamed **template.Model** to **ModelLike** and **mutable.Model** to **MutableModel**
+  - **MutableModel** now accepts different constructor parameters
+  - Rewrote parts of the **Model** classes
+  - **Variable** is now a trait and not a class
+    - **Variable** class (private) now also allows for more customization and behaves differently at default
+  - Rewrote **PropertyChangeEvent** and event management in **MutableModel**
+    - **PropertyChangeListener**`.onPropertyChanged(...)` is now `.onPropertyChange(...)`
+  - Changes to **PropertyGenerator**, which is now **PropertyFactory**:
+    - The `value` parameter in `.apply(...)` is no longer an **Option**
+  - Changed to **PropertyDeclaration**:
+    - Renamed and modified constructors
+    - Added a new abstract property: `isOptional: Boolean`
+- Changes relating to variants of **Tree**:
+  - `.content` is now `.nav`
+  - Replaced the abstract `.containsDirect(A)` with `.navEquals: EqualsFunction[A]`
+  - Rewrote and renamed a number of functions
+    - For example, branches now contain node references instead of just the nav or content references
+    - Leaves now includes the root node if it is empty. See `.leavesBelow` for the previous implementation.
+    - Similarly, branches now include this node by default. `.branchesBelow` matches the previous
+      implementation (i.e. `.allBranches`)
+  - The mutable **Tree** is now **MutableTree** and mutable **TreeLike** is **MutableTreeLike**
+  - **TreeLike** no longer extends **Node**
+- Renamed **JSONReader** to **JsonReader** and **JSONReadEvent** to **JsonReadEvent**
+- Moved **JsonReadEvent** types under the **JsonReadEvent** object
+- Rearranged type parameters in **Combinable** and **Scalable**
+- Renamed **Equatable** to **EqualsBy**, and changed its `public def properties: IterableOnce` to
+  `protected def equalsProperties: Iterable`
+- Renamed **ApproximatelyEquatable** to **ApproxEquals**
+- Renamed **Zeroable** to **CanBeZero** and **ApproximatelyZeroable** to **CanBeAboutZero**
+  - **CanBeZero** now also requires an implementation for a new abstract property `zero: Repr`
+- Renamed **LinearMeasurable** to **HasLength**
+- **CachingIterable** is now **CachingSeq** and **LazyIterable** is now **LazySeq**
+  - Both also contain new functions
+- Renamed **MapLike** to **MapAccess**
+- **GraphNode** and **GraphEdge** no longer extend **Node**
+- Renamed **ConversionReliability** values to PascalCase (e.g. from **NO_CONVERSION** to **NoConversion**)
+- In **UncertainBoolean**, renamed a number of functions. Also renamed **Undefined** to **Uncertain**.
+### Deprecations
+- Deprecated all previous **PropertyGenerator** sub-classes in favor of the new **PropertyFactory** object functions
+- Deprecated **Node** in favor of **View**
+- Deprecated **NullSafe** in favor of `Option.apply(...)`
+- Deprecated **NoSuchAttributeException** in favor of **NoSuchElementException**
+- In **SignedOrZero**, deprecated `.positiveOrZero `and `.negativeOrZero` in favor of `.minZero` and `.maxZero`
+- Deprecated a bunch of method in **Model** classes in favor of their renamed counterparts
+- Deprecated **Generator** and **Counter**
+- Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
+### New Features
+- **ModelDeclarations** now support optional properties
+- Added **CachingMap**, **LazyTree** and **LazyInitIterator**
+- Added **ViewGraphNode** as a lazily initialized graph
+- Added **Identity** object which functions as an identity function (i.e. `a => a`)
+- Added **NoOpLogger** object
+### New Methods
+- **CanBeAboutZero**
+  - Added `.notCloseZero`
+- **CanBeZero**
+  - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
+- **Lazy**
+  - Added `.map(...)` and `.flatMap(...)`
+- **Path**
+  - Added `.toTree`
+- **Signed**
+  - Added a number of new utility functions
+- **Tree** (object)
+  - Added a new recursive constructor: `.iterate(...)`
+- **View**
+  - Added `.valueIterator`
+### Other Changes
+- **Changing(Like)** `.map(...)`, `.flatMap(...)`, `.lazyMap(...)`, `.mergeWith(...)`, `.lazyMergeWith(...)`
+  and `.delayedBy(...)` are no longer abstract
+- **Path** `.parentOption` (via **FileExtensions**) now converts the path to a root path, if necessary
+
 ## v1.17 - 02.10.2022
 This version contains a few larger changes and a large number of little updates and additions here and there.  
 

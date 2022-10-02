@@ -9,7 +9,7 @@ import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.exodus.model.enumeration.ExodusScope.PersonalActions
 import utopia.exodus.model.enumeration.ExodusTask.ChangeRoles
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result

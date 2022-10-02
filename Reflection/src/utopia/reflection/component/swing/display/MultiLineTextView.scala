@@ -1,7 +1,6 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
@@ -20,6 +19,7 @@ import utopia.reflection.shape._
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import LengthExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.reflection.text.Font
 
 object MultiLineTextView

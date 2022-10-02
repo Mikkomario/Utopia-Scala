@@ -1,16 +1,16 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.generic.model.template.{ModelLike, ModelConvertible, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.partial.organization.MemberRoleLinkData
 import utopia.metropolis.model.stored.organization.MemberRoleLink
 
 object MemberRoleWithRights extends FromModelFactory[MemberRoleWithRights]
 {
-	override def apply(model: Model[Property]) = MemberRoleLink(model).map { role =>
+	override def apply(model: ModelLike[Property]) = MemberRoleLink(model).map { role =>
 		MemberRoleWithRights(role, model("task_ids").getVector.flatMap { _.int }.toSet)
 	}
 }

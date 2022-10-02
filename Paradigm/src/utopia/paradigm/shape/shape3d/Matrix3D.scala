@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape3d
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D, Vector2DLike}
 import utopia.paradigm.shape.template.MatrixLike

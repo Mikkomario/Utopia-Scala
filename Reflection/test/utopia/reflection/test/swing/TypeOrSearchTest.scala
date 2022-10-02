@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.async.Loop
-import utopia.flow.util.FileExtensions._
+import utopia.flow.async.process.Loop
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image

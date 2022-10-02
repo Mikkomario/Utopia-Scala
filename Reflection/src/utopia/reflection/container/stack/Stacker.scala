@@ -1,7 +1,8 @@
 package utopia.reflection.container.stack
 
+import utopia.flow.view.mutable.Pointer
+
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.flow.datastructure.mutable.Pointer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.template.layout.stack.Stackable
@@ -191,7 +192,7 @@ object Stacker
 		val requiredAdjustment = availableSpace - optimalLength
 		
 		// Performs the adjustment
-		val targets = lengths.map { new GapLengthAdjust(new Pointer(0.0), _) }
+		val targets = lengths.map { new GapLengthAdjust(Pointer(0.0), _) }
 		adjustLength(targets, requiredAdjustment)
 		targets.foreach { _() }
 		

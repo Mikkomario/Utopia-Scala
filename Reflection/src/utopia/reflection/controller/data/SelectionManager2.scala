@@ -1,8 +1,8 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionWithPointers}
 
@@ -15,7 +15,7 @@ import utopia.reflection.component.template.input.{InteractionWithPointer, Selec
   * @tparam C Type of display component
   * @tparam PA Type of pointer that contains the displayed content
   */
-trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: ChangingLike[Vector[A]]]
+trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 	extends ContentDisplayer[A, C, PA] with SelectionWithPointers[S, PointerWithEvents[S], Vector[A], PA]
 		with InteractionWithPointer[S]
 {
@@ -24,7 +24,7 @@ trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: ChangingLike[Vector[A]
 	/**
 	  * @return A pointer to the currently selected display / displays
 	  */
-	def selectedDisplayPointer: ChangingLike[Iterable[C]]
+	def selectedDisplayPointer: Changing[Iterable[C]]
 	
 	/**
 	  * @param item A displayed item

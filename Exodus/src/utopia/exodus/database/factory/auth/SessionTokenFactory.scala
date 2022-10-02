@@ -4,8 +4,7 @@ import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.auth.SessionTokenModel
 import utopia.exodus.model.partial.auth.SessionTokenData
 import utopia.exodus.model.stored.auth.SessionToken
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
@@ -29,7 +28,7 @@ object SessionTokenFactory
 	
 	override def table = ExodusTables.sessionToken
 	
-	override def apply(model: template.Model[Property]) = 
+	override def apply(model: ModelLike[Property]) =
 	{
 		table.validate(model).map{ valid => 
 			val modelStylePreference = valid("modelStyleId").int.flatMap(ModelStyle.findForId)

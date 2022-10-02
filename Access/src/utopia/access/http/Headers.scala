@@ -1,14 +1,14 @@
 package utopia.access.http
 
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.{Model, Pair}
-import utopia.flow.datastructure.template.Property
-import utopia.flow.datastructure.template
-import utopia.flow.generic.FromModelFactory
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.Now
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.StringExtensions._
 
 import java.nio.charset.Charset
@@ -50,9 +50,9 @@ object Headers extends FromModelFactory[Headers]
     
     // IMPLEMENTED    ----------------------
     
-    override def apply(model: template.Model[Property]) = 
+    override def apply(model: template.ModelLike[Property]) =
     {
-        val fields = model.attributesWithValue
+        val fields = model.nonEmptyProperties
             .flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap
         Success(new Headers(fields))
     }

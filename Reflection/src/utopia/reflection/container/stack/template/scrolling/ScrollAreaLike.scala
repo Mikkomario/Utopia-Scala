@@ -5,7 +5,7 @@ import utopia.flow.time.Now
 import java.awt.event.KeyEvent
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, KeyStatus, MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}

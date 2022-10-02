@@ -1,7 +1,7 @@
 package utopia.trove.database
 
 import java.time.Instant
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.Version
 import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion

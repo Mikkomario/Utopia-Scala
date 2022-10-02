@@ -1,6 +1,6 @@
 package utopia.courier.model
 
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * Represents a full email

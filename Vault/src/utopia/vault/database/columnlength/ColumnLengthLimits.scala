@@ -1,7 +1,7 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.async.Volatile
-import utopia.flow.datastructure.immutable.DeepMap
+import utopia.flow.collection.immutable.DeepMap
+import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.model.immutable.{Column, Table}
 
 /**

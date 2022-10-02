@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.layout
 
-import utopia.flow.collection.VolatileList
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps

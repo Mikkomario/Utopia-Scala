@@ -1,16 +1,15 @@
 package utopia.nexus.result
 
 import utopia.access.http.ContentCategory._
-import utopia.flow.datastructure.immutable.Value
 import utopia.access.http.Status
 import utopia.nexus.http.Request
-import utopia.flow.parse.XmlElement
 import utopia.nexus.http.Response
 import utopia.access.http.Headers
-import java.nio.charset.StandardCharsets
+import utopia.flow.generic.model.immutable.Value
 
-import utopia.flow.generic.{ModelType, VectorType}
-import utopia.flow.parse.XmlWriter
+import java.nio.charset.StandardCharsets
+import utopia.flow.generic.model.mutable.{ModelType, VectorType}
+import utopia.flow.parse.xml.{XmlElement, XmlWriter}
 
 /**
 * This result parser parses data into xml format

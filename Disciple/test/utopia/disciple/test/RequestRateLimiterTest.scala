@@ -1,9 +1,10 @@
 package utopia.disciple.test
 
 import utopia.disciple.controller.RequestRateLimiter
-import utopia.flow.async.{Volatile, Wait}
+import utopia.flow.async.process.Wait
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.test.TestContext._
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.Future
 

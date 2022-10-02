@@ -1,8 +1,9 @@
 package utopia.reflection.test.swing
 
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+
 import java.awt.event.KeyEvent
 import java.util.concurrent.TimeUnit
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler

@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.metropolis.model.stored.organization.{MemberRoleLink, Membership}
 

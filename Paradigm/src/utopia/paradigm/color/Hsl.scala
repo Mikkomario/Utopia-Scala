@@ -1,9 +1,12 @@
 package utopia.paradigm.color
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
-import utopia.flow.generic.{DoubleType, FromModelFactoryWithSchema, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
+import utopia.flow.generic.model.mutable.DoubleType
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.{AngleType, HslType}
@@ -16,9 +19,9 @@ object Hsl extends FromModelFactoryWithSchema[Hsl]
 	// ATTRIBUTES   ----------------
 	
 	override val schema = ModelDeclaration(Vector(
-		PropertyDeclaration("hue", Vector("h"), AngleType),
-		PropertyDeclaration("saturation", Vector("s"), DoubleType),
-		PropertyDeclaration("luminosity", Vector("luminance", "l"), DoubleType)
+		PropertyDeclaration("hue", AngleType, Vector("h")),
+		PropertyDeclaration("saturation", DoubleType, Vector("s")),
+		PropertyDeclaration("luminosity", DoubleType, Vector("luminance", "l"))
 	))
 	
 	
@@ -65,7 +68,7 @@ object Hsl extends FromModelFactoryWithSchema[Hsl]
   * @param luminosity Color luminosity [0, 1] where 0 is black and 1 is white
   */
 case class Hsl private(override val hue: Angle, override val saturation: Double, override val luminosity: Double)
-	extends HslLike[Hsl] with ApproximatelyEquatable[HslLike[_]] with ValueConvertible with ModelConvertible
+	extends HslLike[Hsl] with ApproxEquals[HslLike[_]] with ValueConvertible with ModelConvertible
 {
 	// COMPUTED	------------------
 	

@@ -3,8 +3,8 @@ package utopia.ambassador.database.factory.service
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.service.ServiceSettingsData
 import utopia.ambassador.model.stored.service.ServiceSettings
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

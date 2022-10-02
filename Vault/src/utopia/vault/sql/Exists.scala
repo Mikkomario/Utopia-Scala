@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
 

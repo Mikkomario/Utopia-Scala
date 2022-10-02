@@ -2,7 +2,7 @@ package utopia.courier.controller.write
 
 import utopia.courier.model.write.WriteSettings
 import utopia.courier.model.{Authentication, Email}
-import utopia.flow.async.Loop
+import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 

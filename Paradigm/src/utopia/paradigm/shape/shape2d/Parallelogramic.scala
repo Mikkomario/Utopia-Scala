@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.collection.LazyVector
+import utopia.flow.collection.immutable.caching.iterable.LazyVector
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.Transformable
 

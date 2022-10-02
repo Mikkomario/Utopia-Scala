@@ -1,8 +1,9 @@
 package utopia.genesis.view
 
+import utopia.flow.async.context.ActionQueue
+
 import java.awt.event.KeyEvent
 import java.awt.KeyboardFocusManager
-import utopia.flow.async.ActionQueue
 import utopia.genesis.event.KeyLocation.Standard
 import utopia.genesis.event.{KeyLocation, KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}

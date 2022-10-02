@@ -1,8 +1,8 @@
 package utopia.annex.model.response
 
 import utopia.annex.model.error.EmptyResponseException
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
 
 import scala.util.{Failure, Try}
 

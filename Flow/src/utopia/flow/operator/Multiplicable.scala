@@ -5,7 +5,7 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait Multiplicable[+Repr] extends Any with Scalable[Repr, Int] with Reversible[Repr]
+trait Multiplicable[+Repr] extends Any with Scalable[Int, Repr] with Reversible[Repr]
 {
 	// IMPLEMENTED  ---------------------------
 	

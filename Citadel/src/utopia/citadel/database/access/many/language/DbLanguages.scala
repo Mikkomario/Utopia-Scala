@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.many.language
 
 import utopia.citadel.database.access.many.description.ManyDescribedAccessByIds
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.combined.language.DescribedLanguage
 import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.post.NewLanguageProficiency

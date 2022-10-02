@@ -1,8 +1,8 @@
 package utopia.paradigm.motion.motion1d
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConvertible
-import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.LinearAccelerationType
@@ -40,7 +40,7 @@ object LinearAcceleration extends ChangeFromModelFactory[LinearAcceleration, Lin
   */
 case class LinearAcceleration(override val amount: LinearVelocity, override val duration: Duration)
 	extends ModelConvertibleChange[LinearVelocity, LinearAcceleration] with DoubleLike[LinearAcceleration]
-		with ApproximatelyZeroable[Change[LinearVelocity, _], LinearAcceleration] with ValueConvertible
+		with CanBeAboutZero[Change[LinearVelocity, _], LinearAcceleration] with ValueConvertible
 {
 	// IMPLEMENTED	-------------------
 	
@@ -51,8 +51,6 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	override def repr = this
 	
 	override implicit def toValue: Value = new Value(Some(this), LinearAccelerationType)
-	
-	override protected def zeroAmount = LinearVelocity.zero
 	
 	override def *(mod: Double) = LinearAcceleration(amount * mod, duration)
 	
@@ -66,7 +64,7 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	
 	override def isPositive = if (duration >= Duration.Zero) amount.isPositive else amount.isNegative
 	
-	override protected def zero = LinearAcceleration.zero
+	override def zero = LinearAcceleration.zero
 	
 	override def ~==(other: Change[LinearVelocity, _]) = perMilliSecond ~== other.perMilliSecond
 	

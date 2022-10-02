@@ -1,11 +1,11 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.{BooleanType, DoubleType, FloatType, IntType, LongType}
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.{BooleanType, DoubleType, FloatType, IntType, LongType}
+import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Today
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.CombinedOrdering
-import utopia.flow.util.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.coder.model.data.{Class, Instance, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}

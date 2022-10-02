@@ -4,7 +4,7 @@ import utopia.access.http.Method
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.OrganizationParams
-import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.nexus.http.Path
 import utopia.nexus.rest.scalable.{ExtendableResource, ExtendableResourceFactory}
 import utopia.nexus.result.Result

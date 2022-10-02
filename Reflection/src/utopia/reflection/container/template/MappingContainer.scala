@@ -1,6 +1,6 @@
 package utopia.reflection.container.template
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.reflection.component.template.ComponentLike
 
 /**

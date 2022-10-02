@@ -1,14 +1,14 @@
 package utopia.citadel.importer.controller
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.description.{DbClientDeviceDescriptions, DbDescriptionRoleDescriptions, DbDescriptionRoles, DbLanguageDescriptions, DbLanguageFamiliarityDescriptions, DbOrganizationDescriptions, DbTaskDescriptions, DbUserRoleDescriptions, LinkedDescriptionsAccess}
+import utopia.citadel.database.access.many.description._
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.model.description.DescriptionModel
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JsonParser
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.JsonParser
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.database.Connection
@@ -74,16 +74,16 @@ object ReadDescriptions
 		descriptionRoles.view.foreach { role =>
 			model(role.jsonKeyPlural).model.foreach { input =>
 				// Expect model keys to be language codes
-				(input.attributeNames & languageIds.keySet).foreach { languageCode =>
+				(input.propertyNames.toSet & languageIds.keySet).foreach { languageCode =>
 					val languageId = languageIds(languageCode)
 					
 					// Searches for the existing descriptions
 					val descriptionsModel = input(languageCode).getModel
-					val existingDescriptions = access(descriptionsModel.attributeNames.flatMap { _.int })
+					val existingDescriptions = access(descriptionsModel.propertyNames.flatMap { _.int })
 						.inLanguageWithId(languageId).withRoleId(role.id).pull
 						.map { link => link.targetId -> link }.toMap
 					// Checks which of the descriptions were updated and which are completely new
-					val (newDescriptions, updates) = descriptionsModel.attributesWithValue
+					val (newDescriptions, updates) = descriptionsModel.nonEmptyProperties
 						.flatMap { att => att.name.int.flatMap { targetId =>
 							att.value.string.filter { _.nonEmpty }.map { targetId -> _ } } }
 						.divideWith { case (targetId, description) =>

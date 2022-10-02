@@ -1,7 +1,7 @@
 package utopia.vault.nosql.factory.multi
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.LinkedFactoryLike
 import utopia.vault.util.ErrorHandling

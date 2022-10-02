@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.row
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.error.ColumnNotFoundException
 import utopia.vault.model.immutable.{Column, Result, Row, Table}

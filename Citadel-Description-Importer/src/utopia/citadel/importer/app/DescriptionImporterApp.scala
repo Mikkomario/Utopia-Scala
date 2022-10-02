@@ -3,14 +3,14 @@ package utopia.citadel.importer.app
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.citadel.importer.controller.ReadDescriptions
 import utopia.citadel.util.CitadelContext
-import utopia.flow.async.ThreadPool
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.parse.JsonParser
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments, CommandArgumentsSchema}
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{Connection, ConnectionPool}
 

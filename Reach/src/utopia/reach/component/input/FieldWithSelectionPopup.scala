@@ -1,8 +1,10 @@
 package utopia.reach.component.input
 
-import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
-import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
@@ -82,26 +84,26 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
 	  * @return A new field
 	  */
 	def apply[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
-		P <: ChangingLike[Vector[A]]](isEmptyPointer: ChangingLike[Boolean], contentPointer: P,
-									  valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-									  rightExpandIcon: Option[SingleColorIcon] = None,
-									  rightCollapseIcon: Option[SingleColorIcon] = None,
-									  fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-									  promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-									  hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-									  errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-									  leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-									  listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
-									  noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
-									  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
-									  focusColorRole: ColorRole = Secondary,
-									  sameItemCheck: Option[(A, A) => Boolean] = None,
-									  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-									 (makeField: (FieldCreationContext, N) => C)
-									 (makeDisplay: (ComponentHierarchy, A) => D)
-									 (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
+		P <: Changing[Vector[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
+	                              valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	                              rightExpandIcon: Option[SingleColorIcon] = None,
+	                              rightCollapseIcon: Option[SingleColorIcon] = None,
+	                              fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	                              promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	                              hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	                              errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	                              leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	                              listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
+	                              noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
+	                              highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
+	                              focusColorRole: ColorRole = Secondary,
+	                              sameItemCheck: Option[(A, A) => Boolean] = None,
+	                              fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
+	                             (makeField: (FieldCreationContext, N) => C)
+	                             (makeDisplay: (ComponentHierarchy, A) => D)
+	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
-									 (implicit scrollingContext: ScrollingContextLike) =
+	                             (implicit scrollingContext: ScrollingContextLike) =
 		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
@@ -138,17 +140,17 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
   * @tparam P Type of content pointer used
   */
 class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
-	+P <: ChangingLike[Vector[A]], +N <: TextContextLike]
-(parentHierarchy: ComponentHierarchy, context: N, isEmptyPointer: ChangingLike[Boolean], override val contentPointer: P,
+	+P <: Changing[Vector[A]], +N <: TextContextLike]
+(parentHierarchy: ComponentHierarchy, context: N, isEmptyPointer: Changing[Boolean], override val contentPointer: P,
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
  rightExpandIcon: Option[SingleColorIcon] = None, rightCollapseIcon: Option[SingleColorIcon] = None,
- fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
- leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None), listLayout: StackLayout = Fit,
+ fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+ leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), listLayout: StackLayout = Fit,
  listCap: StackLength = StackLength.fixedZero, noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
- highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
+ highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
  sameItemCheck: Option[(A, A) => Boolean] = None,
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: (FieldCreationContext, N) => C)

@@ -1,10 +1,11 @@
 package utopia.reflection.test.swing
 
+import utopia.flow.async.process.LoopingProcess
+
 import java.awt.event.KeyEvent
-import utopia.flow.async.LoopingProcess
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler

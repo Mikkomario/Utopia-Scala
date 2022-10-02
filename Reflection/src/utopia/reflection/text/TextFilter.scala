@@ -1,6 +1,6 @@
 package utopia.reflection.text
 
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 
 import scala.language.implicitConversions
 

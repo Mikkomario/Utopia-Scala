@@ -2,7 +2,7 @@ package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.organization.MemberRoleLinkModel
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.partial.organization.MemberRoleLinkData
 import utopia.metropolis.model.stored.organization.MemberRoleLink
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory

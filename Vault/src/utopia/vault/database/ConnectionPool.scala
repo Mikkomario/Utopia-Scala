@@ -2,12 +2,14 @@ package utopia.vault.database
 
 import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.async.process.{Breakable, Wait}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag, Wait}
-import utopia.flow.collection.VolatileList
+import utopia.flow.async.context.NewThreadExecutionContext
+import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.FiniteDuration

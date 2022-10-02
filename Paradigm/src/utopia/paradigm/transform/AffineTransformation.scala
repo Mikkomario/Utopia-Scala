@@ -1,11 +1,11 @@
 package utopia.paradigm.transform
 
-import utopia.flow.datastructure.immutable
-import utopia.flow.datastructure.immutable.{Constant, Value}
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.template.{ModelLike, ModelConvertible, Property, ValueConvertible}
+import utopia.flow.operator.ApproxEquals
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
@@ -27,7 +27,7 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
     
     // IMPLEMENTED  --------------------------
     
-    override def parseFrom(model: Model[Property]) =
+    override def parseFrom(model: ModelLike[Property]) =
         apply(model("translation", "position").getVector2D, LinearTransformation.parseFrom(model))
     
     
@@ -59,7 +59,7 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
  */
 case class AffineTransformation(translation: Vector2D, linear: LinearTransformation)
     extends LinearTransformationLike[AffineTransformation] with JavaAffineTransformConvertible
-        with AffineTransformable[Matrix3D] with ApproximatelyEquatable[AffineTransformation]
+        with AffineTransformable[Matrix3D] with ApproxEquals[AffineTransformation]
         with LinearTransformable[Matrix3D] with AnimatedLinearTransformable[AnimatedAffineTransformation]
         with AnimatedAffineTransformable[AnimatedAffineTransformation] with ValueConvertible with ModelConvertible
 {

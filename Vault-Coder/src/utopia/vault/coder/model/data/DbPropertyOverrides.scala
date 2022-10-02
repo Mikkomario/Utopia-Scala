@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.flow.util.UncertainBoolean
-import utopia.flow.util.UncertainBoolean.Undefined
+import utopia.flow.util.UncertainBoolean.Uncertain
 
 object DbPropertyOverrides
 {
@@ -23,4 +23,4 @@ object DbPropertyOverrides
   *                       (default = undefined = use data type default)
   */
 case class DbPropertyOverrides(name: Option[Name] = None, columnName: String = "", default: String = "",
-                               lengthRule: String = "", indexing: UncertainBoolean = Undefined)
+                               lengthRule: String = "", indexing: UncertainBoolean = Uncertain)

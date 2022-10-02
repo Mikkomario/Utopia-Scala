@@ -1,6 +1,6 @@
 package utopia.citadel.database.access.many.device
 
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.device.ClientDeviceUser
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._

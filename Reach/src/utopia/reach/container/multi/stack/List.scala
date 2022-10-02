@@ -1,10 +1,12 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents, Settable}
-import utopia.flow.datastructure.template.{LazyLike, Viewable}
-import utopia.flow.event.{ChangingLike, Fixed}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -30,8 +32,8 @@ import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 
-case class ListRowContext(parentHierarchy: SeedHierarchyBlock, selectionPointer: LazyLike[ChangingLike[Boolean]],
-						  rowIndex: Int)
+case class ListRowContext(parentHierarchy: SeedHierarchyBlock, selectionPointer: Lazy[Changing[Boolean]],
+                          rowIndex: Int)
 
 case class ListRowContent(components: IterableOnce[ReachComponentLike], context: ListRowContext, action: () => Unit)
 
@@ -68,10 +70,10 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of additional result created
 	  * @return A new list (wrap result)
 	  */
-	def apply[R](group: SegmentGroup, contextBackgroundPointer: ChangingLike[ComponentColor],
-				 insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
-				 columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
-				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
+	def apply[R](group: SegmentGroup, contextBackgroundPointer: Changing[ComponentColor],
+	             insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
+	             columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
+	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
 	{
 		val rowDirection = group.rowDirection
@@ -101,8 +103,8 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		// Then creates the main stack
 		val selectedComponentPointer = selectedRowIndexPointer
 			.map { i => rowsWithIndices.find { _._2 == i }.map { _._1 } }
-		val keyPressedPointer = new Pointer(false)
-		val stackPointer = new Pointer[Option[Stack[ReachComponentLike]]](None)
+		val keyPressedPointer = Pointer(false)
+		val stackPointer = Pointer[Option[Stack[ReachComponentLike]]](None)
 		val selector = new Selector(stackPointer, contextBackgroundPointer, selectedComponentPointer, keyPressedPointer)
 		val stackCreation = Stack(parentHierarchy)(mainStackContent, rowDirection.perpendicular, Fit, rowMargin,
 			mainStackCap, selector +: customDrawers)
@@ -165,8 +167,8 @@ case class ContextualListFactory[+N <: ColorContextLike](factory: ListFactory, c
 			context.relatedItemsStackMargin, edgeMargins, customDrawers, focusListeners)(fill)
 }
 
-private class SelectionKeyListener(selectedIndexPointer: Settable[Int], keyPressedPointer: Settable[Boolean], maxIndex: Int,
-								   focusStatePointer: Viewable[Boolean], actions: Map[Int, () => Unit])
+private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPressedPointer: Pointer[Boolean], maxIndex: Int,
+                                   focusStatePointer: View[Boolean], actions: Map[Int, () => Unit])
 	extends KeyStateListener
 {
 	private val triggerKeys = Set(KeyEvent.VK_ENTER, KeyEvent.VK_SPACE)
@@ -204,10 +206,10 @@ private class SelectionKeyListener(selectedIndexPointer: Settable[Int], keyPress
 	override def allowsHandlingFrom(handlerType: HandlerType) = focusStatePointer.value
 }
 
-private class Selector(stackPointer: Viewable[Option[Stack[ReachComponentLike]]],
-					   backgroundPointer: Viewable[ComponentColor],
-					   selectedComponentPointer: ChangingLike[Option[ReachComponentLike]],
-					   keyPressedPointer: Viewable[Boolean])
+private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
+                       backgroundPointer: View[ComponentColor],
+                       selectedComponentPointer: Changing[Option[ReachComponentLike]],
+                       keyPressedPointer: View[Boolean])
 	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener with Handleable
 {
 	// ATTRIBUTES	----------------------------------

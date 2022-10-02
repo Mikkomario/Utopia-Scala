@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.many.organization
 
 import utopia.citadel.database.model.organization.InvitationModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}

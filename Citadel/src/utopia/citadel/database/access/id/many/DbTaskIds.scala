@@ -3,7 +3,7 @@ package utopia.citadel.database.access.id.many
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.factory.organization.UserRoleRightFactory
 import utopia.citadel.database.model.organization.UserRoleRightModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
 import utopia.vault.sql.SqlExtensions._

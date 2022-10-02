@@ -5,7 +5,7 @@ import utopia.access.http.Status.{NotFound, Unauthorized}
 import utopia.exodus.model.enumeration.ExodusScope.ReadPersonalData
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.nexus.rest.scalable.FollowImplementation
 import utopia.nexus.result.Result

@@ -2,8 +2,8 @@ package utopia.disciple.http.request
 
 import utopia.access.http.{Headers, Method}
 import utopia.access.http.Method._
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.datastructure.template
+import utopia.flow.generic.model
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -64,7 +64,7 @@ case class Request(requestUri: String, method: Method = Get, params: Model = Mod
     /**
      * Adds multiple new parameters to this request
      */
-    def ++(params: template.Model[Constant]) = copy(params = this.params ++ params)
+    def ++(params: model.template.ModelLike[Constant]) = copy(params = this.params ++ params)
     
     
     // OTHER METHODS    ----------------

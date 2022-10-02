@@ -1,7 +1,8 @@
 package utopia.reach.component.button.image
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -51,11 +52,11 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def apply(imagesPointer: ChangingLike[ButtonImageSet], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-			  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
-			  useLowPrioritySize: Boolean = false)(action: => Unit) =
+	def apply(imagesPointer: Changing[ButtonImageSet], enabledPointer: Changing[Boolean] = AlwaysTrue,
+	          insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
+	          hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+	          additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
+	          useLowPrioritySize: Boolean = false)(action: => Unit) =
 		new ViewImageButton(parentHierarchy, imagesPointer, enabledPointer, insets, alignment, hotKeys,
 			additionalDrawers, additionalFocusListeners, allowUpscaling, useLowPrioritySize)(action)
 }
@@ -89,10 +90,10 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def withIcon(iconPointer: ChangingLike[SingleColorIcon], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-				 insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
+	def withIcon(iconPointer: Changing[SingleColorIcon], enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
+	             hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+	             additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 				(action: => Unit) =
 		factory(iconPointer.map { _.asIndividualButton }, enabledPointer, insets, alignment, hotKeys,
 			additionalDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
@@ -112,12 +113,12 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def withColouredIcon(iconPointer: ChangingLike[SingleColorIcon], rolePointer: ChangingLike[ColorRole],
-						 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-						 preferredShade: ColorShade = Standard, insets: StackInsets = StackInsets.zero,
-						 alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
-						 additionalDrawers: Vector[CustomDrawer] = Vector(),
-						 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
+	def withColouredIcon(iconPointer: Changing[SingleColorIcon], rolePointer: Changing[ColorRole],
+	                     enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                     preferredShade: ColorShade = Standard, insets: StackInsets = StackInsets.zero,
+	                     alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
+	                     additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                     additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 						(action: => Unit) =
 	{
 		val colorPointer = rolePointer.map { context.color(_, preferredShade) }
@@ -132,12 +133,12 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
-class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: ChangingLike[ButtonImageSet],
-					  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-					  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-					  additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
-					  useLowPrioritySize: Boolean = false)(action: => Unit)
+class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changing[ButtonImageSet],
+                      enabledPointer: Changing[Boolean] = AlwaysTrue,
+                      insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
+                      hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+                      additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
+                      useLowPrioritySize: Boolean = false)(action: => Unit)
 	extends ReachComponentWrapper with ButtonLike
 {
 	// ATTRIBUTES	-----------------------------

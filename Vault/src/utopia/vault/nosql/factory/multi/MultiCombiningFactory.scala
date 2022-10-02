@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.multi
 
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.vault.nosql.factory.CombiningFactoryLike
 
 /**

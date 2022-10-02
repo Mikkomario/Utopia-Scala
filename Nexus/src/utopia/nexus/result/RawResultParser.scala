@@ -1,9 +1,10 @@
 package utopia.nexus.result
 
-import utopia.flow.datastructure.immutable.Value
 import utopia.nexus.http.Request
 import utopia.access.http.Status
+import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.http.Response
+
 import java.nio.charset.StandardCharsets
 
 /**

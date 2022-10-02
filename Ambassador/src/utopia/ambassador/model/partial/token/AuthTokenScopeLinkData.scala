@@ -1,8 +1,8 @@
 package utopia.ambassador.model.partial.token
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * Used for listing, which scopes are available based on which authentication token

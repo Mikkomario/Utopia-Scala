@@ -4,7 +4,7 @@ import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.organization.DbOrganizations
 import utopia.exodus.model.enumeration.ExodusScope.ReadOrganizationData
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result

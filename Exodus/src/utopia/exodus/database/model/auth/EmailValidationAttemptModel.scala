@@ -3,8 +3,8 @@ package utopia.exodus.database.model.auth
 import utopia.exodus.database.factory.auth.EmailValidationAttemptFactory
 import utopia.exodus.model.partial.auth.EmailValidationAttemptData
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 

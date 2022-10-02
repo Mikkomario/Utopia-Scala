@@ -1,9 +1,8 @@
 package utopia.paradigm.angular
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConvertible
-import utopia.flow.operator.{Combinable, LinearScalable}
-import utopia.flow.util.SelfComparable
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.{Combinable, LinearScalable, SelfComparable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
@@ -124,7 +123,7 @@ object Angle
  * @since Genesis 30.6.2017
  */
 case class Angle private(radians: Double)
-    extends LinearScalable[Angle] with Combinable[Angle, Rotation] with SelfComparable[Angle] with ValueConvertible
+    extends LinearScalable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle] with ValueConvertible
 {
     // ATTRIBUTES    ------------------
     

@@ -1,6 +1,7 @@
 package utopia.paradigm.test
 
-import utopia.flow.generic.{ConversionHandler, DataType}
+import utopia.flow.generic.casting.ConversionHandler
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmDataType

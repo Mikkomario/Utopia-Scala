@@ -1,6 +1,8 @@
 package utopia.reflection.component.swing.label
 
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
@@ -29,9 +31,9 @@ object ViewLabel
 	  * @tparam A Type of displayed item
 	  * @return A new item label
 	  */
-	def apply[A](pointer: ChangingLike[A], font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
-				 textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
+	def apply[A](pointer: Changing[A], font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
+	             textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
 		new ViewLabel[A](pointer, displayFunction, font, textColor, insets, alignment, hasMinWidth)
 	
 	/**
@@ -42,7 +44,7 @@ object ViewLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextual[A](pointer: ChangingLike[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def contextual[A](pointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 					 (implicit context: TextContextLike) =
 	{
 		new ViewLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
@@ -58,8 +60,8 @@ object ViewLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithBackground[A](color: ComponentColor, pointer: ChangingLike[A],
-									displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def contextualWithBackground[A](color: ComponentColor, pointer: Changing[A],
+	                                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 								   (implicit context: BackgroundSensitive[TextContextLike]) =
 	{
 		val label = contextual(pointer, displayFunction)(context.inContextWithBackground(color))
@@ -81,11 +83,11 @@ object ViewLabel
  *  @param initialAlignment The alignment used for this component initially (default = Left)
   * @param hasMinWidth Whether this label should have minimum width (always show all content text) (default = true)
   */
-class ViewLabel[A](override val contentPointer: ChangingLike[A], displayFunction: DisplayFunction[A], initialFont: Font,
-				   initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
-				   initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
+class ViewLabel[A](override val contentPointer: Changing[A], displayFunction: DisplayFunction[A], initialFont: Font,
+                   initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
+                   initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
 	extends StackableAwtComponentWrapperWrapper with TextComponent with SwingComponentRelated
-		with CustomDrawableWrapper with PoolWithPointer[A, ChangingLike[A]]
+		with CustomDrawableWrapper with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	--------------------
 	

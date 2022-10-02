@@ -1,8 +1,9 @@
 package utopia.flow.time
 
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.{DaysType, ValueConvertible}
-import utopia.flow.util.SelfComparable
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DaysType
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.SelfComparable
 
 import java.time.{LocalDate, Period}
 import java.util.concurrent.TimeUnit

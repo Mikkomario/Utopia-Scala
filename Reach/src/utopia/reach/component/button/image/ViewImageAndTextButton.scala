@@ -1,7 +1,8 @@
 package utopia.reach.component.button.image
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -60,18 +61,18 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam A Type of content in this button
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
-				 colorPointer: ChangingLike[ComponentColor], fontPointer: ChangingLike[Font],
-				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-				 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-				 textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-				 commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
-				 alignment: Alignment = Alignment.Left, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-				 additionalDrawers: Vector[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-				 allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-				 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: A => Unit) =
+	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
+	             colorPointer: Changing[ComponentColor], fontPointer: Changing[Font],
+	             enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	             textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	             commonInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
+	             alignment: Alignment = Alignment.Left, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+	             additionalDrawers: Vector[CustomDrawer] = Vector(),
+	             additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+	             allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
+	             useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: A => Unit) =
 		new ViewImageAndTextButton[A](parentHierarchy, contentPointer, imagesPointer, colorPointer, fontPointer,
 			enabledPointer, imageInsetsPointer, textInsetsPointer, commonInsetsPointer, borderWidth, alignment,
 			displayFunction, betweenLinesMargin, hotKeys, additionalDrawers, additionalFocusListeners,
@@ -102,17 +103,17 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action Action performed when this button is pressed (accepts current content)
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, imagesPointer: ChangingLike[ButtonImageSet],
-					   colorPointer: ChangingLike[ComponentColor], fontPointer: ChangingLike[Font],
-					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					   imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-					   textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-					   commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
-					   alignment: Alignment = Alignment.Left, betweenLinesMargin: Double = 0.0,
-					   hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-					   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-					   allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-					   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
+	def withStaticText(text: LocalizedString, imagesPointer: Changing[ButtonImageSet],
+	                   colorPointer: Changing[ComponentColor], fontPointer: Changing[Font],
+	                   enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                   imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	                   textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	                   commonInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
+	                   alignment: Alignment = Alignment.Left, betweenLinesMargin: Double = 0.0,
+	                   hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+	                   allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
+	                   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
 		apply[LocalizedString](Fixed(text), imagesPointer, colorPointer, fontPointer, enabledPointer,
 			imageInsetsPointer, textInsetsPointer, commonInsetsPointer, borderWidth, alignment,
 			DisplayFunction.identity, betweenLinesMargin, hotKeys, additionalDrawers,
@@ -150,17 +151,17 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @tparam A Type of content in this button
 	  * @return A new button
 	  */
-	def withChangingStyle[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
-							 colorPointer: ChangingLike[ComponentColor] = Fixed(context.buttonColor),
-							 fontPointer: ChangingLike[Font] = Fixed(context.font),
-							 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-							 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-							 textInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets / 2),
-							 commonInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets / 2),
-							 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-							 additionalDrawers: Vector[CustomDrawer] = Vector(),
-							 additionalFocusListeners: Seq[FocusListener] = Vector(),
-							 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
+	def withChangingStyle[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
+	                         colorPointer: Changing[ComponentColor] = Fixed(context.buttonColor),
+	                         fontPointer: Changing[Font] = Fixed(context.font),
+	                         enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                         imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+	                         textInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets / 2),
+	                         commonInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets / 2),
+	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+	                         additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                         additionalFocusListeners: Seq[FocusListener] = Vector(),
+	                         useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
 							(action: A => Unit) =
 		factory[A](contentPointer, imagesPointer, colorPointer, fontPointer, enabledPointer, imageInsetsPointer,
 			textInsetsPointer, commonInsetsPointer, context.borderWidth, context.textAlignment, displayFunction,
@@ -184,12 +185,12 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @tparam A Type of content in this button
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
-				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-				 additionalDrawers: Vector[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
-				 forceEqualBreadth: Boolean = false)(action: A => Unit) =
+	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
+	             enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+	             additionalDrawers: Vector[CustomDrawer] = Vector(),
+	             additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
+	             forceEqualBreadth: Boolean = false)(action: A => Unit) =
 		withChangingStyle[A](contentPointer, imagesPointer, enabledPointer = enabledPointer,
 			displayFunction = displayFunction, hotKeys = hotKeys,
 			additionalDrawers = additionalDrawers, additionalFocusListeners = additionalFocusListeners,
@@ -211,12 +212,12 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @tparam A Type of content in this button
 	  * @return A new button
 	  */
-	def withIcon[A](contentPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
-					enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-					additionalDrawers: Vector[CustomDrawer] = Vector(),
-					additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
-					forceEqualBreadth: Boolean = false)(action: A => Unit) =
+	def withIcon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
+	                enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+	                additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
+	                forceEqualBreadth: Boolean = false)(action: A => Unit) =
 		apply[A](contentPointer, iconPointer.map { _.inButton }, enabledPointer, displayFunction, hotKeys,
 			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize,
 			forceEqualBreadth)(action)
@@ -235,11 +236,11 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @param action Action performed when this button is pressed (accepts current content)
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, imagesPointer: ChangingLike[ButtonImageSet],
-					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
-					   additionalDrawers: Vector[CustomDrawer] = Vector(),
-					   additionalFocusListeners: Seq[FocusListener] = Vector(),
-					   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
+	def withStaticText(text: LocalizedString, imagesPointer: Changing[ButtonImageSet],
+	                   enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
+	                   additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                   additionalFocusListeners: Seq[FocusListener] = Vector(),
+	                   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
 		apply[LocalizedString](Fixed(text), imagesPointer, enabledPointer, DisplayFunction.identity, hotKeys,
 			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth) { _ => action }
 	
@@ -258,10 +259,10 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withStaticTextAndIcon(text: LocalizedString, icon: SingleColorIcon,
-							  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
-							  additionalDrawers: Vector[CustomDrawer] = Vector(),
-							  additionalFocusListeners: Seq[FocusListener] = Vector(),
-							  useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
+	                          enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
+	                          additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                          additionalFocusListeners: Seq[FocusListener] = Vector(),
+	                          useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
 							 (action: => Unit) =
 		withStaticText(text, Fixed(icon.inButton), enabledPointer, hotKeys, additionalDrawers,
 			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
@@ -272,21 +273,21 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A],
-								imagesPointer: ChangingLike[ButtonImageSet], colorPointer: ChangingLike[ComponentColor],
-								fontPointer: ChangingLike[Font],
-								enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-								imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-								textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-								commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
-								borderWidth: Double = 0.0, alignment: Alignment = Alignment.Left,
-								displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-								betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-								additionalDrawers: Vector[CustomDrawer] = Vector(),
-								additionalFocusListeners: Seq[FocusListener] = Vector(),
-								allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
-								allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
-								forceEqualBreadth: Boolean = false)(action: A => Unit)
+class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A],
+                                imagesPointer: Changing[ButtonImageSet], colorPointer: Changing[ComponentColor],
+                                fontPointer: Changing[Font],
+                                enabledPointer: Changing[Boolean] = AlwaysTrue,
+                                imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                                textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                                commonInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                                borderWidth: Double = 0.0, alignment: Alignment = Alignment.Left,
+                                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                                betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+                                additionalDrawers: Vector[CustomDrawer] = Vector(),
+                                additionalFocusListeners: Seq[FocusListener] = Vector(),
+                                allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
+                                allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
+                                forceEqualBreadth: Boolean = false)(action: A => Unit)
 	extends ReachComponentWrapper with ButtonLike
 {
 	// ATTRIBUTES	-----------------------------

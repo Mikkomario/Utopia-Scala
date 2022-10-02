@@ -2,9 +2,9 @@ package utopia.ambassador.model.partial.process
 
 import utopia.ambassador.model.enumeration.AuthCompletionType
 import utopia.ambassador.model.enumeration.AuthCompletionType.{Default, DenialOfAccess, PartialSuccess}
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * Used for storing client-given rules for redirecting the user after the OAuth process completion. Given during the OAuth preparation.

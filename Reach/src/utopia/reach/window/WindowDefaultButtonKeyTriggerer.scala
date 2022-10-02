@@ -1,7 +1,7 @@
 package utopia.reach.window
 
-import utopia.flow.datastructure.template.Viewable
-import utopia.flow.event.AlwaysTrue
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -26,8 +26,8 @@ object WindowDefaultButtonKeyTriggerer
 	  * @return A new window button listener
 	  */
 	def register(window: Window[_], buttons: Iterable[FocusableWithState],
-			  additionalCondition: Viewable[Boolean] = AlwaysTrue,
-			  triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
+	             additionalCondition: View[Boolean] = AlwaysTrue,
+	             triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
 			 (implicit exc: ExecutionContext) =
 	{
 		// Creates the listener
@@ -46,8 +46,8 @@ object WindowDefaultButtonKeyTriggerer
   * @since 4.3.2021, v0.1
   */
 class WindowDefaultButtonKeyTriggerer(window: Window[_], buttons: Iterable[FocusableWithState],
-									  additionalCondition: Viewable[Boolean] = AlwaysTrue,
-									  triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
+                                      additionalCondition: View[Boolean] = AlwaysTrue,
+                                      triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
 	extends KeyStateListener
 {
 	// ATTRIBUTES	----------------------------

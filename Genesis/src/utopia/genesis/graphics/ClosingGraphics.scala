@@ -1,8 +1,9 @@
 package utopia.genesis.graphics
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
-import utopia.flow.util.Extender
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.ResettableFlag
+import utopia.flow.view.template.Extender
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D
@@ -22,12 +23,12 @@ object ClosingGraphics
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => ChangingLike[Boolean])
+class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => Changing[Boolean])
 	extends AutoCloseable with Extender[Graphics2D]
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private lazy val closedPointer = new PointerWithEvents(false)
+	private lazy val closedPointer = ResettableFlag()
 	private lazy val statePointer = closedPointer || parentClosedPointer
 	
 	
@@ -50,11 +51,9 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => 
 	
 	// IMPLEMENTED  --------------------------------
 	
-	override def close() =
-	{
-		if (isOpen)
-		{
-			closedPointer.value = true
+	override def close() = {
+		if (isOpen) {
+			closedPointer.set()
 			wrapped.dispose()
 		}
 	}

@@ -1,7 +1,7 @@
 package utopia.reflection.container.stack.template.layout
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions._
 import utopia.reflection.component.template.ComponentLike2
 import utopia.reflection.component.template.layout.stack.{Stackable2, StackableWrapper2}
 import utopia.reflection.container.template.mutable.MutableMultiContainer2

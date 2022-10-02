@@ -3,8 +3,8 @@ package utopia.ambassador.database.model.service
 import utopia.ambassador.database.factory.service.ServiceSettingsFactory
 import utopia.ambassador.model.partial.service.ServiceSettingsData
 import utopia.ambassador.model.stored.service.ServiceSettings
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 

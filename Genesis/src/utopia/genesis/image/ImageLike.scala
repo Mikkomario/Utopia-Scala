@@ -3,7 +3,7 @@ package utopia.genesis.image
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 import java.awt.image.BufferedImage
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.util.Drawer
 import utopia.paradigm.color.Color

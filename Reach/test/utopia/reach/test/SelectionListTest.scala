@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler

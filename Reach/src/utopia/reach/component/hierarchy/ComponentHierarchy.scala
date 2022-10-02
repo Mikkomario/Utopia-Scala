@@ -1,6 +1,6 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.event.ChangingLike
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
@@ -30,7 +30,7 @@ trait ComponentHierarchy
 	  * @return A pointer that shows whether this hierarchy is currently active / linked to the top window. Should
 	  *         take into account possible parent state.
 	  */
-	def linkPointer: ChangingLike[Boolean]
+	def linkPointer: Changing[Boolean]
 	
 	/**
 	  * @return Whether the link between this component and the parent component should be considered active

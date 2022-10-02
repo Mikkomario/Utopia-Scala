@@ -1,11 +1,11 @@
 package utopia.paradigm.transform
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
-import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.operator.ApproxEquals
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable, AnimatedLinearTransformation}
@@ -29,7 +29,7 @@ object LinearTransformation extends SureFromModelFactory[LinearTransformation]
     
     // IMPLEMENTED  -----------------------------
     
-    override def parseFrom(model: template.Model[Property]) =
+    override def parseFrom(model: template.ModelLike[Property]) =
         apply(model("scaling").vector2DOr(Vector2D.identity), model("rotation").getRotation, model("shear").getVector2D)
     
     
@@ -66,7 +66,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
                                 shear: Vector2D = Vector2D.zero) extends LinearTransformationLike[LinearTransformation]
     with JavaAffineTransformConvertible with LinearTransformable[Matrix2D] with AffineTransformable[Matrix3D]
     with AnimatedLinearTransformable[AnimatedLinearTransformation]
-    with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproximatelyEquatable[LinearTransformation]
+    with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproxEquals[LinearTransformation]
     with ValueConvertible with ModelConvertible
 {
     // ATTRIBUTES   -----------------

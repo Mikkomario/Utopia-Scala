@@ -2,7 +2,7 @@ package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.exodus.model.stored.auth.{Token, TokenScopeLink}
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * A common trait for combinations which include both token and scope id data

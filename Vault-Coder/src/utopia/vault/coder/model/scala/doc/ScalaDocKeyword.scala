@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.doc
 
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.SelfComparable
 
 /**
   * An enumeration for different keywords used in scaladocs

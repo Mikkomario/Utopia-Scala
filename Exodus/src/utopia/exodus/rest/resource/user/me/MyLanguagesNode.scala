@@ -10,9 +10,9 @@ import utopia.citadel.database.model.user.UserLanguageLinkModel
 import utopia.exodus.model.enumeration.ExodusScope.{PersonalActions, ReadPersonalData}
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.collection.CollectionExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.partial.user.UserLanguageLinkData

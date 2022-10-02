@@ -3,10 +3,9 @@ package utopia.genesis.test
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Point, Size}
 import utopia.paradigm.generic.{BoundsType, CircleType, LineType, ParadigmDataType, PointType, SizeType, Vector3DType}
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.flow.generic.VectorType
-import utopia.flow.generic.ModelType
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.mutable.{ModelType, VectorType}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.paradigm.shape.shape3d.Vector3D
 
 /**
@@ -18,7 +17,7 @@ object DataTypeTest extends App
 {
     ParadigmDataType.setup()
     
-	private implicit val jsonParser: JsonParser = JSONReader
+	private implicit val jsonParser: JsonParser = JsonReader
 	
     val vector1 = Vector3D(1, 1, 1)
     val vector2 = Vector3D(3)

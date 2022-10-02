@@ -1,9 +1,11 @@
 package utopia.reach.component.input.text
 
-import utopia.flow.async.Delay
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -69,14 +71,14 @@ case class ContextualDurationFieldFactory[+N <: TextContextLike](parentHierarchy
 	  * @return A new duration input field
 	  */
 	def apply(initialValue: Duration = Duration.Zero,
-			  maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
-			  separatorText: LocalizedString = ":",
-			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-			  leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-			  rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-			  selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
-			  focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
-			  captureSeconds: Boolean = false, showLabels: Boolean = false)(implicit exc: ExecutionContext) =
+	          maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
+	          separatorText: LocalizedString = ":",
+	          enabledPointer: Changing[Boolean] = AlwaysTrue,
+	          leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	          rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	          selectionStylePointer: Changing[ColorRole] = Fixed(Secondary),
+	          focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
+	          captureSeconds: Boolean = false, showLabels: Boolean = false)(implicit exc: ExecutionContext) =
 		new DurationField(parentHierarchy, initialValue, maxValue, separatorText, enabledPointer, leftIconPointer,
 			rightIconPointer, selectionStylePointer, focusColorRole, customDrawers, captureSeconds, showLabels)
 }
@@ -87,16 +89,16 @@ case class ContextualDurationFieldFactory[+N <: TextContextLike](parentHierarchy
   * @since 9.3.2021, v0.1
   */
 class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration = Duration.Zero,
-					maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
-					separatorText: LocalizedString = LocalizedString.empty,
-					enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-					rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-					selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
-					focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
-					captureSeconds: Boolean = false, showLabels: Boolean = false)
+                    maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
+                    separatorText: LocalizedString = LocalizedString.empty,
+                    enabledPointer: Changing[Boolean] = AlwaysTrue,
+                    leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+                    rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+                    selectionStylePointer: Changing[ColorRole] = Fixed(Secondary),
+                    focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
+                    captureSeconds: Boolean = false, showLabels: Boolean = false)
 				   (implicit context: TextContextLike, exc: ExecutionContext)
-	extends ReachComponentWrapper with InputWithPointer[Duration, ChangingLike[Duration]] with ManyFocusableWrapper
+	extends ReachComponentWrapper with InputWithPointer[Duration, Changing[Duration]] with ManyFocusableWrapper
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -194,7 +196,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 								// Focus transfer is slightly delayed to avoid duplicate key event triggering
 								if (event.newValue.length == maxLength &&
 									event.oldValue.length != maxLength && sourceField.hasFocus)
-									Delay(focusTransferDelay) { targetField.requestFocus() }
+									process.Delay(focusTransferDelay) { targetField.requestFocus() }
 							}
 						}
 					}

@@ -13,10 +13,10 @@ import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.AutoClose._
+import utopia.flow.parse.AutoClose._
 
 import java.io.OutputStream
 import java.net.{URI, URLEncoder}
@@ -54,7 +54,7 @@ object Gateway
 	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
 	  * @return
 	  */
-	def apply(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	def apply(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
 	          maxConnectionsTotal: Int = 10,
 	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
@@ -86,7 +86,7 @@ object Gateway
 	  * @param customizeClient A function for customizing the http client when it is first created
 	  * @return
 	  */
-	def custom(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	def custom(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
 	           maxConnectionsTotal: Int = 10,
 	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
@@ -123,7 +123,7 @@ object Gateway
   *                                 (using .toString). This mostly affects string values, whether they should be
   *                                 wrapped in quotation marks or not. (default = true = use json value format)
 **/
-class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
               parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
@@ -314,7 +314,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	{
 	    val builder = new URIBuilder(baseUri)
 		// May encode parameter values
-	    params.attributes.foreach { a => builder.addParameter(a.name, paramValue(a.value)) }
+	    params.properties.foreach { a => builder.addParameter(a.name, paramValue(a.value)) }
 	    builder.build()
 	}
 	
@@ -335,7 +335,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	        None
 	    else
 	    {
-	        val paramsList = params.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
+	        val paramsList = params.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, StandardCharsets.UTF_8))
 	    }
 	}

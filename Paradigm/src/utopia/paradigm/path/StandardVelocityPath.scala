@@ -1,7 +1,7 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.{Combinable, LinearMeasurable, Reversible}
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.operator.{Combinable, HasLength, Reversible}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.path.Path.PathWithDistance
 
 /**
@@ -9,9 +9,9 @@ import utopia.paradigm.path.Path.PathWithDistance
   * @author Mikko Hilpinen
   * @since Genesis 24.6.2019, v2.1+
   */
-case class StandardVelocityPath[P <: Combinable[P, P] with Reversible[P] with LinearMeasurable]
+case class StandardVelocityPath[P <: Combinable[P, P] with Reversible[P] with HasLength]
 (private val original: PathWithDistance[P], sequenceAmount: Int)
-	extends Path[P] with LinearMeasurable
+	extends Path[P] with HasLength
 {
 	// ATTRIBUTES	-------------------
 	

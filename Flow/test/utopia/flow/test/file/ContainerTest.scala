@@ -1,13 +1,15 @@
 package utopia.flow.test.file
 
-import utopia.flow.async.ThreadPool
-import utopia.flow.container.{ObjectMapFileContainer, ValueConvertibleFileContainer}
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
-import utopia.flow.generic.{DataType, FromModelFactoryWithSchema, ModelConvertible, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.parse.{JSONReader, JsonParser}
-import utopia.flow.util.FileExtensions._
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.parse.file.container.{ObjectMapFileContainer, ValueConvertibleFileContainer}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
+import utopia.flow.generic.model.mutable.{DataType, StringType}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.parse.json.{JsonReader, JsonParser}
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.Instant
@@ -23,7 +25,7 @@ object ContainerTest extends App
 	DataType.setup()
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
-	implicit val jsonParser: JsonParser = JSONReader
+	implicit val jsonParser: JsonParser = JsonReader
 	
 	val container = new ObjectMapFileContainer("Flow/test/test-container.json", TestObject)
 	

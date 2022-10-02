@@ -2,7 +2,7 @@ package utopia.nexus.rest.scalable
 
 import utopia.access.http.Method
 import utopia.access.http.Status.NotImplemented
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.nexus.http.{Path, Response}
 import utopia.nexus.rest.ResourceSearchResult.Error
 import utopia.nexus.rest.{Context, Resource}

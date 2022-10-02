@@ -1,11 +1,12 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.view.template.Extender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.description.DescriptionRole
@@ -13,7 +14,7 @@ import utopia.metropolis.model.stored.user.UserSettings
 
 object DetailedInvitation extends FromModelFactory[DetailedInvitation]
 {
-	override def apply(model: template.Model[Property]) =
+	override def apply(model: template.ModelLike[Property]) =
 		InvitationWithResponse(model).map { base =>
 			val organization = model("organization").model.flatMap { DescribedOrganization(_).toOption }
 				.getOrElse { DescribedOrganization(base.organizationId, Set()) }
@@ -58,5 +59,5 @@ case class DetailedInvitation(invitation: InvitationWithResponse, organization: 
 	override def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]) =
 		invitation.toSimpleModel.without("organization_id", "sender_id") ++
 			Vector(Constant("organization", organization.toSimpleModelUsing(descriptionRoles)),
-				Constant("sender", senderData.map { _.toModel }))
+				immutable.Constant("sender", senderData.map { _.toModel }))
 }

@@ -3,7 +3,7 @@ package utopia.exodus.database.factory.auth
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.auth.EmailValidationResendData
 import utopia.exodus.model.stored.auth.EmailValidationResend
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.model.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**

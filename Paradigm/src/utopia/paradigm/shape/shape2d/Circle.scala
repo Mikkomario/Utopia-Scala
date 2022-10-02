@@ -1,10 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.model.template
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
@@ -17,7 +17,7 @@ import scala.util.Success
 
 object Circle extends FromModelFactory[Circle]
 {
-    override def apply(model: template.Model[Property]) =
+    override def apply(model: template.ModelLike[Property]) =
         Success(Circle(model("origin").getPoint, model("radius").getDouble))
 }
 
@@ -28,7 +28,7 @@ object Circle extends FromModelFactory[Circle]
  */
 case class Circle(origin: Point, radius: Double)
     extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
-        with LinearScalable[Circle] with Combinable[Circle, Dimensional[Double]] with Bounded
+        with LinearScalable[Circle] with Combinable[Dimensional[Double], Circle] with Bounded
 {
     // COMPUTED PROPERTIES    ---------
     

@@ -1,6 +1,7 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents}
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
@@ -41,7 +42,7 @@ object ReachComponentTest extends App
 	
 	def focusReporter(componentName: String) = FocusListener { event => println(s"$componentName: $event") }
 	
-	val windowPointer = new Pointer[Option[Window[_]]](None)
+	val windowPointer = Pointer[Option[Window[_]]](None)
 	val result = ReachCanvas(cursors) { canvasHierarchy =>
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
 			.build(Mixed).column() { factories =>

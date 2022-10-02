@@ -1,9 +1,11 @@
 package utopia.journey.util
 
+import utopia.flow.error.EnvironmentNotSetupException
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.json.JsonParser
+
 import java.nio.file.Path
-import utopia.flow.generic.{DataType, EnvironmentNotSetupException}
-import utopia.flow.parse.JsonParser
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext

@@ -1,7 +1,7 @@
 package utopia.reflection.event
 
-import utopia.flow.datastructure.template.Viewable
-import utopia.flow.event.AlwaysTrue
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.genesis.event.KeyStatus
 
 import java.awt.event.KeyEvent
@@ -32,7 +32,7 @@ object HotKey
 	  * @return A hot key that activates on specified key, if the specified condition allows it.
 	  */
 	def conditionalKeyWithIndex(keyIndex: Int)(condition: => Boolean) =
-		apply(Set(keyIndex), condition = Viewable(condition))
+		apply(Set(keyIndex), condition = View(condition))
 	
 	/**
 	  * @param char Triggering character (key)
@@ -40,7 +40,7 @@ object HotKey
 	  * @return A hot key that activates on specified character key, if the specified condition allows it.
 	  */
 	def conditionalCharacter(char: Char)(condition: => Boolean) =
-		apply(characters = Set(char), condition = Viewable(condition))
+		apply(characters = Set(char), condition = View(condition))
 }
 
 /**
@@ -49,7 +49,7 @@ object HotKey
   * @since 1.3.2021, v1
   */
 case class HotKey(keyIndices: Set[Int] = Set(), characters: Set[Char] = Set(),
-				  condition: Viewable[Boolean] = AlwaysTrue)
+				  condition: View[Boolean] = AlwaysTrue)
 {
 	/**
 	  * @param keys Currently active keys

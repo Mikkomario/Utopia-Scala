@@ -2,10 +2,11 @@ package utopia.reflection.container.swing.window
 
 import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.Delay
-import utopia.flow.event.ChangingLike
+import utopia.flow.async.process
+import utopia.flow.async.process.Delay
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
@@ -27,8 +28,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param context Component creation context (implicit)
   * @param animationContext Component animation context (implicit)
   */
-class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: ChangingLike[ProgressState], defaultWidth: Double,
-					title: LocalizedString = LocalizedString.empty)
+class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
+                    title: LocalizedString = LocalizedString.empty)
 				   (implicit context: TextContext, animationContext: AnimationContextLike)
 {
 	// ATTRIBUTES	--------------------------
@@ -58,7 +59,7 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: ChangingLike
 			}
 			
 			// Delays the window display a little, in case the loading progress was very short
-			Delay(loadingStarted + 0.25.seconds) {
+			process.Delay(loadingStarted + 0.25.seconds) {
 				if (progressPointer.value.progress < 1) {
 					// Displays the window
 					window.startEventGenerators(context.actorHandler)

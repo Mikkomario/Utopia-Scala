@@ -1,11 +1,11 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method.Delete
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, StringType}
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
+import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.operator.EqualsExtensions._
 
 import scala.util.{Failure, Success}
@@ -19,7 +19,7 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: ModelLike[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		if (valid("method").string.forall { _ ~== Delete.toString })
 			Success(apply(valid("path").getString))
 		else

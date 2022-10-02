@@ -1,7 +1,7 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.immutable.{PropertyDeclaration, Value}
-import utopia.flow.generic.DataType
+import utopia.flow.generic.model.immutable.{PropertyDeclaration, Value}
+import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.References
 import utopia.vault.model.error.{ColumnNotFoundException, NoReferenceFoundException}
 import utopia.vault.model.template.Joinable
@@ -23,7 +23,7 @@ import scala.util.{Failure, Success}
   * @param usesAutoIncrement Whether this column uses auto-increment
  */
 case class Column(propertyName: String, columnName: String, tableName: String, override val dataType: DataType,
-                  override val defaultValue: Option[Value] = None,
+                  override val defaultValue: Value = Value.empty,
                   allowsNull: Boolean = true, isPrimary: Boolean = false, usesAutoIncrement: Boolean = false)
         extends PropertyDeclaration with ConditionElement with Joinable
 {
@@ -58,6 +58,8 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     def name = propertyName
     
     override def alternativeNames = Vector(columnName)
+    
+    override def isOptional = allowsNull
     
     override def toString = s"$columnName $dataType ${ if (isPrimary) "PRIMARY KEY " else ""} ${
         if (usesAutoIncrement) "AUTO_INCREMENT " else ""}"

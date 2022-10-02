@@ -1,6 +1,6 @@
 package utopia.citadel.database.model
 
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable

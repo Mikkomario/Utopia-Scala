@@ -1,14 +1,14 @@
 package utopia.journey.controller
 
-import utopia.flow.container.OptionObjectFileContainer
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.container.OptionObjectFileContainer
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
+import utopia.flow.generic.model.mutable.{IntType, StringType}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.journey.util.JourneyContext._
 
@@ -79,7 +79,7 @@ object LocalDevice
 	
 	private object DeviceStatus extends FromModelFactory[DeviceStatus]
 	{
-		override def apply(model: template.Model[Property]) =
+		override def apply(model: ModelLike[Property]) =
 		{
 			val key = model("key").string
 			

@@ -39,19 +39,19 @@ object Reference
 	
 	// Flow
 	
-	lazy val value = apply(immutableStruct, "Value")
-	lazy val property = apply(struct/"template", "Property")
-	lazy val constant = apply(immutableStruct, "Constant")
-	lazy val templateModel = apply(struct, "template", "Model")
-	lazy val model = apply(immutableStruct, "Model")
-	lazy val valueConvertible = apply(flowGenerics, "ValueConvertible")
-	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
+	lazy val value = apply(immutableGenericModels, "Value")
+	lazy val property = apply(genericModelTemplates, "Property")
+	lazy val constant = apply(immutableGenericModels, "Constant")
+	lazy val templateModel = apply(genericModelTemplates, "ModelLike")
+	lazy val model = apply(immutableGenericModels, "Model")
+	lazy val valueConvertible = apply(genericModelTemplates, "ValueConvertible")
+	lazy val modelConvertible = apply(genericModelTemplates, "ModelConvertible")
 	
 	lazy val now = apply(flowTime, "Now")
 	lazy val today = apply(flowTime, "Today")
 	lazy val days = apply(flowTime, "Days")
 	
-	lazy val extender = apply(flowUtils, "Extender")
+	lazy val extender = apply(flow/"view"/"template", "Extender")
 	
 	// Vault
 	
@@ -91,7 +91,6 @@ object Reference
 	lazy val uniqueModelAccess = apply(singleModelAccess/"distinct", "UniqueModelAccess")
 	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")
 	lazy val singleIntIdModelAccess = apply(singleModelAccess/"distinct", "SingleIntIdModelAccess")
-	
 	
 	// Metropolis
 	

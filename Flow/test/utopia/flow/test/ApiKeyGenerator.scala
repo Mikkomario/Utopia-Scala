@@ -1,7 +1,7 @@
 package utopia.flow.test
 
-import utopia.flow.generic.DataType
-import utopia.flow.util.Sha256Hasher
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.parse.Sha256Hasher
 
 import java.util.UUID
 

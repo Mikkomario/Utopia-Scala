@@ -1,13 +1,14 @@
 package utopia.reflection.component.template.display
 
-import utopia.flow.event.{ChangeListener, ChangingLike}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.template.eventful.Changing
 
 object PoolWithPointer
 {
 	/**
 	  * A pool with a generic pointer
 	  */
-	type ChangingPool[A] = PoolWithPointer[A, ChangingLike[A]]
+	type ChangingPool[A] = PoolWithPointer[A, Changing[A]]
 }
 
 /**
@@ -15,7 +16,7 @@ object PoolWithPointer
   * @author Mikko Hilpinen
   * @since 29.6.2019, v1+
   */
-trait PoolWithPointer[+A, +P <: ChangingLike[A]] extends Pool[A]
+trait PoolWithPointer[+A, +P <: Changing[A]] extends Pool[A]
 {
 	// ABSTRACT	----------------
 	

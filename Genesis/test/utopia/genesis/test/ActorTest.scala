@@ -2,7 +2,7 @@ package utopia.genesis.test
 
 import java.time.Duration
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.Wait
+import utopia.flow.async.process.Wait
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.test.TestContext._
 import utopia.genesis.handling.immutable.ActorHandler

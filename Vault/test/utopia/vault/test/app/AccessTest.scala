@@ -1,7 +1,7 @@
 package utopia.vault.test.app
 
-import utopia.flow.generic.DataType
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.Connection
 import utopia.vault.sql.SqlExtensions._
 import utopia.vault.test.database.TestConnectionPool

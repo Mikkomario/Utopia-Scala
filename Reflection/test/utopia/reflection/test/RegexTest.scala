@@ -1,6 +1,6 @@
 package utopia.reflection.test
 
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 
 /**
   * This app tests basic regular expressions

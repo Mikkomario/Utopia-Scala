@@ -1,7 +1,8 @@
 package utopia.reach.component.button.text
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -62,14 +63,14 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: ChangingLike[A], font: Font, colorPointer: ChangingLike[ComponentColor],
-				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
-				 alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-				 betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-				 additionalDrawers: Seq[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-				 allowTextShrink: Boolean = false)(action: A => Unit) =
+	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[ComponentColor],
+	             enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
+	             alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
+	             betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+	             additionalDrawers: Seq[CustomDrawer] = Vector(),
+	             additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+	             allowTextShrink: Boolean = false)(action: A => Unit) =
 		new ViewTextButton[A](parentHierarchy, contentPointer, font, colorPointer, enabledPointer, displayFunction,
 			borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, additionalDrawers,
 			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
@@ -95,13 +96,13 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action The action performed when this button is pressed
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, font: Font, colorPointer: ChangingLike[ComponentColor],
-					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, borderWidth: Double = 0.0,
-					   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-					   betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-					   additionalDrawers: Seq[CustomDrawer] = Vector(),
-					   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-					   allowTextShrink: Boolean = false)(action: => Unit) =
+	def withStaticText(text: LocalizedString, font: Font, colorPointer: Changing[ComponentColor],
+	                   enabledPointer: Changing[Boolean] = AlwaysTrue, borderWidth: Double = 0.0,
+	                   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
+	                   betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+	                   additionalDrawers: Seq[CustomDrawer] = Vector(),
+	                   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+	                   allowTextShrink: Boolean = false)(action: => Unit) =
 		new ViewTextButton[LocalizedString](parentHierarchy, Fixed(text), font, colorPointer, enabledPointer,
 			DisplayFunction.identity, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys,
 			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(_ => action)
@@ -126,10 +127,10 @@ object ContextualViewTextButtonFactory
 		  * @tparam A Type of displayed content
 		  * @return A new button
 		  */
-		def apply[A](contentPointer: ChangingLike[A], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-					 additionalDrawers: Seq[CustomDrawer] = Vector(),
-					 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
+		def apply[A](contentPointer: Changing[A], enabledPointer: Changing[Boolean] = AlwaysTrue,
+		             displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+		             additionalDrawers: Seq[CustomDrawer] = Vector(),
+		             additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		{
 			val context = factory.context
 			factory.factory[A](contentPointer, context.font, Fixed(context.buttonColor), enabledPointer,
@@ -150,9 +151,9 @@ object ContextualViewTextButtonFactory
 		  * @param action The action performed when this button is pressed
 		  * @return A new button
 		  */
-		def withStaticText(text: LocalizedString, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-						   hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-						   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
+		def withStaticText(text: LocalizedString, enabledPointer: Changing[Boolean] = AlwaysTrue,
+		                   hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+		                   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
 			apply[LocalizedString](Fixed(text), enabledPointer, DisplayFunction.identity, hotKeys,
 				additionalDrawers, additionalFocusListeners) { _ => action }
 	}
@@ -185,12 +186,12 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def withChangingColor[A](contentPointer: ChangingLike[A], colorPointer: ChangingLike[ComponentColor],
-							 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-							 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							 borderWidth: Double = context.margins.verySmall, hotKeys: Set[HotKey] = Set(),
-							 additionalDrawers: Seq[CustomDrawer] = Vector(),
-							 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
+	def withChangingColor[A](contentPointer: Changing[A], colorPointer: Changing[ComponentColor],
+	                         enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                         borderWidth: Double = context.margins.verySmall, hotKeys: Set[HotKey] = Set(),
+	                         additionalDrawers: Seq[CustomDrawer] = Vector(),
+	                         additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		factory[A](contentPointer, context.font, colorPointer, enabledPointer, displayFunction, borderWidth,
 			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, hotKeys,
 			additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
@@ -213,12 +214,12 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def withChangingRole[A](contentPointer: ChangingLike[A], rolePointer: ChangingLike[ColorRole],
-							enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-							displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							preferredShade: ColorShade = Standard, borderWidth: Double = context.margins.verySmall,
-							hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-							additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
+	def withChangingRole[A](contentPointer: Changing[A], rolePointer: Changing[ColorRole],
+	                        enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                        preferredShade: ColorShade = Standard, borderWidth: Double = context.margins.verySmall,
+	                        hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+	                        additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		withChangingColor[A](contentPointer, rolePointer.map { role => context.color(role, preferredShade) },
 			enabledPointer, displayFunction, borderWidth, hotKeys, additionalDrawers,
 			additionalFocusListeners)(action)
@@ -229,15 +230,15 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
   * @author Mikko Hilpinen
   * @since 26.10.2020, v0.1
   */
-class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A], font: Font,
-						colorPointer: ChangingLike[ComponentColor],
-						enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-						displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
-						alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-						betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-						additionalDrawers: Seq[CustomDrawer] = Vector(),
-						additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-						allowTextShrink: Boolean = false)(action: A => Unit)
+class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A], font: Font,
+                        colorPointer: Changing[ComponentColor],
+                        enabledPointer: Changing[Boolean] = AlwaysTrue,
+                        displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
+                        alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
+                        betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+                        additionalDrawers: Seq[CustomDrawer] = Vector(),
+                        additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+                        allowTextShrink: Boolean = false)(action: A => Unit)
 	extends ButtonLike with ReachComponentWrapper
 {
 	// ATTRIBUTES	---------------------------------

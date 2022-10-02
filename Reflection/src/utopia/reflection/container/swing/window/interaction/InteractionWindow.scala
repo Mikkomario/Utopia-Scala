@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.window.interaction
 
 import utopia.flow.async.AsyncExtensions.RichFuture
-import utopia.flow.collection.VolatileList
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.collection.CollectionExtensions._
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{ImageAndTextButton, TextButton}

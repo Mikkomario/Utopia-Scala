@@ -1,6 +1,6 @@
 package utopia.nexus.http
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 
 object Path
 {

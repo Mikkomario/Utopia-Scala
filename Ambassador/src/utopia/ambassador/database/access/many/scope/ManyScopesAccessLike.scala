@@ -1,7 +1,7 @@
 package utopia.ambassador.database.access.many.scope
 
 import utopia.ambassador.database.model.scope.ScopeModel
-import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed

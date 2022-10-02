@@ -1,6 +1,6 @@
 package utopia.vault.model.template
 
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
   * A common trait for models that combine a data portion with a table row id. Represents data after it has been
