@@ -63,6 +63,8 @@
 ### New Features
 - **ModelDeclarations** now support optional properties
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
+- Added **ViewGraphNode** as a lazily initialized graph
+- Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 ### New Methods
 - **CanBeAboutZero**

@@ -125,13 +125,16 @@ critical areas (performance-wise), I would recommend you to use these tools, how
 *Utopia* project consists of a number of modules. Below is a short description of the purpose of each module.
 
 ### Utopia Flow
-*A foundation that makes everything run smoothly*  
+*It's the box of tools you want to take with you anywhere*  
 
-**Utopia Flow** makes many things in Scala even easier than they are and offers some very useful data structures 
-and data-related features. **Utopia Flow** is the building block and **foundation for all the other Utopia modules**.  
+**Utopia Flow** makes many things in Scala even easier than they are by default and offers some very useful data 
+structures and data-related features. **Utopia Flow** is a standard building block and the 
+**foundation for all the other Utopia modules**.  
 **Flow** has the highest level of abstraction amongst all modules and can be used in both front and backend 
-development in almost any kind of project. **Flow** is a **standard inclusion for all of my projects** these days, 
-whether they be servers, desktop clients or real-time games.
+development in almost any kind of Scala project.  
+
+**Flow** is a **standard inclusion for all of my projects** these days, 
+whether they be servers, desktop clients, command-line apps or real-time games.
 
 ### Utopia BunnyMunch
 *Speed and ease-of-use combined when it comes to json parsing*
