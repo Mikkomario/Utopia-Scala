@@ -86,12 +86,13 @@ trait InteractionWindowFactory[A]
 	  * @param parentWindow Window over which this window is displayed (optional)
 	  */
 	def displayBlocking(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None): Try[A] =
-		display(parentWindow, cursors).waitFor()
+		display(parentWindow, cursors)._2.waitFor()
 	
 	/**
 	 * Displays an interactive dialog to the user
 	 * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
-	 * @return A future of the closing of the dialog, with a selected result (or default if none was selected)
+	 * @return 1: The window that was just opened, and
+	  *        2: a future of the closing of the window, with a selected result (or default if none was selected)
 	 */
 	def displayOver(parentWindow: java.awt.Window, cursors: Option[CursorSet] = None) =
 		display(Some(parentWindow), cursors)
@@ -99,9 +100,9 @@ trait InteractionWindowFactory[A]
 	/**
 	  * Displays an interactive window to the user
 	  * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
-	  * @return A future of the closing of the dialog, with a selected result (or default if none was selected)
+	  * @return 1: The window that was just opened, and
+	  *         2: a future of the closing of the window, with a selected result (or default if none was selected)
 	  */
-	// TODO: Should return the window itself, also
 	def display(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None) =
 	{
 		implicit val exc: ExecutionContext = executionContext
@@ -174,7 +175,7 @@ trait InteractionWindowFactory[A]
 		resultFuture.onComplete { _ => window.close() }
 		window.closeFuture.onComplete { _ => if (!resultPromise.isCompleted) resultPromise.trySuccess(defaultResult) }
 		
-		resultFuture
+		window -> resultFuture
 	}
 	
 	private def buttonRow(factories: Mixed, buttons: Vector[WindowButtonBlueprint[A]],

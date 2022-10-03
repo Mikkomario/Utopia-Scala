@@ -1,5 +1,11 @@
 # Utopia Reach - List of Changes
 
+## v0.5 (in development)
+### Breaking Changes
+- **InteractionWindowFactory**`.display(...)` and `.displayOver(...)` now return a tuple containing: 
+  - 1: The window that was opened and
+  - 2: The window close result future (i.e. the earlier return value)
+
 ## v0.4 - 02.10.2022
 This update focuses on TextField customizability, adding a number of new ways to affect text highlighting and 
 input processing in **TextField**s.
