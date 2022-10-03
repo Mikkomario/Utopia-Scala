@@ -1,5 +1,8 @@
 # Utopia Paradigm - List of Changes
 
+## v1.1.1 (In Development)
+Supports changes in **Flow** v2.0
+
 ## v1.1 - 02.10.2022
 This is a relatively major update, most important addition in which is the **Vector1D** class.  
 This update also includes a number of size and bounds -related utility functions.  

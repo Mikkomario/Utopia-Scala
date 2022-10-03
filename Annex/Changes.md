@@ -1,5 +1,8 @@
 # Utopia Annex - List of Changes
 
+## v1.3.1 (In Development)
+Supports changes in **Flow** v2.0
+
 ## v1.3 - 02.10.2022
 This update introduces some smaller utility additions which aim to make this module more scalable.  
 Most of the changes relate to the **ContainerUpdateLoop** class.

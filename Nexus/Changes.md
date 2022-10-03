@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v1.8.2 (In Development)
+Supports changes in **Flow** v2.0
+
 ## v1.8.1 - 02.10.2022
 This update is mostly there to support changes introduced in **Flow** v1.17.
 ### New Methods

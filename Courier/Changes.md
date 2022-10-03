@@ -1,5 +1,8 @@
 # Utopia Courier - List of Changes
 
+## v1.0.6 (In Development)
+Supports Changes in **Flow** v2.0
+
 ## v1.0.5 - 02.10.2022
 Supports changes in **Flow** v1.17
 

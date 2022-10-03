@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 
+## v3.1.1 (In Development)
+Supports changes in **Flow** v2.0
+
 ## v3.1 - 02.10.2022
 This update reflects the changes in **Flow** v1.17 and **Paradigm** v1.1.  
 Most important updates concern the **Image** class, which had some of its methods renamed / replaced.
