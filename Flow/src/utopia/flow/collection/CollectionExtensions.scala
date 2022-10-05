@@ -452,7 +452,6 @@ object CollectionExtensions
 				bf.fromSpecific(coll)(pairs.iterator.filter { _._2 == maxValue }.map { _._1 })
 			}
 		}
-		
 		/**
 		  * Finds the item or items with the minimum value, based on a mapping function. Works like minBy, except that
 		  * multiple values are returned in cases where items map to the same (minimum) value.
@@ -484,7 +483,6 @@ object CollectionExtensions
 			val ops = iter(coll)
 			bf.fromSpecific(coll)(ZipPadIterator(ops.iterator, other.iterator, myPadding, theirPadding))
 		}
-		
 		/**
 		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
 		  * collections are included in the resulting collection.
@@ -498,6 +496,39 @@ object CollectionExtensions
 		def zipPad[To](other: Iterable[iter.A], padding: => iter.A)
 		              (implicit bf: BuildFrom[Repr, (iter.A, iter.A), To]): To =
 			zipPad[iter.A, To](other, padding, padding)
+		
+		/**
+		  * Merges an item with an existing item, or appends it at the end of this collection
+		  * @param item The item to either merge or append to this collection
+		  * @param findMatch A function that yields true for the item that should be merged with the new item.
+		  *                  A kind of a find function for the merge target.
+		  * @param merge A function that accepts the already existing item and the new item and merges them yielding
+		  *              a third item, which will then replace the first item.
+		  * @param buildFrom An implicit buildfrom for the resulting collection
+		  * @return A copy of this collection with either one item merged with the specified new item,
+		  *         or the specified item added to the end of this collection
+		  */
+		def mergeOrAppend(item: iter.A)(findMatch: iter.A => Boolean)(merge: (iter.A, iter.A) => iter.A)
+		                 (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+		{
+			val ops = iter(coll)
+			val builder = buildFrom.newBuilder(coll)
+			var found = false
+			ops.iterator.foreach { existing =>
+				// Case: Found merge target => Merges the two items and quits searching
+				if (!found && findMatch(existing)) {
+					found = true
+					builder += merge(existing, item)
+				}
+				// Case: Merge target already found, or not this item => Keeps it as is
+				else
+					existing
+			}
+			// If no merge target was found, appends the new item to this collection
+			if (!found)
+				builder += item
+			builder.result()
+		}
 	}
 	
 	implicit def iterableOperations[Repr](coll: Repr)
@@ -705,18 +736,15 @@ object CollectionExtensions
 		def mapIndex[B >: seq.A, That](index: Int)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
 		{
 			val seqOps = seq(coll)
-			buildFrom.fromSpecific(coll)(new AbstractView[B]
-			{
-				override def iterator: AbstractIterator[B] = new AbstractIterator[B]
-				{
+			buildFrom.fromSpecific(coll)(new AbstractView[B] {
+				override def iterator: AbstractIterator[B] = new AbstractIterator[B] {
 					val it = seqOps.iterator
 					var nextIndex = 0
 					
 					override def hasNext = it.hasNext
 					
 					// Passes items from the original iterator, except at specified index
-					override def next() =
-					{
+					override def next() = {
 						val result = {
 							if (nextIndex == index)
 								f(it.next())
@@ -729,7 +757,6 @@ object CollectionExtensions
 				}
 			})
 		}
-		
 		/**
 		  * Maps the first item that matches provided condition, leaves the other items as they were
 		  * @param find      A function for finding the mapped item

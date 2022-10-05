@@ -61,7 +61,7 @@ object TreeNodeTest extends App
 	// Performs tests on immutable tree
 	basicCheck(copy)
 	
-	val increased = copy + 7
+	val increased = copy :+ 7
 	
 	assert(increased.nodesBelowIterator.exists { _.nav == 7 })
 	assert(increased.nodesBelowIterator.exists { _.nav == 4 })

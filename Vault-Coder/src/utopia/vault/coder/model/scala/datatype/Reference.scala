@@ -31,8 +31,8 @@ object Reference
 	
 	// Extensions
 	
-	lazy val valueConversions = extensions(flowGenerics, "ValueConversions")
-	lazy val valueUnwraps = extensions(flowGenerics, "ValueUnwraps")
+	lazy val valueConversions = extensions(typeCasting, "ValueConversions")
+	lazy val valueUnwraps = extensions(typeCasting, "ValueUnwraps")
 	lazy val collectionExtensions = extensions(flowUtils, "CollectionExtensions")
 	lazy val timeExtensions = extensions(flowTime, "TimeExtensions")
 	lazy val sqlExtensions = extensions(sql, "SqlExtensions")

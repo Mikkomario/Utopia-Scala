@@ -30,6 +30,8 @@
   - `.content` is now `.nav`
   - Replaced the abstract `.containsDirect(A)` with `.navEquals: EqualsFunction[A]`
   - Rewrote and renamed a number of functions
+    - Tree combining (`+`) and appending (`:+`) now work differently by default; 
+      They merge the trees together, instead of simply adding new child nodes.
     - For example, branches now contain node references instead of just the nav or content references
     - Leaves now includes the root node if it is empty. See `.leavesBelow` for the previous implementation.
     - Similarly, branches now include this node by default. `.branchesBelow` matches the previous
@@ -71,6 +73,9 @@
   - Added `.notCloseZero`
 - **CanBeZero**
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
+- **Iterable** (**CollectionExtensions**)
+  - Added `.mergeOrAppend(...)` that either merges an item into the collection, or appends it, 
+    based on a find function result.
 - **Lazy**
   - Added `.map(...)` and `.flatMap(...)`
 - **Path**

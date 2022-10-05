@@ -259,16 +259,6 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
       */
     def withChildren(children: Vector[XmlElement]) = createCopy(children = children)
     /**
-      * @param newChildren New children to add
-      * @return A copy of this element with those children added
-      */
-    def withChildrenAdded(newChildren: IterableOnce[XmlElement]) = withChildren(children ++ newChildren)
-    /**
-      * @param child A new child to add
-      * @return A copy of this element with specified child added
-      */
-    def withChildAdded(child: XmlElement) = withChildren(children :+ child)
-    /**
       * @param child A child element
       * @return A copy of this element with only that child
       */

@@ -15,7 +15,7 @@ import utopia.reach.cursor.CursorSet
 import utopia.reflection.color.ColorRole
 import utopia.reflection.component.context.{ButtonContextLike, ColorContext}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.swing.window.{Dialog, Frame}
+import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.reflection.container.template.window.WindowButtonBlueprint
 import utopia.reflection.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
@@ -23,7 +23,7 @@ import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
 /**
@@ -103,7 +103,7 @@ trait InteractionWindowFactory[A]
 	  * @return 1: The window that was just opened, and
 	  *         2: a future of the closing of the window, with a selected result (or default if none was selected)
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None) =
+	def display(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None): (Window[ReachCanvas], Future[A]) =
 	{
 		implicit val exc: ExecutionContext = executionContext
 		val context = standardContext
