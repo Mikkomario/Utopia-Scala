@@ -8,7 +8,7 @@ import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.generic.PointType
+import utopia.paradigm.generic.ParadigmDataType.PointType
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import java.awt.geom.Point2D

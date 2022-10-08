@@ -2,7 +2,8 @@ package utopia.flow.parse.json
 
 import utopia.flow.generic.casting.ValueConverter
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable._
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.generic.model.mutable.DataType._
 
 import scala.collection.immutable.HashSet
 

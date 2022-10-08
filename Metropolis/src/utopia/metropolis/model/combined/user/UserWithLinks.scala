@@ -5,7 +5,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.Property
-import utopia.flow.generic.model.mutable.{IntType, ModelType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType}
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.stored.user.{UserLanguageLink, UserSettings}
 

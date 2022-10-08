@@ -3,10 +3,11 @@ package utopia.flow.generic.model.immutable
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.generic.model.{immutable, template}
-import utopia.flow.generic.model.mutable.{DataType, ModelType, StringType, Variable, VectorType}
+import utopia.flow.generic.model.mutable.{DataType, Variable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.PropertyFactory
+import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType, VectorType}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -332,8 +333,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
         if (value.isEmpty)
             true
         else
-            value.dataType match
-            {
+            value.dataType match {
                 case StringType => value.getString.isEmpty
                 case VectorType => value.getVector.forall(valueIsEmpty)
                 case ModelType => value.getModel.properties.map { _.value }.forall(valueIsEmpty)

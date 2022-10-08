@@ -10,7 +10,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConv
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.generic.Vector2DType
+import utopia.paradigm.generic.ParadigmDataType.Vector2DType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
 

@@ -3,7 +3,7 @@ package utopia.vault.coder.controller.reader
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.{ModelType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.collection.CollectionExtensions._

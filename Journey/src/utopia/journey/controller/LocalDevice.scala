@@ -5,7 +5,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
-import utopia.flow.generic.model.mutable.{IntType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._

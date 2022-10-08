@@ -2,7 +2,7 @@ package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.{OrderedDepthIterator, PollableOnce}
-import utopia.flow.operator.EqualsExtensions.ApproxEquals
+import utopia.flow.operator.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.EqualsFunction
 
 import scala.annotation.unchecked.uncheckedVariance
@@ -353,31 +353,54 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	def contains(content: A): Boolean = containsNav(content)
 	
 	/**
-	  * Finds the first child node from this entire tree that matches the specified condition. Returns the whole path
-	  * to that node
+	  * Finds the first child node from this entire tree that matches the specified condition.
+	  * Returns the path to that node.
 	  * @param filter A search condition
-	  * @return Path to the first node matching the specified condition, if such a node exists.
-	  *         The resulting path won't include this node.
+	  * @return Path to the first node matching the specified condition.
+	  *         None if no such node was found.
+	  *         The path contains all nodes that need to be traversed in order to reach the target node.
+	  *         The node that first fulfilled the specified search condition always lies at the end of the path.
+	  *         This node is always located at the beginning of the resulting path.
 	  */
 	def findWithPath(filter: Repr => Boolean): Option[Vector[Repr]] = {
-		children.find(filter).map { c => Vector(c) }
-			.orElse { children.findMap { c => c.findWithPath(filter).map { c +: _ } } }
+		if (filter(repr))
+			Some(Vector(repr))
+		else
+			children.findMap { _.findWithPath(filter) }.map { repr +: _ }
 	}
 	/**
 	  * Finds the top nodes under this node (whether they be direct children or grandchildren etc.) that satisfy the
-	  * specified filter. Includes the "path" to all of the selected nodes as well. If a node is selected, it's children are
-	  * not tested anymore. All of the returned values are within separate trees.
+	  * specified filter. Includes the "path" to all of the selected nodes as well.
+	  * If a node is selected, it's children are not tested anymore.
 	  * @param filter A filter function
-	  * @return Paths to all of the nodes that satisfy the specified filter function. Paths don't include this node.
+	  * @return Paths to all of the nodes that satisfy the specified filter function.
+	  *         Every path will start with this node and end with the node that fulfilled the specified function.
+	  *         If this node fulfills the specified function, returns a single path consisting only of this node.
+	  *         The result is lazily computed and cached.
 	  */
-	def filterWithPaths(filter: Repr => Boolean): Iterable[Vector[Repr]] = {
-		val (notAccepted, accepted) = children.divideBy(filter)
-		// Adds accepted children as is and finds potential matches under the non-accepted children
-		// If paths were found under children that weren't directly accepted, appends those children to the
-		// beginning of the resulting path(s)
-		accepted.map { c => Vector(c) } ++
-			notAccepted.flatMap { c => c.filterWithPaths(filter).map { c +: _ } }.filterNot { _.isEmpty }
+	def filterWithPaths(filter: Repr => Boolean) = _filterWithPaths(filter).map { _.result().reverse }.caching
+	private def _filterWithPaths(filter: Repr => Boolean): Iterator[VectorBuilder[Repr @uncheckedVariance]] = {
+		// Case: This node represents a search result => Starts a new branch to it
+		if (filter(repr)) {
+			val builder = new VectorBuilder[Repr]()
+			builder += repr
+			Iterator.single(builder)
+		}
+		// Case: This node is not a search result => looks from below and builds the paths if found
+		else
+			children.iterator.flatMap { _._filterWithPaths(filter) }.map { _ += repr }
 	}
+	/**
+	  * Finds The location of a specific nav element within this tree structure.
+	  * Assumes that this tree contains unique nav elements.
+	  * @param nav Searched nav element
+	  * @return A path to a node containing the specified nav element.
+	  *         Returns None if there doesn't exist any node in this tree with the specified nav element.
+	  *         The path consists of actual nodes that need to be traversed.
+	  *         This node is always the first element in the returned path.
+	  *         The node containing the specified nav element is located at the end of this path.
+	  */
+	def pathTo(nav: A) = if (this.nav ~== nav) Some(Vector()) else findWithPath { _.nav ~== nav }
 	
 	/**
 	  * Finds the highest level branches from this tree which satisfy the specified condition. Will not test the

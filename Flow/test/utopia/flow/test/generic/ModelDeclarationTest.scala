@@ -2,7 +2,8 @@ package utopia.flow.test.generic
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.{BooleanType, DataType, IntType, MutableModel, StringType}
+import utopia.flow.generic.model.mutable.DataType.{BooleanType, IntType, StringType}
+import utopia.flow.generic.model.mutable.{DataType, MutableModel}
 
 /**
  *
@@ -11,7 +12,7 @@ import utopia.flow.generic.model.mutable.{BooleanType, DataType, IntType, Mutabl
  */
 object ModelDeclarationTest extends App
 {
-	DataType.setup()
+	
 	
 	// Tests property declarations
 	val prop1 = PropertyDeclaration("test1", IntType)

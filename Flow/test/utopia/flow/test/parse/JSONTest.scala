@@ -2,7 +2,8 @@ package utopia.flow.test.parse
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.mutable.{DataType, IntType, ModelType, StringType}
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
 import utopia.flow.parse.json.JsonReader
 
 import java.time.Instant
@@ -14,7 +15,7 @@ import java.time.Instant
  */
 object JSONTest extends App
 {
-	DataType.setup()
+	
 	
 	def assertJSON(value: Value, json: String) =
 	{

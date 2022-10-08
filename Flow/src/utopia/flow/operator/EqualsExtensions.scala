@@ -8,10 +8,9 @@ package utopia.flow.operator
 object EqualsExtensions
 {
 	implicit def doubleEquals: EqualsFunction[Double] = EqualsFunction.approxDouble
-	
 	implicit def stringEquals: EqualsFunction[String] = EqualsFunction.stringCaseInsensitive
 	
-	implicit class ApproxEquals[+A](val a: A) extends AnyVal
+	implicit class ImplicitApproxEquals[+A](val a: A) extends AnyVal
 	{
 		/**
 		  * Tests whether these two items compare with each other using a custom equals function
@@ -32,7 +31,7 @@ object EqualsExtensions
 		def !~==[B >: A](other: B)(implicit equals: EqualsFunction[B]): Boolean = equals.not(a, other)
 	}
 	
-	implicit class ApproxEqualsCollection[+A](val c: Iterable[A]) extends AnyVal
+	implicit class ImplicitApproxEqualsCollection[+A](val c: Iterable[A]) extends AnyVal
 	{
 		/**
 		  * Checks whether another collection has identical contents, when using the specified equals function
@@ -41,11 +40,7 @@ object EqualsExtensions
 		  * @tparam B Type of the items in the other collection
 		  * @return Whether these collections have identical items, when using the specified equals function
 		  */
-		def hasEqualContentWith[B >: A](other: Iterable[B])(implicit equals: EqualsFunction[B]) = {
-			if (c.size == other.size)
-				c.forall { a => other.exists { _ ~== a } }
-			else
-				false
-		}
+		def hasEqualContentWith[B >: A](other: Iterable[B])(implicit equals: EqualsFunction[B]) =
+			c.sizeCompare(other) == 0 && c.forall { a => other.exists { _ ~== a } }
 	}
 }

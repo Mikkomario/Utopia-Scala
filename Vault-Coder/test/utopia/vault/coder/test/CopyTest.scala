@@ -23,7 +23,7 @@ object CopyTest extends App
 	
 	// Vault-Coder/data/test/VectorLike.scala
 	
-	DataType.setup()
+	
 	implicit val codec: Codec = Codec.UTF8
 	
 	val path: Path = args.headOption match {

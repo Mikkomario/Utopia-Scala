@@ -12,7 +12,7 @@ import java.nio.file.Path
  */
 object FileTest extends App
 {
-	DataType.setup()
+	
 	
 	val origin: Path = "test-data"
 	val dir1 = origin / "test-dir-1"

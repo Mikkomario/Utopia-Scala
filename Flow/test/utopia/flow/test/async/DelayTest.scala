@@ -4,7 +4,6 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{CloseHook, ThreadPool}
 import utopia.flow.async.process.ProcessState.{Completed, Running, Stopped}
 import utopia.flow.async.process.{DelayedProcess, Wait}
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -20,7 +19,6 @@ import scala.concurrent.duration.FiniteDuration
   */
 object DelayTest extends App
 {
-	DataType.setup()
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	

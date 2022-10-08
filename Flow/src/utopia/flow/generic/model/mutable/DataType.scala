@@ -1,184 +1,463 @@
 package utopia.flow.generic.model.mutable
 
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.mutable.MutableTree
-import utopia.flow.error.EnvironmentNotSetupException
-import utopia.flow.generic.casting.{BasicValueCaster, ConversionHandler, SuperTypeCaster}
+import utopia.flow.collection.immutable.{Pair, Tree}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.generic.casting.{ConversionHandler, SuperTypeCaster}
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.time.Days
 
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
+import scala.concurrent.duration.FiniteDuration
 import scala.language.existentials
-
-/**
- * Any type is the superType for all other types
- * @see Any
- */
-object AnyType extends DataType("Any", classOf[Any], None)
-/**
- * String type stands for strings
- * @see String
- */
-object StringType extends DataType("String", classOf[String])
-/**
- * Int type stands for all integer numbers
- */
-object IntType extends DataType("Int", classOf[java.lang.Integer])
-/**
- * Double type stands for Double numbers
- */
-object DoubleType extends DataType("Double", classOf[java.lang.Double])
-/**
- * Float type stands for floating point numbers
- */
-object FloatType extends DataType("Float", classOf[java.lang.Float])
-/**
- * Long type stands for large long numbers
- */
-object LongType extends DataType("Long", classOf[java.lang.Long])
-/**
- * Boolean type stands for boolean values
- */
-object BooleanType extends DataType("Boolean", classOf[java.lang.Boolean])
-/**
- * Instant type stands for instant time type, which can represent any other time type as well
- * @see java.time
- */
-object InstantType extends DataType("Instant", classOf[java.time.Instant])
-/**
- * The local date type is used for representing dates on a local clock / time zone
- */
-object LocalDateType extends DataType("LocalDate", classOf[java.time.LocalDate])
-/**
- * Time type represents a time (hour, minute, second) portion of a specific date + time in 
- * the local clock / time zone
- */
-object LocalTimeType extends DataType("LocalTime", classOf[java.time.LocalTime])
-/**
- * The local date time type represents a combination of date and time components in a local 
- * clock / time zone
- */
-object LocalDateTimeType extends DataType("LocalDateTime", classOf[java.time.LocalDateTime])
-/**
-  * Duration type represents a length of time, measured in milliseconds (or other such precise unit)
-  */
-object DurationType extends DataType("Duration", classOf[scala.concurrent.duration.FiniteDuration])
-/**
-  * Days type represents a length of time, measured in days
-  */
-object DaysType extends DataType("Days", classOf[utopia.flow.time.Days])
-object PairType extends DataType("Pair", classOf[Pair[Value]])
-/**
- * Vector type stands for a vector of values. Only Vectors with exact parameter type of Value
- * are accepted
- */
-object VectorType extends DataType("Vector", classOf[Vector[Value]])
-/**
- * Model type only accepts immutable models that contain basic constants
- */
-object ModelType extends DataType("Model", classOf[Model])
-
 
 object DataType
 {
-    // ATTRIBUTES    ----------
+    // ATTRIBUTES   ---------------------------
     
-    private var isSetup = false
-    private var _values = Set[DataType]()
-    /**
-     * Each data type ever created
-     */
-    def values = _values
+    private var _typeTree = Vector[Tree[DataType]]()
     
     
-    // OTHER METHODS    -------
+    // COMPUTED -------------------------------
     
     /**
-     * Sets up the basic data type information. This method should be called before using any of the
-     * data types
-     */
-    def setup() = 
-    {
-        if (!isSetup)
-        {
-            isSetup = true
-            introduceTypes(AnyType, StringType, IntType, DoubleType, FloatType, LongType, 
-                    BooleanType, InstantType, LocalDateType, LocalTimeType, LocalDateTimeType, DurationType, DaysType,
-                    VectorType, PairType, ModelType)
-            ConversionHandler.addCaster(BasicValueCaster)
-        }
+      * @return The data type hierarchy where the root nodes are the topmost super types of the types that appear
+      *         in the lower branches. Contains one tree for each type unique type hierarchy.
+      */
+    def hierarchy = _typeTree
+    
+    /**
+      * @return All (currently introduced) known data types
+      */
+    def values = _typeTree.flatMap { _.allNodesIterator.map { _.nav } }
+    
+    
+    // OTHER    -------------------------------
+    
+    /**
+      * Introduces a new data type hierarchy
+      * @param types A type tree or a branch to introduce.
+      *              Doesn't have to be exhaustive, but should at least
+      *              a) Start with a previously introduced type OR
+      *              b) Start with the actual root type.
+      *
+      *              For example, these cases would be valid:
+      *              a) Type Number has already been introduced as a sub-type of Any.
+      *              This method is then called with a tree where the root node is Number.
+      *              b) This method is called with a tree where the root node is Any (assuming that's the topmost type)
+      */
+    def introduce(types: Tree[DataType]) = {
+        val oldTypes = values.toSet
+        _typeTree = _typeTree.mapOrAppend { _.mergeBranch(types).toOption }(types)
+        // Adds super type casting
+        val newTypes = types.allNavsIterator.filterNot(oldTypes.contains).toSet
+        if (newTypes.nonEmpty)
+            ConversionHandler.addCaster(new SuperTypeCaster(newTypes))
     }
+    /**
+      * Introduces a single data type to the type hierarchy
+      * @param dataType The data type to introduce to the common type hierarchy
+      */
+    def introduce(dataType: DataType): Unit =
+        introduce(Tree.branch(dataType.superTypesIterator.toVector.reverse :+ dataType))
     
     /**
-     * Introduces a number of new data types to the data type interface. Each data type created
-     * outside the Flow project should be introduced this way.
-     */
-    def introduceTypes(types: DataType*) = 
+      * Sets up the basic data type information. This method should be called before using any of the
+      * data types
+      */
+    @deprecated("Not needed anymore", "v2.0")
+    def setup() = ()
+    
+    
+    // NESTED   --------------------------------
+    
+    /**
+      * Any type is the superType for all other types.
+      * Represents type [[Any]]
+      */
+    case object AnyType extends DataType
     {
-        _values ++= types
-        // Also introduces super type handling
-        ConversionHandler.addCaster(new SuperTypeCaster(types.toSet))
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Any]
+        
+        
+        // INITIAL CODE ------------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  ------------------------
+        
+        override def name = "Any"
+        override def superType = None
+    }
+    /**
+      * Represents type [[String]]
+      */
+    case object StringType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[String]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "String"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[Integer]] from Java (not Int because a reference type is required at this time)
+      */
+    case object IntType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Integer]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Int"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[java.lang.Double]] (not from Scala, because a reference type is required at this time)
+      */
+    case object DoubleType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[java.lang.Double]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Double"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[java.lang.Long]] (not from Scala, because a reference type is required at this time)
+      */
+    case object LongType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[java.lang.Long]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Long"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[java.lang.Float]] (not from Scala, because a reference type is required at this time)
+      */
+    case object FloatType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[java.lang.Float]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Float"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[java.lang.Boolean]] (not from Scala, because a reference type is required at this time)
+      */
+    case object BooleanType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[java.lang.Boolean]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Boolean"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[Instant]], which is used for representing a moment in time
+      */
+    case object InstantType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Instant]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Instant"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[LocalDate]], which represents a date
+      */
+    case object LocalDateType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[LocalDate]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "LocalDate"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[LocalTime]], i.e. time of day
+      */
+    case object LocalTimeType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[LocalTime]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "LocalTime"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[LocalDateTime]], i.e. local version of Instant
+      */
+    case object LocalDateTimeType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[LocalDateTime]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "LocalDateTime"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[FiniteDuration]]
+      */
+    case object DurationType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[FiniteDuration]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Duration"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[Days]], i.e. duration in days
+      */
+    case object DaysType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Days]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Days"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[Pair]] of [[Value]]s, i.e. two values together
+      */
+    case object PairType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Pair[Value]]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Pair"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[Vector]] of [[Value]]s, i.e. n values together
+      */
+    case object VectorType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Vector[Value]]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Vector"
+        override def superType = Some(AnyType)
+    }
+    /**
+      * Represents type [[Model]]
+      */
+    case object ModelType extends DataType
+    {
+        // ATTRIBUTES   ------------------------
+        
+        override lazy val supportedClass = classOf[Model]
+        
+        
+        // INITIAL CODE -----------------------
+        
+        introduce()
+        
+        
+        // IMPLEMENTED  -----------------------
+        
+        override def name = "Model"
+        override def superType = Some(AnyType)
     }
 }
 
-/**
- * A data types specifies the internal type of a value
- * @author Mikko Hilpinen
- * @since 4.11.2016
- * @param name The name of the data type. Used when printing the type information. Should start 
- * with a upper case letter. Eg. "String"
- * @param superType The type above this data type. All DataTypes should have a super type, except 
- * Any, which is the highest data type. The value defaults to Any but in some cases you want to 
- * specify a different type like Number, for example.
- */
-case class DataType(name: String, supportedClass: Class[_], superType: Option[DataType] = Some(AnyType))
+trait DataType
 {
-    private val tree = new MutableTree(this)
-    
-    // INITIAL CODE    -----------
-    
-    // The datatype interface must be set up at this point
-    if (!DataType.isSetup)
-        throw EnvironmentNotSetupException("DataType.setup() must be called before instantiating any DataType instances")
-    
-    // The super type should be aware of a new child
-    superType.foreach { _.tree += this.tree }
-    
-    
-    // COMPUTED PROPERTIES    ----
+    // ABSTRACT --------------------------------
     
     /**
-     * The type hierarchy of this data type where the data type is the root node and the subtypes
-     * are below that
-     */
-    def typeHierarchy = tree.immutableCopy
+      * @return The name of this data type, in PascalCase.
+      */
+    def name: String
     
     /**
-     * All types deriving from this data type
-     */
-    def subTypes = typeHierarchy.nodesBelow.map { _.nav }
-    
-    
-    // IMPLEMENTED METHODS    ----
-    
-    override def toString: String = name
-    
-    
-    // OTHER METHODS    ----------
+      * @return The class this data type represents.
+      *         Instances of this class may be treated as instances of this data type when wrapped
+      *         in instances of [[Value]].
+      */
+    def supportedClass: Class[_]
     
     /**
-     * Finds out whether this data type is a subType of another data type
-     */
-    def isOfType(other: DataType): Boolean = this == other || superType.exists { _.isOfType(other) }
+      * @return The data type that's the parent / super type of this data type.
+      *         None if this is a topmost data type.
+      */
+    def superType: Option[DataType]
+    
+    
+    // COMPUTED --------------------------------
     
     /**
-     * Checks whether this data type supports an instance
-     * @param instance An instance that may or may not be of the supported type
-     * @return Whether the provided value is an instance of this data type
-     */
+      * @return An iterator that returns the super types of this data type in order from least to most abstract
+      *         (i.e. closest to furthest from this type)
+      */
+    def superTypesIterator = OptionsIterator.iterate(superType) { _.superType }
+    
+    /**
+      * @return A data type hierarchy where this type is appears as the root and sub-types appear below.
+      *         Super types of this type are not included, obviously.
+      */
+    def typeHierarchy =
+        DataType.hierarchy.findMap { tree => tree.allNodesIterator.find { _.nav == this } }.getOrElse(Tree(this))
+    
+    /**
+      * @return The data types that are the sub-types of this data type
+      */
+    def subTypes = typeHierarchy.allNodesIterator.drop(1).map { _.nav }.toVector
+    /**
+      * @return The data types that are the super types of this data type
+      */
+    def superTypes = superTypesIterator.toVector
+    
+    
+    // IMPLEMENTED  ---------------------------
+    
+    override def toString = name
+    
+    
+    // OTHER    -------------------------------
+    
+    /**
+      * Checks whether this data type supports an instance
+      * @param instance An instance that may or may not be of the supported type
+      * @return Whether the provided value is an instance of this data type
+      */
     // TODO: Only works on reference types. Use classtags with value types
     def isInstance(instance: Any) = supportedClass.isInstance(instance)
-    
     /*
-    def isInstance(instance: Any) = 
+    def isInstance(instance: Any) =
     {
         val B = ClassTag(supportedClass)
     			ClassTag(element.getClass) match {
@@ -186,4 +465,15 @@ case class DataType(name: String, supportedClass: Class[_], superType: Option[Da
     				case _ => false
     	}
     }*/
+    
+    /**
+      * @param other Another data type
+      * @return Whether this data type is a sub-type of the specified data type (or is that type itself)
+      */
+    def isOfType(other: DataType) = this == other || superTypesIterator.contains(other)
+    
+    /**
+      * Introduces this data type to the common type hierarchy
+      */
+    protected def introduce() = DataType.introduce(this)
 }

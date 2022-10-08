@@ -2,9 +2,9 @@ package utopia.flow.parse.json
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.mutable.{DoubleType, IntType, LongType}
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.model.mutable.DataType.{DoubleType, IntType, LongType}
 import utopia.flow.parse.json.JsonReadEvent.{ArrayEnd, ArrayStart, Assignment, ObjectEnd, ObjectStart, Quote, Separator}
 
 import java.io.{File, InputStream}

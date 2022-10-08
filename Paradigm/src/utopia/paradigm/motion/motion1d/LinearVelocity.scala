@@ -3,14 +3,14 @@ package utopia.paradigm.motion.motion1d
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
-import utopia.flow.generic.model.mutable.DoubleType
+import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
-import utopia.paradigm.generic.LinearVelocityType
+import utopia.paradigm.generic.ParadigmDataType.LinearVelocityType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.motion.template.Change

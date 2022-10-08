@@ -19,7 +19,7 @@ import scala.concurrent.duration.Duration
 @deprecated("Replaced with TimedTasks and their tests", "v1.15")
 object SynchronizedLoopTest extends App
 {
-	DataType.setup()
+	
 	implicit val logger: Logger = SysErrLogger
 	
 	class Printloop(text: String, time: Duration) extends Loop

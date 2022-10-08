@@ -73,7 +73,7 @@ object CitadelContext
 	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
 	          descriptionRoleCacheDuration: Duration = 1.hours) =
 	{
-		DataType.setup()
+		
 		data = Some(Data(executionContext, connectionPool, databaseName, descriptionRoleCacheDuration))
 		// Sets the specified database as the default database for the Connection interface, also
 		Connection.modifySettings { _.copy(defaultDBName = Some(databaseName)) }

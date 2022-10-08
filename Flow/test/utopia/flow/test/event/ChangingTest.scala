@@ -14,7 +14,7 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
   */
 object ChangingTest extends App
 {
-	DataType.setup()
+	
 	import utopia.flow.test.TestContext._
 	
 	val delay = 0.5.seconds

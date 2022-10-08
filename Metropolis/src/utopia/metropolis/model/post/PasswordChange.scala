@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.ModelConvertible
 
 object PasswordChange extends FromModelFactoryWithSchema[PasswordChange]

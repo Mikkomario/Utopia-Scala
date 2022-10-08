@@ -30,7 +30,7 @@ class EchoServlet extends HttpServlet
 {
     // INITIAL CODE    -----------------------
     
-    DataType.setup()
+    
     private implicit val settings: ServerSettings = ServerSettings("http://localhost:9999")
     private implicit val jsonParser: JsonParser = JsonReader
     

@@ -16,7 +16,7 @@ import scala.util.Try
  */
 object XmlTest extends App
 {
-	DataType.setup()
+	
 	
 	// Creates the xml elements
 	val grandChild1 = XmlElement.local("c", "Test & Values", Model(Vector("att1" -> 1, "att2" -> "b")))

@@ -2,7 +2,8 @@ package utopia.flow.generic.model.immutable
 
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.mutable
-import utopia.flow.generic.model.mutable.{ModelType, Variable}
+import utopia.flow.generic.model.mutable.DataType.ModelType
+import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
 import utopia.flow.operator.EqualsBy
 import utopia.flow.operator.EqualsExtensions._

@@ -3,7 +3,7 @@ package utopia.flow.parse.xml
 import utopia.flow.collection.mutable.MutableTreeLike
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.collection.CollectionExtensions._
 
 object XmlElementBuilder

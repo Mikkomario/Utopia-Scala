@@ -15,7 +15,7 @@ import utopia.flow.util.StringExtensions._
  */
 object ModelTest extends App
 {
-	DataType.setup()
+	
 	
 	// Tests variable creation
 	val generator2 = PropertyFactory.variableWithDefault(0)

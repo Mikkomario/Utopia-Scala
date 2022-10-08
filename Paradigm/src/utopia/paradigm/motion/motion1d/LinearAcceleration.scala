@@ -5,7 +5,7 @@ import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
-import utopia.paradigm.generic.LinearAccelerationType
+import utopia.paradigm.generic.ParadigmDataType.LinearAccelerationType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion2d.Acceleration2D
 import utopia.paradigm.motion.motion3d.Acceleration3D

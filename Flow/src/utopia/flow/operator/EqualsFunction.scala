@@ -33,6 +33,16 @@ object EqualsFunction
 	  */
 	implicit def apply[A](f: (A, A) => Boolean): EqualsFunction[A] = new EqualsFunctionWrapper[A](f)
 	
+	/**
+	  * Creates a new equals function that maps values before comparing them
+	  * @param f A mapping function that yields a comparable value
+	  * @param e Equals function used for comparing mapping results
+	  * @tparam A Type of original item
+	  * @tparam B Type of map result
+	  * @return An equals function that compares items of type A by mapping them to type B
+	  */
+	def by[A, B](f: A => B)(implicit e: EqualsFunction[B]) = apply[A] { (a, b) => e(f(a), f(b)) }
+	
 	
 	// NESTED   ---------------------------
 	
@@ -86,4 +96,19 @@ trait EqualsFunction[-A]
 	  * @return Whether the two items are not equal
 	  */
 	def not(a: A, b: A) = !apply(a, b)
+	
+	/**
+	  * @param other Another equals function
+	  * @tparam B Type of compared types in that function
+	  * @return A combination of these functions where both must return true
+	  */
+	def &&[B <: A](other: EqualsFunction[B]) =
+		EqualsFunction[B] { (a, b) => apply(a, b) && other(a, b) }
+	/**
+	  * @param other Another equals function
+	  * @tparam B Type of compared types in that function
+	  * @return A combination of these functions where only one must return true
+	  */
+	def ||[B <: A](other: EqualsFunction[B]) =
+		EqualsFunction[B] { (a, b) => apply(a, b) || other(a, b) }
 }

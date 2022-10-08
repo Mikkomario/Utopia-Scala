@@ -7,12 +7,14 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
-import utopia.flow.generic.model.mutable._
+import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
+import ParadigmDataType._
+import utopia.flow.generic.model.mutable.DataType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}

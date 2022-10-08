@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object WaitTest2 extends App
 {
-	DataType.setup()
+	
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	

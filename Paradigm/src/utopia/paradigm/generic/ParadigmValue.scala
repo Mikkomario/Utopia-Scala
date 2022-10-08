@@ -5,6 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
+import utopia.paradigm.generic.ParadigmDataType._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
 import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}

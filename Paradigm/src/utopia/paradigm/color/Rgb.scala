@@ -11,7 +11,7 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.enumeration.RgbChannel.{Blue, Green, Red}
-import utopia.paradigm.generic.RgbType
+import utopia.paradigm.generic.ParadigmDataType.RgbType
 
 import scala.collection.immutable.HashMap
 import scala.language.implicitConversions

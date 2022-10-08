@@ -22,7 +22,7 @@ import utopia.reflection.test.TestContext._
   */
 object MouseTest extends App
 {
-	DataType.setup()
+	
 	
 	private class MouseEnterExitListener(val area: Area) extends MouseMoveListener with Handleable
 	{

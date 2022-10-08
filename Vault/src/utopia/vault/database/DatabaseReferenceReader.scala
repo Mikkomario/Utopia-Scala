@@ -1,7 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.vault.sql.Select
 import utopia.vault.sql.Where

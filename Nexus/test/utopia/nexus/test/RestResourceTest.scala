@@ -19,7 +19,7 @@ import java.nio.file.Paths
  */
 object RestResourceTest extends App
 {
-    DataType.setup()
+    
     
     // Creates the main resources first
     implicit val settings: ServerSettings = ServerSettings("https://localhost:9999")

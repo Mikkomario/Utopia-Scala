@@ -10,7 +10,7 @@ import utopia.flow.generic.model.mutable.DataType
   */
 object ConversionRoutesTest extends App
 {
-	DataType.setup()
+	
 	
 	val types = DataType.values.toVector.sortBy { _.name }
 	

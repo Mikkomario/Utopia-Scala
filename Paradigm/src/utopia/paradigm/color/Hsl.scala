@@ -4,12 +4,12 @@ import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
-import utopia.flow.generic.model.mutable.DoubleType
+import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
-import utopia.paradigm.generic.{AngleType, HslType}
+import utopia.paradigm.generic.ParadigmDataType.{AngleType, HslType}
 import utopia.paradigm.generic.ParadigmValue._
 
 import scala.language.implicitConversions

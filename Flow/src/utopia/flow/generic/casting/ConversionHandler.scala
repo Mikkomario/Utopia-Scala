@@ -26,6 +26,11 @@ object ConversionHandler
 	private val optimalRoutes = mutable.HashMap[(DataType, DataType), Option[ConversionRoute]]()
 	
 	
+	// INITIAL CODE --------------------
+	
+	addCaster(BasicValueCaster)
+	
+	
 	// OTHER METHODS    ----------------
 	
 	/**

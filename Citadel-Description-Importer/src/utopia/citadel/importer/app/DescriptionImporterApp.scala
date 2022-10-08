@@ -25,7 +25,7 @@ import scala.util.{Failure, Success}
   */
 object DescriptionImporterApp extends App
 {
-	DataType.setup()
+	
 	
 	implicit val logger: Logger = SysErrLogger
 	implicit val jsonParser: JsonParser = JsonBunny

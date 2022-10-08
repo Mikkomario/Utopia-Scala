@@ -35,7 +35,7 @@ object ScribeContext
 	// OTHER    --------------------------------
 	
 	def setup(tables: Tables, databaseName: String) = {
-		DataType.setup()
+		
 		data = Some(Data(tables, databaseName))
 	}
 	

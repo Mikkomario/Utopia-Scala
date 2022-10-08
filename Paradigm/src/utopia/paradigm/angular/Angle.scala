@@ -6,7 +6,7 @@ import utopia.flow.operator.{Combinable, LinearScalable, SelfComparable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
-import utopia.paradigm.generic.AngleType
+import utopia.paradigm.generic.ParadigmDataType.AngleType
 
 object Angle
 {

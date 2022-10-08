@@ -1,7 +1,7 @@
 package utopia.flow.generic.casting
 
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable._
+import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, StringType, VectorType}
 import utopia.flow.generic.model.template.ValueConvertible
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}

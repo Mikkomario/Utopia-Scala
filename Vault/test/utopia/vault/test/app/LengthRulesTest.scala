@@ -21,7 +21,7 @@ import java.nio.file.Paths
   */
 object LengthRulesTest extends App
 {
-	DataType.setup()
+	
 	implicit val jsonParser: JsonParser = JsonReader
 	implicit val cPool: ConnectionPool = new ConnectionPool()
 	

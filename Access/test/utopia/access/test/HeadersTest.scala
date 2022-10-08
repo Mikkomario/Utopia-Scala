@@ -13,7 +13,7 @@ import utopia.flow.generic.model.mutable.DataType
  */
 object HeadersTest extends App
 {
-    DataType.setup()
+    
     
     val contentType = Text/"plain"
     val empty = Headers()

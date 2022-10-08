@@ -5,7 +5,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
-import utopia.flow.generic.model.mutable.{IntType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
 

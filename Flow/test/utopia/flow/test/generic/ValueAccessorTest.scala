@@ -11,7 +11,7 @@ import utopia.flow.generic.model.mutable.DataType
  */
 object ValueAccessorTest extends App
 {
-	DataType.setup()
+	
 	
 	val i = 1.toValue
 	val s = "2".toValue

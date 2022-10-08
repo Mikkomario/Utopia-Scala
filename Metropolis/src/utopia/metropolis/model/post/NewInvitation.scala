@@ -4,7 +4,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.mutable.{IntType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._

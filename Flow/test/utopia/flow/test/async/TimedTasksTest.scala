@@ -20,7 +20,7 @@ import scala.concurrent.duration.FiniteDuration
   */
 object TimedTasksTest extends App
 {
-	DataType.setup()
+	
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	

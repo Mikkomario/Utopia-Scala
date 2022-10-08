@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
   */
 object MailSendApp extends App
 {
-	DataType.setup()
+	
 	
 	def ask(question: String = "") = {
 		if (question.nonEmpty)

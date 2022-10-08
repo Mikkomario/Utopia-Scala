@@ -12,7 +12,7 @@ import utopia.flow.parse.xml.XmlElement
  */
 object XmlToSimpleModelTest extends App
 {
-	DataType.setup()
+	
 	
 	def printElement(elem: XmlElement) =
 	{

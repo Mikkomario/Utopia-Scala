@@ -22,7 +22,7 @@ import utopia.flow.generic.model.mutable.DataType
 object GatewayTest extends App
 {
     Status.setup()
-    DataType.setup()
+    
     val gateway = new Gateway(maxConnectionsPerRoute = 10, maxConnectionsTotal = 70)
     
     val uri = "http://localhost:9999/TestServer/echo"

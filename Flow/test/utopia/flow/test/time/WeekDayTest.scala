@@ -14,7 +14,7 @@ import java.time.{DayOfWeek, LocalDate}
  */
 object WeekDayTest extends App
 {
-	DataType.setup()
+	
 	
 	assert(WeekDay.iterate(Monday).take(7).toVector == WeekDay.values)
 	assert(WeekDay.reverseIterate(Sunday).take(7).toVector == WeekDay.values.reverse)

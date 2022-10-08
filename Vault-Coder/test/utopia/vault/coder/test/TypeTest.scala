@@ -11,7 +11,7 @@ import utopia.vault.coder.model.datatype.PropertyType.{NonEmptyText, Text}
   */
 object TypeTest extends App
 {
-	DataType.setup()
+	
 	
 	val t = PropertyType.interpret("Option[String]", Some(2), Some("isoCode")).get
 	println(t)

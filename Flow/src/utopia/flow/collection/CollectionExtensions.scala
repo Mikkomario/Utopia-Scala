@@ -498,6 +498,44 @@ object CollectionExtensions
 			zipPad[iter.A, To](other, padding, padding)
 		
 		/**
+		  * Maps a single existing item in this collection, or appends a new item instead
+		  * @param f A mapping function that yields a
+		  *          Some if successful (i.e. if this should be 'the' mapping to apply) and
+		  *          None if failed (i.e. if this wasn't the item to map)
+		  * @param append A function that yields a new item to append to this collection.
+		  *               Called only if the specified mapping function 'f' yielded None for all items
+		  *               in this collection.
+		  * @param buildFrom An implicit buildfrom for the resulting collection
+		  * @return A copy of this collection with either one item mapped,
+		  *         or the specified item added to the end of this collection
+		  */
+		def mapOrAppend(f: iter.A => Option[iter.A])(append: => iter.A)
+		               (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+		{
+			val ops = iter(coll)
+			val builder = buildFrom.newBuilder(coll)
+			var found = false
+			ops.iterator.foreach { a =>
+				// Case: Already successfully mapped an item => Simply collects the remaining items
+				if (found)
+					builder += a
+				// Case: No successful mapping done yet => attempts to map the next item
+				else
+					f(a) match {
+						// Case: Mapping succeeded => Remembers it and adds the mapping result
+						case Some(mapped) =>
+							found = true
+							builder += mapped
+						// Case: Mapping failed => Adds the original item and moves to the next item instead
+						case None => builder += a
+					}
+			}
+			// If mapping failed for all items, appends a new item to this collection
+			if (!found)
+				builder += append
+			builder.result()
+		}
+		/**
 		  * Merges an item with an existing item, or appends it at the end of this collection
 		  * @param item The item to either merge or append to this collection
 		  * @param findMatch A function that yields true for the item that should be merged with the new item.
@@ -510,25 +548,7 @@ object CollectionExtensions
 		  */
 		def mergeOrAppend(item: iter.A)(findMatch: iter.A => Boolean)(merge: (iter.A, iter.A) => iter.A)
 		                 (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-		{
-			val ops = iter(coll)
-			val builder = buildFrom.newBuilder(coll)
-			var found = false
-			ops.iterator.foreach { existing =>
-				// Case: Found merge target => Merges the two items and quits searching
-				if (!found && findMatch(existing)) {
-					found = true
-					builder += merge(existing, item)
-				}
-				// Case: Merge target already found, or not this item => Keeps it as is
-				else
-					existing
-			}
-			// If no merge target was found, appends the new item to this collection
-			if (!found)
-				builder += item
-			builder.result()
-		}
+			mapOrAppend { a => if (findMatch(a)) Some(item) else None }(item)
 	}
 	
 	implicit def iterableOperations[Repr](coll: Repr)

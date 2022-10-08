@@ -9,7 +9,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConv
 import utopia.flow.operator.HasLength
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.generic.LineType
+import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.path.LinearPathLike
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.shape.template.VectorLike

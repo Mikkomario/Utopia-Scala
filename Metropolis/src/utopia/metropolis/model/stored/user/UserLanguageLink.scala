@@ -2,7 +2,7 @@ package utopia.metropolis.model.stored.user
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.{StoredFromModelFactory, StyledStoredModelConvertible}

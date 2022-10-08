@@ -3,7 +3,7 @@ package utopia.metropolis.model.post
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.BooleanType
+import utopia.flow.generic.model.mutable.DataType.BooleanType
 import utopia.flow.generic.model.template.ModelConvertible
 
 object NewInvitationResponse extends FromModelFactoryWithSchema[NewInvitationResponse]

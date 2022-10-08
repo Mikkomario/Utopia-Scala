@@ -15,7 +15,7 @@ import java.time.{Instant, LocalTime}
 @deprecated("Replaced with Loop & LoopingProcess and their tests", "v1.15")
 object WeeklyTaskTest extends App
 {
-	DataType.setup()
+	
 	
 	val currentDay = WeekDay.current()
 	val currentTime = LocalTime.now()

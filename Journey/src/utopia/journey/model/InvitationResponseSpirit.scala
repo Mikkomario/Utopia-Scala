@@ -4,7 +4,7 @@ import utopia.annex.model.Spirit
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.metropolis.model.post.NewInvitationResponse
 

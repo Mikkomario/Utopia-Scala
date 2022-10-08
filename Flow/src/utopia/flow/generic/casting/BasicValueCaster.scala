@@ -5,7 +5,8 @@ import ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
 import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
-import utopia.flow.generic.model.mutable.{AnyType, BooleanType, DataType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
 import utopia.flow.parse.json.JsonReader
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._

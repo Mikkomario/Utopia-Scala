@@ -39,7 +39,7 @@ class ApiServlet extends LogicWrappingServlet
 {
 	// ATTRIBUTES   ----------------------------
 	
-	DataType.setup()
+	
 	
 	private implicit val logger: Logger = SysErrLogger
 	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server").executionContext

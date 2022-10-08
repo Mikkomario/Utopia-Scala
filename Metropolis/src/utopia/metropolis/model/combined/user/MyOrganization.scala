@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.{IntType, ModelType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.metropolis.model.DeepExtender

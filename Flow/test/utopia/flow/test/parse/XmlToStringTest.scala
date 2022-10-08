@@ -12,7 +12,7 @@ import utopia.flow.parse.xml.{Namespace, XmlElement}
  */
 object XmlToStringTest extends App
 {
-	DataType.setup()
+	
 	
 	implicit val ns: Namespace = Namespace("test")
 	

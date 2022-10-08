@@ -30,7 +30,7 @@ class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[Request => R
 {
 	// INITIAL CODE ------------------------
 	
-	DataType.setup()
+	
 	Status.setup()
 	
 	

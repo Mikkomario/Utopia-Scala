@@ -8,7 +8,7 @@ import utopia.access.http.Headers
 import utopia.flow.generic.model.immutable.Value
 
 import java.nio.charset.StandardCharsets
-import utopia.flow.generic.model.mutable.{ModelType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.parse.xml.{XmlElement, XmlWriter}
 
 /**

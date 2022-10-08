@@ -2,7 +2,7 @@ package utopia.metropolis.model.post
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, Value}
-import utopia.flow.generic.model.mutable.{StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{StringType, VectorType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.collection.CollectionExtensions._

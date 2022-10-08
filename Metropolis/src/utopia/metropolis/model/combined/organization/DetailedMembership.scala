@@ -3,7 +3,7 @@ package utopia.metropolis.model.combined.organization
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.ModelType
+import utopia.flow.generic.model.mutable.DataType.ModelType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible

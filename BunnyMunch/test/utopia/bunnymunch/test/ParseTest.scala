@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
   */
 object ParseTest extends App
 {
-	DataType.setup()
+	
 	implicit val facade: ValueFacade.type = ValueFacade
 	
 	val subModel = Model(Vector("name" -> "Öykkäri", "age" -> 44, "length" -> 187.2))

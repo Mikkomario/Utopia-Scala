@@ -18,7 +18,7 @@ import utopia.vault.test.model.partial.sales.SalesProductData
   */
 object AccessTest extends App
 {
-	DataType.setup()
+	
 	Connection.modifySettings { _.copy(defaultDBName = Some("vault_test"), charsetName = "utf8",
 		charsetCollationName = "utf8_general_ci") }
 	

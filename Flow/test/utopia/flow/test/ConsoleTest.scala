@@ -1,7 +1,6 @@
 package utopia.flow.test
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.view.mutable.Pointer
@@ -14,7 +13,6 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
  */
 object ConsoleTest extends App
 {
-	DataType.setup()
 	implicit val jsonParser: JsonParser = JsonReader
 	
 	val terminatedPointer = Pointer(false)

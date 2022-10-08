@@ -5,7 +5,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.{IntType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 
 @deprecated("This class will be removed in a future release", "v2.1")

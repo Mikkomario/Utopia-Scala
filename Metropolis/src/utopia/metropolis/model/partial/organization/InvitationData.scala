@@ -6,7 +6,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.mutable.{InstantType, IntType, ModelType}
+import utopia.flow.generic.model.mutable.DataType.{InstantType, IntType, ModelType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._

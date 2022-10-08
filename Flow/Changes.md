@@ -12,6 +12,8 @@
   - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**
   - **ResettableLazyLike** and **MutableLazyLike** to **ResettableLazy** and **MutableLazy**
 - Renamed **LazyWrapper** to **PreInitializedLazy**
+- Rewrote **DataType** class as a trait and moved all data type objects under the **DataType** object 
+  - Consequently, `DataType.setup()` needn't be called anymore
 - Renamed all attribute -related functions and references in **ModelLike** to property -related counterparts
 - Changes relating to variants of **Model**:
   - Renamed **template.Model** to **ModelLike** and **mutable.Model** to **MutableModel**
@@ -68,14 +70,15 @@
 - Added **ViewGraphNode** as a lazily initialized graph
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
+- Added **ApproxSelfEquals** trait
 ### New Methods
 - **CanBeAboutZero**
   - Added `.notCloseZero`
 - **CanBeZero**
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
 - **Iterable** (**CollectionExtensions**)
-  - Added `.mergeOrAppend(...)` that either merges an item into the collection, or appends it, 
-    based on a find function result.
+  - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
+    or appends it.
 - **Lazy**
   - Added `.map(...)` and `.flatMap(...)`
 - **Path**

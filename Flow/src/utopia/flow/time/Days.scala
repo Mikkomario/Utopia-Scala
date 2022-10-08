@@ -1,7 +1,7 @@
 package utopia.flow.time
 
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable.DaysType
+import utopia.flow.generic.model.mutable.DataType.DaysType
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.SelfComparable
 

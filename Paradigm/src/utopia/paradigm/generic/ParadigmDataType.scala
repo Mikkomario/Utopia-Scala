@@ -1,8 +1,8 @@
 package utopia.paradigm.generic
 
-import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.casting.ConversionHandler
 import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.generic.model.mutable.DataType.AnyType
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
@@ -12,33 +12,6 @@ import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Matrix2D, Point, Pol
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
-object Vector2DType extends DataType("Vector2D", classOf[Vector2D]) with ParadigmDataType
-object Vector3DType extends DataType("Vector3D", classOf[Vector3D]) with ParadigmDataType
-object LineType extends DataType("Line", classOf[Line]) with ParadigmDataType
-object CircleType extends DataType("Circle", classOf[Circle]) with ParadigmDataType
-object PointType extends DataType("Point", classOf[Point]) with ParadigmDataType
-object SizeType extends DataType("Size", classOf[Size]) with ParadigmDataType
-object PolygonType extends DataType("Polygon", classOf[Polygonic]) with ParadigmDataType
-object BoundsType extends DataType("Bounds", classOf[Bounds], Some(PolygonType)) with ParadigmDataType
-object Matrix2DType extends DataType("Matrix2D", classOf[Matrix2D]) with ParadigmDataType
-object Matrix3DType extends DataType("Matrix3D", classOf[Matrix3D]) with ParadigmDataType
-object AngleType extends DataType("Angle", classOf[Angle]) with ParadigmDataType
-object RotationType extends DataType("Rotation", classOf[Rotation]) with ParadigmDataType
-object LinearVelocityType extends DataType("LinearVelocity", classOf[LinearVelocity]) with ParadigmDataType
-object LinearAccelerationType extends DataType("LinearAcceleration", classOf[LinearAcceleration])
-    with ParadigmDataType
-object Velocity2DType extends DataType("Velocity2D", classOf[Velocity2D]) with ParadigmDataType
-object Acceleration2DType extends DataType("Acceleration2D", classOf[Acceleration2D]) with ParadigmDataType
-object Velocity3DType extends DataType("Velocity3D", classOf[Velocity3D]) with ParadigmDataType
-object Acceleration3DType extends DataType("Acceleration3D", classOf[Acceleration3D]) with ParadigmDataType
-object LinearTransformationType extends DataType("LinearTransformation", classOf[LinearTransformation])
-    with ParadigmDataType
-object AffineTransformationType extends DataType("AffineTransformation", classOf[AffineTransformation])
-    with ParadigmDataType
-object RgbType extends DataType("RGB", classOf[Rgb]) with ParadigmDataType
-object HslType extends DataType("HSL", classOf[Hsl]) with ParadigmDataType
-object ColorType extends DataType("Color", classOf[Color]) with ParadigmDataType
-
 /**
  * This class is used for introducing and managing Genesis-specific data types
  * @author Mikko Hilpinen
@@ -46,27 +19,153 @@ object ColorType extends DataType("Color", classOf[Color]) with ParadigmDataType
  */
 object ParadigmDataType
 {
-    private var isSetup = false
-    
     /**
      * Sets up the Genesis-specific data type features, as well as the Flow data type features.
      * This method should be called before using any of the data types introduced in this project.
      */
-    def setup() =
+    def setup() = ConversionHandler.addCaster(ParadigmValueCaster)
+    
+    object Vector2DType extends ParadigmDataType
     {
-        isSetup = true
-        
-        DataType.setup()
-        DataType.introduceTypes(Vector2DType, Vector3DType, PointType, SizeType, LineType, CircleType, PolygonType,
-            BoundsType, AngleType, RotationType, Matrix2DType, Matrix3DType, LinearTransformationType,
-            AffineTransformationType, LinearVelocityType, LinearAccelerationType, Velocity2DType, Acceleration2DType,
-            Velocity3DType, Acceleration3DType, RgbType, HslType, ColorType)
-        ConversionHandler.addCaster(ParadigmValueCaster)
+        override def name = "Vector2D"
+        override lazy val supportedClass = classOf[Vector2D]
+        override def superType = Some(AnyType)
+    }
+    object Vector3DType extends ParadigmDataType
+    {
+        override def name = "Vector3D"
+        override lazy val supportedClass = classOf[Vector3D]
+        override def superType = Some(AnyType)
+    }
+    object LineType extends ParadigmDataType
+    {
+        override def name = "Line"
+        override lazy val supportedClass = classOf[Line]
+        override def superType = Some(AnyType)
+    }
+    object CircleType extends ParadigmDataType
+    {
+        override def name = "Circle"
+        override lazy val supportedClass = classOf[Circle]
+        override def superType = Some(AnyType)
+    }
+    object PointType extends ParadigmDataType
+    {
+        override def name = "Point"
+        override lazy val supportedClass = classOf[Point]
+        override def superType = Some(AnyType)
+    }
+    object SizeType extends ParadigmDataType
+    {
+        override def name = "Size"
+        override lazy val supportedClass = classOf[Size]
+        override def superType = Some(AnyType)
+    }
+    object PolygonType extends ParadigmDataType
+    {
+        override def name = "Polygon"
+        override lazy val supportedClass = classOf[Polygonic]
+        override def superType = Some(AnyType)
+    }
+    object BoundsType extends ParadigmDataType
+    {
+        override def name = "Bounds"
+        override lazy val supportedClass = classOf[Bounds]
+        override def superType = Some(PolygonType)
+    }
+    object Matrix2DType extends ParadigmDataType
+    {
+        override def name = "Matrix2D"
+        override lazy val supportedClass = classOf[Matrix2D]
+        override def superType = Some(AnyType)
+    }
+    object Matrix3DType extends ParadigmDataType
+    {
+        override def name = "Matrix3D"
+        override lazy val supportedClass = classOf[Matrix3D]
+        override def superType = Some(AnyType)
+    }
+    object AngleType extends ParadigmDataType
+    {
+        override def name = "Angle"
+        override lazy val supportedClass = classOf[Angle]
+        override def superType = Some(AnyType)
+    }
+    object RotationType extends ParadigmDataType
+    {
+        override def name = "Rotation"
+        override lazy val supportedClass = classOf[Rotation]
+        override def superType = Some(AnyType)
+    }
+    object LinearVelocityType extends ParadigmDataType
+    {
+        override def name = "LinearVelocity"
+        override lazy val supportedClass = classOf[LinearVelocity]
+        override def superType = Some(AnyType)
+    }
+    object LinearAccelerationType extends ParadigmDataType
+    {
+        override def name = "LinearAcceleration"
+        override lazy val supportedClass = classOf[LinearAcceleration]
+        override def superType = Some(AnyType)
+    }
+    
+    object Velocity2DType extends ParadigmDataType
+    {
+        override def name = "Velocity2D"
+        override lazy val supportedClass = classOf[Velocity2D]
+        override def superType = Some(AnyType)
+    }
+    object Acceleration2DType extends ParadigmDataType
+    {
+        override def name = "Acceleration2D"
+        override lazy val supportedClass = classOf[Acceleration2D]
+        override def superType = Some(AnyType)
+    }
+    object Velocity3DType extends ParadigmDataType
+    {
+        override def name = "Velocity3D"
+        override lazy val supportedClass = classOf[Velocity3D]
+        override def superType = Some(AnyType)
+    }
+    object Acceleration3DType extends ParadigmDataType
+    {
+        override def name = "Acceleration3D"
+        override lazy val supportedClass = classOf[Acceleration3D]
+        override def superType = Some(AnyType)
+    }
+    object LinearTransformationType extends ParadigmDataType
+    {
+        override def name = "LinearTransformation"
+        override lazy val supportedClass = classOf[LinearTransformation]
+        override def superType = Some(AnyType)
+    }
+    
+    object AffineTransformationType extends ParadigmDataType
+    {
+        override def name = "AffineTransformation"
+        override lazy val supportedClass = classOf[AffineTransformation]
+        override def superType = Some(AnyType)
+    }
+    
+    object RgbType extends ParadigmDataType
+    {
+        override def name = "RGB"
+        override lazy val supportedClass = classOf[Rgb]
+        override def superType = Some(AnyType)
+    }
+    object HslType extends ParadigmDataType
+    {
+        override def name = "HSL"
+        override lazy val supportedClass = classOf[Hsl]
+        override def superType = Some(AnyType)
+    }
+    object ColorType extends ParadigmDataType
+    {
+        override def name = "Color"
+        override lazy val supportedClass = classOf[Color]
+        override def superType = Some(AnyType)
     }
 }
 
-sealed trait ParadigmDataType
-{
-    if (!ParadigmDataType.isSetup)
-        throw EnvironmentNotSetupException("ParadigmDataType.setup() must be called before using this data type.")
-}
+sealed trait ParadigmDataType extends DataType

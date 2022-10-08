@@ -7,7 +7,8 @@ import java.sql.Types
 import java.sql.Timestamp
 import java.sql.Date
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable.{BooleanType, DataType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LocalTimeType, LongType, StringType}
+import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LocalTimeType, LongType, StringType}
 
 import java.sql.Time
 

@@ -23,7 +23,7 @@ import utopia.reflection.test.TestContext._
   */
 object StackHierarchyTest extends App
 {
-	DataType.setup()
+	
 
 	private class ChangingWrapper extends JStackableWrapper with StackLeaf
 	{

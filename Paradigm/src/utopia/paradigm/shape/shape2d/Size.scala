@@ -9,7 +9,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConv
 import utopia.flow.operator.SignedOrZero
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.generic.SizeType
+import utopia.paradigm.generic.ParadigmDataType.SizeType
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import java.awt.{Dimension, Insets}

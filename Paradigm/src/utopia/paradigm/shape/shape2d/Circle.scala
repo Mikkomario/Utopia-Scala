@@ -8,7 +8,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConv
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
-import utopia.paradigm.generic.CircleType
+import utopia.paradigm.generic.ParadigmDataType.CircleType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.template.Dimensional
 

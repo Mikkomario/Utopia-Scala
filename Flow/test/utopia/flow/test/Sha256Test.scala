@@ -1,6 +1,5 @@
 package utopia.flow.test
 
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.Sha256Hasher
 
 import scala.io.StdIn
@@ -12,7 +11,6 @@ import scala.io.StdIn
   */
 object Sha256Test extends App
 {
-	DataType.setup()
 	println("Input a string to hash")
 	val input = StdIn.readLine()
 	

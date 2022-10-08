@@ -8,7 +8,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConv
 import utopia.flow.operator.LinearScalable
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.generic.BoundsType
+import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.{Dimensional, VectorLike}

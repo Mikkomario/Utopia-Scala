@@ -3,7 +3,7 @@ package utopia.paradigm.motion.motion3d
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.generic.Velocity3DType
+import utopia.paradigm.generic.ParadigmDataType.Velocity3DType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.motion.motion2d.Velocity2D

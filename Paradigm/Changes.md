@@ -1,7 +1,9 @@
 # Utopia Paradigm - List of Changes
 
-## v1.1.1 (In Development)
+## v1.2 (In Development)
 Supports changes in **Flow** v2.0
+### Breaking Changes
+- Moved all **ParadigmDataType** objects under the **ParadigmDataType** object
 
 ## v1.1 - 02.10.2022
 This is a relatively major update, most important addition in which is the **Vector1D** class.  

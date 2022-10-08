@@ -4,9 +4,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueConverterManager
-import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.mutable.IntType
+import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.view.immutable.caching.Lazy

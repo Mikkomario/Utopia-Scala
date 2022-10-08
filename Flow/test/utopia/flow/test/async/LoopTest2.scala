@@ -4,7 +4,6 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{CloseHook, ThreadPool}
 import utopia.flow.async.process.ProcessState.{Completed, Running, Stopped}
 import utopia.flow.async.process.{LoopingProcess, Wait}
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.process.WaitTarget.WaitDuration
@@ -21,7 +20,6 @@ import scala.concurrent.duration.FiniteDuration
   */
 object LoopTest2 extends App
 {
-	DataType.setup()
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	

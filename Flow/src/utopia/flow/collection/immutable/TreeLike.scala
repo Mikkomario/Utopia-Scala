@@ -3,14 +3,14 @@ package utopia.flow.collection.immutable
 import utopia.flow.collection.template
 import utopia.flow.collection.template.TreeLike.AnyTree
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.EqualsExtensions.ApproxEquals
-
+import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.EqualsExtensions._
 /**
   * A common trait for immutable trees
   * @author Mikko Hilpinen
   * @since 4.11.2016
   */
-trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr]
+trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] with ApproxSelfEquals[Repr]
 {
 	// ABSTRACT --------------------
 	
@@ -29,6 +29,12 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr]
 	  * @return A copy of this tree without any child nodes included
 	  */
 	def withoutChildren = createCopy(children = Vector[Repr]())
+	
+	
+	// IMPLEMENTED  ------------
+	
+	override implicit def equalsFunction: EqualsFunction[Repr] =
+		EqualsFunction[Repr] { (a, b) => (a.nav ~== b.nav) && a.children.hasEqualContentWith(b.children)(equalsFunction) }
 	
 	
 	// OTHER    ----------------
@@ -225,4 +231,79 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr]
 	  */
 	@deprecated("Replaced with .filterDirect(...)", "v2.0")
 	def filterChildren(f: Repr => Boolean) = filterDirect(f)
+	
+	/**
+	  * @param node A node to search
+	  * @return Whether this tree structure contains the specified node, or a node very similar to it
+	  */
+	def contains(node: Repr) = allNodesIterator.exists { _ ~== node }
+	/**
+	  * @param node A searched node
+	  * @return Path to a node within this tree that's equal to the specified node.
+	  *         None if this tree doesn't contain such a node.
+	  *         The resulting path will always start with this node and end with a node equal to the specified node.
+	  */
+	def pathTo(node: Repr) = findWithPath { _ ~== node }
+	
+	/**
+	  * Maps all (top level) nodes within this tree that satisfy the specified search condition
+	  * @param find A function that tells whether a node should be mapped (true) or not (false).
+	  * @param map A mapping function
+	  * @return A copy of this tree where all (highest) nodes that satisfy the specified search
+	  *         condition have been mapped.
+	  */
+	def mapAllWhere(find: Repr => Boolean)(map: Repr => Repr): Repr = {
+		if (find(repr))
+			map(repr)
+		else
+			createCopy(children  = children.map { _.mapAllWhere(find)(map) })
+	}
+	/**
+	  * Maps the first node that satisfies the specified search condition
+	  * @param find A search function that yields true for the node to map
+	  * @param map A mapping function applied to the found node
+	  * @return Either:
+	  *             Left: This tree, if no node satisfied the specified search condition, or
+	  *             Right: A copy of this tree with a single node mapped
+	  */
+	def mapFirstWhere(find: Repr => Boolean)(map: Repr => Repr) =
+		_mapFirstWhere(find)(map).toRight(repr)
+	private def _mapFirstWhere(find: Repr => Boolean)(map: Repr => Repr): Option[Repr] = {
+		if (find(repr))
+			Some(map(repr))
+		else
+			children.iterator.zipWithIndex.findMap { case (c, i) =>
+				c._mapFirstWhere(find)(map).map { c2 => createCopy(children = children.updated(i, c2)) }
+			}
+	}
+	
+	/**
+	  * Replaces a single branch within this tree with the specified branch, based on the branch root nav element.
+	  * @param newBranch A tree to replace an existing branch with
+	  * @return Either:
+	  *             Left: This tree, if it didn't contain a node that could be replaced with the specified tree
+	  *             Right: A copy of this tree where the highest node
+	  *             with a nav element matching that of the specified node has been replaced with the specified node
+	  */
+	def replaceBranch(newBranch: Repr) = mapFirstWhere { _.nav ~== newBranch.nav } { _ => newBranch }
+	/**
+	  * Merges a branch into this tree at the first node that has a matching nav element
+	  * as the root of the specified branch.
+	  * When merging the branch into this tree, preserves all nodes of this tree and adds missing nodes from
+	  * the specified branch.
+	  * @param branch A branch to merge into this tree, if possible
+	  * @return Either:
+	  *             Left: This tree if it didn't contain a node with a nav element
+	  *             matching the root of the specified branch, or
+	  *             Right: A copy of this tree with the specified branch merged with the first node that had a
+	  *             matching nav element.
+	  */
+	def mergeBranch(branch: Repr) = {
+		if (branch.hasChildren)
+			mapFirstWhere { _.nav ~== branch.nav } { _ :++ branch.children }
+		else if (containsNav(branch.nav))
+			Right(repr)
+		else
+			Left(repr)
+	}
 }

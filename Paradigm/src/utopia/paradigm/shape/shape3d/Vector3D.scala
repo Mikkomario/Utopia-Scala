@@ -10,7 +10,7 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
-import utopia.paradigm.generic.Vector3DType
+import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.shape.shape2d.{Point, Size, Vector2D, Vector2DLike}
 

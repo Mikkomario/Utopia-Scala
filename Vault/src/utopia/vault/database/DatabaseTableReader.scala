@@ -1,7 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.mutable.AnyType
+import utopia.flow.generic.model.mutable.DataType.AnyType
 import utopia.flow.parse.string.Regex
 import utopia.vault.database.columnlength.ColumnLengthLimits
 import utopia.vault.model.immutable.{Column, Table}

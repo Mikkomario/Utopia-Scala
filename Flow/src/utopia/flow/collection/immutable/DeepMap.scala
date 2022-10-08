@@ -2,9 +2,9 @@ package utopia.flow.collection.immutable
 
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.mutable.AnyType
 import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.model.mutable.DataType.AnyType
 
 object DeepMap
 {

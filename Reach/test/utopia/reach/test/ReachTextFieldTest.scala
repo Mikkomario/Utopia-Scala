@@ -30,7 +30,7 @@ object ReachTextFieldTest extends App
 {
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
-	DataType.setup()
+	
 	
 	import TestContext._
 	import TestCursors._

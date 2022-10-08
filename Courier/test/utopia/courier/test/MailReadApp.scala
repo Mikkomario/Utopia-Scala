@@ -20,7 +20,7 @@ import scala.util.{Failure, Success}
   */
 object MailReadApp extends App
 {
-	DataType.setup()
+	
 	
 	def ask(question: String = "") = {
 		if (question.nonEmpty)

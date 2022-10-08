@@ -3,7 +3,7 @@ package utopia.metropolis.model.post
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelDeclaration
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.generic.model.mutable.{IntType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType, VectorType}
 import utopia.flow.collection.CollectionExtensions._
 
 object NewDescription extends FromModelFactory[NewDescription]

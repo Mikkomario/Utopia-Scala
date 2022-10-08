@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
   */
 object XmlReaderTest extends App
 {
-	DataType.setup()
+	
 	
 	val result = XmlReader.readFile("Flow/test/test.xml") { reader =>
 		reader.toNextElementWithName("PREPRINTYEAR")

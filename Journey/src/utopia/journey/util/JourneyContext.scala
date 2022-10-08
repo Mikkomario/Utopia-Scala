@@ -74,7 +74,7 @@ object JourneyContext
 	def setup(containersDirectory: Path = "data")
 	         (implicit exc: ExecutionContext, jsonParser: JsonParser, logger: Logger) =
 	{
-		DataType.setup()
+		
 		settings = Success(Settings(executionContext, jsonParser, logger, containersDirectory))
 	}
 	

@@ -5,6 +5,25 @@ import utopia.flow.operator.EqualsFunction
 object Tree
 {
 	/**
+	  * Creates a new tree that consists of a single linear branch that doesn't divide at any point
+	  * @param b Items to place on this branch, from the root to the leaf
+	  * @param navEquals An implicit equals function to use when comparing navigational elements in this tree.
+	  *                  Default is ==
+	  * @tparam A Type of nav elements used by this tree
+	  * @throws NoSuchElementException If the specified branch is empty
+	  * @return A new tree
+	  */
+	@throws[NoSuchElementException]("If the specified branch is empty")
+	def branch[A](b: Seq[A])(implicit navEquals: EqualsFunction[A] = EqualsFunction.default): Tree[A] = {
+		val tail = b.tail
+		if (tail.isEmpty)
+			apply(b.head)
+		else
+			apply(b.head, Vector(branch(b.tail)))
+	}
+	
+	
+	/**
 	  * Creates a new tree with a recursive function.
 	  * The whole tree structure is initialized at once. For lazily initialized structures,
 	  * see [[utopia.flow.collection.immutable.caching.LazyTree]]

@@ -7,7 +7,7 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
-import utopia.paradigm.generic.ColorType
+import utopia.paradigm.generic.ParadigmDataType.ColorType
 
 import scala.language.implicitConversions
 import scala.util.Try

@@ -36,7 +36,7 @@ import scala.util.{Failure, Success, Try}
   */
 object VaultCoderApp extends App
 {
-	DataType.setup()
+	
 	
 	implicit val logger: Logger = SysErrLogger
 	implicit val codec: Codec = Codec.UTF8

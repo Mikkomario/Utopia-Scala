@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets
   */
 object XmlReadTest extends App
 {
-	DataType.setup()
+	
 	
 	println(StringFrom.path("Flow/test/test.xml", StandardCharsets.UTF_8).get.takeWhile { _ != '<' }.length)
 	val xml = XmlReader.parseFile("Flow/test/test.xml").get

@@ -17,7 +17,7 @@ import utopia.reflection.shape.LengthExtensions._
 object StackTest extends App
 {
 	import utopia.reflection.test.TestContext._
-	DataType.setup()
+	
 
 	// Creates the basic components & wrap as Stackable
 	def makeItem() =

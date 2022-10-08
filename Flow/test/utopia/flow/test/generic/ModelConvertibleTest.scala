@@ -13,7 +13,7 @@ import scala.collection.immutable.HashMap
  */
 object ModelConvertibleTest extends App
 {
-	DataType.setup()
+	
 	
 	private implicit val jsonParser: JsonParser = JsonReader
 	

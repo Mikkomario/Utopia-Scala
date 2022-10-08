@@ -7,7 +7,7 @@ import utopia.flow.operator.{ApproxEquals, CanBeZero, LinearScalable, SelfCompar
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
-import utopia.paradigm.generic.RotationType
+import utopia.paradigm.generic.ParadigmDataType.RotationType
 
 object Rotation
 {

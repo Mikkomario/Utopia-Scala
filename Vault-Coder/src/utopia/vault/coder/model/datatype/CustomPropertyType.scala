@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{ModelDeclaration, ModelValidationFailedException}
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.generic.model.mutable.StringType
+import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.parse.string.Regex
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._

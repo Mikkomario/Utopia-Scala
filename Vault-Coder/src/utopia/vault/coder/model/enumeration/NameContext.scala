@@ -2,7 +2,7 @@ package utopia.vault.coder.model.enumeration
 
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.operator.{ApproxEquals, ScopeUsable}
+import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction, ScopeUsable}
 import utopia.vault.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated, Text, UnderScore}
 
@@ -11,7 +11,7 @@ import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphena
   * @author Mikko Hilpinen
   * @since 20.8.2022, v1.6
   */
-sealed trait NameContext extends ScopeUsable[NameContext] with ApproxEquals[NameContext]
+sealed trait NameContext extends ScopeUsable[NameContext] with ApproxSelfEquals[NameContext]
 {
 	// ABSTRACT -----------------------
 	
@@ -50,8 +50,7 @@ sealed trait NameContext extends ScopeUsable[NameContext] with ApproxEquals[Name
 	
 	override def repr = this
 	
-	override def ~==(other: NameContext) =
-		(this == other) || parentsIterator.contains(other) || other.parentsIterator.contains(this)
+	override implicit def equalsFunction: EqualsFunction[NameContext] = NameContext.equalsFunction
 	
 	
 	// OTHER    --------------------
@@ -110,6 +109,9 @@ object NameContext
 	  */
 	val values = Vector[NameContext](EnumValueName, EnumName, JsonPropName, FunctionName, ClassPropName, ObjectName,
 		ClassName, ColumnName, TableName, DatabaseName, Sql, Header, Documentation, FileName)
+	
+	implicit val equalsFunction: EqualsFunction[NameContext] =
+		(a, b) => (a == b) || a.parentsIterator.contains(b) || b.parentsIterator.contains(a)
 	
 	
 	// NESTED   ----------------------

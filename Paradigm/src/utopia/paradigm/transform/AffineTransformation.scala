@@ -9,7 +9,7 @@ import utopia.flow.operator.ApproxEquals
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
-import utopia.paradigm.generic.AffineTransformationType
+import utopia.paradigm.generic.ParadigmDataType.AffineTransformationType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D, Vector2DLike}
 import utopia.paradigm.shape.shape3d.Matrix3D
