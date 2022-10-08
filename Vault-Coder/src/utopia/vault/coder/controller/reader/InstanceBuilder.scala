@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameters, Visibility}
+import utopia.vault.coder.model.scala.{Annotation, DeclarationDate, Parameters, Visibility}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
 import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference}
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Case, Sealed}
@@ -17,7 +17,8 @@ import scala.collection.immutable.VectorBuilder
   */
 class InstanceBuilder(visibility: Visibility, prefixes: Set[DeclarationPrefix], instanceType: InstanceDeclarationType,
                       name: String, genericTypes: Seq[GenericType], parameters: Option[Parameters],
-                      extensions: Vector[Extension], scalaDoc: ScalaDoc, commentsBefore: Vector[String])
+                      extensions: Vector[Extension], scalaDoc: ScalaDoc, commentsBefore: Vector[String],
+                      annotations: Seq[Annotation])
 	extends InstanceBuilderLike
 {
 	// ATTRIBUTES   ----------------------------
@@ -67,14 +68,15 @@ class InstanceBuilder(visibility: Visibility, prefixes: Set[DeclarationPrefix], 
 		// TODO: WET WET
 		instanceType match {
 			case ObjectD => ObjectDeclaration(name, extensions, freeCode, propertiesBuilder.result(),
-				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, scalaDoc.description,
-				scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
+				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, annotations,
+				scalaDoc.description, scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
 			case ClassD => ClassDeclaration(name, genericTypes, parameters.getOrElse(Parameters.empty), extensions,
 				freeCode, propertiesBuilder.result(), methodsBuilder.result().toSet, nestedBuilder.result().toSet,
-				visibility, scalaDoc.description, scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
+				visibility, annotations, scalaDoc.description, scalaDoc.author, commentsBefore, since,
+				prefixes.contains(Case))
 			case TraitD => TraitDeclaration(name, genericTypes, extensions, propertiesBuilder.result(),
-				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, scalaDoc.description,
-				scalaDoc.author, commentsBefore, since, prefixes.contains(Sealed))
+				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, annotations,
+				scalaDoc.description, scalaDoc.author, commentsBefore, since, prefixes.contains(Sealed))
 		}
 	}
 }

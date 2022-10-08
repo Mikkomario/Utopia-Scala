@@ -9,7 +9,7 @@ import utopia.vault.coder.model.scala.doc.ScalaDocPart
   * @author Mikko Hilpinen
   * @since 3.9.2021, v0.1
   */
-trait ScalaDocConvertible
+trait Documented
 {
 	// ABSTRACT --------------------------
 	

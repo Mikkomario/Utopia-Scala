@@ -5,7 +5,7 @@ import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.ScalaType
 import utopia.vault.coder.model.scala.declaration.DeclarationStart
 import utopia.vault.coder.model.scala.doc.ScalaDocPart
-import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
+import utopia.vault.coder.model.scala.template.{ScalaConvertible, Documented}
 
 /**
   * Represents a scala method parameter
@@ -14,7 +14,7 @@ import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConver
   */
 case class Parameter(name: String, dataType: ScalaType, default: CodePiece = CodePiece.empty,
                      prefix: Option[DeclarationStart] = None, description: String = "")
-	extends ScalaConvertible with ScalaDocConvertible
+	extends ScalaConvertible with Documented
 {
 	// COMPUTED -------------------------------
 	

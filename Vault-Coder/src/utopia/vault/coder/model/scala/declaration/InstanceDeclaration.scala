@@ -3,14 +3,15 @@ package utopia.vault.coder.model.scala.declaration
 import utopia.flow.operator.CombinedOrdering
 import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.{Author, Since}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.datatype.{Extension, GenericType}
 import utopia.vault.coder.model.scala.doc.ScalaDocPart
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameters, Visibility}
-import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
+import utopia.vault.coder.model.scala.{Annotation, DeclarationDate, Parameters, Visibility}
+import utopia.vault.coder.model.scala.template.CodeConvertible
 
 import scala.collection.immutable.VectorBuilder
 
@@ -19,9 +20,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-trait InstanceDeclaration
-	extends Declaration with CodeConvertible with ScalaDocConvertible
-		with Mergeable[InstanceDeclaration, InstanceDeclaration]
+trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration, InstanceDeclaration]
 {
 	// ABSTRACT ------------------------------
 	
@@ -75,6 +74,7 @@ trait InstanceDeclaration
 	  * @param properties New properties
 	  * @param methods New methods
 	  * @param nested New nested instances
+	  * @param annotations New annotations
 	  * @param description New description
 	  * @param author New author
 	  * @param headerComments New header comments
@@ -82,14 +82,13 @@ trait InstanceDeclaration
 	  */
 	protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType], extensions: Vector[Extension],
 	                       creationCode: Code, properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
-	                       nested: Set[InstanceDeclaration], description: String, author: String,
-	                       headerComments: Vector[String], since: DeclarationDate): InstanceDeclaration
+	                       nested: Set[InstanceDeclaration], annotations: Seq[Annotation], description: String,
+	                       author: String, headerComments: Vector[String], since: DeclarationDate): InstanceDeclaration
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def documentation =
-	{
+	override def documentation = {
 		val builder = new VectorBuilder[ScalaDocPart]()
 		val desc = description
 		if (desc.nonEmpty)
@@ -107,14 +106,15 @@ trait InstanceDeclaration
 		builder.result()
 	}
 	
-	override def toCode =
-	{
+	override def toCode = {
 		val builder = new CodeBuilder()
 		
 		// Writes the scaladoc
 		builder ++= scalaDoc
 		// Writes possible comments
 		headerComments.foreach { c => builder += s"// $c" }
+		// Writes possible annotations
+		builder ++= annotationsPart
 		// Writes the declaration and the extensions
 		builder += basePart
 		constructorParams.foreach { builder += _.toScala }
@@ -164,6 +164,7 @@ trait InstanceDeclaration
 	
 	override def mergeWith(other: InstanceDeclaration) =
 	{
+		val parties = Pair(this, other)
 		val conflictsBuilder = new VectorBuilder[MergeConflict]()
 		
 		val myDeclaration = basePart
@@ -176,6 +177,11 @@ trait InstanceDeclaration
 		if (mySuperConstructor.exists { my => theirSuperConstructor.exists { _ != my } })
 			conflictsBuilder += MergeConflict.line(theirSuperConstructor.get.toString,
 				mySuperConstructor.get.toString, s"$name versions specify different super constructors")
+		
+		val (mergedAnnotations, annotationConflicts) = Annotation.merge(parties.map { _.annotations })
+		annotationConflicts.foreach { case Pair(_, their) =>
+			conflictsBuilder += MergeConflict.note(s"Annotation ${ their.toScala } was (partially) overwritten")
+		}
 		
 		def _mergeDeclarations[A <: Mergeable[A, A] with Declaration](my: Vector[A], their: Vector[A]): Vector[A] =
 		{
@@ -217,8 +223,8 @@ trait InstanceDeclaration
 			newExtensions,
 			creationCode ++ Code(other.creationCode.lines.filterNot(creationCode.lines.contains),
 				other.creationCode.references),
-			newProperties, newMethods, newNested, description.notEmpty.getOrElse(other.description),
-			author.notEmpty.getOrElse(other.author),
+			newProperties, newMethods, newNested, mergedAnnotations, description.nonEmptyOrElse(other.description),
+			author.nonEmptyOrElse(other.author),
 			headerComments ++ other.headerComments.filterNot(headerComments.contains), since min other.since) ->
 			conflictsBuilder.result()
 	}

@@ -64,6 +64,7 @@
 - Deprecated a bunch of method in **Model** classes in favor of their renamed counterparts
 - Deprecated **Generator** and **Counter**
 - Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
+- Deprecated `.compareWith(...)` in **Pair** in favor of `.merge(...)`
 ### New Features
 - **ModelDeclarations** now support optional properties
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
@@ -83,6 +84,8 @@
   - Added `.map(...)` and `.flatMap(...)`
 - **Path**
   - Added `.toTree`
+- **Pair**
+  - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **Signed**
   - Added a number of new utility functions
 - **Tree** (object)
@@ -93,6 +96,7 @@
 - **Changing(Like)** `.map(...)`, `.flatMap(...)`, `.lazyMap(...)`, `.mergeWith(...)`, `.lazyMergeWith(...)`
   and `.delayedBy(...)` are no longer abstract
 - **Path** `.parentOption` (via **FileExtensions**) now converts the path to a root path, if necessary
+- **Pair**`.sorted` now returns a **Pair**
 
 ## v1.17 - 02.10.2022
 This version contains a few larger changes and a large number of little updates and additions here and there.  

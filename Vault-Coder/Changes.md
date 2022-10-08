@@ -1,5 +1,12 @@
 # Utopia Vault Coder
 
+## v1.7.1 (In Development)
+### Bugfixes
+- Merging now supports operators (e.g. `+`), whereas the earlier versions omitted them from merge results
+- Merging now supports annotations (e.g. `@deprecated`), whereas earlier versions omitted them from merge results
+### Known Bugs
+- Merging misplaces type declarations and their documentation
+
 ## v1.7 - 02.10.2022
 This relatively major update focuses on two completely new features:
 1. Enumeration customization and

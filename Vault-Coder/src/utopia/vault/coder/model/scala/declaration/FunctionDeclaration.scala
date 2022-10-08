@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
@@ -7,8 +8,7 @@ import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.Return
 import utopia.vault.coder.model.scala.datatype.{GenericType, ScalaType}
 import utopia.vault.coder.model.scala.doc.ScalaDocPart
-import utopia.vault.coder.model.scala.{Parameters, Visibility}
-import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
+import utopia.vault.coder.model.scala.{Annotation, Parameters, Visibility}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -18,7 +18,7 @@ import scala.collection.immutable.VectorBuilder
   * @since 30.8.2021, v0.1
   */
 trait FunctionDeclaration[+Repr]
-	extends Declaration with CodeConvertible with ScalaDocConvertible with Mergeable[FunctionDeclaration[_], Repr]
+	extends Declaration with Mergeable[FunctionDeclaration[_], Repr]
 {
 	// ABSTRACT ------------------------------
 	
@@ -69,6 +69,7 @@ trait FunctionDeclaration[+Repr]
 	  * @param parameters New parameters
 	  * @param bodyCode New code
 	  * @param explicitOutputType New output type
+	  * @param annotations Annotations to apply to this function
 	  * @param description New description
 	  * @param returnDescription New return description
 	  * @param headerComments New header comments
@@ -77,9 +78,9 @@ trait FunctionDeclaration[+Repr]
 	  * @return Copy of this declaration
 	  */
 	protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType], parameters: Option[Parameters],
-	                       bodyCode: Code, explicitOutputType: Option[ScalaType], description: String,
-	                       returnDescription: String, headerComments: Vector[String], isOverridden: Boolean,
-	                       isImplicit: Boolean): Repr
+	                       bodyCode: Code, explicitOutputType: Option[ScalaType], annotations: Seq[Annotation],
+	                       description: String, returnDescription: String, headerComments: Vector[String],
+	                       isOverridden: Boolean, isImplicit: Boolean): Repr
 	
 	
 	// COMPUTED ------------------------------
@@ -113,6 +114,8 @@ trait FunctionDeclaration[+Repr]
 		builder ++= scalaDoc
 		// Then possible header comments
 		headerComments.foreach { c => builder += s"// $c" }
+		// Then possible annotations
+		builder ++= annotationsPart
 		// Then the header and body
 		if (isImplicit)
 			builder.appendPartial("implicit ")
@@ -147,6 +150,7 @@ trait FunctionDeclaration[+Repr]
 			else
 				this -> other
 		}
+		val parties = Pair(priority, lowPriority)
 		
 		val conflictsBuilder = new VectorBuilder[MergeConflict]()
 		lazy val prioString = if (isLowMergePriority) " (low priority)" else ""
@@ -165,6 +169,12 @@ trait FunctionDeclaration[+Repr]
 				explicitOutputType.get.toString,
 				s"$name implementations specify different return types$prioString")
 		
+		val (mergedAnnotations, annotationConflicts) = Annotation.merge(parties.map { _.annotations })
+		if (parties.first == this)
+			annotationConflicts.foreach { case Pair(_, lowPrio) =>
+				conflictsBuilder += MergeConflict.note(s"Annotation $lowPrio was (partially) overwritten")
+			}
+		
 		val newVisibility = {
 			if (other.isLowMergePriority)
 				visibility
@@ -177,8 +187,9 @@ trait FunctionDeclaration[+Repr]
 			priority.genericTypes ++
 				lowPriority.genericTypes.filterNot { t => priority.genericTypes.exists { _.name == t.name } },
 			priority.params, priority.bodyCode, priority.explicitOutputType.orElse(lowPriority.explicitOutputType),
-			priority.description.notEmpty.getOrElse(lowPriority.description),
-			priority.returnDescription.notEmpty.getOrElse(lowPriority.returnDescription),
+			mergedAnnotations,
+			priority.description.nonEmptyOrElse(lowPriority.description),
+			priority.returnDescription.nonEmptyOrElse(lowPriority.returnDescription),
 			other.headerComments.filterNot(headerComments.contains) ++ headerComments,
 			isOverridden || other.isOverridden, priority.isImplicit) -> conflictsBuilder.result()
 	}

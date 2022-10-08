@@ -1,5 +1,6 @@
 package utopia.vault.coder.controller.reader
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.collection.mutable.builder.MultiMapBuilder
 import utopia.flow.collection.mutable.iterator.PollingIterator
 import utopia.flow.parse.string.{IterateLines, Regex}
@@ -10,7 +11,7 @@ import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
 import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.datatype.TypeVariance.Invariance
-import utopia.vault.coder.model.scala.{Package, Parameter, Parameters}
+import utopia.vault.coder.model.scala.{Annotation, Package, Parameter, Parameters}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
 import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, InheritanceLimitType, Reference, ScalaType, TypeRequirement, TypeVariance}
@@ -33,6 +34,7 @@ object ScalaParser
 	private lazy val packageRegex = Regex("package ") + Regex.any
 	private lazy val importRegex = Regex("import ") + Regex.any
 	
+	private lazy val annotationStartRegex = Regex.escape('@')
 	private lazy val visibilityRegex = (Regex("protected ") || Regex("private ")).withinParenthesis
 	private lazy val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(p.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
@@ -40,15 +42,21 @@ object ScalaParser
 	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
-	private val namedDeclarationStartRegex = declarationStartRegex +
-		((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
-		(Regex.wordCharacter.zeroOrMoreTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
-		(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce
+	private val namedDeclarationStartRegex = {
+		val operatorRegex = Regex.anyOf("!+-=/*&%?:<>|").oneOrMoreTimes.withinParenthesis
+		val nameRegex = (((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
+			(Regex.wordCharacter.zeroOrMoreTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+			(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce).withinParenthesis
+		
+		declarationStartRegex + (operatorRegex || nameRegex).withinParenthesis
+	}
 	
 	private lazy val extendsRegex = Regex(" extends ")
 	private lazy val withRegex = Regex(" with ")
 	
-	private lazy val commaOutsideParenthesesRegex = Regex.escape(',').ignoringParentheses
+	private lazy val commaRegex = Regex.escape(',')
+	private lazy val commaOutsideParenthesesRegex = commaRegex.ignoringParentheses
+	private lazy val commaOutsideQuotationsRegex = commaRegex.ignoringQuotations
 	
 	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
 	private lazy val commentStartRegex = Regex("\\/\\*")
@@ -152,8 +160,11 @@ object ScalaParser
 	                             parentBuilder: InstanceBuilderLike): Boolean =
 	{
 		// Reads lines until there is a scaladoc start or a declaration start
-		val startingLines = linesIter.collectTo { line => scalaDocStartRegex.existsIn(line.code) ||
-			namedDeclarationStartRegex.existsIn(line.code) }.dropWhile { _.isEmpty }
+		val startingLines = linesIter.collectTo { line =>
+			scalaDocStartRegex.existsIn(line.code) ||
+				namedDeclarationStartRegex.existsIn(line.code) ||
+				annotationStartRegex.existsIn(line.code)
+		}.dropWhile { _.isEmpty }
 		val beforeFirstLine = startingLines.dropRight(1)
 		
 		// Checks what the next non-empty line looks like
@@ -212,15 +223,22 @@ object ScalaParser
 			declarationLine match {
 				// Case: Declaration found => parses it
 				case Some(declarationLine) =>
+					// Looks for annotations
+					val (annotations, commentAndCodeLines) = (beforeFirstLine ++ beforeDeclarationLines)
+						.divideWith { line =>
+							if (line.code.startsWith("@"))
+								Left(annotationFrom(line, refMap))
+							else
+								Right(line)
+						}
 					// Processes the "free" code before the declaration
 					// - comments will be attached to the parsed declaration
-					val (beforeDeclarationComments, beforeDeclarationCode) = (beforeFirstLine ++ beforeDeclarationLines)
-						.divideWith { line =>
-							if (line.code.startsWith("//"))
-								Left(line.code.drop(2).trim)
-							else
-								Right(line.copy(indentation = line.indentation - declarationLine.indentation))
-						}
+					val (beforeDeclarationComments, beforeDeclarationCode) = commentAndCodeLines.divideWith { line =>
+						if (line.code.startsWith("//"))
+							Left(line.code.drop(2).trim)
+						else
+							Right(line.copy(indentation = line.indentation - declarationLine.indentation))
+					}
 					val filteredComments = beforeDeclarationComments.filter { !segmentSeparatorRegex(_) }
 					parentBuilder.addFreeCode(beforeDeclarationCode
 						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty })
@@ -358,8 +376,9 @@ object ScalaParser
 							// Case: Parsed item is a method
 							if (declarationType == FunctionD && parameters.exists { _.containsExplicits })
 								parentBuilder.addMethod(MethodDeclaration(visibility, declarationName, genericTypes,
-									parameters.get, body, explicitType, scalaDoc.description, scalaDoc.returnDescription,
-									filteredComments, isOverridden = prefixes.contains(Override),
+									parameters.get, body, explicitType, annotations, scalaDoc.description,
+									scalaDoc.returnDescription, filteredComments,
+									isOverridden = prefixes.contains(Override),
 									isImplicit = prefixes.contains(Implicit), isLowMergePriority = false))
 							// Case: Parsed item is a property
 							else {
@@ -374,8 +393,8 @@ object ScalaParser
 									case None => Vector()
 								}
 								parentBuilder.addProperty(PropertyDeclaration(propertyType, declarationName, body,
-									visibility, explicitType, implicitParameters,
-									scalaDoc.description.notEmpty.getOrElse(scalaDoc.returnDescription),
+									visibility, explicitType, implicitParameters, annotations,
+									scalaDoc.description.nonEmptyOrElse(scalaDoc.returnDescription),
 									filteredComments, isOverridden = prefixes.contains(Override),
 									isImplicit = prefixes.contains(Implicit)))
 							}
@@ -389,7 +408,7 @@ object ScalaParser
 								afterParameterLists.map { CodeLine(declarationLine.indentation, _) },
 								linesIter, refMap)
 							val builder = new InstanceBuilder(visibility, prefixes, declarationType, declarationName,
-								genericTypes, parameters, extensions, scalaDoc, filteredComments)
+								genericTypes, parameters, extensions, scalaDoc, filteredComments, annotations)
 							contentBlock.foreach { block =>
 								// Reads all available items from the block
 								val blockLinesIterator = block.lines.iterator.pollable
@@ -404,6 +423,21 @@ object ScalaParser
 					false
 			}
 		}
+	}
+	
+	private def annotationFrom(line: CodeLine, refMap: Map[String, Reference]) = {
+		val (mainPart, rawParamsPart) = line.code.splitAtFirst("(")
+		val (namePart, typesPart) = mainPart.splitAtFirst("[")
+		val name = namePart.drop(1)
+		val types = if (typesPart.nonEmpty) scalaTypesFrom(typesPart, refMap)._1 else Vector()
+		val params = {
+			if (rawParamsPart.nonEmpty)
+				rawParamsPart.untilLast(")").splitIterator(commaOutsideQuotationsRegex)
+					.map(JsonBunny.valueOf).toVector
+			else
+				Vector()
+		}
+		Annotation(name, types, params)
 	}
 	
 	private def combineLineAndBlock(firstLine: CodeLine, block: ReadCodeBlock, remaining: Option[String],
@@ -570,6 +604,9 @@ object ScalaParser
 	private def parametersFrom(parameterListStrings: Vector[String], refMap: Map[String, Reference],
 	                           scalaDoc: ScalaDoc) =
 	{
+		// println(s"\nReading parameters from ${ parameterListStrings.size } lines: ")
+		// parameterListStrings.foreach { line => println(s"\t- $line") }
+		
 		// Handles the implicit parameter list separately, which is expected to be the last list, if present
 		val (standardLists, implicitList) = {
 			if (parameterListStrings.lastOption.exists { _.startsWith("implicit ") })
@@ -588,20 +625,26 @@ object ScalaParser
 	
 	private def parameterListFrom(parameterListString: String, refMap: Map[String, Reference], scalaDoc: ScalaDoc) =
 	{
-		if (parameterListString.isEmpty)
+		// println(s"\nReading parameter list from: $parameterListString")
+		if (parameterListString.isEmpty) {
+			// println("\t=> Empty list")
 			Vector()
+		}
 		else
 		{
 			val paramsBuilder = new VectorBuilder[Parameter]()
 			val (firstParam, firstRemaining) = nextParameterFrom(parameterListString, refMap, scalaDoc)
+			// println(s"First parameter is: $firstParam")
 			paramsBuilder += firstParam
 			var remaining = firstRemaining
-			while (remaining.startsWith(","))
-			{
+			while (remaining.startsWith(",")) {
+				// println(s"Parses next param starting from: $remaining")
 				val (nextParam, nextRemaining) = nextParameterFrom(remaining.drop(1), refMap, scalaDoc)
 				paramsBuilder += nextParam
+				// println(s"Parsed parameter: $nextParam")
 				remaining = nextRemaining
 			}
+			// println(s"Remaining part, which was not included in any parameter: $remaining")
 			paramsBuilder.result()
 		}
 	}
@@ -772,13 +815,11 @@ object ScalaParser
 	                                  remainingLinesIter: PollingIterator[CodeLine]): (Vector[String], Option[String]) =
 	{
 		// println(s"Reading parameter list contents starting from line: '$listStartLine'")
-		
 		val listsBuilder = new VectorBuilder[String]()
 		// Code that appears after the initial parameter lists will be stored here
 		var codeAfter: Option[String] = None
 		// Checks whether the first line starts a parameter list
-		if (listStartLine.startsWith("("))
-		{
+		if (listStartLine.startsWith("(")) {
 			// Wraps the starting lines as code lines without indentation
 			// - doesn't utilize indentation in this method
 			val (listLines, remainingAfter) = readBlockLike(CodeLine(listStartLine.drop(1)), remainingLinesIter,
@@ -788,10 +829,11 @@ object ScalaParser
 			listsBuilder += listLines.map { _.code }.mkString
 			// Collects lists while the remaining part keeps initiating new lists
 			codeAfter = remainingAfter
-			while (codeAfter.exists { _.startsWith("(") })
-			{
+			while (codeAfter.exists { _.startsWith("(") }) {
 				val (listLines, remainingAfter) = readBlockLike(CodeLine(codeAfter.get.drop(1)), remainingLinesIter,
 					'(', ')')
+				// println(s"Got ${ listLines.size } lines from ${codeAfter.get}:")
+				listLines.foreach { l => println(s"- '$l'") }
 				listsBuilder += listLines.map { _.code }.mkString
 				codeAfter = remainingAfter
 			}
@@ -800,15 +842,15 @@ object ScalaParser
 		if (codeAfter.nonEmpty)
 			listsBuilder.result() -> codeAfter
 		else
-			remainingLinesIter.pollOption match
-			{
+			remainingLinesIter.pollOption match {
 				case Some(nextLine) =>
 					val trimmedNextLine = nextLine.code.trim
 					// Case: Next line opens a new parameter list => processes that and the potential lists after
-					if (trimmedNextLine.startsWith("("))
-					{
+					if (trimmedNextLine.startsWith("(")) {
 						remainingLinesIter.skipPolled()
+						// println("Uses recursion to go deeper")
 						val (nextLists, remaining) = readRawParameterLists(trimmedNextLine, remainingLinesIter)
+						// println(s"Found ${ nextLists.size } lines from the opened line: '$trimmedNextLine'")
 						(listsBuilder.result() ++ nextLists) -> remaining
 					}
 					// Case: Next line doesn't open a new list => leaves it as it is
@@ -845,15 +887,15 @@ object ScalaParser
 			blockStartLine.code.count { _ == closeChar }
 		var lastLine = blockStartLine
 		// Adds multiple lines if necessary
-		while (openBlockCount > 0 && remainingLinesIter.hasNext)
-		{
+		while (openBlockCount > 0 && remainingLinesIter.hasNext) {
 			blockLinesBuilder += lastLine
 			lastLine = remainingLinesIter.next()
 			openBlockCount = openBlockCount +
 				lastLine.code.count { _ == openChar } - lastLine.code.count { _ == closeChar }
 		}
 		// Handles the last line, possibly splitting it to two parts
-		val (lastLineBlockPart, afterPart) = separateBlockClosuresFrom(lastLine, openBlockCount - 1, closeChar)
+		val (lastLineBlockPart, afterPart) = separateBlockClosuresFrom(lastLine, (openBlockCount - 1) max 0,
+			openChar, closeChar)
 		blockLinesBuilder += lastLineBlockPart
 		// Returns all lines plus the part after the last closure
 		blockLinesBuilder.result() -> Some(afterPart.dropWhile { _ == ' ' }).filter { _.nonEmpty }
@@ -904,8 +946,27 @@ object ScalaParser
 	// Returns part before the last included closure (without closing character) +
 	// part after last included closure
 	// ClosuresToInclude indicates the number of closing characters to include in the first part without cutting it
-	private def separateBlockClosuresFrom(line: CodeLine, closuresToInclude: Int, closeChar: Char) =
+	private def separateBlockClosuresFrom(line: CodeLine, extraClosuresToInclude: Int, openChar: Char, closeChar: Char) =
 	{
+		//println(s"\nSeparating $openChar - $closeChar from ${ line.code }, including extra $extraClosuresToInclude closures")
+		// Contains indices of opening characters
+		val openIndices = line.code.iterator.zipWithIndex.filter { _._1 == openChar }.map { _._2 }.caching
+		// Each item contains: 1) Index of char, 2) Number of such chars already encountered
+		val closeIndices = line.code.iterator.zipWithIndex.filter { _._1 == closeChar }.map { _._2 }.zipWithIndex.caching
+		
+		val splitIndex = closeIndices.findMap { case (closeIndex, pastClosures) =>
+			val openings = openIndices.iterator.takeWhile { _ < closeIndex }.size
+			// println(s"Testing the ${pastClosures + 1}th closure at index $closeIndex, where there have been $openings new openings")
+			if (pastClosures >= openings + extraClosuresToInclude) {
+				// println("Cutting here")
+				Some(closeIndex)
+			}
+			else {
+				// println("Continuing search")
+				None
+			}
+		}
+		/*
 		val splitIndex = {
 			if (closuresToInclude <= 0)
 				line.code.indexOf(closeChar)
@@ -916,8 +977,12 @@ object ScalaParser
 				closureIterator.skip(closuresToInclude)
 				closureIterator.next()
 			}
+		}*/
+		val (lineCode, remainingCode) = splitIndex match {
+			case Some(splitIndex) => line.code.substring(0, splitIndex) -> line.code.substring(splitIndex + 1)
+			case None => line.code -> ""
 		}
-		val (lineCode, remainingCode) = line.code.substring(0, splitIndex) -> line.code.substring(splitIndex + 1)
+		// println(s"Took '$lineCode', left '$remainingCode'")
 		line.copy(code = lineCode) -> remainingCode
 	}
 }

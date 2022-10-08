@@ -3,7 +3,7 @@ package utopia.vault.coder.model.scala
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
+import utopia.vault.coder.model.scala.template.{ScalaConvertible, Documented}
 
 import scala.language.implicitConversions
 
@@ -50,7 +50,7 @@ object Parameters
   * @since 2.9.2021, v0.1
   */
 case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Vector[Parameter] = Vector())
-	extends ScalaConvertible with ScalaDocConvertible
+	extends ScalaConvertible with Documented
 {
 	// COMPUTED -----------------------------------
 	

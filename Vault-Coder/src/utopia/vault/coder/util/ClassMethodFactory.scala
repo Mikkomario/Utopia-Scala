@@ -44,7 +44,7 @@ object ClassMethodFactory
 		// Case: Enumerations are used => has to process enumeration values separately in custom apply method
 		else
 			new MethodDeclaration(Public, methodName, Vector(), param,
-				tryApplyCode(targetClass, validatedModelCode)(propNamesInModel)(wrapAssignments), None,
+				tryApplyCode(targetClass, validatedModelCode)(propNamesInModel)(wrapAssignments), None, Vector(),
 				"", "", Vector(), isOverridden = true, isImplicit = false,
 				isLowMergePriority = false)
 	}

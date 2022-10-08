@@ -3,7 +3,7 @@ package utopia.vault.coder.model.scala.declaration
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
 import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
-import utopia.vault.coder.model.scala.{Parameter, Visibility}
+import utopia.vault.coder.model.scala.{Annotation, Parameter, Visibility}
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 /**
@@ -20,6 +20,7 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  * @param visibility Visibility of this property (default = public)
 	  * @param explicitOutputType Data type returned by this function when explicitly defined (optional)
 	  * @param implicitParams Implicit parameters accepted by this (computed) property
+	  * @param annotations Annotations that apply to this declaration (default = empty)
 	  * @param description Documentation for this property
 	  * @param isOverridden Whether this property overrides a base member (default = false)
 	  * @param isImplicit Whether this is an implicit property (default = false)
@@ -31,11 +32,13 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  */
 	def apply(name: String, references: Set[Reference] = Set(), visibility: Visibility = Public,
 	          explicitOutputType: Option[ScalaType] = None,
-	          implicitParams: Vector[Parameter] = Vector(), description: String = "", isOverridden: Boolean = false,
+	          implicitParams: Vector[Parameter] = Vector(), annotations: Seq[Annotation] = Vector(),
+	          description: String = "", isOverridden: Boolean = false,
 	          isImplicit: Boolean = false, isLowMergePriority: Boolean = false)
 	         (line1: String, moreLines: String*) =
 		PropertyDeclaration(this, name, Code.from(line1 +: moreLines.toVector).referringTo(references), visibility,
-			explicitOutputType, implicitParams, description, Vector(), isOverridden, isImplicit, isLowMergePriority)
+			explicitOutputType, implicitParams, annotations, description, Vector(),
+			isOverridden, isImplicit, isLowMergePriority)
 }
 
 object PropertyDeclarationType

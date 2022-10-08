@@ -1,15 +1,16 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.Visibility
-import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.{Annotation, Visibility}
+import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
 import utopia.vault.coder.model.scala.datatype.GenericType
+import utopia.vault.coder.model.scala.template.{CodeConvertible, Documented}
 
 /**
   * Declares a scala item of some sort
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-trait Declaration
+trait Declaration extends CodeConvertible with Documented
 {
 	// ABSTRACT ------------------------------
 	
@@ -30,14 +31,30 @@ trait Declaration
 	  */
 	def genericTypes: Seq[GenericType]
 	
+	/**
+	  * @return Annotations that apply to this (whole) declaration
+	  */
+	def annotations: Seq[Annotation]
+	
 	
 	// COMPUTED ------------------------------
 	
 	/**
+	  * @return The annotations part of this declaration's code, which typically appears between the base part and
+	  *         the scaladoc part.
+	  */
+	protected def annotationsPart = {
+		if (annotations.isEmpty)
+			Code.empty
+		else {
+			val pieces = annotations.map { _.toScala }
+			Code(pieces.map { p => CodeLine(p.text) }.toVector, pieces.flatMap { _.references }.toSet)
+		}
+	}
+	/**
 	  * @return The base part of this declaration as a string. E.g. "private def test"
 	  */
-	protected def basePart =
-	{
+	protected def basePart = {
 		val visibilityPart = visibility.toScala
 		val mainPart = keyword + s" $name"
 		val genericPart = {

@@ -4,7 +4,7 @@ import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.TypeVariance.{Contravariance, Covariance, Invariance}
 import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.TypeParam
 import utopia.vault.coder.model.scala.doc.ScalaDocPart
-import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
+import utopia.vault.coder.model.scala.template.{ScalaConvertible, Documented}
 
 object GenericType
 {
@@ -55,7 +55,7 @@ object GenericType
   */
 case class GenericType(name: String, requirement: Option[TypeRequirement] = None, variance: TypeVariance = Invariance,
                        description: String = "")
-	extends ScalaConvertible with ScalaDocConvertible
+	extends ScalaConvertible with Documented
 {
 	// COMPUTED ----------------------------------
 	

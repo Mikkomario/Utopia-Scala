@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.operator.Sign
+import utopia.flow.collection.mutable.iterator.ZipPadIterator
+import utopia.flow.operator.{EqualsFunction, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 import scala.annotation.switch
@@ -48,6 +49,89 @@ object Pair
 	  * @return A new pair with two values of the specified function
 	  */
 	def fill[A](item: => A) = apply(item, item)
+	
+	
+	// EXTENSIONS ----------------------------------
+	
+	implicit class RichCollPair[A](val p: Pair[Iterable[A]]) extends AnyVal
+	{
+		/**
+		  * @return Zips the two collections in this pair together.
+		  *         (but only on the overlapping area, i.e. the common size)
+		  */
+		def zipMerge = p.merge { _ zip _ }
+		/**
+		  * @return An iterator that zips the two collections in this pair together
+		  *         (but only on the overlapping area, i.e. the common size)
+		  */
+		def zipIterator = p.merge { _.iterator zip _.iterator }
+		/**
+		  * @param pad A function that yields items to place the shorter collection
+		  * @return An iterator that zips all items on both sides of this pair,
+		  *         padding the shorter collection where/if necessary
+		  */
+		def zipPadIterator(pad: => A) = ZipPadIterator[A](p.first.iterator, p.second.iterator, pad)
+		/**
+		  * @param pad Asymmetric padding to apply, where the left side contains the padding for the
+		  *            first collection and the right side contains padding for the second collection.
+		  * @return An iterator that zips all items on both sides of this pair,
+		  *         padding the shorter collection where/if necessary
+		  */
+		def zipPadIterator(pad: Pair[A]) = ZipPadIterator[A, A](p.first.iterator, p.second.iterator, pad.first, pad.second)
+		
+		/**
+		  * Groups the collections in this pair to 3 groups:
+		  * 1: Items that appear only in the first collection
+		  * 2: Items that appear only in the second collection
+		  * 3: Items that appear in both collections, based on the specified matching function
+		  *
+		  * Assumes the items in each collection to be distinct.
+		  * If the items in the second collection are not distinct, this function may behave in an unpredictable manner
+		  * (i.e. an item from the second collection may appear in both groups 2 and 3).
+		  *
+		  * @param equals A function that determines whether the two items form a "match",
+		  *               and should therefore be placed together in group 3.
+		  *
+		  * @return Groups 1 and 2 as a Pair of Sets + group 3 as a Vector of Pairs.
+		  *         The ordering of group 3 is dictated by the ordering in the second source collection.
+		  *         The ordering in groups 1 and 2 is lost (obviously).
+		  */
+		def separateMatching(implicit equals: EqualsFunction[A]) =
+			separateMatchingWith(equals.apply)
+		/**
+		  * Groups the collections in this pair to 3 groups:
+		  * 1: Items that appear only in the first collection
+		  * 2: Items that appear only in the second collection
+		  * 3: Items that appear in both collections, based on the specified matching function
+		  *
+		  * Assumes the items in each collection to be distinct.
+		  * If the items in the second collection are not distinct, this function may behave in an unpredictable manner
+		  * (i.e. an item from the second collection may appear in both groups 2 and 3).
+		  *
+		  * @param f A function that determines whether the two items form a "match",
+		  *          and should therefore be placed together in group 3.
+		  *
+		  * @return Groups 1 and 2 as a Pair of Sets + group 3 as a Vector of Pairs.
+		  *         The ordering of group 3 is dictated by the ordering in the second source collection.
+		  *         The ordering in groups 1 and 2 is lost (obviously).
+		  */
+		def separateMatchingWith(f: (A, A) => Boolean) = {
+			val firstUniquePool = mutable.Set.from[A](p.first)
+			val secondUniqueBuilder = mutable.Set[A]()
+			val matchesBuilder = new VectorBuilder[Pair[A]]()
+			
+			p.second.foreach { b =>
+				firstUniquePool.find { a => f(a, b) } match {
+					case Some(a) =>
+						firstUniquePool -= a
+						matchesBuilder += Pair(a, b)
+					case None => secondUniqueBuilder += b
+				}
+			}
+			
+			Pair(firstUniquePool.toSet, secondUniqueBuilder.toSet) -> matchesBuilder.result()
+		}
+	}
 }
 
 /**
@@ -103,7 +187,7 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	
 	override def map[B](f: A => B) = Pair(f(first), f(second))
 	
-	override def reduce[B >: A](op: (B, B) => B) = op(first, second)
+	override def reduce[B >: A](op: (B, B) => B) = merge(op)
 	
 	override def toString() = s"($first, $second)"
 	
@@ -135,6 +219,17 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  */
 	override def contains[B >: A](item: B) = first == item || second == item
 	
+	override def sorted[B >: A](implicit ord: Ordering[B]) = {
+		val cmp = ord.compare(first, second)
+		if (cmp > 0) reverse else this
+	}
+	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
+	override def maxBy[B](f: A => B)(implicit cmp: Ordering[B]) =
+		if (cmp.gt(f(second), f(first))) second else first
+	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
+	override def minBy[B](f: A => B)(implicit cmp: Ordering[B]) =
+		if (cmp.lt(f(second), f(first))) second else first
+	
 	
 	// OTHER    --------------------------
 	
@@ -142,18 +237,15 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  * @param sign A sign
 	  * @return This pair on Positive, reversed copy on Negative
 	  */
-	def *(sign: Sign) = sign match
-	{
+	def *(sign: Sign) = sign match {
 		case Positive => this
 		case Negative => reverse
 	}
-	
 	/**
 	 * @param side A side (Positive = left = first, Negative = right = second)
 	 * @return The item of this pair from that side
 	 */
-	def apply(side: Sign) = side match
-	{
+	def apply(side: Sign) = side match {
 		case Positive => first
 		case Negative => second
 	}
@@ -184,8 +276,7 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  * @tparam B Type of the new item
 	  * @return A copy of this pair with the specified item replacing one of the items in this pair
 	  */
-	def withItem[B >: A](newItem: B, side: Sign) = side match
-	{
+	def withItem[B >: A](newItem: B, side: Sign) = side match {
 		case Negative => withFirst(newItem)
 		case Positive => withSecond(newItem)
 	}
@@ -208,8 +299,7 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  * @tparam B Type of function result
 	  * @return A copy of this pair with the targeted item mapped
 	  */
-	def mapSide[B >: A](side: Sign)(f: A => B) = side match
-	{
+	def mapSide[B >: A](side: Sign)(f: A => B) = side match {
 		case Negative => mapFirst(f)
 		case Positive => mapSecond(f)
 	}
@@ -241,12 +331,21 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	def zip[B](other: Pair[B]) = Pair((first, other.first), (second, other.second))
 	
 	/**
+	  * Merges together the two values in this pair using a function.
+	  * Works exactly like reduce.
+	  * @param f A function that accepts the two values in this pair and yields a merge value
+	  * @tparam B Function result type
+	  * @return Function result
+	  */
+	def merge[B](f: (A, A) => B) = f(first, second)
+	/**
 	  * Compares the two values in this pair using the specified function
 	  * @param f A function for comparing two values with each other
 	  * @tparam B Type of function result
 	  * @return Function result
 	  */
-	def compareWith[B](f: (A, A) => B) = f(first, second)
+	@deprecated("Renamed to .merge(...)", "v2.0")
+	def compareWith[B](f: (A, A) => B) = merge(f)
 	
 	
 	// NESTED   ------------------------------
