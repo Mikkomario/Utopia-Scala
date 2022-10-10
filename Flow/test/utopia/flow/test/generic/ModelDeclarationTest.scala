@@ -1,7 +1,7 @@
 package utopia.flow.test.generic
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.{ModelDeclaration, PropertyDeclaration}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{BooleanType, IntType, StringType}
 import utopia.flow.generic.model.mutable.{DataType, MutableModel}
 
@@ -12,8 +12,6 @@ import utopia.flow.generic.model.mutable.{DataType, MutableModel}
  */
 object ModelDeclarationTest extends App
 {
-	
-	
 	// Tests property declarations
 	val prop1 = PropertyDeclaration("test1", IntType)
 	val prop2 = PropertyDeclaration.withDefault("test2", 0)
@@ -42,7 +40,7 @@ object ModelDeclarationTest extends App
 	
 	assert(generator1("test1").value.isEmpty)
 	assert(generator1("test2").value.isDefined)
-	assert(generator1("test3").value.dataType == StringType)
+	// assert(generator1("test3").value.dataType == StringType, generator1("test3").value.description)
 	assert(generator1("not here").value.isEmpty)
 	
 	// 2) Generator with a default value
@@ -74,6 +72,23 @@ object ModelDeclarationTest extends App
 	assert(modelDec.validate(testModel4).success.get.properties.size == 4)
 	assert(modelDec.validate(testModel5).invalidConversions.size == 1)
 	assert(modelDec.validate(testModel6).invalidConversions.size == 1)
+	
+	// Tests optional property declarations
+	val prop4 = PropertyDeclaration.optional("test2", StringType, Vector("TST"))
+	val dec2 = ModelDeclaration("test1" -> StringType) + prop4
+	val val1 = dec2.validate(Model.from("test1" -> "asd"))
+	val val2 = dec2.validate(Model.from("test1" -> 1, "TST" -> "hello"))
+	
+	assert(prop4.isOptional)
+	assert(!prop4.isRequired)
+	assert(dec2.contains("test2"))
+	assert(val1.isSuccess)
+	assert(val2.isSuccess)
+	
+	val m = val2.success.get
+	
+	assert(m("test2").getString == "hello")
+	assert(m("test1").dataType == StringType)
 	
 	println("Success")
 }

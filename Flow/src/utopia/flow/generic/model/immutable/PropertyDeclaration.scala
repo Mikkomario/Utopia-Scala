@@ -16,7 +16,7 @@ object PropertyDeclaration
       */
     def apply(name: String, dataType: DataType, alternativeNames: Vector[String] = Vector(),
               defaultValue: Value = Value.empty, isOptional: Boolean = false): PropertyDeclaration =
-        PropertyDeclarationImpl(name, alternativeNames, dataType, defaultValue)
+        PropertyDeclarationImpl(name, alternativeNames, dataType, defaultValue, isOptional)
     
     /**
       * Creates a new declaration
@@ -48,7 +48,7 @@ object PropertyDeclaration
       * @return A new property declaration
       */
     def withDefault(name: String, defaultValue: Value, alternativeNames: Vector[String] = Vector()): PropertyDeclaration =
-        apply(name, defaultValue.dataType, alternativeNames, isOptional = true)
+        apply(name, defaultValue.dataType, alternativeNames, defaultValue, isOptional = true)
     
     
     // NESTED   ----------------------
