@@ -1048,6 +1048,37 @@ object TimeExtensions
 		def hours(implicit n: Numeric[T]) = nanoPrecision(1000000L * 1000 * 60 * 60)
 	}
 	
+	implicit class LocalTimeNumber(val i: Int) extends AnyVal
+	{
+		/**
+		  * @return This number as a local hours number
+		  */
+		def oClock = LocalTime.of(i, 0)
+		
+		/**
+		  * Converts two integers into a local time
+		  * @param minutes Minutes to add to this hour
+		  * @return "This" hour at 'minutes' minutes.
+		  *         E.g. 17::54 is interpreted as 17:54
+		  */
+		def ::(minutes: Int) = LocalTime.of(i, minutes)
+		
+		/**
+		  * Combines this minutes value with hours in order to form a local time value
+		  * @param hour Target hour
+		  * @return A local time value that's "this" many minutes to / before 'hour' hour.
+		  *         E.g. 6 to 12 would yield 11:54
+		  */
+		def to(hour: Int) = if (hour == 0) LocalTime.of(23, i) else LocalTime.of(hour - 1, i)
+		/**
+		  * Combines this minutes value with hours in order to form a local time value
+		  * @param hour Target hour
+		  * @return A local time value that's "this" many minutes past / after 'hour' hour.
+		  *         E.g. 6 past 12 would yield 12:06
+		  */
+		def past(hour: Int) = if (hour == 24) LocalTime.of(0, i) else LocalTime.of(hour, i)
+	}
+	
 	implicit class DayCount(val i: Int) extends AnyVal
 	{
 		// COMPUTED ----------------------

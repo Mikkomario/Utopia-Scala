@@ -70,6 +70,7 @@
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
 - Added **ViewGraphNode** as a lazily initialized graph
 - Added **TimedTask** trait, which is now supported in **TimedTasks**, also
+- Added new ways to write **LocalTime** values (after importing **TimeExtensions**)
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait
