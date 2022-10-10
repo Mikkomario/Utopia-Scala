@@ -833,7 +833,7 @@ object ScalaParser
 				val (listLines, remainingAfter) = readBlockLike(CodeLine(codeAfter.get.drop(1)), remainingLinesIter,
 					'(', ')')
 				// println(s"Got ${ listLines.size } lines from ${codeAfter.get}:")
-				listLines.foreach { l => println(s"- '$l'") }
+				// listLines.foreach { l => println(s"- '$l'") }
 				listsBuilder += listLines.map { _.code }.mkString
 				codeAfter = remainingAfter
 			}

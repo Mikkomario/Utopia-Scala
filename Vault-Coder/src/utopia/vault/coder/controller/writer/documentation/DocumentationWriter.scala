@@ -178,7 +178,7 @@ object DocumentationWriter
 							val actualTableName = tableName.table
 							classByTableName.get(actualTableName) match {
 								case Some(target) => writer.println(s"  - Refers to ${ link(target.name) }")
-								case None => writer.println(s"  - Refers to $actualTableName from another module")
+								case None => writer.println(s"  - Refers to *$actualTableName* from another module")
 							}
 						}
 					}

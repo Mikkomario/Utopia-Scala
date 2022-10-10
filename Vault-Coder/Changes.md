@@ -2,8 +2,10 @@
 
 ## v1.7.1 (In Development)
 ### Bugfixes
+- Fixed enumeration auto-indexing from 0-based (v1.7 -specific bug) back to 1-based
 - Merging now supports operators (e.g. `+`), whereas the earlier versions omitted them from merge results
 - Merging now supports annotations (e.g. `@deprecated`), whereas earlier versions omitted them from merge results
+- Functional parameters that accepted tuples were not parsed correctly when merging - fixed
 ### Known Bugs
 - Merging misplaces type declarations and their documentation
 

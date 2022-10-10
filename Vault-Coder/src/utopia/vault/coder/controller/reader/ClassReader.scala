@@ -188,7 +188,7 @@ object ClassReader
 						enumAtt.value.getVector.zipWithIndex.map { case (v, index) =>
 							v.model match {
 								case Some(model) => enumValueFrom(model, index)
-								case None => EnumerationValue(v.getString, index.toString)
+								case None => EnumerationValue(v.getString, (index + 1).toString)
 							}
 						},
 						author = author)
