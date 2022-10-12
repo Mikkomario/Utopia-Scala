@@ -11,6 +11,7 @@ import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.util.{Failure, Success, Try}
+import scala.language.implicitConversions
 
 /**
   * This object contains some extensions for the more traditional collections / data structures

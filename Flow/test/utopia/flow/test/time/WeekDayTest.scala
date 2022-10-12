@@ -1,6 +1,5 @@
 package utopia.flow.test.time
 
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.WeekDay
 import utopia.flow.time.WeekDay.{Monday, Sunday, Thursday, Tuesday, Wednesday}
 import utopia.flow.time.TimeExtensions._
@@ -20,8 +19,8 @@ object WeekDayTest extends App
 	assert(WeekDay.reverseIterate(Sunday).take(7).toVector == WeekDay.values.reverse)
 	assert(Vector(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY,
 		DayOfWeek.SATURDAY, DayOfWeek.SUNDAY).map { d => d: WeekDay } == WeekDay.values)
-	assert((1 to 7).map(WeekDay.forIndex).toVector == WeekDay.values)
-	assert((1 to 7).map { DayOfWeek.of(_): WeekDay } == WeekDay.values)
+	assert(Range.inclusive(1, 7).map(WeekDay.forIndex).toVector == WeekDay.values)
+	assert(Range.inclusive(1, 7).map { DayOfWeek.of(_): WeekDay } == WeekDay.values)
 	assert(Tuesday > Monday)
 	assert(Tuesday < Wednesday)
 	assert(Monday.previous == Sunday)

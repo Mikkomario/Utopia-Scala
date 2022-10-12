@@ -4,6 +4,8 @@ import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.mutable.{DataType, Variable}
 import utopia.flow.generic.model.template.Property
 
+import scala.language.implicitConversions
+
 object PropertyFactory
 {
 	// TYPES    ---------------------------

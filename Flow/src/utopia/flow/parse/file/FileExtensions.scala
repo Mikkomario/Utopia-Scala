@@ -17,6 +17,7 @@ import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCo
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
+import scala.language.implicitConversions
 
 /**
   * Provides some extensions to be used with java.nio.file classes

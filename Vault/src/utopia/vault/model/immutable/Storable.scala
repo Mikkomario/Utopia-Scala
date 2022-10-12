@@ -1,7 +1,7 @@
 package utopia.vault.model.immutable
 
 import utopia.vault.sql.SqlExtensions._
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.vault.database.{Connection, DBException}
@@ -78,7 +78,7 @@ trait Storable extends ModelConvertible
     
     // IMPLEMENTED  ----------------------------------
     
-    override def toModel = Model(valueProperties, declaration.toConstantFactory)
+    override def toModel = Model(valueProperties, declaration.toPropertyFactoryWithoutDefaults(Constant))
     
     
     // OTHER METHODS    ------------------------------

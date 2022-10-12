@@ -6,6 +6,7 @@ import utopia.flow.generic.model.template.ValueConvertible
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
 /**
   * This object offers implicit conversions from basic data types to the valueConvertible trait
