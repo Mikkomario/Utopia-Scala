@@ -46,6 +46,13 @@ object Reference
 	lazy val model = apply(immutableGenericModels, "Model")
 	lazy val valueConvertible = apply(genericModelTemplates, "ValueConvertible")
 	lazy val modelConvertible = apply(genericModelTemplates, "ModelConvertible")
+	lazy val modelDeclaration = apply(immutableGenericModels, "ModelDeclaration")
+	lazy val propertyDeclaration = apply(immutableGenericModels, "PropertyDeclaration")
+	lazy val fromModelFactoryWithSchema = apply(flowGenerics/"factory", "FromModelFactoryWithSchema")
+	
+	lazy val flowDataType = apply(genericModels/"mutable", "DataType")
+	lazy val stringType = flowDataType/"StringType"
+	lazy val instantType = flowDataType/"InstantType"
 	
 	lazy val now = apply(flowTime, "Now")
 	lazy val today = apply(flowTime, "Today")
@@ -95,6 +102,7 @@ object Reference
 	// Metropolis
 	
 	lazy val metropolisStoredModelConvertible = apply(metropolisModel/"stored", "StoredModelConvertible")
+	lazy val storedFromModelFactory = apply(metropolisModel/"stored", "StoredFromModelFactory")
 	lazy val descriptionRole = apply(description, "DescriptionRole")
 	lazy val linkedDescription = apply(combinedDescription, "LinkedDescription")
 	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")

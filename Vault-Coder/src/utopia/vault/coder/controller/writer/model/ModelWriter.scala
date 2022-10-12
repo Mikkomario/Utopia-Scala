@@ -2,13 +2,14 @@ package utopia.vault.coder.controller.writer.model
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.database.AccessWriter
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
 import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.Reference
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
+import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
+import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, ObjectDeclaration}
 import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, declaration}
+import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.io.Codec
 
@@ -40,9 +41,22 @@ object ModelWriter
 		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(Reference.model)) else
 			propWrites.reduceLeft { _.append(_, ", ") }.withinParenthesis.withPrefix("Vector")
 				.withinParenthesis.withPrefix("Model").referringTo(Reference.model)
-		
-		// Writes the data model
+		val fromModelMayFail = classToWrite.fromDbModelConversionMayFail
+		val modelDeclarationCode = Reference.modelDeclaration.targetCode +
+			(CodePiece("Vector") +
+				classToWrite.properties.map(propertyDeclarationFrom).reduceLeftOption { _.append(_, ", ") }
+					.getOrElse(CodePiece.empty).withinParenthesis
+				).withinParenthesis
+		// Writes the data model and the data object
 		File(dataClassPackage,
+			ObjectDeclaration(dataClassName,
+				Vector(Reference.fromModelFactoryWithSchema(ScalaType.basic(dataClassName))),
+				properties = Vector(
+					LazyValue("schema", modelDeclarationCode.references, isOverridden = !fromModelMayFail,
+						isLowMergePriority = true)(modelDeclarationCode.text)
+				),
+				methods = Set(fromModelFor(classToWrite, dataClassName).copy(isLowMergePriority = true))
+			),
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
 				constructionParams = classToWrite.properties.map { prop =>
@@ -58,7 +72,7 @@ object ModelWriter
 				since = DeclarationDate.versionedToday, isCaseClass = true)
 		).write().flatMap { dataClassRef =>
 			val storePackage = setup.modelPackage / s"stored.${ classToWrite.packageName }"
-			// Writes the stored model next
+			// Writes the stored model and object next
 			val storedClass = {
 				val idType = classToWrite.idType.toScala
 				// Accepts id and data -parameters
@@ -98,7 +112,21 @@ object ModelWriter
 						isCaseClass = true)
 				}
 			}
-			File(storePackage, storedClass).write().map { _ -> dataClassRef }
+			// If Metropolis is enabled, writes the fromModelFactory as well
+			val storedObject = {
+				if (setup.modelCanReferToDB)
+					None
+				else
+					Some(ObjectDeclaration(storedClass.name,
+						Vector(Reference.storedFromModelFactory(
+							ScalaType.basic(storedClass.name), ScalaType.basic(dataClassName))),
+						properties = Vector(
+							ComputedProperty("dataFactory", Set(dataClassRef), isOverridden = true)(dataClassName)
+						)
+					))
+			}
+			File(storePackage, storedObject.toVector :+ storedClass, Set[Reference]())
+				.write().map { _ -> dataClassRef }
 		}
 	}
 	
@@ -131,5 +159,37 @@ object ModelWriter
 					case None => Vector()
 				}
 		}
+	}
+	
+	private def propertyDeclarationFrom(prop: Property)(implicit naming: NamingRules): CodePiece = {
+		val name = prop.jsonPropName
+		val altNames = (Set(CamelCase.lower, UnderScore)
+			.flatMap { style =>
+				(prop.name +: prop.dbProperties.map { p: DbProperty => p.name }).toSet
+					.map { name: Name => name.singularIn(style) }
+			} - name)
+			.toVector.sorted
+		val default = prop.customDefaultValue.notEmpty.orElse { prop.dataType.nonEmptyDefaultValue.notEmpty } match {
+			case Some(v) => prop.dataType.toValueCode(v.text).referringTo(v.references)
+			case None => Reference.value.targetCode.append("empty", ".")
+		}
+		Reference.propertyDeclaration.targetCode + CodePiece(name.quoted)
+			.append(prop.dataType.valueDataType.targetCode, ", ")
+			.append(s"Vector(${ altNames.map { _.quoted }.mkString(", ") })", ", ")
+			.append(default, ", ")
+			.append(s"isOptional = ${ prop.dataType.isOptional }", ", ")
+			.withinParenthesis
+	}
+	
+	private def fromModelFor(classToWrite: Class, dataClassName: String)(implicit naming: NamingRules) = {
+		def _modelFromAssignments(assignments: CodePiece) =
+			assignments.withinParenthesis.withPrefix(dataClassName)
+		
+		if (classToWrite.fromDbModelConversionMayFail)
+			ClassMethodFactory.classFromModel(classToWrite, "schema.validate(model)"){
+				_.dbProperties.map { _.jsonPropName } }(_modelFromAssignments)
+		else
+			ClassMethodFactory.classFromValidatedModel(classToWrite){
+				_.dbProperties.map { _.jsonPropName } }(_modelFromAssignments)
 	}
 }

@@ -43,10 +43,19 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 				// Plus, the parts must be parseable
 				model("parts").getVector.tryMap { v => CustomPartConversion(v.getModel) }.flatMap { parts =>
 					if (parts.nonEmpty || model.containsNonEmpty("sql")) {
+						val valueDataType = {
+							val code = model("value_data_type", "value_type", "data_type").getString
+							if (code.isEmpty)
+								Reference.flowDataType/"AnyType"
+							else if (code.contains('.'))
+								Reference(code)
+							else
+								Reference.flowDataType/code
+						}
 						val default: CodePiece = model("default", "default_value")
 						// Handles the single-column use-case, if necessary
 						val conversion = if (parts.isEmpty) Left(sqlTypeFrom(model, default)) else Right(parts)
-						Success(apply(ScalaType(model("type")), conversion, model("from_value"),
+						Success(apply(ScalaType(model("type")), conversion, valueDataType, model("from_value"),
 							model("option_from_value"), model("to_value"), model("option_to_value"),
 							model("empty", "empty_value"), default,
 							model("prop_name", "property_name", "default_prop_name", "default_name"),
@@ -124,6 +133,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
   * @param conversion Either Left: The underlying SQL data type (just the type) behind this data type
   *                   (single-column use-case) or Right: The parts (column-representations) that form this combined
   *                   data type (multi-column use-case)
+  * @param valueDataType Full reference to the data type object associated with the Value that is generated from this type
   * @param fromValue Code that takes a Value (represented by $v) and returns an instance of this type.
   *                  For multi-column data types, the values are represented by $v1, $v2, $v3 and so on.
   * @param optionFromValue Code that takes a Value ($v) and returns an option containing an instance of this type.
@@ -141,6 +151,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
   * @param yieldsTryFromValue Whether fromValue code yields a Try instead of an instance of this type (default = false)
   */
 case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlPropertyType, Vector[CustomPartConversion]],
+                              valueDataType: Reference,
                               fromValue: CodePiece, optionFromValue: CodePiece,
                               toValue: CodePiece, optionToValue: CodePiece = CodePiece.empty,
                               emptyValue: CodePiece = CodePiece.empty,
@@ -217,6 +228,8 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 			case Left(targetType) => Vector(DirectSqlTypeConversion(OptionWrappedMidType, targetType.nullable))
 			case Right(parts) => parts.map { new PartToSqlConversion(_, extractFromOption = true) }
 		}
+		
+		override def valueDataType = CustomPropertyType.this.valueDataType
 		
 		override def emptyValue = CodePiece.none
 		override def nonEmptyDefaultValue = CodePiece.empty

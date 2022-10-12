@@ -36,8 +36,6 @@ import scala.util.{Failure, Success, Try}
   */
 object VaultCoderApp extends App
 {
-	
-	
 	implicit val logger: Logger = SysErrLogger
 	implicit val codec: Codec = Codec.UTF8
 	implicit val jsonParser: JsonParser = JsonReader
