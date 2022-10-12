@@ -2,7 +2,7 @@ package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, Name, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.datatype.TypeVariance.Covariance
@@ -45,6 +45,19 @@ object AccessWriter
 	  * @return Name of the single id access point for that class
 	  */
 	def singleIdAccessNameFor(c: Class)(implicit naming: NamingRules) = (singleAccessPrefix +: c.name).className
+	/**
+	  * Converts a class name into a ManyXAccess trait name
+	  * @param className Name of the X class
+	  * @param naming Naming rules to apply
+	  * @return A trait name for ManyXAccess traits
+	  */
+	private def manyAccessTraitNameFrom(className: Name)(implicit naming: NamingRules) = {
+		// The "Many" -prefix is ignored if the class name already starts with "Many"
+		if (className.pluralClassName.toLowerCase.startsWith("many"))
+			className + accessTraitSuffix
+		else
+			(manyPrefix +: className) + accessTraitSuffix
+	}
 	
 	/**
 	  * @param c     A class
@@ -52,6 +65,7 @@ object AccessWriter
 	  * @return Package that contains singular access points for that class
 	  */
 	def singleAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = setup.singleAccessPackage / c.packageName
+	private def manyAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = setup.manyAccessPackage / c.packageName
 	
 	/**
 	  * @param c     A class
@@ -71,11 +85,8 @@ object AccessWriter
 	  *                              many description links access point, if applicable for this class
 	  * @param codec                 Implicit codec to use when writing files
 	  * @param setup                 Implicit project-specific setup to use
-	  * @return References to<br>
-	  *         1) trait common for distinct single model access points<br>
-	  *         2) Single model access point object<br>
-	  *         3) Trait common for many model access points<br>
-	  *         4) Many model access point object
+	  * @return References to the ManyXAccessLike -trait (i.e. the most generic access point for multiple items),
+	  *         if one was generated
 	  */
 	def apply(classToWrite: Class, modelRef: Reference, factoryRef: Reference, dbModelRef: Reference,
 	          descriptionReferences: Option[(Reference, Reference, Reference)])
@@ -108,13 +119,70 @@ object AccessWriter
 		
 		writeSingleAccesses(classToWrite, modelRef, descriptionReferences, Vector(factoryProperty, modelProperty),
 			deprecationMethods.map { _.first }, rootViewExtension)
-			.flatMap { case (singleAccessRef, uniqueAccessRef, _) =>
+			.flatMap { _ =>
 				writeManyAccesses(classToWrite, modelRef, descriptionReferences, modelProperty, factoryProperty,
-					deprecationMethods.map { _.second }, rootViewExtension)
-					.map { case (manyAccessRef, manyAccessTraitRef) =>
-						(uniqueAccessRef, singleAccessRef, manyAccessTraitRef, manyAccessRef)
-					}
+					deprecationMethods.map { _.second })
 			}
+	}
+	
+	/**
+	  * Writes the access points for combined items
+	  * @param combo Combo to access
+	  * @param genericManyAccessRef A reference to the ManyXAccessLike -trait for the combo parent portion
+	  * @param modelRef A reference to the combined model class
+	  * @param factoryRef A reference to the combined model from DB factory
+	  * @param childDbModelRef A reference to the combo child database model
+	  * @param codec Implicit codec to use
+	  * @param setup Implicit project setup to use
+	  * @param naming Implicit naming rules to use
+	  * @return Reference to the many combo items root access point
+	  */
+	def writeComboAccessPoints(combo: CombinationData, genericManyAccessRef: Reference, modelRef: Reference,
+	                           factoryRef: Reference, childDbModelRef: Reference)
+	                          (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	{
+		val packageName = manyAccessPackageFor(combo.parentClass)
+		val traitName = manyAccessTraitNameFrom(combo.name).className
+		val traitType = ScalaType.basic(traitName)
+		val extensions: Vector[Extension] = {
+			val base = genericManyAccessRef(modelRef, traitType)
+			if (combo.combinationType.isOneToMany)
+				Vector(base)
+			else
+				Vector(base, Reference.manyRowModelAccess(modelRef))
+		}
+		File(packageName,
+			// Writes a private subAccess trait for filter(...) implementation
+			ObjectDeclaration(traitName, nested = Set(
+				ClassDeclaration("SubAccess",
+					constructionParams = Parameters(
+						Parameter("parent", Reference.manyModelAccess(modelRef),
+							prefix = Some(DeclarationStart.overrideVal)),
+						Parameter("filterCondition", Reference.condition, prefix = Some(DeclarationStart.overrideVal))),
+					extensions = Vector(traitType, Reference.subView), visibility = Private))
+			),
+			// Writes the common trait for all many combined access points
+			TraitDeclaration(traitName,
+				extensions = extensions,
+				properties = Vector(
+					ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
+					ComputedProperty((combo.childName + "Model").prop, Set(childDbModelRef), visibility = Protected,
+						description = s"Model (factory) used for interacting the ${
+							combo.childClass.name.pluralDoc } associated with this ${ combo.name.doc }")(
+						childDbModelRef.target)
+				), methods = Set(
+					MethodDeclaration("filter", explicitOutputType = Some(traitType), isOverridden = true)(
+						Parameter("additionalCondition", Reference.condition))(
+						s"new $traitName.SubAccess(this, additionalCondition)")
+				),
+				description = s"A common trait for access points that return multiple ${ combo.name.pluralDoc } at a time",
+				author = combo.author
+			)
+		).write().flatMap { traitRef =>
+			// Next writes the root access point
+			writeManyRootAccess(combo.name, modelRef, traitRef, None, packageName, combo.author,
+				isDeprecatable = combo.isDeprecatable)
+		}
 	}
 	
 	// Writes all single item access points
@@ -249,16 +317,17 @@ object AccessWriter
 	private def writeManyAccesses(classToWrite: Class, modelRef: Reference,
 	                              descriptionReferences: Option[(Reference, Reference, Reference)],
 	                              modelProperty: PropertyDeclaration, factoryProperty: PropertyDeclaration,
-	                              deprecationMethod: Option[MethodDeclaration], rootViewExtension: Extension)
+	                              deprecationMethod: Option[MethodDeclaration])
 	                             (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
-		val manyAccessPackage = setup.manyAccessPackage / classToWrite.packageName
+		val manyAccessPackage = manyAccessPackageFor(classToWrite)
 		writeManyAccessTrait(classToWrite, modelRef, descriptionReferences, manyAccessPackage, modelProperty,
 			factoryProperty, deprecationMethod)
-			.flatMap { manyAccessTraitRef =>
-				writeManyRootAccess(classToWrite, modelRef, manyAccessTraitRef, descriptionReferences,
-					manyAccessPackage, rootViewExtension)
-					.map { manyAccessRef => (manyAccessRef, manyAccessTraitRef) }
+			.flatMap { case (genericManyAccessTraitRef, manyAccessTraitRef) =>
+				writeManyRootAccess(classToWrite.name, modelRef, manyAccessTraitRef, descriptionReferences,
+					manyAccessPackage, classToWrite.author, classToWrite.isDeprecatable)
+					// Returns only the most generic trait, since that's the only one being used later
+					.map { _ => genericManyAccessTraitRef }
 			}
 	}
 	
@@ -271,13 +340,7 @@ object AccessWriter
 	                                (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
 		// Common part for all written trait names
-		val traitNameBase = {
-			// The "Many" -prefix is ignored if the class name already starts with "Many"
-			if (classToWrite.name.pluralClassName.toLowerCase.startsWith("many"))
-				classToWrite.name + accessTraitSuffix
-			else
-				(manyPrefix +: classToWrite.name) + accessTraitSuffix
-		}
+		val traitNameBase = manyAccessTraitNameFrom(classToWrite.name)
 		
 		// Properties and methods that will be written to the highest trait (which may vary)
 		val idsPullCode = classToWrite.idType.fromValuesCode("pullColumn(index)")
@@ -322,7 +385,6 @@ object AccessWriter
 		parentRef.flatMap { parentRef =>
 			val traitName = traitNameBase.pluralClassName
 			val traitType = ScalaType.basic(traitName)
-			// TODO: Technically only the class name portion is meant to be plural
 			val subViewName = ((manyPrefix +: classToWrite.name) + subViewSuffix).pluralClassName
 			
 			// Trait parent type depends on whether descriptions are used or not
@@ -389,18 +451,20 @@ object AccessWriter
 					author = classToWrite.author, since = DeclarationDate.versionedToday
 				)
 			).write()
+				// Returns both the more generic and the more concrete trait references
+				.map { parentRef -> _ }
 		}
 	}
 	
-	private def writeManyRootAccess(classToWrite: Class, modelRef: Reference, manyAccessTraitRef: Reference,
+	private def writeManyRootAccess(className: Name, modelRef: Reference, manyAccessTraitRef: Reference,
 	                                descriptionReferences: Option[(Reference, Reference, Reference)],
-	                                manyAccessPackage: Package, rootViewExtension: Extension)
+	                                manyAccessPackage: Package, author: String, isDeprecatable: Boolean)
 	                               (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
-		val pluralClassName = classToWrite.name.pluralClassName
+		val pluralClassName = className.pluralClassName
 		// Writes the many model access point
 		val manyAccessName = {
-			if (classToWrite.name.className == pluralClassName)
+			if (className.className == pluralClassName)
 				s"DbMany$pluralClassName"
 			else
 				s"Db$pluralClassName"
@@ -427,16 +491,15 @@ object AccessWriter
 				)
 		}
 		val subSetClassAccessMethod = MethodDeclaration("apply",
-			returnDescription = s"An access point to ${
-				classToWrite.name.pluralDoc } with the specified ids")(
+			returnDescription = s"An access point to ${ className.pluralDoc } with the specified ids")(
 			Parameter("ids", ScalaType.set(ScalaType.int),
-				description = s"Ids of the targeted ${ classToWrite.name.pluralDoc }"))(
+				description = s"Ids of the targeted ${ className.pluralDoc }"))(
 			s"new $subsetClassName(ids)")
 		
 		// For deprecating items, there is also a sub-object for accessing all items,
 		// including those that were deprecated
 		val historyAccess = {
-			if (classToWrite.isDeprecatable)
+			if (isDeprecatable)
 				Some(ObjectDeclaration(
 					s"Db${pluralClassName}IncludingHistory",
 					Vector(manyAccessTraitRef, Reference.unconditionalView)
@@ -447,17 +510,20 @@ object AccessWriter
 		val historyAccessProperty = historyAccess.map { access =>
 			ComputedProperty("includingHistory",
 				description = s"A copy of this access point that includes historical (i.e. deprecated) ${
-					classToWrite.name.pluralDoc}")(access.name)
+					className.pluralDoc}")(access.name)
 		}
-		
+		// Root access points extend either the UnconditionalView or the NonDeprecatedView -trait,
+		// depending on whether deprecation is supported
+		val rootViewExtension: Extension =
+			if (isDeprecatable) Reference.nonDeprecatedView(modelRef) else Reference.unconditionalView
 		File(manyAccessPackage,
 			ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, rootViewExtension),
 				properties = historyAccessProperty.toVector,
 				methods = Set(subSetClassAccessMethod),
 				nested = Set[InstanceDeclaration](subSetClass) ++ historyAccess,
 				description = s"The root access point when targeting multiple ${
-					classToWrite.name.pluralDoc } at a time",
-				author = classToWrite.author, since = DeclarationDate.versionedToday
+					className.pluralDoc } at a time",
+				author = author, since = DeclarationDate.versionedToday
 			)
 		).write()
 	}

@@ -3,7 +3,6 @@ package utopia.vault.coder.main
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.file.container.ObjectMapFileContainer
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.time.Today
 import utopia.flow.time.TimeExtensions._
@@ -468,7 +467,15 @@ object VaultCoderApp extends App
 								.flatMap { combinedRefs =>
 									CombinedFactoryWriter(combination, combinedRefs, parentRefs.factory,
 										childRefs.factory)
-										.map { _ => () }
+										.flatMap { comboFactoryRef =>
+											parentRefs.genericAccessTrait.toTry {
+												// Should not reach here
+												new IllegalStateException("No generic access trait exists for a combined class") }
+												.flatMap { accessTraitRef =>
+													AccessWriter.writeComboAccessPoints(combination, accessTraitRef,
+														combinedRefs.combined, comboFactoryRef, childRefs.dbModel)
+												}
+										}
 								}
 						}
 					}
@@ -505,7 +512,8 @@ object VaultCoderApp extends App
 							// Finally writes the access points
 							AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef,
 								descriptionReferences)
-								.map { _ => classToWrite -> ClassReferences(modelRef, dataRef, factoryRef, dbModelRef) }
+								.map { accessTraitRef => classToWrite ->
+									ClassReferences(modelRef, dataRef, factoryRef, dbModelRef, accessTraitRef) }
 						}
 					}
 			}

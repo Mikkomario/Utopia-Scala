@@ -38,4 +38,9 @@ case class CombinationData(combinationType: CombinationType, name: Name, parentC
 	  * @return Author of this combined class
 	  */
 	def author = parentClass.author.notEmpty.getOrElse(childClass.author)
+	
+	/**
+	  * @return Whether this combination contains deprecatable data
+	  */
+	def isDeprecatable = parentClass.isDeprecatable || childClass.isDeprecatable
 }

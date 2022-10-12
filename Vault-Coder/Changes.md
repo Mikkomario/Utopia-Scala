@@ -8,6 +8,7 @@
 - Merging now supports annotations (e.g. `@deprecated`), whereas earlier versions omitted them from merge results
 - Functional parameters that accepted tuples were not parsed correctly when merging - fixed
 ### New Features
+- Added access point -writing for combined models
 - Added FromModelFactory writing for the data models (experimental)
 ### Known Bugs
 - Merging misplaces type declarations and their documentation

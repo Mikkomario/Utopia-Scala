@@ -118,6 +118,10 @@
       {
         "name": "Car",
         "doc": "Represents a car",
+        "combo": {
+          "name": "ManufacturedCar",
+          "child": "Manufacturer"
+        },
         "props": [
           {
             "name": "registration",
