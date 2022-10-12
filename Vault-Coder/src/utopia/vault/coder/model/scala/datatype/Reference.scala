@@ -204,7 +204,11 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  */
 	def /(newTarget: String) = subReference.notEmpty match {
 		case Some(oldSubRef) => copy(subReference = s"$oldSubRef.$newTarget")
-		case None => copy(subReference = newTarget)
+		case None =>
+			if (importTarget.isEmpty)
+				copy(importTarget = newTarget)
+			else
+				copy(importTarget = s"$importTarget.$newTarget")
 	}
 	
 	/**

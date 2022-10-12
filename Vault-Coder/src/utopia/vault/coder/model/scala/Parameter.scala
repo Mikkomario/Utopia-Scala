@@ -39,8 +39,7 @@ case class Parameter(name: String, dataType: ScalaType, default: CodePiece = Cod
 	{
 		val defaultPart = if (default.isEmpty) default else default.withPrefix(" = ")
 		val mainPart = dataType.toScala.withPrefix(name + ": ") + defaultPart
-		prefix match
-		{
+		prefix match {
 			case Some(prefix) => prefix.toScala.append(mainPart, " ")
 			case None => mainPart
 		}
