@@ -5,6 +5,7 @@ Supports changes in **Flow** v2.0
 ### Breaking Changes
 - The message / description property / parameter in **ResourceSearchResult.Error** and **Result** is now of 
   type **String** instead of **Option**. An empty string, not **None**, represents an empty message / description.
+- Renamed the xml and json -based **ResultParser** implementations from ...XML and ...JSON to ...Xml and ...Json
 ### New Features
 - Added **PostContext**, an abstract **Context** class that provides utility functions for post body processing
   - These functions were separated and moved to **Nexus** from the **Exodus** module

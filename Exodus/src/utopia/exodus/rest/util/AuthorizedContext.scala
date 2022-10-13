@@ -23,7 +23,7 @@ import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}
 import utopia.nexus.rest.PostContext
-import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
+import utopia.nexus.result.{Result, ResultParser, UseRawJson}
 import utopia.vault.database.Connection
 
 object AuthorizedContext
@@ -60,7 +60,7 @@ object AuthorizedContext
 	  * @param jsonParser Json parser used for interpreting request json content (implicit)
 	  * @return A new request context
 	  */
-	def apply(request: Request, resultParser: ResultParser = UseRawJSON)
+	def apply(request: Request, resultParser: ResultParser = UseRawJson)
 	         (implicit serverSettings: ServerSettings, jsonParser: JsonParser): AuthorizedContext =
 		new AuthorizedContextImplementation(request, resultParser)
 	
@@ -68,7 +68,7 @@ object AuthorizedContext
 	// NESTED   ---------------------------
 	
 	private class AuthorizedContextImplementation(override val request: Request,
-	                                              override val resultParser: ResultParser = UseRawJSON)
+	                                              override val resultParser: ResultParser = UseRawJson)
 	                                             (implicit override val settings: ServerSettings,
 	                                              override val jsonParser: JsonParser)
 		extends AuthorizedContext

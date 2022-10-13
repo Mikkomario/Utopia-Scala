@@ -10,7 +10,7 @@ import utopia.nexus.http.Response
 * @author Mikko Hilpinen
 * @since 24.5.2018
 **/
-object UseRawJSON extends RawResultParser
+object UseRawJson extends RawResultParser
 {
     def parseDataResponse(data: Value, status: Status, request: Request) = Response.fromValue(data, status)
 }

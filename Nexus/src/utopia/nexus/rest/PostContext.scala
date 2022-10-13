@@ -9,7 +9,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.nexus.http.{Request, ServerSettings}
-import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
+import utopia.nexus.result.{Result, ResultParser, UseRawJson}
 
 import scala.util.{Failure, Success, Try}
 
@@ -26,7 +26,7 @@ object PostContext
 	  * @param jsonParser Json parser used for interpreting request json content (implicit)
 	  * @return A new request context
 	  */
-	def apply(request: Request, resultParser: ResultParser = UseRawJSON)
+	def apply(request: Request, resultParser: ResultParser = UseRawJson)
 	         (implicit serverSettings: ServerSettings, jsonParser: JsonParser): PostContext =
 		new _PostContext(request, resultParser)
 	
@@ -34,7 +34,7 @@ object PostContext
 	// NESTED   -------------------------
 	
 	private class _PostContext(override val request: Request,
-	                           override val resultParser: ResultParser = UseRawJSON)
+	                           override val resultParser: ResultParser = UseRawJson)
 	                          (implicit override val settings: ServerSettings,
 	                           override val jsonParser: JsonParser)
 		extends PostContext

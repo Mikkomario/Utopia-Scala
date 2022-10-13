@@ -10,22 +10,22 @@ import utopia.nexus.http.Request
 * @author Mikko Hilpinen
 * @since 24.5.2018
 **/
-case class UseRawXMLOrJSON(rootElementName: String = "Response", preferJSON: Boolean = true) extends RawResultParser
+case class UseRawXmlOrJson(rootElementName: String = "Response", preferJson: Boolean = true) extends RawResultParser
 {
-    private val xmlParser = UseRawXML(rootElementName)
+    private val xmlParser = UseRawXml(rootElementName)
     
 	def parseDataResponse(data: Value, status: Status, request: Request) =
 	{
 		val jsonAccepted = request.headers.accepts(Application.json)
-		if (jsonAccepted && preferJSON)
-				UseRawJSON.parseDataResponse(data, status, request)
+		if (jsonAccepted && preferJson)
+				UseRawJson.parseDataResponse(data, status, request)
 		else
 		{
 			val xmlAccepted = request.headers.accepts(Application.xml)
-			if (xmlAccepted || !preferJSON)
+			if (xmlAccepted || !preferJson)
 					xmlParser.parseDataResponse(data, status, request)
 			else
-					UseRawJSON.parseDataResponse(data, status, request)
+					UseRawJson.parseDataResponse(data, status, request)
 		}
 	}
 }
