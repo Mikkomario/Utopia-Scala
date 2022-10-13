@@ -1,10 +1,10 @@
 package utopia.nexus.result
 
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.nexus.http.Request
 import utopia.access.http.{Status, StatusGroup}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.nexus.http.Response
+import utopia.flow.util.StringExtensions._
+import utopia.nexus.http.{Request, Response}
 
 /**
 * This result parser wraps the result in an envelope
@@ -19,7 +19,7 @@ case class UseJSONEnvelope(getDataName: Status => String = s => if (s.group == S
 	    val buffer = Vector.newBuilder[(String, Value)]
 	    
 	    buffer += statusName -> result.status.code
-	    result.description.foreach { buffer += descriptionName -> _ }
+	    result.description.notEmpty.foreach { buffer += descriptionName -> _ }
 	    if (!result.data.isEmpty)
 	        buffer += getDataName(result.status) -> result.data
 	    

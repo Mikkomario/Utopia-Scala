@@ -1,8 +1,6 @@
 package utopia.exodus.rest.util
 
-import utopia.access.http.ContentCategory.{Application, Text}
-import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Unauthorized}
-import utopia.access.http.error.ContentTypeException
+import utopia.access.http.Status.{Forbidden, InternalServerError, Unauthorized}
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
@@ -16,10 +14,7 @@ import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token}
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.logger
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
@@ -27,11 +22,9 @@ import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}
-import utopia.nexus.rest.Context
+import utopia.nexus.rest.PostContext
 import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
 import utopia.vault.database.Connection
-
-import scala.util.{Failure, Success, Try}
 
 object AuthorizedContext
 {
@@ -89,44 +82,8 @@ object AuthorizedContext
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1.0
   */
-abstract class AuthorizedContext extends Context
+abstract class AuthorizedContext extends PostContext
 {
-	// ATTRIBUTES   ------------------------
-	
-	// Request body is cached, since streamed request bodies can only be read once
-	// Either[Failure, Value]
-	private lazy val parsedRequestBody = {
-		request.body.headOption match {
-			case Some(body) =>
-				// Accepts json, xml and text content types
-				val value = body.contentType.subType.toLowerCase match {
-					case "json" => body.bufferedJson(jsonParser).contents
-					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
-					case _ =>
-						body.contentType.category match {
-							case Text => body.bufferedToString.contents.map[Value] { s => s }
-							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
-								Vector(Application.json, Application.xml, Text.plain)))
-						}
-				}
-				value match {
-					case Success(value) => Right(value)
-					case Failure(error) => Left(Result.Failure(BadRequest, error.getMessage))
-				}
-			// Case: No request body specified => Uses an empty value
-			case None => Right(Value.empty)
-		}
-	}
-	
-	
-	// ABSTRACT ----------------------------
-	
-	/**
-	  * @return The json parser used by this context
-	  */
-	def jsonParser: JsonParser
-	
-	
 	// COMPUTED	----------------------------
 	
 	/**
@@ -514,92 +471,6 @@ abstract class AuthorizedContext extends Context
 			result
 		}
 	}
-	
-	/**
-	  * Parses a value from the request body and uses it to produce a response
-	  * @param f Function that will be called if the value was successfully read.
-	  *          Accepts the read value, which may be empty. Returns a http result.
-	  * @return Function result
-	  */
-	def handlePossibleValuePost(f: Value => Result) = parsedRequestBody.leftOrMap(f)
-	/**
-	  * Parses a value from the request body and uses it to produce a response
-	  * @param f Function that will be called if the value was successfully read and not empty.
-	  *          Returns an http result.
-	  * @return Function result or a failure result if no value could be read.
-	  */
-	def handleValuePost(f: Value => Result) =
-	{
-		handlePossibleValuePost { value =>
-			// Fails on empty value
-			if (value.isEmpty)
-				Result.Failure(BadRequest, "Please specify a body in the request")
-			else
-				f(value)
-		}
-	}
-	/**
-	  * Parses a model from the request body and uses it to produce a response
-	  * @param parser Model parser
-	  * @param f Function that will be called if the model was successfully parsed. Returns an http result.
-	  * @tparam A Type of parsed model
-	  * @return Function result or a failure result if no model could be parsed.
-	  */
-	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result = {
-		handleValuePost { value =>
-			value.model match {
-				case Some(model) =>
-					parser(model) match {
-						// Gives the parsed model to specified function
-						case Success(parsed) => f(parsed)
-						case Failure(error) => Result.Failure(BadRequest, error.getMessage)
-					}
-				case None => Result.Failure(BadRequest, "Please provide a json object in the request body")
-			}
-		}
-	}
-	/**
-	  * Parses request body into a vector of values and handles them using the specified function.
-	  * For non-array bodies, wraps the body in a vector.
-	  * @param f Function that will be called if a json body was present. Accepts a vector of values. Returns result.
-	  * @return Function result or a failure if no value could be read
-	  */
-	def handleArrayPost(f: Vector[Value] => Result) = handleValuePost { v: Value =>
-		if (v.isEmpty)
-			f(Vector())
-		else
-			v.vector match
-			{
-				case Some(vector) => f(vector)
-				// Wraps the value into a vector if necessary
-				case None => f(Vector(v))
-			}
-	}
-	/**
-	  * Parses request body into a vector of models and handles them using the specified function. Non-vector bodies
-	  * are wrapped in vectors, non-object elements are ignored.
-	  * @param parser Parser function used for parsing models into objects
-	  * @param f Function called if all parsing succeeds
-	  * @tparam A Type of parsed item
-	  * @return Function result or failure in case of parsing failures
-	  */
-	def handleModelArrayPost[A](parser: Model => Try[A])(f: Vector[A] => Result) = handleArrayPost { values =>
-		values.flatMap { _.model }.tryMap { parser(_) } match
-		{
-			case Success(parsed) => f(parsed)
-			case Failure(error) => Result.Failure(BadRequest, error.getMessage)
-		}
-	}
-	/**
-	  * Parses request body into a vector of models and handles them using the specified function. Non-vector bodies
-	  * are wrapped in vectors, non-object elements are ignored.
-	  * @param parser Parser used for parsing models into objects
-	  * @param f Function called if all parsing succeeds
-	  * @tparam A Type of parsed item
-	  * @return Function result or failure in case of parsing failures
-	  */
-	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Vector[A] => Result): Result =
-		handleModelArrayPost[A] { m: Model => parser(m) }(f)
 	
 	// Finds user id and checks the password
 	private def tryAuthenticate(email: String, password: String)(implicit connection: Connection) =

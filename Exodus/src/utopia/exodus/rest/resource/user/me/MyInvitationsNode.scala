@@ -40,7 +40,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 		else
 			path.head.int match {
 				case Some(id) => Follow(InvitationNode(id), path.tail)
-				case None => Error(message = Some(s"${path.head} is not a valid invitation id"))
+				case None => Error(message = s"${path.head} is not a valid invitation id")
 			}
 	}
 	

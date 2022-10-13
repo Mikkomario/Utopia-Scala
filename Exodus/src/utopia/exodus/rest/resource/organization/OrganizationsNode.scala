@@ -8,11 +8,11 @@ import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.model.enumeration.ExodusScope.CreateOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewOrganization
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
+import utopia.nexus.rest.ItemsByIdResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -21,12 +21,11 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
-object OrganizationsNode extends Resource[AuthorizedContext]
+object OrganizationsNode extends ItemsByIdResource[AuthorizedContext]
 {
 	// IMPLEMENTED	------------------------------
 	
 	override val name = "organizations"
-	
 	override val allowedMethods = Vector(Post)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
@@ -56,13 +55,5 @@ object OrganizationsNode extends Resource[AuthorizedContext]
 		}
 	}
 	
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-	{
-		// Allows access to individual organization access points based on organization id
-		path.head.int match
-		{
-			case Some(id) => Follow(OrganizationNode(id), path.tail)
-			case None => Error(message = Some(s"${path.head} is not a valid organization id"))
-		}
-	}
+	override protected def resourceForId(id: Value) = id.int.map(OrganizationNode.apply)
 }

@@ -2,6 +2,11 @@
 
 ## v4.1.1 - 02.10.2022
 Supports changes in **Flow** v1.17
+### New Methods
+- **AuthorizedContext**
+  - Added `.handleInterceptedPost(...)` and `.handleInterceptedValuePost(...)`
+### Other Changes
+- Removed the device-related REST resources that were deprecated in version v4.0 
 
 ## v4.1 - 18.08.2022
 This update reflects changes in **Flow** v1.16, adding new logging

@@ -95,7 +95,7 @@ object AuthUtils
 			case None =>
 				// Case: Immediate success
 				if (errorMessage.isEmpty)
-					Result.Success(Value.empty, description = Some("No authentication required"))
+					Result.Success(Value.empty, description = "No authentication required")
 				// Case: Immediate failure
 				else
 					Result.Failure(Unauthorized, errorMessage)

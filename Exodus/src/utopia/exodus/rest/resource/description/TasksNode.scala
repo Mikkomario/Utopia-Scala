@@ -23,9 +23,8 @@ object TasksNode extends GeneralDataNode[DescribedTask]
 	
 	// Provides access to individual task nodes
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
-		path.head.int match
-		{
+		path.head.int match {
 			case Some(taskId) => Follow(TaskNode(taskId), path.tail)
-			case None => Error(message = Some(s"${path.head} is not a valid task id"))
+			case None => Error(message = s"${path.head} is not a valid task id")
 		}
 }

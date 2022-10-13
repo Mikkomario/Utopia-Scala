@@ -1,7 +1,14 @@
 # Utopia Nexus - List of Changes
 
-## v1.8.2 (In Development)
+## v1.9 (In Development)
 Supports changes in **Flow** v2.0
+### Breaking Changes
+- The message / description property / parameter in **ResourceSearchResult.Error** and **Result** is now of 
+  type **String** instead of **Option**. An empty string, not **None**, represents an empty message / description.
+### New Features
+- Added **PostContext**, an abstract **Context** class that provides utility functions for post body processing
+  - These functions were separated and moved to **Nexus** from the **Exodus** module
+- Added **ItemsByIdResource** trait, which simplifies resource by id -accessing
 
 ## v1.8.1 - 02.10.2022
 This update is mostly there to support changes introduced in **Flow** v1.17.

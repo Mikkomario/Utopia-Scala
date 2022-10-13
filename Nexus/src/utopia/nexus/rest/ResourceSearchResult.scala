@@ -34,14 +34,14 @@ object ResourceSearchResult
      * A redirect is returned when a link is found and must be followed using a separate path
      * @param newPath The new path to follow to the original destination resource
      */
-    final case class Redirected(newPath: Path)
-        extends ResourceSearchResult[Context]
+    final case class Redirected(newPath: Path) extends ResourceSearchResult[Context]
     
     /**
      * An error is returned when the next resource is not found or is otherwise not available
+      * @param status The http status to send back to the client (default = 404 = Not Found)
+      * @param message A descriptive message to send back to the client (default = empty = no message)
      */
-    final case class Error(status: Status = NotFound, message: Option[String] = None)
-        extends ResourceSearchResult[Context]
+    final case class Error(status: Status = NotFound, message: String = "") extends ResourceSearchResult[Context]
     {
         def toResult = Failure(status, message)
     }

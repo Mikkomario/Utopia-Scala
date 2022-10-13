@@ -10,5 +10,5 @@ import utopia.nexus.rest.ResourceSearchResult.Error
 trait LeafResource[-C <: Context] extends Resource[C]
 {
 	override def follow(path: Path)(implicit context: C) =
-		Error(message = Some(s"$name doesn't contain any child nodes"))
+		Error(message = s"$name doesn't contain any child nodes")
 }

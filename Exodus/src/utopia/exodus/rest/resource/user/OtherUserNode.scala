@@ -31,7 +31,7 @@ case class OtherUserNode(userId: Int) extends Resource[AuthorizedContext]
 		if (path.head ~== "settings")
 			Ready(this)
 		else
-			Error(message = Some("Only 'settings' is available under this resource at this time"))
+			Error(message = "Only 'settings' is available under this resource at this time")
 	}
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =

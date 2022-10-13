@@ -49,7 +49,7 @@ case class OrganizationMembersNode(organizationId: Int) extends Resource[Authori
 			path.head.int match
 			{
 				case Some(userId) => Follow(MemberNode(organizationId, Some(userId)), path.tail)
-				case None => Error(message = Some(s"${path.head} is not a valid user id"))
+				case None => Error(message = s"${path.head} is not a valid user id")
 			}
 	}
 }

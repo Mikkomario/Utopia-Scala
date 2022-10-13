@@ -46,10 +46,9 @@ object UsersNode extends Resource[AuthorizedContext]
 		if (path.head ~== "me")
 			Follow(MeNode, path.tail)
 		else
-			path.head.int match
-			{
+			path.head.int match {
 				case Some(userId) => Follow(OtherUserNode(userId), path.tail)
-				case None => Error(message = Some(s"Targeted user id (now '${path.head}') must be an integer"))
+				case None => Error(message = s"Targeted user id (now '${path.head}') must be an integer")
 			}
 	}
 	

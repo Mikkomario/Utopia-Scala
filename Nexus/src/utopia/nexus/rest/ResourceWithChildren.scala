@@ -26,8 +26,8 @@ trait ResourceWithChildren[-C <: Context] extends Resource[C]
 		c.find { _.name ~== path.head } match {
 			case Some(next) => Follow(next, path.tail)
 			case None =>
-				Error(message = Some(s"${path.head} is not a child node of $name. Available options: [${
-					c.map { _.name }.mkString(", ")}]"))
+				Error(message = s"${path.head} is not a child node of $name. Available options: [${
+					c.map { _.name }.mkString(", ")}]")
 		}
 	}
 }

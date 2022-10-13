@@ -8,8 +8,7 @@ object ResultParser
     /**
      * Wraps a function into a result parser instance
      */
-    def forFunction(f: (Result, Request) => Response) = new ResultParser
-    {
+    def forFunction(f: (Result, Request) => Response) = new ResultParser {
         def apply(result: Result, request: Request) = f(result, request)
     }
 }

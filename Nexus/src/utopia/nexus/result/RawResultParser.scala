@@ -3,6 +3,7 @@ package utopia.nexus.result
 import utopia.nexus.http.Request
 import utopia.access.http.Status
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.StringExtensions._
 import utopia.nexus.http.Response
 
 import java.nio.charset.StandardCharsets
@@ -24,14 +25,15 @@ trait RawResultParser extends ResultParser
     
     // IMPLEMENTED METHODS    ----------
     
-    def apply(result: Result, request: Request) = 
-    {
-        val response = 
-        {
+    def apply(result: Result, request: Request) = {
+        val response = {
             if (result.data.isEmpty)
-                result.description.map(Response.plainText(_, result.status, 
-                        request.headers.preferredCharset getOrElse StandardCharsets.UTF_8)) getOrElse 
-                        Response.empty(result.status)
+                result.description.notEmpty match {
+                    case Some(description) =>
+                        Response.plainText(description, result.status,
+                            request.headers.preferredCharset getOrElse StandardCharsets.UTF_8)
+                    case None => Response.empty(result.status)
+                }
             else
                 parseDataResponse(result.data, result.status, request)
         }

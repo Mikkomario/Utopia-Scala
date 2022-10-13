@@ -108,9 +108,9 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
                         if (remaining.head ~== pathToSkip.head)
                             handleRemainingBasePath(remaining.tail, pathToSkip.tail)
                         else
-                            Left(Error(message = Some(s"Expected $pathToSkip, found $remaining")))
+                            Left(Error(message = s"Expected $pathToSkip, found $remaining"))
                     // Case: Too short a path
-                    case None => Left(Error(message = Some(s"Expected request path to continue with /$pathToSkip")))
+                    case None => Left(Error(message = s"Expected request path to continue with /$pathToSkip"))
                 }
             // Case: No more path to skip => Expects the next path piece to show a version
             case None =>
@@ -121,13 +121,13 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
                             Right(remaining.head -> remaining.tail)
                         // Case: Didn't find a valid version
                         else
-                            Left(Error(message = Some(
+                            Left(Error(message =
                                 s"'${remaining.head}' is not a valid version. Available versions: [${
-                                    childResources.keys.mkString(", ")}]")))
+                                    childResources.keys.mkString(", ")}]"))
                     // Case: Too short a path
-                    case None => Left(Error(message = Some(
+                    case None => Left(Error(message =
                         s"Expected request path to continue with a version. Available versions: [${
-                            childResources.keys.mkString(", ")}]")))
+                            childResources.keys.mkString(", ")}]"))
                 }
         }
     }
@@ -143,8 +143,8 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
             // Case: Root resource found => follows that one
             case Some(resource) => follow(version, resource, remainingPath.tail)
             // Case: Root resource not found
-            case None => Left(Error(message = Some(s"Resource '$first' not found under ${
-                path/version}. Available resources: [${resources.map { _.name }.mkString(", ")}]")))
+            case None => Left(Error(message = s"Resource '$first' not found under ${
+                path/version}. Available resources: [${resources.map { _.name }.mkString(", ")}]"))
         }
     }
     

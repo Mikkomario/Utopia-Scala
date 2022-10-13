@@ -13,7 +13,7 @@ object Result
     case object Empty extends Result
     {
         def status = NoContent
-        def description = None
+        def description = ""
         def data = Value.empty
         def headers = Headers.empty
     }
@@ -25,33 +25,24 @@ object Result
     case object NotModified extends Result
     {
         def status = Status.NotModified
-        def description = None
+        def description = ""
         def data = Value.empty
         def headers = Headers.empty
     }
-    
-	object Failure
-	{
-		/**
-		 * Creates a new failure result with description
-		 * @param status Failure status
-		 * @param description Failure description
-		 * @return A failure result
-		 */
-		def apply(status: Status, description: String) = new Failure(status, Some(description))
-	}
 	
     /**
      * This result may be returned when a request is invalid or when an error occurs
+      * @param status Failure status
+      * @param description Failure description. Default = empty = no description.
      */
-    case class Failure(status: Status, description: Option[String] = None,
+    case class Failure(status: Status, description: String = "",
             data: Value = Value.empty, headers: Headers = Headers.empty) extends Result
     
     /**
      * This result may be returned when the API wants to return specific data
      */
     case class Success(data: Value = Value.empty, status: Status = OK,
-            description: Option[String] = None, headers: Headers = Headers.empty) extends Result
+            description: String = "", headers: Headers = Headers.empty) extends Result
 	
 	/**
 	 * A result used for redirecting the client to another resource
@@ -63,10 +54,8 @@ object Result
 	{
 		override def status = if (permanently) MovedPermanently else Found
 		
-		override def description = None
-		
+		override def description = ""
 		override def data = Value.empty
-		
 		override def headers = Headers.empty.withLocation(url)
 	}
 }
@@ -85,17 +74,14 @@ trait Result
      * The status of the result
      */
 	def status: Status
-	
 	/**
-	 * The description for the result (optional)
+	 * The description for the result. Empty if there is no description.
 	 */
-	def description: Option[String]
-	
+	def description: String
 	/**
 	 * The data returned by this result
 	 */
 	def data: Value
-	
 	/**
 	 * The header modifications for this result
 	 */
