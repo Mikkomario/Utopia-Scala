@@ -33,7 +33,7 @@ object Reference
 	
 	lazy val valueConversions = extensions(typeCasting, "ValueConversions")
 	lazy val valueUnwraps = extensions(typeCasting, "ValueUnwraps")
-	lazy val collectionExtensions = extensions(flowUtils, "CollectionExtensions")
+	lazy val collectionExtensions = extensions(flow/"collection", "CollectionExtensions")
 	lazy val timeExtensions = extensions(flowTime, "TimeExtensions")
 	lazy val sqlExtensions = extensions(sql, "SqlExtensions")
 	
@@ -129,6 +129,8 @@ object Reference
 	
 	// OTHER    -------------------------------
 	
+	def apply(pck: Package, target: String): Reference = apply(pck, Vector(target))
+	
 	/**
 	  * Converts a string into a reference
 	  * @param ref A string representing a reference
@@ -145,7 +147,7 @@ object Reference
 				extensions(Package(parts.dropRight(2)), parts(parts.size - 2))
 			// Case: Single property reference or a sub-reference
 			else if (parts.last.head.isLower && parts.size > 1)
-				apply(Package(parts.dropRight(2)), parts(parts.size - 2), parts.last)
+				apply(Package(parts.dropRight(2)), Vector(parts(parts.size - 2)), parts.last)
 			// Case: Standard reference
 			else
 				apply(Package(parts.dropRight(1)), parts.last)
@@ -170,7 +172,8 @@ object Reference
   *                     as well as in the import
   * @param subReference Item referred to under the imported item. E.g. a specific property
   */
-case class Reference(packagePath: Package, importTarget: String, subReference: String = "") extends ScalaConvertible
+case class Reference private(packagePath: Package, importTarget: Vector[String], subReference: String = "")
+	extends ScalaConvertible
 {
 	// COMPUTED --------------------------------
 	
@@ -178,7 +181,10 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @return The target of this reference when referred from code (doesn't contain the package path,
 	  *         expects an import)
 	  */
-	def target = if (subReference.isEmpty) importTarget else s"$importTarget.$subReference"
+	def target = {
+		val base = importTarget.last
+		if (subReference.isEmpty) base else s"$base.$subReference"
+	}
 	/**
 	  * @return A code referring to the target of this reference using its name
 	  */
@@ -187,7 +193,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	/**
 	  * @return Whether it is possible to group this reference with other references using { ... } syntax
 	  */
-	def canBeGrouped = subReference.isEmpty && !importTarget.contains('.')
+	def canBeGrouped = subReference.isEmpty && importTarget.size == 1 && importTarget.forall { !_.contains('.') }
 	
 	/**
 	  * @param setup Implicit project setup
@@ -212,11 +218,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  */
 	def /(newTarget: String) = subReference.notEmpty match {
 		case Some(oldSubRef) => copy(subReference = s"$oldSubRef.$newTarget")
-		case None =>
-			if (importTarget.isEmpty)
-				copy(importTarget = newTarget)
-			else
-				copy(importTarget = s"$importTarget.$newTarget")
+		case None => copy(importTarget = importTarget :+ newTarget)
 	}
 	
 	/**
@@ -230,7 +232,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @return Path to the referenced file
 	  */
 	def pathIn(sourceRoot: Path) = {
-		val (packagePart, classPart) = importTarget.splitAtLast(".")
+		val (packagePart, classPart) = importTarget.mkString(".").splitAtLast(".")
 		// Case: There are no two parts in the target => Uses the only part as the file name
 		if (classPart.isEmpty)
 			packagePath.pathTo(packagePart, sourceRoot)
@@ -246,8 +248,8 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 		if (importTarget.isEmpty)
 			packagePath.toScala
 		else if (packagePath.isEmpty)
-			importTarget
+			importTarget.mkString(".")
 		else
-			s"${packagePath.toScala}.$importTarget"
+			s"${packagePath.toScala}.${ importTarget.mkString(".") }"
 	}
 }

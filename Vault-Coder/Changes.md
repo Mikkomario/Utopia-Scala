@@ -8,8 +8,11 @@
 - Merging now supports annotations (e.g. `@deprecated`), whereas earlier versions omitted them from merge results
 - Functional parameters that accepted tuples were not parsed correctly when merging - fixed
 ### New Features
+- Added `-N` argument that disables merging
 - Added access point -writing for combined models
 - Added FromModelFactory writing for the data models (experimental)
+### Other Changes
+- Possibly combined model constructors now contain a default parameter value of None
 ### Known Bugs
 - Merging misplaces type declarations and their documentation
 

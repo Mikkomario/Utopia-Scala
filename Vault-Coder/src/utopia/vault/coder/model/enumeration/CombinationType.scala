@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.enumeration
 
 import utopia.vault.coder.model.data.{CombinationReferences, Name, NamingRules}
+import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.MethodDeclaration
 import utopia.vault.coder.model.scala.{Parameter, Parameters}
@@ -128,7 +129,7 @@ object CombinationType
 		override protected def childParamTypeFrom(childRef: Reference) = ScalaType.option(childRef)
 		
 		override protected def secondApplyParameterFrom(childRef: Reference) =
-			Parameter("child", ScalaType.option(childRef))
+			Parameter("child", ScalaType.option(childRef), default = CodePiece.none)
 	}
 	/**
 	  * Combines a single parent to 0-n children

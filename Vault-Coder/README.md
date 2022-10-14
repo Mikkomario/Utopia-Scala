@@ -33,8 +33,10 @@ Once you have created a specification document, run the application using the fo
   - You can use `-A` flag to specify group `all`
 - `<merge>` Specifies location of the existing source root (src) directory which is compared and merged into 
   the generated output
-  - This argument is optional. No merging will occur if this is left empty
+  - This argument is optional. If this is left empty, merging will only occur for saved projects
   - You may also specify this value during program use if you pass `-M` as a command line argument
+  - Alternatively, you may specifically disable merging by passing `-N` as a command line argument
+    - This is only necessary on saved projects
   - NB: When merging data in projects where the database and the model implementations are separated to different 
     modules, the application will request another (optional) source directory for the other module
 

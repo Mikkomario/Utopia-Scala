@@ -64,6 +64,10 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	  *         (from utopia.flow.generic.model.mutable.DataType) would be returned.
 	  */
 	def valueDataType: Reference
+	/**
+	  * @return Whether this data type supports the usage of default values when parsing data from json
+	  */
+	def supportsDefaultJsonValues: Boolean
 	
 	/**
 	  * Writes a code that reads this an instance of this type from a value or a sequence of values
@@ -224,6 +228,7 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 		override def concrete = ConcreteSingleColumnPropertyType.this
 		
 		override def valueDataType = ConcreteSingleColumnPropertyType.this.valueDataType
+		override def supportsDefaultJsonValues = false
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			ConcreteSingleColumnPropertyType.this.writeDefaultDescription(className, propName)
@@ -370,6 +375,7 @@ object BasicPropertyType
 	{
 		override val sqlType = SqlPropertyType("BIGINT")
 		override lazy val valueDataTypeName = "LongType"
+		override def supportsDefaultJsonValues = true
 		
 		override def scalaType = ScalaType.long
 		
@@ -387,6 +393,7 @@ object BasicPropertyType
 	{
 		override val sqlType = SqlPropertyType("DOUBLE")
 		override lazy val valueDataTypeName = "DoubleType"
+		override def supportsDefaultJsonValues = true
 		
 		override def scalaType = ScalaType.double
 		
@@ -404,6 +411,7 @@ object BasicPropertyType
 	{
 		override val sqlType = SqlPropertyType("BOOLEAN", "FALSE")
 		override lazy val valueDataTypeName = "BooleanType"
+		override def supportsDefaultJsonValues = true
 		
 		override def scalaType = ScalaType.boolean
 		
@@ -421,6 +429,7 @@ object BasicPropertyType
 	{
 		override val sqlType = SqlPropertyType("DATETIME")
 		override lazy val valueDataTypeName = "InstantType"
+		override def supportsDefaultJsonValues = false
 		
 		override def scalaType = Reference.instant
 		
@@ -438,6 +447,7 @@ object BasicPropertyType
 	{
 		override val sqlType = SqlPropertyType("DATE")
 		override lazy val valueDataTypeName = "LocalDateType"
+		override def supportsDefaultJsonValues = false
 		
 		override def scalaType = Reference.localDate
 		
@@ -455,6 +465,7 @@ object BasicPropertyType
 	{
 		override val sqlType = SqlPropertyType("TIME")
 		override lazy val valueDataTypeName = "LocalTimeType"
+		override def supportsDefaultJsonValues = false
 		
 		override def scalaType = Reference.localTime
 		
@@ -498,6 +509,7 @@ object BasicPropertyType
 			case None => size.toSql
 		})
 		override lazy val valueDataTypeName = "IntType"
+		override def supportsDefaultJsonValues = true
 		
 		override def scalaType = ScalaType.int
 		
@@ -526,6 +538,7 @@ trait PropertyTypeWrapper extends PropertyType
 	
 	override def scalaType = wrapped.scalaType
 	override def valueDataType = wrapped.valueDataType
+	override def supportsDefaultJsonValues = wrapped.supportsDefaultJsonValues
 	override def sqlConversions = wrapped.sqlConversions
 	
 	override def yieldsTryFromValue = wrapped.yieldsTryFromValue
@@ -617,6 +630,7 @@ object PropertyType
 		override lazy val defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
 		
 		override def valueDataType = Reference.instantType
+		override def supportsDefaultJsonValues = false
 		
 		override def scalaType = Reference.instant
 		
@@ -695,6 +709,7 @@ object PropertyType
 		override val sqlType = SqlPropertyType("INT", "0", "days")
 		override lazy val nonEmptyDefaultValue = CodePiece("Days.zero", Set(Reference.days))
 		override lazy val valueDataType = Reference.flowDataType/"DaysType"
+		override def supportsDefaultJsonValues = true
 		
 		override def yieldsTryFromValue = false
 		
@@ -738,6 +753,7 @@ object PropertyType
 		
 		override def scalaType = ScalaType.string
 		override def valueDataType = Reference.stringType
+		override def supportsDefaultJsonValues = true
 		
 		override def emptyValue = Text.emptyValue
 		override def nonEmptyDefaultValue = CodePiece.empty
@@ -773,6 +789,7 @@ object PropertyType
 		// Empty value is not allowed
 		override def emptyValue = CodePiece.empty
 		override def nonEmptyDefaultValue = CodePiece.empty
+		override def supportsDefaultJsonValues = true
 		
 		override def defaultPropertyName =  if (length < 100) "name" else "text"
 		
@@ -820,6 +837,7 @@ object PropertyType
 		
 		override def nonEmptyDefaultValue = CodePiece.empty
 		override def emptyValue = CodePiece("Value.empty", Set(Reference.value))
+		override def supportsDefaultJsonValues = true
 		
 		override def concrete = this
 		
@@ -865,6 +883,7 @@ object PropertyType
 			case _ => unit.toString.toLowerCase
 		})
 		override lazy val valueDataType = Reference.flowDataType/"DurationType"
+		override def supportsDefaultJsonValues = true
 		
 		private def unitConversionCode = s".toUnit(TimeUnit.${unit.name})"
 		
@@ -937,6 +956,7 @@ object PropertyType
 		
 		override def scalaType = enumeration.reference
 		override def valueDataType = enumeration.idType.valueDataType
+		override def supportsDefaultJsonValues = true
 		
 		override def optional: PropertyType = Optional
 		override def concrete = this
@@ -975,6 +995,7 @@ object PropertyType
 			
 			override def scalaType = ScalaType.option(EnumValue.this.scalaType)
 			override def valueDataType = EnumValue.this.valueDataType
+			override def supportsDefaultJsonValues = false
 			
 			override def nonEmptyDefaultValue = CodePiece.empty
 			override def emptyValue = CodePiece.none

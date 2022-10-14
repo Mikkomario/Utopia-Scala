@@ -163,22 +163,29 @@ object ModelWriter
 	
 	private def propertyDeclarationFrom(prop: Property)(implicit naming: NamingRules): CodePiece = {
 		val name = prop.jsonPropName
+		// Supports some alternative names
 		val altNames = (Set(CamelCase.lower, UnderScore)
 			.flatMap { style =>
 				(prop.name +: prop.dbProperties.map { p: DbProperty => p.name }).toSet
 					.map { name: Name => name.singularIn(style) }
 			} - name)
 			.toVector.sorted
-		val default = prop.customDefaultValue.notEmpty.orElse { prop.dataType.nonEmptyDefaultValue.notEmpty } match {
-			case Some(v) => prop.dataType.toValueCode(v.text).referringTo(v.references)
-			case None => Reference.value.targetCode.append("empty", ".")
-		}
-		Reference.propertyDeclaration.targetCode + CodePiece(name.quoted)
-			.append(prop.dataType.valueDataType.targetCode, ", ")
-			.append(s"Vector(${ altNames.map { _.quoted }.mkString(", ") })", ", ")
-			.append(default, ", ")
-			.append(s"isOptional = ${ prop.dataType.isOptional }", ", ")
-			.withinParenthesis
+		// May specify a default value
+		val default = prop.customDefaultValue.notEmpty.orElse {
+			val dt = prop.dataType
+			if (dt.supportsDefaultJsonValues) dt.nonEmptyDefaultValue.notEmpty else None
+		}.map { v => prop.dataType.toValueCode(v.text).referringTo(v.references) }
+		
+		// Writes only the necessary code parts (i.e. omits duplicate default parameters)
+		var paramsCode: CodePiece = name.quoted
+		if (altNames.nonEmpty || default.isDefined)
+			paramsCode = paramsCode
+				.append(s"Vector(${ altNames.map { _.quoted }.mkString(", ") })", ", ")
+		default.foreach { default => paramsCode = paramsCode.append(default, ", ") }
+		if (prop.dataType.isOptional)
+			paramsCode = paramsCode.append("isOptional = true", ", ")
+		
+		Reference.propertyDeclaration.targetCode + paramsCode.withinParenthesis
 	}
 	
 	private def fromModelFor(classToWrite: Class, dataClassName: String)(implicit naming: NamingRules) = {

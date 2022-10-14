@@ -174,6 +174,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 	
 	override def defaultPropertyName =
 		defaultPropName.getOrElse { Name.interpret(scalaType.toString, CamelCase.capitalized) }
+	override def supportsDefaultJsonValues = true
 	
 	override def fromValueCode(valueCodes: Vector[String]): CodePiece = fromValueCode(fromValue, valueCodes)
 	// TODO: Current version doesn't support multi-column types, hence the Vector("v")
@@ -230,6 +231,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		}
 		
 		override def valueDataType = CustomPropertyType.this.valueDataType
+		override def supportsDefaultJsonValues = false
 		
 		override def emptyValue = CodePiece.none
 		override def nonEmptyDefaultValue = CodePiece.empty

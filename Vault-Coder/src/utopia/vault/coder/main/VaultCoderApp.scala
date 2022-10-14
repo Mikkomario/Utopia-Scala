@@ -52,7 +52,8 @@ object VaultCoderApp extends App
 		ArgumentSchema("merge", help = "Source origin where merge input files are read from (relative to root, if root is specified)"),
 		ArgumentSchema.flag("all", "A", help = "Flag for selecting group 'all'"),
 		ArgumentSchema.flag("single", "S", help = "Flag for limiting filter results to exact matches"),
-		ArgumentSchema.flag("merging", "M", help = "Flag for enabling merge mode")),
+		ArgumentSchema.flag("merging", "M", help = "Flag for enabling merge mode"),
+		ArgumentSchema.flag("nomerge", "N", help = "Flag for disabling merge mode")),
 		args.toVector)
 	val startTime = LocalTime.now()
 	
@@ -407,10 +408,19 @@ object VaultCoderApp extends App
 					implicit val naming: NamingRules = data.namingRules
 					val mergeFileName = (data.projectName.inContext(FileName) ++ Vector("merge", "conflicts",
 						Today.toString, startTime.getHour.toString, startTime.getMinute.toString)).fileName + ".txt"
+					val mergePaths = {
+						// Case: Merging is disabled
+						if (arguments("nomerge").getBoolean)
+							Vector()
+						// Case: Single module project
+						else if (data.modelCanReferToDB)
+							mainMergeRoot.toVector
+						// Case: Multi-module project
+						else
+							Vector(mainMergeRoot, alternativeMergeRoot).flatten
+					}
 					implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
-						data.databasePackage, directory,
-						if (data.modelCanReferToDB) mainMergeRoot.toVector else
-							Vector(mainMergeRoot, alternativeMergeRoot).flatten,
+						data.databasePackage, directory, mergePaths,
 						directory/mergeFileName, data.version, data.modelCanReferToDB, data.prefixColumnNames)
 					
 					write(data)
