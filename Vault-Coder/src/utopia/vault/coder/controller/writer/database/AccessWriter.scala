@@ -137,6 +137,7 @@ object AccessWriter
 	  * @param naming Implicit naming rules to use
 	  * @return Reference to the many combo items root access point
 	  */
+	// FIXME: trait name pluralization is wrong (e.g. ManyRestrictedCustomerAccess)
 	def writeComboAccessPoints(combo: CombinationData, genericManyAccessRef: Reference, modelRef: Reference,
 	                           factoryRef: Reference, childDbModelRef: Reference)
 	                          (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =

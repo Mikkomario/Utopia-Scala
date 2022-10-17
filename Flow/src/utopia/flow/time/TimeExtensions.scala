@@ -1063,13 +1063,14 @@ object TimeExtensions
 		  */
 		def ::(minutes: Int) = LocalTime.of(i, minutes)
 		
-		/**
+		/*
 		  * Combines this minutes value with hours in order to form a local time value
 		  * @param hour Target hour
 		  * @return A local time value that's "this" many minutes to / before 'hour' hour.
 		  *         E.g. 6 to 12 would yield 11:54
 		  */
-		def to(hour: Int) = if (hour == 0) LocalTime.of(23, i) else LocalTime.of(hour - 1, i)
+		// Removed because of name conflicts
+		// def to(hour: Int) = if (hour == 0) LocalTime.of(23, i) else LocalTime.of(hour - 1, i)
 		/**
 		  * Combines this minutes value with hours in order to form a local time value
 		  * @param hour Target hour

@@ -2,7 +2,12 @@
 This application allows you to automatically write the basic SQL and Scala code to support your model structure. 
 Instead of writing the code manually, you only need to specify a .json file which describes the content to create.
 
-## Usage Instructions
+In this document, we will first cover the main use-case, where one manually writes an input json file and then 
+converts it to a class structure.  
+At the end of this document, you will also find instructions on how to generate input model templates based on 
+existing database structure.
+
+## Main App Use Instructions
 First, you need to prepare a .json file describing the model structure you want to create / use. 
 See the required document structure below.  
 
@@ -460,3 +465,20 @@ This application will produce the following documents
         - description
           - **DbXDescriptions.scala** - The root access point for accessing multiple **X**-descriptions at once
             - Only generated for classes which support descriptions
+
+## Generating Model Templates
+There's an alternative mode available. This mode reads one or more tables from a database and writes 
+a model structure template based on the information available.  
+The purpose of this tool is to make it easier to migrate to Vault-Coder and Utopia -style code when starting with 
+an existing database.
+
+### Command Arguments
+You may activate this alternative mode by writing `read` as the first command line argument.  
+You may also specify the following additional arguments: 
+1. `password` (`pw`) - Password used when connecting to the database (no password used by default)
+2. `user` (`u`) - Username used when connecting to the database (default = `root`)
+3. `connection` (`con`) - Database address to connect to (default = `jdbc:mysql://localhost:3306/`)
+4. `database` (`db`) - Name of the database to read (asked if not provided here)
+5. `table` (`t`) - Name of the table or tables to read (use json array syntax for multiple tables, 
+  alternatively you may write `-A` to read all tables, asked if not specified here)
+6. `output` (`out`) - Path to the directory where the generated file will be written (default = `output`)

@@ -9,9 +9,11 @@
         <element id="module-output" name="Vault-Coder" />
         <element id="module-output" name="BunnyMunch" />
         <element id="module-output" name="Flow" />
+        <element id="module-output" name="Vault" />
       </element>
       <element id="file-copy" path="$PROJECT_DIR$/Vault-Coder/README.md" />
       <element id="library" level="application" name="scala-sdk-2.13.7" />
+      <element id="library" level="project" name="mariadb-java-client-1" />
     </root>
   </artifact>
 </component>

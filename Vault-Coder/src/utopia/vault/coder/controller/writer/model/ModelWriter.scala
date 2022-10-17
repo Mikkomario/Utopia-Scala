@@ -177,17 +177,19 @@ object ModelWriter
 		}.map { v => prop.dataType.toValueCode(v.text).referringTo(v.references) }
 		
 		// Writes only the necessary code parts (i.e. omits duplicate default parameters)
-		var paramsCode: CodePiece = name.quoted
+		var paramsCode = CodePiece(name.quoted).append(prop.dataType.valueDataType.targetCode, ", ")
 		if (altNames.nonEmpty || default.isDefined)
 			paramsCode = paramsCode
 				.append(s"Vector(${ altNames.map { _.quoted }.mkString(", ") })", ", ")
 		default.foreach { default => paramsCode = paramsCode.append(default, ", ") }
-		if (prop.dataType.isOptional)
+		if (prop.dataType.isOptional || !prop.dataType.supportsDefaultJsonValues)
 			paramsCode = paramsCode.append("isOptional = true", ", ")
 		
 		Reference.propertyDeclaration.targetCode + paramsCode.withinParenthesis
 	}
 	
+	// FIXME: Now reads "schema.validate(model).flatMap{ valid => " (toTry is missing)
+	// FIXME: Also, parent type is wrong
 	private def fromModelFor(classToWrite: Class, dataClassName: String)(implicit naming: NamingRules) = {
 		def _modelFromAssignments(assignments: CodePiece) =
 			assignments.withinParenthesis.withPrefix(dataClassName)
