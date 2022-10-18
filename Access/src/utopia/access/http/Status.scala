@@ -245,6 +245,7 @@ object Status
   *                    request. False if it is unknown whether the server status may change in time or if this current
   *                    status is only temporary (see 'isTemporary' for more details)
  */
+// TODO: Use UncertainBoolean here
 class Status(val name: String, val code: Int, val isTemporary: Boolean = false, val doNotRepeat: Boolean = false)
     extends EqualsBy
 {

@@ -474,9 +474,9 @@ an existing database.
 
 ### Command Arguments
 You may activate this alternative mode by writing `read` as the first command line argument.  
-You may also specify the following additional arguments: 
-1. `password` (`pw`) - Password used when connecting to the database (no password used by default)
-2. `user` (`u`) - Username used when connecting to the database (default = `root`)
+You may also specify the following additional arguments:
+1. `user` (`u`) - Username used when connecting to the database (default = `root`)
+2. `password` (`pw`) - Password used when connecting to the database (asked if not provided here)
 3. `connection` (`con`) - Database address to connect to (default = `jdbc:mysql://localhost:3306/`)
 4. `database` (`db`) - Name of the database to read (asked if not provided here)
 5. `table` (`t`) - Name of the table or tables to read (use json array syntax for multiple tables, 

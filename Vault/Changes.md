@@ -2,6 +2,11 @@
 
 ## v1.14.1 (in development)
 Adjusting to **Flow** v2.0 changes
+### Other Changes
+- When loading column length rules from json, multiple rules may now be combined by separating them with "` or `" 
+  (without quotation marks). This means that the second rule will kick in if the application of the first rule fails. 
+    - For example, `"expand to 255 or crop"` will primarily attempt to make the column larger, but at will rather crop 
+    input that's longer than 255 characters.
 
 ## v1.14 - 02.10.2022
 This update adds a number of functions to access points that utilize ordering, i.e. different variants of 

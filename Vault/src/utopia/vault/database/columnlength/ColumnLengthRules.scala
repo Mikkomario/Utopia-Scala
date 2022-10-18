@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.DeepMap
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.{Throw, TryCrop, TryExpand}
@@ -21,6 +22,8 @@ import scala.concurrent.ExecutionContext
 object ColumnLengthRules
 {
 	// ATTRIBUTES   --------------------------------
+	
+	private lazy val ruleSplitRegex = Regex.whiteSpace + Regex("or") + Regex.whiteSpace
 	
 	/**
 	  * The column length rule applied by default (default = throw error if column maximum length is exceeded)
@@ -127,21 +130,26 @@ object ColumnLengthRules
 	private def loadFromDbModel(dbName: String, model: Model)
 	                           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
+		// Handles each column in each table
 		model.properties.flatMap { tableAtt =>
 			val tableName = tableAtt.name
 			tableAtt.value.getModel.properties.flatMap { columnAtt =>
 				val propName = columnAtt.name
-				val value = columnAtt.value.getString.toLowerCase
-				val limit = value match {
+				// Multiple rules may be combined using "A or B" syntax where A and B are separate rules
+				val parts = columnAtt.value.getString.toLowerCase.split(ruleSplitRegex).map { _.trim }
+				// Parses each part
+				val limits = parts.flatMap {
 					case "throw" => Some(Throw)
 					case "crop" => Some(TryCrop)
 					case "expand" => Some(TryExpand.infinitely)
-					case _ =>
-						if (value.startsWith("expand") || value.startsWith("to") || value.startsWith("up to"))
-							value.afterLast(" ").long.map { TryExpand upTo _ }
+					case other =>
+						if (other.startsWith("expand") || other.startsWith("to") || other.startsWith("up to"))
+							other.afterLast(" ").long.map { TryExpand upTo _ }
 						else
-							value.long.map { TryExpand upTo _ }
+							other.long.map { TryExpand upTo _ }
 				}
+				// Combines the parts into a single limit
+				val limit = limits.headOption.map { first => limits.tail.foldLeft(first) { _.recoverWith(_) } }
 				limit.map { Vector(dbName, tableName, propName) -> _ }
 			}
 		}

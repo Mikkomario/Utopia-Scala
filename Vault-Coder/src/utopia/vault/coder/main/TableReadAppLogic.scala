@@ -24,8 +24,8 @@ object TableReadAppLogic extends AppLogic
 	
 	override val name = "read"
 	override lazy val argumentSchema = Vector(
-		ArgumentSchema("password", "pw", help = "Password used for accessing the database"),
 		ArgumentSchema("user", "u", "root", help = "User name used to access the database"),
+		ArgumentSchema("password", "pw", help = "Password used for accessing the database"),
 		ArgumentSchema("connection", "con", "jdbc:mysql://localhost:3306/", help = "Database address to connect to"),
 		ArgumentSchema("database", "db", help = "Name of the read database"),
 		ArgumentSchema("table", "t", help = "Name of the read table"),
@@ -34,9 +34,13 @@ object TableReadAppLogic extends AppLogic
 	)
 	
 	override def apply(args: CommandArguments) = {
+		val target = args("connection").getString
+		val user = args("user").getString
+		val pw = args("password")
+			.stringOr { StdIn.printAndReadLine(s"Password for connecting to $target with user $user") }
+		
 		// Specifies the connection settings
-		Connection.modifySettings { _.copy(connectionTarget = args("connection").getString,
-			user = args("user").getString, password = args("password").getString,
+		Connection.modifySettings { _.copy(connectionTarget = target, user = user, password = pw,
 			defaultDBName = args("database").string) }
 		// Checks which tables to read
 		args("database").string

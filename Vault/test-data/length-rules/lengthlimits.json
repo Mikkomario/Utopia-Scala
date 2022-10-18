@@ -3,6 +3,10 @@
     "person": {
       "name": "expand to 96",
       "age": "crop"
+    },
+    "length_test": {
+      "str": "expand to 8 or crop",
+      "num": "expand to 99 or crop"
     }
   }
 }
