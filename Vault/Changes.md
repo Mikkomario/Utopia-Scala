@@ -8,11 +8,14 @@ Adjusting to **Flow** v2.0 changes
 - **Reference**
   - Added `.reverse`
   - Added functions for converting references to joins
+- **References**
+  - Added functions that produce reference-based graphs
 ### Other Changes
 - When loading column length rules from json, multiple rules may now be combined by separating them with "` or `" 
   (without quotation marks). This means that the second rule will kick in if the application of the first rule fails. 
     - For example, `"expand to 255 or crop"` will primarily attempt to make the column larger, but at will rather crop 
     input that's longer than 255 characters.
+- **References** object now returns **CachingSeq** instead of **Set** in many functions
 
 ## v1.14 - 02.10.2022
 This update adds a number of functions to access points that utilize ordering, i.e. different variants of 

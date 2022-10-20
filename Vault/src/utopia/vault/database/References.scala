@@ -1,13 +1,14 @@
 package utopia.vault.database
 
-import utopia.flow.collection.immutable.{Pair, Tree}
+import utopia.flow.collection.immutable.{Pair, ViewGraphNode}
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.operator.Sign
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.caching.iterable.CachingSeq
+import utopia.flow.view.immutable.View
 import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table}
 
 import scala.collection.immutable.{HashMap, HashSet}
-import scala.collection.mutable
 
 /**
  * The references object keeps track of all references between different tables in a multiple
@@ -25,8 +26,7 @@ object References
     
     // IMPLEMENTED  ----------------------
     
-    override def toString =
-    {
+    override def toString = {
         if (referenceData.isEmpty)
             "No references recorded"
         else
@@ -41,14 +41,12 @@ object References
      * @param databaseName the name of the database
      * @param references a set of references in the database
      */
-    def setup(databaseName: String, references: Set[Reference]) =
-    {
+    def setup(databaseName: String, references: Set[Reference]) = {
         if (referenceData.contains(databaseName))
             referenceData += (databaseName -> (referenceData(databaseName) ++ references))
         else
             referenceData += (databaseName -> references)
     }
-    
     /**
       * Sets up reference data for a single database. Each pair should contain 4 elements:
       * 1) referencing table, 2) name of the referencing property, 3) referenced table,
@@ -61,7 +59,6 @@ object References
             Reference(table1, name1, table2, name2) }.toSet
         references.groupBy { _.from.table.databaseName }.foreach { case (dbName, refs) => setup(dbName, refs) }
     }
-    
     /**
      * Sets up reference data for a single database. Each pair should contain 4 elements:
      * 1) referencing table, 2) name of the referencing property, 3) referenced table,
@@ -76,12 +73,10 @@ object References
      * @return A reference from the provided reference point. None if the point doesn't reference
      * anything
      */
-    def from(point: ReferencePoint) =
-    {
+    def from(point: ReferencePoint) = {
         checkIsSetup(point.table.databaseName)
         referenceData(point.table.databaseName).find { _.from == point }.map { _.to }
     }
-    
     /**
      * Finds a possible reference that is made from the provided reference point (table + column)
      * @param table The table that contains the column
@@ -90,7 +85,6 @@ object References
      * anything
      */
     def from(table: Table, column: Column): Option[ReferencePoint] = from(ReferencePoint(table, column))
-    
     /**
      * Finds a possible reference that is made from the provided reference point (table + column)
      * @param table The table that contains the column
@@ -99,92 +93,75 @@ object References
      * anything
      */
     def from(table: Table, columnName: String): Option[ReferencePoint] = ReferencePoint(table, columnName).flatMap(from)
+    /**
+      * Finds all references made from a specific table
+      */
+    def from(table: Table) = {
+        checkIsSetup(table.databaseName)
+        referenceData(table.databaseName).iterator.filter { _.from.table == table }.caching
+    }
     
     /**
      * Finds all places where the provided reference point is referenced
      * @param point the targeted reference point
      * @return All reference points that target the specified reference point
      */
-    def to(point: ReferencePoint) =
-    {
+    def to(point: ReferencePoint) = {
         checkIsSetup(point.table.databaseName)
-        referenceData(point.table.databaseName).filter { _.to == point }.map { _.from }
+        referenceData(point.table.databaseName).iterator.filter { _.to == point }.map { _.from }.caching
     }
-    
     /**
      * Finds all places where the provided reference point is referenced
      * @param table the table that contains the column
      * @param column the referenced column
      * @return All reference points that target the specified reference point
      */
-    def to(table: Table, column: Column): Set[ReferencePoint] = to(ReferencePoint(table, column))
-    
+    def to(table: Table, column: Column): CachingSeq[ReferencePoint] = to(ReferencePoint(table, column))
     /**
      * Finds all places where the provided reference point is referenced
      * @param table the table that contains the column
      * @param columnName the name of the referenced column
      * @return All reference points that target the specified reference point
      */
-    def to(table: Table, columnName: String): Set[ReferencePoint] =
-            table.find(columnName).map { ReferencePoint(table, _) }.map(to).getOrElse(HashSet())
-    
-    /**
-     * Finds all references made from a specific table
-     */
-    def from(table: Table) =
-    {
-        checkIsSetup(table.databaseName)
-        referenceData(table.databaseName).filter { _.from.table == table }
-    }
-    
+    def to(table: Table, columnName: String): CachingSeq[ReferencePoint] =
+        table.find(columnName).map { ReferencePoint(table, _) } match {
+            case Some(point) => to(point)
+            case None => CachingSeq.empty
+        }
     /**
      * Finds all references made into a specific table
      */
-    def to(table: Table) =
-    {
+    def to(table: Table) = {
         checkIsSetup(table.databaseName)
-        referenceData(table.databaseName).filter { _.to.table == table }
+        referenceData(table.databaseName).iterator.filter { _.to.table == table }.caching
     }
     
     /**
       * Finds all references between the two tables. The results contain pairings of left side
       * columns matched with right side columns. The references may go either way
       */
-    def columnsBetween(tables: Pair[Table]) =
-    {
+    def columnsBetween(tables: Pair[Table]) = {
         // Makes sure database references have been set up
         tables.map { _.databaseName }.distinct.foreach(checkIsSetup)
         // Checks first for same order as in specified parameter, then for reverse order
-        Sign.values.flatMap { orderSign =>
+        Sign.values.iterator.flatMap { orderSign =>
             val orderedTables = tables * orderSign
-            referenceData(orderedTables.first.databaseName)
+            referenceData(orderedTables.first.databaseName).iterator
                 .filter { _.tables == orderedTables }
                 .map { _.columns * orderSign } // Columns are ordered according to the parameter ordering
-        }.toSet
+        }.caching
     }
     /**
      * Finds all references between the two tables. The results contain pairings of left side
      * columns matched with right side columns. The references may go either way
      */
-    def columnsBetween(left: Table, right: Table): Set[Pair[Column]] = columnsBetween(Pair(left, right))
-    
+    def columnsBetween(left: Table, right: Table): CachingSeq[Pair[Column]] = columnsBetween(Pair(left, right))
     /**
       * Finds a single connection between the two tables
       * @param tables Left & right table
       * @return Left side column -> right side column. None if there wasn't a connection between the two tables
       */
-    def connectionBetween(tables: Pair[Table]) =
-    {
-        // Makes sure data is set up
-        tables.map { _.databaseName }.distinct.foreach(checkIsSetup)
-        // Checks first for forward references, then for backwards references
-        Sign.values.findMap { orderSign =>
-            val orderedTables = tables * orderSign
-            referenceData(orderedTables.first.databaseName)
-                .find { _.tables == orderedTables }
-                .map { _.columns * orderSign } // Columns are returned in same order as parameter tables
-        }
-    }
+    def connectionBetween(tables: Pair[Table]) = columnsBetween(tables).headOption
     /**
       * Finds a single connection between the two tables
       * @param left Left side table
@@ -197,7 +174,7 @@ object References
      * Finds all references from the left table to the right table. Only one sided references
      * are included
      */
-    def fromTo(left: Table, right: Table) = from(left) intersect to(right)
+    def fromTo(left: Table, right: Table) = from(left).filter { _.to.table == right }
     /**
      * Finds all references between the two tables. The reference(s) may point to either direction
      */
@@ -213,37 +190,40 @@ object References
     def tablesReferencing(table: Table) = to(table).map { _.from.table }
     
     /**
-     * Lists all of the tables that either directly or indirectly refer to the specified table. Will not include the
-     * specified table itself, even if it refers to itself.
+     * Lists all of the tables that either directly or indirectly refer to the specified table.
+      * Will not include the specified table itself, even if it refers to itself.
      * @param table Targeted table
      * @return All tables directly or indirectly referencing the specified table
      */
-    def tablesAffectedBy(table: Table): Set[Table] = tablesAffectedBy(table, Set())
+    def tablesAffectedBy(table: Table): CachingSeq[Table] =
+        toReverseLinkGraphFrom(table).allNodesIterator.drop(1).map { _.value }.caching
     
-    private def tablesAffectedBy(table: Table, ignoredTables: Set[Table]): Set[Table] =
-    {
-        var newIgnored = ignoredTables + table
-        // Finds all tables directly referencing specified table (ignores tables that are already recorded)
-        val newReferencing = tablesReferencing(table) -- newIgnored
-        
-        if (newReferencing.nonEmpty)
-        {
-            // Finds all tables referencing those directly referenced tables (recursive)
-            val additionalTablesBuilder = mutable.Set[Table]()
-            newReferencing.foreach { referencingTable =>
-                val moreTables = tablesAffectedBy(referencingTable, newIgnored)
-                if (moreTables.nonEmpty)
-                {
-                    additionalTablesBuilder ++= moreTables
-                    // Expands the number of ignored tables each time new ones are found
-                    newIgnored ++= moreTables
-                }
-            }
-            
-            newReferencing ++ additionalTablesBuilder
-        }
-        else
-            newReferencing
+    /**
+      * Creates a new reference graph that only contains direct links from the origin table to the target table.
+      * I.e. the edges point the same direction as the table references.
+      * @param table The origin node table
+      * @return A reference graph node representing the specified table (lazily initialized)
+      */
+    def toLinkGraphFrom(table: Table) = ViewGraphNode
+        .iterate(table) { table => from(table).map { ref => View(ref) -> View(ref.to.table) } }
+    /**
+      * Creates a new reference graph where leaving edges are the references coming **to** the node table.
+      * I.e. all the references are associated with the tables they point towards, not where they originate from.
+      * @param table The origin node table
+      * @return A reference graph node representing the specified table (lazily initialized)
+      */
+    def toReverseLinkGraphFrom(table: Table) = ViewGraphNode
+        .iterate(table) { table => to(table).map { ref => View(ref) -> View(ref.from.table) } }
+    /**
+      * Creates a new reference graph that contains each reference twice:
+      * Once in the table from which the reference originates and once in the table to which the reference points to.
+      * In other words, all the edges in the resulting graph go both ways.
+      * @param table The origin node table
+      * @return A reference graph node representing the specified table (lazily initialized)
+      */
+    def toBiDirectionalLinkGraphFrom(table: Table) = ViewGraphNode.iterate(table) { table =>
+        from(table).map { ref => View(ref -> true) -> View(ref.to.table) } ++
+            to(table).map { ref => View(ref -> false) -> View(ref.from.table) }
     }
     
     /**
@@ -254,20 +234,7 @@ object References
      * @return A reference tree where the specified table is the root and tables referencing that table are below it.
       *         The references in the result point from tree leaves towards the root of the tree.
      */
-    def referenceTree(root: Table): Tree[Table] = referenceTree(root, Set())
-    
-    private def referenceTree(root: Table, ignoredTables: Set[Table]): Tree[Table] =
-    {
-        val newIgnored = ignoredTables + root
-        // Finds all tables directly referencing specified table (except those ignored)
-        val referencing = tablesReferencing(root) -- newIgnored
-        
-        // Transforms each referencing table into a tree of tables (ignoring tables already in the tree)
-        val referencingTrees = referencing.map { referenceTree(_, newIgnored) }
-        
-        // Returns the whole tree
-        Tree(root, referencingTrees.toVector)
-    }
+    def referenceTree(root: Table) = toReverseLinkGraphFrom(root).toTree.map { _.value }
     
     /**
      * Clears all reference data concerning a single database
@@ -275,8 +242,7 @@ object References
      */
     def clear(databaseName: String) = referenceData -= databaseName
     
-    private def checkIsSetup(databaseName: String) =
-    {
+    private def checkIsSetup(databaseName: String) = {
         if (!referenceData.contains(databaseName))
             throw EnvironmentNotSetupException(
                     s"References for database '$databaseName' haven't been specified")

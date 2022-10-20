@@ -173,6 +173,32 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	override def iterator: Iterator[A] = new PairIterator
 	
 	override def length = 2
+	override def knownSize = 2
+	override def isEmpty = false
+	override def isTraversableAgain = true
+	
+	override def head = first
+	override def headOption = Some(first)
+	override def last = second
+	override def lastOption = Some(second)
+	
+	override def reverse = Pair(second, first)
+	protected override def reversed = reverse
+	
+	override def toVector = Vector(first, second)
+	override def toString = s"($first, $second)"
+	
+	override def empty = Vector.empty[A]
+	
+	override def distinct = if (first == second) Vector(first) else this
+	override def distinctBy[B](f: A => B) = if (f(first) == f(second)) Vector(first) else this
+	
+	override def sorted[B >: A](implicit ord: Ordering[B]) = {
+		val cmp = ord.compare(first, second)
+		if (cmp > 0) reverse else this
+	}
+	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
+	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
 	
 	override def apply(index: Int) = (index: @switch) match
 	{
@@ -181,52 +207,17 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 		case _ => throw new IndexOutOfBoundsException(s"Attempting to access index $index of a pair")
 	}
 	
-	override def reverse = Pair(second, first)
+	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
+	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
 	
-	override def toVector = Vector(first, second)
+	override def contains[B >: A](item: B) = first == item || second == item
 	
 	override def map[B](f: A => B) = Pair(f(first), f(second))
 	
 	override def reduce[B >: A](op: (B, B) => B) = merge(op)
 	
-	override def toString() = s"($first, $second)"
-	
-	override def isTraversableAgain = true
-	
-	override def head = first
-	
-	override def headOption = Some(first)
-	
-	override def last = second
-	
-	override def lastOption = Some(second)
-	
-	override def isEmpty = false
-	
-	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
-	
-	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
-	
-	override def empty = Vector.empty[A]
-	
-	protected override def reversed = reverse
-	
-	override def knownSize = 2
-	
-	/**
-	  * @param item An item
-	  * @return Whether this pair contains that specific item
-	  */
-	override def contains[B >: A](item: B) = first == item || second == item
-	
-	override def sorted[B >: A](implicit ord: Ordering[B]) = {
-		val cmp = ord.compare(first, second)
-		if (cmp > 0) reverse else this
-	}
-	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
 	override def maxBy[B](f: A => B)(implicit cmp: Ordering[B]) =
 		if (cmp.gt(f(second), f(first))) second else first
-	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
 	override def minBy[B](f: A => B)(implicit cmp: Ordering[B]) =
 		if (cmp.lt(f(second), f(first))) second else first
 	
