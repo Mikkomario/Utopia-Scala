@@ -87,6 +87,7 @@
 - **Path**
   - Added `.toTree`
 - **Pair**
+  - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **Signed**
   - Added a number of new utility functions

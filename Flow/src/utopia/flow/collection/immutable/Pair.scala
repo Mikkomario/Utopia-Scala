@@ -257,6 +257,27 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	 */
 	def sideOf[B >: A](item: B): Option[Sign] =
 		if (item == first) Some(Negative) else if (item == second) Some(Positive) else None
+	/**
+	  * @param item An item
+	  * @return The item opposite to the specified item.
+	  *         None if the specified item didn't appear in this pair.
+	  */
+	def oppositeOf[B >: A](item: B) =
+		if (item == first) Some(second) else if (item == second) Some(first) else None
+	/**
+	  * Finds the item opposite to one matching a condition.
+	  * Works like find, except that this function returns the opposite item.
+	  *
+	  * I.e. if 'f' returns true for the first item, returns the second item;
+	  * If 'f' returns false for the first item and true for the second item, returns the first item;
+	  * If 'f' returns false for both items, returns None.
+	  *
+	  * @param f A find function for the targeted (not returned) item
+	  * @return The item opposite to the item for which 'f' returned true.
+	  *         None if 'f' returned false for both items.
+	  */
+	def oppositeToWhere(f: A => Boolean) =
+		if (f(first)) Some(second) else if (f(second)) Some(first) else None
 	
 	/**
 	  * @param newFirst New first item

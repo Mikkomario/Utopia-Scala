@@ -2,6 +2,12 @@
 
 ## v1.14.1 (in development)
 Adjusting to **Flow** v2.0 changes
+### New Methods
+- **Access**
+  - Added `.findNotLinkedTo(Table)`
+- **Reference**
+  - Added `.reverse`
+  - Added functions for converting references to joins
 ### Other Changes
 - When loading column length rules from json, multiple rules may now be combined by separating them with "` or `" 
   (without quotation marks). This means that the second rule will kick in if the application of the first rule fails. 
