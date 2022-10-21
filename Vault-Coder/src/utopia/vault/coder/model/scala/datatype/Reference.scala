@@ -91,13 +91,14 @@ object Reference
 	lazy val filterableView = apply(viewAccess, "FilterableView")
 	lazy val chronoRowFactoryView = apply(viewAccess, "ChronoRowFactoryView")
 	
-	lazy val singleRowModelAccess = apply(singleModelAccess, "SingleRowModelAccess")
+	lazy val singleModelAccess = apply(Package.singleModelAccess, "SingleModelAccess")
+	lazy val singleRowModelAccess = apply(Package.singleModelAccess, "SingleRowModelAccess")
 	lazy val manyModelAccess = apply(Package.manyModelAccess, "ManyModelAccess")
 	lazy val manyRowModelAccess = apply(Package.manyModelAccess, "ManyRowModelAccess")
 	lazy val distinctModelAccess = apply(access/"template.model", "DistinctModelAccess")
-	lazy val uniqueModelAccess = apply(singleModelAccess/"distinct", "UniqueModelAccess")
-	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")
-	lazy val singleIntIdModelAccess = apply(singleModelAccess/"distinct", "SingleIntIdModelAccess")
+	lazy val uniqueModelAccess = apply(Package.singleModelAccess/"distinct", "UniqueModelAccess")
+	lazy val singleIdModelAccess = apply(Package.singleModelAccess/"distinct", "SingleIdModelAccess")
+	lazy val singleIntIdModelAccess = apply(Package.singleModelAccess/"distinct", "SingleIntIdModelAccess")
 	
 	// Metropolis
 	

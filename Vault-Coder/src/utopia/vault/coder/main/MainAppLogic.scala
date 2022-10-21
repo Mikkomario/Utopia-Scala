@@ -15,7 +15,7 @@ import utopia.vault.coder.controller.reader
 import utopia.vault.coder.controller.writer.database._
 import utopia.vault.coder.controller.writer.documentation.DocumentationWriter
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
-import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectPaths, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, ClassReferences, CombinationData, Filter, NamingRules, ProjectData, ProjectPaths, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NameContext.FileName
 import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.util.Common._
@@ -467,24 +467,7 @@ object MainAppLogic extends AppLogic
 					data.classes.tryMap { write(_, tablesRef, descriptionLinkObjects) }.flatMap { classRefs =>
 						// Finally writes the combined models
 						val classRefsMap = classRefs.toMap
-						data.combinations.tryForeach { combination =>
-							val parentRefs = classRefsMap(combination.parentClass)
-							val childRefs = classRefsMap(combination.childClass)
-							CombinedModelWriter(combination, parentRefs.model, parentRefs.data, childRefs.model)
-								.flatMap { combinedRefs =>
-									CombinedFactoryWriter(combination, combinedRefs, parentRefs.factory,
-										childRefs.factory)
-										.flatMap { comboFactoryRef =>
-											parentRefs.genericAccessTrait.toTry {
-												// Should not reach here
-												new IllegalStateException("No generic access trait exists for a combined class") }
-												.flatMap { accessTraitRef =>
-													AccessWriter.writeComboAccessPoints(combination, accessTraitRef,
-														combinedRefs.combined, comboFactoryRef, childRefs.dbModel)
-												}
-										}
-								}
-						}
+						data.combinations.tryForeach { writeCombo(_, classRefsMap) }
 					}
 				}
 			}
@@ -519,11 +502,35 @@ object MainAppLogic extends AppLogic
 							// Finally writes the access points
 							AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef,
 								descriptionReferences)
-								.map { accessTraitRef => classToWrite ->
-									ClassReferences(modelRef, dataRef, factoryRef, dbModelRef, accessTraitRef) }
+								.map { case (genericUniqueAccessRef, genericManyAccessRef) =>
+									classToWrite -> ClassReferences(modelRef, dataRef, factoryRef, dbModelRef,
+										genericUniqueAccessRef, genericManyAccessRef) }
 						}
 					}
 			}
+		}
+	}
+	
+	private def writeCombo(combination: CombinationData, classRefsMap: Map[Class, ClassReferences])
+	                      (implicit setup: ProjectSetup, naming: NamingRules) =
+	{
+		val parentRefs = classRefsMap(combination.parentClass)
+		val childRefs = classRefsMap(combination.childClass)
+		CombinedModelWriter(combination, parentRefs.model, parentRefs.data, childRefs.model).flatMap { combinedRefs =>
+			CombinedFactoryWriter(combination, combinedRefs, parentRefs.factory, childRefs.factory)
+				.flatMap { comboFactoryRef =>
+					parentRefs.genericUniqueAccessTrait
+						.toTry { new IllegalStateException("No generic unique access trait exists for a combined class") }
+						.flatMap { genericUniqueAccessTraitRef =>
+							parentRefs.genericManyAccessTrait
+								.toTry { new IllegalStateException("No generic access trait exists for a combined class") }
+								.flatMap { genericManyAccessTraitRef =>
+									AccessWriter.writeComboAccessPoints(combination, genericUniqueAccessTraitRef,
+										genericManyAccessTraitRef, combinedRefs.combined, comboFactoryRef,
+										parentRefs.dbModel, childRefs.dbModel)
+								}
+						}
+				}
 		}
 	}
 }

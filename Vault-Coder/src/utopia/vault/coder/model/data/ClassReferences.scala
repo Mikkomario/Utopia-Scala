@@ -8,4 +8,4 @@ import utopia.vault.coder.model.scala.datatype.Reference
   * @since 14.10.2021, v1.2
   */
 case class ClassReferences(model: Reference, data: Reference, factory: Reference, dbModel: Reference,
-                           genericAccessTrait: Option[Reference])
+                           genericUniqueAccessTrait: Option[Reference], genericManyAccessTrait: Option[Reference])

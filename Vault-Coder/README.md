@@ -48,6 +48,11 @@ Once you have created a specification document, run the application using the fo
 The program will inform you if there were any problems during input file processing or during output write operations.
 
 ## Input File Structure
+This section instructs you on how to write a correct input json document and shows you what options you have 
+available to you.  
+When writing a new input document, you may start with the 
+[input template](https://github.com/Mikkomario/Utopia-Scala/blob/development/Vault-Coder/input-template.json) file.
+
 The input .json file should contain a single object with following properties:
 - **"name" / "project": String (optional)** - Name of this project
   - If left empty, the name will be based on the specified base package or database package
@@ -442,6 +447,7 @@ This application will produce the following documents
       - **SDescriptionLinkFactory.scala** - An object that contains description link factories for described classes
       - **P**
         - **XFactory.scala** - A factory object used for reading models from database
+          - These are also generated for various class combinations
     - model
       - **SDescriptionLinkModel.scala** - An object that contains description link model factories for described classes
       - **P**
@@ -449,19 +455,26 @@ This application will produce the following documents
     - access
       - single
         - **P**
+          - **UniqueXAccessLike.scala** - A trait common to distinct single access points that return instances 
+            of **X** or any combinations where **X** acts as the parent class
+            - Only generated for classes that use combinations
           - **UniqueXAccess.scala** - A trait common to distinct single access points that return instances of **X**
           - **DbSingleX.scala** - A class that accesses individual instances of **X** based on their id
+            - Also generated for various class combinations
           - **DbX.scala** - The root access point for individual instances of **X**
+            - Also generated for various class combinations
         - description
           - **DbXDescription.scala** - The root access point for individual descriptions targeting instances of **X**
             - Only generated for classes which support descriptions
       - many
         - **P**
           - **ManyXsAccessLike.scala** - A trait common to access points that return multiple instances 
-            of **X** or its variations at a time
-            - Only generated for classes with combinations or when explicitly requested
+            of **X** or its variations (combinations) at a time
+            - Only generated for classes that use combinations
           - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
+            - Also generated for various class combinations
           - **DbXs.scala** - The root access point for multiple instances of **X**
+            - Also generated for various class combinations
         - description
           - **DbXDescriptions.scala** - The root access point for accessing multiple **X**-descriptions at once
             - Only generated for classes which support descriptions

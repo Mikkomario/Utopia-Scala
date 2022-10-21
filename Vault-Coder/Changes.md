@@ -12,7 +12,7 @@
   (see README for details)
 - Added `-N` argument that disables merging
 - Added access point -writing for combined models
-- Added FromModelFactory writing for the data models (experimental)
+- Added FromModelFactory -writing for the XData -classes (experimental)
 ### Other Changes
 - Possibly combined model constructors now contain a default parameter value of None
 ### Known Bugs
