@@ -169,9 +169,9 @@ object AccessWriter
 			.flatMap { case (genericUniqueTraitRef, uniqueAccessRef) =>
 				writeSingleIdAccess(classToWrite, modelRef, uniqueAccessRef, descriptionReferences, singleAccessPackage)
 					.flatMap { singleIdAccessRef =>
-						writeSingleRootAccess(classToWrite.name, classToWrite.idType, modelRef, singleIdAccessRef,
-							singleAccessPackage, Vector(modelProperty, factoryProperty), rootViewExtension,
-							classToWrite.author)
+						writeSingleRootAccess(classToWrite.name, classToWrite.idType, modelRef,
+							Reference.singleRowModelAccess, singleIdAccessRef, singleAccessPackage,
+							Vector(modelProperty, factoryProperty), rootViewExtension, classToWrite.author)
 							.map { _ -> genericUniqueTraitRef }
 					}
 			}
@@ -253,7 +253,9 @@ object AccessWriter
 					else
 						Reference.unconditionalView
 				}
-				writeSingleRootAccess(combo.name, idType, combinedModelRef, singleIdAccessRef, singleAccessPackage,
+				writeSingleRootAccess(combo.name, idType, combinedModelRef,
+					if (combo.combinationType.isOneToMany) Reference.singleModelAccess else Reference.singleRowModelAccess,
+					singleIdAccessRef, singleAccessPackage,
 					Vector(factoryProp,
 						ComputedProperty("model", Set(parentDbModelRef), visibility = Protected,
 							description = s"A database model (factory) used for interacting with linked ${
@@ -375,15 +377,14 @@ object AccessWriter
 	// Root access points extend either the UnconditionalView or the NonDeprecatedView -trait,
 	// depending on whether deprecation is supported
 	private def writeSingleRootAccess(className: Name, idType: PropertyType, modelRef: Reference,
-	                                   singleIdAccessRef: Reference, singleAccessPackage: Package,
-	                                   baseProperties: Vector[PropertyDeclaration], rootViewExtension: Extension,
-	                                   author: String)
+	                                  singleModelAccessRef: Reference, singleIdAccessRef: Reference,
+	                                  singleAccessPackage: Package, baseProperties: Vector[PropertyDeclaration],
+	                                  rootViewExtension: Extension, author: String)
 	                                 (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
 		File(singleAccessPackage,
 			ObjectDeclaration((accessPrefix +: className).className,
-				// FIXME: one-to-many combos should have singleModelAccess, not singleRowModelAccess
-				Vector(Reference.singleRowModelAccess(modelRef), rootViewExtension, Reference.indexed),
+				Vector(singleModelAccessRef(modelRef), rootViewExtension, Reference.indexed),
 				properties = baseProperties,
 				// Defines an .apply(id) method for accessing individual items
 				methods = Set(MethodDeclaration("apply", Set(singleIdAccessRef),
@@ -430,6 +431,10 @@ object AccessWriter
 			else
 				Vector(base, Reference.manyRowModelAccess(modelRef))
 		}
+		val childModelProp = ComputedProperty((combo.childName + "Model").prop, Set(childDbModelRef),
+			visibility = Protected,
+			description = s"Model (factory) used for interacting the ${
+				combo.childClass.name.pluralDoc } associated with this ${ combo.name.doc }")(childDbModelRef.target)
 		File(packageName,
 			// Writes a private subAccess trait for filter(...) implementation
 			ObjectDeclaration(traitName, nested = Set(
@@ -445,15 +450,13 @@ object AccessWriter
 				extensions = extensions,
 				properties = Vector(
 					ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
-					ComputedProperty((combo.childName + "Model").prop, Set(childDbModelRef), visibility = Protected,
-						description = s"Model (factory) used for interacting the ${
-							combo.childClass.name.pluralDoc } associated with this ${ combo.name.doc }")(
-						childDbModelRef.target)
-				), methods = Set(
+					childModelProp
+				) ++ propertyGettersFor(combo.childClass, childModelProp.name, combo.childName.prop),
+				methods = propertySettersFor(combo.childClass, childModelProp.name) { n => (combo.childName +: n).prop } +
 					MethodDeclaration("filter", explicitOutputType = Some(traitType), isOverridden = true)(
 						Parameter("additionalCondition", Reference.condition))(
 						s"new $traitName.SubAccess(this, additionalCondition)")
-				),
+				,
 				description = s"A common trait for access points that return multiple ${ combo.name.pluralDoc } at a time",
 				author = combo.author
 			)
