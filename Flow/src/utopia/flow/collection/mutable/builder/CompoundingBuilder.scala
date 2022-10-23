@@ -135,7 +135,9 @@ abstract class CompoundingBuilder[A, +B <: mutable.Builder[A, C], C, +To <: Iter
 	}
 	
 	override def addAll(xs: IterableOnce[A]) = {
-		builderPointer.value.addAll(xs)
+		val iter = xs.iterator
+		if (iter.hasNext)
+			builderPointer.value.addAll(iter)
 		this
 	}
 	

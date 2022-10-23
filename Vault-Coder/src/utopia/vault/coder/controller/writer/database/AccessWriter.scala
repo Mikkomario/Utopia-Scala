@@ -382,6 +382,7 @@ object AccessWriter
 	{
 		File(singleAccessPackage,
 			ObjectDeclaration((accessPrefix +: className).className,
+				// FIXME: one-to-many combos should have singleModelAccess, not singleRowModelAccess
 				Vector(Reference.singleRowModelAccess(modelRef), rootViewExtension, Reference.indexed),
 				properties = baseProperties,
 				// Defines an .apply(id) method for accessing individual items
