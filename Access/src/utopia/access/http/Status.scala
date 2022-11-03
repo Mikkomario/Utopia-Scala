@@ -257,6 +257,18 @@ class Status(val name: String, val code: Int, val isTemporary: Boolean = false, 
     val group = StatusGroup.forCode(code)
     
     
+    // COMPUTED -------------------------
+    
+    /**
+      * @return Whether this status represents a success (code range 200-399)
+      */
+    def isSuccess = code < 400
+    /**
+      * @return Whether this status represents a failure (code range 400-)
+      */
+    def isFailure = code >= 400
+    
+    
     // IMPLEMENTED    ----------------------
     
     protected override def equalsProperties = Vector(code)
