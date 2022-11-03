@@ -6,6 +6,8 @@ import utopia.flow.time.Days
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.duration.FiniteDuration
 
+import scala.language.implicitConversions
+
 /**
   * Provides implicit methods for unwrapping values into basic data types
   * @author Mikko Hilpinen

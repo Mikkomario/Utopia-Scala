@@ -1,5 +1,7 @@
 package utopia.flow.operator
 
+import scala.language.implicitConversions
+
 /**
   * An identity function. Returns the item as it is.
   * @author Mikko Hilpinen

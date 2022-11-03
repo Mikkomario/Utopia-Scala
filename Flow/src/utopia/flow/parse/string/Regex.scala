@@ -209,6 +209,11 @@ case class Regex(string: String)
 	  * @return This regular expression repeated that many times
 	  */
 	def *(multiplier: Int) = times(multiplier)
+	/**
+	  * @param range Range that determines how many times this regular expression may repeat
+	  * @return This regular expression repeated 'a' to 'b' times, where 'a' and 'b' are range ends.
+	  */
+	def *(range: Range) = times(range)
 	
 	/**
 	 * @param another Another regex
@@ -225,7 +230,17 @@ case class Regex(string: String)
 	 * @param range A range
 	 * @return This regex 'range' times in sequence
 	 */
-	def times(range: Range) = Regex(string + s"{${range.start},${range.end}")
+	@throws[IllegalArgumentException]("If the specified range is empty")
+	def times(range: Range): Regex = {
+		if (range.nonEmpty) {
+			if (range.size == 1)
+				times(range.head)
+			else
+				Regex(string + s"{${range.min},${range.max}}")
+		}
+		else
+			throw new IllegalArgumentException("Empty range")
+	}
 	
 	/**
 	  * Creates a regular expression that ignores results between the specified start and end characters

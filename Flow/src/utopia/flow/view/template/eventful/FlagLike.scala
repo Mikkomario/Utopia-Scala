@@ -2,6 +2,8 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 
+import scala.language.implicitConversions
+
 object FlagLike
 {
 	// IMPLICIT ------------------

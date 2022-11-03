@@ -65,6 +65,8 @@
 - Deprecated **Generator** and **Counter**
 - Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
 - Deprecated `.compareWith(...)` in **Pair** in favor of `.merge(...)`
+### Bugfixes
+- Fixed **Regex**`.times(Range)` that previously yielded invalid regular expressions
 ### New Features
 - **ModelDeclarations** now support optional properties
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**

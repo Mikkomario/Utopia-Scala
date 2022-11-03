@@ -2,6 +2,8 @@ package utopia.flow.generic.factory
 
 import utopia.flow.generic.model.immutable.Value
 
+import scala.language.implicitConversions
+
 /**
   * A factory used for parsing items from values
   * @author Mikko Hilpinen

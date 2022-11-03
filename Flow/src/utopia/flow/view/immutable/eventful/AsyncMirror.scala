@@ -8,6 +8,7 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 import scala.util.Try
 
 object AsyncMirror
