@@ -2,6 +2,7 @@
 
 ## v1.2 (In Development)
 Supports changes in **Flow** v2.0
+TODO: Document changes in Dimensional (Dimensions, HasDimensions, ...)
 ### Breaking Changes
 - Moved all **ParadigmDataType** objects under the **ParadigmDataType** object
 
