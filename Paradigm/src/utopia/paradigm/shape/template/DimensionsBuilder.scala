@@ -11,7 +11,7 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 5.11.2022, v1.2
   */
-class DimensionsBuilder[A](zero: A) extends mutable.Builder[A, Dimensions[A]]
+class DimensionsBuilder[A](zero: A) extends DimensionalBuilder[A, Dimensions[A]]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -42,16 +42,5 @@ class DimensionsBuilder[A](zero: A) extends mutable.Builder[A, Dimensions[A]]
 		this
 	}
 	
-	
-	// OTHER    --------------------------
-	
-	/**
-	  * Assigns a value on a specific axis
-	  * @param axis Targeted axis
-	  * @param value Value to assign for that axis
-	  */
-	def update(axis: Axis, value: A) = assigned.value(axis) = value
-	
-	def +=(assignment: (Axis, A)) = update(assignment._1, assignment._2)
-	def ++=(assignments: IterableOnce[(Axis, A)]) = assignments.iterator.foreach { this += _ }
+	override def update(axis: Axis, value: A) = assigned.value(axis) = value
 }
