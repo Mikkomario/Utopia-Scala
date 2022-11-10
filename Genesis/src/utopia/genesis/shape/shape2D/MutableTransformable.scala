@@ -76,7 +76,7 @@ trait MutableTransformable
 	  * @param axis Targeted axis
 	  * @return This instance's position on specified axis
 	  */
-	def positionAlong(axis: Axis) = transformation.translation.along(axis)
+	def positionAlong(axis: Axis) = transformation.translation(axis)
 	/**
 	  * Changes this instance's position on the specified axis
 	  * @param axis Targeted axis
@@ -89,7 +89,7 @@ trait MutableTransformable
 	  * @param axis Targeted axis
 	  * @return This instance's scaling along specified axis
 	  */
-	def scalingAlong(axis: Axis) = scaling.along(axis)
+	def scalingAlong(axis: Axis) = scaling(axis)
 	/**
 	  * Changes this instance's scaling along specified axis
 	  * @param axis Targeted axis

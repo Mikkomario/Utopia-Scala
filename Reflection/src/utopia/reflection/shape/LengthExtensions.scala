@@ -202,8 +202,8 @@ object LengthExtensions
 			// Calculates the new position for the area
 			val topLeft = Point.calculateWith { axis =>
 				val (startMargin, endMargin) = insets.toInsets.sidesAlong(axis)
-				within.position.along(axis) + positionWithDirection(fittedArea.along(axis), within.size.along(axis),
-					startMargin, endMargin, a.along(axis).direction, !fitWithinBounds)
+				within.position(axis) + positionWithDirection(fittedArea(axis), within.size(axis),
+					startMargin, endMargin, a(axis).direction, !fitWithinBounds)
 			}
 			
 			Bounds(topLeft, fittedArea)
@@ -234,20 +234,20 @@ object LengthExtensions
 				val areaWithinMinInsets = within - actualInsets.min
 				
 				// Calculates new breadth
-				val breadth = areaToPosition.along(sideAxis)
-				val maxBreadth = areaWithinMinInsets.size.along(sideAxis)
+				val breadth = areaToPosition(sideAxis)
+				val maxBreadth = areaWithinMinInsets.size(sideAxis)
 				val actualBreadth =
 				{
 					// Case: Margin has to be shrunk below minimum
 					if (breadth.min > maxBreadth)
-						breadth.min min within.size.along(sideAxis)
+						breadth.min min within.size(sideAxis)
 					// Case: breadth within limits
 					else
 						breadth.optimal min maxBreadth
 				}
 				
-				val length = areaToPosition.along(strechAxis)
-				val targetLength = areaWithinDefaultInsets.size.along(strechAxis)
+				val length = areaToPosition(strechAxis)
+				val targetLength = areaWithinDefaultInsets.size(strechAxis)
 				
 				length.max.filter { _ < targetLength } match {
 					// Case: The area can't be streched far enough => streches as far as possible, then aligns
@@ -255,12 +255,12 @@ object LengthExtensions
 						positionWithInsets(Size(maxLength, actualBreadth, strechAxis), within, actualInsets,
 							preserveShape = false)
 					case None =>
-						val maxLength = areaWithinMinInsets.size.along(strechAxis)
+						val maxLength = areaWithinMinInsets.size(strechAxis)
 						val actualLength =
 						{
 							// Case: Margin has to be shrunk below minimum
 							if (length.min > maxLength)
-								length.min min within.size.along(strechAxis)
+								length.min min within.size(strechAxis)
 							// Case: Length is within limits
 							else
 								(length.optimal max targetLength) min maxLength
@@ -299,10 +299,10 @@ object LengthExtensions
 		{
 			// May override the primary axis parameter
 			val actualPrimaryAxis = if (a.affects(primaryAxis)) primaryAxis else primaryAxis.perpendicular
-			a.along(actualPrimaryAxis).direction match
+			a(actualPrimaryAxis).direction match
 			{
 				case Some(primaryDirection) =>
-					val primaryLength = areaToPosition.along(actualPrimaryAxis)
+					val primaryLength = areaToPosition(actualPrimaryAxis)
 					val optimalPrimaryLength = primaryLength.optimal
 					
 					// Positions along the primary axis first
@@ -311,7 +311,7 @@ object LengthExtensions
 					
 					// Next positions along the secondary axis
 					val secondaryAxis = actualPrimaryAxis.perpendicular
-					val secondaryLength = areaToPosition.along(secondaryAxis)
+					val secondaryLength = areaToPosition(secondaryAxis)
 					val optimalSecondaryLength =
 					{
 						val defaultOptimal = secondaryLength.optimal
@@ -320,7 +320,7 @@ object LengthExtensions
 						else
 							defaultOptimal
 					}
-					val areaLength = within.size.along(secondaryAxis)
+					val areaLength = within.size(secondaryAxis)
 					
 					// Case: Will fill the whole available area
 					if (areaLength < optimalSecondaryLength)
@@ -345,11 +345,11 @@ object LengthExtensions
 					else
 					{
 						val referenceStart = referenceArea.minAlong(secondaryAxis)
-						val referenceLength = referenceArea.size.along(secondaryAxis)
+						val referenceLength = referenceArea.size(secondaryAxis)
 						val referenceEnd = referenceStart + referenceLength
 						
 						// Calculates the preferred aligned position
-						val preferredSecondaryCoordinate = a.along(secondaryAxis).direction match
+						val preferredSecondaryCoordinate = a(secondaryAxis).direction match
 						{
 							case Some(direction) =>
 								direction match
@@ -440,7 +440,7 @@ object LengthExtensions
 			// Checks which side fits the component better
 			val referenceAreaStart = referenceArea.minAlong(axis)
 			val referenceAreaEnd = referenceArea.maxAlong(axis)
-			val totalAreaLength = within.size.along(axis)
+			val totalAreaLength = within.size(axis)
 			val withinStart = within.minAlong(axis)
 			val withinEnd = withinStart + totalAreaLength
 			

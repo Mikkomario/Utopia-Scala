@@ -249,9 +249,9 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		val popup = Popup(this, newCanvas.parent, actorHandler, autoCloseLogic, alignment) { (_, popupSize) =>
 			// Calculates pop-up top left coordinates based on alignment
 			Point.calculateWith { axis =>
-				alignment.along(axis) match {
-					case Close => over.minAlong(axis) - popupSize.along(axis) - margin
-					case Middle => over.center.along(axis) - popupSize.along(axis) / 2
+				alignment(axis) match {
+					case Close => over.minAlong(axis) - popupSize(axis) - margin
+					case Middle => over.center(axis) - popupSize(axis) / 2
 					case Far => over.maxAlong(axis) + margin
 				}
 			}

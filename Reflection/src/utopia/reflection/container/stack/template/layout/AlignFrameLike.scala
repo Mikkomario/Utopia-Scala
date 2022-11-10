@@ -64,7 +64,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 				c.stackSize.withNoMax.expanding
 			else
 				c.stackSize.map { (axis, length) =>
-					if (align.along(axis).movesItems)
+					if (align(axis).movesItems)
 						length.noMax.expanding
 					else
 						length

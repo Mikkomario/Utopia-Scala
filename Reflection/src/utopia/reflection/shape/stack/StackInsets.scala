@@ -166,7 +166,7 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  * @return A copy of these insets which expand to the direction opposite to the aligned side. For example, if
 	  *         axis = X and alignment is Right, expands to Left. If alignment is center, expands to both directions.
 	  */
-	def expandingAccordingTo(axis: Axis2D, alignment: Alignment) = alignment.along(axis).direction match {
+	def expandingAccordingTo(axis: Axis2D, alignment: Alignment) = alignment(axis).direction match {
 		case Some(preservedDirection) => expandingTowards(axis.toDirection(preservedDirection.opposite))
 		case None => expandingAlong(axis)
 	}

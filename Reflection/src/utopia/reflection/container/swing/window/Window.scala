@@ -373,10 +373,10 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
                 val increase = size - oldSize
                 // Window movement is determined by resize alignment
                 val movement = Axis2D.values.map { axis =>
-                    val move = resizeAlignment.along(axis) match {
+                    val move = resizeAlignment(axis) match {
                         case Close => 0.0
-                        case Middle => increase.along(axis) / 2.0
-                        case Far => increase.along(axis)
+                        case Middle => increase(axis) / 2.0
+                        case Far => increase(axis)
                     }
                     axis -> move
                 }.toMap[Axis, Double]

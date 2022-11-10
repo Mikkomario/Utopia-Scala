@@ -12,7 +12,7 @@ import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{DoubleVector, DoubleVectorLike}
+import utopia.paradigm.shape.template.DoubleVectorLike
 
 import java.awt.geom.RoundRectangle2D
 import scala.language.implicitConversions
@@ -377,11 +377,11 @@ case class Bounds(position: Point, override val size: Size)
         {
             val newPosition = Point.calculateWith { axis =>
                 if (maxAlong(axis) > area.maxAlong(axis))
-                    area.maxAlong(axis) - size.along(axis)
+                    area.maxAlong(axis) - size(axis)
                 else if (minAlong(axis) < area.minAlong(axis))
-                    area.position.along(axis)
+                    area.position(axis)
                 else
-                    position.along(axis)
+                    position(axis)
             }
             withPosition(newPosition)
         }

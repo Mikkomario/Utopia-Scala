@@ -54,7 +54,7 @@ object Vector1D
 			}
 		}
 		
-		override def from(other: HasDimensions[Double]) = other match {
+		override def from(other: HasDimensions[Double]): Vector1D = other match {
 			case v: Vector1D => v
 			case v: DoubleVectorLike[_] => v.components.find { _.nonZero }.getOrElse(zero)
 			case o => apply(o.dimensions)
@@ -67,7 +67,8 @@ object Vector1D
   * @author Mikko Hilpinen
   * @since 16.9.2022, v1.1
   */
-case class Vector1D(override val length: Double, axis: Axis = X) extends DoubleVectorLike[Vector1D] with DoubleVector
+case class Vector1D(override val length: Double, axis: Axis = X)
+	extends Dimension[Double] with DoubleVectorLike[Vector1D] with DoubleVector
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -122,6 +123,11 @@ case class Vector1D(override val length: Double, axis: Axis = X) extends DoubleV
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def value = length
+	override def zeroValue = 0.0
+	
+	override def nonZero = !isZero
+	
 	override def zero = Vector1D.zeroAlong(axis)
 	
 	override def repr = this
@@ -132,6 +138,8 @@ case class Vector1D(override val length: Double, axis: Axis = X) extends DoubleV
 	override def isAboutZero = length ~== 0.0
 	
 	override def toUnit = withLength(1.0)
+	
+	override def components = Vector(this)
 	
 	override def *(n: Double) = copy(length = length * n)
 	override def +(length: Double) = copy(length = this.length + length)

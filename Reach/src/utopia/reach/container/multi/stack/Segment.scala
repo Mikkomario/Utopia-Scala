@@ -147,14 +147,14 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		private def setContentBounds() =
 		{
 			val mySize = size
-			val myLength = size.along(alignAxis)
-			val contentLength = wrappedComponent.stackSize.along(alignAxis)
+			val myLength = size(alignAxis)
+			val contentLength = wrappedComponent.stackSize(alignAxis)
 			// May reposition content if it would be scaled above optimal length
 			if (layout != Fit && contentLength.optimal < myLength)
 			{
 				val newContentLength = contentLength.optimal
 				val newLocation = if (layout == Leading) 0.0 else myLength - newContentLength
-				val myBreadth = size.along(direction)
+				val myBreadth = size(direction)
 				wrappedComponent.bounds = Bounds(Point(newLocation, 0, alignAxis),
 					Size(newContentLength, myBreadth, alignAxis))
 			}

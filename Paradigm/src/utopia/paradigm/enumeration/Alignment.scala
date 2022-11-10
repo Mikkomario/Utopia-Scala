@@ -62,7 +62,7 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	/**
 	  * @return The axes supported for this alignment
 	  */
-	def affectedAxes: Set[Axis2D] = Axis2D.values.iterator.filter { along(_).nonZero }.toSet
+	def affectedAxes: Set[Axis2D] = Axis2D.values.iterator.filter { apply(_).nonZero }.toSet
 	
 	/**
 	  * @return Whether this alignment moves items along the horizontal axis (X)
@@ -84,7 +84,7 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	/**
 	  * @return Directions this alignment will try to move contents
 	  */
-	def directions: Vector[Direction2D] = Axis2D.values.flatMap { axis => along(axis).direction.map { axis(_) } }
+	def directions: Vector[Direction2D] = Axis2D.values.flatMap { axis => apply(axis).direction.map { axis(_) } }
 	
 	/**
 	  * @return The direction this alignment will move the items horizontally. None if this alignment doesn't
@@ -152,7 +152,7 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	  * @param axis An axis
 	  * @return Whether this alignment specifies a direction along that axis
 	  */
-	def affects(axis: Axis2D) = along(axis).movesItems
+	def affects(axis: Axis) = apply(axis).movesItems
 	
 	/**
 	  * @param direction A direction
@@ -181,25 +181,6 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	def withVertical(vertical: LinearAlignment): Alignment = Alignment(horizontal, vertical)
 	
 	/**
-	  * @param axis Target axis
-	  * @return Direction determined by this alignment on specified axis. None if this alignment doesn't specify a
-	  *         direction along specified axis (centered)
-	  */
-	@deprecated("Please use .along(Axis2D).direction instead", "2.6.3")
-	def directionAlong(axis: Axis2D) = along(axis).direction
-	
-	/**
-	  * Calculates the desired coordinate for an element along the specified axis
-	  * @param axis Targeted axis
-	  * @param elementLength The length of the targeted element along that axis
-	  * @param areaLength The total length of the available area along that axis
-	  * @return The proposed (top or left) coordinate for the element along that axis
-	  */
-	@deprecated("Please use .along(Axis2D).position(Double, Double) instead", "v2.6.3")
-	def positionAlong(axis: Axis2D, elementLength: Double, areaLength: Double) =
-		along(axis).position(elementLength, areaLength)
-	
-	/**
 	  * @param area An area to position
 	  * @param anchor An anchor position, which will be interpreted according to this alignment.
 	  *               E.g. for BottomLeft alignment, this anchor point will represent the bottom left corner
@@ -213,7 +194,7 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	  * @return Location of a point within that area (relative position)
 	  */
 	def origin(within: Size) =
-		Point(dimensions.zipWithAxis.map { case (alignment, axis) => alignment.origin(within.along(axis)) })
+		Point(dimensions.zipWithAxis.map { case (alignment, axis) => alignment.origin(within(axis)) })
 	/**
 	  * @param within An area within which a point is aligned
 	  * @return Location of a point within that area
@@ -228,7 +209,7 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	  */
 	def position(area: Size, within: Bounds) =
 		Point(dimensions.zipWithAxis.map { case (alignment, axis) =>
-			within.position.along(axis) + alignment.position(area.along(axis), within.size.along(axis))
+			within.position(axis) + alignment.position(area(axis), within.size(axis))
 		})
 	/**
 	  * Positions a 2D area within another 2D area. Won't check whether the area would fit within the boundaries.
@@ -239,7 +220,7 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	  */
 	def position(area: Size, within: Size): Point =
 		Point(dimensions.zipWithAxis.map { case (alignment, axis) =>
-			alignment.position(area.along(axis), within.along(axis))
+			alignment.position(area(axis), within(axis))
 		})
 	
 	/**

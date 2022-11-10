@@ -164,7 +164,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 				if (axes.contains(axis))
 				{
 					// Uses content size but may limit it in process
-					val raw = contentSize.along(axis)
+					val raw = contentSize(axis)
 					val limited = (if (limitsToContentSize) raw else raw.noMax).withLowPriority.noMin
 					// May also expand according to scroll bar width
 					if (scrollBarIsInsideContent)
@@ -173,7 +173,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 						axis -> (limited + scrollBarWidth + scrollBarMargin.width)
 				}
 				else
-					axis -> contentSize.along(axis)
+					axis -> contentSize(axis)
 		}.toMap
 		
 		StackSize(lengths(X), lengths(Y))
@@ -194,12 +194,12 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 					// If this area's maximum size is tied to that of the content, will not allow the content to
 					// be smaller than this area
 					if (limitsToContentSize)
-						axis -> (contentSize.along(axis).optimal max contentAreaSize.along(axis))
+						axis -> (contentSize(axis).optimal max contentAreaSize(axis))
 					else
-						axis -> contentSize.along(axis).optimal
+						axis -> contentSize(axis).optimal
 				}
 				else
-					axis -> contentAreaSize.along(axis)
+					axis -> contentAreaSize(axis)
 		}.toMap
 		
 		content.size = Size(lengths(X), lengths(Y))
@@ -244,7 +244,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 	  */
 	def scrollTo(abovePercent: Double, axis: Axis2D, animated: Boolean) =
 	{
-		val target = contentOrigin.withDimension(contentSize.componentAlong(axis) * -abovePercent)
+		val target = contentOrigin.withDimension(contentSize.along(axis) * -abovePercent)
 		if (animated)
 			animateScrollTo(target)
 		else
@@ -341,7 +341,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 	}
 	
 	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach { axis =>
-		if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize.along(axis))
+		if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
 			barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
 	}
 	
@@ -479,7 +479,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 					axis.perpendicular)
 				
 				axis -> ScrollBarBounds(Bounds(
-					barAreaPosition + axis(barAreaSize.along(axis) * scrollPercents.along(axis)), barSize),
+					barAreaPosition + axis(barAreaSize(axis) * scrollPercents(axis)), barSize),
 					Bounds(barAreaPosition, barAreaSize), axis)
 			}.toMap
 			
@@ -594,7 +594,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 			if (isDraggingBar)
 			{
 				val newBarOrigin = event.positionOverArea(bounds) - barDragPosition
-				scrollTo(newBarOrigin.along(barDragAxis) / lengthAlong(barDragAxis), barDragAxis, animated = false)
+				scrollTo(newBarOrigin(barDragAxis) / lengthAlong(barDragAxis), barDragAxis, animated = false)
 			}
 			// If dragging content, updates scrolling and remembers velocity
 			else if (isDraggingContent)

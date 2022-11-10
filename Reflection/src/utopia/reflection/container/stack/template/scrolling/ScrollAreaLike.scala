@@ -182,12 +182,12 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 					// If this area's maximum size is tied to that of the content, will not allow the content to
 					// be smaller than this area
 					if (limitsToContentSize)
-						axis -> (contentSize.along(axis).optimal max contentAreaSize.along(axis))
+						axis -> (contentSize.along(axis).optimal max contentAreaSize(axis))
 					else
-						axis -> contentSize.along(axis).optimal
+						axis -> contentSize(axis).optimal
 				}
 				else
-					axis -> contentAreaSize.along(axis)
+					axis -> contentAreaSize(axis)
 		}.toMap
 		
 		content.size = Size(lengths(X), lengths(Y))
@@ -232,7 +232,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  */
 	def scrollTo(abovePercent: Double, axis: Axis2D, animated: Boolean) =
 	{
-		val target = contentOrigin.withDimension(contentSize.componentAlong(axis) * -abovePercent)
+		val target = contentOrigin.withDimension(contentSize.along(axis) * -abovePercent)
 		if (animated)
 			animateScrollTo(target)
 		else
@@ -330,7 +330,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach
 	{
 		axis =>
-			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize.along(axis))
+			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
 				barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
 	}
 	
@@ -478,7 +478,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 					val barAreaPosition = Point(myBreadth - scrollBarWidth, 0, axis.perpendicular)
 					
 					axis -> ScrollBarBounds(Bounds(
-						barAreaPosition + axis(barAreaSize.along(axis) * scrollPercents.along(axis)), barSize),
+						barAreaPosition + axis(barAreaSize(axis) * scrollPercents(axis)), barSize),
 						Bounds(barAreaPosition, barAreaSize), axis)
 			}.toMap
 			
@@ -593,7 +593,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 			if (isDraggingBar)
 			{
 				val newBarOrigin = event.positionOverArea(bounds) - barDragPosition
-				scrollTo(newBarOrigin.along(barDragAxis) / lengthAlong(barDragAxis), barDragAxis, animated = false)
+				scrollTo(newBarOrigin(barDragAxis) / lengthAlong(barDragAxis), barDragAxis, animated = false)
 			}
 			// If dragging content, updates scrolling and remembers velocity
 			else if (isDraggingContent)

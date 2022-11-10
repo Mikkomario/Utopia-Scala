@@ -47,20 +47,20 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     /**
       * @return The current length of this stack
       */
-    def length = size.along(direction)
+    def length = size(direction)
     /**
       * @return The current breadth (perpendicular length) of this stack
       */
-    def breadth = size.along(direction.perpendicular)
+    def breadth = size(direction.perpendicular)
     
     /**
      * The length (min, optimal, max) of this stack
      */
-    def stackLength = stackSize.along(direction)
+    def stackLength = stackSize(direction)
     /**
      * The breadth (min, optimal, max) of this stack
      */
-    def stackBreadth = stackSize.along(direction.perpendicular)
+    def stackBreadth = stackSize(direction.perpendicular)
     
     
     // IMPLEMENTED    -------------------
@@ -105,9 +105,9 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
                 Bounds(Point.origin, size)
             else {
                 // Includes half of the area between items (if there is no item, uses cap)
-                val top = if (i > 0) (item.position.along(direction) - c(i - 1).maxAlong(direction)) / 2 else
-                    item.position.along(direction)
-                val bottom = if (i < c.size - 1) (c(i + 1).position.along(direction) - item.maxAlong(direction)) / 2 else
+                val top = if (i > 0) (item.position(direction) - c(i - 1).maxAlong(direction)) / 2 else
+                    item.position(direction)
+                val bottom = if (i < c.size - 1) (c(i + 1).position(direction) - item.maxAlong(direction)) / 2 else
                     length - item.maxAlong(direction)
                 
                 // Also includes the whole stack breadth
@@ -124,12 +124,12 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
       */
     override def itemNearestTo(relativePoint: Point) =
     {
-        val p = relativePoint.along(direction)
+        val p = relativePoint(direction)
         val c = components
         // Finds the first item past the relative point
-        c.indexWhereOption { _.position.along(direction) > p }.map { nextIndex =>
+        c.indexWhereOption { _.position(direction) > p }.map { nextIndex =>
             // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
-            if (nextIndex == 0 || c(nextIndex).position.along(direction) - p < p - c(nextIndex - 1).maxAlong(direction))
+            if (nextIndex == 0 || c(nextIndex).position(direction) - p < p - c(nextIndex - 1).maxAlong(direction))
                 c(nextIndex)
             else
                 c(nextIndex - 1)

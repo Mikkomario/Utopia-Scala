@@ -6,6 +6,7 @@ import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.flow.operator.{CanBeZero, EqualsFunction}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
+import utopia.paradigm.shape.shape1d.Dimension
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{IndexedSeqOps, mutable}
@@ -140,6 +141,11 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	// IMPLEMENTED  --------------------------
 	
 	override def dimensions: Dimensions[A] = this
+	/**
+	  * @return Components of these dimensions
+	  */
+	override def components: IndexedSeq[Dimension[A]] =
+		zipWithAxis.map { case (v, axis) => Dimension(axis, v, zeroValue) }
 	
 	override def length = values.length
 	
@@ -171,6 +177,12 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	
 	override def padTo[B >: A](len: Int, elem: B) = copy(values = super.padTo(len, elem))
 	
+	/**
+	  * @param axis Targeted axis
+	  * @return Dimension of this item along that axis
+	  */
+	override def apply(axis: Axis): A = apply(axis.index)
+	
 	
 	// OTHER    ------------------------------
 	
@@ -188,10 +200,10 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	}
 	
 	/**
-	  * @param axis Targeted axis
-	  * @return Dimension of this item along that axis
+	  * @param component A component / dimension
+	  * @return Whether these dimensions contains an equal dimension
 	  */
-	def apply(axis: Axis): A = apply(axis.index)
+	def contains(component: Dimension[Any]) = apply(component.axis) == component.value
 	
 	/**
 	  * @param length New length to apply to this set of dimensions

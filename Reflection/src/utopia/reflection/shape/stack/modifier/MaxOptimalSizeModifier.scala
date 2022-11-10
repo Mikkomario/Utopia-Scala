@@ -11,7 +11,7 @@ import utopia.reflection.shape.stack.StackSize
   */
 case class MaxOptimalSizeModifier(max: Size) extends StackSizeModifier
 {
-	private val modifiers = Axis2D.values.map { axis => axis -> MaxOptimalLengthModifier(max.along(axis)) }.toMap
+	private val modifiers = Axis2D.values.map { axis => axis -> MaxOptimalLengthModifier(max(axis)) }.toMap
 	
 	override def apply(size: StackSize) = size.map { (axis, length) => modifiers(axis)(length) }
 }

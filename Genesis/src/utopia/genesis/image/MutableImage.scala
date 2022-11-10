@@ -205,7 +205,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param maxLength Length limitation for that axis
 	  */
 	def limitAlong(side: Axis2D, maxLength: Double) =
-		if (size.along(side) > maxLength) shrinkToFit(size.withDimension(side(maxLength)))
+		if (size(side) > maxLength) shrinkToFit(size.withDimension(side(maxLength)))
 	
 	/**
 	  * Places a width limitation for this image. Preserves shape.

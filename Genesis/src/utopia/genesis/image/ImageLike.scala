@@ -100,8 +100,8 @@ trait ImageLike extends HasSize
 	  */
 	def lengthTowards(direction: Direction2D) = direction.sign match
 	{
-		case Positive => size.along(direction.axis) - origin.along(direction.axis)
-		case Negative => origin.along(direction.axis)
+		case Positive => size(direction.axis) - origin(direction.axis)
+		case Negative => origin(direction.axis)
 	}
 	
 	

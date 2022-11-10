@@ -223,12 +223,6 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       */
     def expanding = mapEachDimension { _.expanding }
     
-    /**
-     * @return The components that form this stack size
-     */
-    @deprecated("Please use .dimensions instead", "v1.3")
-    def components = Vector(width, height)
-    
     
     // IMPLEMENTED    ----------------
     
@@ -453,7 +447,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @param size A limiting size
       * @return A copy of this size that always fits to the specified size
       */
-    def limitedTo(size: Size) = map { (side, length) => length.within(size.along(side)) }
+    def limitedTo(size: Size) = map { (side, length) => length.within(size(side)) }
     
     /**
       * @param other Another size
@@ -477,7 +471,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @return Whether this stack size contains a value that fits within those limits
       */
     def fitsWithin(minimum: Size, maximum: Size) = Axis2D.values.forall { axis =>
-        along(axis).fitsWithin(minimum.along(axis), maximum.along(axis))
+        along(axis).fitsWithin(minimum(axis), maximum(axis))
     }
     /**
       * @param maximum Maximum allowed size
@@ -489,5 +483,5 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @return Whether there exists a value that fulfils both of these size requirements
       */
     def fitsWithin(limits: StackSize) = Axis2D.values
-        .forall { axis => along(axis).fitsWithin(limits.along(axis)) }
+        .forall { axis => along(axis).fitsWithin(limits(axis)) }
 }

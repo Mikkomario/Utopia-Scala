@@ -83,7 +83,7 @@ object Stacker2
 		if (components.nonEmpty)
 		{
 			// Calculates the necessary length adjustment
-			val lengthAdjustment = area.size.along(stackAxis) - optimalLength
+			val lengthAdjustment = area.size(stackAxis) - optimalLength
 			
 			// Arranges the mutable items in a vector first. Treats margins and caps as separate items
 			val caps = Vector.fill(2)(Pointer(0.0))
@@ -128,7 +128,7 @@ object Stacker2
 			targets.foreach { _() }
 			
 			// Positions the components length-wise (first components with margin and then the final component)
-			var cursor = area.position.componentAlong(stackAxis) + caps.head.value
+			var cursor = area.position.along(stackAxis) + caps.head.value
 			components.zip(margins).foreach { case (component, marginPointer) =>
 				component.setCoordinate(cursor)
 				cursor += component.lengthAlong(stackAxis) + marginPointer.value
@@ -137,9 +137,9 @@ object Stacker2
 			
 			// Handles the breadth of the components too, as well as their perpendicular positioning
 			val breadthAxis = stackAxis.perpendicular
-			val newBreadth = area.size.along(breadthAxis)
+			val newBreadth = area.size(breadthAxis)
 			components.foreach { component =>
-				val breadth = component.stackSize.along(breadthAxis)
+				val breadth = component.stackSize(breadthAxis)
 				
 				// Component breadth may be affected by minimum and maximum
 				val newComponentBreadth = {
@@ -170,7 +170,7 @@ object Stacker2
 						(newBreadth - newComponentBreadth) / 2
 				}
 				
-				component.setCoordinate(area.position.componentAlong(breadthAxis) + newComponentPosition)
+				component.setCoordinate(area.position.along(breadthAxis) + newComponentPosition)
 			}
 		}
 	}
@@ -289,7 +289,7 @@ object Stacker2
 	
 	private class StackableLengthAdjust(private val target: Stackable2, private val direction: Axis2D) extends LengthAdjust
 	{
-		def length = target.stackSize.along(direction)
+		def length = target.stackSize(direction)
 		
 		def setLength(length: Double) = target.setLength(direction(length))
 	}

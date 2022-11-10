@@ -65,7 +65,7 @@ object Matrix3D extends DimensionsWrapperFactory[Vector3D, Matrix3D]
 	  * @return A matrix with specified rows (3 expected, if less, zero vectors are used)
 	  */
 	def withRows(rows: Dimensions[Vector3D]) =
-		apply(Dimensions(Vector3D.zero).iterate(3) { axis => Vector3D(rows.map { _.along(axis) }) })
+		apply(Dimensions(Vector3D.zero).iterate(3) { axis => Vector3D(rows.map { _(axis) }) })
 	
 	/**
 	  * Creates an affine transformation by combining a linear transformation and a translation transformation

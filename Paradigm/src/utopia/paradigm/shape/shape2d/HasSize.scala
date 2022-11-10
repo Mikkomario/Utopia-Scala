@@ -37,7 +37,7 @@ trait HasSize
 	  * @param axis Targeted axis
 	  * @return The length of this item along the specified axis
 	  */
-	def lengthAlong(axis: Axis) = size.along(axis)
+	def lengthAlong(axis: Axis) = size(axis)
 	
 	/**
 	  * @param area An area / size
@@ -54,10 +54,10 @@ trait HasSize
 	  * @param v A one-dimensional vector
 	  * @return Whether this item spans at least the area of that vector (along the axis of that vector)
 	  */
-	def spans(v: Vector1D) = size.along(v.axis) >= v.length
+	def spans(v: Vector1D) = size(v.axis) >= v.length
 	/**
 	  * @param v A one-dimensional vector
 	  * @return Whether this item fits within the specified vector's length along the vector's axis
 	  */
-	def fitsWithin(v: Vector1D) = size.along(v.axis) <= v.length
+	def fitsWithin(v: Vector1D) = size(v.axis) <= v.length
 }

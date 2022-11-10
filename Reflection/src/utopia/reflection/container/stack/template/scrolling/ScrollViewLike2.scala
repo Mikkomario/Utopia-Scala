@@ -33,16 +33,16 @@ trait ScrollViewLike2[C <: Stackable2] extends ScrollAreaLike2[C]
 	/**
 	  * @return The length of this view's contents
 	  */
-	def contentLength = contentSize.along(axis)
+	def contentLength = contentSize(axis)
 	/**
 	  * @return The breadth of this view's contents
 	  */
-	def contentBreadth = contentSize.along(axis.perpendicular)
+	def contentBreadth = contentSize(axis.perpendicular)
 	
 	/**
 	  * @return The current position of this view's contents (negative)
 	  */
-	def contentPosition = contentOrigin.along(axis)
+	def contentPosition = contentOrigin(axis)
 	def contentPosition_=(pos: Double) = contentOrigin = contentOrigin.withDimension(axis(pos))
 	
 	/**

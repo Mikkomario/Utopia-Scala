@@ -95,8 +95,8 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	/**
 	  * @return This vector separated to individual 1-dimensional components
 	  */
-	def components =
-		dimensions.zipWithIndex.map { case (length, index) => Vector1D(length, Axis(index)) }
+	override def components: IndexedSeq[Vector1D] =
+		dimensions.zipWithAxis.map { case (length, axis) => Vector1D(length, axis) }
 	
 	/**
 	  * This vector with length of 1
@@ -164,6 +164,8 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	override def scaled(xScaling: Double, yScaling: Double) = this * Dimensions.double(xScaling, yScaling)
 	override def scaled(modifier: Double) = this * modifier
 	
+	override def along(axis: Axis) = Vector1D(apply(axis), axis)
+	
 	override def translated(translation: HasDoubleDimensions) = this + translation
 	
 	
@@ -184,6 +186,7 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	  * @param axis Targeted axis
 	  * @return A component of this vector applicable to that axis
 	  */
+	@deprecated("Replaced with .along(Axis)", "v1.2")
 	def componentAlong(axis: Axis) = Vector1D(dimensions.getOrElse(axis.index, dimensions.zeroValue), axis)
 	
 	/**

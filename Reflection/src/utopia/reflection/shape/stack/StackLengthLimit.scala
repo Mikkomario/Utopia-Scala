@@ -27,8 +27,8 @@ object StackLengthLimit
 		Y -> limitsFromSizes(Y, min, minOptimal, maxOptimal, max))
 	
 	private def limitsFromSizes(axis: Axis2D, min: Size, minOptimal: Option[Size], maxOptimal: Option[Size], max: Option[Size]) =
-		StackLengthLimit(min.along(axis), minOptimal.map { _.along(axis) },
-			maxOptimal.map { _.along(axis) }, max.map { _.along(axis) })
+		StackLengthLimit(min(axis), minOptimal.map { _(axis) },
+			maxOptimal.map { _(axis) }, max.map { _(axis) })
 }
 
 /**

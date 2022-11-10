@@ -47,7 +47,7 @@ trait AlignFrameLike2[+C <: Stackable2] extends SingleContainer2[C] with Caching
 		else
 		{
 			content.stackSize.map { (axis, length) =>
-				if (align.along(axis).movesItems)
+				if (align(axis).movesItems)
 					length.noMax.expanding
 				else
 					length

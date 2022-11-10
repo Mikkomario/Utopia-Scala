@@ -63,7 +63,7 @@ trait AccelerationLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], +Repr 
 	
 	override def toString = s"${ perMilliSecond.transition }/ms^2"
 	
-	override def along(axis: Axis) = LinearAcceleration(amount.along(axis), duration)
+	override def apply(axis: Axis) = LinearAcceleration(amount(axis), duration)
 	
 	
 	// OTHER	----------------------

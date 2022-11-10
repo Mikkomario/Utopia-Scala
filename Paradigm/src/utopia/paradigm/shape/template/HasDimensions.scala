@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
+import utopia.paradigm.shape.shape1d.Dimension
 
 object HasDimensions
 {
@@ -50,6 +51,11 @@ trait HasDimensions[+A]
 	def xyPair = Pair(x, y)
 	
 	/**
+	  * @return The individual dimensional components that form the dimensions in this item
+	  */
+	def components: IndexedSeq[Dimension[A]] = dimensions.components
+	
+	/**
 	  * @param ord Implicit ordering to use
 	  * @tparam B Ordered type
 	  * @return Smallest individual dimension in this item
@@ -67,9 +73,14 @@ trait HasDimensions[+A]
 	
 	/**
 	  * @param axis Targeted axis
+	  * @return This item's value on that axis
+	  */
+	def apply(axis: Axis): A = dimensions(axis)
+	/**
+	  * @param axis Targeted axis
 	  * @return This item's dimension along that axis
 	  */
-	def along(axis: Axis) = dimensions(axis)
+	def along(axis: Axis) = Dimension(axis, apply(axis), dimensions.zeroValue)
 	
 	/**
 	  * @param other Another item with dimensions
@@ -91,12 +102,12 @@ trait HasDimensions[+A]
 	  * @param axis Target axis
 	  * @return Whether this item has a positive (> 0) value for specified dimension
 	  */
-	def isPositiveAlong[B >: A](axis: Axis)(implicit ord: Ordering[B]) = ord.gteq(along(axis), dimensions.zeroValue)
+	def isPositiveAlong[B >: A](axis: Axis)(implicit ord: Ordering[B]) = ord.gteq(apply(axis), dimensions.zeroValue)
 	/**
 	  * @param axis Target axis
 	  * @return Whether this item has a negative (< 0) value for specified dimension
 	  */
-	def isNegativeAlong[B >: A](axis: Axis)(implicit ord: Ordering[B]) = ord.lteq(along(axis), dimensions.zeroValue)
+	def isNegativeAlong[B >: A](axis: Axis)(implicit ord: Ordering[B]) = ord.lteq(apply(axis), dimensions.zeroValue)
 	/**
 	  * @param axis Targeted axis
 	  * @return Whether this item contains a zero dimension / value for that axis

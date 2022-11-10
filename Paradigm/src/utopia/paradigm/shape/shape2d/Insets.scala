@@ -27,7 +27,7 @@ object Insets extends InsetsFactory[Double, Size, Insets, Insets]
       * Creates a symmetric set of insets where top = bottom and left = right
       * @param size the total size of the insets
       */
-    def symmetric(size: HasDoubleDimensions): Insets = symmetric(size.along(X) / 2, size.along(Y) / 2)
+    def symmetric(size: HasDoubleDimensions): Insets = symmetric(size(X) / 2, size(Y) / 2)
 }
 
 /**

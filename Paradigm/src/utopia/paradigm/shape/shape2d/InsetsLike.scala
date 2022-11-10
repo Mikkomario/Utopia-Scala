@@ -259,7 +259,7 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
      * @return Multiplied copy of these insets
      */
     def *(multi: Vector2D) = makeCopy(amounts.map { case (side, length) =>
-        side -> multiply(length, multi.along(side.axis)) })
+        side -> multiply(length, multi(side.axis)) })
     
     /**
       * Adds two insets together

@@ -69,12 +69,12 @@ trait HasBounds extends HasSize with Area2D
 	  * @param axis The targeted axis
 	  * @return The smallest coordinate within this item's bounds along the specified axis (assuming positive size)
 	  */
-	def minAlong(axis: Axis) = topLeft.along(axis)
+	def minAlong(axis: Axis) = topLeft(axis)
 	/**
 	  * @param axis The targeted axis
 	  * @return The largesst coordinate within this item's bounds along the specified axis (assuming positive size)
 	  */
-	def maxAlong(axis: Axis) = topLeft.along(axis) + size.along(axis)
+	def maxAlong(axis: Axis) = topLeft(axis) + size(axis)
 	
 	/**
 	  * @param bounds A set of bounds
