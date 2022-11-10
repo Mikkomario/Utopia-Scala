@@ -189,6 +189,8 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	
 	// IMPLEMENTED  -----------------------------
 	
+	override def repr = this
+	
 	override def current = clippedCache.current
 	override def value = clippedCache.value
 	

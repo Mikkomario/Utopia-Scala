@@ -1,17 +1,19 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.EqualsBy
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape1d.Vector1D
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.paradigm.shape.template.MatrixLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions, MatrixLike}
 import utopia.paradigm.transform.{AffineTransformable, JavaAffineTransformConvertible, LinearTransformable}
 
 import java.awt.geom.AffineTransform
 
 // See: https://en.wikipedia.org/wiki/Transformation_matrix
-object Matrix2D
+object Matrix2D extends DimensionsWrapperFactory[Vector2D, Matrix2D]
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -42,15 +44,19 @@ object Matrix2D
 	lazy val rotation180Degrees = rotation(Rotation.ofDegrees(180))
 	
 	
-	// OTHER	-------------------------------
+	// IMPLEMENTED  ---------------------------
 	
-	/**
-	  * @param xTransform Transformation applied over the x axis (first column)
-	  * @param yTransform Transformation applied over the y axis (second column)
-	  * @return A new matrix
-	  */
-	def apply(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D = Vector2D.zero): Matrix2D =
-		apply(Pair(xTransform, yTransform))
+	override def zeroDimension = Vector2D.zero
+	
+	override def apply(dimensions: Dimensions[Vector2D]) = new Matrix2D(dimensions.withLength(2))
+	
+	override def from(other: HasDimensions[Vector2D]) = other match {
+		case m: Matrix2D => m
+		case o => apply(o.dimensions)
+	}
+	
+	
+	// OTHER	-------------------------------
 	
 	/**
 	  * Creates a new matrix by providing the numbers from left to right, up to down
@@ -71,31 +77,36 @@ object Matrix2D
 	def scaling(xScaling: Double, yScaling: Double) = apply(
 		xScaling, 0,
 		0, yScaling)
-	
 	/**
 	  * Creates a linear scaling transformation matrix
 	  * @param modifier A scaling modifier applied to both x and y axes
 	  * @return A new scaling transformation matrix
 	  */
 	def scaling(modifier: Double): Matrix2D = scaling(modifier, modifier)
-	
 	/**
 	  * @param modifier Scaling modifier to apply
 	  * @param axis The axis to target with the scaling
 	  * @return A new linear scaling transformation
 	  */
-	def scaling(modifier: Double, axis: Axis2D): Matrix2D = axis match
-	{
+	def scaling(modifier: Double, axis: Axis2D): Matrix2D = axis match {
 		case X => scaling(modifier, 1)
 		case Y => scaling(1, modifier)
 	}
-	
 	/**
 	  * Creates a linear scaling transformation matrix
 	  * @param vector A vector containing scaling modifiers for x and y axes
 	  * @return A new scaling transformation matrix
 	  */
-	def scaling(vector: Vector2DLike[_]): Matrix2D = scaling(vector.x, vector.y)
+	def scaling(vector: HasDoubleDimensions): Matrix2D = scaling(vector.x, vector.y)
+	/**
+	  * @param vector A one-dimensional vector
+	  * @return A scaling that affects only the vector's axis, based on the vector's length
+	  */
+	def scaling(vector: Vector1D): Matrix2D = vector.axis match {
+		case X => scaling(vector.length, 1)
+		case Y => scaling(1, vector.length)
+		case _ => scaling(1, 1)
+	}
 	
 	/**
 	  * Creates a new linear rotation transformation matrix
@@ -121,6 +132,11 @@ object Matrix2D
 	def shearing(xShearing: Double, yShearing: Double) = apply(
 		1, xShearing,
 		yShearing, 1)
+	/**
+	  * @param amount Shearing amount (X & Y)
+	  * @return A new linear shearing transformation matrix
+	  */
+	def shearing(amount: HasDoubleDimensions): Matrix2D = shearing(amount.x, amount.y)
 }
 
 /**
@@ -128,9 +144,9 @@ object Matrix2D
   * @author Mikko Hilpinen
   * @since Genesis 15.7.2020, v2.3
   */
-case class Matrix2D(override val columns: Pair[Vector2D])
-	extends MatrixLike[Vector2D, Matrix2D] with TwoDimensional[Vector2D] with LinearTransformable[Matrix2D]
-		with AffineTransformable[Matrix3D] with JavaAffineTransformConvertible
+class Matrix2D private(override val columns: Dimensions[Vector2D])
+	extends MatrixLike[Vector2D, Matrix2D] with LinearTransformable[Matrix2D]
+		with AffineTransformable[Matrix3D] with JavaAffineTransformConvertible with EqualsBy
 {
 	// ATTRIBUTES   ----------------------------
 	
@@ -161,19 +177,13 @@ case class Matrix2D(override val columns: Pair[Vector2D])
 		}
 	}
 	
-	override lazy val rows = Pair(Vector2D(xTransform.x, yTransform.x), Vector2D(xTransform.y, yTransform.y))
+	override lazy val rows = Dimensions(Vector2D.zero)(
+		Vector2D(xTransform.x, yTransform.x),
+		Vector2D(xTransform.y, yTransform.y)
+	)
 	
 	
 	// COMPUTED	--------------------------------
-	
-	/**
-	  * @return Transformation applied on X axis (first column)
-	  */
-	def xTransform = columns.first
-	/**
-	  * @return Transformation applied on Y axis (second column)
-	  */
-	def yTransform = columns.second
 	
 	/**
 	  * @return A 3x3 matrix based on this matrix. The z-transformation matches that of the identity matrix (0, 0, 1)
@@ -193,18 +203,11 @@ case class Matrix2D(override val columns: Pair[Vector2D])
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def dimensions = columns
+	override protected def equalsProperties = dimensions
+	
+	override def withDimensions(newDimensions: Dimensions[Vector2D]) = Matrix2D(newDimensions)
 	
 	override def repr = this
-	
-	override def dimensions2D = columns
-	
-	override protected def buildCopy(columns: IndexedSeq[Vector2D]) = {
-		val fullColumns = columns.padTo(2, Vector2D.zero)
-		Matrix2D(fullColumns.head, fullColumns(1))
-	}
-	
-	override def zeroDimension = Vector2D.zero
 	
 	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
 	

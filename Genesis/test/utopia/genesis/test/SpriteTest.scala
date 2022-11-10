@@ -26,7 +26,7 @@ object SpriteTest extends App
 	val drawer1 = SpriteDrawer(strip over 4.seconds,
 		Transformation(translation = gameWorldSize.toVector / 2, scaling = Vector2D(2, 2)))
 	
-	val image2 = Image.readFrom("Genesis/test-images/mushrooms.png").get.fitting(Size.square(200)).withCenterOrigin
+	val image2 = Image.readFrom("Genesis/test-images/mushrooms.png").get.fittingWithin(Size.square(200)).withCenterOrigin
 	val drawer2 = TransformingImageAnimator(image2,
 		AffineTransformation.translation(Vector2D(200, 200)).rotated360ClockwiseOverTime.over(3.seconds))
 	

@@ -36,6 +36,11 @@ case class Polygon(corners: Vector[Point]) extends Polygonic
 	override lazy val convexParts = super.convexParts
 	
 	
+	// IMPLEMENTED  --------------------
+	
+	override def repr = this
+	
+	
 	// OTHER	------------------------
 	
 	/**

@@ -4,6 +4,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, DbProperty, Name, Named, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala
+import utopia.vault.coder.model.scala.Visibility.Protected
 import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
@@ -113,7 +114,7 @@ object DbModelWriter
 				methods = Set(
 					MethodDeclaration("apply", isOverridden = true)(Parameter("data", dataRef))(
 						s"apply($applyParametersCode)"),
-					MethodDeclaration("complete", Set(modelRef), isOverridden = true)(
+					MethodDeclaration("complete", Set(modelRef), visibility = Protected, isOverridden = true)(
 						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
 						s"${ modelRef.target }(id.get${ if (classToWrite.useLongId) "Long" else "Int" }, data)"),
 					MethodDeclaration("withId", returnDescription = "A model with that id")(

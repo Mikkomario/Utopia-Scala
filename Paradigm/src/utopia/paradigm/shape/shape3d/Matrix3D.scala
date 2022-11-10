@@ -2,13 +2,15 @@ package utopia.paradigm.shape.shape3d
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D, Vector2DLike}
-import utopia.paradigm.shape.template.MatrixLike
+import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions, MatrixLike}
 import utopia.paradigm.transform.{AffineTransformable, JavaAffineTransformConvertible, LinearTransformable}
 
 import java.awt.geom.AffineTransform
+import scala.collection.BuildFrom
 
-object Matrix3D
+object Matrix3D extends DimensionsWrapperFactory[Vector3D, Matrix3D]
 {
 	// ATTRIBUTES	------------------------------
 	
@@ -20,6 +22,18 @@ object Matrix3D
 		0, 1, 0,
 		0, 0, 1
 	)
+	
+	
+	// IMPLEMENTED  ------------------------------
+	
+	override def zeroDimension = Vector3D.zero
+	
+	override def apply(dimensions: Dimensions[Vector3D]) = new Matrix3D(dimensions.withLength(3))
+	
+	override def from(other: HasDimensions[Vector3D]) = other match {
+		case m: Matrix3D => m
+		case o => apply(o.dimensions)
+	}
 	
 	
 	// OTHER	----------------------------------
@@ -45,22 +59,13 @@ object Matrix3D
 	  * @param columns A set of columns
 	  * @return A matrix with the specified columns (3 expected, if less, zero vectors are used)
 	  */
-	def withColumns(columns: Seq[Vector3D]) =
-	{
-		val c = columns.padTo(3, Vector3D.zero)
-		Matrix3D(c.head, c(1), c(2))
-	}
-	
+	def withColumns(columns: Dimensions[Vector3D]) = apply(columns)
 	/**
 	  * @param rows A set of rows
 	  * @return A matrix with specified rows (3 expected, if less, zero vectors are used)
 	  */
-	def withRows(rows: Seq[Vector3D]) =
-	{
-		val r = rows.padTo(3, Vector3D.zero)
-		val columns = (0 until 3).map { i => r.map { row => row.dimensions(i) } }.map(Vector3D.withDimensions)
-		Matrix3D(columns.head, columns(1), columns(2))
-	}
+	def withRows(rows: Dimensions[Vector3D]) =
+		apply(Dimensions(Vector3D.zero).iterate(3) { axis => Vector3D(rows.map { _.along(axis) }) })
 	
 	/**
 	  * Creates an affine transformation by combining a linear transformation and a translation transformation
@@ -69,15 +74,15 @@ object Matrix3D
 	  * @return A new affine transformation that applies both the linear transformation and the translation
 	  */
 	// See: https://en.wikipedia.org/wiki/Transformation_matrix
-	def affineTransform(linear: Matrix2D, translation: Vector2D) = apply(linear.xTransform.in3D,
-		linear.yTransform.in3D, translation.withZ(1))
+	def affineTransform(linear: Matrix2D, translation: Vector2D) =
+		apply(linear.xTransform.toVector3D, linear.yTransform.toVector3D, translation.toVector3D.withZ(1))
 	
 	/**
 	  * Creates a translating affine transformation
 	  * @param amount Amount of translation to apply
 	  * @return A new affine transformation that only translates the shape
 	  */
-	def translation(amount: Vector2DLike[_]) = apply(
+	def translation(amount: HasDoubleDimensions) = apply(
 		1, 0, amount.x,
 		0, 1, amount.y,
 		0, 0, 1)
@@ -88,9 +93,8 @@ object Matrix3D
   * @author Mikko Hilpinen
   * @since Genesis 15.7.2020, v2.3
   */
-case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D = Vector3D.zero,
-					zTransform: Vector3D = Vector3D.zero)
-	extends MatrixLike[Vector3D, Matrix3D] with ThreeDimensional[Vector3D] with AffineTransformable[Matrix3D]
+class Matrix3D private(override val columns: Dimensions[Vector3D])
+	extends MatrixLike[Vector3D, Matrix3D] with AffineTransformable[Matrix3D]
 		with JavaAffineTransformConvertible with LinearTransformable[Matrix3D]
 {
 	// ATTRIBUTES   ------------------------------
@@ -105,11 +109,11 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	override lazy val determinant =
 	{
 		// Starts by finding the row with most zeros
-		val referenceRowIndex = rows.indices.maxBy { i => row(i).toVector.count { _ == 0.0 } }
+		val referenceRowIndex = rows.indices.maxBy { i => row(i).dimensions.count { _ == 0.0 } }
 		val referenceRow = row(referenceRowIndex)
 		// Uses that row to calculate the determinant
 		val components = columns.indices.map { columnIndex =>
-			val multiplier = referenceRow.toVector(columnIndex)
+			val multiplier = referenceRow.dimensions(columnIndex)
 			// Skips calculations when result would be multiplied by a zero
 			if (multiplier == 0.0)
 				multiplier
@@ -143,9 +147,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 			Some(adjugate / determinant)
 	}
 	
-	override val columns = Vector(xTransform, yTransform, zTransform)
-	
-	override lazy val rows = Vector(
+	override lazy val rows = Dimensions(Vector3D.zero)(
 		Vector3D(xTransform.x, yTransform.x, zTransform.x),
 		Vector3D(xTransform.y, yTransform.y, zTransform.y),
 		Vector3D(xTransform.z, yTransform.z, zTransform.z)
@@ -180,26 +182,20 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  * @return A copy of this matrix that has been reduced to two dimensions. Will lose the z-component of each
 	  *         transformation and the z-transformation entirely.
 	  */
-	def in2D = Matrix2D(xTransform.in2D, yTransform.in2D)
+	def in2D = Matrix2D(dimensions.withLength(2).map { _.toVector2D })
 	
 	/**
 	  * @return The linear transform portion and the translation portion of this matrix when it is considered an
 	  *         affine transformation
 	  */
-	def linearAndTranslation = in2D -> zTransform.in2D
+	def linearAndTranslation = in2D -> zTransform.toVector2D
 	
 	
 	// IMPLEMENTED	------------------------------
 	
+	override def withDimensions(newDimensions: Dimensions[Vector3D]) = Matrix3D(newDimensions)
+	
 	override def repr = this
-	
-	override protected def buildCopy(columns: IndexedSeq[Vector3D]) =
-	{
-		val fullColumns = columns.padTo(3, Vector3D.zero)
-		Matrix3D(fullColumns.head, fullColumns(1), fullColumns(2))
-	}
-	
-	override def zeroDimension = Vector3D.zero
 	
 	override def transformedWith(transformation: Matrix3D) = transformation(this)
 	
@@ -226,6 +222,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  */
 	def dropTo2D(columnIndexToDrop: Int, rowIndexToDrop: Int) =
 	{
+		implicit val bf: BuildFrom[Any, Vector3D, Dimensions[Vector3D]] = Dimensions(Vector3D.zero)
 		val newColumns = columns.withoutIndex(columnIndexToDrop).map { _.withoutDimensionAtIndex(rowIndexToDrop) }
 		Matrix2D(newColumns.head, newColumns(1))
 	}

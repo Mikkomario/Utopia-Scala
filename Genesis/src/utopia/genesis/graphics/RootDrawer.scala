@@ -18,6 +18,8 @@ class RootDrawer(override protected val graphics: ClosingGraphics) extends Drawe
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def repr = this
+	
 	override def transformedWith(transformation: Matrix3D) =
 		new DerivedDrawer((graphics, Some(transformation), Vector()), clipBounds -> transformation.inverse)
 	

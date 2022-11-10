@@ -2,7 +2,7 @@ package utopia.genesis.test
 
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.angular.Angle
+import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape3d.Vector3D
 
 object VectorTest extends App
@@ -40,7 +40,7 @@ object VectorTest extends App
     
     val v2 = Vector3D(1)
     
-    assert(v2.rotatedDegs(90) ~== Vector3D(0, 1))
+    assert(v2.rotated(Rotation.ofDegrees(90)) ~== Vector3D(0, 1))
     
     assert(v1.angleDifference(Vector3D(1)).degrees ~== 45.0)
     assert((Vector3D(1) angleDifference Vector3D(0, 1)).degrees ~== 90.0)

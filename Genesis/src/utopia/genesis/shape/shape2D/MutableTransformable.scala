@@ -5,7 +5,7 @@ import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape2d.{Point, Vector2D}
-import utopia.paradigm.shape.template.VectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for mutable items that have a mutating transformation state
@@ -83,7 +83,7 @@ trait MutableTransformable
 	  * @param amount New position along specified axis
 	  */
 	def setPositionAlong(axis: Axis, amount: Double) = transformation = transformation.withTranslation(
-		transformation.translation.withDimension(amount, axis))
+		transformation.translation.withDimension(axis(amount)))
 	
 	/**
 	  * @param axis Targeted axis
@@ -95,7 +95,7 @@ trait MutableTransformable
 	  * @param axis Targeted axis
 	  * @param amount New scaling amount for the specified axis
 	  */
-	def setScalingAlong(axis: Axis, amount: Double) = scaling = scaling.withDimension(amount, axis)
+	def setScalingAlong(axis: Axis, amount: Double) = scaling = scaling.withDimension(axis(amount))
 	
 	/**
 	  * Transforms this item using specified transformation. Please note that the provided transformation is applied
@@ -109,7 +109,7 @@ trait MutableTransformable
 	  * Translates this instance the specified amount. Please note that the current scaling may affect the applied translation
 	  * @param amount Amount of translation (position change) applied
 	  */
-	def translate(amount: VectorLike[_]) = transformation = transformation.translated(amount)
+	def translate(amount: HasDoubleDimensions) = transformation = transformation.translated(amount)
 	
 	/**
 	  * Rotates this instance the specified amount

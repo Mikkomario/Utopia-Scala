@@ -563,7 +563,7 @@ object TimeExtensions
 		  * @param other Another date
 		  * @return Dates between these two dates. Includes this date but excludes the other.
 		  */
-		def datesUntil(other: LocalDate) = DateRange.exclusive(d, other)
+		def toExclusive(other: LocalDate) = DateRange.exclusive(d, other)
 	}
 	
 	implicit class ExtendedLocalTime(val t: LocalTime) extends AnyVal with SelfComparable[LocalTime]

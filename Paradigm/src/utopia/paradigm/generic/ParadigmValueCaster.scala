@@ -22,7 +22,7 @@ import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
 import utopia.paradigm.motion.template.Change
 import utopia.paradigm.shape.shape2d._
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
-import utopia.paradigm.shape.template.VectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
 import java.time.LocalTime
@@ -322,8 +322,8 @@ object ParadigmValueCaster extends ValueCaster
         case RgbType => Some(value.getRgb.toVector.map { r => r })
         case _ => None
     }
-    private def vectorOf(vectorLike: VectorLike[_]): Vector[Value] = vectorLike.dimensions.map {
-        x => if (x ~== 0.0) 0.0.toValue else x.toValue }.toVector
+    private def vectorOf(vectorLike: HasDoubleDimensions): Vector[Value] =
+        vectorLike.dimensions.map { x => if (x ~== 0.0) 0.0.toValue else x.toValue }.toVector
     
     private def pairOf(value: Value): Option[Pair[Value]] = value.dataType match {
         case Vector2DType => Some(pairOf(value.getVector2D))
@@ -336,7 +336,7 @@ object ParadigmValueCaster extends ValueCaster
         case BoundsType =>
             val b = value.getBounds
             Some(Pair(b.position, b.size))
-        case Matrix2DType => Some(value.getMatrix2D.dimensions.map { v => v })
+        case Matrix2DType => Some(value.getMatrix2D.xyPair.map { v => v })
         case LinearVelocityType =>
             val v = value.getLinearVelocity
             v.duration.finite.map { d => Pair(v.amount, d) }
@@ -347,7 +347,7 @@ object ParadigmValueCaster extends ValueCaster
         case Acceleration3DType => pairOf(value.getAcceleration3D)
         case _ => None
     }
-    private def pairOf(vector: Vector2DLike[_]): Pair[Value] = vector.dimensions2D.map { d => d }
+    private def pairOf(vector: HasDoubleDimensions): Pair[Value] = vector.xyPair.map { d => d }
     private def pairOf[A <: ValueConvertible](change: Change[A, _]) =
         change.duration.finite.map { d => Pair[Value](change.amount.toValue, d) }
     
@@ -373,9 +373,9 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def vector2DOf(value: Value): Option[Vector2D] = value.dataType match {
-        case VectorType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector2D.withDimensions)
+        case VectorType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector2D.from)
         case PairType => value.tryPairWith { _.tryDouble }.toOption.map(Vector2D.apply)
-        case Vector3DType => Some(value.getVector3D.in2D)
+        case Vector3DType => Some(value.getVector3D.toVector2D)
         case PointType => Some(value.getPoint.toVector)
         case SizeType => Some(value.getSize.toVector)
         case LineType => Some(value.getLine.vector)
@@ -386,8 +386,8 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def vector3DOf(value: Value): Option[Vector3D] = value.dataType match {
-        case VectorType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector3D.withDimensions)
-        case Vector2DType => Some(value.getVector2D.in3D)
+        case VectorType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector3D.from)
+        case Vector2DType => Some(value.getVector2D.toVector3D)
         case Velocity3DType => Some(value.getVelocity3D.perMilliSecond)
         case Acceleration3DType => Some(value.getAcceleration3D.perMilliSecond.perMilliSecond)
         case ModelType => Vector3D(value.getModel).toOption
@@ -396,7 +396,7 @@ object ParadigmValueCaster extends ValueCaster
             Some(Vector3D(rgb.red, rgb.green, rgb.blue))
         case HslType =>
             val hsl = value.getHsl
-            Some(Vector2D.lenDir(hsl.saturation, hsl.hue).withZ(hsl.luminosity - 0.5))
+            Some(Vector3D.lenDir(hsl.saturation, hsl.hue).withZ(hsl.luminosity - 0.5))
         case _ => None
     }
     
@@ -419,7 +419,7 @@ object ParadigmValueCaster extends ValueCaster
     private def lineOf(value: Value): Option[Line] = value.dataType match {
         case PairType => value.tryPairWith { _.tryPoint }.toOption.map(Line.apply)
         case BoundsType => Some(value.getBounds.diagonal)
-        case Matrix2DType => Some(Line(value.getMatrix2D.dimensions.map { _.toPoint }))
+        case Matrix2DType => Some(Line(value.getMatrix2D.xyPair.map { _.toPoint }))
         case ModelType => Line(value.getModel).toOption
         case _ => None
     }
@@ -614,7 +614,7 @@ object ParadigmValueCaster extends ValueCaster
     private def hslOf(value: Value): Option[Hsl] = value.dataType match {
         case Vector3DType =>
             val v = value.getVector3D
-            Some(Hsl(v.direction, v.in2D.length, v.z + 0.5))
+            Some(Hsl(v.direction, v.toVector2D.length, v.z + 0.5))
         case AngleType => Some(Hsl(value.getAngle, 1, 0.5))
         case RgbType => Some(value.getRgb.toHSL)
         case ColorType => Some(value.getColor.hsl)

@@ -31,12 +31,12 @@ object Stacker2
 						   layout: StackLayout = Fit) =
 	{
 		if (componentSizes.isEmpty)
-			StackSize.any.mapSide(stackAxis) { _.expanding }
+			StackSize.any.mapDimension(stackAxis) { _.expanding }
 		else
 		{
 			// Checks component sizes
 			val lengths = componentSizes map { _ along stackAxis }
-			val breadths = componentSizes map { _ perpendicularTo stackAxis }
+			val breadths = componentSizes map { _ along stackAxis.perpendicular }
 			
 			// Determines total length & breadth (rounding)
 			val componentsLength = lengths.tail.foldLeft(lengths.head.ceil) { _ + _.ceil }

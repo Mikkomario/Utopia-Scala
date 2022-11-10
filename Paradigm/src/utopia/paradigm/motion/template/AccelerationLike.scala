@@ -4,8 +4,8 @@ import utopia.flow.operator.{CanBeAboutZero, Combinable}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.paradigm.shape.shape2d.Vector2DLike
-import utopia.paradigm.shape.template.{Dimensional, VectorProjectable}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{Dimensional, DoubleVectorLike, VectorProjectable2}
 
 import scala.concurrent.duration.Duration
 
@@ -17,10 +17,9 @@ import scala.concurrent.duration.Duration
   * @tparam V    Type of velocity information
   * @tparam Repr A concrete implementation of this trait
   */
-trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
-	+Repr <: Change[V, _] /*with Arithmetic[Change[V, _], Repr]*/ ]
-	extends Change[V, Repr] with Combinable[Change[V, _], Repr] with Dimensional[LinearAcceleration]
-		with VectorProjectable[Repr] with CanBeAboutZero[Change[Change[Dimensional[Double], _], _], Repr]
+trait AccelerationLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], +Repr <: Change[V, _]]
+	extends Change[V, Repr] with Combinable[Change[V, _], Repr] with Dimensional[LinearAcceleration, Repr]
+		with VectorProjectable2[Repr] with CanBeAboutZero[Change[Change[HasDoubleDimensions, _], _], Repr]
 {
 	// ABSTRACT	-----------------------
 	
@@ -35,8 +34,6 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	// COMPUTED	-----------------------
 	
 	override def dimensions = amount.dimensions.map { LinearAcceleration(_, duration) }
-	
-	override def zeroDimension = LinearAcceleration.zero
 	
 	/**
 	  * @return Direction of this acceleration
@@ -57,7 +54,7 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	override def isZero = amount.isZero || duration.isInfinite
 	override def isAboutZero = amount.isAboutZero || duration.isInfinite
 	
-	override def ~==(other: Change[Change[Dimensional[Double], _], _]) =
+	override def ~==(other: Change[Change[HasDoubleDimensions, _], _]) =
 		perMilliSecond ~== other.perMilliSecond
 	
 	override def *(mod: Double) = buildCopy(amount * mod)

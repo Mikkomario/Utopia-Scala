@@ -69,6 +69,8 @@ class LazyClip(parent: Either[Lazy[Polygonic], (LazyClip, Lazy[Matrix3D])])
 	
 	// IMPLEMENTED  -----------------------------
 	
+	override def repr = this
+	
 	override def value = cache.value
 	override def current = cache.current
 	

@@ -53,7 +53,7 @@ object DataTypeTest extends App
 	assert(p1(1).doubleOr() == 1)
 	assert(p1("x").doubleOr() == 1)
 	assert(p1("y").doubleOr() == 1)
-	assert(p1.vector3DOr() == point1.in3D)
+	assert(p1.vector3DOr() == point1.toVector3D)
  
 	assert(s1.vectorOr().size == 2)
 	assert(s1(0).doubleOr() == 1)

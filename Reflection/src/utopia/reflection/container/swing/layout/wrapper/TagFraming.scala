@@ -78,7 +78,8 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color) ex
 	{
 		case Some(c) =>
 			val contentSize = c.stackSize
-			val (shorterAxis, shorterLength) = contentSize.toMap2D.minBy { _._2.optimal }
+			// TODO: Could use .components here (but not yet added)
+			val (shorterLength, shorterAxis) = contentSize.dimensions.zipWithAxis2D.minBy { _._1.optimal }
 			// Insets are applied to the longer side and their length is 1/2 of the shorter side length
 			StackInsets.symmetric(shorterLength / 2, shorterAxis.perpendicular)
 		case None => StackInsets.any

@@ -102,7 +102,7 @@ class AnimatedVisibilityChange(original: AwtComponentRelated with Stackable, tra
 		}
 		StackSize.any(transitionAxis match
 		{
-			case Some(axis) => targetSize.mapAxis(axis) { _ * scaling }
+			case Some(axis) => targetSize.mapDimension(axis) { _ * scaling }
 			case None => targetSize * scaling
 		})
 	}

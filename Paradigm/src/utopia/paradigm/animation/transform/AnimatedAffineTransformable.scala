@@ -1,8 +1,8 @@
 package utopia.paradigm.animation.transform
 
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.shape.shape2d.Vector2DLike
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for instances that support animated affine transformations
@@ -22,6 +22,6 @@ trait AnimatedAffineTransformable[+Transformed]
 	
 	// OTHER	-----------------------------
 	
-	def translatedOverTime[V <: Vector2DLike[V]](translation: V) =
+	def translatedOverTime(translation: HasDoubleDimensions) =
 		affineTransformedWith(AnimatedAffineTransformation.translate(translation))
 }

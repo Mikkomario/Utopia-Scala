@@ -6,7 +6,6 @@ import utopia.conflict.handling.{Collidable, CollisionGroup, CollisionListener}
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.Drawable
 import utopia.paradigm.shape.shape2d.{Circle, Line, Point}
-import utopia.paradigm.shape.template.VectorLike
 import utopia.genesis.util.DepthRange
 import utopia.inception.handling.immutable.Handleable
 
@@ -61,7 +60,7 @@ class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGrou
             }
             else
             {
-                val mtvStart: Point = VectorLike.average(collisionPoints)
+                val mtvStart: Point = Point.average(collisionPoints)
                 mtv = Line(mtvStart, mtvStart + collision.get.mtv)
             }
         }

@@ -2,14 +2,15 @@ package utopia.paradigm.shape.shape2d
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.template.VectorLike.V
-import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for models / shapes that specify a size and may be copied
   * @author Mikko Hilpinen
   * @since 15.9.2022, v1.1
   */
+// TODO: Rename to Sized
 trait SizedLike[+Repr] extends Sized
 {
 	// ABSTRACT ---------------------------
@@ -45,7 +46,7 @@ trait SizedLike[+Repr] extends Sized
 	  * @param scaling A scaling modifier to apply to this item's size (different for different axes)
 	  * @return A scaled copy of this item
 	  */
-	def withScaledSize(scaling: Dimensional[Double]) = withSize(size * scaling)
+	def withScaledSize(scaling: HasDoubleDimensions) = withSize(size * scaling)
 	/**
 	  * Scales this item by dividing its size. Preserves shape.
 	  * @param div A modifier with which this item's size is divided
@@ -57,7 +58,7 @@ trait SizedLike[+Repr] extends Sized
 	  * @param div A modifier with which this item's size is divided (different for different axes)
 	  * @return A scaled copy of this item
 	  */
-	def withDividedSize(div: Dimensional[Double]) = withSize(size / div)
+	def withDividedSize(div: HasDoubleDimensions) = withSize(size / div)
 	
 	/**
 	  * Creates a copy of this item with the specified length along the specified axis
@@ -98,7 +99,7 @@ trait SizedLike[+Repr] extends Sized
 	  *                 (default = false)
 	  * @return A copy of this item that fills the specified area but has the same shape.
 	  */
-	def filling(minArea: Vector2DLike[_ <: V], minimize: Boolean = false) = {
+	def filling[V <: DoubleVectorLike[V]](minArea: V, minimize: Boolean = false) = {
 		// Case: Zero size => can't scale
 		if (size.isZero)
 			repr
@@ -116,7 +117,7 @@ trait SizedLike[+Repr] extends Sized
 	  *                 so that it barely fits within that area (default = false)
 	  * @return A copy of this item that fits the specified area but has the same shape
 	  */
-	def fittingWithin(maxArea: Vector2DLike[_ <: V], maximize: Boolean = false) = {
+	def fittingWithin[V <: DoubleVectorLike[V]](maxArea: V, maximize: Boolean = false) = {
 		// Case: Zero size => already fits
 		if (size.isZero)
 			repr
@@ -183,7 +184,7 @@ trait SizedLike[+Repr] extends Sized
 	  * @return A copy of this area that fits the specified area, not necessarily having the same shape.
 	  *         If this item already fit within the specified area, returns this area.
 	  */
-	def croppedToFitWithin(maxArea: Vector2DLike[_ <: V]) = withSize(size.combineWith(maxArea) { _ min _ })
+	def croppedToFitWithin(maxArea: HasDoubleDimensions) = withSize(size.mergeWith(maxArea) { _ min _ })
 	/**
 	  * Creates a copy of this item that has its size reduced to fit within the specified maximum length threshold.
 	  * Doesn't preserve shape.
@@ -191,7 +192,7 @@ trait SizedLike[+Repr] extends Sized
 	  * @return A copy of this area that fits within the specified maximum length, not necessarily having the same shape.
 	  *         If this item already fits within the specified length, returns this area.
 	  */
-	def croppedToFitWithin(maxLength: Vector1D) = withSize(size.mapAxis(maxLength.axis) { _ min maxLength.length })
+	def croppedToFitWithin(maxLength: Vector1D) = withSize(size.mapDimension(maxLength.axis) { _ min maxLength.length })
 	/**
 	  * Creates a copy of this item that has its size reduced to fit within the specified maximum width threshold.
 	  * Doesn't preserve shape.

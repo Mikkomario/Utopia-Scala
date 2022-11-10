@@ -37,7 +37,7 @@ object Stacker
 		{
 			// Checks component sizes
 			val lengths = visibleComponentSizes map { _ along stackAxis }
-			val breadths = visibleComponentSizes map { _ perpendicularTo stackAxis }
+			val breadths = visibleComponentSizes map { _ along stackAxis.perpendicular }
 			
 			// Determines total length & breadth
 			val componentsLength = lengths reduce { _ + _ }

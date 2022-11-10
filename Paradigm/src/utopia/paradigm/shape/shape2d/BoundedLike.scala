@@ -2,14 +2,15 @@ package utopia.paradigm.shape.shape2d
 
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.shape.template.VectorLike.V
-import utopia.paradigm.shape.template.{Dimensional, VectorLike}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.DoubleVectorLike
 
 /**
   * Common trait for shapes that can specify a bounding box
   * @author Mikko Hilpinen
   * @since Genesis 15.5.2021, v2.5.1
   */
+// TODO: Rename to Bounded
 trait BoundedLike[+Repr] extends Bounded with SizedLike[Repr]
 {
 	// ABSTRACT --------------------------
@@ -132,13 +133,13 @@ trait BoundedLike[+Repr] extends Bounded with SizedLike[Repr]
 	  * @param scaling A scaling modifier to apply to the bounds of this item (different for different axes)
 	  * @return A scaled copy of this item
 	  */
-	def withScaledBounds(scaling: Dimensional[Double]) = withBounds(bounds * scaling)
+	def withScaledBounds(scaling: HasDoubleDimensions) = withBounds(bounds * scaling)
 	
 	/**
 	  * @param translation Translation to apply to this item's position
 	  * @return A copy of this item with translated position
 	  */
-	def translated(translation: Dimensional[Double]) = withBounds(bounds + translation)
+	def translated(translation: HasDoubleDimensions) = withBounds(bounds + translation)
 	
 	/**
 	  * @param insets Insets to apply to this item's bounds
@@ -150,12 +151,12 @@ trait BoundedLike[+Repr] extends Bounded with SizedLike[Repr]
 	  * @param enlargement A size increase to apply
 	  * @return A copy of this item with bounds that keep the same center-point but have enlarged size
 	  */
-	def enlarged(enlargement: VectorLike[_ <: V]) =
+	def enlarged[V <: DoubleVectorLike[V]](enlargement: V) =
 		withBounds(Bounds(topLeft - enlargement / 2, size + enlargement))
 	/**
 	  * Creates a copy of this item with shrunk bounds where the center-point remains the same
 	  * @param shrinking A size decrease to apply
 	  * @return A copy of this item with bounds that keep the same center-point but have shrunk size
 	  */
-	def shrunk(shrinking: VectorLike[_ <: V]) = withBounds(Bounds(topLeft + shrinking / 2, size - shrinking))
+	def shrunk[V <: DoubleVectorLike[V]](shrinking: V) = withBounds(Bounds(topLeft + shrinking / 2, size - shrinking))
 }

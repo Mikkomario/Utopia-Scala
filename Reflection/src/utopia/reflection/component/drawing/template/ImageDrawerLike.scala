@@ -52,8 +52,8 @@ trait ImageDrawerLike extends CustomDrawer
 			else {
 				// Case: Upscaling is required (still limited by original image resolution,
 				// unless original image is already over source resolution)
-				val imageSize = (bounds.size - insets.mapToInsets { l => l.max.getOrElse(l.optimal) }.total) min
-					(image.size max image.sourceResolution)
+				val imageSize = (bounds.size - insets.mapToInsets { l => l.max.getOrElse(l.optimal) }.total) topLeft
+					(image.size bottomRight image.sourceResolution)
 				Some(image.fittingWithin(imageSize, maximize = true))
 			}
 		}

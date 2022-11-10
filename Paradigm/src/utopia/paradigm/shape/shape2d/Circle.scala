@@ -10,7 +10,8 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.generic.ParadigmDataType.CircleType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.geom.Ellipse2D
 import scala.util.Success
@@ -28,7 +29,7 @@ object Circle extends FromModelFactory[Circle]
  */
 case class Circle(origin: Point, radius: Double)
     extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
-        with LinearScalable[Circle] with Combinable[Dimensional[Double], Circle] with Bounded
+        with LinearScalable[Circle] with Combinable[HasDoubleDimensions, Circle] with Bounded
 {
     // COMPUTED PROPERTIES    ---------
     
@@ -64,7 +65,7 @@ case class Circle(origin: Point, radius: Double)
     /**
       * @return The bounds around this circle
       */
-    override def bounds = Bounds.between(origin - Vector(radius, radius), origin + Vector(radius, radius))
+    override def bounds = Bounds.between(origin - Vector2D(radius, radius), origin + Vector2D(radius, radius))
     
     override def toShape = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius * 2, radius * 2)
     
@@ -72,7 +73,7 @@ case class Circle(origin: Point, radius: Double)
     
     override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
     
-    override def contains[V <: Vector2DLike[V]](point: V) = point.distanceFrom(origin) <= radius
+    override def contains[V <: DoubleVectorLike[V]](point: V) = point.distanceFrom(origin) <= radius
     
     override def projectedOver(axis: Vector2D) =
     {
@@ -80,7 +81,7 @@ case class Circle(origin: Point, radius: Double)
         Line(projectedOrigin - axis.withLength(radius), projectedOrigin + axis.withLength(radius))
     }
     
-    def -(another: Dimensional[Double]) = copy(origin = origin - another)
+    def -(another: HasDoubleDimensions) = copy(origin = origin - another)
     
     /**
       * Scales the circle's radius by the provided amount
@@ -91,7 +92,7 @@ case class Circle(origin: Point, radius: Double)
       * @param translation A translation amount
       * @return A copy of this circle where the origin has been translated by specified amount
       */
-    override def +(translation: Dimensional[Double]) = copy(origin = origin + translation)
+    override def +(translation: HasDoubleDimensions) = copy(origin = origin + translation)
     
     
     // OTHER METHODS    ---------------

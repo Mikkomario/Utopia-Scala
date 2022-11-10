@@ -74,7 +74,8 @@ object StackSizeModifier
 	  * @param modifier Stack length modifier to wrap
 	  * @return A new stack size modifier
 	  */
-	def apply(axis: Axis2D)(modifier: StackLengthModifier): StackSizeModifier = s => s.mapSide(axis)(modifier.apply)
+	def apply(axis: Axis2D)(modifier: StackLengthModifier): StackSizeModifier =
+		s => s.mapDimension(axis)(modifier.apply)
 	
 	/**
 	  * Creates a modifier that only applies to stack size width

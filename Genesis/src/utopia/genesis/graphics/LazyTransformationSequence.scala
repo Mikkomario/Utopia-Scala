@@ -51,6 +51,8 @@ class LazyTransformationSequence(val parent: Option[LazyTransformationSequence],
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def repr = this
+	
 	override def current = cache.current
 	override def value: Matrix3D = cache.value
 	

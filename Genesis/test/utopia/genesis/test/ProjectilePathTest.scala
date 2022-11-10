@@ -1,6 +1,5 @@
 package utopia.genesis.test
 
-import utopia.flow.collection.mutable.iterator.Generator
 import utopia.paradigm.path.ProjectilePath
 
 /**
@@ -11,7 +10,7 @@ import utopia.paradigm.path.ProjectilePath
 object ProjectilePathTest extends App
 {
 	val curve = ProjectilePath()
-	val progress = Generator(0.0) { _ + 0.1 }.iterator.takeWhile { _ <= 1.0 }
+	val progress = Iterator.iterate(0.0) { _ + 0.1 }.takeWhile { _ <= 1.0 }
 	
 	progress.foreach { p =>
 		println(s"${(p * 100).toInt}% => ${(curve(p) * 100).toInt}%")

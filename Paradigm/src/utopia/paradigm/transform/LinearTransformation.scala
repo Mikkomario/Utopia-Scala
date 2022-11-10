@@ -13,7 +13,7 @@ import utopia.paradigm.generic.ParadigmDataType.LinearTransformationType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import scala.collection.immutable.VectorBuilder
 
@@ -74,8 +74,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
     /**
       * A matrix representation of this transformation
       */
-    lazy val toMatrix =
-    {
+    lazy val toMatrix = {
         val base = Matrix2D(
             scaling.x, shear.x,
             shear.y, scaling.y)
@@ -106,6 +105,8 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
     
     
     // IMPLEMENTED  -----------------
+    
+    override def repr = toMatrix
     
     override def toString =
     {
@@ -153,7 +154,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
      * Transforms a vector into this transformed coordinate system
      * @param vector a (relative) vector that will be transformed to this coordinate system
      */
-    def apply(vector: Dimensional[Double]) = toMatrix(vector)
+    def apply(vector: HasDoubleDimensions) = toMatrix(vector)
     
     /**
       * @param other Another linear transformation
@@ -168,7 +169,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
      * @return The (relative) vector that would produce the specified vector when transformed. None if this
       *         transformation maps all vectors to a single line or a point (scaling of 0 was applied)
      */
-    def invert(vector: Dimensional[Double]) = toMatrix.inverse.map { _(vector) }
+    def invert(vector: HasDoubleDimensions) = toMatrix.inverse.map { _(vector) }
     
     /**
       * @param transformable An instance to transform

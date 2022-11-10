@@ -51,7 +51,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     /**
       * @return The current breadth (perpendicular length) of this stack
       */
-    def breadth = size.perpendicularTo(direction)
+    def breadth = size.along(direction.perpendicular)
     
     /**
      * The length (min, optimal, max) of this stack
@@ -60,7 +60,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     /**
      * The breadth (min, optimal, max) of this stack
      */
-    def stackBreadth = stackSize.perpendicularTo(direction)
+    def stackBreadth = stackSize.along(direction.perpendicular)
     
     
     // IMPLEMENTED    -------------------

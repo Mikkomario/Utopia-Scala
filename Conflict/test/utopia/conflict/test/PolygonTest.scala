@@ -52,10 +52,10 @@ object PolygonTest extends App
     assert(polygon.projectedOver(X) == Line(Point.origin, Point(3)))
     assert(polygon.projectedOver(Y) == Line(Point.origin, Point(0, 3)))
     
-    assert(polygon.containsProjection(Point(0.3, 0.1), X.toUnitVector))
-    assert(polygon.containsProjection(Point(0.3, -5), X.toUnitVector))
-    assert(polygon.containsProjection(Point(0.3, 0.1), Y.toUnitVector))
-    assert(!polygon.containsProjection(Point(4, 4), X.toUnitVector))
+    assert(polygon.containsProjection(Point(0.3, 0.1), X.unit.toVector2D))
+    assert(polygon.containsProjection(Point(0.3, -5), X.unit.toVector2D))
+    assert(polygon.containsProjection(Point(0.3, 0.1), Y.unit.toVector2D))
+    assert(!polygon.containsProjection(Point(4, 4), X.unit.toVector2D))
     
     // Tests containment
     assert(polygon.contains(Point(0.3, 0.1)))

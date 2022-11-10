@@ -1,27 +1,25 @@
 package utopia.genesis.image
 
+import utopia.flow.operator.LinearScalable
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.operator.LinearScalable
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
-import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis2D, Direction2D}
-import utopia.paradigm.angular.{Angle, Rotation}
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Insets, Matrix2D, Point, Size, SizedLike, Vector2D, Vector2DLike}
-import utopia.paradigm.shape.template.Dimensional
 import utopia.genesis.util.Drawer
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.template.VectorLike.V
+import utopia.paradigm.shape.shape2d._
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
-import scala.math.Ordering.Double.TotalOrdering
-import scala.util.{Failure, Success, Try}
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}
 import javax.imageio.ImageIO
+import scala.math.Ordering.Double.TotalOrdering
+import scala.util.{Failure, Success, Try}
 
 object Image
 {
@@ -258,8 +256,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * affect non-scaled or upscaled images. Please note that <b>this operation cannot be reversed</b>
 	  * @return A copy of this image with (possibly) lowered source resolution
 	  */
-	def withMinimumResolution = if (scaling.dimensions2D.forall { _ >= 1 }) this else
-		withSourceResolution(size min sourceResolution, preserveUseSize = true)
+	def withMinimumResolution = if (scaling.dimensions.forall { _ >= 1 }) this else
+		withSourceResolution(size topLeft sourceResolution, preserveUseSize = true)
 	
 	/**
 	  * @return A buffered image copied from the source data of this image. None if this image is empty.
@@ -295,7 +293,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	override def withSize(size: Size) = this * (size / this.size)
 	
-	override def croppedToFitWithin(maxArea: Vector2DLike[_ <: V]) = {
+	override def croppedToFitWithin(maxArea: HasDoubleDimensions) = {
 		if (fitsWithin(maxArea))
 			this
 		else {
@@ -320,13 +318,13 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param scaling The scaling factor
 	  * @return A scaled version of this image
 	  */
-	def *(scaling: Dimensional[Double]): Image = withScaling(this.scaling * scaling)
+	def *(scaling: HasDoubleDimensions): Image = withScaling(this.scaling * scaling)
 	/**
 	  * Downscales this image
 	  * @param divider The dividing factor
 	  * @return A downscaled version of this image
 	  */
-	def /(divider: Dimensional[Double]): Image = withScaling(scaling / divider)
+	def /(divider: HasDoubleDimensions): Image = withScaling(scaling / divider)
 	
 	/**
 	 * @param other Another image
@@ -371,8 +369,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param translation A translation applied to source resolution image origin
 	  * @return A copy of this image with translated origin
 	  */
-	def withTranslatedSourceResolutionOrigin(translation: Dimensional[Double]) =
-		mapSourceResolutionOrigin { _+ translation }
+	def withTranslatedSourceResolutionOrigin(translation: HasDoubleDimensions) =
+		mapSourceResolutionOrigin { _ + translation }
 	/**
 	  * @param newOrigin A new image origin <b>relative to the current image size</b>, which is scaling-dependent
 	  * @return A copy of this image with the specified origin
@@ -387,7 +385,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param translation Translation applied to current (scaled) image origin
 	  * @return A copy of this image with translated origin
 	  */
-	def withTranslatedOrigin(translation: Dimensional[Double]) = mapOrigin { _ + translation }
+	def withTranslatedOrigin(translation: HasDoubleDimensions) = mapOrigin { _ + translation }
 	
 	/**
 	  * Takes a sub-image from this image (meaning only a portion of this image)
@@ -452,12 +450,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param scaling A scaling modifier applied to the original image
 	  * @return A scaled version of this image
 	  */
-	def withScaling(scaling: Vector2D) = copy(scaling = scaling)
-	/**
-	  * @param scaling A scaling modifier applied to the original image
-	  * @return A scaled version of this image
-	  */
-	def withScaling(scaling: Dimensional[Double]): Image = withScaling(Vector2D.withDimensions(scaling.dimensions))
+	def withScaling(scaling: HasDoubleDimensions): Image = copy(scaling = Vector2D.from(scaling))
 	/**
 	  * @param scaling A scaling modifier applied to the original image
 	  * @return A scaled version of this image
@@ -478,47 +471,11 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	}
 	
 	/**
-	  * Scales this image, preserving shape.
-	  * @param area An area
-	  * @return A copy of this image that matches the specified area, but may be smaller if shape preservation demands it.
-	  */
-	@deprecated("Please use fittingWithin(Vector2DLike, Boolean) instead", "v3.1")
-	def fitting(area: Size) = if (size.nonZero) this * (area / size).dimensions2D.min else this
-	
-	/**
-	  * @param area Target area (maximum)
-	  * @return A copy of this image that is smaller or equal to the target area. Shape is preserved.
-	  */
-	@deprecated("Please use fittingWithin(Vector2DLike) instead", "v3.1")
-	def smallerThan(area: Size) = if (size.fitsWithin(area)) this else fitting(area)
-	/**
 	  * @param area Target area (minimum)
 	  * @return A copy of this image that is larger or equal to the target area. Shape is preserved.
 	  */
 	@deprecated("Please use filling(Dimensional) instead", "v3.1")
 	def largerThan(area: Size) = filling(area)
-	
-	/**
-	  * Limits the height or width of this image
-	  * @param side Targeted side / axis
-	  * @param maxLength Maximum length for this image on that axis
-	  * @return A copy of this image that has equal or lower than maximum length on the specified axis
-	  */
-	@deprecated("Please use fittingWithin(Vector1D) instead", "v3.1")
-	def limitedAlong(side: Axis2D, maxLength: Double) =
-		if (size.along(side) <= maxLength) this else smallerThan(size.withDimension(side(maxLength)))
-	/**
-	  * @param maxWidth Maximum allowed width
-	  * @return A copy of this image with equal or lower width than the specified maximum
-	  */
-	@deprecated("Please use fittingWithinWidth(Double) instead", "v3.1")
-	def withLimitedWidth(maxWidth: Double) = limitedAlong(X, maxWidth)
-	/**
-	  * @param maxHeight Maximum allowed height
-	  * @return A copy of this image with equal or lower height than the specified maximum
-	  */
-	@deprecated("Please use fittingWithinHeight(Double) instead", "v3.1")
-	def withLimitedHeight(maxHeight: Double) = limitedAlong(Y, maxHeight)
 	
 	/**
 	  * @param f A mapping function for pixel tables

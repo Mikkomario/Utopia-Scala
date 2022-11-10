@@ -69,7 +69,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  */
 	lazy val carets = lines.zip(lineBounds).map { case (line, (bounds, _)) =>
 		context.caretCoordinatesFrom(line).map { relativeX =>
-			Line.ofVector(bounds.topLeft.plusX(relativeX), Vector2D(0, bounds.height))
+			Line.ofVector(bounds.topLeft + X(relativeX), Vector2D(0, bounds.height))
 		}
 	}
 	

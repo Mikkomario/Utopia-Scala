@@ -11,7 +11,8 @@ import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensional, VectorLike}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{DoubleVector, DoubleVectorLike}
 
 import java.awt.geom.RoundRectangle2D
 import scala.language.implicitConversions
@@ -195,7 +196,7 @@ case class Bounds(position: Point, override val size: Size)
     
     override def withBounds(newBounds: Bounds) = newBounds
     
-    override def translated(translation: Vector2DLike[_]): Bounds = withPosition(position + translation)
+    override def translated(translation: HasDoubleDimensions): Bounds = withPosition(position + translation)
     
     /**
       * Scales both position and size
@@ -211,7 +212,7 @@ case class Bounds(position: Point, override val size: Size)
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def +(translation: Dimensional[Double]) = mapPosition { _ + translation }
+    def +(translation: HasDoubleDimensions) = mapPosition { _ + translation }
     /**
       * @param insets Insets to add to these bounds
       * @return A copy of these bounds with specified insets added to the sides
@@ -222,7 +223,7 @@ case class Bounds(position: Point, override val size: Size)
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def -[V <: VectorLike[V]](translation: V) = translated(-translation)
+    def -[V <: DoubleVectorLike[V]](translation: V) = translated(-translation)
     /**
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted
@@ -234,13 +235,13 @@ case class Bounds(position: Point, override val size: Size)
       * @param scaling A scaling factor
       * @return A scaled version of these bounds
       */
-    def *(scaling: Dimensional[Double]) = Bounds(position * scaling, size * scaling)
+    def *(scaling: HasDoubleDimensions) = Bounds(position * scaling, size * scaling)
     /**
       * Divides both position and size
       * @param div A dividing factor
       * @return A divided version of these bounds
       */
-    def /(div: Dimensional[Double]) = Bounds(position / div, size / div)
+    def /(div: HasDoubleDimensions) = Bounds(position / div, size / div)
     
     
     // OTHER METHODS    ----------------
@@ -411,7 +412,7 @@ case class Bounds(position: Point, override val size: Size)
       * @return A bottom part of these bounds with up to a specific height
       */
     def bottomSlice(maxHeight: Double) = if (height <= maxHeight) this else
-        Bounds(position.plusY(height - maxHeight), Size(width, maxHeight))
+        Bounds(position + Y(height - maxHeight), Size(width, maxHeight))
     /**
       * @param maxWidth Maximum width of resulting bounds
       * @return A leftmost part of these bounds with up to a specific width
@@ -422,7 +423,7 @@ case class Bounds(position: Point, override val size: Size)
       * @return A rightmost part of these bounds with up to a specific width
       */
     def rightSlice(maxWidth: Double) = if (width <= maxWidth) this else
-        Bounds(position.plusX(width - maxWidth), Size(maxWidth, height))
+        Bounds(position + X(width - maxWidth), Size(maxWidth, height))
     /**
       * Slices these bounds from a specific direction
       * @param direction The direction from which these bounds are sliced

@@ -1,56 +1,44 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.operator.EqualsBy
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.PointType
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
 
 import java.awt.geom.Point2D
 import scala.collection.immutable.HashMap
 import scala.util.Success
 
-object Point extends FromModelFactory[Point]
+object Point extends VectorFactory[Point] with FromModelFactory[Point]
 {
 	// ATTRIBUTES   ---------------------------
 	
 	/**
 	  * (0,0) location
 	  */
-    val origin = apply()
+    val origin = empty
 	
     
 	// IMPLEMENTED  ---------------------------
 	
-    def apply(model: template.ModelLike[Property]) = Success(
+	override def apply(dimensions: Dimensions[Double]) = new Point(dimensions.withLength(2))
+	override def from(other: HasDimensions[Double]) = other match {
+		case p: Point => p
+		case o => apply(o.dimensions)
+	}
+	
+	def apply(model: template.ModelLike[Property]) = Success(
             Point(model("x").getDouble, model("y").getDouble))
 	
 	
 	// OTHER    -------------------------------
-	
-	/**
-	  * @param x An x-coordinate (default = 0)
-	  * @param y An y-coordinate (default = 0)
-	  * @return A new point with those coordinates
-	  */
-	def apply(x: Double = 0.0, y: Double = 0.0): Point = apply(Pair(x, y))
-	
-	/**
-	  * @param l Position length-wise
-	  * @param b Position breadth-wise
-	  * @param axis Target axis that determines which direction is length
-	  * @return A new point
-	  */
-	def apply(l: Double, b: Double, axis: Axis2D): Point = axis match
-	{
-		case X => Point(l, b)
-		case Y => Point(b, l)
-	}
     
     /**
      * Converts an awt point to Utopia point
@@ -63,6 +51,7 @@ object Point extends FromModelFactory[Point]
     /**
      * Converts a coordinate map into a point
      */
+    @deprecated("Please use apply instead", "v1.2")
     def of[K >: Axis2D](map: Map[K, Double]) = Point(map.getOrElse(X, 0), map.getOrElse(Y, 0))
 	
 	/**
@@ -71,34 +60,6 @@ object Point extends FromModelFactory[Point]
 	  * @return Point with function results as values
 	  */
 	def calculateWith(f: Axis2D => Double) = Point(f(X), f(Y))
-    
-    /**
-     * A combination of the points with minimum x and y coordinates
-     */
-	@deprecated("Please call this method through the point instance", "v2")
-    def topLeft(a: Point, b: Point) = Point(Math.min(a.x, b.x), Math.min(a.y, b.y))
-    /**
-     * A combination of the points with minimum x and y coordinates. None if collection is empty
-     */
-    def topLeftOption(points: IterableOnce[Point]) = points.iterator.reduceLeftOption { _ topLeft _ }
-    /**
-     * A combination of the points with minimum x and y coordinates
-     */
-    def topLeft(points: IterableOnce[Point]): Point = topLeftOption(points).getOrElse(origin)
-    
-    /**
-     * A combination of the points with maximum x and y coordinates
-     */
-	@deprecated("Please call this method through the point instance", "v2")
-    def bottomRight(a: Point, b: Point) = Point(Math.max(a.x, b.x), Math.max(a.y, b.y))
-    /**
-     * A combination of the points with maximum x and y coordinates. None if collection is empty
-     */
-    def bottomRightOption(points: IterableOnce[Point]) = points.iterator.reduceLeftOption { _ bottomRight _ }
-    /**
-     * A combination of the points with maximum x and y coordinates
-     */
-    def bottomRight(points: IterableOnce[Point]): Point = bottomRightOption(points).getOrElse(origin)
 }
 
 /**
@@ -106,34 +67,23 @@ object Point extends FromModelFactory[Point]
 * @author Mikko Hilpinen
 * @since Genesis 20.11.2018
 **/
-case class Point(override val dimensions2D: Pair[Double])
-	extends Vector2DLike[Point] with ValueConvertible with ModelConvertible
-		with TwoDimensional[Double]
+class Point private(override val dimensions: Dimensions[Double])
+	extends DoubleVectorLike[Point] with DoubleVector with ValueConvertible with ModelConvertible
+		with EqualsBy
 {
     // IMPLEMENTED    -----------------
 	
 	override def zero = Point.origin
 	override def repr = this
 	
+	override protected def equalsProperties = dimensions
+	
 	override def toValue = new Value(Some(this), PointType)
 	override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
 	
-	override def toString = dimensions2D.toString()
+	override def toString = xyPair.toString()
 	
-	override def buildCopy(vector: Vector2D) = Point(vector.dimensions2D)
-	override def buildCopy(vector: Vector3D) = Point(vector.dimensions2D)
-	
-	override def buildCopy(dimensions: IndexedSeq[Double]) =
-	{
-		if (dimensions.size >= 2)
-			Point(dimensions.head, dimensions(1))
-		else if (dimensions.isEmpty)
-			Point.origin
-		else
-			Point(dimensions.head)
-	}
-	
-	
+	override protected def factory = Point
 	
 	
 	// COMPUTED	-----------------------
@@ -141,15 +91,12 @@ case class Point(override val dimensions2D: Pair[Double])
 	/**
 	  * A vector representation of this point
 	  */
-	def toVector = Vector2D(dimensions2D)
+	def toVector = toVector2D
 	/**
 	  * @return A 3D vector representation of this point
 	  */
+	@deprecated("Please use .toVector3D instead", "v1.2")
 	def in3D = Vector3D(x, y)
-	/**
-	  * @return A size representation of this point
-	  */
-	def toSize = Size(dimensions2D)
 	
 	/**
 	  * An awt representation of this point

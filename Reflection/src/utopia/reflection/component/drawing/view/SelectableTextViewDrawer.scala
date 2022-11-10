@@ -10,6 +10,7 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{DrawLevel, SelectableTextDrawerLike}
 import utopia.genesis.graphics.MeasuredText
+import utopia.paradigm.enumeration.Axis.X
 
 /**
   * A view-based implementation of a text drawer that supports text selection
@@ -40,7 +41,7 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 	val caretPointer = textPointer.lazyMergeWith(caretPositionPointer) { (text, caretPosition) =>
 		caretPosition.map { caretPosition =>
 			val caretLine = text.caretAt(caretPosition)
-			Bounds.between(caretLine.start, caretLine.end.plusX(caretWidth))
+			Bounds.between(caretLine.start, caretLine.end + X(caretWidth))
 		}
 	}
 	

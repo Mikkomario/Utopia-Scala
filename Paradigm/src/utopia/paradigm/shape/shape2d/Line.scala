@@ -12,7 +12,7 @@ import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.path.LinearPathLike
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
-import utopia.paradigm.shape.template.VectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.Transformable
 
 import java.awt.geom.Line2D
@@ -50,7 +50,7 @@ object Line extends FromModelFactory[Line]
      * @param vector The vector portion of the line
      * @return A line with the provided position and vector part
      */
-    def ofVector(position: Point, vector: VectorLike[_]) = Line(position, position + vector)
+    def ofVector(position: Point, vector: HasDoubleDimensions) = Line(position, position + vector)
     
     /**
      * Creates a set of edges for the provided vertices. The vertices are iterated in order and an 
@@ -146,6 +146,8 @@ case class Line(points: Pair[Point])
     
     // IMPLEMENTED METHODS    ----------
     
+    override def repr = this
+    
     /**
       * @return The bounds around this line
       */
@@ -190,13 +192,13 @@ case class Line(points: Pair[Point])
      */
     def intersection(other: Line, onlyPointsInSegment: Boolean = true) = 
     {
-        val v1 = vector.in3D
-        val v2 = other.vector.in3D
+        val v1 = vector.toVector3D
+        val v2 = other.vector.toVector3D
         
         // a (V1 x V2) = (P2 - P1) x V2
         // Where P is the start point and Vs are the vector parts
         val leftVector = v1 cross v2
-        val rightVector = (other.start - start).in3D cross v2
+        val rightVector = (other.start - start).toVector3D cross v2
         
         // If the left hand side vector is a zero vector, there is no collision
         // The two vectors must also be parallel

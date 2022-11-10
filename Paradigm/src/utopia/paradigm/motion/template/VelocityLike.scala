@@ -3,8 +3,8 @@ package utopia.paradigm.motion.template
 import utopia.flow.operator.{CanBeAboutZero, Combinable, LinearScalable}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
-import utopia.paradigm.shape.shape2d.Vector2DLike
-import utopia.paradigm.shape.template.{Dimensional, VectorProjectable}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{Dimensional, DoubleVectorLike, VectorProjectable2}
 
 import scala.concurrent.duration.Duration
 
@@ -12,18 +12,20 @@ import scala.concurrent.duration.Duration
   * Used for tracking speed
   * @author Mikko Hilpinen
   * @since Genesis 14.7.2020, v2.3
+  * @tparam X Type of transition / position
+  * @tparam Repr Concrete velocity type
   */
-trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Transition, Repr]]
-	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Change[Dimensional[Double], _], Repr]
-		with CanBeAboutZero[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
-		with VectorProjectable[Repr]
+trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
+	extends Change[X, Repr] with LinearScalable[Repr] with Combinable[Change[HasDoubleDimensions, _], Repr]
+		with CanBeAboutZero[Change[HasDoubleDimensions, _], Repr] with Dimensional[LinearVelocity, Repr]
+		with VectorProjectable2[Repr]
 {
 	// ABSTRACT	-----------------
 	
 	/**
 	  * @return The amount of transition within the duration of this instance
 	  */
-	def transition: Transition
+	def transition: X
 	
 	/**
 	  * Creates a new copy of this instance
@@ -31,7 +33,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	  * @param duration   New Duration (default = current)
 	  * @return A new copy of this velocity
 	  */
-	protected def buildCopy(transition: Transition = transition, duration: Duration = duration): Repr
+	protected def buildCopy(transition: X = transition, duration: Duration = duration): Repr
 	
 	
 	// COMPUTED	-----------------
@@ -45,8 +47,6 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	  * @return A linear copy of this velocity, based on transition amount / length
 	  */
 	def linear = LinearVelocity(transition.length, duration)
-	
-	override def zeroDimension = LinearVelocity.zero
 	
 	/**
 	  * @return Direction of this velocity vector
@@ -64,15 +64,15 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	override def isZero = transition.isZero || duration.isInfinite
 	override def isAboutZero = transition.isAboutZero || duration.isInfinite
 	
-	override def ~==(other: Change[Dimensional[Double], _]) = perMilliSecond ~== other.perMilliSecond
+	override def ~==(other: Change[HasDoubleDimensions, _]) = perMilliSecond ~== other.perMilliSecond
 	
 	override def amount = transition
 	
 	override def *(mod: Double) = buildCopy(transition * mod)
 	
-	override def +(other: Change[Dimensional[Double], _]) = buildCopy(transition + other(duration))
+	override def +(other: Change[HasDoubleDimensions, _]) = buildCopy(transition + other(duration))
 	
-	def -(other: Change[Dimensional[Double], _]) = buildCopy(transition - other(duration))
+	def -(other: Change[HasDoubleDimensions, _]) = buildCopy(transition - other(duration))
 	
 	override def toString = s"$perMilliSecond/ms"
 	
@@ -123,7 +123,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	  * @param acceleration Amount of acceleration (considered to be consistent)
 	  * @return The amount of transition in provided time, and also the velocity at the end of that time
 	  */
-	def apply(time: Duration, acceleration: Change[Change[Dimensional[Double], _], _]): (Transition, Repr) =
+	def apply(time: Duration, acceleration: Change[Change[HasDoubleDimensions, _], _]): (X, Repr) =
 	{
 		val endVelocity = this + acceleration(time)
 		val averageVelocity = this.average(endVelocity)
@@ -138,7 +138,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	  *                          change directions (by being decreased below 0), a zero velocity will be returned instead
 	  * @return The amount of transition in provided time, and also the velocity at the end of that time
 	  */
-	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (Transition, Repr) =
+	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (X, Repr) =
 	{
 		// Sometimes translation & acceleration needs to be stopped when velocity would change direction
 		val durationLimit = {

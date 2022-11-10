@@ -2,14 +2,14 @@ package utopia.paradigm.shape.shape2d
 
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.shape2d.Vector2DLike.V2D
-import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for models / shapes that specify a size
   * @author Mikko Hilpinen
   * @since 15.9.2022, v1.1
   */
+// TODO: Rename to HasSize
 trait Sized
 {
 	// ABSTRACT ---------------------------
@@ -44,12 +44,12 @@ trait Sized
 	  * @param area An area / size
 	  * @return Whether this item completely fills an area of that size (i.e. is equal or larger on all axes)
 	  */
-	def fills(area: Dimensional[Double]) = size.forAllDimensionsWith(area) { _ >= _ }
+	def fills(area: HasDoubleDimensions) = size.forAllDimensionsWith(area) { _ >= _ }
 	/**
 	  * @param area An area / size
 	  * @return Whether this item fits within an area of that size (i.e. is smaller or equal on all axes)
 	  */
-	def fitsWithin(area: V2D) = size.forAllDimensionsWith(area) { _ <= _ }
+	def fitsWithin(area: HasDoubleDimensions) = size.forAllDimensionsWith(area) { _ <= _ }
 	
 	/**
 	  * @param v A one-dimensional vector

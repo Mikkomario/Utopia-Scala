@@ -1,7 +1,8 @@
 package utopia.genesis.shape.shape2D
 
 import utopia.paradigm.angular.Rotation
-import utopia.paradigm.shape.shape2d.{Vector2D, Vector2DLike}
+import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
  * Transformations can be applied to (immutable) transformable shapes / elements
@@ -26,7 +27,7 @@ trait TransformProjectable[+T]
       * @param translation Amount of translation applied
       * @return A translated copy of this item
       */
-    def translated(translation: Vector2DLike[_]) = transformedWith(Transformation.translation(translation))
+    def translated(translation: HasDoubleDimensions) = transformedWith(Transformation.translation(translation))
     
     /**
       * @param rotation Amount of rotation applied

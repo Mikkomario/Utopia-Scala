@@ -55,19 +55,19 @@ case class YearlyDateRange(start: MonthDay, end: MonthDay)
 	  *         If this range can be expressed as a single complete range of days during that year, returns 1 range.
 	  *         Otherwise returns 2 ranges (one for the beginning of the year and one for the end of the year).
 	  */
-	def at(year: Year) =
+	def at(year: Year): Vector[DateRange] =
 	{
 		// Case: Empty range => returns empty vector
 		if (spansFullYear)
 			Vector(year.firstDay to year.lastDay)
 		// Case: End of year is not passed => returns a single complete range
 		else if (isSingleRangePerYear)
-			Vector(year(start) datesUntil year(end))
+			Vector(year(start) toExclusive year(end))
 		// Case: Range passes end of year => returns start of year segment and the end of year segment separately
 		else
 		{
 			Vector(
-				year.firstDay datesUntil year(end),
+				year.firstDay toExclusive year(end),
 				year(start) to year.lastDay
 			)
 		}

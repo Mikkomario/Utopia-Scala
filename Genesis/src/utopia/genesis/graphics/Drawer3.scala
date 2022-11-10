@@ -1,7 +1,8 @@
 package utopia.genesis.graphics
 
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, MultiDimensional, Point, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, ShapeConvertible}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.{Font, Graphics2D, RenderingHints, Shape}
 
@@ -22,6 +23,8 @@ object Drawer3
 class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsContextLike[Drawer3] with AutoCloseable
 {
 	// IMPLEMENTED  --------------------------
+	
+	override def repr = this
 	
 	override protected def withGraphics(newGraphics: LazyGraphics) = new Drawer3(newGraphics)
 	
@@ -90,8 +93,8 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 	  * @param area Area that is copied
 	  * @param translation The amount of translation applied to the area
 	  */
-	def copyArea(area: Bounds, translation: MultiDimensional[Double]) = {
-		if (translation.dimensions2D.exists { _ != 0 })
+	def copyArea(area: Bounds, translation: HasDoubleDimensions) = {
+		if (translation.xyPair.exists { _ != 0 })
 			graphics.value.copyArea(
 				area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
 				translation.x.round.toInt, translation.y.round.toInt)

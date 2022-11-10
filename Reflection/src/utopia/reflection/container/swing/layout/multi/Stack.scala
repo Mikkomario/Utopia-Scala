@@ -252,7 +252,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
                 val baseDrawer = drawer.noEdges
                 val drawers = colors.map(baseDrawer.withFillColor).repeatingIterator()
     
-                val b = bounds.size.perpendicularTo(direction)
+                val b = bounds.size.along(direction.perpendicular)
                 var lastStart = 0.0
                 var lastComponentBottom = components.head.maxAlong(direction)
                 components.tail.foreach { c =>

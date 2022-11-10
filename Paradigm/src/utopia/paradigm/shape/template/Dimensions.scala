@@ -2,21 +2,34 @@ package utopia.paradigm.shape.template
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
-import utopia.paradigm.enumeration.Axis
-import utopia.flow.operator.EqualsFunction
+import utopia.paradigm.enumeration.{Axis, Axis2D}
+import utopia.flow.operator.{CanBeZero, EqualsFunction}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{IndexedSeqOps, mutable}
+import scala.language.implicitConversions
 
 object Dimensions
 {
+	// TYPES    -----------------------
+	
+	type DoubleDimensions = Dimensions[Double]
+	
+	
 	// ATTRIBUTES   -------------------
 	
 	/**
 	  * A factory for building dimensions that consist of double numbers
 	  */
 	val double = apply(0.0)
+	
+	
+	// IMPLICIT -----------------------
+	
+	implicit def doubleFactory(d: Dimensions.type): DimensionsFactory[Double] = d.double
+	// implicit def doubleDimensions(d: Iterable[Double]): Dimensions[Double] = double.from(d)
 	
 	
 	// OTHER    -----------------------
@@ -60,26 +73,15 @@ object Dimensions
 		
 		// IMPLEMENTED ---------------------------
 		
-		/**
-		  * @return A new builder for building dimension sets
-		  */
 		override def newBuilder = new DimensionsBuilder[A](zero)
 		
-		/**
-		  * @param values Dimensions to assign (ordered)
-		  * @return A set of dimensions based on the specified values
-		  */
 		override def apply(values: IndexedSeq[A]) = Dimensions(zero, values)
-		/**
-		  * @param values Dimensions to assign (axis -> dimension)
-		  * @return A set of dimensions based on the specified values
-		  */
-		override def apply(values: Map[Axis, A]): Dimensions[A] = apply(Axis.values.map { a => values.getOrElse(a, zero) })
-		
-		/**
-		  * @param values Dimensions to assign (ordered)
-		  * @return A set of dimensions based on the specified values
-		  */
+		override def apply(values: Map[Axis, A]): Dimensions[A] = {
+			if (values.isEmpty)
+				empty
+			else
+				apply(Axis.values.take(values.keysIterator.map { _.index }.max).map { a => values.getOrElse(a, zero) })
+		}
 		override def from(values: IterableOnce[A]) = values match {
 			case d: Dimensions[A] => d
 			case s: IndexedSeq[A] => apply(s)
@@ -95,7 +97,7 @@ object Dimensions
   */
 case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, Dimensions[A]]
-		with DimensionsWrapper[A, Dimensions]
+		with HasDimensions[A] with CanBeZero[Dimensions[A]]
 {
 	// COMPUTED ------------------------------
 	
@@ -112,6 +114,10 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @return Dimensions, coupled with their correlating axes
 	  */
 	def zipWithAxis = values zip Axis.values
+	/**
+	  * @return 0-2 first dimensions, coupled with their correlating axes
+	  */
+	def zipWithAxis2D = values zip Axis2D.values
 	/**
 	  * @return A map based on these dimensions, where axes are used as keys.
 	  */
@@ -134,7 +140,6 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	// IMPLEMENTED  --------------------------
 	
 	override def dimensions: Dimensions[A] = this
-	override def withDimensions[B](newDimensions: Dimensions[B]): Dimensions[B] = newDimensions
 	
 	override def length = values.length
 	
@@ -164,8 +169,23 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	override def zero: Dimensions[A] = copy[A](values = Vector.fill[A](length)(zeroValue))
 	override def isZero = values.forall { _ == zeroValue }
 	
+	override def padTo[B >: A](len: Int, elem: B) = copy(values = super.padTo(len, elem))
+	
 	
 	// OTHER    ------------------------------
+	
+	/**
+	  * @param length Targeted number of dimensions
+	  * @return An iterator of these dimensions that contains 'length' many items
+	  */
+	def iteratorOfLength(length: Int) = {
+		if (this.length == length)
+			iterator
+		else if (this.length < length)
+			iterator.padTo(length, zeroValue)
+		else
+			iterator.take(length)
+	}
 	
 	/**
 	  * @param axis Targeted axis
@@ -185,6 +205,7 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 		else
 			copy(values = values.take(length))
 	}
+	def padTo(length: Int): Dimensions[A] = padTo(length, zeroValue)
 	
 	/**
 	  * @param other Another set of dimensions
@@ -245,12 +266,33 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @tparam B Type of new dimension
 	  * @return A copy of these dimensions with that dimension
 	  */
-	override def withDimension[B >: A](axis: Axis, dimension: B) = {
+	def withDimension[B >: A](axis: Axis, dimension: B) = {
 		if (axis.index < length)
 			copy(values = (values.take(axis.index) :+ dimension) ++ values.drop(axis.index + 1))
 		else
 			copy(values = values.padTo(axis.index, zeroValue) :+ dimension)
 	}
+	/**
+	  * Replaces this item's x-dimension
+	  * @param x The new x-dimension to assign
+	  * @tparam B Type of new dimension
+	  * @return A copy of this item with that dimension
+	  */
+	def withX[B >: A](x: B) = withDimension(X, x)
+	/**
+	  * Replaces this item's y-dimension
+	  * @param y The new y-dimension to assign
+	  * @tparam B Type of new dimension
+	  * @return A copy of this item with that dimension
+	  */
+	def withY[B >: A](y: B) = withDimension(Y, y)
+	/**
+	  * Replaces this item's z-dimension
+	  * @param z The new z-dimension to assign
+	  * @tparam B Type of new dimension
+	  * @return A copy of this item with that dimension
+	  */
+	def withZ[B >: A](z: B) = withDimension(Z, z)
 	/**
 	  * Replaces 0-n dimensions in this set
 	  * @param dimensions Dimensions to assign (axis -> dimension)
@@ -285,7 +327,28 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @tparam B Type of new dimension
 	  * @return A copy of these dimensions where the original dimension has been replaced with the modified copy
 	  */
-	override def mapDimension[B >: A](axis: Axis)(f: A => B) = withDimension(axis, f(apply(axis)))
+	def mapDimension[B >: A](axis: Axis)(f: A => B) = withDimension(axis, f(apply(axis)))
+	/**
+	  * Modifies the x-dimension of this item
+	  * @param f A mapping function called for the x-dimension
+	  * @tparam B Type of mapping result
+	  * @return A copy of this item with the mapped dimension
+	  */
+	def mapX[B >: A](f: A => B) = mapDimension[B](X)(f)
+	/**
+	  * Modifies the y-dimension of this item
+	  * @param f A mapping function called for the y-dimension
+	  * @tparam B Type of mapping result
+	  * @return A copy of this item with the mapped dimension
+	  */
+	def mapY[B >: A](f: A => B) = mapDimension[B](Y)(f)
+	/**
+	  * Modifies the z-dimension of this item
+	  * @param f A mapping function called for the z-dimension
+	  * @tparam B Type of mapping result
+	  * @return A copy of this item with the mapped dimension
+	  */
+	def mapZ[B >: A](f: A => B) = mapDimension[B](Z)(f)
 	/**
 	  * Alters the value of 0-n dimensions in this set
 	  * @param axes Targeted axes

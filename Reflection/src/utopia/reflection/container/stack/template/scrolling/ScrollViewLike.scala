@@ -45,7 +45,7 @@ trait ScrollViewLike[C <: Stackable] extends ScrollAreaLike[C]
 	/**
 	  * @return The breadth of this view's contents
 	  */
-	def contentBreadth = contentSize.perpendicularTo(axis)
+	def contentBreadth = contentSize.along(axis.perpendicular)
 	
 	/**
 	  * @return The current position of this view's contents (negative)

@@ -3,9 +3,10 @@ package utopia.genesis.util
 import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, MultiDimensional, Point, ShapeConvertible, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, ShapeConvertible, Size}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{AffineTransformable, AffineTransformation, JavaAffineTransformConvertible, LinearTransformable}
 
 import scala.util.Try
@@ -84,6 +85,8 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     
     
     // IMPLEMENTED  -----------------------
+    
+    override def repr = this
     
     override def transformedWith(transformation: Matrix2D) = transformed(transformation)
     
@@ -340,9 +343,9 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @param area Area that is copied
       * @param translation The amount of translation applied to the area
       */
-    def copyArea(area: Bounds, translation: MultiDimensional[Double]) =
+    def copyArea(area: Bounds, translation: HasDoubleDimensions) =
     {
-        if (translation.dimensions2D.exists { _ != 0 })
+        if (translation.xyPair.exists { _ != 0 })
             graphics.copyArea(
                 area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
                 translation.x.round.toInt, translation.y.round.toInt)

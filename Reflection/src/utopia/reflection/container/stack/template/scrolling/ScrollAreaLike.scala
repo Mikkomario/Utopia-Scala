@@ -14,12 +14,12 @@ import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.VectorLike
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
@@ -113,7 +113,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  * @return The current scroll modifier / percentage [0, 1]
 	  */
 	def scrollPercents = -contentOrigin / contentSize
-	def scrollPercents_=(newPercents: VectorLike[_]) = scrollTo(newPercents, animated = false)
+	def scrollPercents_=(newPercents: HasDoubleDimensions) = scrollTo(newPercents, animated = false)
 	
 	/**
 	  * @return The currently visible area inside the content
@@ -215,7 +215,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  * @param abovePercents The portion of the content that should be above this view [0, 1]
 	  * @param animated Whether scrolling should be animated (default = true). If false, scrolling will be completed at once.
 	  */
-	def scrollTo(abovePercents: VectorLike[_], animated: Boolean = true) =
+	def scrollTo(abovePercents: HasDoubleDimensions, animated: Boolean = true) =
 	{
 		val target = -contentSize.toPoint * abovePercents
 		if (animated)
@@ -250,7 +250,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  * Scrolls this view a certain amount
 	  * @param amounts The scroll vector
 	  */
-	def scroll(amounts: VectorLike[_], animated: Boolean = true, preservePreviousMomentum: Boolean = true) =
+	def scroll(amounts: HasDoubleDimensions, animated: Boolean = true, preservePreviousMomentum: Boolean = true) =
 	{
 		if (animated)
 			animateScrollTo(contentOrigin + amounts, preservePreviousMomentum)

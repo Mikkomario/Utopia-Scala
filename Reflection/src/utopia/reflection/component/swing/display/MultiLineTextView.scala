@@ -210,7 +210,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 		{
 			// Sets low priority length to one side of the size, based on alignment
 			val targetSide = if (alignment.affectsHorizontal) X else Y
-			size.mapSide(targetSide) { _.withLowPriority }
+			size.mapDimension(targetSide) { _.withLowPriority }
 		}
 	}
 }

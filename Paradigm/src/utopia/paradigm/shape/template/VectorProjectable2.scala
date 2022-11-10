@@ -7,8 +7,9 @@ import utopia.paradigm.enumeration.Axis.{X, Y, Z}
   * These items can be projected over vectors
   * @author Mikko Hilpinen
   * @since Genesis 13.9.2019, v2.1+
+  * @tparam P Type of vector projection result
   */
-trait VectorProjectable[+Projection]
+trait VectorProjectable2[+P]
 {
 	// ABSTRACT	--------------------
 	
@@ -17,7 +18,7 @@ trait VectorProjectable[+Projection]
 	  * @param vector Target vector
 	  * @return This instance's projection over target vector
 	  */
-	def projectedOver[V <: VectorLike[V]](vector: VectorLike[V]): Projection
+	def projectedOver[V <: DoubleVectorLike[V]](vector: V): P
 	
 	
 	// COMPUTED	-------------------
@@ -42,5 +43,5 @@ trait VectorProjectable[+Projection]
 	  * @param axis Target axis
 	  * @return A projection of this item over specified axis
 	  */
-	def projectedOver(axis: Axis): Projection = projectedOver(axis.unit)
+	def projectedOver(axis: Axis): P = projectedOver(axis.unit)
 }

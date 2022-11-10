@@ -5,7 +5,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape1d.Vector1D
 import utopia.paradigm.shape.shape2d.{Bounded, Bounds, Point, Size}
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
 * This trait is extended by classes that occupy a certain 2D space (position + size)
@@ -65,9 +65,9 @@ trait Area extends Bounded
     def bottomY_=(newY: Double) = y = newY - height
     
     def topLeft_=(p: Point) = position = p
-    def topRight_=(p: Point) = position = p.minusX(width)
+    def topRight_=(p: Point) = position = p - X(width)
     def bottomRight_=(p: Point) = position = p - size
-    def bottomLeft_=(p: Point) = position = p.minusY(height)
+    def bottomLeft_=(p: Point) = position = p - Y(height)
     def center = position + size / 2
     def center_=(p: Point) = position = p - size / 2
     
@@ -129,7 +129,7 @@ trait Area extends Bounded
       * Translates this area's location
       * @param translation Translation to apply to this area's location
       */
-    def translate(translation: Dimensional[Double]) = position += translation
+    def translate(translation: HasDoubleDimensions) = position += translation
     /**
      * Adjusts either x- or y-coordinate of this area
      */

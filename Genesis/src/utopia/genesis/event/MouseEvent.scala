@@ -3,7 +3,7 @@ package utopia.genesis.event
 import utopia.inception.util.Filter
 import utopia.genesis.event.MouseButton._
 import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point}
-import utopia.paradigm.shape.template.VectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 object MouseEvent
 {
@@ -93,7 +93,7 @@ trait MouseEvent[+Repr]
       * @param amount Amount of translation applied to this event's position
       * @return A copy of this event with translated position
       */
-    def translated(amount: VectorLike[_]) = mapPosition { _ + amount }
+    def translated(amount: HasDoubleDimensions) = mapPosition { _ + amount }
     
     /**
       * @param origin New origin

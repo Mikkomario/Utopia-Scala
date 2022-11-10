@@ -1,8 +1,11 @@
 package utopia.paradigm.transform
 
 import utopia.paradigm.angular.Rotation
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2DLike}
+import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for shapes etc. which can be transformed using linear transformations
@@ -12,6 +15,11 @@ import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2DLike}
 trait LinearTransformable[+Transformed]
 {
 	// ABSTRACT	---------------------------
+	
+	/**
+	  * @return This item as is
+	  */
+	def repr: Transformed
 	
 	/**
 	  * @param transformation A linear transformation (matrix) to apply
@@ -38,12 +46,10 @@ trait LinearTransformable[+Transformed]
 	  * @return A copy of this instance that has been rotated 90 degrees clockwise
 	  */
 	def rotated90DegreesClockwise = transformedWith(Matrix2D.quarterRotationClockwise)
-	
 	/**
 	  * @return A copy of this instance that has been rotated 90 degrees counter-clockwise
 	  */
 	def rotated90DegreesCounterClockwise = transformedWith(Matrix2D.quarterRotationCounterClockwise)
-	
 	/**
 	  * @return A copy of this instance that has been rotated 180 degrees
 	  */
@@ -53,7 +59,6 @@ trait LinearTransformable[+Transformed]
 	  * @return A copy of this instance that has been flipped along the x-axis
 	  */
 	def flippedHorizontally = scaled(-1, 1)
-	
 	/**
 	  * @return A copy of this instance that has been flipped along the y-axis
 	  */
@@ -68,7 +73,6 @@ trait LinearTransformable[+Transformed]
 	  * @return A scaled copy of this instance
 	  */
 	def scaled(xScaling: Double, yScaling: Double) = transformedWith(Matrix2D.scaling(xScaling, yScaling))
-	
 	/**
 	  * @param modifier A scaling modifier to apply
 	  * @return A scaled copy of this instance
@@ -79,8 +83,16 @@ trait LinearTransformable[+Transformed]
 	  * @param vector A vector that represents x- and y-scaling
 	  * @return A scaled copy of this instance
 	  */
-	def scaled(vector: Vector2DLike[_]): Transformed = scaled(vector.x, vector.y)
-	
+	def scaled(vector: HasDoubleDimensions): Transformed = scaled(vector.x, vector.y)
+	/**
+	  * @param vector A one-dimensional vector
+	  * @return This item scaled along the specified vector, based on the vector's length. Other axes remain unaffected.
+	  */
+	def scaled(vector: Vector1D): Transformed = vector.axis match {
+		case X => scaled(vector.length, 1.0)
+		case Y => scaled(1.0, vector.length)
+		case _ => repr
+	}
 	/**
 	  * @param axis     Target axis
 	  * @param modifier Scaling amount applied along that axis

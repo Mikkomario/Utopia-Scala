@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.shape.shape2d.{Bounds, Insets, Size}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.shape.shape2d.{Bounds, Insets, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.Border
 
@@ -61,10 +61,10 @@ trait BorderDrawerLike extends CustomDrawer
 		
 		// Top is limited by left
 		if (insets.top > 0)
-			buffer += Bounds(bounds.topLeft.plusX(insets.left), Size(bounds.width - insets.left, insets.top))
+			buffer += Bounds(bounds.topLeft + X(insets.left), Size(bounds.width - insets.left, insets.top))
 		// Right is limited by top
 		if (insets.right > 0)
-			buffer += Bounds(bounds.topRight + Vector(-insets.right, insets.top), Size(insets.right, bounds.height - insets.top))
+			buffer += Bounds(bounds.topRight + Vector2D(-insets.right, insets.top), Size(insets.right, bounds.height - insets.top))
 		// Bottom is limited by right
 		if (insets.bottom > 0)
 			buffer += Bounds(bounds.bottomLeft - Y(insets.bottom), Size(bounds.width - insets.right, insets.bottom))
@@ -76,5 +76,5 @@ trait BorderDrawerLike extends CustomDrawer
 	}
 	
 	private def boundsInsideInsets(original: Bounds, insets: Insets) =
-		Bounds(original.position + Vector(insets.left, insets.top), original.size - insets.total)
+		Bounds(original.position + Vector2D(insets.left, insets.top), original.size - insets.total)
 }

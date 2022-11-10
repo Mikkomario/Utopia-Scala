@@ -3,7 +3,7 @@ package utopia.paradigm.motion.template
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.AbstractChanging
-import utopia.paradigm.shape.shape2d.Vector2DLike
+import utopia.paradigm.shape.template.DoubleVectorLike
 
 import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -14,7 +14,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */
-abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
+abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
 	+S <: MovementStatusLike[X, V, A, _], H]
 (maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.Zero)
 	extends AbstractChanging[H] with MovementHistoryLike[X, V, A, S]

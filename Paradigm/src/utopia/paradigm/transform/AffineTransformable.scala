@@ -1,7 +1,7 @@
 package utopia.paradigm.transform
 
-import utopia.paradigm.shape.shape2d.Vector2DLike
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for shapes etc. that can be transformed using 2D affine transformations
@@ -37,5 +37,5 @@ trait AffineTransformable[+Transformed]
 	  * @param translation Amount of translation to apply
 	  * @return A translated copy of this instance
 	  */
-	def translated(translation: Vector2DLike[_]) = transformedWith(Matrix3D.translation(translation))
+	def translated(translation: HasDoubleDimensions) = transformedWith(Matrix3D.translation(translation))
 }

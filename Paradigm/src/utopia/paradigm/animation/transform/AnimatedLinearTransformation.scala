@@ -2,8 +2,9 @@ package utopia.paradigm.animation.transform
 
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2DLike}
+import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.shape.template.DoubleVectorLike
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 
 object AnimatedLinearTransformation
@@ -57,19 +58,16 @@ object AnimatedLinearTransformation
 	  * @param yScaling Scaling amount to apply over the y-axis
 	  * @return An animation that scales the specified amount over time
 	  */
-	def scaling(xScaling: Double, yScaling: Double) =
-	{
-		val xChange = xScaling - 1
-		val yChange = yScaling - 1
-		apply { p => Matrix2D.scaling(1 + xChange * p, 1 + yChange * p) }
-	}
-	
+	def scaling(xScaling: Double, yScaling: Double): AnimatedLinearTransformation = scaling(Vector2D(xScaling, yScaling))
 	/**
 	  * Creates a scaling animation
 	  * @param amount Scaling amount
 	  * @return An animation that scales the specified amount over time
 	  */
-	def scaling(amount: Vector2DLike[_]): AnimatedLinearTransformation = scaling(amount.x, amount.y)
+	def scaling[V <: DoubleVectorLike[V]](amount: V): AnimatedLinearTransformation = {
+		val change = amount - Vector2D.identity
+		apply { p => Matrix2D.scaling(change.map { 1 + _ * p }) }
+	}
 	
 	/**
 	  * Creates a shearing animation
@@ -77,15 +75,14 @@ object AnimatedLinearTransformation
 	  * @param yShear Shearing to apply along y-axis
 	  * @return An animation that shears the specified amount over time
 	  */
-	def shearing(xShear: Double, yShear: Double) =
-		apply { p => Matrix2D.shearing(xShear * p, yShear * p) }
-	
+	def shearing(xShear: Double, yShear: Double): AnimatedLinearTransformation = shearing(Vector2D(xShear, yShear))
 	/**
 	  * Creates a shearing animation
 	  * @param amount Shearing amount
 	  * @return An animation that shears the specified amount over time
 	  */
-	def shearing(amount: Vector2DLike[_]): AnimatedLinearTransformation = shearing(amount.x, amount.y)
+	def shearing[V <: DoubleVectorLike[V]](amount: V): AnimatedLinearTransformation =
+		apply { p => Matrix2D.shearing(amount * p) }
 }
 
 /**
@@ -99,6 +96,8 @@ case class AnimatedLinearTransformation(f: Double => Matrix2D) extends Animation
 	with AffineTransformable[AnimatedAffineTransformation] with AnimatedAffineTransformable[AnimatedAffineTransformation]
 {
 	// IMPLEMENTED	-------------------------
+	
+	override def repr = this
 	
 	override def apply(progress: Double) = f(progress)
 	

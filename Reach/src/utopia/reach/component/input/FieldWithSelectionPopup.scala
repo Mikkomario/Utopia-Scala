@@ -266,7 +266,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 			cachedPopup.foreach { popup =>
 				println("Repositions the pop-up")
 				// Positions the pop-up
-				popup.position = field.absolutePosition.plusY(fieldBounds.height)
+				popup.position = field.absolutePosition + Y(fieldBounds.height)
 				// Matches field width, if possible
 				val stackWidth = popup.stackSize.width
 				if (fieldBounds.width < stackWidth.min)

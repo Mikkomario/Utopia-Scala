@@ -9,7 +9,7 @@ import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.image.Image
-import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
 import utopia.paradigm.shape.shape2d.{Insets, Point, Size, Vector2D}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
@@ -20,7 +20,6 @@ import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.util.AwtEventThread
@@ -380,8 +379,8 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
                         case Far => increase.along(axis)
                     }
                     axis -> move
-                }.toMap
-                position = (position - Vector2D.of(movement)).positive
+                }.toMap[Axis, Double]
+                position = (position - Vector2D(movement)).positive
             }
             else
                 checkWindowBounds()
@@ -399,7 +398,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
         
         if (isUnderSized)
         {
-            size = size max stackSize.min
+            size = size bottomRight stackSize.min
             updateContentBounds()
         }
     }

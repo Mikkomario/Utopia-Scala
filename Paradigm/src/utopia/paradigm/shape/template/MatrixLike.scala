@@ -1,22 +1,27 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.operator.LinearScalable
+import utopia.paradigm.enumeration.Axis.{X, Y, Z}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * A common trait for matrix implementations
   * @author Mikko Hilpinen
   * @since Genesis 15.7.2020, v2.3
   */
-trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearScalable[Repr]
+trait MatrixLike[V <: DoubleVectorLike[V], +Repr] extends Dimensional[V, Repr] with LinearScalable[Repr]
 {
 	// ABSTRACT	---------------------
 	
+	/**
+	  * @return The columns of this matrix, as vectors
+	  */
 	// x-transformation at index 0, y-transformation at index 1 and so on
-	def columns: IndexedSeq[V]
+	def columns: Dimensions[V]
 	/**
 	  * @return The rows in this matrix
 	  */
-	def rows: IndexedSeq[V]
+	def rows: Dimensions[V]
 	
 	/**
 	  * The determinant of this matrix. The determinant shows the scaling applied to the volume
@@ -34,7 +39,21 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  */
 	def inverse: Option[Repr]
 	
-	protected def buildCopy(columns: IndexedSeq[V]): Repr
+	
+	// COMPUTED --------------------
+	
+	/**
+	  * @return Transformation applied on X axis (first column)
+	  */
+	def xTransform = columns(X)
+	/**
+	  * @return Transformation applied on Y axis (second column)
+	  */
+	def yTransform = columns(Y)
+	/**
+	  * @return Transformation applied on the Z-axis (third column), if applicable
+	  */
+	def zTransform = columns(Z)
 	
 	
 	// IMPLEMENTED	----------------
@@ -42,19 +61,12 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	override def dimensions = columns
 	
 	override def toString = {
-		val content = toMap.map { case (axis, vector) =>
+		val content = dimensions.zipWithAxis.map { case (vector, axis) =>
 			s"$axis: [${vector.dimensions.mkString(", ")}]" }.mkString(", ")
 		s"{$content}"
 	}
 	
 	override def *(mod: Double) = map { _ * mod }
-	
-	def ~==(other: Dimensional[V]) = {
-		if (dimensions.size == other.dimensions.size)
-			dimensions.zip(other.dimensions).forall { case (a, b) => a ~== b }
-		else
-			false
-	}
 	
 	
 	// OTHER	--------------------
@@ -67,7 +79,6 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  */
 	@throws[IndexOutOfBoundsException]("This matrix doesn't contain specified index")
 	def apply(columnIndex: Int, rowIndex: Int) = column(columnIndex).dimensions(rowIndex)
-	
 	/**
 	  * @param index Index of the targeted column
 	  * @return A column vector at that index
@@ -75,7 +86,6 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  */
 	@throws[IndexOutOfBoundsException]("This matrix doesn't contain a column with that index")
 	def column(index: Int) = columns(index)
-	
 	/**
 	  * @param index Index of the targeted row
 	  * @return A row vector at that index
@@ -91,7 +101,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  */
 	// Vector multiplication: x*x-transformation + y*y-transformation
 	// TODO: Handle the case of 0-dimension vectors
-	def apply(vector: Dimensional[Double]): V = vector.dimensions.zip(columns)
+	def apply(vector: HasDoubleDimensions): V = vector.dimensions.iterator.zip(columns)
 		.map { case (c, transformation) => transformation * c }
 		.reduce { _ + _ }
 	
@@ -100,7 +110,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  * @param matrix Matrix to transform
 	  * @return A transformed matrix
 	  */
-	def apply(matrix: MatrixLike[_ <: Dimensional[Double], _]): Repr = buildCopy(matrix.columns.map(apply))
+	def apply(matrix: MatrixLike[_ <: HasDoubleDimensions, _]): Repr = withDimensions(matrix.columns.map(apply))
 	
 	/**
 	  * Performs matrix multiplication. This is same as transforming this matrix with the specified matrix.
@@ -110,7 +120,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  * @tparam M Multiplication result type
 	  * @return This matrix transformed with the other matrix
 	  */
-	def *[M](matrix: MatrixLike[_ <: Dimensional[Double], M]): M = matrix(this)
+	def *[M](matrix: MatrixLike[_, M]): M = matrix(this)
 	
 	// Determinant = how much the area is scaled, proportionally (Eg. 2x scaling both x and y yields determinant 4 =(2^2))
 	// NB: When determinant is 0, there is only a single line or a single point, no 2d space
@@ -122,7 +132,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  * @param f A mapping function
 	  * @return A mapped copy of this matrix
 	  */
-	def map(f: Double => Double) = buildCopy(columns.map { _.map(f) })
+	def map(f: Double => Double) = mapEachDimension { _.map(f) }
 	
 	/**
 	  * Maps all items in this matrix
@@ -132,6 +142,6 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearSc
 	  * @return A mapped copy of this matrix
 	  */
 	def mapWithIndices(f: (Double, Int, Int) => Double) =
-		buildCopy(columns.zipWithIndex.map { case (column, columnIndex) =>
-			column.mapWithIndex { (v, rowIndex) => f(v, columnIndex, rowIndex) } })
+		withDimensions(dimensions.copy(values = columns.zipWithIndex.map { case (column, columnIndex) =>
+			column.mapWithIndex { (v, rowIndex) => f(v, columnIndex, rowIndex) } }))
 }

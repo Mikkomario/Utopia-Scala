@@ -2,13 +2,14 @@ package utopia.reflection.shape.stack
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Combinable.SelfCombinable
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.{EqualsBy, LinearScalable}
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Insets, MultiDimensional, Size, TwoDimensional}
+import utopia.paradigm.shape.shape2d.{Insets, Size}
+import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
 import utopia.reflection.shape.stack.LengthPriority.Low
 
-object StackSize
+object StackSize extends DimensionsWrapperFactory[StackLength, StackSize]
 {
     // ATTRIBUTES    --------------------
     
@@ -20,6 +21,18 @@ object StackSize
      * A stack size that is always 0x0
      */
     val fixedZero = fixed(Size.zero)
+    
+    
+    // IMPLEMENTED  ---------------------
+    
+    override def zeroDimension = StackLength.any
+    
+    override def apply(dimensions: Dimensions[StackLength]) = new StackSize(dimensions.withLength(2))
+    
+    override def from(other: HasDimensions[StackLength]) = other match {
+        case s: StackSize => s
+        case o => apply(o.dimensions)
+    }
     
     
     // CONSTRUCTOR    -------------------
@@ -37,9 +50,8 @@ object StackSize
       * @param maxHeight Maximum height (None if not limited)
       * @return A new stack size
       */
-    def apply(min: Size, optimal: Size, maxWidth: Option[Double], maxHeight: Option[Double]) =
-            new StackSize(StackLength(min.width, optimal.width, maxWidth),
-            StackLength(min.height, optimal.height, maxHeight))
+    def apply(min: Size, optimal: Size, maxWidth: Option[Double], maxHeight: Option[Double]): StackSize =
+        apply(StackLength(min.width, optimal.width, maxWidth), StackLength(min.height, optimal.height, maxHeight))
     /**
       * @param min Minimum size
       * @param optimal Optimal size
@@ -55,17 +67,6 @@ object StackSize
       * @return A new stack size
       */
     def apply(min: Size, optimal: Size, max: Size): StackSize = apply(min, optimal, Some(max))
-    /**
-      * @param length Parallel stack length
-      * @param breadth Perpendicular stack length
-      * @param axis Axis that determines what is parallel and what is perpendicular
-      * @return A new stack size
-      */
-    def apply(length: StackLength, breadth: StackLength, axis: Axis2D): StackSize = axis match 
-    {
-        case X => StackSize(length, breadth)
-        case Y => StackSize(breadth, length)
-    }
     
     /**
       * @param optimal Optimal size
@@ -126,36 +127,36 @@ object StackSize
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-case class StackSize(override val dimensions2D: Pair[StackLength])
-    extends TwoDimensional[StackLength] with StackInsetsConvertible with LinearScalable[StackSize]
-        with SelfCombinable[StackSize]
+class StackSize private(override val dimensions: Dimensions[StackLength])
+    extends Dimensional[StackLength, StackSize] with StackInsetsConvertible with LinearScalable[StackSize]
+        with SelfCombinable[StackSize] with EqualsBy
 {
     // COMPUTED PROPERTIES    --------
     
     /**
       * @return Width of this size
       */
-    def width = dimensions2D.first
+    def width = x
     /**
       * @return Height of this size
       */
-    def height = dimensions2D.second
+    def height = y
     
     /**
       * @return Minimum size
       */
-    def min = Size(dimensions2D.map { _.min })
+    def min = Size(dimensions.map { _.min })
     /**
       * @return Optimum size
       */
-    def optimal = Size(dimensions2D.map { _.optimal })
+    def optimal = Size(dimensions.map { _.optimal })
     /**
       * @return Maximum size. None if not specified
       */
     def max = 
     {
-        if (dimensions2D.forall { _.max.isDefined })
-            Some(Size(dimensions2D.map { _.max.get }))
+        if (dimensions.forall { _.max.isDefined })
+            Some(Size(dimensions.map { _.max.get }))
         else
             None
     }
@@ -212,15 +213,15 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
     /**
       * @return A copy of this size with low priority for both width and height
       */
-    def withLowPriority = mapSides { _.withLowPriority }
+    def withLowPriority = mapEachDimension { _.withLowPriority }
     /**
       * @return A copy of this size that is more easily shrinked
       */
-    def shrinking = mapSides { _.shrinking }
+    def shrinking = mapEachDimension { _.shrinking }
     /**
       * @return A copy of this size that is more easily expanded
       */
-    def expanding = mapSides { _.expanding }
+    def expanding = mapEachDimension { _.expanding }
     
     /**
      * @return The components that form this stack size
@@ -231,13 +232,15 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
     
     // IMPLEMENTED    ----------------
     
-    override def toInsets = StackInsets.symmetric(this)
+    override def withDimensions(newDimensions: Dimensions[StackLength]) = StackSize(newDimensions)
     
-    override def zeroDimension = StackLength.any
+    override protected def equalsProperties = dimensions
+    
+    override def toInsets = StackInsets.symmetric(this)
     
     override def toString = s"[$width, $height]"
     
-    override def *(multi: Double) = StackSize(dimensions2D.map { _ * multi })
+    override def *(multi: Double) = withDimensions(dimensions.map { _ * multi })
     
     override def +(other: StackSize) = mergeWith(other) { _ + _ }
     
@@ -329,6 +332,7 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param map A mapping function
       * @return A copy of this size with a mapped side
       */
+    @deprecated("Please use mapDimension instead", "v2.0")
     def mapSide(axis: Axis2D)(map: StackLength => StackLength) = axis match
     {
         case X => mapWidth(map)
@@ -339,7 +343,8 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param map A mapping function
       * @return A new size
       */
-    def mapSides(map: StackLength => StackLength) = StackSize(dimensions2D.map(map))
+    @deprecated("Please use mapEachDimension instead", "v2.0")
+    def mapSides(map: StackLength => StackLength) = mapEachDimension(map)
     
     /**
       * Maps both sides of this stack size using specified function
@@ -353,7 +358,8 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param axis Targeted axis
       * @return A copy of this stack size with specified length priority on targeted axis
       */
-    def withPriorityFor(priority: LengthPriority, axis: Axis2D) = mapSide(axis) { _.withPriority(priority) }
+    def withPriorityFor(priority: LengthPriority, axis: Axis2D) =
+        mapDimension(axis) { _.withPriority(priority) }
     /**
       * @param axis Target axis
       * @return A copy of this size with low priority for specified axis
@@ -382,7 +388,7 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param axis target axis
       * @return A copy of this size with new maximum length for specified side
       */
-    def withMaxSide(maxLength: Double, axis: Axis2D) = mapSide(axis) { _.withMax(maxLength) }
+    def withMaxSide(maxLength: Double, axis: Axis2D) = mapDimension(axis) { _.withMax(maxLength) }
     /**
       * @param maxW New maximum width
       * @return A copy of this size with specified maximum width
@@ -404,7 +410,7 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param axis Target axis
       * @return A copy of this size with specified optimal length for the specified axis
       */
-    def withOptimalSide(optimalLength: Double, axis: Axis2D) = mapSide(axis) { _.withOptimal(optimalLength) }
+    def withOptimalSide(optimalLength: Double, axis: Axis2D) = mapDimension(axis) { _.withOptimal(optimalLength) }
     /**
       * @param optimalW New optimal width
       * @return A copy of this size with specified optimal width
@@ -426,7 +432,7 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       * @param axis Target axis
       * @return A copy of this size with specified minimum length for the specified axis
       */
-    def withMinSide(minLength: Double, axis: Axis2D) = mapSide(axis) { _.withMin(minLength) }
+    def withMinSide(minLength: Double, axis: Axis2D) = mapDimension(axis) { _.withMin(minLength) }
     /**
       * @param minW A new minimum width
       * @return A copy of this size with specified minimum width
@@ -484,7 +490,4 @@ case class StackSize(override val dimensions2D: Pair[StackLength])
       */
     def fitsWithin(limits: StackSize) = Axis2D.values
         .forall { axis => along(axis).fitsWithin(limits.along(axis)) }
-    
-    private def mergeWith[B](other: MultiDimensional[B])(f: (StackLength, B) => StackLength) =
-        StackSize(dimensions2D.mergeWith(other.dimensions2D)(f))
 }

@@ -9,8 +9,8 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size, Vector2D}
-import utopia.paradigm.shape.template.Dimensional
 import utopia.genesis.util.Drawer
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
 
@@ -115,7 +115,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Scales the size of this image
 	  * @param mod Size scaling factor
 	  */
-	def *=(mod: Dimensional[Double]) = scaling *= mod
+	def *=(mod: HasDoubleDimensions) = scaling *= mod
 	
 	/**
 	  * Divides the size of this image
@@ -178,14 +178,14 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * expand over the area along one axis
 	  * @param area Area to fill
 	  */
-	def resizeToFill(area: Size) = if (size.nonZero) *=((area / size).dimensions2D.max)
+	def resizeToFill(area: Size) = if (size.nonZero) *=((area / size).xyPair.max)
 	
 	/**
 	  * Resizes this image to exactly fit the specified area. Preserves shape, though, which may cause this image to
 	  * shrink inside the area along one axis
 	  * @param area Area to fit to
 	  */
-	def resizeToFit(area: Size) = if (size.nonZero) *=((area / size).dimensions2D.min)
+	def resizeToFit(area: Size) = if (size.nonZero) *=((area / size).xyPair.min)
 	
 	/**
 	  * Makes sure this image fills the specified area. If this image is already larger than the area, does nothing

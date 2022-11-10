@@ -5,7 +5,8 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, TwoDimensional}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
 
 import javax.swing.SwingConstants
 import scala.collection.immutable.HashMap
@@ -15,7 +16,7 @@ import scala.collection.immutable.HashMap
   * @author Mikko Hilpinen
   * @since Genesis 22.4.2019
   */
-sealed trait Alignment extends TwoDimensional[LinearAlignment]
+sealed trait Alignment extends HasDimensions[LinearAlignment]
 {
 	// ABSTRACT	----------------
 	
@@ -61,7 +62,7 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	/**
 	  * @return The axes supported for this alignment
 	  */
-	def affectedAxes: Set[Axis2D] = toMap2D.filter { _._2.nonZero }.keySet
+	def affectedAxes: Set[Axis2D] = Axis2D.values.iterator.filter { along(_).nonZero }.toSet
 	
 	/**
 	  * @return Whether this alignment moves items along the horizontal axis (X)
@@ -83,8 +84,7 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	/**
 	  * @return Directions this alignment will try to move contents
 	  */
-	def directions: Vector[Direction2D] =
-		toMap2D.flatMap { case (axis, alignment) => alignment.direction.map { axis(_) } }.toVector
+	def directions: Vector[Direction2D] = Axis2D.values.flatMap { axis => along(axis).direction.map { axis(_) } }
 	
 	/**
 	  * @return The direction this alignment will move the items horizontally. None if this alignment doesn't
@@ -139,9 +139,8 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	
 	// IMPLEMENTED  ------------
 	
-	override def dimensions2D = Pair(horizontal, vertical)
-	
-	override def zeroDimension = Middle
+	override def dimensions =
+		Dimensions[LinearAlignment](Middle)(Pair(horizontal, vertical))
 	
 	override def x = horizontal
 	override def y = vertical
@@ -214,7 +213,7 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	  * @return Location of a point within that area (relative position)
 	  */
 	def origin(within: Size) =
-		Point.of(toMap2D.map { case (axis, alignment) => axis -> alignment.origin(within.along(axis)) })
+		Point(dimensions.zipWithAxis.map { case (alignment, axis) => alignment.origin(within.along(axis)) })
 	/**
 	  * @param within An area within which a point is aligned
 	  * @return Location of a point within that area
@@ -228,8 +227,8 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	  * @return The top left coordinate of the area when positioned according to this alignment
 	  */
 	def position(area: Size, within: Bounds) =
-		Point.of(toMap2D.map { case (axis, alignment) =>
-			axis -> (within.position.along(axis) + alignment.position(area.along(axis), within.size.along(axis)))
+		Point(dimensions.zipWithAxis.map { case (alignment, axis) =>
+			within.position.along(axis) + alignment.position(area.along(axis), within.size.along(axis))
 		})
 	/**
 	  * Positions a 2D area within another 2D area. Won't check whether the area would fit within the boundaries.
@@ -239,8 +238,8 @@ sealed trait Alignment extends TwoDimensional[LinearAlignment]
 	  *         relative to the containment area top left position.
 	  */
 	def position(area: Size, within: Size): Point =
-		Point.of(toMap2D.map { case (axis, alignment) =>
-			axis -> alignment.position(area.along(axis), within.along(axis))
+		Point(dimensions.zipWithAxis.map { case (alignment, axis) =>
+			alignment.position(area.along(axis), within.along(axis))
 		})
 	
 	/**

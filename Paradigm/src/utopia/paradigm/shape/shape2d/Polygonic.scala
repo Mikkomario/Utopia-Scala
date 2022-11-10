@@ -3,6 +3,7 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.shape.template.DoubleVectorLike
 import utopia.paradigm.transform.Transformable
 
 import java.awt.Shape
@@ -206,7 +207,8 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		Line(start, end)
 	}
 	
-	override def contains[V <: Vector2DLike[V]](point: V) = collisionAxes.forall { containsProjection(point, _) }
+	override def contains[V <: DoubleVectorLike[V]](point: V) =
+		collisionAxes.forall { containsProjection(point, _) }
 	
 	override def transformedWith(transformation: Matrix3D): Polygonic =
 		Polygon(corners.map { transformation(_).toPoint }.toVector)

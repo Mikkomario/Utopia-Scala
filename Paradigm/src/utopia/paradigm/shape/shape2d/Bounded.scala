@@ -2,12 +2,14 @@ package utopia.paradigm.shape.shape2d
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
+import utopia.paradigm.shape.template.DoubleVectorLike
 
 /**
   * Common trait for shapes that can specify a bounding box
   * @author Mikko Hilpinen
   * @since Genesis 15.5.2021, v2.5.1
   */
+// TODO: Rename to HasBounds
 trait Bounded extends Sized with Area2D
 {
 	// ABSTRACT --------------------------
@@ -58,7 +60,7 @@ trait Bounded extends Sized with Area2D
 	
 	override def size = bounds.size
 	
-	override def contains[V <: Vector2DLike[V]](point: V) =
+	override def contains[V <: DoubleVectorLike[V]](point: V) =
 		point.x >= leftX && point.y >= topY && point.x <= rightX && point.y <= bottomY
 	
 	

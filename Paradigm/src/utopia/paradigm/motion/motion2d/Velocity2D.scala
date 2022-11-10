@@ -8,12 +8,13 @@ import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.motion.template.{ChangeFromModelFactory, ModelConvertibleChange, VelocityLike}
-import utopia.paradigm.shape.shape2d.{TwoDimensional, Vector2D}
-import utopia.paradigm.shape.template.VectorLike
+import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, DoubleVectorLike, HasDimensions}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
-object Velocity2D extends ChangeFromModelFactory[Velocity2D, Vector2D]
+object Velocity2D
+	extends DimensionsWrapperFactory[LinearVelocity, Velocity2D] with ChangeFromModelFactory[Velocity2D, Vector2D]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -24,6 +25,19 @@ object Velocity2D extends ChangeFromModelFactory[Velocity2D, Vector2D]
 	
 	
 	// IMPLEMENTED  -------------------------
+	
+	override def zeroDimension = LinearVelocity.zero
+	
+	override def apply(dimensions: Dimensions[LinearVelocity]) = {
+		val duration = dimensions.x.duration
+		apply(Vector2D(dimensions.map { _ over duration }), duration)
+	}
+	
+	override def from(other: HasDimensions[LinearVelocity]) = other match {
+		case v: Velocity2D => v
+		case v3: Velocity3D => v3.in2D
+		case o => apply(o.dimensions)
+	}
 	
 	override protected def amountFromValue(value: Value) = value.tryVector2D
 	
@@ -47,19 +61,14 @@ object Velocity2D extends ChangeFromModelFactory[Velocity2D, Vector2D]
   */
 case class Velocity2D(transition: Vector2D, override val duration: Duration)
 	extends VelocityLike[Vector2D, Velocity2D] with ModelConvertibleChange[Vector2D, Velocity2D]
-		with TwoDimensional[LinearVelocity] with ValueConvertible
+		with ValueConvertible
 {
-	// ATTRIBUTES   -------------
-	
-	override val dimensions2D = transition.dimensions2D.map { LinearVelocity(_, duration) }
-	
-	
 	// COMPUTED	-----------------
 	
 	/**
 	  * @return A 3D copy of this velocity
 	  */
-	def in3D = Velocity3D(transition.in3D, duration)
+	def in3D = Velocity3D(transition.toVector3D, duration)
 	
 	
 	// IMPLEMENTED	-------------
@@ -72,8 +81,10 @@ case class Velocity2D(transition: Vector2D, override val duration: Duration)
 	
 	override protected def buildCopy(transition: Vector2D, duration: Duration) = copy(transition, duration)
 	
-	override def projectedOver[V <: VectorLike[V]](vector: VectorLike[V]) =
-		Velocity2D(transition.projectedOver(vector), duration)
+	override def withDimensions(newDimensions: Dimensions[LinearVelocity]) =
+		copy(Vector2D(newDimensions.map { _ over duration }))
+	
+	override def projectedOver[V <: DoubleVectorLike[V]](vector: V) = Velocity2D(transition.projectedOver(vector), duration)
 	
 	
 	// OTHER	-----------------

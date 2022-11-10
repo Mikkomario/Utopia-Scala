@@ -4,16 +4,17 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
-import utopia.flow.generic.model.template.{ModelLike, ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property, ValueConvertible}
 import utopia.flow.operator.ApproxEquals
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
 import utopia.paradigm.generic.ParadigmDataType.AffineTransformationType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D, Vector2DLike}
+import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.DoubleVector
 
 object AffineTransformation extends SureFromModelFactory[AffineTransformation]
 {
@@ -86,6 +87,8 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     
     // IMPLEMENTED  -----------------
     
+    override def repr = toMatrix
+    
     override def scaling = linear.scaling
     
     override def shear = linear.shear
@@ -140,7 +143,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * Transforms a vector into this transformed coordinate system
       * @param vector a (relative) vector that will be transformed to this coordinate system
       */
-    def apply[V <: Vector2DLike[V]](vector: V) = vector * toMatrix
+    def apply[V <: AffineTransformable[V]](vector: V) = vector * toMatrix
     
     
     // OTHER METHODS    -------------
@@ -151,17 +154,15 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * @return The (relative) vector that would produce the specified vector when transformed. None if this
       *         transformation maps all vectors to a single line or a point (scaling of 0 was applied)
       */
-    def invert[V <: Vector2DLike[V]](vector: V) = toMatrix.inverse.map { vector * _ }
+    def invert[V <: AffineTransformable[V]](vector: V) = toMatrix.inverse.map { vector * _ }
     
     /**
       * Rotates this transformation around the specified point or origin
       * @param origin Point around which this transformation is rotated (in transformed coordinate system)
       * @param rotation Rotation to apply
-      * @tparam V Type of origin point vector
       * @return Rotated copy of this transformation
       */
-    def rotatedAround[V <: Vector2DLike[V]](origin: V, rotation: Rotation) =
-    {
+    def rotatedAround(origin: DoubleVector, rotation: Rotation) = {
         if (rotation.isZero)
             toMatrix
         else if (origin.isZero)
@@ -172,15 +173,13 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
             translated(-origin).rotated(rotation).translated(origin)
         }
     }
-    
     /**
       * Rotates this transformation around the specified point or origin
       * @param origin Point around which this transformation is rotated (in pre-transformed coordinate system)
       * @param rotation Rotation to apply
-      * @tparam V Type of origin point vector
       * @return Rotated copy of this transformation
       */
-    def rotatedAroundRelative[V <: Vector2DLike[V]](origin: V, rotation: Rotation) =
+    def rotatedAroundRelative(origin: DoubleVector, rotation: Rotation) =
         rotatedAround(apply(origin), rotation)
     
     /**
@@ -192,8 +191,8 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * @param translation A new translation value
       * @return A copy of this transformation with new translation
       */
-    def withTranslation(translation: Dimensional[Double]) =
-        copy(translation = Vector2D.withDimensions(translation.dimensions))
+    def withTranslation(translation: HasDoubleDimensions) =
+        copy(translation = Vector2D.from(translation))
     
     /**
      * Copies this transformation, giving it a new position

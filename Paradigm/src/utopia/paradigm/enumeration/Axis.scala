@@ -3,9 +3,6 @@ package utopia.paradigm.enumeration
 import utopia.flow.operator.{RichComparable, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.shape2d.Vector2D
-import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.VectorLike
 
 /**
   * An axis specifies the plane or the binary direction on which a length applies,
@@ -21,18 +18,6 @@ sealed trait Axis extends RichComparable[Axis]
       * @return The index of this axis in a context where dimensions are stored within an array or a sequence
       */
     def index: Int
-    
-    /**
-      * A unit vector along this axis
-      */
-    @deprecated("Replaced with unit", "v1.1")
-    def toUnitVector: VectorLike[_ <: VectorLike[_]]
-    
-    /**
-      * @return A 3D unit vector along this axis
-      */
-    @deprecated("Replaced with unit", "v1.1")
-    def toUnitVector3D: Vector3D
     
     
     // COMPUTED ------------------------
@@ -63,8 +48,6 @@ sealed trait Axis2D extends Axis
 {
     // ABSTRACT ----------------------------
     
-    override def toUnitVector: Vector2D
-    
     /**
       * The axis perpendicular to this one
       */
@@ -92,11 +75,6 @@ sealed trait Axis2D extends Axis
       * @return Backward (negative) direction on this axis
       */
     def backward = toDirection(Negative)
-    
-    
-    // IMPLEMENTED  -------------------------
-    
-    override def toUnitVector3D = toUnitVector.in3D
     
     
     // OTHER    ----------------------------
@@ -167,7 +145,6 @@ object Axis
     case object X extends Axis2D
     {
         override def index = 0
-        def toUnitVector = Vector2D(1)
         def perpendicular = Y
         def apply(alignment: LinearAlignment): Alignment = Alignment.horizontal(alignment)
     }
@@ -178,7 +155,6 @@ object Axis
     case object Y extends Axis2D
     {
         override def index = 1
-        def toUnitVector = Vector2D(0, 1)
         def perpendicular = X
         def apply(alignment: LinearAlignment): Alignment = Alignment.vertical(alignment)
     }
@@ -189,7 +165,5 @@ object Axis
     case object Z extends Axis
     {
         override def index = 2
-        def toUnitVector = Vector3D(0, 0, 1)
-        override def toUnitVector3D = toUnitVector
     }
 }

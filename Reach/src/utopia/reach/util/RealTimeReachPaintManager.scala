@@ -154,9 +154,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			// Invalidates buffer
 			bufferPointer.clear()
 			// Repaints the old area
-			val transitionDimensions = transition.toMap2D
-			Axis2D.values.find { transitionDimensions.get(_).forall { _ == 0.0 } } match
-			{
+			Axis2D.values.find { transition.along(_) == 0.0 } match {
 				// If the translation only affected one axis, uses minimum repaint area
 				case Some(noMovementAxis) =>
 					val movementAxis = noMovementAxis.perpendicular

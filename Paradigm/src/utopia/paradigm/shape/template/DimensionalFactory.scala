@@ -1,10 +1,22 @@
 package utopia.paradigm.shape.template
 
-import utopia.paradigm.enumeration.Axis
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.shape.template.DimensionalFactory.MappedDimensionalFactory
+
+import scala.collection.BuildFrom
+import scala.language.implicitConversions
 
 object DimensionalFactory
 {
+	// IMPLICIT -------------------------
+	
+	implicit def factoryToBuildFrom[D, R](f: DimensionalFactory[D, R]): BuildFrom[Any, D, R] =
+		new BuildDimensionalFrom[D, R](f)
+	
+	
+	// NESTED   -------------------------
+	
 	private class MappedDimensionalFactory[D, Mid, R](o: DimensionalFactory[D, Mid])(f: Mid => R)
 		extends DimensionalFactory[D, R]
 	{
@@ -13,6 +25,13 @@ object DimensionalFactory
 		override def apply(values: IndexedSeq[D]) = f(o(values))
 		override def apply(values: Map[Axis, D]) = f(o(values))
 		override def from(values: IterableOnce[D]) = f(o.from(values))
+	}
+	
+	private class BuildDimensionalFrom[-A, +To](f: DimensionalFactory[A, To]) extends BuildFrom[Any, A, To]
+	{
+		override def newBuilder(from: Any) = f.newBuilder
+		
+		override def fromSpecific(from: Any)(it: IterableOnce[A]) = f.from(it)
 	}
 }
 
@@ -62,7 +81,31 @@ trait DimensionalFactory[-D, +R]
 	  * @param values Dimensions to assign (ordered)
 	  * @return A set of dimensions based on the specified values
 	  */
-	def apply(values: D*): R = apply(values.toIndexedSeq)
+	def apply(values: D*): R = apply(values.toVector)
+	
+	/**
+	  * @param parallel Dimension parallel to the specified axis
+	  * @param perpendicular Dimension perpendicular to the specified axis
+	  * @param along An axis
+	  * @return An item with X and Y dimensions based on the specified values
+	  */
+	def apply(parallel: D, perpendicular: D, along: Axis2D): R = along match {
+		case X => apply(parallel, perpendicular)
+		case Y => apply(perpendicular, parallel)
+	}
+	
+	/**
+	  * @param length Target dimensions count
+	  * @param elem An element to fill the dimensions up to 'length' (call-by-name)
+	  * @return A new item with 'length' many 'elem' dimensions
+	  */
+	def fill(length: Int)(elem: => D) = apply(Vector.fill(length)(elem))
+	/**
+	  * @param length Target dimensions count [0, 3]
+	  * @param f A function that accepts an axis and returns a dimension for that axis
+	  * @return A new set of dimension based on the specified function's values
+	  */
+	def iterate(length: Int)(f: Axis => D) = apply(Axis.values.take(length).map(f))
 	
 	/**
 	  * Maps all items built with this factory

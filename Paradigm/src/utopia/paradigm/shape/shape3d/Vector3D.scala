@@ -6,17 +6,19 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.operator.EqualsBy
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
-import utopia.paradigm.shape.shape2d.{Point, Size, Vector2D, Vector2DLike}
+import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
 
 import scala.concurrent.duration.Duration
 
-object Vector3D extends SureFromModelFactory[Vector3D]
+object Vector3D extends VectorFactory[Vector3D] with SureFromModelFactory[Vector3D]
 {
     // ATTRIBUTES    --------------------
     
@@ -27,7 +29,7 @@ object Vector3D extends SureFromModelFactory[Vector3D]
     /**
      * The zero vector (0, 0, 0)
      */
-    val zero = Vector3D()
+    val zero = empty
     /**
      * A vector with the length of 1
      */
@@ -36,6 +38,13 @@ object Vector3D extends SureFromModelFactory[Vector3D]
     
     // IMPLEMENTED    ---------------------
 	
+	override def apply(dimensions: Dimensions[Double]) = new Vector3D(dimensions.withLength(3))
+	
+	override def from(other: HasDimensions[Double]) = other match {
+		case v: Vector3D => v
+		case o => apply(o.dimensions)
+	}
+	
 	override def parseFrom(model: template.ModelLike[Property]) =
 		Vector3D(model("x").getDouble, model("y").getDouble, model("z").getDouble)
     
@@ -43,20 +52,16 @@ object Vector3D extends SureFromModelFactory[Vector3D]
     // OTHER METHODS    -----------------
     
     /**
-     * Creates a new vector with specified length and direction
-     */
-    def lenDir(length: Double, direction: Angle) = Vector3D(
-            math.cos(direction.radians) * length, math.sin(direction.radians) * length)
-    
-    /**
      * Converts a coordinate map into a vector
      */
-    def of(map: Map[Axis, Double]) = Vector3D(map.getOrElse(X, 0), map.getOrElse(Y, 0), map.getOrElse(Z, 0))
+    @deprecated("Please use apply instead", "v1.2")
+    def of(map: Map[Axis, Double]) = apply(map)
 	
 	/**
 	  * @param dimensions An array of dimensions (x, y, z, ...)
 	  * @return A 3D vector based on the specified dimensions
 	  */
+	@deprecated("Please use apply instead", "v1.2")
 	def withDimensions(dimensions: Seq[Double]) =
 	{
 		if (dimensions.size >= 3)
@@ -85,54 +90,6 @@ object Vector3D extends SureFromModelFactory[Vector3D]
 		 */
         Vector3D(u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x)
     }
-    
-    /**
-     * Calculates the average point of the provided vectors
-     * @return The average point of the provided vectors
-     * @throws UnsupportedOperationException If the collection is empty
-     */
-    @throws(classOf[UnsupportedOperationException])
-    def average(vectors: Iterable[Vector3D]) = vectors.reduceLeft { _ + _ } / vectors.size
-    
-    /**
-     * Calculates the average point of the provided vectors
-     * @return The average point of the provided vectors. None if collection is empty
-     */
-    def averageOption(vectors: Iterable[Vector3D]) =
-    {
-        if (vectors.isEmpty)
-            None
-        else
-            vectors.reduceLeftOption(_ + _).map(_ / vectors.size)
-    }
-	
-    /**
-     * The top left corner of a bounds between the two vertices. In other words,
-     * creates a vector that has the smallest available value on each axis from the two candidates
-     */
-	@deprecated("Please call through the vector instance", "v2")
-    def topLeft(first: Vector3D, second: Vector3D) = combine(first, second, (a, b) => if (a <= b) a else b)
-    
-    /**
-     * The top left corner of a bounds around the vertices. In other words,
-     * creates a vector that has the smallest available value on each axis from all the candidates.
-     * None if the provided collection is empty
-     */
-    def topLeft(vectors: IterableOnce[Vector3D]): Option[Vector3D] = vectors.iterator.reduceOption { _ topLeft _ }
-    
-    /**
-     * The bottom right corner of a bounds between the two vertices. In other words,
-     * creates a vector that has the largest available value on each axis from the two candidates
-     */
-	@deprecated("Please call through the vector instance", "v2")
-    def bottomRight(first: Vector3D, second: Vector3D) = combine(first, second, (a, b) => if (a >= b) a else b)
-    
-    /**
-     * The bottom right corner of a bounds around the vertices. In other words,
-     * creates a vector that has the largest available value on each axis from all the candidates.
-     * None if the provided collection is empty
-     */
-    def bottomRight(vectors: IterableOnce[Vector3D]): Option[Vector3D] = vectors.iterator.reduceOption { _ bottomRight _ }
 	
     /**
      * Combines two vectors into a third vector using a binary operator
@@ -141,6 +98,7 @@ object Vector3D extends SureFromModelFactory[Vector3D]
      * @param f The binary operator that determines the coordinates of the returned vector
      * @return A vector with values combined from the two vectors using the provided operator
      */
+    @deprecated("Please use first.mergeWith(second)(f) instead", "v1.2")
     def combine(first: Vector3D, second: Vector3D, f: (Double, Double) => Double) = 
     {
         val v1 = first.toVector
@@ -158,6 +116,7 @@ object Vector3D extends SureFromModelFactory[Vector3D]
      * @param condition The binary operator that determines the return value of the function
      * @return True if the condition returned true for any two coordinates, false otherwise
      */
+    @deprecated("Deprecated for removal", "v1.2")
     def exists(first: Vector3D, second: Vector3D, condition: (Double, Double) => Boolean): Boolean = 
     {
         val v1 = first.toVector
@@ -179,6 +138,7 @@ object Vector3D extends SureFromModelFactory[Vector3D]
      * @param condition The binary operator that determines the return value of the function
      * @return True if the condition returned true for every two coordinates, false otherwise
      */
+    @deprecated("Deprecated for removal", "v1.2")
     def forall(first: Vector3D, second: Vector3D, condition: (Double, Double) => Boolean) = 
             !exists(first, second, { !condition(_, _) })
 }
@@ -189,69 +149,35 @@ object Vector3D extends SureFromModelFactory[Vector3D]
  * @author Mikko Hilpinen
  * @since Genesis 24.12.2016
  */
-case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, override val z: Double = 0.0)
-	extends Vector2DLike[Vector3D] with ValueConvertible with ModelConvertible
-		with ThreeDimensional[Double]
+class Vector3D private(override val dimensions: Dimensions[Double])
+	extends DoubleVectorLike[Vector3D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
 {
-	// ATTRIBUTES	--------------------
+    // COMPUTED PROPERTIES    ----------
+	
+	/**
+	  * @return A 2D-copy of this vector
+	  */
+	def in2D = Vector2D.from(this)
+	
+    /**
+     * A normal for this vector
+     */
+    def normal = if (x == 0 && y == 0 && z != 0) Vector3D(1) else normal2D.toVector3D
 	
 	/**
 	  * The x, y and z components of this vector
 	  */
-	lazy val toVector = Vector(x, y, z)
-	
-	
-    // COMPUTED PROPERTIES    ----------
-    
-    /**
-     * Converts this vector to a point
-     */
-    def toPoint = Point(x, y)
-    
-    /**
-     * Converts this vector to a size
-     */
-    def toSize = Size(x, y)
-    
-    /**
-     * This vector's direction on the z-y plane
-     */
-    def xDirection = Angle ofRadians calculateDirection(z, y)
-    
-    /**
-     * This vector's direction on the x-z plane
-     */
-    def yDirection = Angle ofRadians calculateDirection(x, z)
-    
-    /**
-     * Calculates this vectors direction around the specified axis
-     */
-    def directionAround(axis: Axis) = axis match
-	{
-		case X => xDirection
-		case Y => yDirection
-		case Z => direction
-	}
-    
-    /**
-     * A normal for this vector
-     */
-    def normal = if (x == 0 && y == 0 && z != 0) Vector3D(1) else normal2D.in3D
-	
-	/**
-	  * @return A 3x3 matrix based on this 3d vector. The natural 1x3 matrix representation [x,y,z] of this vector
-	  *         is expanded to 3x3 by adding missing numbers from the identity matrix.
-	  */
-	def to3DMatrix = Matrix3D(
-		x, y, z,
-		0, 1, 0,
-		0, 0, 1
-	)
+	@deprecated("Please rather use .dimensions", "v1.2")
+	def toVector = Vector(x, y, z)
     
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def equalsProperties = dimensions
+	
 	override def zero = Vector3D.zero
+	
+	override protected def factory = Vector3D
 	
 	override def toString = s"($x, $y, $z)"
 	
@@ -260,22 +186,6 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	override def toValue = new Value(Some(this), Vector3DType)
 	
 	override def toModel = Model.fromMap(Map("x" -> x, "y" -> y, "z" -> z).filterNot { _._2 ~== 0.0 })
-	
-	/**
-	  * @return The X, Y, Z ... dimensions of this vectorlike instance. No specific length required, however.
-	  */
-	override def dimensions = toVector
-	
-	override def buildCopy(vector: Vector2D) = vector.in3D
-	
-	override def buildCopy(vector: Vector3D) = vector
-	
-	/**
-	  * Builds a new vectorlike instance from the provided dimensions
-	  * @param dimensions A set of dimensions
-	  * @return A parsed version of the dimensions
-	  */
-	override def buildCopy(dimensions: IndexedSeq[Double]) = Vector3D.withDimensions(dimensions)
     
     
     // OTHER METHODS    ----------------
@@ -334,7 +244,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
      */
     def withYDirection(direction: Angle) = 
     {
-        val zRotated = in2D.withDirection(direction)
+        val zRotated = toVector2D.withDirection(direction)
         Vector3D(zRotated.x, y, zRotated.y)
     }
     
@@ -344,15 +254,18 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
      * @param origin The point this vector is rotated around (defaults to zero)
      * @return The rotated vector
      */
-    def rotatedRads(rotationRads: Double, origin: Vector3D = Vector3D.zero) = rotated(Rotation ofRadians rotationRads)
-    
+    @deprecated("Deprecated for removal", "v1.2")
+    def rotatedRads(rotationRads: Double, origin: Vector3D = Vector3D.zero) =
+	    rotated(Rotation ofRadians rotationRads)
     /**
      * Rotates the vector around a certain origin point
      * @param rotationDegs The amount of rotation in degrees
      * @param origin The point this vector is rotated around (default to zero)
      * @return The rotated vector
      */
-    def rotatedDegs(rotationDegs: Double, origin: Vector3D = Vector3D.zero) = rotated(Rotation ofDegrees rotationDegs)
+    @deprecated("Deprecated for removal", "v1.2")
+    def rotatedDegs(rotationDegs: Double, origin: Vector3D = Vector3D.zero) =
+	    rotated(Rotation ofDegrees rotationDegs)
 	
 	/**
 	  * Converts this vector to a velocity vector
@@ -360,6 +273,4 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  * @return A velocity vector
 	  */
 	def traversedIn(time: Duration) = Velocity3D(this, time)
-	
-    private def calculateDirection(x: Double, y: Double) = math.atan2(y, x)
 }

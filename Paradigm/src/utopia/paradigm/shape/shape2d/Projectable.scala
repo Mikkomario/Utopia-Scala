@@ -3,6 +3,8 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Projectable.PointOrdering
+import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 object Projectable
 {
@@ -50,7 +52,7 @@ trait Projectable
     /**
       * Projects this shape, creating a line parallel to the provided axis
       */
-    def projectedOver(axis: Axis2D): Line = projectedOver(axis.toUnitVector)
+    def projectedOver(axis: Axis2D): Line = projectedOver(axis.unit.toVector2D)
     
     /**
     * Calculates if / how much the projections of the two shapes overlap on the specified axis
@@ -101,7 +103,7 @@ trait Projectable
       * @return Whether the projected point is contained within this object's projection when considering only the
       *         specified axis
       */
-    def containsProjection[V <: Vector2DLike[V]](point: V, axis: Vector2D) =
+    def containsProjection[V <: DoubleVectorLike[V]](point: V, axis: Vector2D) =
     {
         val pointProjection = point.projectedOver(axis)
         val myProjection = projectedOver(axis)
@@ -116,7 +118,7 @@ trait Projectable
         if (comparePoints(projection.start, projection.end) <= 0) projection else projection.reverse
     }
     
-    protected def comparePoints(v1: MultiDimensional[Double], v2: MultiDimensional[Double]) =
+    protected def comparePoints(v1: HasDoubleDimensions, v2: HasDoubleDimensions) =
     {
         if (v1.x < v2.x) { -1 }
         else if (v1.x > v2.x) { 1 }

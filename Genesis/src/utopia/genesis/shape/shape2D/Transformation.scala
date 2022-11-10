@@ -3,7 +3,8 @@ package utopia.genesis.shape.shape2D
 import java.awt.geom.AffineTransform
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.shape.shape2d
-import utopia.paradigm.shape.template.{Dimensional, VectorLike}
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.DoubleVectorLike
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 @deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
@@ -28,7 +29,7 @@ object Transformation
       * @param amount Translation vector
       * @return A new transformation with only translation included
       */
-    def translation(amount: Dimensional[Double]): Transformation = translation(shape2d.Vector2D.withDimensions(amount.dimensions))
+    def translation(amount: HasDoubleDimensions): Transformation = translation(shape2d.Vector2D.from(amount))
     
     /**
       * @param x Translation x-wise
@@ -223,8 +224,8 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * Transforms a <b>relative</b> point <b>into an absolute</b> point
      * @param relative a relative point that will be transformed
      */
-    def apply[V <: shape2d.Vector2DLike[_]](relative: shape2d.Vector2DLike[_ <: V]): V =
-        relative.buildCopy(apply(shape2d.Point(relative.x, relative.y)).dimensions)
+    def apply[V <: DoubleVectorLike[V]](relative: V): V =
+        relative.withDimensions(apply(shape2d.Point(relative.x, relative.y)).dimensions)
     
     /**
      * Transforms a shape <b>from relative space to absolute space</b>
@@ -256,8 +257,8 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * @param absolute a vector in absolute world space
      * @return The absolute point in relative world space
      */
-    def invert[V  <: shape2d.Vector2DLike[_]](absolute: shape2d.Vector2DLike[_ <: V]): V =
-        absolute.buildCopy(invert(shape2d.Point(absolute.x, absolute.y)).dimensions)
+    def invert[V  <: DoubleVectorLike[V]](absolute: V): V =
+        absolute.withDimensions(invert(shape2d.Point(absolute.x, absolute.y)).dimensions)
     
     /**
      * Transforms a shape <b>from absolute space to relative space</b>
@@ -320,8 +321,8 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
       * @param translation A new translation value
       * @return A copy of this transformation with new translation
       */
-    def withTranslation(translation: Dimensional[Double]) =
-        copy(translation = shape2d.Vector2D.withDimensions(translation.dimensions))
+    def withTranslation(translation: HasDoubleDimensions) =
+        copy(translation = shape2d.Vector2D.from(translation))
     
     /**
      * Copies this transformation, giving it a new position
@@ -363,12 +364,12 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
     /**
      * Copies this transformation, changing the translation by the provided amount
      */
-    def translated(translation: VectorLike[_]) = withTranslation(this.translation + translation)
+    def translated(translation: HasDoubleDimensions) = withTranslation(this.translation + translation)
     
     /**
      * Copies this transformation, changing the scaling by the provided amount
      */
-    def scaled(scaling: VectorLike[_]) = withScaling(this.scaling * scaling)
+    def scaled(scaling: HasDoubleDimensions) = withScaling(this.scaling * scaling)
     
     /**
      * Copies this transformation, changing the scaling by the provided amount
@@ -395,5 +396,5 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
     /**
      * Copies this transformation, changing the shearing by the provided amount
      */
-    def sheared(shearing: VectorLike[_]) = withShear(shear + shearing)
+    def sheared(shearing: HasDoubleDimensions) = withShear(shear + shearing)
 }

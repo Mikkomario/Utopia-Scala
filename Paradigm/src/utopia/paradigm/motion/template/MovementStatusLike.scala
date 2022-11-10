@@ -1,6 +1,6 @@
 package utopia.paradigm.motion.template
 
-import utopia.paradigm.shape.shape2d.Vector2DLike
+import utopia.paradigm.shape.template.DoubleVectorLike
 
 import scala.concurrent.duration.Duration
 
@@ -9,7 +9,7 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */
-trait MovementStatusLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A], +Repr]
+trait MovementStatusLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A], +Repr]
 {
 	// ABSTRACT	-------------------------
 	

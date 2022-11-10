@@ -9,7 +9,7 @@ import utopia.paradigm.animation.Animation
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
@@ -178,7 +178,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 			{
 				val height = bounds.width
 				val translation = (bounds.height - height) / 2
-				Bounds(bounds.position.plusY(translation), bounds.size.withHeight(height))
+				Bounds(bounds.position + Y(translation), bounds.size.withHeight(height))
 			}
 			
 			val rounded = barBounds.toRoundedRectangle(1)

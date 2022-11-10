@@ -1,8 +1,9 @@
 package utopia.paradigm.animation.transform
 
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2DLike}
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 
 object AnimatedAffineTransformation
@@ -10,11 +11,10 @@ object AnimatedAffineTransformation
 	/**
 	  * Creates a translation animation
 	  * @param amount Translation amount as a vector
-	  * @tparam V Type of translation vector
 	  * @return A new animated transformation
 	  */
-	def translate[V <: Vector2DLike[V]](amount: V) =
-		apply { p => Matrix3D.translation(amount * p) }
+	def translate(amount: HasDoubleDimensions) =
+		apply { p => Matrix3D.translation(amount.dimensions.map { _ * p }) }
 }
 
 /**
@@ -29,6 +29,8 @@ case class AnimatedAffineTransformation(f: Double => Matrix3D)
 		with AnimatedAffineTransformable[AnimatedAffineTransformation]
 {
 	// IMPLEMENTED	------------------------------
+	
+	override def repr = this
 	
 	override def apply(progress: Double) = f(progress)
 	
@@ -52,5 +54,6 @@ case class AnimatedAffineTransformation(f: Double => Matrix3D)
 	  * @tparam A Type of transformation result
 	  * @return Transformation result
 	  */
-	def transform[A](transformable: AnimatedAffineTransformable[A]) = transformable.affineTransformedWith(this)
+	def transform[A](transformable: AnimatedAffineTransformable[A]) =
+		transformable.affineTransformedWith(this)
 }

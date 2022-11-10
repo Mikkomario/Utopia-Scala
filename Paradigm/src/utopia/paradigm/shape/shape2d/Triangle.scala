@@ -23,13 +23,18 @@ object Triangle
   */
 case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Polygonic with Transformable[Triangle]
 {
+	// ATTRIBUTES   ----------------
+	
+	lazy val corners = Vector(origin, origin + side1, origin + side2)
+	
+	
 	// IMPLEMENTED	----------------
 	
 	override def transformedWith(transformation: Matrix3D) = mapCorners { _ * transformation }
 	
 	override def transformedWith(transformation: Matrix2D) = mapCorners { _ * transformation }
 	
-	lazy val corners = Vector(origin, origin + side1, origin + side2)
+	override def repr = this
 	
 	
 	// OTHER    -------------------
