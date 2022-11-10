@@ -29,7 +29,7 @@ object Circle extends FromModelFactory[Circle]
  */
 case class Circle(origin: Point, radius: Double)
     extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
-        with LinearScalable[Circle] with Combinable[HasDoubleDimensions, Circle] with Bounded
+        with LinearScalable[Circle] with Combinable[HasDoubleDimensions, Circle] with HasBounds
 {
     // COMPUTED PROPERTIES    ---------
     

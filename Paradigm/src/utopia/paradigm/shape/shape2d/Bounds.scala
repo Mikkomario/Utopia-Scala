@@ -118,7 +118,7 @@ object Bounds extends FromModelFactory[Bounds]
  * @since Genesis 13.1.2017
  */
 case class Bounds(position: Point, override val size: Size)
-    extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds] with BoundedLike[Bounds]
+    extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds] with Bounded[Bounds]
 {
     // COMPUTED PROPERTIES    ------------
     
@@ -279,7 +279,7 @@ case class Bounds(position: Point, override val size: Size)
       * @param item An item with bounds
       * @return Whether these bounds completely contain the specified item
       */
-    def contains(item: Bounded): Boolean = contains(item.bounds)
+    def contains(item: HasBounds): Boolean = contains(item.bounds)
     /**
      * Checks whether a circle completely lies within the rectangle's bounds when the z-axis is 
      * ignored

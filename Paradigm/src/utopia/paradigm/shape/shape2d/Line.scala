@@ -89,7 +89,7 @@ object Line extends FromModelFactory[Line]
  */
 case class Line(points: Pair[Point])
     extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
-        with HasLength with Transformable[Line] with Bounded
+        with HasLength with Transformable[Line] with HasBounds
 {
     // ATTRIBUTES    -------------------
     

@@ -8,7 +8,7 @@ import utopia.genesis.graphics.Drawer3
 import utopia.genesis.util.Drawer
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size, Sized, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size, HasSize, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
@@ -17,7 +17,7 @@ import utopia.paradigm.transform.JavaAffineTransformConvertible
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2.4
   */
-trait ImageLike extends Sized
+trait ImageLike extends HasSize
 {
 	// ABSTRACT	--------------------
 	

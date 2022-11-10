@@ -64,7 +64,7 @@ object Size extends VectorFactory[Size] with FromModelFactory[Size]
 **/
 class Size private(override val dimensions: Dimensions[Double])
     extends DoubleVectorLike[Size] with DoubleVector with ValueConvertible with ModelConvertible
-        with SignedOrZero[Size] with SizedLike[Size] with EqualsBy
+        with SignedOrZero[Size] with Sized[Size] with EqualsBy
 {
     // COMPUTED    --------------------------
     

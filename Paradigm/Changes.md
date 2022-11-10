@@ -1,10 +1,13 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.2 (In Development)
-Supports changes in **Flow** v2.0
-TODO: Document changes in Dimensional (Dimensions, HasDimensions, ...)
 ### Breaking Changes
+- Rewrote **Dimensional**, **VectorLike** and similar traits completely
+  - **Dimensional** is now **HasDimensions** (a new trait with name **Dimensional** was also introduced)
+  - **VectorLike** is now **DoubleVectorLike**
 - Moved all **ParadigmDataType** objects under the **ParadigmDataType** object
+- Renamed **Sized** to **HasSize** and **Bounded** to **HasBounds**
+  - Renamed **SizedLike** to **Sized** and **BoundedLike** to **Bounded**
 
 ## v1.1 - 02.10.2022
 This is a relatively major update, most important addition in which is the **Vector1D** class.  

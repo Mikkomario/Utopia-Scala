@@ -168,7 +168,7 @@ object Image
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: Lazy[PixelTable])
-	extends ImageLike with LinearScalable[Image] with SizedLike[Image]
+	extends ImageLike with LinearScalable[Image] with Sized[Image]
 {
 	// ATTRIBUTES	----------------
 	

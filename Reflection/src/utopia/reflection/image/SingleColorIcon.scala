@@ -3,7 +3,7 @@ package utopia.reflection.image
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.{Size, SizedLike}
+import utopia.paradigm.shape.shape2d.{Size, Sized}
 import utopia.reflection.color.{ColorSet, ColorShade, ColorShadeVariant, ComponentColor}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
@@ -22,7 +22,7 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.2
   */
-class SingleColorIcon(val original: Image) extends SizedLike[SingleColorIcon]
+class SingleColorIcon(val original: Image) extends Sized[SingleColorIcon]
 {
 	// ATTRIBUTES	------------------------
 	
