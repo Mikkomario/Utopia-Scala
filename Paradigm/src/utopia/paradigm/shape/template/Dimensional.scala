@@ -1,8 +1,46 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.operator.CanBeZero
+import utopia.flow.operator.{CanBeZero, Combinable, Reversible, Scalable}
 import utopia.paradigm.enumeration.Axis
 import Axis._
+
+object Dimensional
+{
+	// EXTENSIONS   ----------------------------
+	
+	implicit class NumericDimensional[A, R](val d: Dimensional[A, R])(implicit n: Numeric[A])
+		extends Combinable[HasDimensions[A], R] with Reversible[R] with Scalable[A, R]
+	{
+		override def repr = d.repr
+		
+		override def unary_- = d.mapEachDimension(n.negate)
+		
+		override def +(other: HasDimensions[A]) = d.mergeWith(other)(n.plus)
+		override def *(mod: A) = d.mapEachDimension { n.times(_, mod) }
+	}
+	
+	implicit class CombiningDimensional[A <: Combinable[C, A], C, R](val d: Dimensional[A, R])
+		extends AnyVal with Combinable[HasDimensions[C], R]
+	{
+		override def +(other: HasDimensions[C]) = d.mergeWith(other) { _ + _ }
+	}
+	
+	implicit class ScalableDimensional[A <: Scalable[S, A], S, R](val d: Dimensional[A, R])
+		extends AnyVal with Scalable[HasDimensions[S], R]
+	{
+		override def *(mod: HasDimensions[S]) = d.mergeWith(mod) { _ * _ }
+		
+		def *(mod: S) = d.mapEachDimension { _ * mod }
+	}
+	
+	implicit class ReversibleDimensional[A <: Reversible[A], R](val d: Dimensional[A, R])
+		extends AnyVal with Reversible[R]
+	{
+		override def repr = d.repr
+		
+		override def unary_- = d.mapEachDimension { -_ }
+	}
+}
 
 /**
   * A common trait for items which have a set of dimensions (along X, Y, Z, ...),
