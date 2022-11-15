@@ -103,8 +103,7 @@ trait Projectable
       * @return Whether the projected point is contained within this object's projection when considering only the
       *         specified axis
       */
-    def containsProjection[V <: DoubleVectorLike[V]](point: V, axis: Vector2D) =
-    {
+    def containsProjection[V <: DoubleVectorLike[V]](point: V, axis: Vector2D) = {
         val pointProjection = point.projectedOver(axis)
         val myProjection = projectedOver(axis)
         

@@ -75,10 +75,10 @@ case class Circle(origin: Point, radius: Double)
     
     override def contains[V <: DoubleVectorLike[V]](point: V) = point.distanceFrom(origin) <= radius
     
-    override def projectedOver(axis: Vector2D) =
-    {
-        val projectedOrigin = origin.toVector.projectedOver(axis).toPoint
-        Line(projectedOrigin - axis.withLength(radius), projectedOrigin + axis.withLength(radius))
+    override def projectedOver(axis: Vector2D) = {
+        val projectedOrigin = origin.projectedOver(axis)
+        val radiusVector = axis.withLength(radius)
+        Line(projectedOrigin - radiusVector, projectedOrigin + radiusVector)
     }
     
     def -(another: HasDoubleDimensions) = copy(origin = origin - another)

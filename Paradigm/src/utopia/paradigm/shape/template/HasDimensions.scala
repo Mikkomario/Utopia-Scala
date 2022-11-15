@@ -60,13 +60,13 @@ trait HasDimensions[+A]
 	  * @tparam B Ordered type
 	  * @return Smallest individual dimension in this item
 	  */
-	def minDimension[B >: A](implicit ord: Ordering[B]) = (dimensions :+ dimensions.zeroValue).min(ord)
+	def minDimension[B >: A](implicit ord: Ordering[B]) = dimensions.min(ord)
 	/**
 	  * @param ord Implicit ordering to use
 	  * @tparam B Ordered type
 	  * @return Largest individual dimension in this item
 	  */
-	def maxDimension[B >: A](implicit ord: Ordering[B]) = (dimensions :+ dimensions.zeroValue).max(ord)
+	def maxDimension[B >: A](implicit ord: Ordering[B]) = dimensions.max(ord)
 	
 	
 	// OTHER    ------------------------

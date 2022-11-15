@@ -81,7 +81,7 @@ object Dimensions
 			if (values.isEmpty)
 				empty
 			else
-				apply(Axis.values.take(values.keysIterator.map { _.index }.max).map { a => values.getOrElse(a, zero) })
+				apply(Axis.values.take(values.keysIterator.map { _.index }.max + 1).map { a => values.getOrElse(a, zero) })
 		}
 		override def from(values: IterableOnce[A]) = values match {
 			case d: Dimensions[A] => d

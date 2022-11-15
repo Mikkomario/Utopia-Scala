@@ -28,7 +28,7 @@ object MatrixTest extends App
 		130, 120, 240,
 		51, 47, 73,
 		35, 33, 45
-	))
+	), m1(m2))
 	
 	// Testing matrix vector multiplication
 	val m3 = Matrix3D(
@@ -37,14 +37,14 @@ object MatrixTest extends App
 		7, 8, 9
 	)
 	val v1 = Vector3D(2, 1, 3)
-	assert(m3(v1) == Vector3D(13, 31, 49))
+	assert(m3(v1) == Vector3D(13, 31, 49), m3(v1))
 	
 	// Testing 2D matrix determinant
 	val m5 = Matrix2D(
 		4, 6,
 		3, 8
 	)
-	assert(m5.determinant == 14)
+	assert(m5.determinant == 14, m5.determinant)
 	
 	// Testing 3D matrix determinant
 	val m4 = Matrix3D(
@@ -52,7 +52,7 @@ object MatrixTest extends App
 		2, 4, 7,
 		4, 6, 2
 	)
-	assert(m4.determinant == 74)
+	assert(m4.determinant == 74, m4.determinant)
 	
 	// Testing 2D matrix inverse
 	val m6 = Matrix2D(
@@ -62,8 +62,8 @@ object MatrixTest extends App
 	assert(m6.inverse.get ~== Matrix2D(
 		0.6, -0.7,
 		-0.2, 0.4
-	))
-	assert(m6(m6.inverse.get) ~== Matrix2D.identity)
+	), m6.inverse)
+	assert(m6(m6.inverse.get) ~== Matrix2D.identity, m6(m6.inverse.get))
 	
 	// Testing 3D matrix inverse
 	val m7 = Matrix3D(

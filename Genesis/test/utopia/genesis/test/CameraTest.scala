@@ -2,8 +2,8 @@ package utopia.genesis.test
 
 import utopia.genesis.view.Canvas
 import utopia.genesis.view.MainFrame
-import java.awt.Font
 
+import java.awt.Font
 import utopia.flow.test.TestContext._
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.paradigm.shape.shape2d.{Bounds, Size}
@@ -12,20 +12,21 @@ import utopia.genesis.handling.{ActorLoop, Drawable}
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
+import utopia.paradigm.generic.ParadigmDataType
 
 object CameraTest extends App
 {
+	ParadigmDataType.setup()
+	
     class GridNumberDrawer(private val grid: GridDrawer) extends Drawable with Handleable
     {
         private val font = new Font("Arial", 0, 14)
         
-        override def draw(drawer: Drawer) = 
-        {
+        override def draw(drawer: Drawer) = {
             // Draws a number on each grid square
-            for (x <- 0 until grid.squareAmounts.x.toInt; y <- 0 until grid.squareAmounts.y.toInt)
-            {
+            for (x <- 0 until grid.squareAmounts.x.toInt; y <- 0 until grid.squareAmounts.y.toInt) {
                 drawer.drawTextCentered((y * grid.squareAmounts.x.toInt + x + 1).toString, font,
-                        Bounds(grid.squarePosition(x, y), grid.squareSize))
+	                Bounds(grid.squarePosition(x, y), grid.squareSize))
             }
         }
     }

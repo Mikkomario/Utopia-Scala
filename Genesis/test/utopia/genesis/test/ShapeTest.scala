@@ -28,8 +28,8 @@ object ShapeTest extends App
     
     val line5 = Line(Point(1, 2), Point(1, 1))
     assert(line1.intersection(line5, onlyPointsInSegment = false).isDefined)
-    assert(line1.intersection(line5).isEmpty)
-    assert(line5.intersection(line1).isEmpty)
+    assert(line1.intersection(line5).isEmpty, line1.intersection(line5))
+    assert(line5.intersection(line1).isEmpty, line5.intersection(line1))
     
     val circle1 = Circle(Point(3), 2)
     

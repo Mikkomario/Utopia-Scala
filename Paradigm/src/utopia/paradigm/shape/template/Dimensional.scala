@@ -8,7 +8,7 @@ object Dimensional
 {
 	// EXTENSIONS   ----------------------------
 	
-	implicit class NumericDimensional[A, R](val d: Dimensional[A, R])(implicit n: Numeric[A])
+	implicit class NumericDimensional[A, +R](val d: Dimensional[A, R])(implicit n: Numeric[A])
 		extends Combinable[HasDimensions[A], R] with Reversible[R] with Scalable[A, R]
 	{
 		override def repr = d.repr
@@ -19,13 +19,13 @@ object Dimensional
 		override def *(mod: A) = d.mapEachDimension { n.times(_, mod) }
 	}
 	
-	implicit class CombiningDimensional[A <: Combinable[C, A], C, R](val d: Dimensional[A, R])
+	implicit class CombiningDimensional[A <: Combinable[C, A], -C, +R](val d: Dimensional[A, R])
 		extends AnyVal with Combinable[HasDimensions[C], R]
 	{
 		override def +(other: HasDimensions[C]) = d.mergeWith(other) { _ + _ }
 	}
 	
-	implicit class ScalableDimensional[A <: Scalable[S, A], S, R](val d: Dimensional[A, R])
+	implicit class ScalableDimensional[A <: Scalable[S, A], -S, +R](val d: Dimensional[A, R])
 		extends AnyVal with Scalable[HasDimensions[S], R]
 	{
 		override def *(mod: HasDimensions[S]) = d.mergeWith(mod) { _ * _ }
@@ -33,7 +33,7 @@ object Dimensional
 		def *(mod: S) = d.mapEachDimension { _ * mod }
 	}
 	
-	implicit class ReversibleDimensional[A <: Reversible[A], R](val d: Dimensional[A, R])
+	implicit class ReversibleDimensional[A <: Reversible[A], +R](val d: Dimensional[A, R])
 		extends AnyVal with Reversible[R]
 	{
 		override def repr = d.repr

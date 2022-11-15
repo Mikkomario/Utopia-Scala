@@ -1,10 +1,9 @@
 package utopia.genesis.test
 
 import java.awt.Color
-
 import utopia.genesis.util.Drawer
 import utopia.genesis.handling.Drawable
-import utopia.paradigm.shape.shape2d.{Line, Size}
+import utopia.paradigm.shape.shape2d.{Line, Size, Vector2D}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.inception.handling.mutable.Handleable
 
@@ -57,7 +56,7 @@ class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable with Ha
      * @param x The x-index of the square
      * @param y The y-index of the square
      */
-    def squarePosition(x: Int, y: Int) = position + squareSize * Vector3D(x, y)
+    def squarePosition(x: Int, y: Int) = position + squareSize * Vector2D(x, y)
     
     /**
      * The center point of a square in the grid

@@ -11,7 +11,7 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.path.LinearPathLike
-import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
+import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.Transformable
 
@@ -190,31 +190,27 @@ case class Line(points: Pair[Point])
      * to true
      * @return The intersection between the two lines or None if there is no intersection
      */
-    def intersection(other: Line, onlyPointsInSegment: Boolean = true) = 
-    {
+    def intersection(other: Line, onlyPointsInSegment: Boolean = true) = {
         val v1 = vector.toVector3D
         val v2 = other.vector.toVector3D
         
         // a (V1 x V2) = (P2 - P1) x V2
         // Where P is the start point and Vs are the vector parts
         val leftVector = v1 cross v2
-        val rightVector = (other.start - start).toVector3D cross v2
+        lazy val rightVector = (other.start - start).toVector3D cross v2
         
         // If the left hand side vector is a zero vector, there is no collision
         // The two vectors must also be parallel
-        if ((leftVector ~== Vector3D.zero) || !(leftVector isParallelWith rightVector))
+        if (leftVector.isAboutZero || !(leftVector isParallelWith rightVector))
             None
-        else
-        {
+        else {
             // a = |right| / |left|, negative if they have opposite directions
             val a = if (leftVector.direction ~== rightVector.direction) 
                 rightVector.length / leftVector.length else -rightVector.length / leftVector.length
+            lazy val intersectionPoint = apply(a)
             
-            val intersectionPoint = apply(a)
-            
-            if (onlyPointsInSegment)
-            {
-                if (a >= 0 && a <= 1 && Bounds.between(other.start, other.end).contains(intersectionPoint)) 
+            if (onlyPointsInSegment) {
+                if (a >= 0 && a <= 1 && other.bounds.contains(intersectionPoint))
                     Some(intersectionPoint) else None
             }
             else

@@ -27,6 +27,11 @@ object Bounds extends FromModelFactory[Bounds]
      */
     val zero = Bounds(Point.origin, Size.zero)
     
+    /**
+      * Collision axes used when testing for containment / overlap with Bounds
+      */
+    lazy val collisionAxes = Vector(X.unit.toVector2D, Y.unit.toVector2D)
+    
     
     // IMPLICIT ---------------------------
     
@@ -192,7 +197,9 @@ case class Bounds(position: Point, override val size: Size)
     override def toShape = toAwt
     
     override def topEdge = X(size.width).in2D
-    override def rightEdge = Y(height).in2D
+    override def rightEdge = Y(size.height).in2D
+    
+    override def collisionAxes = Bounds.collisionAxes
     
     override def withBounds(newBounds: Bounds) = newBounds
     

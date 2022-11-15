@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.shape3d
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.EqualsBy
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
@@ -95,7 +96,7 @@ object Matrix3D extends DimensionsWrapperFactory[Vector3D, Matrix3D]
   */
 class Matrix3D private(override val columns: Dimensions[Vector3D])
 	extends MatrixLike[Vector3D, Matrix3D] with AffineTransformable[Matrix3D]
-		with JavaAffineTransformConvertible with LinearTransformable[Matrix3D]
+		with JavaAffineTransformConvertible with LinearTransformable[Matrix3D] with EqualsBy
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -192,6 +193,8 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	
 	
 	// IMPLEMENTED	------------------------------
+	
+	override protected def equalsProperties = dimensions
 	
 	override def withDimensions(newDimensions: Dimensions[Vector3D]) = Matrix3D(newDimensions)
 	

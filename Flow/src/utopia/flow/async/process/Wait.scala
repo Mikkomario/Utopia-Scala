@@ -7,6 +7,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.SysErrLogger
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
 object Wait
@@ -61,10 +62,10 @@ class Wait(val target: WaitTarget, val lock: AnyRef = new AnyRef,
 			target.endTime match {
 				case Some(targetTime) =>
 					lock.synchronized {
-						while (!waitCompleted && targetTime.isInFuture) {
-							val waitDuration = targetTime - Now
+						lazy val remainingWait = targetTime - Now
+						while (!waitCompleted && remainingWait > Duration.Zero) {
 							// Performs the actual wait here (nano precision)
-							lock.wait(waitDuration.toMillis, waitDuration.getNano / 1000)
+							lock.wait(remainingWait.toMillis, remainingWait.getNano / 1000)
 							// May break on any notify call. Also, stop() always breaks
 							if (target.breaksOnNotify || state.isBroken)
 								waitCompleted = true

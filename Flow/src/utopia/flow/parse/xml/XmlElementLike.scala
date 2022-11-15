@@ -11,6 +11,7 @@ import utopia.flow.parse.xml.XmlElementLike.isAllowedInContent
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
+import scala.collection.mutable
 
 object XmlElementLike
 {
@@ -107,7 +108,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
      * Prints an xml string from this element.
      */
     def toXml: String = {
-        val builder = new StringBuilder()
+        val builder = new mutable.StringBuilder()
         appendToXml(builder)
         builder.result()
     }
@@ -325,7 +326,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       * Prints an xml string from this element. Character data is represented as is.
       * @param xmlBuilder Builder for building the final xml string
       */
-    def appendToXml(xmlBuilder: StringBuilder): Unit =
+    def appendToXml(xmlBuilder: mutable.StringBuilder): Unit =
     {
         val namePart = name.toString
         val attsPart = attributesString.mapIfNotEmpty { " " + _ }

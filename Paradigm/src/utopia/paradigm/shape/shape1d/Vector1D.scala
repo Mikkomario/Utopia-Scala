@@ -59,6 +59,13 @@ object Vector1D
 			case v: DoubleVectorLike[_] => v.components.find { _.nonZero }.getOrElse(zero)
 			case o => apply(o.dimensions)
 		}
+		
+		override def apply(values: Map[Axis, Double]) =
+			values.find { _._2 !~== 0.0 }.orElse { values.find { _._2 != 0.0 } }.orElse { values.headOption } match
+			{
+				case Some((axis, length)) => Vector1D(length, axis)
+				case None => empty
+			}
 	}
 }
 

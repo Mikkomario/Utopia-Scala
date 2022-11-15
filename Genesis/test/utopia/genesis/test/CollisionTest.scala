@@ -18,7 +18,7 @@ object CollisionTest extends App
     val circle1 = Circle(Point.origin, 2)
     val circle2 = Circle(Point(3), 2)
     
-    assert(circle1.projectedOver(X) == Line(Point(-2), Point(2)))
+    assert(circle1.projectedOver(X) == Line(Point(-2), Point(2)), circle1.projectedOver(X))
     
     val mtv1 = circle1.collisionMtvWith(circle2)
     
@@ -32,8 +32,6 @@ object CollisionTest extends App
     val point1 = collisionPoints1(0)
     val point2 = collisionPoints1(1)
     
-    println(collisionPoints1)
-    
     assert(collisionPoints1.forall { _.x == 1.5 })
     assert(point1.y < 0)
     assert(point1.y > -3)
@@ -42,15 +40,14 @@ object CollisionTest extends App
     
     val line1 = Line(Point(1.5, -3), Point(1.5, 3))
     
-    assert(line1.projectedOver(Y) == Line(Point(0, -3), Point(0, 3)))
-    assert(line1.projectedOver(X) == Line(Point(1.5), Point(1.5)))
+    assert(line1.projectedOver(Y) ~== Line(Point(0, -3), Point(0, 3)), line1.projectedOver(Y))
+    assert(line1.projectedOver(X) ~== Line(Point(1.5), Point(1.5)), line1.projectedOver(X))
     assert(line1.collisionAxes.size == 2)
     assert(line1.collisionAxes.exists { _ isParallelWith X })
     
     val mtv2 = circle1.collisionMtvWith(line1, line1.collisionAxes)
     
-    assert(mtv2.isDefined)
-    assert(mtv2.get == Vector2D(-0.5))
+    assert(mtv2.exists { _ ~== Vector2D(-0.5) }, mtv2)
     
     val collisionPoints2 = line1.circleIntersection(circle1).sortBy { _.y }
     

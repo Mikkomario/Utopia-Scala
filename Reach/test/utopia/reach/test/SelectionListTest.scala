@@ -35,7 +35,9 @@ object SelectionListTest extends App
 		implicit val context: TextContext = baseContext.inContextWithBackground(background)
 			.forTextComponents.expandingToRight
 		val list = SelectionList(hierarchy).contextual.apply(contentPointer, valuePointer) { (hierarchy, item: Int) =>
-			MutableViewTextLabel(hierarchy).contextual.apply(item, DisplayFunction.interpolating("Label %s"))
+			val label = MutableViewTextLabel(hierarchy).contextual.apply(item, DisplayFunction.interpolating("Label %s"))
+			// label.addBackground(Color.magenta)
+			label
 		}
 		list.addCustomDrawer(BackgroundDrawer(background))
 		list

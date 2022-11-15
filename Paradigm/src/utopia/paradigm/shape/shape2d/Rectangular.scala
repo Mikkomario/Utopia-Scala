@@ -33,4 +33,6 @@ trait Rectangular extends Parallelogramic
 	
 	override def maxEdgeLength = rightEdgeLength max topEdge.length
 	override def minEdgeLength = rightEdgeLength min topEdge.length
+	
+	override def collisionAxes = Vector(topEdge, rightEdge)
 }

@@ -3,9 +3,9 @@ package utopia.genesis.util
 import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, ShapeConvertible, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, ShapeConvertible, Size, Vector2D}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
+import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{AffineTransformable, AffineTransformation, JavaAffineTransformConvertible, LinearTransformable}
 
@@ -56,7 +56,10 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     /**
       * The current clipping bounds assigned to this drawer (None if no clipping bounds have been assigned)
       */
-    lazy val clipBounds = Option(graphics.getClipBounds).map { r => r: Bounds }
+    lazy val clipBounds = {
+        // .getClipBounds in Graphics2D sometimes throws a random NullPointerException for an unknown reason, hence Try
+        Option(Try { graphics.getClipBounds }.getOrElse(null)).map { r => r: Bounds }
+    }
     
     private var children = Vector[Drawer]()
     
@@ -240,7 +243,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         val topLeft = textArea.position
         val scaling = (textArea.size / textSize).toVector
         
-        if (scaling ~== Vector3D.identity)
+        if (scaling ~== Vector2D.identity)
             graphics.drawString(text, topLeft.x.round.toInt, topLeft.y.round.toInt + metrics.getAscent)
         else
             transformed(AffineTransformation(topLeft.toVector, scaling = scaling))
@@ -299,7 +302,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
             
             // Draws the lines
             // TODO: WET WET
-            if (scaling ~== Vector3D.identity)
+            if (scaling ~== Vector2D.identity)
                 lines.foreachWithIndex { (line, index) =>
                     graphics.drawString(line, (topLeft.x + getLineX(lineWidths(index), textWidth)).round.toInt,
                         (topLeft.y + index * (lineHeight + betweenLinesMargin)).round.toInt + lineHeight)

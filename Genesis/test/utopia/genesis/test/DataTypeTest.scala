@@ -106,5 +106,9 @@ object DataTypeTest extends App
     assert(Bounds.fromJson(r.boundsOr().toJson) == r.bounds)
     assert(Transformation.fromJson(t.transformationOr().toJson) == t.transformation)
     */
+	
+	assert(s1.getString != "")
+	assert(p1.getString != "")
+	
     println("Success")
 }
