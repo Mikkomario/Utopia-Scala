@@ -51,7 +51,7 @@ class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param alignment Alignment used for the <b>text</b> (the image will be placed with the opposite alignment,
 	  *                  so that the two form a close pair) (default = Left)
 	  * @param betweenLinesMargin Vertical margin placed between text lines (default = 0)
-	  * @param additionalDrawers Additional custom drawers assigned to this component
+	  * @param customDrawers Additional custom drawers assigned to this component
 	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
 	  * @param allowImageUpscaling Whether image should be allowed to scale up to its source resolution (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
@@ -68,12 +68,12 @@ class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	             textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
 	             alignment: Alignment = Alignment.Left,
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	             betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
+	             betweenLinesMargin: Double = 0.0, customDrawers: Vector[CustomDrawer] = Vector(),
 	             allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
 	             allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
 	             forceEqualBreadth: Boolean = false) =
 		new ViewImageAndTextLabel[A](parentHierarchy, itemPointer, imagePointer, fontPointer, textColorPointer,
-			imageInsetsPointer, textInsetsPointer, alignment, displayFunction, betweenLinesMargin, additionalDrawers,
+			imageInsetsPointer, textInsetsPointer, alignment, displayFunction, betweenLinesMargin, customDrawers,
 			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
 }
 
@@ -99,7 +99,7 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @param imageInsetsPointer A pointer to the insets placed around the image (default = always any, preferring zero)
 	  * @param textInsetsPointer A pointer to the insets placed around the text (default = determined by context)
 	  * @param displayFunction Display function used when converting the item to text (default = toString)
-	  * @param additionalDrawers Additional custom drawers assigned to this component
+	  * @param customDrawers Additional custom drawers assigned to this component
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image part
 	  *                                (default = false)
 	  * @param forceEqualBreadth Whether the image and text should be forced to have the same breadth, no matter the
@@ -113,10 +113,10 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	                         imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
 	                         textInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets),
 	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	                         additionalDrawers: Vector[CustomDrawer] = Vector(),
+	                         customDrawers: Vector[CustomDrawer] = Vector(),
 	                         useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
 		factory[A](itemPointer, imagePointer, fontPointer, textColorPointer, imageInsetsPointer, textInsetsPointer,
-			context.textAlignment, displayFunction, context.betweenLinesMargin.optimal, additionalDrawers,
+			context.textAlignment, displayFunction, context.betweenLinesMargin.optimal, customDrawers,
 			context.allowLineBreaks, context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize,
 			forceEqualBreadth)
 	
@@ -126,7 +126,7 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @param imagePointer A pointer to the image displayed on this label
 	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
 	  * @param displayFunction Display function used when converting the item to text (default = toString)
-	  * @param additionalDrawers Additional custom drawers assigned to this component
+	  * @param customDrawers Additional custom drawers assigned to this component
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image part
 	  *                                (default = false)
 	  * @param forceEqualBreadth Whether the image and text should be forced to have the same breadth, no matter the
@@ -136,10 +136,10 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  */
 	def apply[A](itemPointer: Changing[A], imagePointer: Changing[Image], imageInsets: StackInsets = StackInsets.any,
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	             additionalDrawers: Vector[CustomDrawer], useLowPriorityImageSize: Boolean = false,
+	             customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
 	             forceEqualBreadth: Boolean = false) =
 		withChangingStyle[A](itemPointer, imagePointer, imageInsetsPointer = Fixed(imageInsets),
-			displayFunction = displayFunction, additionalDrawers = additionalDrawers,
+			displayFunction = displayFunction, customDrawers = customDrawers,
 			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)
 	
 	/**
@@ -214,7 +214,7 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 		val imagePointer = iconPointer.mergeWith(backgroundPointer) { _.singleColorImageAgainst(_) }
 		val label = withChangingStyle(itemPointer, imagePointer,
 			textColorPointer = backgroundPointer.map { _.defaultTextColor }, imageInsetsPointer = Fixed(imageInsets),
-			displayFunction = displayFunction, additionalDrawers = backgroundDrawer +: customDrawers,
+			displayFunction = displayFunction, customDrawers = backgroundDrawer +: customDrawers,
 			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)
 		// Repaints this component whenever background color changes
 		backgroundPointer.addContinuousAnyChangeListener { label.repaint(Low) }

@@ -1,14 +1,14 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.genesis.graphics.MeasuredText
-import utopia.paradigm.color.Color
-import utopia.paradigm.transform.AffineTransformation
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.transform.AffineTransformation
+import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
-import utopia.reflection.shape.LengthExtensions._
 
 /**
   * This custom drawer draws text over a component. This is a common trait for both mutable and immutable implementations.
@@ -54,14 +54,12 @@ trait TextDrawerLike2 extends CustomDrawer
 	
 	override def opaque = false
 	
-	// TODO: This is probably broken
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		// Calculates draw bounds and possible scaling
 		val textArea = alignment.positionWithInsets(text.size, bounds, insets)
 		// Skips drawing if the text is outside the clipping area
-		if (drawer.clipBounds.forall { _.overlapsWith(textArea) })
-		{
+		if (drawer.clipBounds.forall { _.overlapsWith(textArea) }) {
 			val scaling = (textArea.size / text.size).toVector
 			// Applies transformation during the whole drawing process
 			drawer.transformed(AffineTransformation(textArea.position.toVector, scaling = scaling))

@@ -93,8 +93,7 @@ trait StackLike2[C <: Stackable2] extends MultiContainer2[C] with StackSizeCalcu
         c.optionIndexOf(item).map { i =>
             if (c.size == 1)
                 Bounds(Point.origin, size)
-            else
-            {
+            else {
                 // Includes half of the area between items (if there is no item, uses cap)
                 val top = if (i > 0) (item.position(direction) - c(i - 1).maxAlong(direction)) / 2 else
                     item.position(direction)

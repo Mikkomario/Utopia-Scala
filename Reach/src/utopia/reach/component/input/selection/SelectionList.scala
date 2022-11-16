@@ -141,18 +141,16 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	}
 	
 	private val keyListener = SelectionKeyListener2.along(direction, hasFocus)(manager.moveSelection)
-	private val repaintAreaListener: ChangeListener[Option[Bounds]] =
-		e => {
-			Bounds.aroundOption(Vector(e.oldValue, e.newValue).flatten).foreach { repaintArea(_, High) }
-			true
-		}
+	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
+		Bounds.aroundOption(e.values.flatten).foreach { area => repaintArea(area.enlarged(direction(margin.optimal)), High) }
+		true
+	}
 	
 	
 	// INITIAL CODE	--------------------------------
 	
 	addHierarchyListener { isAttached =>
-		if (isAttached)
-		{
+		if (isAttached) {
 			GlobalKeyboardEventHandler += keyListener
 			GlobalMouseEventHandler += GlobalMouseReleaseListener
 			actorHandler += keyListener
@@ -162,8 +160,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			canvas.cursorManager.foreach { _ += this }
 			enableFocusHandling()
 		}
-		else
-		{
+		else {
 			GlobalKeyboardEventHandler -= keyListener
 			GlobalMouseEventHandler -= GlobalMouseReleaseListener
 			actorHandler -= keyListener
@@ -322,7 +319,8 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		{
 			lazy val bg = contextBackgroundPointer.value
 			def draw(pointer: View[Option[Bounds]], highlightLevel: Double) =
-				pointer.value.foreach { area => drawer.onlyFill(bg.highlightedBy(highlightLevel)).draw(area) }
+				pointer.value.foreach { area => drawer.onlyFill(bg.highlightedBy(highlightLevel))
+					.draw(area + bounds.position) }
 			
 			// Checks whether currently selected area and the mouse area overlap
 			if (manager.selectedDisplay.exists(LocalMouseListener.currentDisplayUnderCursor.contains))
