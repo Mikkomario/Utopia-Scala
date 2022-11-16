@@ -3,6 +3,15 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
+object PointerWithEvents
+{
+	/**
+	  * @tparam A Type of values stored in this pointer, when defined
+	  * @return A new pointer that's currently empty
+	  */
+	def empty[A]() = new PointerWithEvents[Option[A]](None)
+}
+
 /**
   * Classes with this trait generate change events when they mutate
   * @author Mikko Hilpinen

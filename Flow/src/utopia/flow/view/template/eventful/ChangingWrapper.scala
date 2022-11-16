@@ -64,6 +64,8 @@ trait ChangingWrapper[+A] extends Changing[A]
 	
 	override def futureWhere(valueCondition: A => Boolean) = wrapped.futureWhere(valueCondition)
 	override def nextFutureWhere(valueCondition: A => Boolean) = wrapped.nextFutureWhere(valueCondition)
+	override def findMapFuture[B](f: A => Option[B]) = wrapped.findMapFuture(f)
+	override def findMapNextFuture[B](f: A => Option[B]) = wrapped.findMapNextFuture(f)
 	override def existsFixed(condition: A => Boolean) = wrapped.existsFixed(condition)
 	override def notFixedWhere(condition: A => Boolean) = wrapped.notFixedWhere(condition)
 	override def flatMap[B](f: A => Changing[B]) = wrapped.flatMap(f)

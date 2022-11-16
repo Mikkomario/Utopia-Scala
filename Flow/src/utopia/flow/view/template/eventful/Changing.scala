@@ -92,6 +92,20 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def nextFutureWhere(valueCondition: A => Boolean) =
 		_futureWhere(valueCondition, disableImmediateTrigger = true)
+	/**
+	  * @param f A mapping function that yields Some for the value that resolves the resulting future
+	  * @tparam B Type of mapping result, when defined
+	  * @return A future that completes once 'f' returns Some for a value in this changing item.
+	  *         Resolves immediately if 'f' yields Some for the current value of this item.
+	  */
+	def findMapFuture[B](f: A => Option[B]) = _findMapFuture[B](f)
+	/**
+	  * @param f A mapping function that yields Some for the value that resolves the resulting future
+	  * @tparam B Type of mapping result, when defined
+	  * @return A future that completes once 'f' returns Some for a value in this changing item.
+	  *         The current value in this item is not tested with 'f'.
+	  */
+	def findMapNextFuture[B](f: A => Option[B]) = _findMapFuture[B](f, disableImmediateTrigger = true)
 	
 	/**
 	  * @param f A mapping function
@@ -320,27 +334,36 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A value future where the specified condition returns true (may never complete)
 	  */
 	protected def _futureWhere(condition: A => Boolean, disableImmediateTrigger: Boolean = false) =
+		_findMapFuture[A](a => Some(a).filter(condition), disableImmediateTrigger)
+	/**
+	  * A default implementation of the 'futureWhere' function
+	  * @param condition Condition to search for values with
+	  * @return A value future where the specified condition returns true (may never complete)
+	  */
+	protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean = false) =
 	{
-		// Case: Completes with the current value
-		if (!disableImmediateTrigger && condition(value))
-			Future.successful(value)
-		// Case: May change => Listens to changes until the searched state is found
-		else if (isChanging) {
-			val promise = Promise[A]()
-			addListener { e =>
-				// Stops listening once the promise has completed
-				if (condition(e.newValue)) {
-					promise.trySuccess(e.newValue)
-					false
+		val initialCandidate = if (disableImmediateTrigger) None else Some(value)
+		initialCandidate.flatMap(condition) match {
+			// Case: Completes with the current value
+			case Some(result) => Future.successful(result)
+			case None =>
+				// Case: May change => Listens to changes until the searched state is found
+				if (isChanging) {
+					val promise = Promise[B]()
+					addListener { e =>
+						condition(e.newValue) match {
+							case Some(result) =>
+								promise.trySuccess(result)
+								DetachmentChoice.detach
+							case None => DetachmentChoice.continue
+						}
+					}
+					promise.future
 				}
+				// Case: Impossible to succeed
 				else
-					true
-			}
-			promise.future
+					Future.never
 		}
-		// Case: Impossible to succeed
-		else
-			Future.never
 	}
 }
 

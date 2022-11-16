@@ -3,10 +3,8 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.eventful.Changing
 
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 object ChangeFuture
@@ -103,6 +101,16 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	
 	override def futureWhere(valueCondition: A => Boolean) =
 		future.flatMap { v => if (valueCondition(v)) Future.successful(v) else Future.never }
+	override def nextFutureWhere(valueCondition: A => Boolean) =
+		if (isCompleted) Future.never else futureWhere(valueCondition)
+	
+	override def findMapFuture[B](f: A => Option[B]) =
+		future.flatMap { v => f(v) match {
+			case Some(v2) => Future.successful(v2)
+			case None => Future.never
+		} }
+	override def findMapNextFuture[B](f: A => Option[B]) =
+		if (isCompleted) Future.never else findMapFuture(f)
 	
 	override def map[B](f: A => B) =
 		if (isCompleted) Fixed(f(value)) else new ChangeFuture[B](f(placeHolder), future.map(f))

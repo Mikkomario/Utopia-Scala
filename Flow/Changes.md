@@ -73,6 +73,7 @@
 - Added **ViewGraphNode** as a lazily initialized graph
 - Added **TimedTask** trait, which is now supported in **TimedTasks**, also
 - Added new ways to write **LocalTime** values (after importing **TimeExtensions**)
+- Added **SettableOnce**, which is like a **Promise** with **ChangeEvent**s
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait
@@ -91,6 +92,8 @@
 - **Pair**
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
+- **PointerWithEvents** (type)
+  - Added `.empty`
 - **Signed**
   - Added a number of new utility functions
 - **Tree** (object)
