@@ -34,8 +34,7 @@ trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 	  */
 	lazy val instancePointer = serverResultPointer.map(instanceFrom)
 	
-	private val _serverResultFuture = LazyFuture.flatten { implicit exc =>
-		serverResultPointer.futureWhere { _.isDefined }.map { _.get } }
+	private val _serverResultFuture = LazyFuture.flatten { _ => serverResultPointer.findMapFuture { r => r } }
 	
 	
 	// COMPUTED ---------------------------
