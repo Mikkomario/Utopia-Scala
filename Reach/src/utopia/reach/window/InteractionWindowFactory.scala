@@ -30,6 +30,7 @@ import scala.util.Try
   * A common trait for creating dialogs that are used for user-interactions, usually for requesting some sort of input
   * @author Mikko Hilpinen
   * @since 1.3.2021, v0.1
+  * @tparam A Type of results yielded by the generated windows
   */
 // TODO: Should allow for changing buttons
 trait InteractionWindowFactory[A]

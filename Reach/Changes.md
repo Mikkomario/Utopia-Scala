@@ -9,6 +9,8 @@
   factory functions
 ### Bugfixes
 - Some fixes to **SelectionList** visuals
+### New Features
+- Added **MessageWindowFactory** trait
 
 ## v0.4 - 02.10.2022
 This update focuses on TextField customizability, adding a number of new ways to affect text highlighting and 
