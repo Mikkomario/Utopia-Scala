@@ -45,8 +45,6 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 		else
 			_value = newValue
 	}
-	@throws[IllegalStateException]("If this pointer has already been set")
-	def value_=(newValue: A): Unit = value = Some(newValue)
 	
 	
 	// OTHER    ---------------------------
@@ -57,7 +55,7 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 	  * @throws IllegalStateException If this pointer has already been set
 	  */
 	@throws[IllegalStateException]("If this pointer has already been set")
-	def set(value: A) = this.value = value
+	def set(value: A) = this.value = Some(value)
 	/**
 	  * Specifies the value in this pointer, unless specified already
 	  * @param value Value for this pointer to hold (call-by-name, only called if this pointer is empty)
@@ -68,7 +66,7 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 		if (isCompleted)
 			false
 		else {
-			this.value = value
+			this.value = Some(value)
 			true
 		}
 	}
