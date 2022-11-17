@@ -3,6 +3,9 @@ package utopia.flow.view.mutable
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
+
 object Pointer
 {
 	// OTHER    ----------------------------
@@ -19,6 +22,11 @@ object Pointer
 	  * @return A new option pointer
 	  */
 	def option[A](value: Option[A] = None) = apply[Option[A]](value)
+	/**
+	  * @tparam A Type of held value, when defined
+	  * @return A new empty pointer
+	  */
+	def empty[A]() = apply[Option[A]](None)
 	
 	/**
 	  * Creates a new pointer with events
@@ -27,6 +35,25 @@ object Pointer
 	  * @return A new pointer with events
 	  */
 	def withEvents[A](value: A) = new PointerWithEvents(value)
+	
+	/**
+	  * @param referenceDuration A function for calculating the duration of strong references to the held values
+	  * @param exc Implicit execution context
+	  * @tparam A Type of held value, when defined
+	  * @return A new pointer that switches to a weak reference after a while
+	  */
+	def releasing[A <: AnyRef](referenceDuration: A => Duration)(implicit exc: ExecutionContext) =
+		ReleasingPointer.empty[A](referenceDuration)
+	/**
+	  * @param referenceDuration Duration of strong references to the held values
+	  * @param initialValue Initially held value (optional)
+	  * @param exc               Implicit execution context
+	  * @tparam A Type of held value, when defined
+	  * @return A new pointer that switches to a weak reference after a while
+	  */
+	def releasingAfter[A <: AnyRef](referenceDuration: Duration, initialValue: Option[A] = None)
+	                               (implicit exc: ExecutionContext) =
+		ReleasingPointer.after[A](referenceDuration, initialValue)
 	
 	
 	// EXTENSIONS --------------------------
