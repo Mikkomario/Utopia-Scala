@@ -3,10 +3,13 @@
 ## v2.0 (in development)
 ### Breaking Changes
 - Reorganized the package structure
-- **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
+- Changes relating to variants of **Changing** (or **ChangingLike**)
+  - **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
   - **ChangingLike**, then was renamed to **Changing** instead
-- Removed the implicit class for **Changing** of **Boolean**, moved these methods to **FlagLike** and
-  added an implicit conversion, which is available through `import utopia.flow.view.template.eventful.FlatLike.wrap`
+  - Removed the implicit class for **Changing** of **Boolean**, moved these methods to **FlagLike** and
+    added an implicit conversion, which is available through `import utopia.flow.view.template.eventful.FlatLike.wrap`
+  - Modified internal mapping and merging logic, allowing for more advanced (incremental) merge functions
+    - This affects mirror instance creation using the keyword `new`. Cases where `.of(...)` is used are not modified.
 - The following traits were renamed and replaced an existing class with the same name
   - **Viewable** and **Settable** to **View** and **Pointer**
   - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**

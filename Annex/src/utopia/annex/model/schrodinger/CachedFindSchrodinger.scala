@@ -18,11 +18,9 @@ class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override protected def instanceFrom(result: Option[Try[I]]) = result match
-	{
+	override protected def instanceFrom(result: Option[Try[I]]) = result match {
 		case Some(result) =>
-			result match
-			{
+			result match {
 				case Success(instance) => instance
 				case Failure(_) => cached
 			}
@@ -46,15 +44,13 @@ class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 			case Success(result) =>
 				result match {
 					case Right(response) =>
-						response match
-						{
+						response match {
 							case Response.Success(_, body, _) =>
 								val parseResult = parse(body)
 								parseResult.failure.foreach(recordError)
 								complete(parseResult)
 							case Response.Failure(status, message, _) =>
-								val errorMessage = message match
-								{
+								val errorMessage = message match {
 									case Some(m) => s"Invitation retrieval failed ($status). Response message: $m"
 									case None => s"Invitation retrieval failed with status $status"
 								}
@@ -63,8 +59,7 @@ class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 								complete(Failure(error))
 						}
 					case Left(notSent) =>
-						notSent match
-						{
+						notSent match {
 							case RequestFailed(error) =>
 								recordError(error)
 								complete(Failure(error))

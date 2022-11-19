@@ -65,20 +65,22 @@ abstract class AbstractChanging[A] extends Changing[A]
 	/**
 	  * Starts mirroring another pointer
 	  * @param origin Origin value pointer
-	  * @param map A value transformation function that accepts the new origin pointer value
+	  * @param map A value transformation function that accepts two parameters:
+	  *            1) Current pointer value,
+	  *            2) Source change event,
+	  *            and produces a new value to store in this pointer
 	  * @param set A function for updating this pointer's value
 	  * @tparam O Type of origin pointer's value
 	  */
-	protected def startMirroring[O](origin: Changing[O])(map: O => A)(set: A => Unit) =
+	protected def startMirroring[O](origin: Changing[O])(map: (A, ChangeEvent[O]) => A)(set: A => Unit) =
 	{
 		// Registers as a dependency for the origin pointer
 		origin.addDependency(ChangeDependency { e1: ChangeEvent[O] =>
 			// Whenever the origin's value changes, calculates a new value
-			val newValue = map(e1.newValue)
 			val oldValue = value
+			val newValue = map(oldValue, e1)
 			// If the new value is different from the previous state, updates the value and generates a new change event
-			if (newValue != oldValue)
-			{
+			if (newValue != oldValue) {
 				set(newValue)
 				val event2 = ChangeEvent(oldValue, newValue)
 				// The dependencies are informed immediately, other listeners only afterwards
