@@ -2,7 +2,7 @@ package utopia.reach.container
 
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, ChangeFuture}
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
@@ -56,7 +56,7 @@ class ReachWindow private(visibilityPointer: Changing[Boolean])
 			if (visibilityPointer.isFixed)
 				Right(
 					if (visibilityPointer.value)
-						ChangeFuture.wrap(closeFuture.map { _ => false }, true)
+						Changing.future(false, closeFuture) { _ => true }
 					else
 						AlwaysFalse
 				)

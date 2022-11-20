@@ -1,14 +1,67 @@
 package utopia.flow.view.template.eventful
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.{AsyncMirror, DelayedView, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.immutable.eventful.{AsyncMirror, ChangeFuture, DelayedView, Fixed, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
+
+object Changing
+{
+	/**
+	  * Creates a changing item that changes its value once a future resolves (successfully or unsuccessfully)
+	  * @param placeholder A placeholder value returned until the future resolves
+	  * @param future A future
+	  * @param processResult A function to process the successful or failed future result once it arrives
+	  * @param exc Implicit execution context
+	  * @tparam A Type of processed future result, as well as the placeholder value
+	  *           (i.e. the type of value stored in the changing item)
+	  * @tparam F Type of value yielded by the future, when successful
+	  * @return A changing item, based on the future
+	  */
+	def future[A, F](placeholder: => A, future: Future[F])(processResult: Try[F] => A)
+	                (implicit exc: ExecutionContext) =
+		future.currentResult match {
+			case Some(result) => Fixed(processResult(result))
+			case None => ChangeFuture.merging(placeholder, future) { (_, result) => processResult(result) }
+		}
+	/**
+	  * Wraps a future into a changing item
+	  * @param placeholder A placeholder value to be returned until the future resolves
+	  *                    (call-by-name, not called if the future has already resolved)
+	  * @param future A future to wrap
+	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation to catch errors thrown by the future
+	  * @tparam A Type of future result
+	  * @return A changing item that acquires the value of a future once it successfully resolves.
+	  *         Until this time (and if the future fails), this item will contain the specified placeholder value.
+	  */
+	def wrapFuture[A](placeholder: => A, future: Future[A])(implicit exc: ExecutionContext, log: Logger) =
+		this.future[A, A](placeholder, future) {
+			case Success(item) => item
+			case Failure(error) =>
+				log(error)
+				placeholder
+		}
+	/**
+	  * Wraps a future into a changing item
+	  * that contains None while unresolved (or failed) and Some once (or if) successfully resolved
+	  * @param future A future to wrap
+	  * @param exc    Implicit execution context
+	  * @param log    Implicit logging implementation to catch errors thrown by the future
+	  * @tparam A Type of future result
+	  * @return A changing item, based on the future
+	  */
+	def wrapFutureToOption[A](future: Future[A])(implicit exc: ExecutionContext, log: Logger) =
+		this.future[Option[A], A](None, future) { _.toOption }
+}
 
 /**
   * A common trait for items which have the potential of changing their contents and generating change events, although
@@ -112,13 +165,25 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A mirrored version of this item, using specified mapping function
 	  */
-	def map[B](f: A => B): Changing[B] = Mirror.of(this)(f)
+	def map[B](f: A => B): Changing[B] = diverge { Mirror(this)(f) } { f(value) }
+	/**
+	  * Creates a new changing item that contains a mapped value of this item.
+	  * The mapping function used acquires additional contextual information.
+	  * @param initialMap A function to perform the initial mapping.
+	  *                   Accepts the current value of this item.
+	  * @param incrementMap A function to perform the consecutive mappings.
+	  *                     Accepts the previous mapping result, as well as the change event that occurred in this item.
+	  * @tparam B Type of mapping results
+	  * @return A new changing item
+	  */
+	def incrementalMap[B](initialMap: A => B)(incrementMap: (B, ChangeEvent[A]) => B) =
+		diverge { Mirror.incremental(this)(initialMap)(incrementMap) } { initialMap(value) }
 	/**
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
-	def lazyMap[B](f: A => B): ListenableLazy[B] = LazyMirror.of(this)(f)
+	def lazyMap[B](f: A => B): ListenableLazy[B] = lazyDiverge { LazyMirror(this)(f) } { f(value) }
 	
 	/**
 	  * @param other Another changing item
@@ -127,7 +192,9 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from both of these items
 	  */
-	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] = MergeMirror.of(this, other)(f)
+	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] =
+		divergeMerge[B, Changing[R]](other) { MergeMirror(this, other)(f) } { v2 => map { f(_, v2) } } {
+			Mirror(other) { v2 => f(value, v2) } }
 	/**
 	  * @param first Another changing item
 	  * @param second Yet another changing item
@@ -140,6 +207,32 @@ trait Changing[+A] extends Any with View[A]
 	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R): Changing[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
 	/**
+	  * Creates a new changing item that combines the values of this and the other item.
+	  * The merge function used acquires additional information.
+	  * @param other Another changing item
+	  * @param initialMerge A merge function used for acquiring the initial merge result.
+	  *                     Accepts the values of this and the other item.
+	  * @param incrementMerge A merge function used for acquiring consecutive merge results.
+	  *                       Accepts:
+	  *                         1) The previous merge result,
+	  *                         2) The current value of this item,
+	  *                         3) The current value of the other item,
+	  *                         4) Either:
+	  *                             Left) A change event that occurred in this item, or
+	  *                             Right) A change event that occurred in the other item.
+	  *                       Yields a merge result.
+	  * @tparam B Type of value(s) in the other item
+	  * @tparam R Type of merge results
+	  * @return A new changing item
+	  */
+	def incrementalMergeWith[B, R](other: Changing[B])(initialMerge: (A, B) => R)
+	                              (incrementMerge: (R, A, B, Either[ChangeEvent[A], ChangeEvent[B]]) => R) =
+		divergeMerge[B, Changing[R]](other) {
+			MergeMirror.incremental(this, other)(initialMerge)(incrementMerge) } { v2 =>
+			incrementalMap { initialMerge(_, v2) } { (r, e1) => incrementMerge(r, e1.newValue, v2, Left(e1)) } } {
+			Mirror.incremental(other) { initialMerge(value, _) } { (r, e2) =>
+				incrementMerge(r, value, e2.newValue, Right(e2)) } }
+	/**
 	  * @param other Another changing item
 	  * @param f A merge function
 	  * @tparam B Type of the other item's value
@@ -147,7 +240,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A mirror that lazily merges the values from both of these items
 	  */
 	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R): ListenableLazy[R] =
-		LazyMergeMirror.of(this, other)(f)
+		divergeMerge[B, ListenableLazy[R]](other) { LazyMergeMirror(this, other)(f) } { v2 => lazyMap { f(_, v2) } } {
+			LazyMirror(other) { f(value, _) } }
 	
 	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event
@@ -155,8 +249,25 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in
 	  *         this pointer's changes
 	  */
-	def delayedBy(threshold: Duration)(implicit exc: ExecutionContext): Changing[A] =
-		DelayedView.of(this, threshold)
+	def delayedBy(threshold: => Duration)(implicit exc: ExecutionContext): Changing[A] = {
+		// Case: This item may change
+		if (isChanging)
+			threshold.finite match {
+				// Case: A finite delay has been defined
+				case Some(duration) =>
+					// Case: Zero delay = View of this item
+					if (duration <= Duration.Zero)
+						this
+					// Case: Positive delay => Creates a delayed view
+					else
+						DelayedView(this, duration)
+				// Case: Infinite delay = Fixed value
+				case None => Fixed(value)
+			}
+		// Case: This item doesn't change anymore => No need for delay
+		else
+			this
+	}
 	
 	/**
 	  * @param condition A condition to test fixed values with
@@ -167,13 +278,13 @@ trait Changing[+A] extends Any with View[A]
 	  * @param condition A condition to test fixed values with
 	  * @return This item if changing or not fixed to a value the specified condition returns true for
 	  */
-	def notFixedWhere(condition: A => Boolean) =
-	{
+	def notFixedWhere(condition: A => Boolean) = {
 		if (isChanging)
 			Some(this)
 		else if (condition(value))
 			None
-		else Some(this)
+		else
+			Some(this)
 	}
 	
 	/**
@@ -326,6 +437,60 @@ trait Changing[+A] extends Any with View[A]
 			listener.onChangeEvent(ChangeEvent(simulatedOldValue, current))
 		else
 			DetachmentChoice.continue
+	}
+	
+	/**
+	  * Creates a new changing item based on this item,
+	  * returning a fixed pointer in case this item is no longer changing
+	  * @param ifChanging    Result to give if this item is still changing (call-by-name)
+	  * @param ifNotChanging A fixed value to return if this item is no longer changing (call-by-name)
+	  * @tparam B Type of new changing or fixed value
+	  * @return A new changing item
+	  */
+	protected def diverge[B](ifChanging: => Changing[B])(ifNotChanging: => B) = {
+		if (isChanging)
+			ifChanging
+		else
+			Fixed(ifNotChanging)
+	}
+	/**
+	  * Creates a new lazy container based on this item.
+	  * A more simple container is created if this item is no longer changing.
+	  * @param ifChanging Result (lazy container) to give if this item is still changing (call-by-name)
+	  * @param ifNotChanging A fixed value to return if this item is no longer changing (call-by-name, lazy)
+	  * @tparam B Type of new changing or fixed value
+	  * @return A new lazy container
+	  */
+	protected def lazyDiverge[B](ifChanging: => ListenableLazy[B])(ifNotChanging: => B) = {
+		if (isChanging)
+			ifChanging
+		else
+			Lazy.listenable(ifNotChanging)
+	}
+	/**
+	  * Creates a new changing item by combining this item with another.
+	  * Uses a more simple function in case the other item doesn't change anymore.
+	  * @param other Another (possibly) changing item
+	  * @param ifBothChange A result to yield in case both items may still change
+	  * @param ifOtherIsFixed A function for producing the result in case the other item is no longer changing.
+	  *                       Accepts the fixed value of the other item.
+	  * @param ifOnlyThisIsFixed A function for producing the result in case this item is fixed and the other is not.
+	  * @tparam B Type of values in the other item
+	  * @tparam R Type of merge result
+	  * @return A new changing item
+	  */
+	protected def divergeMerge[B, R](other: Changing[B])(ifBothChange: => R)
+	                                (ifOtherIsFixed: B => R)
+	                                (ifOnlyThisIsFixed: => R) =
+	{
+		if (other.isChanging) {
+			if (isChanging)
+				ifBothChange
+			else
+				ifOnlyThisIsFixed
+		}
+		else
+			ifOtherIsFixed(other.value)
 	}
 	
 	/**

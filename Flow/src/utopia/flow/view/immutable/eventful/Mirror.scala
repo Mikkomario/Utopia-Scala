@@ -13,6 +13,7 @@ object Mirror
 	 * @tparam R Reflected / mapped item type
 	 * @return A new mirror
 	 */
+	@deprecated("Please use source.map(f) instead", "v2.0")
 	def of[O, R](source: Changing[O])(f: O => R) =
 	{
 		if (source.isChanging)

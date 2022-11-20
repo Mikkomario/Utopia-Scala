@@ -15,6 +15,7 @@ object MergeMirror
 	 * @tparam R Merged / mapped item type
 	 * @return A new mirror
 	 */
+	@deprecated("Please use firstSource.mergeWith(secondSource)(f) instead", "v2.0")
 	def of[O1, O2, R](firstSource: Changing[O1], secondSource: Changing[O2])(f: (O1, O2) => R) =
 	{
 		// Uses mapping functions or even a fixed value if possible

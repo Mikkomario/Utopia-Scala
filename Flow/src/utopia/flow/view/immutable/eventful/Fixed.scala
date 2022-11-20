@@ -1,12 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.async.context.SynchronousExecutionContext
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
-import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 
 case class Fixed[+A](override val value: A) extends Changing[A]
 {
@@ -25,13 +20,6 @@ case class Fixed[+A](override val value: A) extends Changing[A]
 		simulateChangeEventFor(changeListener, simulatedOldValue)
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = ()
-	
-	override def map[B](f: A => B) = Fixed(f(value))
-	override def lazyMap[B](f: A => B) = Lazy.listenable { f(value) }
-	
-	override def delayedBy(threshold: Duration)
-	                      (implicit exc: ExecutionContext = SynchronousExecutionContext) =
-		this
 }
 
 /**

@@ -10,6 +10,7 @@
     added an implicit conversion, which is available through `import utopia.flow.view.template.eventful.FlatLike.wrap`
   - Modified internal mapping and merging logic, allowing for more advanced (incremental) merge functions
     - This affects mirror instance creation using the keyword `new`. Cases where `.of(...)` is used are not modified.
+  - **Changing**`.delayedBy(Duration)` now accepts the duration as call-by-name
 - The following traits were renamed and replaced an existing class with the same name
   - **Viewable** and **Settable** to **View** and **Pointer**
   - **LazyLike** and **ListenableLazyLike** to **Lazy** and **ListenableLazy**
@@ -86,6 +87,8 @@
   - Added `.notCloseZero`
 - **CanBeZero**
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
+- **Changing**
+  - Added `.incrementalMap(...)` and `.incrementalMergeWith(...)` -methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.

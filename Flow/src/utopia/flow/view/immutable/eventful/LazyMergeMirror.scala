@@ -32,6 +32,20 @@ object LazyMergeMirror
 		else
 			Lazy.listenable { merge(source1.value, source2.value) }
 	}
+	
+	/**
+	  * Creates a new mirror that lazily merges the values of two changing items,
+	  * updating the merge result when necessary.
+	  * @param source1 The first source item
+	  * @param source2 The second source item
+	  * @param merge A merge function
+	  * @tparam O1 Type of values in the first item
+	  * @tparam O2 Type of values in the second item
+	  * @tparam R Type of merge result
+	  * @return A new lazily merging mirror
+	  */
+	def apply[O1, O2, R](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => R) =
+		new LazyMergeMirror[O1, O2, R](source1, source2)(merge)
 }
 
 /**
@@ -39,7 +53,7 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[O1, O2, Reflection](source1: Changing[O1], source2: Changing[O2])
+class LazyMergeMirror[+O1, +O2, Reflection](source1: Changing[O1], source2: Changing[O2])
                                          (merge: (O1, O2) => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {

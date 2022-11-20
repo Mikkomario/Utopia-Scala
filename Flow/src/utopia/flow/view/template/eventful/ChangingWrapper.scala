@@ -1,6 +1,7 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.event.model.ChangeEvent
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,13 +54,20 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def map[B](f: A => B) = wrapped.map(f)
 	override def lazyMap[B](f: A => B) = wrapped.lazyMap(f)
 	
+	
+	override def incrementalMap[B](initialMap: A => B)(incrementMap: (B, ChangeEvent[A]) => B) =
+		wrapped.incrementalMap(initialMap)(incrementMap)
+	override def incrementalMergeWith[B, R](other: Changing[B])(initialMerge: (A, B) => R)
+	                                       (incrementMerge: (R, A, B, Either[ChangeEvent[A], ChangeEvent[B]]) => R) =
+		wrapped.incrementalMergeWith(other)(initialMerge)(incrementMerge)
+	
 	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = wrapped.mergeWith(other)(f)
 	override def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R) =
 		wrapped.mergeWith(first, second)(merge)
 	override def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
 		wrapped.lazyMergeWith(other)(f)
 	
-	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) =
+	override def delayedBy(threshold: => Duration)(implicit exc: ExecutionContext) =
 		wrapped.delayedBy(threshold)
 	
 	override def futureWhere(valueCondition: A => Boolean) = wrapped.futureWhere(valueCondition)

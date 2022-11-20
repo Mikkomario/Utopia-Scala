@@ -14,6 +14,7 @@ object LazyMirror
 	  * @tparam R Type of item after mapping
 	  * @return A lazily mirrored view to specified pointer
 	  */
+	@deprecated("Please use pointer.lazyMap(f) instead", "v2.0")
 	def of[O, R](pointer: Changing[O])(f: O => R) =
 	{
 		if (pointer.isChanging)
@@ -21,6 +22,16 @@ object LazyMirror
 		else
 			Lazy.listenable { f(pointer.value) }
 	}
+	
+	/**
+	  * Creates a new lazy mirror, which lazily reflects the value of a source item
+	  * @param source A source item
+	  * @param f A mapping function
+	  * @tparam O Type of source values
+	  * @tparam R Type of mapping results
+	  * @return A new mirror
+	  */
+	def apply[O, R](source: Changing[O])(f: O => R) = new LazyMirror[O, R](source)(f)
 }
 
 /**
@@ -33,7 +44,7 @@ object LazyMirror
   * @tparam Origin Type of item before mirroring
   * @tparam Reflection Type of item after mirroring
   */
-class LazyMirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection)
+class LazyMirror[+Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	--------------------------

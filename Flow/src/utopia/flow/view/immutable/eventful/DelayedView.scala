@@ -23,6 +23,7 @@ object DelayedView
 	  * @tparam A Type of item values
 	  * @return A new delayed view into the item (where all change events are delayed at least by <i>delay</i>)
 	  */
+	@deprecated("Please use source.delayedBy(delay) instead", "v2.0")
 	def of[A](source: Changing[A], delay: => Duration)(implicit exc: ExecutionContext) =
 	{
 		// Won't wrap non-changing items
@@ -45,6 +46,17 @@ object DelayedView
 		else
 			source
 	}
+	
+	/**
+	  * Creates a new delayed view of another changing item
+	  * @param source The viewed item
+	  * @param delay A delay to apply to each mirrored change
+	  * @param exc Implicit execution context
+	  * @tparam A Type of the values in the other item
+	  * @return A new delayed view
+	  */
+	def apply[A](source: Changing[A], delay: FiniteDuration)(implicit exc: ExecutionContext) =
+		new DelayedView[A](source, delay)
 }
 
 /**
