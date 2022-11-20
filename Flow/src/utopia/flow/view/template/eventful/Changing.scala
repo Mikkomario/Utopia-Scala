@@ -244,6 +244,45 @@ trait Changing[+A] extends Any with View[A]
 			LazyMirror(other) { f(value, _) } }
 	
 	/**
+	  * Maps this changing item with a function that yields changing items.
+	  * The resulting changing will match the value of the most recent map result.
+	  *
+	  * Please note that listeners and dependencies attached to the map results, and not to the result of this function,
+	  * will not be carried over to future map results.
+	  *
+	  * @param f A mapping function that yields changing items
+	  * @tparam B Type of values in the resulting items
+	  * @return A pointer to the current value of the last map result
+	  */
+	def flatMap[B](f: A => Changing[B]) = {
+		if (isChanging)
+			FlatteningMirror(this)(f)
+		else
+			f(value)
+	}
+	/**
+	  * Maps this changing item with a function that yields other changing items.
+	  * These are wrapped under a single "Changing" interface.
+	  * The specified mapping function receives additional contextual (state) information.
+	  * @param initialMap A mapping function that accepts the current value of this pointer and yields another pointer.
+	  * @param incrementMap A mapping function used for mapping the consecutive values / changes.
+	  *                     Accepts:
+	  *                         1) The previous mapping result (a pointer), and
+	  *                         2) The change event that occurred in this pointer
+	  *                     Yields pointers.
+	  * @tparam B Type of mapping result pointers' values
+	  * @return A new pointer that wraps the mapping result pointers
+	  */
+	def incrementalFlatMap[B](initialMap: A => Changing[B])
+	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B]) =
+	{
+		if (isChanging)
+			FlatteningMirror.incremental(this)(initialMap)(incrementMap)
+		else
+			initialMap(value)
+	}
+	
+	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event
 	  * @param exc Implicit execution context
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in
@@ -332,19 +371,6 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
 		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
-	
-	/**
-	  * Maps this changing item with a function that yields changing items.
-	  * The resulting changing will match the value of the most recent map result.
-	  *
-	  * Please note that listeners and dependencies attached to the map results, and not to the result of this function,
-	  * will not be carried over to future map results.
-	  *
-	  * @param f A mapping function that yields changing items
-	  * @tparam B Type of values in the resulting items
-	  * @return A pointer to the current value of the last map result
-	  */
-	def flatMap[B](f: A => Changing[B]) = FlatteningMirror(this)(f)
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
