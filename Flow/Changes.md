@@ -88,7 +88,7 @@
 - **CanBeZero**
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
 - **Changing**
-  - Added `.incrementalMap(...)` and `.incrementalMergeWith(...)` -methods
+  - Added `.incrementalMap(...)`, `.incrementalMergeWith(...)` and `.incrementalFlatMap(...)` -methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.

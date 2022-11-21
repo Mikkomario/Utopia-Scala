@@ -1,5 +1,6 @@
 package utopia.flow.util
 
+import utopia.flow.operator.Reversible
 import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 
 import scala.language.implicitConversions
@@ -9,7 +10,7 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 31.3.2021, v1.9
  */
-sealed trait UncertainBoolean
+sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
 {
 	// ABSTRACT --------------------------
 	
@@ -72,10 +73,16 @@ sealed trait UncertainBoolean
 	/**
 	  * @return An inversion of this value
 	  */
-	def unary_! = value match {
+	def unary_! : UncertainBoolean = value match {
 		case Some(known) => Certain(!known)
 		case None => Uncertain
 	}
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def repr = this
+	override def unary_- = !this
 	
 	
 	// OTHER    --------------------------
@@ -167,17 +174,18 @@ object UncertainBoolean
 		// IMPLICIT --------------------------------
 		
 		implicit def autoConvertToBoolean(certain: Certain): Boolean = certain.knownValue
-		
 		implicit def autoConvertFromBoolean(boolean: Boolean): Certain = Certain(boolean)
 	}
-	
 	/**
 	 * Used when the boolean value is known
 	 * @param knownValue The known boolean value
 	 */
-	case class Certain(knownValue: Boolean) extends UncertainBoolean
+	case class Certain(knownValue: Boolean) extends UncertainBoolean with Reversible[Certain]
 	{
 		override def value = Some(knownValue)
+		
+		override def unary_! = Certain(!knownValue)
+		override def unary_- = !this
 	}
 	
 	/**
