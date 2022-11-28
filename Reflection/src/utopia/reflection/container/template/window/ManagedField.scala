@@ -96,12 +96,12 @@ object ManagedField
 	  * @tparam C Type of wrapped field
 	  * @return A new managed field
 	  */
+	// TODO: Replace Option with just LocalizedString (empty = None)
 	def test[V, C[X] <: Input[X]](field: C[V])(test: V => Option[LocalizedString])
 											(implicit autoConvert: V => Value): ManagedField[C[V]] =
 		apply(field) {
 			val raw = field.value
-			test(raw) match
-			{
+			test(raw) match {
 				case Some(error) => Left(error)
 				case None => Right(autoConvert(raw))
 			}
