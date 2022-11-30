@@ -5,11 +5,16 @@
 - **InteractionWindowFactory**`.display(...)` and `.displayOver(...)` now return a tuple containing: 
   - 1: The window that was opened and
   - 2: The window close result future (i.e. the earlier return value)
+- Some constructors now require an **EqualsFunction** instead of a regular function when asking for "same item -checks"
 - Renamed `additionalCustomDrawers` / `additionalDrawers` -parameter to `customDrawers` in some component 
   factory functions
+- Modified **SelectionList** constructors
 ### Bugfixes
 - Some fixes to **SelectionList** visuals
 ### New Features
+- **SelectionList** now supports two new constructor parameters:
+  - `highlightModifier: Double` - A modified applied to all visual highlighting
+  - `alternativeKeyCondition: => Boolean` - An alternative condition for enabling arrow key events
 - Added **MessageWindowFactory** trait
 
 ## v0.4 - 02.10.2022

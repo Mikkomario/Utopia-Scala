@@ -1,5 +1,6 @@
 package utopia.reach.component.input
 
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -97,7 +98,7 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
 	                              noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
 	                              highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	                              focusColorRole: ColorRole = Secondary,
-	                              sameItemCheck: Option[(A, A) => Boolean] = None,
+	                              sameItemCheck: Option[EqualsFunction[A]] = None,
 	                              fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	                             (makeField: (FieldCreationContext, N) => C)
 	                             (makeDisplay: (ComponentHierarchy, A) => D)
@@ -151,7 +152,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
  leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), listLayout: StackLayout = Fit,
  listCap: StackLength = StackLength.fixedZero, noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
  highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
- sameItemCheck: Option[(A, A) => Boolean] = None,
+ sameItemCheck: Option[EqualsFunction[A]] = None,
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: (FieldCreationContext, N) => C)
 (makeDisplay: (ComponentHierarchy, A) => D)
@@ -208,7 +209,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 			// Creates the pop-up content in open form first
 			val openList = Open { hierarchy =>
 				SelectionList(hierarchy).apply(context.actorHandler, field.innerBackgroundPointer, contentPointer,
-					valuePointer, Y, listLayout, context.defaultStackMargin, listCap, sameItemCheck)(makeDisplay)
+					valuePointer, Y, listLayout, context.defaultStackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
 			}
 			val scrollContent = noOptionsView match
 			{
