@@ -54,17 +54,13 @@ trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 	  * Moves the selection (cursor) by specified amount (of items)
 	  * @param amount Number of items to progress
 	  */
-	def moveSelection(amount: Int) =
-	{
-		if (amount != 0)
-		{
+	def moveSelection(amount: Int) = {
+		if (amount != 0) {
 			val displays = this.displays
-			if (displays.nonEmpty)
-			{
+			if (displays.nonEmpty) {
 				val oldIndices = selectedDisplay.flatMap{ displays.optionIndexOf(_) }
 				
-				if (oldIndices.nonEmpty)
-				{
+				if (oldIndices.nonEmpty) {
 					val oldIndex = if (amount < 0) oldIndices.min else oldIndices.max
 					// Moves the selection by one
 					val newIndex = (oldIndex + amount) % displays.size
