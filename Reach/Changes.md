@@ -2,6 +2,8 @@
 
 ## v0.5 (in development)
 ### Breaking Changes
+- **ComponentColor**`.highlightedBy(Double)` now behaves differently. The expected default amount is now 1.0 
+  (instead of 0.2 or 0.4 or something, like before)
 - **InteractionWindowFactory**`.display(...)` and `.displayOver(...)` now return a tuple containing: 
   - 1: The window that was opened and
   - 2: The window close result future (i.e. the earlier return value)
@@ -16,6 +18,8 @@
   - `highlightModifier: Double` - A modified applied to all visual highlighting
   - `alternativeKeyCondition: => Boolean` - An alternative condition for enabling arrow key events
 - Added **MessageWindowFactory** trait
+### Other
+- Visual highlighting updates to buttons and some fields
 
 ## v0.4 - 02.10.2022
 This update focuses on TextField customizability, adding a number of new ways to affect text highlighting and 

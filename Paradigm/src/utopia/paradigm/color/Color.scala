@@ -214,7 +214,6 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  */
 	@deprecated("Please use .transparent instead", "v2.4.1")
 	def isTransparent = alpha < 1
-	
 	/**
 	  * @return Whether this color has transparency (can be seen through partially or fully)
 	  */
@@ -238,6 +237,19 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  * @return An integer representation of this color. Contains rgb and alpha data.
 	  */
 	def toInt = toAwt.getRGB
+	
+	/**
+	  * @return A lighter copy of this color
+	  */
+	def lightened = lightenedBy(1.0)
+	/**
+	  * @return A darker copy of this color
+	  */
+	def darkened = darkenedBy(1.0)
+	/**
+	  * @return Either a lighter or a darker copy of this color, depending on the visual luminance of this color
+	  */
+	def highlighted = highlightedBy(1.0)
 	
 	
 	// IMPLEMENTED	----------------------
@@ -389,4 +401,38 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  * @return A weighted average between these colors (rgb-wise)
 	  */
 	def average(other: Color, myWeight: Double, theirWeight: Double): Color = average(other, myWeight / theirWeight)
+	
+	/**
+	  * Creates a darkened copy of this color
+	  * @param impact Impact modifier, where 0 is no impact and 1 is the default impact
+	  * @return A darkened copy of this color
+	  */
+	def darkenedBy(impact: Double) = {
+		val mag = 1 + (1 - relativeLuminance) * 2.5
+		val t = luminosity * Math.pow(1 - 0.1 * mag, impact) - impact * 0.005
+		withLuminosity(t)
+	}
+	/**
+	  * Creates a lighter copy of this color
+	  * @param impact Impact modifier, where 0  is no impact and 1 is the default impact
+	  * @return A lighter version of this color
+	  */
+	def lightenedBy(impact: Double) = {
+		val mag = 1 + relativeLuminance * 3
+		// val g2 = gradient * Math.pow(1 + (1 - o) * 0.5, impact)
+		val t = darkness * Math.pow(1 - 0.1 * mag, impact) - impact * 0.01
+		withDarkness(t)
+	}
+	/**
+	  * Creates a slightly modified copy of this color
+	  * @param impact An impact modifier, where 0 is no impact and 1 is the default impact
+	  * @return Either a darker or a lighter version of this color,
+	  *         depending on the visual luminance of this color
+	  */
+	def highlightedBy(impact: Double) = {
+		if (relativeLuminance > 0.5)
+			darkenedBy(impact)
+		else
+			lightenedBy(impact)
+	}
 }

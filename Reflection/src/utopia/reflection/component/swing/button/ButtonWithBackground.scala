@@ -52,5 +52,5 @@ abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends B
 		}
 	}
 	
-	private def makeBorder(baseColor: Color) = Border.raised(borderWidth, baseColor, 0.5)
+	private def makeBorder(baseColor: Color) = Border.raised(borderWidth, baseColor)
 }

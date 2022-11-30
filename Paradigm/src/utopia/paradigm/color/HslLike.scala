@@ -16,12 +16,10 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @return The hue of this color [0, 360[ where 0 is red, 120 is green and 240 is blue
 	  */
 	def hue: Angle
-	
 	/**
 	  * @return The saturation of this color [0, 1] where 0 is grayscale and 1 is fully saturated
 	  */
 	def saturation: Double
-	
 	/**
 	  * @return The luminosity of this color [0, 1] where 0 is black and 1 is white
 	  */
@@ -32,13 +30,11 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @return A copy of this color with specified hue
 	  */
 	def withHue(hue: Angle): Repr
-	
 	/**
 	  * @param saturation New saturation [0, 1]
 	  * @return A copy of this color with specified saturation
 	  */
 	def withSaturation(saturation: Double): Repr
-	
 	/**
 	  * @param luminosity New luminosity [0, 1]
 	  * @return A copy of this color with new luminosity
@@ -49,6 +45,12 @@ trait HslLike[Repr <: HslLike[Repr]]
 	// COMPUTED	------------------
 	
 	/**
+	  * @return The darkness factor of this color. Inverse of luminosity.
+	  *         [0, 1] where 0 is totally white and 1 is totally black.
+	  */
+	def darkness = 1 - luminosity
+	
+	/**
 	  * @return A percentage value of saturation [0, 100]
 	  */
 	def saturationPercent = (saturation * 100).toInt
@@ -56,6 +58,10 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @return A percentage value of luminosity [0, 100]
 	  */
 	def luminosityPercent = (luminosity * 100).toInt
+	/**
+	  * @return A percentage value of darkness (i.e. inverse luminosity) [0, 100]
+	  */
+	def darknessPercent = (darkness * 100).toInt
 	
 	/**
 	  * @return An angle representation of hue
@@ -101,26 +107,31 @@ trait HslLike[Repr <: HslLike[Repr]]
 	// OTHER	------------------
 	
 	/**
+	  * @param darkness New darkness value to assign
+	  *                 [0, 1], where 0 is white and 1 is black
+	  * @return A copy of this color with that darkness value
+	  */
+	def withDarkness(darkness: Double) = withLuminosity(1 - darkness)
+	
+	/**
 	  * @param amount The adjustment in hue
 	  * @return A copy of this color with ajusted hue
 	  */
 	def plusHue(amount: Rotation) = withHue(hue + amount)
-	
 	/**
 	  * Adjusts the hue of this color towards the specified target
 	  * @param amountDegrees The maximum hue adjustment
 	  * @param target Target hue [0, 360[
 	  * @return A copy of this color with adjusted hue
 	  */
-	def plusHueTowards(amountDegrees: Double, target: Angle) =
-	{
+	// TODO: Absolute rotation class would be useful here
+	def plusHueTowards(amountDegrees: Double, target: Angle) = {
 		val diff = target - hue
 		if (diff.isZero)
 			this
 		else if (diff.degrees <= amountDegrees)
 			withHue(target)
-		else
-		{
+		else {
 			// Checks whether to go forward or backward on hue scale
 			plusHue(Rotation.ofDegrees(amountDegrees, diff.direction))
 		}
@@ -137,6 +148,11 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @return A copy of this color with adjusted luminosity
 	  */
 	def plusLuminosity(amount: Double) = withLuminosity(luminosity + amount)
+	/**
+	  * @param amount Darkness adjustment [0, 1]
+	  * @return A copy of this color with adjusted darkness
+	  */
+	def plusDarkness(amount: Double) = minusLuminosity(amount)
 	
 	/**
 	  * @param amount Hue adjustment
@@ -155,38 +171,47 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @return A copy of this color with adjusted luminosity
 	  */
 	def minusLuminosity(amount: Double) = withLuminosity(luminosity - amount)
+	/**
+	  * @param amount Darkness adjustment
+	  * @return A copy of this color with adjusted darkness
+	  */
+	def minusDarkness(amount: Double) = plusLuminosity(amount)
 	
 	def timesSaturation(multiplier: Double) = withSaturation(saturation * multiplier)
 	
 	def timesLuminosity(multiplier: Double) = withLuminosity(luminosity * multiplier)
+	/**
+	  * @param multiplier A modifier applied to this color's darkness
+	  * @return A copy of this color with that darkness value
+	  */
+	def timesDarkness(multiplier: Double) = withDarkness(darkness * multiplier)
 	
 	def mapHue(f: Angle => Angle) = withHue(f(hue))
 	
 	def mapSaturation(f: Double => Double) = withSaturation(f(saturation))
 	
 	def mapLuminosity(f: Double => Double) = withLuminosity(f(luminosity))
+	def mapDarkness(f: Double => Double) = withDarkness(f(darkness))
 	
 	/**
 	  * @param lightMod A lightening modifier > 0 where 2 is twice as bright, 1 keeps this color as is
 	  * @return A lightened version of this color
 	  */
-	def lightened(lightMod: Double) =
-	{
+	@deprecated("Replaced with .lightenedBy and .lightened", "v1.2")
+	def lightened(lightMod: Double) = {
 		if (lightMod <= 0)
 			withLuminosity(0)
-		else
-		{
+		else {
 			val o = luminosity
 			withLuminosity(1 - (1 - o) / lightMod)
 		}
 	}
-	
 	/**
 	  * @param darkMod A darkening modifier > 0 where 2 is twice as dark, 1 keeps this color as is
 	  * @return A darkened version of this color
 	  */
-	def darkened(darkMod: Double) =
-	{
+	@deprecated("Replaced with .darkenedBy and .darkened", "v1.2")
+	def darkened(darkMod: Double) = {
 		if (darkMod <= 0)
 			withLuminosity(1)
 		else

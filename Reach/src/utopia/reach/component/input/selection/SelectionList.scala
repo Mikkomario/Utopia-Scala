@@ -275,14 +275,15 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
+			if (!hasFocus)
+				requestFocus()
 			pressedDisplay = hoverComponentPointer.value
 			SelectionDrawer.hoverAreaPointer.value.foreach { repaintArea(_, High) }
 			pressedDisplay.map { d => ConsumeEvent(s"Pressed display $d") }
 		}
 		
 		// Only listens to mouse presses while the mouse is over this component
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
-		{
+		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
 			case MouseButtonStateHandlerType => relativeMousePosition.isDefined
 			case _ => true
 		}
@@ -328,15 +329,15 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		{
 			lazy val bg = contextBackgroundPointer.value
 			def draw(pointer: View[Option[Bounds]], highlightLevel: Double) =
-				pointer.value.foreach { area => drawer.onlyFill(bg.highlightedBy(highlightLevel * highlightLevel))
+				pointer.value.foreach { area => drawer.onlyFill(bg.highlightedBy(highlightLevel))
 					.draw(area + bounds.position) }
 			
 			// Checks whether currently selected area and the mouse area overlap
 			if (manager.selectedDisplay.exists(LocalMouseListener.currentDisplayUnderCursor.contains))
-				draw(selectedAreaPointer, if (LocalMouseListener.isPressed) 0.275 else if (hasFocus) 0.2 else 0.1)
+				draw(selectedAreaPointer, if (LocalMouseListener.isPressed) 4 else if (hasFocus) 3 else 1)
 			else {
-				draw(selectedAreaPointer, if (hasFocus) 0.15 else 0.05)
-				draw(hoverAreaPointer, if (LocalMouseListener.isPressed) 0.225 else 0.05)
+				draw(selectedAreaPointer, if (hasFocus) 2 else 1)
+				draw(hoverAreaPointer, if (LocalMouseListener.isPressed) 3 else 1)
 			}
 		}
 	}

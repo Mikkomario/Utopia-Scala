@@ -17,12 +17,12 @@ import utopia.reflection.shape.Border
   * @param statePointer A pointer to the button's state
   * @param borderWidth Width of the drawn border in pixels (default = 0 = Don't draw the border)
   * @param colorChangeIntensity The modifier applied to color change in state changes (default = 1.0)
-  * @param borderColorVariance Color variance modifier applied on the raised border (default = 0.5)
+  * @param borderColorIntensity Color variance modifier applied on the raised border (default = 1.0)
   * @param drawLevel Drawing level used when using this drawer (default = Background)
   */
 case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePointer: Changing[ButtonState],
                                       borderWidth: Double = 0.0, colorChangeIntensity: Double = 1.0,
-                                      borderColorVariance: Double = 0.5, override val drawLevel: DrawLevel = Background)
+                                      borderColorIntensity: Double = 1.0, override val drawLevel: DrawLevel = Background)
 	extends BorderDrawerLike
 {
 	// ATTRIBUTES	------------------------------
@@ -30,8 +30,10 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 	private val drawsBorder = borderWidth > 0
 	private val colorPointer = baseColorPointer.mergeWith(statePointer) { (c, s) => s.modify(c, colorChangeIntensity) }
 	// Applies lesser raising while the button is pressed
-	private val borderPointer = colorPointer.lazyMap { c => Border.raised(borderWidth, c,
-		if (statePointer.value.isPressed) borderColorVariance * 0.25 else borderColorVariance) }
+	private val borderPointer = colorPointer.lazyMap { c =>
+		Border.raised(borderWidth, c,
+			if (statePointer.value.isPressed) borderColorIntensity * 0.25 else borderColorIntensity)
+	}
 	
 	
 	// COMPUTED	----------------------------------
@@ -41,13 +43,10 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 	
 	// IMPLEMENTED	------------------------------
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
-	{
-		if (bounds.size.isPositive)
-		{
+	override def draw(drawer: Drawer, bounds: Bounds) = {
+		if (bounds.size.isPositive) {
 			// Draws the background, then the border
-			val backgroundArea = drawer.clipBounds match
-			{
+			val backgroundArea = drawer.clipBounds match {
 				case Some(clipArea) => bounds.intersectionWith(clipArea)
 				case None => Some(bounds)
 			}

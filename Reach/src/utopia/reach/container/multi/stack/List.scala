@@ -231,7 +231,7 @@ private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
 	def relativeMousePosition = relativeMousePositionPointer.value
 	def selectedArea = selectedAreaPointer.value
 	def mouseOverArea = mouseOverAreaPointer.value
-	def defaultSelectionHighlight = if (keyPressedPointer.value) 0.225 else 0.15
+	def defaultSelectionHighlight = if (keyPressedPointer.value) 2 else 1
 	
 	
 	// IMPLEMENTED	----------------------------------
@@ -254,7 +254,7 @@ private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
 					case Some(selectedArea) =>
 						// Case: Mouse is over the selected area
 						if (selectedArea.contains(mousePosition))
-							draw(if (mousePressed) 0.225 else defaultSelectionHighlight, selectedArea)
+							draw(if (mousePressed) 2 else defaultSelectionHighlight, selectedArea)
 						// Case: Mouse area and selected area are separate
 						else
 						{

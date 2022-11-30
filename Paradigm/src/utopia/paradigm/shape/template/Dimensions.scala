@@ -25,6 +25,10 @@ object Dimensions
 	  * A factory for building dimensions that consist of double numbers
 	  */
 	val double = apply(0.0)
+	/**
+	  * A factory for building dimensions that consists of integer numbers
+	  */
+	val int = apply(0)
 	
 	
 	// IMPLICIT -----------------------

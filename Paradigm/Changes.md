@@ -8,6 +8,14 @@
 - Moved all **ParadigmDataType** objects under the **ParadigmDataType** object
 - Renamed **Sized** to **HasSize** and **Bounded** to **HasBounds**
   - Renamed **SizedLike** to **Sized** and **BoundedLike** to **Bounded**
+### Deprecations
+- Deprecated `.darkened(Double)` and `.lightened(Double)` in **HslLike** 
+  in favor of `.darkened`, `.lightened`, `.darkenedBy(Double)` and `.lightenedBy(Double)` in **Color**
+### New Methods
+- **Color**
+  - Added darkening, lightening and highlighting functions
+- **HslLike**
+  - Added `.darkness` and related functions (darkness is just inverse of luminance)
 
 ## v1.1 - 02.10.2022
 This is a relatively major update, most important addition in which is the **Vector1D** class.  

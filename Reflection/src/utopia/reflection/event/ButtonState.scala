@@ -68,26 +68,11 @@ case class ButtonState(isEnabled: Boolean, isInFocus: Boolean, isMouseOver: Bool
 	  */
 	def modify(originalColor: Color, intensity: Double = 1) =
 	{
-		// Either lightens or darkens the colors
-		def mod(color: Color) =
-		{
-			val luminosityMod = color.luminosity
-			if (originalColor.luminosity >= 0.6)
-				color.darkened(1 + (1 - luminosityMod) * intensity * 0.3 + 0.1)
-			else
-				color.lightened(1 + luminosityMod * intensity * 0.7 + 0.1)
-		}
-		
-		var c = originalColor
-		if (!isEnabled)
-			c = c.timesAlpha(0.55)
-		if (isMouseOver)
-			c = mod(c)
-		if (isInFocus)
-			c = mod(c)
-		if (isPressed)
-			c = mod(c)
-		
-		c
+		val modLevel = Vector(isMouseOver, isInFocus, isPressed).count { b => b }
+		val base = if (modLevel == 0) originalColor else originalColor.highlightedBy(modLevel)
+		if (isEnabled)
+			base
+		else
+			base.timesAlpha(0.55)
 	}
 }
