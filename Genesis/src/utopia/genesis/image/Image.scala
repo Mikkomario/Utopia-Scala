@@ -1,6 +1,6 @@
 package utopia.genesis.image
 
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.{LinearScalable, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
@@ -57,14 +57,14 @@ object Image
 		if (readClass.isDefined || Files.exists(path))
 		{
 			// ImageIO and class may return null. Image is read through class, if one is provided
-			val readResult = Try { readClass.map { c => Option(c.getResourceAsStream("/" + path.toString))
+			val readResult = Try { readClass.map { c => Option(c.getResourceAsStream(s"/${ path.toString }"))
 				.flatMap { _.consume { stream => Option(ImageIO.read(stream)) } } }
 				.getOrElse { Option(ImageIO.read(path.toFile)) } }
 			
 			readResult.flatMap
 			{
 				case Some(result) => Success(apply(result))
-				case None => Failure(new NoImageReaderAvailableException("Cannot read image from file: " + path.toString))
+				case None => Failure(new NoImageReaderAvailableException(s"Cannot read image from file: ${ path.toString }"))
 			}
 		}
 		else
@@ -168,7 +168,7 @@ object Image
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: Lazy[PixelTable])
-	extends ImageLike with LinearScalable[Image] with Sized[Image]
+	extends ImageLike with LinearScalable[Image] with Sized[Image] with MaybeEmpty[Image]
 {
 	// ATTRIBUTES	----------------
 	
@@ -282,6 +282,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return Whether this image is actually completely empty
 	  */
 	override def isEmpty = source.isEmpty
+	override def nonEmpty = !isEmpty
 	
 	override def preCalculatedPixels = _pixels.current
 	/**

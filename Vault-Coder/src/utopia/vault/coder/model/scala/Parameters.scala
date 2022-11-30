@@ -1,9 +1,10 @@
 package utopia.vault.coder.model.scala
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.template.{ScalaConvertible, Documented}
+import utopia.vault.coder.model.scala.template.{Documented, ScalaConvertible}
 
 import scala.language.implicitConversions
 
@@ -50,18 +51,9 @@ object Parameters
   * @since 2.9.2021, v0.1
   */
 case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Vector[Parameter] = Vector())
-	extends ScalaConvertible with Documented
+	extends ScalaConvertible with Documented with MaybeEmpty[Parameters]
 {
 	// COMPUTED -----------------------------------
-	
-	/**
-	  * @return Whether this parameters list is empty
-	  */
-	def isEmpty = lists.isEmpty && implicits.isEmpty
-	/**
-	  * @return Whether this parameters list is nonempty
-	  */
-	def nonEmpty = !isEmpty
 	
 	/**
 	  * @return Whether these parameter lists contain at least one list that is not implicit
@@ -79,6 +71,13 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	
 	
 	// IMPLEMENTED  -------------------------------
+	
+	override def repr = this
+	
+	/**
+	  * @return Whether this parameters list is empty
+	  */
+	override def isEmpty = lists.isEmpty && implicits.isEmpty
 	
 	override def documentation = (lists.flatten ++ implicits).flatMap { _.documentation }
 	

@@ -8,8 +8,10 @@ import utopia.flow.time.{Days, Today}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
+import utopia.flow.operator.MaybeEmpty
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
+import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
@@ -30,7 +32,7 @@ object Value
  * Values can wrap an object value and associate it with a certain data type. Values can be cast 
  * to different data types. They are immutable.
  */
-case class Value(content: Option[Any], dataType: DataType) extends JsonConvertible
+case class Value(content: Option[Any], dataType: DataType) extends JsonConvertible with MaybeEmpty[Value]
 {
     // INITIAL CODE    ---------
     
@@ -46,26 +48,19 @@ case class Value(content: Option[Any], dataType: DataType) extends JsonConvertib
     def description = s"'$getString' ($dataType)"
     
     /**
-      * @return Whether this value has a real (not null) object value associated with it
-      */
-    def nonEmpty = content.isDefined
-    /**
      * Whether this value has a real object value associated with it
      */
     def isDefined = nonEmpty
     
-    /**
-     * Whether this value doesn't have a real object value associated with it
-     */
-    def isEmpty = content.isEmpty
-    
-    /**
-      * @return None if this value is empty. This value otherwise.
-      */
-    def notEmpty = if (isEmpty) None else Some(this)
-    
     
     // IMPLEMENTED METHODS    ---
+    
+    override def repr = this
+    
+    /**
+      * Whether this value doesn't have a real object value associated with it
+      */
+    override def isEmpty = content.isEmpty
     
     override def toJson = JsonValueConverter(this).getOrElse("null")
     
@@ -74,7 +69,7 @@ case class Value(content: Option[Any], dataType: DataType) extends JsonConvertib
      */
     override def toString = string.getOrElse("")
     
-    override def appendToJson(jsonBuilder: StringBuilder) = JsonValueConverter(this) match {
+    override def appendToJson(jsonBuilder: mutable.StringBuilder) = JsonValueConverter(this) match {
         case Some(json) => jsonBuilder ++= json
         case None => jsonBuilder ++= "null"
     }

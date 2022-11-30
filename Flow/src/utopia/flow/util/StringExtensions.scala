@@ -40,11 +40,6 @@ object StringExtensions
 		def lastWord = afterLast(" ")
 		
 		/**
-		 * @return A non-empty copy of this string or None
-		 */
-		def notEmpty = if (s.isEmpty) None else Some(s)
-		
-		/**
 		 * @return A copy of this string without any non-letter characters
 		 */
 		def letters = s.filter { _.isLetter }
@@ -56,22 +51,11 @@ object StringExtensions
 		/**
 		  * @return A copy of this string surrounded with quotation marks (")
 		  */
-		def quoted = "\"" + s + "\""
+		def quoted = s"\"$s\""
 		/**
 		  * @return A copy of this string where the first character is in lower case
 		  */
 		def uncapitalize = if (s.isEmpty) s else s"${s.head.toLower}${s.drop(1)}"
-		
-		/**
-		  * @param default The string returned if this string is empty
-		  * @return This string, if not empty, otherwise the 'default' string
-		  */
-		def nonEmptyOrElse(default: => String) = if (s.isEmpty) default else s
-		/**
-		  * @param f A mapping function
-		  * @return This string if empty, otherwise a mapped copy of this string
-		  */
-		def mapIfNotEmpty(f: String => String) = if (s.isEmpty) s else f(s)
 		
 		/**
 		  * @param range A range
@@ -320,6 +304,7 @@ object StringExtensions
 		 * @param regex A regular expression
 		 * @return Each part of this string which was separated with such an expression
 		 */
+		//noinspection LegacyStringFormatting
 		@deprecated("Please use .split(Regex), combining it with .ignoringQuotations (in Regex)", "v1.15")
 		def splitIgnoringQuotations(regex: String) =
 			s.split(regex + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
@@ -380,6 +365,29 @@ object StringExtensions
 		  * which use the same name)
 		  */
 		def replaceEachMatchOf(regex: Regex, replacement: => String) = replaceAll(regex, replacement)
+		
+		/**
+		  * @return Some(this) if not empty. None if empty.
+		  */
+		def notEmpty = if (s.isEmpty) None else Some(s)
+		
+		// TODO: These are copied from MayBeEmpty -
+		//  Can't inherit it because implicit casting then fails with StringOps ambiguity
+		
+		/**
+		  * @param default An item to return in case this one is empty (call-by-name)
+		  * @tparam B Type of the default result
+		  * @return This if not empty, otherwise the default
+		  */
+		def nonEmptyOrElse[B >: String](default: => B) = if (s.isEmpty) default else s
+		
+		/**
+		  * @param f A mapping function to apply for non-empty items
+		  * @tparam B Type of mapping result
+		  * @return A mapped copy of this item, if this item was not empty.
+		  *         Otherwise returns this item.
+		  */
+		def mapIfNotEmpty[B >: String](f: String => B) = if (s.isEmpty) s else f(s)
 	}
 	
 	private class StringIndexOfIterator(val string: String, val searched: String) extends Iterator[Int]

@@ -6,6 +6,8 @@ import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 
+import scala.collection.mutable
+
 /**
   * Properties are named and contain a value in a certain data type
   * @author Mikko Hilpinen
@@ -41,7 +43,7 @@ trait Property extends JsonConvertible with View[Value]
 	
 	override def toString = s"$name: ${ value.description }"
 	
-	override def appendToJson(jsonBuilder: StringBuilder) = {
+	override def appendToJson(jsonBuilder: mutable.StringBuilder) = {
 		jsonBuilder ++= name.quoted
 		jsonBuilder ++= ": "
 		value.appendToJson(jsonBuilder)

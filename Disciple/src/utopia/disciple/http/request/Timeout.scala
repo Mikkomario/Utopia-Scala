@@ -1,9 +1,9 @@
 package utopia.disciple.http.request
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
-
 import utopia.flow.time.TimeExtensions._
 import TimeoutType._
+import utopia.flow.operator.MaybeEmpty
 
 object Timeout
 {
@@ -69,19 +69,9 @@ object Timeout
   * @author Mikko Hilpinen
   * @since 15.5.2020, v1.3
   */
-case class Timeout(thresholds: Map[TimeoutType, FiniteDuration])
+case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEmpty[Timeout]
 {
 	// COMPUTED	----------------------------
-	
-	/**
-	  * @return Whether this timeout is empty
-	  */
-	def isEmpty = thresholds.isEmpty
-	
-	/**
-	  * @return Whether this timeout is not empty
-	  */
-	def nonEmpty = thresholds.nonEmpty
 	
 	/**
 	  * @return Connection timeout threshold. Infinite if not otherwise specified.
@@ -116,8 +106,14 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration])
 	
 	// IMPLEMENTED	------------------------
 	
-	override def toString =
-	{
+	override def repr = this
+	
+	/**
+	  * @return Whether this timeout is empty
+	  */
+	def isEmpty = thresholds.isEmpty
+	
+	override def toString = {
 		if (nonEmpty)
 			thresholds.map { case (timeoutType, duration) =>
 				s"$timeoutType: ${duration.description}"

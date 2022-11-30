@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.code
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.{Combinable, MaybeEmpty}
 import utopia.flow.parse.string.Regex
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.scala.code.CodeLine.{maxLineLength, oneTimeRegexes, repeatableRegexes, tabWidth}
@@ -59,7 +59,7 @@ object CodeLine
   * @author Mikko Hilpinen
   * @since 27.9.2021, v1.1
   */
-case class CodeLine(indentation: Int, code: String) extends Combinable[String, CodeLine]
+case class CodeLine(indentation: Int, code: String) extends Combinable[String, CodeLine] with MaybeEmpty[CodeLine]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -70,15 +70,6 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 	
 	
 	// COMPUTED ----------------------------
-	
-	/**
-	  * @return Whether this code line is empty
-	  */
-	def isEmpty = code.isEmpty
-	/**
-	  * @return Whether this code line is not empty
-	  */
-	def nonEmpty = !isEmpty
 	
 	/**
 	  * @return Whether this code line exceeds the maximum code line length
@@ -124,9 +115,16 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def +(other: String) = copy(code = code + other)
+	override def repr = this
 	
-	override def toString = ("\t" * indentation) + code
+	/**
+	  * @return Whether this code line is empty
+	  */
+	override def isEmpty = code.isEmpty
+	
+	override def +(other: String) = copy(code = s"$code$other")
+	
+	override def toString = s"${ "\t" * indentation }$code"
 	
 	
 	// OTHER    -----------------------------
@@ -141,7 +139,7 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 	  * @param prefix A prefix to add to the beginning of this line
 	  * @return A copy of this line with the prefix added
 	  */
-	def prepend(prefix: String) = copy(code = prefix + code)
+	def prepend(prefix: String) = copy(code = s"$prefix$code")
 	
 	/**
 	  * @param f A mapping function for the code part

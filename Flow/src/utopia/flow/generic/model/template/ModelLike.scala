@@ -5,6 +5,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonConvertible
 
+import scala.collection.mutable
+
 object ModelLike
 {
 	/**
@@ -143,7 +145,7 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  */
 	override def apply(propName: String): Value = get(propName).value
 	
-	override def appendToJson(jsonBuilder: StringBuilder) = {
+	override def appendToJson(jsonBuilder: mutable.StringBuilder) = {
 		if (isEmpty)
 			jsonBuilder ++= "{}"
 		else {

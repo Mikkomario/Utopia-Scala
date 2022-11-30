@@ -3,7 +3,7 @@ package utopia.flow.collection.template
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.{OrderedDepthIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions.ImplicitApproxEquals
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.{EqualsFunction, MaybeEmpty}
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
@@ -29,7 +29,7 @@ object TreeLike
   * @tparam A Type of item used when navigating through this tree. May also be considered the main content of this tree.
   * @tparam Repr Types of nodes in this tree
   */
-trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
+trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 {
 	// ABSTRACT   --------------------
 	
@@ -43,11 +43,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  * @return The navigation element of this tree node.
 	  */
 	def nav: A
-	
-	/**
-	  * @return "This" instance
-	  */
-	def repr: Repr
 	
 	/**
 	  * The child nodes directly under this node
@@ -72,14 +67,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	
 	// COMPUTED PROPERTIES    --------
 	
-	/**
-	  * Whether this tree is empty and doesn't contain a single node below it
-	  */
-	def isEmpty = children.isEmpty
-	/**
-	  * @return Whether this tree contains at least one node below it
-	  */
-	def nonEmpty = !isEmpty
 	/**
 	  * @return Whether this tree has child nodes registered under it
 	  */
@@ -287,12 +274,12 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	
 	// IMPLEMENTED  ----------------
 	
-	override def toString: String = {
-		if (isEmpty)
-			nav.toString
-		else
-			s"$nav: {${ children.map { _.toString }.reduce { _ + ", " + _ } }}"
-	}
+	/**
+	  * Whether this tree is empty and doesn't contain a single node below it
+	  */
+	override def isEmpty = children.isEmpty
+	
+	override def toString: String = if (isEmpty) nav.toString else s"$nav: {${ children.mkString(", ") }}"
 	
 	
 	// OTHER METHODS    ------------

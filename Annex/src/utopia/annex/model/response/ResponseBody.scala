@@ -3,6 +3,7 @@ package utopia.annex.model.response
 import utopia.annex.model.error.EmptyResponseException
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.MaybeEmpty
 
 import scala.util.{Failure, Try}
 
@@ -11,7 +12,7 @@ import scala.util.{Failure, Try}
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-sealed abstract class ResponseBody(private val body: Value)
+sealed abstract class ResponseBody(private val body: Value) extends MaybeEmpty[ResponseBody]
 {
 	// ABSTRACT	--------------------------
 	
@@ -34,16 +35,6 @@ sealed abstract class ResponseBody(private val body: Value)
 	// COMPUTED	--------------------------
 	
 	/**
-	  * @return Whether this response contains data
-	  */
-	def nonEmpty = body.isDefined
-	
-	/**
-	  * @return Whether this response is empty
-	  */
-	def isEmpty = body.isEmpty
-	
-	/**
 	  * @return Value of this response
 	  */
 	def value = body
@@ -55,6 +46,16 @@ sealed abstract class ResponseBody(private val body: Value)
 	  * @return Parsed instance. Failure if this body is empty or if parsing failed.
 	  */
 	def parsedSingle[A](implicit parser: FromModelFactory[A]) = tryParseSingleWith(parser)
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def repr = this
+	
+	/**
+	  * @return Whether this response is empty
+	  */
+	override def isEmpty = body.isEmpty
 }
 
 object ResponseBody

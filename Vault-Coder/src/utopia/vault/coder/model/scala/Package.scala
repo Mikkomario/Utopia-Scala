@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala
 
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
@@ -47,8 +48,6 @@ object Package
 	lazy val flowUtils = flow/"util"
 	@deprecated
 	lazy val struct = flow/"datastructure"
-	@deprecated
-	lazy val immutableStruct = struct/"immutable"
 	
 	// Vault
 	
@@ -101,18 +100,9 @@ object Package
   * @author Mikko Hilpinen
   * @since 26.9.2021, v1.1
   */
-case class Package(parts: Vector[String]) extends ScalaConvertible
+case class Package(parts: Vector[String]) extends ScalaConvertible with MaybeEmpty[Package]
 {
 	// COMPUTED ---------------------------
-	
-	/**
-	  * @return Whether this package is empty ("")
-	  */
-	def isEmpty = parts.isEmpty
-	/**
-	  * @return Whether this package path contains at least one package
-	  */
-	def nonEmpty = !isEmpty
 	
 	/**
 	  * @return The parent package of this package - this package if this is the root package
@@ -127,6 +117,13 @@ case class Package(parts: Vector[String]) extends ScalaConvertible
 	
 	
 	// IMPLEMENTED  -----------------------
+	
+	override def repr = this
+	
+	/**
+	  * @return Whether this package is empty ("")
+	  */
+	override def isEmpty = parts.isEmpty
 	
 	override def toScala = parts.mkString(".")
 	

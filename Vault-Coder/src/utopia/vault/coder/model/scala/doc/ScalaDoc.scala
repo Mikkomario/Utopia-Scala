@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala.doc
 
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.coder.model.scala.DeclarationDate
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.{Author, Param, Return, Since}
@@ -18,15 +19,9 @@ object ScalaDoc
   * @author Mikko Hilpinen
   * @since 1.11.2021, v1.3
   */
-case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible
+case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible with MaybeEmpty[ScalaDoc]
 {
 	// COMPUTED ----------------------------------
-	
-	/**
-	  * @return Whether this documentation is empty
-	  */
-	def isEmpty = parts.isEmpty
-	def nonEmpty = !isEmpty
 	
 	/**
 	  * @return Main description in this scaladoc
@@ -49,12 +44,14 @@ case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def toCode =
-	{
+	override def repr = this
+	
+	override def isEmpty = parts.isEmpty
+	
+	override def toCode = {
 		if (parts.isEmpty)
 			Code.empty
-		else
-		{
+		else {
 			val partsCode = parts.map { _.toCode }.reduceLeft { _ ++ _ }
 			"/**" +: partsCode.prependAll("  * ") :+ "  */"
 		}

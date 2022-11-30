@@ -1,5 +1,7 @@
 package utopia.reflection.container.template.window
 
+import utopia.flow.operator.MaybeEmpty
+
 object RowGroup
 {
 	/**
@@ -31,19 +33,9 @@ object RowGroup
   * @param rows Input rows that form this group
   * @tparam Row Row type
   */
-class RowGroup[+Row](val rows: Vector[Row])
+class RowGroup[+Row](val rows: Vector[Row]) extends MaybeEmpty[RowGroup[Row]]
 {
 	// COMPUTED	----------------------
-	
-	/**
-	  * @return Whether this group is empty
-	  */
-	def isEmpty = rows.isEmpty
-	
-	/**
-	  * @return Whether this group is not empty
-	  */
-	def nonEmpty = rows.nonEmpty
 	
 	/**
 	  * @return Whether this group consists of a single row
@@ -54,6 +46,16 @@ class RowGroup[+Row](val rows: Vector[Row])
 	  * @return Whether this group contains multiple rows
 	  */
 	def isMultipleRows = rows.size > 1
+	
+	
+	// IMPLEMENTED  ------------------
+	
+	override def repr = this
+	
+	/**
+	  * @return Whether this group is empty
+	  */
+	override def isEmpty = rows.isEmpty
 	
 	
 	// OTHER	----------------------

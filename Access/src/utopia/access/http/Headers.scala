@@ -1,27 +1,24 @@
 package utopia.access.http
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.Now
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.StringExtensions._
 
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-import java.util.Base64
+import java.nio.charset.{Charset, StandardCharsets}
+import java.time.{Instant, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.time.Instant
-import java.time.ZonedDateTime
-import java.time.ZoneOffset
-import scala.language.implicitConversions
+import java.util.Base64
 import scala.io.Codec
+import scala.language.implicitConversions
 import scala.math.Ordering.Double.TotalOrdering
-import scala.collection.immutable.Map
 import scala.util.{Success, Try}
 
 object Headers extends FromModelFactory[Headers]
@@ -73,7 +70,7 @@ object Headers extends FromModelFactory[Headers]
  * @author Mikko Hilpinen
  * @since 22.8.2017
  */
-case class Headers private(fields: Map[String, String]) extends ModelConvertible
+case class Headers private(fields: Map[String, String]) extends ModelConvertible with MaybeEmpty[Headers]
 {
     // IMPLEMENTED METHODS / PROPERTIES    ---
     
@@ -83,15 +80,6 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     
     
     // COMPUTED PROPERTIES    -----
-    
-    /**
-     * @return Whether these headers are empty
-     */
-    def isEmpty = fields.isEmpty
-    /**
-     * @return Whether these headers are not empty
-     */
-    def nonEmpty = !isEmpty
     
     /**
      * The methods allowed for the server resource
@@ -227,13 +215,23 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     def containsBearerAuthorization = authorization.exists { _.startsWithIgnoreCase("Bearer ") }
     
     
+    // IMPLEMENTED  ---------------
+    
+    override def repr = this
+    
+    /**
+      * @return Whether these headers are empty
+      */
+    override def isEmpty = fields.isEmpty
+    
+    
     // OPERATORS    ---------------
     
     /**
      * Finds the value associated with the specified header name. The value may contain multiple 
      * parts, depending from the header format. Returns None if the header has no value.
      */
-    def apply(headerName: String) = fields.get(headerName.toLowerCase())
+    def apply(headerName: String) = fields.get(headerName.toLowerCase)
     
     /**
      * Adds new values to a header. Will not overwrite any existing values.
@@ -310,7 +308,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * targeted header.
      */
     def withHeader(headerName: String, values: Seq[String], separator: String = ","): Headers = 
-            withHeader(headerName, values.reduce { _ + separator + _ })
+            withHeader(headerName, values.reduce { (a, b) => s"$a$separator$b" })
     /**
      * Returns a copy of these headers with a new header. Overwrites any previous values on the 
      * targeted header.
@@ -319,26 +317,24 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     /**
       * Adds new values to a header. Will not overwrite any existing values.
       */
-    def withHeaderAdded(headerName: String, values: Seq[String], separator: String): Headers =
-    {
+    def withHeaderAdded(headerName: String, values: Seq[String], separator: String): Headers = {
         if (values.nonEmpty)
-            withHeaderAdded(headerName, values.reduce { _ + separator + _ }, separator)
+            withHeaderAdded(headerName, values.reduce { (a, b) => s"$a$separator$b" }, separator)
         else
             this
     }
     /**
       * Adds a new value to a header. Will not overwrite any existing values.
       */
-    def withHeaderAdded(headerName: String, value: String, separator: String = ",") =
-    {
-        if (fields.contains(headerName.toLowerCase()))
-        {
-            // Appends to existing value
-            val newValue = apply(headerName).get + separator + value
-            Headers(fields + (headerName -> newValue))
+    def withHeaderAdded(headerName: String, value: String, separator: String = ",") = {
+        apply(headerName) match {
+            // Case: Header already exists => Appends a value
+            case Some(existingValue) =>
+                val newValue = s"$existingValue$separator$value"
+                Headers(fields + (headerName -> newValue))
+            // Case: New header => adds it
+            case None => withHeader(headerName, value)
         }
-        else
-            withHeader(headerName, value)
     }
     
     /**
@@ -456,8 +452,13 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * @param contentType the type of the content
      * @param charset then encoding that was used used when the content was written to the response
      */
-    def withContentType(contentType: ContentType, charset: Option[Charset] = None) = withHeader(
-        "Content-Type", contentType.toString + charset.map { ";" + _.name() }.getOrElse(""))
+    def withContentType(contentType: ContentType, charset: Option[Charset] = None) = {
+        val charsetPart = charset match {
+            case Some(charset) => s";${charset.name()}"
+            case None => ""
+        }
+        withHeader("Content-Type", s"$contentType$charsetPart")
+    }
     
     /**
      * Creates a new header with the time when the message associated with this header was originated. 
@@ -496,8 +497,8 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     def withBasicAuthorization(userName: String, password: String) =
     {
         // Encodes the username + password with base64
-        val encoded = Base64.getEncoder.encodeToString((userName + ":" + password).getBytes(Codec.UTF8.charSet))
-        withAuthorization("Basic " + encoded)
+        val encoded = Base64.getEncoder.encodeToString(s"$userName:$password".getBytes(Codec.UTF8.charSet))
+        withAuthorization(s"Basic $encoded")
     }
     /**
       * @param token Authorization/access token

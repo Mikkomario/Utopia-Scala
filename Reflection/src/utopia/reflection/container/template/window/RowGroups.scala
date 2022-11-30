@@ -1,5 +1,7 @@
 package utopia.reflection.container.template.window
 
+import utopia.flow.operator.MaybeEmpty
+
 object RowGroups
 {
 	/**
@@ -65,7 +67,7 @@ object RowGroups
   * @param groups Input row groups that form this main group
   * @tparam Row Type of rows in these groups
   */
-class RowGroups[+Row](val groups: Vector[RowGroup[Row]])
+class RowGroups[+Row](val groups: Vector[RowGroup[Row]]) extends MaybeEmpty[RowGroups[Row]]
 {
 	// COMPUTED	----------------------------
 	
@@ -73,16 +75,6 @@ class RowGroups[+Row](val groups: Vector[RowGroup[Row]])
 	  * All input rows within this set
 	  */
 	lazy val rows = groups.flatMap { _.rows }
-	
-	/**
-	  * @return Whether this set of rows is completely empty
-	  */
-	def isEmpty = groups.forall { _.isEmpty }
-	
-	/**
-	  * @return Whether this set contains any rows
-	  */
-	def nonEmpty = groups.exists { _.nonEmpty }
 	
 	/**
 	  * @return Whether this set consists only of a single group
@@ -98,6 +90,16 @@ class RowGroups[+Row](val groups: Vector[RowGroup[Row]])
 	  * @return Whether this set consists only of a single row
 	  */
 	def isSingleRow = isSingleGroup && groups.head.isSingleRow
+	
+	
+	// IMPLEMENTED  --------------------------
+	
+	override def repr = this
+	
+	/**
+	  * @return Whether this set of rows is completely empty
+	  */
+	def isEmpty = groups.forall { _.isEmpty }
 	
 	
 	// OTHER	------------------------------

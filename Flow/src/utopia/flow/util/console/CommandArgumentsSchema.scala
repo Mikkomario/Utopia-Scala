@@ -1,5 +1,7 @@
 package utopia.flow.util.console
 
+import utopia.flow.operator.MaybeEmpty
+
 object CommandArgumentsSchema
 {
 	/**
@@ -13,16 +15,19 @@ object CommandArgumentsSchema
  * @author Mikko Hilpinen
  * @since 26.6.2021, v1.10
  */
-case class CommandArgumentsSchema(arguments: Vector[ArgumentSchema])
+case class CommandArgumentsSchema(arguments: Vector[ArgumentSchema]) extends MaybeEmpty[CommandArgumentsSchema]
 {
+	// IMPLEMENTED  -----------------------
+	
+	override def repr = this
+	
 	/**
 	 * @return Whether this schema is empty
 	 */
-	def isEmpty = arguments.isEmpty
-	/**
-	 * @return Whether this schema contains at least one argument specification
-	 */
-	def nonEmpty = !isEmpty
+	override def isEmpty = arguments.isEmpty
+	
+	
+	// OTHER    --------------------------
 	
 	/**
 	 * Finds an argument schema that matches the specified name

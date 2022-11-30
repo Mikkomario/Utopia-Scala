@@ -79,6 +79,7 @@
 - Added new ways to write **LocalTime** values (after importing **TimeExtensions**)
 - Added **SettableOnce**, which is like a **Promise** with **ChangeEvent**s
 - Added **ReleasingPointer** class
+- Added **MaybeEmpty** trait and **NotEmpty** object for dealing with items that have the `.isEmpty` -property
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait

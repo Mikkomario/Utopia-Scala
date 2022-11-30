@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.util.Version
 import utopia.vault.coder.model.scala.Package
 
@@ -26,14 +27,9 @@ case class ProjectData(projectName: Name, modelPackage: Package, databasePackage
                        classes: Vector[Class], combinations: Vector[CombinationData], instances: Vector[Instance],
                        namingRules: NamingRules, version: Option[Version], modelCanReferToDB: Boolean,
                        prefixColumnNames: Boolean)
+	extends MaybeEmpty[ProjectData]
 {
 	// COMPUTED ------------------------------
-	
-	/**
-	  * @return Whether this data set is completely empty
-	  */
-	def isEmpty = enumerations.isEmpty && classes.isEmpty && combinations.isEmpty
-	def nonEmpty = !isEmpty
 	
 	/**
 	  * @return A copy of this project data with only classes remaining
@@ -47,6 +43,16 @@ case class ProjectData(projectName: Name, modelPackage: Package, databasePackage
 	  * @return A copy of this project data with only enumerations remaining
 	  */
 	def onlyEnumerations = copy(classes = Vector(), combinations = Vector())
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def repr = this
+	
+	/**
+	  * @return Whether this data set is completely empty
+	  */
+	override def isEmpty = enumerations.isEmpty && classes.isEmpty && combinations.isEmpty
 	
 	
 	// OTHER    -------------------------------
