@@ -20,6 +20,7 @@
 - Added **MessageWindowFactory** trait
 ### Other
 - Visual highlighting updates to buttons and some fields
+- InteractionWindowFactory now asks for a **View** instead of **Changing** as the "defaultActionEnabledPointer"
 
 ## v0.4 - 02.10.2022
 This update focuses on TextField customizability, adding a number of new ways to affect text highlighting and 

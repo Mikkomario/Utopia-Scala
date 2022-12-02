@@ -2,14 +2,17 @@ package utopia.reach.window
 
 import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.Pointer
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
-import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackFactory}
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.cursor.CursorSet
 import utopia.reflection.color.ColorRole
@@ -17,11 +20,12 @@ import utopia.reflection.component.context.{ButtonContextLike, ColorContext}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.reflection.container.template.window.WindowButtonBlueprint
+import utopia.reflection.event.HotKey
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 
+import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
@@ -60,7 +64,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], Changing[Boolean])
+	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], View[Boolean])
 	
 	/**
 	  * @return Result provided when no result is gained through interacting with the buttons
@@ -110,14 +114,18 @@ trait InteractionWindowFactory[A]
 		val context = standardContext
 		
 		val resultPromise = Promise[A]()
+		// When this function finishes, this pointer contains the actually used condition
+		// (the condition is built incrementally)
+		val enterEnabledConditionPointer = Pointer[View[Boolean]](AlwaysTrue)
 		
 		// Creates the main content stack with 1-3 rows (based on button layouts)
-		val (content, (buttons, defaultActionEnabledPointer, blueprints)) = ReachCanvas(cursors) { hierarchy =>
+		val (content, buttons) = ReachCanvas(cursors) { hierarchy =>
 			Framing(hierarchy).buildFilledWithContext(context, context.containerBackground, Stack)
 				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>
 					stackF.build(Mixed).column() { factories =>
 						// Creates the main content and determines the button blueprints
 						val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
+						enterEnabledConditionPointer.value = defaultActionEnabledPointer
 						
 						// Groups the buttons based on location
 						val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }
@@ -129,12 +137,10 @@ trait InteractionWindowFactory[A]
 						val buttonsBuilder = new VectorBuilder[ButtonLike]()
 						
 						// Appends a single button row, if necessary
-						def appendButtons(blueprints: Vector[WindowButtonBlueprint[A]]): Unit =
-						{
-							if (blueprints.nonEmpty)
-							{
+						def appendButtons(blueprints: Vector[WindowButtonBlueprint[A]]): Unit = {
+							if (blueprints.nonEmpty) {
 								val (component, buttons) = buttonRow(factoriesWithoutContext, blueprints,
-									defaultButtonMargin, resultPromise)
+									defaultButtonMargin, resultPromise, enterEnabledConditionPointer.value.value)
 								rowsBuilder += component
 								buttonsBuilder ++= buttons
 							}
@@ -145,14 +151,13 @@ trait InteractionWindowFactory[A]
 						rowsBuilder += mainContent
 						appendButtons(bottomButtons)
 						
-						rowsBuilder.result() -> (buttonsBuilder.result(), defaultActionEnabledPointer, buttonBlueprints)
+						rowsBuilder.result() -> buttonsBuilder.result()
 					}
 				}
 		}.parentAndResult
 		
 		// Creates and sets up the dialog
-		val window = parentWindow match
-		{
+		val window = parentWindow match {
 			case Some(parent) => new Dialog(parent, content, title, Program)
 			case None => Frame.windowed(content, title, Program)
 		}
@@ -161,13 +166,10 @@ trait InteractionWindowFactory[A]
 		window.startEventGenerators(context.actorHandler)
 		window.display()
 		
+		// Finalizes the enter action enabled -function
 		// Triggers the default button on enter, provided that no button has focus and the window does
-		defaultActionEnabledPointer.notFixedWhere { !_ }.foreach { enabledPointer =>
-			blueprints.find { _.isDefault }.foreach { defaultButtonBlueprint =>
-				WindowDefaultButtonKeyTriggerer.register(window, buttons, enabledPointer) {
-					defaultButtonBlueprint.pressAction(resultPromise)
-				}
-			}
+		enterEnabledConditionPointer.update { baseCondition =>
+			View(baseCondition.value && buttons.forall { !_.hasFocus } && window.isFocusedWindow && window.visible)
 		}
 		
 		// Closes the dialog once a result is acquired.
@@ -180,7 +182,8 @@ trait InteractionWindowFactory[A]
 	}
 	
 	private def buttonRow(factories: Mixed, buttons: Vector[WindowButtonBlueprint[A]],
-						  baseMargin: Double, resultPromise: Promise[A]): (ReachComponentLike, Vector[ButtonLike]) =
+						  baseMargin: Double, resultPromise: Promise[A],
+						  defaultActionEnabled: => Boolean): (ReachComponentLike, Vector[ButtonLike]) =
 	{
 		val nonScalingMargin = baseMargin.downscaling
 		
@@ -193,14 +196,16 @@ trait InteractionWindowFactory[A]
 			if (blueprints.size > 1)
 				factories(AlignFrame).build(Stack)(alignment) { stackF =>
 					stackF.build(Mixed).apply(X, margin = nonScalingMargin) { factories =>
-						val buttons = blueprints.map { blueprint => actualize(factories, blueprint, resultPromise) }
+						val buttons = blueprints.map { blueprint =>
+							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
+						}
 						buttons -> buttons
 					}.parentAndResult
 				}.parentAndResult
 			// Case: Only one button
 			else
 				factories(AlignFrame).build(Mixed)(alignment) { factories =>
-					val button = actualize(factories, blueprints.head, resultPromise)
+					val button = actualize(factories, blueprints.head, resultPromise, defaultActionEnabled)
 					button -> Vector(button)
 				}.parentAndResult
 		}
@@ -211,32 +216,35 @@ trait InteractionWindowFactory[A]
 			
 			// Case: Items on left side + right and/or center => no aligning needed
 			if (buttonsByLocation.contains(Alignment.Left))
-				buttonGroupsToStack(factories(Stack), buttonGroups, scalingMargin, nonScalingMargin, resultPromise)
+				buttonGroupsToStack(factories(Stack), buttonGroups, scalingMargin, nonScalingMargin, resultPromise,
+					defaultActionEnabled)
 			// Case: Items only on center and right => aligns the stack
 			else
 				factories(AlignFrame).build(Stack)(Alignment.Right) { stackF =>
-					buttonGroupsToStack(stackF, buttonGroups, scalingMargin, nonScalingMargin, resultPromise)
+					buttonGroupsToStack(stackF, buttonGroups, scalingMargin, nonScalingMargin, resultPromise,
+						defaultActionEnabled)
 				}.parentAndResult
 		}
 	}
 	
 	private def buttonGroupsToStack(factory: StackFactory, buttonGroups: Vector[Vector[WindowButtonBlueprint[A]]],
 									scalingMargin: StackLength, nonScalingMargin: StackLength,
-									resultPromise: Promise[A]): (Stack[ReachComponentLike], Vector[ButtonLike]) =
+									resultPromise: Promise[A],
+									defaultActionEnabled: => Boolean): (Stack[ReachComponentLike], Vector[ButtonLike]) =
 	{
 		factory.build(Mixed)(X, margin = scalingMargin) { factories =>
 			val (components, buttons) = buttonGroups.splitMap { group =>
 				// If there are multiple buttons in a group, places them in a stack
-				if (group.size > 1)
-				{
+				if (group.size > 1) {
 					factories(Stack).build(Mixed)(X, margin = nonScalingMargin) { factories =>
-						val buttons = group.map { blueprint => actualize(factories, blueprint, resultPromise) }
+						val buttons = group.map { blueprint =>
+							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
+						}
 						buttons -> buttons
 					}.parentAndResult
 				}
-				else
-				{
-					val button = actualize(factories(Mixed), group.head, resultPromise)
+				else {
+					val button = actualize(factories(Mixed), group.head, resultPromise, defaultActionEnabled)
 					button -> Vector(button)
 				}
 			}
@@ -244,19 +252,25 @@ trait InteractionWindowFactory[A]
 		}.parentAndResult
 	}
 	
-	// Returns created button + whether that button should be the default button
-	private def actualize(factories: Mixed, blueprint: WindowButtonBlueprint[A], resultPromise: Promise[A]) =
+	// Returns created button
+	private def actualize(factories: Mixed, blueprint: WindowButtonBlueprint[A], resultPromise: Promise[A],
+	                      defaultActionEnabled: => Boolean) =
 	{
 		implicit val context: ButtonContextLike = buttonContext(blueprint.role, blueprint.icon.isDefined)
-		val button = blueprint.icon match
-		{
+		val enterHotkey = {
+			if (blueprint.isDefault)
+				Some(HotKey.conditionalKeyWithIndex(KeyEvent.VK_ENTER)(defaultActionEnabled))
+			else
+				None
+		}
+		val hotkeys = blueprint.hotkey.toSet ++ enterHotkey
+		val button = blueprint.icon match {
 			case Some(icon) =>
-				factories(ImageAndTextButton).withContext(context).withIcon(icon, blueprint.text,
-					hotKeys = blueprint.hotkey.toSet) {
+				factories(ImageAndTextButton).withContext(context).withIcon(icon, blueprint.text, hotKeys = hotkeys) {
 					blueprint.pressAction(resultPromise)
 				}
 			case None =>
-				factories(TextButton).withContext(context).apply(blueprint.text, blueprint.hotkey.toSet) {
+				factories(TextButton).withContext(context).apply(blueprint.text, hotkeys) {
 					blueprint.pressAction(resultPromise)
 				}
 		}

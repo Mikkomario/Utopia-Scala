@@ -3,6 +3,7 @@ import utopia.flow.async.process.Delay
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Direction2D
@@ -94,7 +95,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  */
 	protected def specifyButtons(context: N,
 								 input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
-								 warn: (String, LocalizedString) => Unit): (Vector[WindowButtonBlueprint[A]], Changing[Boolean])
+								 warn: (String, LocalizedString) => Unit): (Vector[WindowButtonBlueprint[A]], View[Boolean])
 	
 	/**
 	  * @return Text to display on the default close button. Empty if no default close button should be displayed.
