@@ -17,6 +17,11 @@ object NotEmpty
 	  * @return Some if that item is not empty. None otherwise.
 	  */
 	def apply[A <: HasIsEmpty](item: A) = if (item.isEmpty) None else Some(item)
+	/**
+	  * @param string A string
+	  * @return Some if that string is not empty. None otherwise.
+	  */
+	def apply(string: String) = if (string.isEmpty) None else Some(string)
 	
 	/**
 	  * Finds the first non-empty item from the specified set of items

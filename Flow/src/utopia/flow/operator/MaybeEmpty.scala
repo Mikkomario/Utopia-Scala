@@ -19,15 +19,18 @@ object MaybeEmpty
 	  * @tparam A Type of that item
 	  * @return That item wrapped as a MaybeEmpty
 	  */
-	def apply[A <: HasIsEmpty](item: A): MaybeEmpty[A] = new MaybeEmptyWrapper[A](item)
-	
+	def apply[A <: HasIsEmpty](item: A): MaybeEmpty[A] = new MaybeEmptyWrapper[A](item)(item.isEmpty)
+	/**
+	  * @param string A string
+	  * @return A "MaybeEmpty" based on that string
+	  */
+	def apply(string: String): MaybeEmpty[String] = new MaybeEmptyWrapper[String](string)(string.isEmpty)
 	
 	// NESTED   ----------------------------
 	
-	class MaybeEmptyWrapper[+A <: HasIsEmpty](wrapped: A) extends MaybeEmpty[A]
-	{
+	class MaybeEmptyWrapper[+A](wrapped: A)(testIsEmpty: => Boolean) extends MaybeEmpty[A] {
 		override def repr = wrapped
-		override def isEmpty = wrapped.isEmpty
+		override def isEmpty = testIsEmpty
 	}
 }
 
