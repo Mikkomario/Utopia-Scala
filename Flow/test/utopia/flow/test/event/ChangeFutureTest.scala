@@ -12,15 +12,14 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
   * @author Mikko Hilpinen
   * @since 22.9.2022, v1.17
   */
-object ChangingTest extends App
+object ChangeFutureTest extends App
 {
-	
 	import utopia.flow.test.TestContext._
 	
 	val delay = 0.5.seconds
 	
 	val original = new PointerWithEvents(1)
-	val delayMapped = original.flatMap { i => ChangeFuture.wrap(Delay(delay) { i + 1 }, i) }
+	val delayMapped = original.flatMap { i => ChangeFuture(i, Delay(delay) { i + 1 }) }
 	
 	original.addListener { e => println(s"$Now original: $e") }
 	delayMapped.addListener { e => println(s"$Now mapped: $e") }

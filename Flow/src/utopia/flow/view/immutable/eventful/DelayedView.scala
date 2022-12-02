@@ -2,10 +2,10 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.Wait
-import utopia.flow.event.listener. ChangeListener
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag, VolatileOption}
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import java.time.Instant
@@ -78,10 +78,8 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration)(implicit ex
 	
 	private val waitLock = new AnyRef
 	
-	private var changeReactionThreshold = Instant.EPOCH
-	private var latestReceivedValue = source.value
-	
-	private val valuePointer = Volatile(latestReceivedValue)
+	private val queuedValuePointer = VolatileOption[(A, Instant)]()
+	private val valuePointer = Volatile(source.value)
 	private val isWaitingFlag = new VolatileFlag()
 	
 	
@@ -89,27 +87,35 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration)(implicit ex
 	
 	// Whenever source's value changes, delays change activation and updates future value
 	source.addListener(ChangeListener.continuous { event =>
-		changeReactionThreshold = Now + delay
-		latestReceivedValue = event.newValue
+		val initialTarget = event.newValue -> (Now + delay)
+		val shouldStartWait = queuedValuePointer.pop(old => old.isEmpty -> Some(initialTarget))
+		
 		// If no waiting is currently active, starts one
-		if (isWaitingFlag.set())
+		if (shouldStartWait)
 			Future {
+				// TODO: Build a more elegant version of this function
 				// Waits until a pause in changes
 				var waitNotBroken = true
-				while (waitNotBroken && Now < changeReactionThreshold && CloseHook.nonShutdown) {
+				var nextTarget = initialTarget
+				while (waitNotBroken && Now < nextTarget._2 && CloseHook.nonShutdown) {
 					// If the wait was interrupted, hurries to completion without waiting the prescribed time period
-					waitNotBroken = Wait(changeReactionThreshold, waitLock)
+					waitNotBroken = Wait(nextTarget._2, waitLock)
+					nextTarget = queuedValuePointer.value.getOrElse(nextTarget)
 				}
 				// Allows new wait and updates current value
-				isWaitingFlag.reset()
-				valuePointer.value = latestReceivedValue
+				valuePointer.value = queuedValuePointer.pop() match {
+					// Case: Another item was queued after escaping the while-loop (unlikely) =>
+					// Immediately applies that value
+					case Some((v, _)) => v
+					case None => nextTarget._1
+				}
 			}
 	})
 	
 	
 	// IMPLEMENTED -----------------------------
 	
-	override protected def wrapped = source
+	override protected def wrapped = valuePointer
 	
 	override def isChanging = source.isChanging || isWaitingFlag.isSet
 }
