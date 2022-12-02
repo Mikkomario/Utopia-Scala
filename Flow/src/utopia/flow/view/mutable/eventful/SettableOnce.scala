@@ -42,8 +42,10 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 	override def value_=(newValue: Option[A]) = {
 		if (_value.exists { v => !newValue.contains(v) })
 			throw new IllegalStateException("SettableOnce.value may only be defined once")
-		else
+		else {
 			_value = newValue
+			fireChangeEvent(None)
+		}
 	}
 	
 	
