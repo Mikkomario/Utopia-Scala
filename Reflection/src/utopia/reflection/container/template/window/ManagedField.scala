@@ -27,6 +27,7 @@ object ManagedField
 	  * @tparam C Type of wrapped field
 	  * @return A new managed field
 	  */
+	// FIXME: This implicit functions yields wrong C type parameter (because C[A] is used instead of C)
 	implicit def autoConvert[V, C[A] <: Input[A]](field: C[V])(implicit autoConvert: V => Value): ManagedField[C[V]] =
 		alwaysSucceed(field) { autoConvert(field.value) }
 	

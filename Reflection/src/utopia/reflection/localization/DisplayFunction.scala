@@ -21,12 +21,10 @@ object DisplayFunction
 	  * A DisplayFunction that displays the item as is, no transformation or localization applied
 	  */
 	val raw = noLocalization[Any] { a => LocalString(a.toString) }
-	
 	/**
 	  * A displayFunction that displays option's value as is and an empty string for empty values
 	  */
 	val rawOption = noLocalization[Option[Any]] { _.map { a => LocalString(a.toString) }.getOrElse(LocalString.empty) }
-	
 	/**
 	  * A display function that preserves strings which are already localized
 	  */
@@ -36,17 +34,14 @@ object DisplayFunction
 	  * A display function that shows hours and minutes, like '13:26'
 	  */
 	val hhmm = forTime(DateTimeFormatter.ofPattern("HH:mm"))
-	
 	/**
 	  * A display function that shows hours, minutes and seconds. Like '03:22:42'
 	  */
 	val hhmmss = forTime(DateTimeFormatter.ofPattern("HH:mm:ss"))
-	
 	/**
 	  * A display function that shows day of month of year, like '13.05.2025'
 	  */
 	val ddmmyyyy = forTime(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-	
 	/**
 	  * A display function that shows day of month of year and hour and minute information. Like '13.05.2025 13:26'
 	  */

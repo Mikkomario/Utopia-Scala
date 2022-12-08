@@ -58,6 +58,7 @@ object XmlElementLike
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
  */
+// TODO: Overwrite apply so that it may return attribute values, also
 trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     extends TreeLike[NamespacedString, Repr] with ModelConvertible
 {

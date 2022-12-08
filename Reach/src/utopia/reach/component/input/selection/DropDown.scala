@@ -29,6 +29,8 @@ import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 
+import scala.concurrent.ExecutionContext
+
 /**
   * A field used for selecting a value from a predefined list of options
   * @author Mikko Hilpinen
@@ -94,7 +96,8 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	(makeDisplay: (ComponentHierarchy, A) => C)(implicit scrollingContext: ScrollingContextLike) =
+	(makeDisplay: (ComponentHierarchy, A) => C)
+	(implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
 		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty }
@@ -164,7 +167,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
 	 sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	(implicit scrollingContext: ScrollingContextLike) =
+	(implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext) =
 	{
 		val mainDisplayFunction = DisplayFunction.wrap[Option[A]] {
 			case Some(item) => displayFunction(item)

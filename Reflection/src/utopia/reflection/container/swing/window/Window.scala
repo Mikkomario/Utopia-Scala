@@ -330,14 +330,11 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     /**
       * Starts following component resizes, updating content size on each resize
       */
-    protected def activateResizeHandling() =
-    {
-        component.addComponentListener(new ComponentAdapter
-        {
+    protected def activateResizeHandling() = {
+        component.addComponentListener(new ComponentAdapter {
             // Resizes content each time this window is resized
             // TODO: This will not limit user's ability to resize window beyond minimum and maximum
-            override def componentResized(e: ComponentEvent) =
-            {
+            override def componentResized(e: ComponentEvent) = {
                 updateContentBounds()
                 content.updateLayout()
             }
@@ -348,6 +345,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
       * Updates this window's bounds according to changes either outside or inside this window
       * @param dictateSize Whether this window should dictate the resulting size (Full screen windows always dictate their size)
       */
+    // FIXME: It is possible for this window to go partially out of screen after this update
     protected def updateWindowBounds(dictateSize: Boolean) =
     {
         if (fullScreen)
