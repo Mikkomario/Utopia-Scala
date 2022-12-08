@@ -13,11 +13,15 @@
 - Modified **SelectionList** constructors
 ### Bugfixes
 - Some fixes to **SelectionList** visuals
+- Some fixes to **FieldWithSelectionPopup** functionality
 ### New Features
 - **SelectionList** now supports two new constructor parameters:
   - `highlightModifier: Double` - A modified applied to all visual highlighting
   - `alternativeKeyCondition: => Boolean` - An alternative condition for enabling arrow key events
 - Added **MessageWindowFactory** trait
+### New Methods
+- **FocusRequestable** (type)
+  - Added `.wrap(...)` and `.delegate(...)` for wrapping Reach components into FocusRequestable Reach components
 ### Other
 - Visual highlighting updates to buttons and some fields
 - InteractionWindowFactory now asks for a **View** instead of **Changing** as the "defaultActionEnabledPointer"
