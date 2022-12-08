@@ -148,6 +148,12 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			Open { makeDisplay(_, item) } }
 	}
 	
+	/**
+	  * A pointer that contains the currently selected sub-area within this list.
+	  * The origin (0,0) coordinates of the contained bounds are the position of this list.
+	  */
+	val selectedAreaPointer = manager.selectedDisplayPointer.map { _.headOption.flatMap(stack.areaOf) }
+	
 	private val keyListener = SelectionKeyListener2
 		.along(direction, hasFocus || alternativeKeyCondition)(manager.moveSelection)
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
@@ -164,7 +170,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			GlobalMouseEventHandler += GlobalMouseReleaseListener
 			actorHandler += keyListener
 			addCustomDrawer(SelectionDrawer)
-			SelectionDrawer.selectedAreaPointer.addListener(repaintAreaListener)
+			selectedAreaPointer.addListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.addListener(repaintAreaListener)
 			canvas.cursorManager.foreach { _ += this }
 			enableFocusHandling()
@@ -174,7 +180,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			GlobalMouseEventHandler -= GlobalMouseReleaseListener
 			actorHandler -= keyListener
 			removeCustomDrawer(SelectionDrawer)
-			SelectionDrawer.selectedAreaPointer.removeListener(repaintAreaListener)
+			selectedAreaPointer.removeListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.removeListener(repaintAreaListener)
 			canvas.cursorManager.foreach { _ -= this }
 			disableFocusHandling()
@@ -182,7 +188,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	}
 	
 	// Repaints selected area when focus changes
-	focusPointer.addContinuousAnyChangeListener { SelectionDrawer.selectedAreaPointer.value.foreach { repaintArea(_) } }
+	focusPointer.addContinuousAnyChangeListener { selectedAreaPointer.value.foreach { repaintArea(_) } }
 	
 	// Listens to local mouse events
 	addMouseButtonListener(LocalMouseListener)
@@ -315,7 +321,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	{
 		// ATTRIBUTES	---------------------------
 		
-		val selectedAreaPointer = manager.selectedDisplayPointer.map { _.headOption.flatMap(stack.areaOf) }
 		val hoverAreaPointer = LocalMouseListener.hoverComponentPointer.map { _.flatMap(stack.areaOf) }
 		
 		

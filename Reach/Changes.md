@@ -24,6 +24,7 @@
   - Added `.wrap(...)` and `.delegate(...)` for wrapping Reach components into FocusRequestable Reach components
 ### Other
 - Visual highlighting updates to buttons and some fields
+- **SelectionList** now exposes the selected area pointer
 - InteractionWindowFactory now asks for a **View** instead of **Changing** as the "defaultActionEnabledPointer"
 
 ## v0.4 - 02.10.2022
