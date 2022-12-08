@@ -9,13 +9,13 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
-import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
@@ -152,7 +152,13 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	  * A pointer that contains the currently selected sub-area within this list.
 	  * The origin (0,0) coordinates of the contained bounds are the position of this list.
 	  */
-	val selectedAreaPointer = manager.selectedDisplayPointer.map { _.headOption.flatMap(stack.areaOf) }
+	lazy val selectedAreaPointer = manager.selectedDisplayPointer.flatMap { _.headOption match {
+		case Some(display) =>
+			display.boundsPointer.map { b =>
+				stack.areaOf(display).filter { _.size.dimensions.forall { _ > 0.0 } }.orElse { Some(b) }
+			}
+		case None => Fixed(None)
+	} }
 	
 	private val keyListener = SelectionKeyListener2
 		.along(direction, hasFocus || alternativeKeyCondition)(manager.moveSelection)
