@@ -340,10 +340,11 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		scroll(Vector2D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach { axis =>
-		if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
-			barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
-	}
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) =
+		Axis2D.values.foreach { axis =>
+			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
+				barBounds.get(axis).foreach { b => barDrawer.draw(drawer, b + position, axis) }
+		}
 	
 	/**
 	  * Converts a scroll bar drawer to a custom drawer, which should then be added to this view

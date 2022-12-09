@@ -14,6 +14,7 @@
 ### Bugfixes
 - Some fixes to **SelectionList** visuals
 - Some fixes to **FieldWithSelectionPopup** functionality
+- Fix to scroll bar drawing
 ### New Features
 - **SelectionList** now supports two new constructor parameters:
   - `highlightModifier: Double` - A modified applied to all visual highlighting

@@ -100,14 +100,14 @@ case class Regex(string: String)
 		else if (hasBrackets)
 		{
 			if (string.startsWith(Pattern.quote("[^")))
-				Regex("[" + string.substring(2))
+				Regex(s"[${ string.substring(2) }")
 			else
-				Regex("[^" + string.substring(1))
+				Regex(s"[^${ string.substring(1) }")
 		}
 		else if (string.endsWith("}") || string.endsWith("*") || string.endsWith("?") || string.endsWith("+"))
 			Regex("(?!" + string + "$).*")
 		else
-			Regex("[^" + string + "]")
+			Regex(s"[^$string]")
 	}
 	
 	/**
@@ -149,20 +149,21 @@ case class Regex(string: String)
 	/**
 	  * @return A version of this regex wrapped within parenthesis
 	  */
-	def withinParenthesis = Regex("(" + string + ")")
+	def withinParenthesis = Regex(s"($string)")
 	
 	/**
 	  * @return This regex in sequence 0 or more times
 	  */
-	def zeroOrMoreTimes = if (isEmpty || string.endsWith("*")) this else Regex(string + "*")
+	// TODO: Rename to anyNumberOfTimes (or create an alias)
+	def zeroOrMoreTimes = if (isEmpty || string.endsWith("*")) this else Regex(s"$string*")
 	/**
 	  * @return This regex in sequence one or more times
 	  */
-	def oneOrMoreTimes = if (isEmpty || string.endsWith("+")) this else Regex(string + "+")
+	def oneOrMoreTimes = if (isEmpty || string.endsWith("+")) this else Regex(s"$string+")
 	/**
 	  * @return This regex either 0 or exactly 1 times
 	  */
-	def noneOrOnce = if (isEmpty || string.endsWith("?")) this else Regex(string + "?")
+	def noneOrOnce = if (isEmpty || string.endsWith("?")) this else Regex(s"$string?")
 	
 	/**
 	  * @return A copy of this regular expression that ignores results within quotations
