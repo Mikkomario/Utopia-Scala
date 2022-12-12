@@ -11,6 +11,7 @@ import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
@@ -38,26 +39,31 @@ object SelectionListTest extends App
 	val mainBg = colorScheme.gray.default
 	
 	val canvas = ReachCanvas(cursors) { hierarchy =>
-		Stack(hierarchy).withContext(baseContext).build(Mixed)
-			.column(customDrawers = Vector(BackgroundDrawer(mainBg))) { factories =>
-				val framingBg = colorScheme.primary.light
-				val framing = baseContext.inContextWithBackground(framingBg).forTextComponents.expandingToRight.use { implicit c =>
-					factories(Framing).withContext(c).build(SelectionList)
-						.apply(margins.small.any, customDrawers = Vector(BackgroundDrawer(framingBg))) { listF: ContextualSelectionListFactory[TextContext] =>
-							listF.apply(contentPointer, valuePointer, alternativeKeyCondition = true) { (hierarchy, item: Int) =>
-								val label = MutableViewTextLabel(hierarchy).withContext(c)
-									.apply(item, DisplayFunction.interpolating("Label %s"))
-								// label.addBackground(Color.cyan)
-								label
-							}
+		Framing(hierarchy).withContext(baseContext).build(Stack)
+			.apply(margins.medium.any, customDrawers = Vector(BackgroundDrawer(mainBg))) { stackF =>
+				stackF.build(Mixed).column() { factories =>
+					val scroll = factories(ScrollView).build(Framing)(maxOptimalLength = Some(224)) { framingF =>
+						val framingBg = colorScheme.primary.light
+						baseContext.inContextWithBackground(framingBg).forTextComponents.expandingToRight.use { implicit c =>
+							framingF.withContext(c).build(SelectionList)
+								.apply(margins.small.any, customDrawers = Vector(BackgroundDrawer(framingBg))) { listF: ContextualSelectionListFactory[TextContext] =>
+									listF.apply(contentPointer, valuePointer, alternativeKeyCondition = true) { (hierarchy, item: Int) =>
+										val label = MutableViewTextLabel(hierarchy).withContext(c)
+											.apply(item, DisplayFunction.interpolating("Label %s"))
+										// label.addBackground(Color.cyan)
+										label
+									}
+								}
 						}
+					}
+					val button = factories.withContext(
+						baseContext.inContextWithBackground(mainBg).forTextComponents.forPrimaryColorButtons)(TextButton)
+						.apply("Button") { println("Button Pressed") }
+					
+					Vector(scroll.parent, button)
 				}
-				val button = factories.withContext(
-					baseContext.inContextWithBackground(mainBg).forTextComponents.forPrimaryColorButtons)(TextButton)
-					.apply("Button") { println("Button Pressed") }
-				
-				Vector(framing.parent, button)
-			}.parent
+			}
+			.parent
 	}
 	
 	GlobalKeyboardEventHandler += KeyTypedListener { event =>
