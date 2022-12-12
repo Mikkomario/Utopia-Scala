@@ -122,6 +122,7 @@ object Bounds extends FromModelFactory[Bounds]
  * @author Mikko Hilpinen
  * @since Genesis 13.1.2017
  */
+// TODO: Add &&
 case class Bounds(position: Point, override val size: Size)
     extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds] with Bounded[Bounds]
 {

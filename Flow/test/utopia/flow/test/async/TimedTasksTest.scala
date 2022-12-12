@@ -1,10 +1,9 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.process.ProcessState.{Completed, NotStarted, Running, Stopped}
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.async.process.{TimedTasks, Wait}
-import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.async.process.ProcessState.{Completed, NotStarted, Running, Stopped}
+import utopia.flow.async.process.{TimedTask, TimedTasks, Wait}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -20,7 +19,6 @@ import scala.concurrent.duration.FiniteDuration
   */
 object TimedTasksTest extends App
 {
-	
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	
@@ -39,7 +37,7 @@ object TimedTasksTest extends App
 	val counter2 = Volatile(0)
 	
 	waitStart = Now
-	tasks.add(Now + 0.5.seconds) {
+	tasks += TimedTask { Now + 0.5.seconds } {
 		val newVal = counter1.updateAndGet { _ + 1 }
 		if (newVal < 3)
 			Some(Now + 0.5.seconds)

@@ -162,7 +162,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def drawBounds = Bounds(Point.origin, size)
 	
-	override def repaint() = super[ReachCanvasLike].repaint()
+	override def repaint() = {
+		currentPainter.foreach { _.resetBuffer() }
+		super[ReachCanvasLike].repaint()
+	}
 	
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
 	{

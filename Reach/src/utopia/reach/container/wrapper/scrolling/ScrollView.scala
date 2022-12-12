@@ -218,15 +218,17 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	// INITIAL CODE	----------------------------
 	
+	// TODO: WET WET (see ScrollArea)
 	setupMouseHandling(actorHandler, scrollPerWheelClick)
 	sizePointer.addListener(ChangeListener.onAnyChange { updateScrollBarBounds() })
+	content.sizePointer.addContinuousAnyChangeListener { updateScrollBarBounds(repaintAfter = true) }
 	
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match
-	{
-		case Some(clip) => clip.intersectionWith(bounds).foreach { c => super.paintWith(drawer, Some(c)) }
-		case None => super.paintWith(drawer, Some(bounds))
+	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
+		case Some(clip) =>
+			clip.intersectionWith(bounds).foreach { c => super.paintWith(drawer.clippedTo(c), Some(c)) }
+		case None => super.paintWith(drawer.clippedTo(bounds), Some(bounds))
 	}
 }

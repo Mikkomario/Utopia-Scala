@@ -1,5 +1,8 @@
 package utopia.reach.test
 
+import utopia.flow.view.mutable.eventful.ResettableFlag
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Hsl
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.shape.shape2d.Size
@@ -15,6 +18,8 @@ import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.util.SingleFrameSetup
 
+import java.awt.event.KeyEvent
+
 /**
   * A test app for scroll areas
   * @author Mikko Hilpinen
@@ -28,8 +33,12 @@ object ReachScrollAreaTest extends App
 	import TestCursors._
 	
 	val blockSize = StackSize.any(Size(96, 96))
+	val altBlockSize = blockSize * 0.75
 	val colorIterator = Iterator.continually { Hsl(Angle.ofDegrees(math.random() * 360), 1, 0.5) }
 	val bg = colorScheme.gray.light
+	
+	val isAltSizeFlag = ResettableFlag()
+	val activeSizePointer = isAltSizeFlag.map { if (_) altBlockSize else blockSize }
 	
 	val canvas: ReachCanvas = ReachCanvas(cursors) { canvasHierarchy =>
 		implicit val c: ReachCanvas = canvasHierarchy.top
@@ -38,19 +47,27 @@ object ReachScrollAreaTest extends App
 				scrollF.mapContext { _.inContextWithBackground(bg) }.build(Stack)
 					.apply(maxOptimalSize = Some(Size(320, 320))) { rowF =>
 						rowF.build(Stack).row() { colF =>
-							Vector.fill(5) {
+							val blocks = Vector.fill(5) {
 								val content = Open { hierarchy =>
 									Vector.fill(5) {
 										CustomDrawReachComponent(hierarchy,
-											Vector(BackgroundDrawer(colorIterator.next())))(blockSize)
+											Vector(BackgroundDrawer(colorIterator.next()))) { activeSizePointer.value }
 									}
 								}
 								colF.column(content)
 							}
+							activeSizePointer.addContinuousAnyChangeListener {
+								blocks.foreach { _.child.foreach { _.resetCachedSize() } }
+								blocks.foreach { c => c.parent.revalidateAndThen { c.parent.repaintParent() } }
+							}
+							blocks
 						}
 					}
 			}
 	}
+	
+	GlobalKeyboardEventHandler.registerKeyStateListener { KeyStateListener.onKeyPressed(KeyEvent.VK_SPACE) { _ => isAltSizeFlag.update { !_ } } }
+	GlobalKeyboardEventHandler.registerKeyStateListener { KeyStateListener.onKeyPressed(KeyEvent.VK_F5) { _ => canvas.repaint() } }
 	
 	val frame = Frame.windowed(canvas, "Reach Test")
 	frame.setToCloseOnEsc()
