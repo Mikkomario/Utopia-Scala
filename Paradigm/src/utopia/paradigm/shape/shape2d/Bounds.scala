@@ -123,7 +123,7 @@ object Bounds extends FromModelFactory[Bounds]
  * @since Genesis 13.1.2017
  */
 // TODO: Add &&
-case class Bounds(position: Point, override val size: Size)
+case class Bounds(override val position: Point, override val size: Size)
     extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds] with Bounded[Bounds]
 {
     // COMPUTED PROPERTIES    ------------
@@ -333,7 +333,7 @@ case class Bounds(position: Point, override val size: Size)
       * @param p New position
       * @return A copy of these bounds with specified position
       */
-    def withPosition(p: Point) = Bounds(p, size)
+    override def withPosition(p: Point): Bounds = Bounds(p, size)
     /**
       * @param map A mapping function for position
       * @return A copy of these bounds with mapped position

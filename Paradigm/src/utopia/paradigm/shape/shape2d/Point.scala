@@ -59,6 +59,7 @@ object Point extends VectorFactory[Point] with FromModelFactory[Point]
 	  * @param f A function that is called for specified axes
 	  * @return Point with function results as values
 	  */
+	@deprecated("Please use .fromFunction2D(...) instead", "v1.2")
 	def calculateWith(f: Axis2D => Double) = Point(f(X), f(Y))
 }
 

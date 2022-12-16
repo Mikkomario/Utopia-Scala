@@ -10,7 +10,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
-import utopia.paradigm.shape.shape2d.{Insets, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size, Vector2D}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
 import utopia.inception.handling.immutable.Handleable
@@ -34,7 +34,8 @@ import scala.util.Try
 * @since 25.3.2019
 **/
 // TODO: Component revalidation should be delayed while this window is invisible
-trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable with AwtContainerRelated with Constrainable
+abstract class Window[+Content <: Stackable with AwtComponentRelated]
+    extends Stackable with AwtContainerRelated with Constrainable
 {
     // ATTRIBUTES   ----------------
     
@@ -85,6 +86,23 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
       * @return Alignment used for positioning this window when its size changes
       */
     def resizeAlignment: Alignment
+    // TODO: Add resize focus component (i.e. the component / bounds who's position is preserved when window is resized)
+    //  May be created using a resize logic or something
+    
+    // TODO: Reapply these
+    /*
+      * @return The point which is used as the "anchor" when the size of this window changes.
+      *         Whenever changes occur, the anchor point is preserved and this window is moved around it instead.
+      */
+    // def absoluteAnchorPosition: Point
+    
+    /*
+      * @return (Minimum) margin placed between this window and the screen borders, when possible.
+      *         This margin (or larger) is kept when this window would otherwise touch the screen border.
+      *         For very large windows, this value may be ignored or the applied margin may be smaller than this value.
+      *         For full screen windows, this value is always ignored.
+      */
+    // def screenBorderMargin: Double
     
     
     // COMPUTED    ----------------
@@ -348,8 +366,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     // FIXME: It is possible for this window to go partially out of screen after this update
     protected def updateWindowBounds(dictateSize: Boolean) =
     {
-        if (fullScreen)
-        {
+        if (fullScreen) {
             // Full screen mode always dictates size & position
             if (showsToolBar)
                 position = Screen.insetsAt(component.getGraphicsConfiguration).toPoint
@@ -359,14 +376,18 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
             size = stackSize.optimal
             updateContentBounds()
         }
-        else
-        {
+        else {
             // In windowed mode, either dictates the new size or just makes sure its within limits
-            if (dictateSize)
-            {
+            if (dictateSize) {
+                // val oldAnchor = absoluteAnchorPosition
                 val oldSize = size
+                // TODO: Preserve the location of the anchor
                 size = stackSize.optimal
                 updateContentBounds()
+                // val newAnchor = absoluteAnchorPosition
+                
+                // Moves this window so that the anchors overlap. Makes sure screen borders are respected, also.
+                
                 
                 val increase = size - oldSize
                 // Window movement is determined by resize alignment
@@ -394,11 +415,12 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
         stackSize.maxWidth.filter { _ < width }.foreach { width = _ }
         stackSize.maxHeight.filter { _ < height }.foreach { height = _ }
         
-        if (isUnderSized)
-        {
+        if (isUnderSized) {
             size = size bottomRight stackSize.min
             updateContentBounds()
         }
+        
+        // TODO: Also make sure this window stays within view
     }
     
     /**
@@ -416,10 +438,19 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
      */
     def centerOnParent() = centerOn(component.getParent)
     
-    private def centerOn(component: java.awt.Component) =
-    {
-        if (fullScreen)
-        {
+    /**
+     * Requests this window to gain focus if it doesn't have it already. Moves this window to the front in the process.
+     */
+    def requestFocus() = {
+        if (!isFocusedWindow)
+            AwtEventThread.async {
+                component.toFront()
+                component.repaint()
+            }
+    }
+    
+    private def centerOn(component: java.awt.Component) = {
+        if (fullScreen) {
             if (showsToolBar)
                 position = Screen.insetsAt(component.getGraphicsConfiguration).toPoint
             else
@@ -429,17 +460,12 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
             this.component.setLocationRelativeTo(component)
     }
     
-    /**
-     * Requests this window to gain focus if it doesn't have it already. Moves this window to the front in the process.
-     */
-    def requestFocus() =
-    {
-        if (!isFocusedWindow)
-            AwtEventThread.async {
-                component.toFront()
-                component.repaint()
-            }
-    }
+    /*
+    private def positionWithinScreen(proposed: Point) = {
+        if (fitsWithin(Screen.size)) {
+            TODO: Continue
+        }
+    }*/
     
     
     // NESTED   -------------------------

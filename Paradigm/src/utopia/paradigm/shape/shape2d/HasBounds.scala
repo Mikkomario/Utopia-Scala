@@ -22,6 +22,11 @@ trait HasBounds extends HasSize with Area2D
 	// COMPUTED -------------------------
 	
 	/**
+	  * @return The position of this item - typically the top-left corner of this item
+	  */
+	def position: Point = bounds.position
+	
+	/**
 	  * @return The top-left corner of this item's bounds (assuming positive size)
 	  */
 	def topLeft = bounds.position
@@ -72,7 +77,7 @@ trait HasBounds extends HasSize with Area2D
 	def minAlong(axis: Axis) = topLeft(axis)
 	/**
 	  * @param axis The targeted axis
-	  * @return The largesst coordinate within this item's bounds along the specified axis (assuming positive size)
+	  * @return The largest coordinate within this item's bounds along the specified axis (assuming positive size)
 	  */
 	def maxAlong(axis: Axis) = topLeft(axis) + size(axis)
 	

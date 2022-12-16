@@ -106,6 +106,16 @@ trait DimensionalFactory[-D, +R]
 	  * @return A new set of dimension based on the specified function's values
 	  */
 	def iterate(length: Int)(f: Axis => D) = apply(Axis.values.take(length).map(f))
+	/**
+	  * @param f A function that accepts an axis (X, Y) and produces a dimension
+	  * @return A dimensional item consisting of the function return values (2)
+	  */
+	def fromFunction2D(f: Axis2D => D) = apply(Axis2D.values.map(f))
+	/**
+	  * @param f A function that accepts an axis (X, Y, Z) and produces a dimension
+	  * @return A dimensional item consisting of the function return values (3)
+	  */
+	def fromFunction3D(f: Axis => D) = apply(Axis.values.map(f))
 	
 	/**
 	  * Maps all items built with this factory

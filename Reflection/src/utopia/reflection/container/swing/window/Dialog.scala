@@ -17,7 +17,8 @@ class Dialog[C <: Stackable with AwtContainerRelated](owner: java.awt.Window, ov
                                                       override val title: LocalizedString = LocalizedString.empty,
                                                       startResizePolicy: WindowResizePolicy = User,
                                                       override val resizeAlignment: Alignment = Center,
-                                                      borderless: Boolean = false) extends Window[C]
+                                                      borderless: Boolean = false)
+    extends Window[C]
 {
     // ATTRIBUTES    -------------------
     

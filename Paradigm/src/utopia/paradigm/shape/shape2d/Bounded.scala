@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.DoubleVectorLike
@@ -34,6 +34,12 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  * @return A copy of this item with mapped bounds
 	  */
 	def mapBounds(f: Bounds => Bounds) = withBounds(f(bounds))
+	
+	/**
+	  * @param position A new (top-left) position to assign to this item
+	  * @return A copy of this item moved to the specified position
+	  */
+	def withPosition(position: Point): Repr = withBounds(bounds.withPosition(position))
 	
 	/**
 	  * Moves this item so that it's top-left coordinate is at the specified location
@@ -121,6 +127,42 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 		val newTopLeft = alignment.position(newSize, bounds)
 		withBounds(Bounds(newTopLeft, newSize))
 	}
+	
+	/*
+	  * Repositions this item so that it lies within the specified set of bounds.
+	  * The applied movement is kept to a minimum. Will never alter the size of this item.
+	  * If this item doesn't fit into the specified bounds, parts of this item are kept outside of the bounds,
+	  * but the outlying area is kept to a minimum.
+	  * @param area Target area
+	  * @return A copy of this item so that it lies within that specified area (if possible)
+	  */
+		/*
+	def slidInto(area: Bounds) =
+	{
+		// Case: Already fits or covers the specified area => Doesn't move
+		if (area.contains(bounds) || bounds.contains(area))
+			repr
+		else {
+			val overSize = (size - area.size).positive
+			if (overSize.isZero) {
+				val newPosition = Point.fromFunction2D { axis =>
+					if (maxAlong(axis) > area.maxAlong(axis))
+						area.maxAlong(axis) - size(axis)
+					else if (minAlong(axis) < area.minAlong(axis))
+						area.position(axis)
+					else
+						position(axis)
+				}
+				withPosition(newPosition)
+			}
+			else {
+				val translation = Vector2D.fromFunction2D { axis =>
+					TODO: Finish this function once Bounds has 1-dimensional components
+					???
+				}
+			}
+		}
+	}*/
 	
 	/**
 	  * Creates a copy of this item with scaled bounds (both size AND position). Preserves shape.
