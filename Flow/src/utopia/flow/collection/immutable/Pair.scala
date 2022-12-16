@@ -193,7 +193,7 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	override def distinct = if (first == second) Vector(first) else this
 	override def distinctBy[B](f: A => B) = if (f(first) == f(second)) Vector(first) else this
 	
-	override def sorted[B >: A](implicit ord: Ordering[B]) = {
+	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = {
 		val cmp = ord.compare(first, second)
 		if (cmp > 0) reverse else this
 	}

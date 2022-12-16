@@ -75,6 +75,7 @@
 - **ModelDeclarations** now support optional properties
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
 - Added **ViewGraphNode** as a lazily initialized graph
+- Added generic Range traits: **Span**, **IterableSpan**, **Spanning**, **HasEnds** and so on
 - Added **TimedTask** trait, which is now supported in **TimedTasks**, also
 - Added new ways to write **LocalTime** values (after importing **TimeExtensions**)
 - Added **SettableOnce**, which is like a **Promise** with **ChangeEvent**s
@@ -91,8 +92,11 @@
 - **Changing**
   - Added `.incrementalMap(...)` and `.incrementalMergeWith(...)` -methods
 - **Iterable** (**CollectionExtensions**)
+  - Added `.minMax` and `.minMaxOption`
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.
+- **Iterator** (**CollectionExtensions**)
+  - Added `.minMax` and `.minMaxOption`
 - **Lazy**
   - Added `.map(...)` and `.flatMap(...)`
 - **Path**

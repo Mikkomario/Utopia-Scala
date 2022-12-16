@@ -12,6 +12,7 @@ import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.util.{Failure, Success, Try}
 import scala.language.implicitConversions
+import scala.math.Ordered.orderingToOrdered
 
 /**
   * This object contains some extensions for the more traditional collections / data structures
@@ -605,7 +606,6 @@ object CollectionExtensions
 		  * @return Maximum item or None if this Iterable was empty
 		  */
 		def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] = if (t.isEmpty) None else Some(t.max(cmp))
-		
 		/**
 		  * Finds the minimum value in this Iterable
 		  * @param cmp Ordering (implicit)
@@ -623,7 +623,6 @@ object CollectionExtensions
 		  */
 		def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
 			if (t.isEmpty) None else Some(t.maxBy(map))
-		
 		/**
 		  * Finds the minimum value based on map result
 		  * @param map A mapping function
@@ -633,6 +632,18 @@ object CollectionExtensions
 		  */
 		def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
 			if (t.isEmpty) None else Some(t.minBy(map))
+		
+		/**
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value within this collection as a pair
+		  */
+		def minMax(implicit ord: Ordering[A]) = t.iterator.minMax
+		/**
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value within this collection as a pair.
+		  *         None if this collection is empty.
+		  */
+		def minMaxOption(implicit ord: Ordering[A]) = if (t.isEmpty) None else Some(minMax)
 		
 		/**
 		  * Finds the item(s) that best match the specified conditions
@@ -1092,6 +1103,33 @@ object CollectionExtensions
 		def pollable = PollingIterator[A](i)
 		
 		/**
+		  * Finds the minimum and the maximum values from this iterator.
+		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value found from this iterator
+		  */
+		def minMax(implicit ord: Ordering[A]) = {
+			val first = i.next()
+			var currentMin = first
+			var currentMax = first
+			i.foreach { a =>
+				if (a < currentMin)
+					currentMin = a
+				else if (a > currentMax)
+					currentMax = a
+			}
+			Pair(currentMin, currentMax)
+		}
+		/**
+		  * Finds the minimum and the maximum values from this iterator.
+		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value found from this iterator.
+		  *         None if this iterator didn't contain any more items.
+		  */
+		def minMaxOption(implicit ord: Ordering[A]) = if (i.hasNext) Some(minMax) else None
+		
+		/**
 		  * Finds the last item accessible from this iterator. Consumes all items in this iterator.
 		  * @throws NoSuchElementException If this iterator is empty
 		  * @return The last item in this iterator
@@ -1104,7 +1142,6 @@ object CollectionExtensions
 			}
 			current
 		}
-		
 		/**
 		  * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
 		  */
@@ -1130,7 +1167,6 @@ object CollectionExtensions
 		  * @return A copy of this iterator with that item prepended. This iterator is invalidated.
 		  */
 		def +:[B >: A](item: => B): Iterator[B] = PollableOnce(item) ++ i
-		
 		/**
 		  * @param item An item to append (call-by-name)
 		  * @tparam B Type of that item
@@ -1147,8 +1183,7 @@ object CollectionExtensions
 		  * @return Whether 'f' returned true for 'count' items. Doesn't test whether 'f' would return true for more
 		  *         than 'count' items.
 		  */
-		def existsCount(count: Int)(f: A => Boolean) =
-		{
+		def existsCount(count: Int)(f: A => Boolean) = {
 			var found = 0
 			while (found < count && i.hasNext) {
 				if (f(i.next()))
@@ -1161,8 +1196,7 @@ object CollectionExtensions
 		  * Skips the next 'n' items in this iterator
 		  * @param n Number of items to skip (default = 1)
 		  */
-		def skip(n: Int = 1) =
-		{
+		def skip(n: Int = 1) = {
 			var skipped = 0
 			while (skipped < n && i.hasNext) {
 				i.next()
@@ -1188,8 +1222,7 @@ object CollectionExtensions
 		  * @tparam U Arbitrary operation result type (not used)
 		  * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
 		  */
-		def forNext[U](n: Int)(operation: A => U) =
-		{
+		def forNext[U](n: Int)(operation: A => U) = {
 			var consumed = 0
 			while (i.hasNext && consumed < n) {
 				operation(i.next())
@@ -1205,8 +1238,7 @@ object CollectionExtensions
 		  * @param n Number of items to collect
 		  * @return Collected items as a vector
 		  */
-		def collectNext(n: Int) =
-		{
+		def collectNext(n: Int) = {
 			var consumed = 0
 			val builder = new VectorBuilder[A]()
 			while (i.hasNext && consumed < n) {

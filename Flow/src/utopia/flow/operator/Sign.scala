@@ -78,6 +78,12 @@ object Sign
 	  */
 	def of(number: Double): Sign = if (number >= 0.0) Positive else Negative
 	
+	/**
+	  * @param positiveCondition A condition for returning Positive
+	  * @return Positive if condition was true, Negative otherwise
+	  */
+	def apply(positiveCondition: Boolean) = if (positiveCondition) Positive else Negative
+	
 	
 	// NESTED   --------------------------
 	
