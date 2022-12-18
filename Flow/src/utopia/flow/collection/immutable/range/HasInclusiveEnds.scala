@@ -33,4 +33,23 @@ trait HasInclusiveEnds[P] extends HasEnds[P]
 	
 	def max[B >: P](implicit ord: Ordering[B]) = ord.max(start, end)
 	def maxOption[B >: P](implicit ord: Ordering[B]) = Some(max)
+	
+	
+	// OTHER    ----------------------
+	
+	/**
+	  * @param point A point
+	  * @return A copy of that point that has been restricted to this span.
+	  *         The point is adjusted as little as possible.
+	  */
+	def restrict(point: P) = {
+		implicit val ord: Ordering[P] = ordering
+		val _ends = minMax
+		if (ordering.lt(point, _ends.first))
+			_ends.first
+		else if (ordering.gt(point, _ends.second))
+			_ends.second
+		else
+			point
+	}
 }

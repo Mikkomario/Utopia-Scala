@@ -220,21 +220,6 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	def including(p1: P, p2: P, more: P*): Repr = including(Set(p1, p2) ++ more)
 	
 	/**
-	  * @param point A point
-	  * @return A copy of that point that has been restricted to this span.
-	  *         The point is adjusted as little as possible.
-	  */
-	def restrict(point: P) = {
-		val _ends = minMax
-		if (point < _ends.first)
-			_ends.first
-		else if (point > _ends.second)
-			_ends.second
-		else
-			point
-	}
-	
-	/**
 	  * @param other Another span
 	  * @return The overlapping portion between these two spans with the same direction this span has.
 	  *         None if these spans don't overlap.

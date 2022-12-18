@@ -1,12 +1,13 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.{CanBeAboutZero, Combinable, HasLength, LinearScalable}
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
-import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape1d.{Span1D, Vector1D}
 import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Size, Vector2D}
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
@@ -168,6 +169,22 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	
 	override def translated(translation: HasDoubleDimensions) = this + translation
 	
+	/**
+	  * Creates a new vector with the same direction with this vector
+	  * @param length The length of the new vector
+	  */
+	def withLength(length: Double) = toUnit * length
+	
+	/**
+	  * This vector with increased length
+	  */
+	def +(n: Double) = withLength(length + n)
+	
+	/**
+	  * This vector with decreased length (the direction may change to opposite)
+	  */
+	def -(n: Double) = this + (-n)
+	
 	
 	// OTHER	--------------------------
 	
@@ -275,21 +292,6 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	def withDimension(dimension: Vector1D): Repr = withDimension(dimension.axis, dimension.length)
 	
 	/**
-	  * Creates a new vector with the same direction with this vector
-	  * @param length The length of the new vector
-	  */
-	def withLength(length: Double) = toUnit * length
-	
-	/**
-	  * This vector with increased length
-	  */
-	def +(n: Double) = withLength(length + n)
-	/**
-	  * This vector with decreased length (the direction may change to opposite)
-	  */
-	def -(n: Double) = this + (-n)
-	
-	/**
 	  * @param other Another vector
 	  * @return The distance between the points represented by these two vectors
 	  */
@@ -368,6 +370,20 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 		else
 			factory.from(twoDimensional)
 	}
+	
+	/**
+	  * Moves this vector into the specified area with minimal movement
+	  * @param area An area to which this vector shall remain within
+	  * @return A copy of this vector that lies within the specified area
+	  */
+	def shiftedInto(area: HasDimensions[HasInclusiveEnds[Double]]) =
+		mergeWith(area) { (p, area) => area.restrict(p) }
+	/**
+	  * Moves this vector into a specific area with minimal movement
+	  * @param area A 1-dimensional area
+	  * @return A copy of this vector that lies within that area along that dimension
+	  */
+	def shiftedInto(area: Span1D) = mapDimension(area.axis)(area.restrict)
 	
 	private def calculateDirection(x: Double, y: Double) = math.atan2(y, x)
 }
