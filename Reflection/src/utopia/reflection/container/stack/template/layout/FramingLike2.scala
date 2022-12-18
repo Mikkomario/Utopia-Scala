@@ -55,7 +55,7 @@ trait FramingLike2[+C <: Stackable2] extends SingleContainer2[C] with CachingSta
 	{
 		val myLength = lengthAlong(axis)
 		val contentLength = content.stackSize.along(axis)
-		val (firstInset, secondInset) = insets.sidesAlong(axis)
+		val (firstInset, secondInset) = insets.sidesAlong(axis).toTuple
 		
 		val totalAdjustment = myLength - (contentLength.optimal + firstInset.optimal + secondInset.optimal)
 		

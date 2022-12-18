@@ -5,7 +5,7 @@ import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.shape.shape2d.{Insets, InsetsFactory, InsetsLike}
 import utopia.paradigm.enumeration.Alignment
 
-object StackInsets extends InsetsFactory[StackLength, StackSize, StackInsets, StackInsets]
+object StackInsets extends InsetsFactory[StackLength, StackInsets]
 {
 	// ATTRIBUTES	-----------------------
 	
@@ -106,9 +106,9 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	
 	@deprecated("There's no need to call this method since 'this' already does this", "v2")
 	override def toInsets = this
-	override protected def makeCopy(newAmounts: Map[Direction2D, StackLength]) = StackInsets(newAmounts)
-	override protected def makeZero  = StackLength.fixedZero
-	override protected def combine(first: StackLength, second: StackLength)  = first + second
+	override protected def withAmounts(newAmounts: Map[Direction2D, StackLength]) = StackInsets(newAmounts)
+	override protected def zeroLength  = StackLength.fixedZero
+	override protected def plus(first: StackLength, second: StackLength)  = first + second
 	override protected def multiply(a: StackLength, multiplier: Double)  = a * multiplier
 	override protected def make2D(horizontal: StackLength, vertical: StackLength)  = StackSize(horizontal, vertical)
 	
@@ -129,7 +129,7 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  * @param other A set of insets
 	  * @return A copy of these insets which have been increased by the other set of insets
 	  */
-	def +(other: Insets) = makeCopy(
+	def +(other: Insets) = withAmounts(
 		(amounts.keySet ++ other.amounts.keySet).map { dir => dir -> (apply(dir) + other(dir)) }.toMap)
 	/**
 	  * @param amount Length decrease affecting each side of these insets

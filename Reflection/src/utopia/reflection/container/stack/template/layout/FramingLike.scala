@@ -77,7 +77,7 @@ trait FramingLike[C <: Stackable] extends SingleStackContainer[C] with Component
 	{
 		val myLength = lengthAlong(axis)
 		val contentLength = content.stackSize.along(axis)
-		val (firstInset, secondInset) = insets.sidesAlong(axis)
+		val (firstInset, secondInset) = insets.sidesAlong(axis).toTuple
 		
 		val totalAdjustment = myLength - (contentLength.optimal + firstInset.optimal + secondInset.optimal)
 		
