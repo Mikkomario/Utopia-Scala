@@ -1,4 +1,6 @@
-package utopia.flow.collection.immutable
+package utopia.flow.collection.immutable.range
+
+import utopia.flow.collection.immutable.Pair
 
 /**
   * A common trait for items which, like ranges, have two ends: A start and an end. Both of these are inclusive.

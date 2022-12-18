@@ -27,6 +27,14 @@ sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
 	def opposite: Sign
 	
 	
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Whether this sign is negative
+	  */
+	def isNegative = !isPositive
+	
+	
 	// IMPLEMENTED  ------------------------
 	
 	override def unary_- = opposite

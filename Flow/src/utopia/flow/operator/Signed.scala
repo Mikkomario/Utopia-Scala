@@ -75,6 +75,25 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 		case Positive => isPositive
 		case Negative => isNegative
 	}
+	/**
+	  * @param sign A sign
+	  * @return Whether this item is not of that sign
+	  */
+	def isNot(sign: Sign) = sign match {
+		case Positive => nonPositive
+		case Negative => nonNegative
+	}
+	
+	/**
+	  * @param sign A sign (+ or -)
+	  * @return A copy of this item with that sign
+	  */
+	def withSign(sign: Sign) = if (is(sign)) repr else -this
+	/**
+	  * @param sign A sign
+	  * @return Some(this) if this item is of that sign. None otherwise.
+	  */
+	def ifHasSign(sign: Sign) = if (is(sign)) Some(repr) else None
 	
 	/**
 	  * @param default Value to return if this item is not positive
@@ -88,6 +107,13 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	  * @return This item if negative, otherwise the specified default
 	  */
 	def negativeOrElse[B >: Repr](default: => B) = if (isNegative) repr else default
+	/**
+	  * @param sign Accepted sign
+	  * @param default Value specified if this item is not of that sign (call-by-name)
+	  * @tparam B Type of default value
+	  * @return This item if of that sign, otherwise the default value
+	  */
+	def withSignOrElse[B >: Repr](sign: Sign, default: => B) = if (is(sign)) repr else default
 	
 	/**
 	  * @param f A mapping function to apply if this item is positive
@@ -101,4 +127,11 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	  * @return Mapped copy of this item if this was negative, otherwise this item as is
 	  */
 	def mapIfNegative[B >: Repr](f: Repr => B) = if (isNegative) f(repr) else repr
+	/**
+	  * @param sign Sign for which the mapping function applies
+	  * @param f A mapping function applied for this item, if of the specified sign
+	  * @tparam B Type of mapping result
+	  * @return A mapped copy of this item, if this was of the specified sign. This item otherwise.
+	  */
+	def mapIfHasSign[B >: Repr](sign: Sign)(f: Repr => B) = if (is(sign)) f(repr) else repr
 }

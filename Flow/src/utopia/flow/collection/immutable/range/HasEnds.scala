@@ -1,5 +1,6 @@
-package utopia.flow.collection.immutable
+package utopia.flow.collection.immutable.range
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 
@@ -81,11 +82,11 @@ trait HasEnds[P]
 	  * @return Whether that point lies within this range
 	  */
 	def contains(point: P) = {
-		val compares = toPair.map { ordering.compare(point, _) }
+		val compares = toPair.map { ordering.compare(point, _).sign }
 		if (isInclusive)
-			compares.merge { _ != _ } || compares.contains(0)
+			compares.isAsymmetric || compares.contains(0)
 		else
-			compares.second != 0 && compares.merge { _ != _ }
+			compares.second != 0 && compares.isAsymmetric
 	}
 	/**
 	  * @param other Another range

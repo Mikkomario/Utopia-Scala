@@ -1,20 +1,19 @@
-package utopia.flow.collection.immutable
+package utopia.flow.collection.immutable.range
 
 /**
   * A common trait for items which, like ranges, have two ends: A start and an end. Both of these are inclusive.
   * @tparam P Type of end-points in this span
-  * @tparam D Type of distance / step used by this span
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait Spanning[P, D] extends HasInclusiveEnds[P] with RangeLike[P, D]
+trait IterableHasInclusiveEnds[P] extends HasInclusiveEnds[P] with IterableHasEnds[P]
 {
 	// COMPUTED -----------------------
 	
 	/**
 	  * @return An iterator that starts from the end of this span and moves towards the start
 	  */
-	def reverseIterator = reverseIteratorBy(step)
+	def reverseIterator = _iterator(end, start)
 	
 	
 	// IMPLEMENTED  --------------------
@@ -29,13 +28,4 @@ trait Spanning[P, D] extends HasInclusiveEnds[P] with RangeLike[P, D]
 	
 	override def max[B >: P](implicit ord: Ordering[B]) = super[HasInclusiveEnds].max
 	override def maxOption[B >: P](implicit ord: Ordering[B]) = Some(max)
-	
-	
-	// OTHER    ------------------------
-	
-	/**
-	  * @param step A step taken each iteration
-	  * @return An iterator that starts from the end of this span and moves towards the start
-	  */
-	def reverseIteratorBy(step: D) = _iterator(end, start, step)
 }

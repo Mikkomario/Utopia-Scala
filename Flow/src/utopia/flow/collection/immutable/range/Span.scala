@@ -1,14 +1,7 @@
-package utopia.flow.collection.immutable
-
-import scala.language.implicitConversions
+package utopia.flow.collection.immutable.range
 
 object Span
 {
-	// IMPLICIT -------------------------
-	
-	implicit def rangeToSpan(r: Range.Inclusive): IterableSpan[Int, Int] = IterableSpan.numeric(r.start, r.end, r.step)
-	
-	
 	// OTHER    -------------------------
 	
 	/**

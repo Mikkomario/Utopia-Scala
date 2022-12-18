@@ -69,6 +69,7 @@
 - Deprecated **Generator** and **Counter**
 - Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
 - Deprecated `.compareWith(...)` in **Pair** in favor of `.merge(...)`
+- Deprecated `.isNotSymmetric` in **Pair** in favor of `.isAsymmetric`
 ### Bugfixes
 - Fixed **Regex**`.times(Range)` that previously yielded invalid regular expressions
 ### New Features
@@ -103,6 +104,7 @@
   - Added `.toTree`
 - **Pair**
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
+  - Added `.isSymmerticBy(...)` and `.isAsymmetricBy(...)`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **PointerWithEvents** (type)
   - Added `.empty`

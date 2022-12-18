@@ -162,6 +162,11 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	/**
 	  * @return Whether the two values in this pair are not equal
 	  */
+	def isAsymmetric = !isSymmetric
+	/**
+	  * @return Whether the two values in this pair are not equal
+	  */
+	@deprecated("Please use .isAsymmetric instead", "v2.0")
 	def isNotSymmetric = !isSymmetric
 	
 	
@@ -358,6 +363,20 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  */
 	@deprecated("Renamed to .merge(...)", "v2.0")
 	def compareWith[B](f: (A, A) => B) = merge(f)
+	
+	/**
+	  * @param f A mapping function
+	  * @tparam B Type of mapping results
+	  * @return Whether the values in this pair are symmetric (i.e. equal) after applying the specified mapping function
+	  */
+	def isSymmetricBy[B](f: A => B) = merge { f(_) == f(_) }
+	/**
+	  * @param f A mapping function
+	  * @tparam B Type of mapping result
+	  * @return Whether the values in this pair are asymmetric (i.e. not equal)
+	  *         after applying the specified mapping function
+	  */
+	def isAsymmetricBy[B](f: A => B) = !isSymmetricBy(f)
 	
 	
 	// NESTED   ------------------------------

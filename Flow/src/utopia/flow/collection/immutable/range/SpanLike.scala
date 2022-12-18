@@ -1,10 +1,89 @@
-package utopia.flow.collection.immutable
+package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.Sign
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{Combinable, Reversible, Sign}
 
 import scala.math.Ordered.orderingToOrdered
+
+object SpanLike
+{
+	// EXTENSIONS   ----------------------
+	
+	implicit class CombinableSpan[P <: Combinable[D, P], D, +Repr](val s: SpanLike[P, Repr]) extends AnyVal
+	{
+		/**
+		  * @param distance A distance to move this span
+		  * @return A copy of this span where both the start and the end points have been moved the specified distance
+		  */
+		def shiftedBy(distance: D) = s.withEnds(s.start + distance, s.end + distance)
+		
+		/**
+		  * @param length New length to assign to this span
+		  * @return A copy of this span with the same starting point and the new length
+		  */
+		def withLength(length: D) = s.withEnd(s.start + length)
+		
+		/**
+		  * @param maxLength Largest allowed length
+		  * @return A copy of this span with length equal to or smaller than the specified maximum length.
+		  *         The starting point of this span is preserved.
+		  */
+		def withMaxLength(maxLength: D) = {
+			implicit val ord: Ordering[P] = s.ordering
+			val newEnd = s.start + maxLength
+			if (newEnd >= s.end)
+				s._repr
+			else
+				s.withEnd(newEnd)
+		}
+		/**
+		  * @param minLength Smallest allowed length
+		  * @return A copy of this span with length equal to or larger than the specified minimum length.
+		  *         The starting point of this span is preserved.
+		  */
+		def withMinLength(minLength: D) = {
+			implicit val ord: Ordering[P] = s.ordering
+			val newEnd = s.start + minLength
+			if (newEnd <= s.end)
+				s._repr
+			else
+				s.withEnd(newEnd)
+		}
+	}
+	
+	implicit class SubractableSpan[P <: Combinable[P, P] with Reversible[P], +Repr](val s: SpanLike[P, Repr])
+		extends AnyVal
+	{
+		/**
+		  * @return The length of this span
+		  */
+		def length = s.end - s.start
+		
+		/**
+		  * Moves this span so that it either:
+		  * a) Lies completely within the specified span, or
+		  * b) Covers the specified span entirely
+		  * The applied movement is minimized
+		  * @param other Another span
+		  * @return A copy of this span that fulfills a condition specified above
+		  */
+		def shiftedInto(other: HasInclusiveEnds[P]) = {
+			implicit val ord: Ordering[P] = s.ordering
+			if (s.start < other.start) {
+				if (s.end >= other.end)
+					s._repr
+				else
+					(s: CombinableSpan[P, P, Repr]).shiftedBy(ord.min(other.start - s.start, other.end - s.end))
+			}
+			else if (s.end > other.end)
+				(s: CombinableSpan[P, P, Repr]).shiftedBy(-ord.min(s.start - other.start, s.end - other.end))
+			else
+				s._repr
+		}
+	}
+}
 
 /**
   * A common trait for items which have two comparable ends, like ranges, and which may be copied and modified in
@@ -111,7 +190,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return A copy of this span that is extended to include all of the specified points
 	  */
 	def including(points: IterableOnce[P]): Repr = points match {
-		case span: Spanning[P, _] => _including(span.minMax)
+		case span: HasInclusiveEnds[P] => _including(span.minMax)
 		case i: Iterable[P] =>
 			if (i.knownSize == 1)
 				including(i.head)
@@ -154,7 +233,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return The overlapping portion between these two spans with the same direction this span has.
 	  *         None if these spans don't overlap.
 	  */
-	def overlapWith(other: Spanning[P, _]) = {
+	def overlapWith(other: HasInclusiveEnds[P]) = {
 		lazy val otherPoints = {
 			if (other.direction == direction)
 				other.toPair
@@ -172,7 +251,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return The overlapping portion between these two spans with the same direction this span has.
 	  *         None if these spans don't overlap.
 	  */
-	def &(other: Spanning[P, _]) = overlapWith(other)
+	def &(other: HasInclusiveEnds[P]) = overlapWith(other)
 	
 	private def _including(minMax: Pair[P]) = {
 		val myMinMax = this.minMax
