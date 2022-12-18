@@ -37,6 +37,11 @@ object Insets extends InsetsFactory[Double, Insets]
 **/
 case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, Size, Insets]
 {
+    // ATTRIBUTES   --------------
+    
+    lazy override val dimensions = super.dimensions
+    
+    
     // IMPLEMENTED  --------------
     
     override def self = this

@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
-import utopia.paradigm.enumeration.{Alignment, Axis2D}
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.{DoubleVectorLike, HasDimensions}
@@ -139,6 +139,25 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  */
 	def shiftedInto(area: HasDimensions[HasInclusiveEnds[Double]]) =
 		withBounds(bounds.mergeWith(area) { _ shiftedInto _ })
+	/**
+	  * Repositions and downscales this item so that it lies within the specified set of bounds.
+	  * Size is altered only if this item wouldn't otherwise fit within the specified bounds.
+	  * Movement is also minimized.
+	  * @param area An area within which this item shall reside
+	  * @return A copy of this item that lies completely within the specified area
+	  */
+	def fittedInto(area: HasDimensions[HasInclusiveEnds[Double]]) =
+		withBounds(bounds.mergeWith(area) { (my, into) =>
+			val maxLength = into.end - into.start
+			if (my.length >= maxLength)
+				my.withEnds(into.start, into.end)
+			else if (my.start < into.start)
+				my.withEnds(into.start, into.start + my.length)
+			else if (my.end > into.end)
+				my.withEnds(into.end - my.length, into.end)
+			else
+				my
+		})
 	
 	/**
 	  * Creates a copy of this item with scaled bounds (both size AND position). Preserves shape.

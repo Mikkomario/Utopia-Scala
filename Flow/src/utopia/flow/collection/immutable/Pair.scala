@@ -2,14 +2,14 @@ package utopia.flow.collection.immutable
 
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
-import utopia.flow.operator.{EqualsFunction, Sign}
+import utopia.flow.operator.{Combinable, EqualsFunction, Reversible, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
 import scala.collection.{IndexedSeqOps, mutable}
-import scala.language.implicitConversions
+import scala.language.{implicitConversions, reflectiveCalls}
 
 object Pair
 {
@@ -17,22 +17,6 @@ object Pair
 	
 	implicit def tupleToPair[A](tuple: (A, A)): Pair[A] = apply(tuple._1, tuple._2)
 	implicit def pairToTuple[A](pair: Pair[A]): (A, A) = pair.toTuple
-	
-	implicit class PairOfDoubles(val pair: Pair[Double]) extends AnyVal
-	{
-		/**
-		  * @return Difference between the two values in this pair
-		  */
-		def diff = pair.second - pair.first
-	}
-	
-	implicit class PairOfInts(val pair: Pair[Int]) extends AnyVal
-	{
-		/**
-		  * @return Difference between the two values in this pair
-		  */
-		def diff = pair.second - pair.first
-	}
 	
 	
 	// OTHER    ------------------------------------
@@ -53,6 +37,39 @@ object Pair
 	
 	
 	// EXTENSIONS ----------------------------------
+	
+	implicit class SummingPair[A <: Combinable[A, A]](val p: Pair[A]) extends AnyVal
+	{
+		/**
+		  * @return The sum of the items in this pair
+		  */
+		def sum = p.first + p.second
+	}
+	
+	implicit class DifferencePair[A <: Combinable[A, R] with Reversible[A], R](val p: Pair[A]) extends AnyVal
+	{
+		/**
+		  * @return The difference between the items in this pair
+		  */
+		def diff = p.second - p.first
+	}
+	
+	implicit class NumericPair[N](val p: Pair[N])(implicit n: Numeric[N])
+	{
+		/**
+		  * @return Sum of the values in this pair
+		  */
+		def sum = n.plus(p.first, p.second)
+		/**
+		  * @return Difference between the values in this pair (second - first)
+		  */
+		def diff = n.minus(p.second, p.first)
+		/**
+		  * @param mod A multiplier
+		  * @return A multiplied copy of this pair
+		  */
+		def *(mod: N) = p.map { n.times(_, mod) }
+	}
 	
 	implicit class RichCollPair[A](val p: Pair[Iterable[A]]) extends AnyVal
 	{
@@ -140,8 +157,8 @@ object Pair
  * @author Mikko Hilpinen
  * @since 21.9.2021, v1.12
  */
-// Currently cannot extend Reversible because of repr conflict in Iterable
-case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, IndexedSeq[A]] // with Reversible[Pair[A]]
+case class Pair[+A](first: A, second: A)
+	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, IndexedSeq[A]] with Reversible[Pair[A]]
 {
 	// COMPUTED --------------------------
 	
@@ -153,8 +170,6 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	 * @return A map with the same contents with this pair (first item linked with Negative, second with Positive)
 	 */
 	def toMap = Map(Negative -> first, Positive -> second)
-	
-	def unary_- = reverse
 	
 	/**
 	  * @return Whether the two values in this pair are equal
@@ -180,10 +195,11 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	
 	// IMPLEMENTED  ----------------------
 	
-	// Cannot implement this because repr is final (and deprecated) in IterableOps for some reason (sheesh...)
-	// override def repr = this
+	override def self = this
 	
 	override def iterator: Iterator[A] = new PairIterator
+	
+	override def unary_- = reverse
 	
 	override def length = 2
 	override def knownSize = 2
@@ -237,14 +253,6 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	
 	// OTHER    --------------------------
 	
-	/**
-	  * @param sign A sign
-	  * @return This pair on Positive, reversed copy on Negative
-	  */
-	def *(sign: Sign) = sign match {
-		case Positive => this
-		case Negative => reverse
-	}
 	/**
 	 * @param side A side (Positive = left = first, Negative = right = second)
 	 * @return The item of this pair from that side

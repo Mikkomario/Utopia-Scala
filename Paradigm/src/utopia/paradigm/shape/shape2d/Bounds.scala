@@ -236,8 +236,9 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
       * @param insets Insets to add to these bounds
       * @return A copy of these bounds with specified insets added to the sides
       */
-    // TODO: Refactor once insets have been refactored
-    def +(insets: Insets) = Bounds(position - Vector2D(insets.top, insets.left), size + insets.total)
+    def +(insets: Insets) = mergeWith(insets) { (area, insets) =>
+        area.withEnds(area.start - insets.first, area.end + insets.second)
+    }
     
     /**
       * @param translation Translation applied to these bounds
@@ -248,8 +249,9 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted
       */
-    // TODO: Refactor once insets have been refactored
-    def -(insets: Insets) = Bounds(position + Vector2D(insets.top, insets.left), size - insets.total)
+    def -(insets: Insets) = mergeWith(insets) { (area, insets) =>
+        area.withEnds(area.start + insets.first, area.end - insets.second)
+    }
     
     /**
       * Scales both position and size
@@ -345,48 +347,6 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
       * @return The overlap between these two sets of bounds
       */
     def &&(other: Bounds) = overlapWith(other)
-    
-    /**
-      * Fits these bounds to the specified area. Alters the size and position as little as possible.
-      * Prefers to move position instead of changing size.
-      * @param area Target area
-      * @return These bounds fitted to the specified area.
-      */
-    // TODO: Rename and/or refactor
-    def fittedInto(area: Bounds) =
-    {
-        // Case: Already fits
-        if (area.contains(this))
-            this
-        // Case: Only position needs to be adjusted
-        else if (size.fitsWithin(area.size))
-        {
-            val newPosition = Point.fromFunction2D { axis =>
-                if (maxAlong(axis) > area.maxAlong(axis))
-                    area.maxAlong(axis) - size(axis)
-                else if (minAlong(axis) < area.minAlong(axis))
-                    area.position(axis)
-                else
-                    position(axis)
-            }
-            withPosition(newPosition)
-        }
-        // Case: Only height (and possibly x) needs to be adjusted
-        else if (width <= area.width)
-        {
-            val newX = if (rightX >= area.rightX) area.rightX - width else if (position.x <= area.position.x) area.position.x else position.x
-            Bounds(Point(newX, area.position.y), Size(width, area.height))
-        }
-        // Case: Only width (and possibly y) needs to be adjusted
-        else if (height <= area.height)
-        {
-            val newY = if (bottomY >= area.bottomY) area.bottomY - height else if (position.y <= area.position.y) area.position.y else position.y
-            Bounds(Point(area.position.x, newY), Size(area.width, height))
-        }
-        // Case: Both height and width need to be shrunk
-        else
-            area
-    }
     
     /**
       * @param maxHeight Maximum height of resulting bounds
