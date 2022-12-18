@@ -89,7 +89,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     
     // IMPLEMENTED  -----------------------
     
-    override def repr = this
+    override def self = this
     
     override def transformedWith(transformation: Matrix2D) = transformed(transformation)
     

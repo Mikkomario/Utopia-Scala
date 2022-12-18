@@ -106,7 +106,7 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	
 	// IMPLEMENTED	------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this timeout is empty

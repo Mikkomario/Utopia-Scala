@@ -117,7 +117,7 @@ object ColorContrastStandard
 		
 		override def largeTextMinimumContrast = 3.0
 		
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: ColorContrastStandard) = o match
 		{
@@ -135,7 +135,7 @@ object ColorContrastStandard
 		
 		override def largeTextMinimumContrast = 4.5
 		
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: ColorContrastStandard) = o match
 		{

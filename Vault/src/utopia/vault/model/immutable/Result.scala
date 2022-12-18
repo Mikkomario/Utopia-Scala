@@ -86,7 +86,7 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
     
     // IMPLEMENTED  ----------------------
     
-    override def repr = this
+    override def self = this
     
     /**
       * Whether this result is empty and doesn't contain any rows or generated keys

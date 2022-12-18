@@ -182,7 +182,7 @@ case class Bounds(override val position: Point, override val size: Size)
     
     // IMPLEMENTED METHODS    ----------
     
-    override def repr = this
+    override def self = this
     override def bounds = this
     
     override def topLeftCorner = position
@@ -383,7 +383,7 @@ case class Bounds(override val position: Point, override val size: Size)
         // Case: Only position needs to be adjusted
         else if (size.fitsWithin(area.size))
         {
-            val newPosition = Point.calculateWith { axis =>
+            val newPosition = Point.fromFunction2D { axis =>
                 if (maxAlong(axis) > area.maxAlong(axis))
                     area.maxAlong(axis) - size(axis)
                 else if (minAlong(axis) < area.minAlong(axis))

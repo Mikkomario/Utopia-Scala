@@ -207,7 +207,7 @@ class Matrix2D private(override val columns: Dimensions[Vector2D])
 	
 	override def withDimensions(newDimensions: Dimensions[Vector2D]) = Matrix2D(newDimensions)
 	
-	override def repr = this
+	override def self = this
 	
 	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
 	

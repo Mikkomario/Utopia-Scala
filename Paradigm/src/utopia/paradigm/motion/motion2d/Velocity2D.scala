@@ -75,7 +75,7 @@ case class Velocity2D(transition: Vector2D, override val duration: Duration)
 	
 	override def zero = Velocity2D.zero
 	
-	override def repr = this
+	override def self = this
 	
 	override implicit def toValue: Value = new Value(Some(this), Velocity2DType)
 	

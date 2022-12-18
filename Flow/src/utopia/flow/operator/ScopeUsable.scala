@@ -12,7 +12,7 @@ trait ScopeUsable[+Repr]
 	/**
 	  * @return A representation of this item
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	
 	// OTHER	----------------------------
@@ -23,5 +23,5 @@ trait ScopeUsable[+Repr]
 	  * @tparam R Function result type
 	  * @return Function result
 	  */
-	def use[R](f: Repr => R) = f(repr)
+	def use[R](f: Repr => R) = f(self)
 }

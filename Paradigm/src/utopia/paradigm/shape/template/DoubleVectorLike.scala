@@ -233,7 +233,7 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	  * @param vector A vector that determines the dividing factor (via length) and the affected axis (vector's axis)
 	  * @return A copy of this vector where one component has been divided with the specified modifier
 	  */
-	def dividedAlong(vector: Vector1D) = if (vector.isZero) repr else mapDimension(vector.axis) { _ / vector.length }
+	def dividedAlong(vector: Vector1D) = if (vector.isZero) self else mapDimension(vector.axis) { _ / vector.length }
 	
 	/**
 	  * Merges this vectorlike element with another element using a merge function. Dimensions not present in one of the

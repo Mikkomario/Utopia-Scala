@@ -50,7 +50,7 @@ class RowGroup[+Row](val rows: Vector[Row]) extends MaybeEmpty[RowGroup[Row]]
 	
 	// IMPLEMENTED  ------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this group is empty

@@ -48,7 +48,7 @@ sealed trait NameContext extends ScopeUsable[NameContext] with ApproxSelfEquals[
 	
 	// IMPLEMENTED  -----------------
 	
-	override def repr = this
+	override def self = this
 	
 	override implicit def equalsFunction: EqualsFunction[NameContext] = NameContext.equalsFunction
 	

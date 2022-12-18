@@ -24,7 +24,7 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
     
     var leavingEdges = Vector[Edge]()
     
-    override protected def repr = this
+    override def self = this
     
     
     // OTHER METHODS    ------------
@@ -69,7 +69,7 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
       */
     def disconnectTotally(node: AnyNode) = {
         val visitedNodes = mutable.Set[Any](this)
-        OrderedDepthIterator(Iterator.single(repr)) { start =>
+        OrderedDepthIterator(Iterator.single(self)) { start =>
             start.leavingEdges = start.leavingEdges.filterNot { _.end == node }
             start.leavingEdges.flatMap { edge =>
                 val node = edge.end

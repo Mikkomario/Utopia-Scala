@@ -238,7 +238,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
     
     override def +(other: StackSize) = mergeWith(other) { _ + _ }
     
-    override def repr = this
+    override def self = this
     
     
     // OPERATORS    ------------------

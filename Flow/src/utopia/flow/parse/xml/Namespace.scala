@@ -30,7 +30,7 @@ case class Namespace(name: String)
 {
 	// IMPLEMENTED  ---------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this is an empty namespace

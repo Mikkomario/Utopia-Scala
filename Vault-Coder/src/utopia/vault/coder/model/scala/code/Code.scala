@@ -67,7 +67,7 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this code is totally empty

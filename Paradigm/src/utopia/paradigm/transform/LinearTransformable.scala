@@ -19,7 +19,7 @@ trait LinearTransformable[+Transformed]
 	/**
 	  * @return This item as is
 	  */
-	def repr: Transformed
+	def self: Transformed
 	
 	/**
 	  * @param transformation A linear transformation (matrix) to apply
@@ -91,7 +91,7 @@ trait LinearTransformable[+Transformed]
 	def scaled(vector: Vector1D): Transformed = vector.axis match {
 		case X => scaled(vector.length, 1.0)
 		case Y => scaled(1.0, vector.length)
-		case _ => repr
+		case _ => self
 	}
 	/**
 	  * @param axis     Target axis

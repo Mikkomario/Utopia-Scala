@@ -127,7 +127,7 @@ case class Version private(numbers: Vector[Int], suffix: String) extends SelfCom
 	
 	// IMPLEMENTED	--------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def toString =
 	{

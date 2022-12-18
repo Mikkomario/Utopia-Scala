@@ -101,7 +101,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def repr = i
+		override def self = i
 		
 		override def compareTo(o: Instant) = i.compareTo(o)
 		
@@ -193,7 +193,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  --------------------------
 		
-		override def repr = d
+		override def self = d
 		
 		override def compareTo(o: LocalDateTime) = d.compareTo(o)
 		
@@ -236,7 +236,7 @@ object TimeExtensions
 	
 	implicit class ExtendedDuration(val d: Duration) extends AnyVal with SelfComparable[Duration]
 	{
-		override def repr = d
+		override def self = d
 		
 		override def compareTo(o: Duration) = d.compareTo(o)
 	}
@@ -442,7 +442,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  --------------------
 		
-		override def repr = d
+		override def self = d
 		
 		override def compareTo(o: LocalDate) = d.compareTo(o)
 		
@@ -578,7 +578,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  ------------------
 		
-		override def repr = t
+		override def self = t
 		
 		override def compareTo(o: LocalTime) = t.compareTo(o)
 		
@@ -634,7 +634,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  ------------------
 		
-		override def repr = m
+		override def self = m
 		
 		override def compareTo(o: Month) = m.compareTo(o)
 		
@@ -762,7 +762,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  ---------------------
 		
-		override def repr = y
+		override def self = y
 		
 		override def compareTo(o: Year) = y.compareTo(o)
 		
@@ -856,7 +856,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED-------------------
 		
-		override def repr = md
+		override def self = md
 		
 		override def compareTo(o: MonthDay) = md.compareTo(o)
 		
@@ -930,7 +930,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED--------------------
 		
-		override def repr = ym
+		override def self = ym
 		
 		override def compareTo(o: YearMonth) = ym.compareTo(o)
 		
@@ -1003,7 +1003,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def repr = p
+		override def self = p
 		
 		// Uses some rounding in comparing (not exact with months vs days). 1 month is considered to be 30.44 days
 		override def compareTo(o: Period) = ((p.getYears * 12 + p.getMonths) * 30.44 + p.getDays -

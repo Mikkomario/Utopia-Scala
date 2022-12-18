@@ -74,7 +74,7 @@ case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible
 	
 	// IMPLEMENTED ---------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def toString = if (length == 1) "a day" else s"$length days"
 	

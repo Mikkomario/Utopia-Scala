@@ -39,7 +39,7 @@ case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, 
 {
     // IMPLEMENTED  --------------
     
-    override def repr = this
+    override def self = this
     
     override protected def makeCopy(newAmounts: Map[Direction2D, Double]) = Insets(newAmounts)
     

@@ -60,5 +60,5 @@ trait IterableSpan[P] extends Span[P] with IterableHasInclusiveEnds[P] with Span
 {
 	// IMPLEMENTED  -------------------------
 	
-	override protected def _repr = this
+	override protected def self = this
 }

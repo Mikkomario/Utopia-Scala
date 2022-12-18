@@ -54,7 +54,7 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	override def isZero = direction.isEmpty
 	
 	override def unary_- = opposite
-	override def repr = this
+	override def self = this
 }
 
 object LinearAlignment

@@ -67,7 +67,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     /**
       * @return "This" instance
       */
-    def repr: Repr
+    def self: Repr
     /**
       * @return Name of this xml element
       */
@@ -307,7 +307,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       */
     def valueOfChild(firstChildName: String, secondChildName: String, more: String*) = {
         val path = Vector(firstChildName, secondChildName) ++ more
-        path.foldLeftIterator(Some(repr): Option[Repr]) { (elem, next) => elem.flatMap { _.childWithName(next) } }
+        path.foldLeftIterator(Some(self): Option[Repr]) { (elem, next) => elem.flatMap { _.childWithName(next) } }
             .takeTo { _.isEmpty }
             .last
         match {

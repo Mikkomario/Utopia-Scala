@@ -89,7 +89,7 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this code piece is empty

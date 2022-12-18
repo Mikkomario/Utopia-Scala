@@ -31,5 +31,5 @@ object Span
   */
 trait Span[P] extends SpanLike[P, Span[P]]
 {
-	override protected def _repr = this
+	override protected def self = this
 }

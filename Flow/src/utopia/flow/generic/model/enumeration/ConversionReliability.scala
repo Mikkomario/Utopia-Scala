@@ -19,7 +19,7 @@ sealed trait ConversionReliability extends SelfComparable[ConversionReliability]
 	
     // IMPLEMENTED    -----------
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: ConversionReliability) = o.cost - this.cost
 }

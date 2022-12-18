@@ -144,6 +144,8 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def self = this
+	
 	override def dimensions: Dimensions[A] = this
 	/**
 	  * @return Components of these dimensions

@@ -29,7 +29,7 @@ object MaybeEmpty
 	// NESTED   ----------------------------
 	
 	class MaybeEmptyWrapper[+A](wrapped: A)(testIsEmpty: => Boolean) extends MaybeEmpty[A] {
-		override def repr = wrapped
+		override def self = wrapped
 		override def isEmpty = testIsEmpty
 	}
 }
@@ -46,7 +46,7 @@ trait MaybeEmpty[+Repr] extends Any
 	/**
 	  * @return This instance
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	/**
 	  * @return Whether this item is empty
@@ -64,7 +64,7 @@ trait MaybeEmpty[+Repr] extends Any
 	/**
 	  * @return Some(this) if not empty. None if empty.
 	  */
-	def notEmpty = if (isEmpty) None else Some(repr)
+	def notEmpty = if (isEmpty) None else Some(self)
 	
 	
 	// OTHER    ------------------------------
@@ -74,7 +74,7 @@ trait MaybeEmpty[+Repr] extends Any
 	  * @tparam B Type of the default result
 	  * @return This if not empty, otherwise the default
 	  */
-	def nonEmptyOrElse[B >: Repr](default: => B) = if (isEmpty) default else repr
+	def nonEmptyOrElse[B >: Repr](default: => B) = if (isEmpty) default else self
 	
 	/**
 	  * @param f A mapping function to apply for non-empty items
@@ -82,5 +82,5 @@ trait MaybeEmpty[+Repr] extends Any
 	  * @return A mapped copy of this item, if this item was not empty.
 	  *         Otherwise returns this item.
 	  */
-	def mapIfNotEmpty[B >: Repr](f: Repr => B) = if (isEmpty) repr else f(repr)
+	def mapIfNotEmpty[B >: Repr](f: Repr => B) = if (isEmpty) self else f(self)
 }

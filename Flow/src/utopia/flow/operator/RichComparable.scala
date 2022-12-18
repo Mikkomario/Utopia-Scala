@@ -115,7 +115,7 @@ trait SelfComparable[Repr] extends Any with RichComparable[Repr]
 	/**
 	  * @return This instance
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	
 	// OTHER    ---------------------------
@@ -124,10 +124,10 @@ trait SelfComparable[Repr] extends Any with RichComparable[Repr]
 	  * @param other Another instance
 	  * @return Smaller of these two instances
 	  */
-	def min(other: Repr): Repr = if (this > other) other else repr
+	def min(other: Repr): Repr = if (this > other) other else self
 	/**
 	  * @param other Another instance
 	  * @return Larger of these two instances
 	  */
-	def max(other: Repr): Repr = if (this < other) other else repr
+	def max(other: Repr): Repr = if (this < other) other else self
 }

@@ -55,7 +55,7 @@ case class Value(content: Option[Any], dataType: DataType) extends JsonConvertib
     
     // IMPLEMENTED METHODS    ---
     
-    override def repr = this
+    override def self = this
     
     /**
       * Whether this value doesn't have a real object value associated with it

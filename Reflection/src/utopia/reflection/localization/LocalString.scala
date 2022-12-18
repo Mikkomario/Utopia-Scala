@@ -90,7 +90,7 @@ case class LocalString(override val string: String, override val languageCode: O
 	
 	// IMPLEMENTED	----------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def modify(f: String => String) = copy(string = f(string))
 	

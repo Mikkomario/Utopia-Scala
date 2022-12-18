@@ -45,7 +45,7 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def colorScheme = colorSchemeOverride.getOrElse(defaultColorScheme)
 	

@@ -146,7 +146,7 @@ case class Line(points: Pair[Point])
     
     // IMPLEMENTED METHODS    ----------
     
-    override def repr = this
+    override def self = this
     
     /**
       * @return The bounds around this line

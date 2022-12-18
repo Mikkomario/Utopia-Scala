@@ -191,7 +191,7 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
     
     // IMPLEMENTED  ----------------------------
     
-    override def repr = this
+    override def self = this
     
     override protected def newNode(content: NamespacedString) = XmlElement(content)
     

@@ -71,7 +71,7 @@ class LazyTree[A](lazyNav: Lazy[A], override val children: CachingSeq[LazyTree[A
 	// IMPLEMENTED  ---------------------------
 	
 	override def nav = lazyNav.value
-	override def repr = this
+	override def self = this
 	
 	override protected def createCopy(nav: A, children: Seq[LazyTree[A]]) =
 		new LazyTree[A](Lazy.initialized(nav), CachingSeq.from(children))

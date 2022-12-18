@@ -51,7 +51,7 @@ case class VersionNumber(numbers: Vector[Int], suffix: String = "") extends Self
 	
 	// IMPLEMENTED	--------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: VersionNumber) = numbers.zip(o.numbers).find { case (a, b) => a != b } match
 	{

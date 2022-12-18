@@ -19,7 +19,7 @@ case class CommandArgumentsSchema(arguments: Vector[ArgumentSchema]) extends May
 {
 	// IMPLEMENTED  -----------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	 * @return Whether this schema is empty

@@ -40,29 +40,29 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	/**
 	  * @return Absolute value of this item
 	  */
-	def abs = if (isNegative) -this else repr
+	def abs = if (isNegative) -this else self
 	/**
 	  * @return Negative absolute value of this item
 	  */
-	def negativeAbs = if (isPositive) -this else repr
+	def negativeAbs = if (isPositive) -this else self
 	
 	/**
 	  * @return Some(this) if positive, None otherwise
 	  */
-	def ifPositive = if (isPositive) Some(repr) else None
+	def ifPositive = if (isPositive) Some(self) else None
 	/**
 	  * @return Some(this) if negative, None otherwise
 	  */
-	def ifNegative = if (isNegative) Some(repr) else None
+	def ifNegative = if (isNegative) Some(self) else None
 	
 	/**
 	  * @return Some(this) if not positive, None otherwise
 	  */
-	def notPositive = if (!isPositive) Some(repr) else None
+	def notPositive = if (!isPositive) Some(self) else None
 	/**
 	  * @return Some(this) if not negative, None otherwise
 	  */
-	def notNegative = if (!isNegative) Some(repr) else None
+	def notNegative = if (!isNegative) Some(self) else None
 	
 	
 	// OTHER    --------------------------
@@ -88,50 +88,50 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	  * @param sign A sign (+ or -)
 	  * @return A copy of this item with that sign
 	  */
-	def withSign(sign: Sign) = if (is(sign)) repr else -this
+	def withSign(sign: Sign) = if (is(sign)) self else -this
 	/**
 	  * @param sign A sign
 	  * @return Some(this) if this item is of that sign. None otherwise.
 	  */
-	def ifHasSign(sign: Sign) = if (is(sign)) Some(repr) else None
+	def ifHasSign(sign: Sign) = if (is(sign)) Some(self) else None
 	
 	/**
 	  * @param default Value to return if this item is not positive
 	  * @tparam B Type of default item
 	  * @return This item if positive, otherwise the specified default
 	  */
-	def positiveOrElse[B >: Repr](default: => B) = if (isPositive) repr else default
+	def positiveOrElse[B >: Repr](default: => B) = if (isPositive) self else default
 	/**
 	  * @param default Value to return if this item is not negative
 	  * @tparam B Type of default item
 	  * @return This item if negative, otherwise the specified default
 	  */
-	def negativeOrElse[B >: Repr](default: => B) = if (isNegative) repr else default
+	def negativeOrElse[B >: Repr](default: => B) = if (isNegative) self else default
 	/**
 	  * @param sign Accepted sign
 	  * @param default Value specified if this item is not of that sign (call-by-name)
 	  * @tparam B Type of default value
 	  * @return This item if of that sign, otherwise the default value
 	  */
-	def withSignOrElse[B >: Repr](sign: Sign, default: => B) = if (is(sign)) repr else default
+	def withSignOrElse[B >: Repr](sign: Sign, default: => B) = if (is(sign)) self else default
 	
 	/**
 	  * @param f A mapping function to apply if this item is positive
 	  * @tparam B Type of mapping result
 	  * @return Mapped copy of this item if this was positive, otherwise this item as is
 	  */
-	def mapIfPositive[B >: Repr](f: Repr => B) = if (isPositive) f(repr) else repr
+	def mapIfPositive[B >: Repr](f: Repr => B) = if (isPositive) f(self) else self
 	/**
 	  * @param f A mapping function to apply if this item is negative
 	  * @tparam B Type of mapping result
 	  * @return Mapped copy of this item if this was negative, otherwise this item as is
 	  */
-	def mapIfNegative[B >: Repr](f: Repr => B) = if (isNegative) f(repr) else repr
+	def mapIfNegative[B >: Repr](f: Repr => B) = if (isNegative) f(self) else self
 	/**
 	  * @param sign Sign for which the mapping function applies
 	  * @param f A mapping function applied for this item, if of the specified sign
 	  * @tparam B Type of mapping result
 	  * @return A mapped copy of this item, if this was of the specified sign. This item otherwise.
 	  */
-	def mapIfHasSign[B >: Repr](sign: Sign)(f: Repr => B) = if (is(sign)) f(repr) else repr
+	def mapIfHasSign[B >: Repr](sign: Sign)(f: Repr => B) = if (is(sign)) f(self) else self
 }

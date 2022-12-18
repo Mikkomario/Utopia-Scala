@@ -61,7 +61,7 @@ class DerivedDrawer(parentGraphics: => (ClosingGraphics, Option[Matrix3D], Seq[C
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override protected def graphics = graphicsPointer.value
 	

@@ -50,7 +50,7 @@ sealed abstract class ResponseBody(private val body: Value) extends MaybeEmpty[R
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this response is empty

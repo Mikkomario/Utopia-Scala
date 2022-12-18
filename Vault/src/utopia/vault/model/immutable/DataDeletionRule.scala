@@ -55,7 +55,7 @@ case class DataDeletionRule(targetTable: Table, timePropertyName: String,
 {
 	// IMPLEMENTED	-------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this deletion rule has no effect on the targeted table

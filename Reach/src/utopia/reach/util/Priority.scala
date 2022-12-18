@@ -40,7 +40,7 @@ object Priority
 	case object VeryHigh extends Priority
 	{
 		override val index = 2
-		override def repr = this
+		override def self = this
 	}
 	
 	/**
@@ -49,7 +49,7 @@ object Priority
 	case object High extends Priority
 	{
 		override val index = 1
-		override def repr = this
+		override def self = this
 	}
 	
 	/**
@@ -58,7 +58,7 @@ object Priority
 	case object Normal extends Priority
 	{
 		override val index = 0
-		override def repr = this
+		override def self = this
 	}
 	
 	/**
@@ -67,7 +67,7 @@ object Priority
 	case object Low extends Priority
 	{
 		override val index = -1
-		override def repr = this
+		override def self = this
 	}
 	
 	/**
@@ -76,6 +76,6 @@ object Priority
 	case object VeryLow extends Priority
 	{
 		override val index = -2
-		override def repr = this
+		override def self = this
 	}
 }

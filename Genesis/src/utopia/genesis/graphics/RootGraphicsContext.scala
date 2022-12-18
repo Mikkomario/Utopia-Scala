@@ -32,7 +32,7 @@ class RootGraphicsContext(newGraphics: => ClosingGraphics) extends GraphicsConte
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def transformation = Matrix3D.identity
 	

@@ -34,7 +34,7 @@ object SpanLike
 			implicit val ord: Ordering[P] = s.ordering
 			val newEnd = s.start + maxLength
 			if (newEnd >= s.end)
-				s._repr
+				s.self
 			else
 				s.withEnd(newEnd)
 		}
@@ -47,7 +47,7 @@ object SpanLike
 			implicit val ord: Ordering[P] = s.ordering
 			val newEnd = s.start + minLength
 			if (newEnd <= s.end)
-				s._repr
+				s.self
 			else
 				s.withEnd(newEnd)
 		}
@@ -73,14 +73,14 @@ object SpanLike
 			implicit val ord: Ordering[P] = s.ordering
 			if (s.start < other.start) {
 				if (s.end >= other.end)
-					s._repr
+					s.self
 				else
 					(s: CombinableSpan[P, P, Repr]).shiftedBy(ord.min(other.start - s.start, other.end - s.end))
 			}
 			else if (s.end > other.end)
 				(s: CombinableSpan[P, P, Repr]).shiftedBy(-ord.min(s.start - other.start, s.end - other.end))
 			else
-				s._repr
+				s.self
 		}
 	}
 }
@@ -98,7 +98,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	/**
 	  * @return "This" element
 	  */
-	protected def _repr: Repr
+	protected def self: Repr
 	
 	/**
 	  * Creates a copy of this element
@@ -119,11 +119,11 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	/**
 	  * @return A copy of this span where the 'start' is smaller than the 'end'
 	  */
-	def ascending = if (isAscending) _repr else reverse
+	def ascending = if (isAscending) self else reverse
 	/**
 	  * @return A copy of this span where the 'start' is larger than the 'end'
 	  */
-	def descending = if (isDescending) _repr else reverse
+	def descending = if (isDescending) self else reverse
 	
 	
 	// OTHER    -----------------------
@@ -170,7 +170,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @param direction A direction (positive (i.e. ascending) or negative (i.e. descending))
 	  * @return A copy of this span with that direction
 	  */
-	def withDirection(direction: Sign) = if (this.direction == direction) _repr else reverse
+	def withDirection(direction: Sign) = if (this.direction == direction) self else reverse
 	
 	/**
 	  * @param point A point to include within this span
@@ -183,7 +183,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 		else if (point > _ends.second)
 			withMax(point)
 		else
-			_repr
+			self
 	}
 	/**
 	  * @param points A set of points
@@ -197,12 +197,12 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 			else
 				i.minMaxOption match {
 					case Some(minMax) => _including(minMax)
-					case None => _repr
+					case None => self
 				}
 		case o =>
 			o.iterator.minMaxOption match {
 				case Some(minMax) => _including(minMax)
-				case None => _repr
+				case None => self
 			}
 	}
 	/**

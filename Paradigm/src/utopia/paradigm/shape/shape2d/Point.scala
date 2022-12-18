@@ -75,7 +75,7 @@ class Point private(override val dimensions: Dimensions[Double])
     // IMPLEMENTED    -----------------
 	
 	override def zero = Point.origin
-	override def repr = this
+	override def self = this
 	
 	override protected def equalsProperties = dimensions
 	

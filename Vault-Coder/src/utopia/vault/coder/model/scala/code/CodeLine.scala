@@ -115,7 +115,7 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this code line is empty

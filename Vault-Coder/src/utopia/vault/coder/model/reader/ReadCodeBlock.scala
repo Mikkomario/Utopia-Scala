@@ -39,7 +39,7 @@ case class ReadCodeBlock(lines: Vector[CodeLine]) extends MaybeEmpty[ReadCodeBlo
 	
 	// IMPLEMENTED  ------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this is an empty block of code

@@ -51,7 +51,7 @@ case class Tree[A](override val nav: A, override val children: Vector[Tree[A]] =
 {
 	// IMPLEMENTED    ---------------
 	
-	override def repr = this
+	override def self = this
 	
 	override protected def createCopy(content: A, children: Seq[Tree[A]]) = Tree(content, children.toVector)
 	

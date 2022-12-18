@@ -3,6 +3,8 @@
 ## v2.0 (in development)
 ### Breaking Changes
 - Reorganized the package structure
+- Renamed `def repr` to `def self` in multiple places, 
+  because `repr` conflicts with `final def repr: Iterable[A]` in **Iterable**
 - Changes relating to variants of **Changing** (or **ChangingLike**)
   - **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
   - **ChangingLike**, then was renamed to **Changing** instead
@@ -104,7 +106,8 @@
   - Added `.toTree`
 - **Pair**
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
-  - Added `.isSymmerticBy(...)` and `.isAsymmetricBy(...)`
+  - Added `.isSymmerticBy(...)`, `.isAsymmetricBy(...)`, 
+    `.equalsUsing(EqualsFunction)`, `.notEqualsUsing(EqualsFunction)`, `~==` and `!~==`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **PointerWithEvents** (type)
   - Added `.empty`

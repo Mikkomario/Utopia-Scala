@@ -43,7 +43,7 @@ class MutableTree[A](var nav: A, initialChildren: Vector[MutableTree[A]] = Vecto
     
     // IMPLEMENTED PROPERTIES    -----
     
-    override def repr = this
+    override def self = this
     
     def children = _children
     

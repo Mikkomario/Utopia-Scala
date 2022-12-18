@@ -24,7 +24,7 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 {
 	// IMPLEMENTED  --------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override protected def withGraphics(newGraphics: LazyGraphics) = new Drawer3(newGraphics)
 	

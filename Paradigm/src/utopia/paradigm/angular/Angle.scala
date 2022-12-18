@@ -191,7 +191,7 @@ case class Angle private(radians: Double)
     
     // IMPLEMENTED  ------------------
     
-    override def repr = this
+    override def self = this
     
     override implicit def toValue: Value = new Value(Some(this), AngleType)
     

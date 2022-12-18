@@ -60,7 +60,7 @@ case class Circle(origin: Point, radius: Double)
     
     // IMPLEMENTED METHODS    ---------
     
-    override def repr = this
+    override def self = this
     
     /**
       * @return The bounds around this circle

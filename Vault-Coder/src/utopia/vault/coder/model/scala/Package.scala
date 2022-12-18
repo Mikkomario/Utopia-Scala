@@ -118,7 +118,7 @@ case class Package(parts: Vector[String]) extends ScalaConvertible with MaybeEmp
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this package is empty ("")

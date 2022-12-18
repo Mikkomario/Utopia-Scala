@@ -137,7 +137,7 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 	
 	override def zero = Vector1D.zeroAlong(axis)
 	
-	override def repr = this
+	override def self = this
 	
 	override protected def factory: VectorFactory[Vector1D] = Vector1D.Factory
 	

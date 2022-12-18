@@ -24,7 +24,7 @@ case class BaseContext(actorHandler: ActorHandler, defaultFont: Font, defaultCol
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def inContextWithBackground(color: ComponentColor) = ColorContext(this, color)
 	

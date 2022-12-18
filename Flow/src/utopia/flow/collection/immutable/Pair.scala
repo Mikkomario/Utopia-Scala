@@ -1,5 +1,6 @@
 package utopia.flow.collection.immutable
 
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
 import utopia.flow.operator.{EqualsFunction, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
@@ -168,6 +169,13 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  */
 	@deprecated("Please use .isAsymmetric instead", "v2.0")
 	def isNotSymmetric = !isSymmetric
+	
+	/**
+	  * @param ord Implicit ordering to apply
+	  * @tparam B Type of ordered values
+	  * @return A span from the first value of this pair to the second value of this pair
+	  */
+	def toSpan[B >: A](implicit ord: Ordering[B]) = Span[B](first, second)
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -365,6 +373,16 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	def compareWith[B](f: (A, A) => B) = merge(f)
 	
 	/**
+	  * @param e An equals function
+	  * @return Whether the two values of this pair are equal when applying the specified function
+	  */
+	def equalsUsing(e: EqualsFunction[A]) = e.equals(first, second)
+	/**
+	  * @param e An equals function
+	  * @return Whether the two values of this pair are unequal when applying the specified function
+	  */
+	def notEqualsUsing(e: EqualsFunction[A]) = e.not(first, second)
+	/**
 	  * @param f A mapping function
 	  * @tparam B Type of mapping results
 	  * @return Whether the values in this pair are symmetric (i.e. equal) after applying the specified mapping function
@@ -377,6 +395,22 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  *         after applying the specified mapping function
 	  */
 	def isAsymmetricBy[B](f: A => B) = !isSymmetricBy(f)
+	
+	/**
+	  * @param other Another pair
+	  * @param eq Implicit equals function to use
+	  * @tparam B Type of values in the other pair
+	  * @return Whether these pairs are equal when using the specified function
+	  */
+	def ~==[B >: A](other: Pair[B])(implicit eq: EqualsFunction[B]) =
+		eq(first, other.first) && eq(second, other.second)
+	/**
+	  * @param other Another pair
+	  * @param eq    Implicit equals function to use
+	  * @tparam B Type of values in the other pair
+	  * @return Whether these pairs are not equal when using the specified function
+	  */
+	def !~==[B >: A](other: Pair[B])(implicit eq: EqualsFunction[B]) = !(this ~== other)
 	
 	
 	// NESTED   ------------------------------

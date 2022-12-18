@@ -103,7 +103,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	
 	// IMPLEMENTED  -----------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this text is empty

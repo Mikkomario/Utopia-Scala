@@ -87,7 +87,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     
     // IMPLEMENTED  -----------------
     
-    override def repr = toMatrix
+    override def self = toMatrix
     
     override def scaling = linear.scaling
     

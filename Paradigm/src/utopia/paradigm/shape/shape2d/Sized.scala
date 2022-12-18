@@ -17,7 +17,7 @@ trait Sized[+Repr] extends HasSize
 	/**
 	  * @return This item
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	/**
 	  * @param size A new size for this shape
@@ -69,7 +69,7 @@ trait Sized[+Repr] extends HasSize
 	def withLength(length: Vector1D, preserveShape: Boolean = false) = {
 		if (preserveShape) {
 			val myLength = lengthAlong(length.axis)
-			if (myLength == 0) repr else withScaledSize(length.length / myLength)
+			if (myLength == 0) self else withScaledSize(length.length / myLength)
 		}
 		else
 			withSize(size.withDimension(length))
@@ -101,13 +101,13 @@ trait Sized[+Repr] extends HasSize
 	def filling[V <: DoubleVectorLike[V]](minArea: V, minimize: Boolean = false) = {
 		// Case: Zero size => can't scale
 		if (size.isZero)
-			repr
+			self
 		// Case: Scaling is required
 		else if (minimize || !fills(minArea))
 			withScaledSize((minArea / size).maxDimension)
 		// Case: No scaling is required
 		else
-			repr
+			self
 	}
 	/**
 	  * Returns a copy of this item that fits into the specified area. Preserves shape.
@@ -119,13 +119,13 @@ trait Sized[+Repr] extends HasSize
 	def fittingWithin[V <: DoubleVectorLike[V]](maxArea: V, maximize: Boolean = false) = {
 		// Case: Zero size => already fits
 		if (size.isZero)
-			repr
+			self
 		// Case: Scaling is required
 		else if (maximize || !fitsWithin(maxArea))
 			withScaledSize((maxArea / size).minDimension)
 		// Case: No scaling is required
 		else
-			repr
+			self
 	}
 	
 	/**
@@ -138,7 +138,7 @@ trait Sized[+Repr] extends HasSize
 		if (minimize || !spans(minLength))
 			withLength(minLength, preserveShape = true)
 		else
-			repr
+			self
 	}
 	/**
 	  * Returns a copy of this item that fits within the specified length limit on one axis. Preserves shape.
@@ -146,7 +146,7 @@ trait Sized[+Repr] extends HasSize
 	  * @return A scaled copy of this item that is at most the specified maximum length on the targeted axis
 	  */
 	def fittingWithin(maxLength: Vector1D) =
-		if (fitsWithin(maxLength)) repr else withLength(maxLength, preserveShape = true)
+		if (fitsWithin(maxLength)) self else withLength(maxLength, preserveShape = true)
 	/**
 	  * Creates a copy of this item that is of at least the specified width. Preserves shape.
 	  * @param minWidth The smallest allowed width

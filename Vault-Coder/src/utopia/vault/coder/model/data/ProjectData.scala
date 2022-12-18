@@ -47,7 +47,7 @@ case class ProjectData(projectName: Name, modelPackage: Package, databasePackage
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this data set is completely empty

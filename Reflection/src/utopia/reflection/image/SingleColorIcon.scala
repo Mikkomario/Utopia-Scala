@@ -111,7 +111,7 @@ class SingleColorIcon(val original: Image) extends Sized[SingleColorIcon]
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def size = original.size
 	

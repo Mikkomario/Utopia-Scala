@@ -15,7 +15,7 @@ object SizedTest extends App
 	
 	case class SizeWrapper(size: Size) extends Sized[SizeWrapper]
 	{
-		override def repr = this
+		override def self = this
 		override def withSize(size: Size) = copy(size)
 	}
 	

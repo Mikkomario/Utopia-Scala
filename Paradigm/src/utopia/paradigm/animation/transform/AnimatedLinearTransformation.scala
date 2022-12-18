@@ -97,7 +97,7 @@ case class AnimatedLinearTransformation(f: Double => Matrix2D) extends Animation
 {
 	// IMPLEMENTED	-------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def apply(progress: Double) = f(progress)
 	

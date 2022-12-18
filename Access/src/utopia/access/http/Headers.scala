@@ -217,7 +217,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     
     // IMPLEMENTED  ---------------
     
-    override def repr = this
+    override def self = this
     
     /**
       * @return Whether these headers are empty

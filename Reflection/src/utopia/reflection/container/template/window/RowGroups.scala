@@ -94,7 +94,7 @@ class RowGroups[+Row](val groups: Vector[RowGroup[Row]]) extends MaybeEmpty[RowG
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this set of rows is completely empty

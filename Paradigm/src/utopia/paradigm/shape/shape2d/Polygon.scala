@@ -38,7 +38,7 @@ case class Polygon(corners: Vector[Point]) extends Polygonic
 	
 	// IMPLEMENTED  --------------------
 	
-	override def repr = this
+	override def self = this
 	
 	
 	// OTHER	------------------------

@@ -30,5 +30,5 @@ trait CanBeAboutZero[-A, +Repr] extends Any with ApproxEquals[A] with CanBeZero[
 	/**
 	  * @return None if about zero, Some(this) otherwise
 	  */
-	def notCloseZero = if (isAboutZero) None else Some(repr)
+	def notCloseZero = if (isAboutZero) None else Some(self)
 }

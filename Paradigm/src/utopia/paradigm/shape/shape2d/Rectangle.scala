@@ -58,7 +58,7 @@ case class Rectangle(topLeftCorner: Point, topEdge: Vector2D, rightEdgeLength: D
 	
 	// IMPLEMENTED	--------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def toModel =
 		Model(Vector(("topLeft", topLeftCorner), ("top", topEdge), ("rightEdgeLength", rightEdgeLength)))

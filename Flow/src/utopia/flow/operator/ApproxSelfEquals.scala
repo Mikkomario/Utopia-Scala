@@ -12,7 +12,7 @@ trait ApproxSelfEquals[Repr] extends ApproxEquals[Repr]
 	/**
 	  * @return This instance
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	/**
 	  * @return An equals function to use for comparing instances of this class
@@ -22,5 +22,5 @@ trait ApproxSelfEquals[Repr] extends ApproxEquals[Repr]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def ~==(other: Repr) = equalsFunction(repr, other)
+	override def ~==(other: Repr) = equalsFunction(self, other)
 }

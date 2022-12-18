@@ -23,7 +23,7 @@ object DoubleVector extends VectorFactory[DoubleVector]
 	
 	private case class _DoubleVector(dimensions: Dimensions[Double]) extends DoubleVector
 	{
-		override def repr = this
+		override def self = this
 		
 		override protected def factory = DoubleVector
 	}

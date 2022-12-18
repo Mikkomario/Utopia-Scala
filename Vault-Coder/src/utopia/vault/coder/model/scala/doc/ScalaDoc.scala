@@ -44,7 +44,7 @@ case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible with Ma
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def isEmpty = parts.isEmpty
 	

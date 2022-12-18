@@ -86,7 +86,7 @@ sealed trait WaitTarget extends CanBeZero[WaitTarget]
     
     // IMPLEMENTED  -------------
     
-    override def repr = this
+    override def self = this
     override def isZero = !isPositive
     
     

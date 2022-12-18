@@ -102,7 +102,7 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def repr = this
+	override def self = this
 	
 	@deprecated("There's no need to call this method since 'this' already does this", "v2")
 	override def toInsets = this

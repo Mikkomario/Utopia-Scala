@@ -72,7 +72,7 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this parameters list is empty

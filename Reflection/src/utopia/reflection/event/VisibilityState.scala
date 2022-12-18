@@ -62,7 +62,7 @@ sealed trait Visibility extends VisibilityState with BinarySigned[Visibility]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def unary_- = opposite
 	
@@ -101,7 +101,7 @@ sealed trait VisibilityChange extends VisibilityState
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def isVisible = true
 }

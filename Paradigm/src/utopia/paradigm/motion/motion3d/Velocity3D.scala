@@ -95,7 +95,7 @@ case class Velocity3D(transition: Vector3D, override val duration: Duration)
 	
 	override protected def buildCopy(transition: Vector3D, duration: Duration) = copy(transition, duration)
 	
-	override def repr = this
+	override def self = this
 	
 	override def projectedOver[V <: DoubleVectorLike[V]](vector: V) = Velocity3D(transition.projectedOver(vector), duration)
 	

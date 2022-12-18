@@ -62,7 +62,7 @@ object NumericSpan
   */
 trait NumericSpan[N]
 	extends IterableSpan[N] with SpanLike[N, NumericSpan[N]] with Combinable[N, NumericSpan[N]]
-		/*with Reversible[NumericSpan[N]]*/ with Scalable[N, NumericSpan[N]]
+		with Reversible[NumericSpan[N]] with Scalable[N, NumericSpan[N]]
 {
 	// ABSTRACT ---------------------------
 	
@@ -85,12 +85,12 @@ trait NumericSpan[N]
 	  */
 	def length = n.minus(end, start)
 	
-	def unary_- = withEnds(n.negate(start), n.negate(end))
-	
 	
 	// IMPLEMENTED  -------------------------
 	
-	override protected def _repr = this
+	override def self = this
+	
+	override def unary_- = withEnds(n.negate(start), n.negate(end))
 	
 	override implicit def ordering: Ordering[N] = n
 	
@@ -137,7 +137,7 @@ trait NumericSpan[N]
 	def withMaxLength(maxLength: N) = {
 		val newEnd = n.plus(start, maxLength)
 		if (newEnd >= end)
-			_repr
+			self
 		else
 			withEnd(newEnd)
 	}
@@ -149,7 +149,7 @@ trait NumericSpan[N]
 	def withMinLength(minLength: N) = {
 		val newEnd = n.plus(start, minLength)
 		if (newEnd <= end)
-			_repr
+			self
 		else
 			withEnd(newEnd)
 	}
@@ -165,13 +165,13 @@ trait NumericSpan[N]
 	def shiftedInto(other: HasInclusiveEnds[N]) = {
 		if (start < other.start) {
 			if (end >= other.end)
-				_repr
+				self
 			else
 				shiftedBy(n.min(n.minus(other.start, start), n.minus(other.end, end)))
 		}
 		else if (end > other.end)
 			shiftedBy(n.negate(n.min(n.minus(start, other.start), n.minus(end, other.end))))
 		else
-			_repr
+			self
 	}
 }

@@ -14,7 +14,7 @@ trait Reversible[+Repr] extends Any
 	/**
 	  * @return 'This' instance
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	/**
 	  * @return A reversed copy of this item
@@ -29,7 +29,7 @@ trait Reversible[+Repr] extends Any
 	  * @return Kept or reversed copy of this item, depending on the sign
 	  */
 	def *(sign: Sign) = sign match {
-		case Positive => repr
+		case Positive => self
 		case Negative => -this
 	}
 }

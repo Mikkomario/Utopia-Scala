@@ -102,7 +102,7 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this graph is empty
@@ -318,7 +318,7 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 				singleWay.toVector
 		}
 		
-		override protected def repr = this
+		override def self = this
 	}
 	
 	private case class GEdge(value: E, endContent: N) extends GraphViewEdge[N, E]

@@ -7,7 +7,7 @@ package utopia.genesis.graphics
   */
 class GraphicsContext2(protected override val graphics: LazyGraphics) extends GraphicsContextLike[GraphicsContext2]
 {
-	override def repr = this
+	override def self = this
 	
 	override protected def withGraphics(newGraphics: LazyGraphics) = new GraphicsContext2(graphics)
 }
