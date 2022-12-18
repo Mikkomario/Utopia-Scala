@@ -164,8 +164,7 @@ trait ImageLike extends HasSize
 		{
 			case Some(pixels) => pixels(area / scaling)
 			case None =>
-				(area / scaling).intersectionWith(Bounds(Point.origin, sourceResolution)) match
-				{
+				(area / scaling).overlapWith(Bounds(Point.origin, sourceResolution)) match {
 					case Some(insideArea) =>
 						if (insideArea.size.isPositive)
 						{
@@ -178,7 +177,7 @@ trait ImageLike extends HasSize
 								{
 									// Iterates over the targeted pixels
 									case Some(image) =>
-										new ImageIterator(image, insideArea.x.toInt, insideArea.y.toInt,
+										new ImageIterator(image, insideArea.leftX.toInt, insideArea.topY.toInt,
 											insideArea.rightX.toInt, insideArea.bottomY.toInt)
 									case None => Vector().iterator
 								}

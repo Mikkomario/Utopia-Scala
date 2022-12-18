@@ -59,7 +59,7 @@ object ScrollViewTest extends App
 	
 	// Creates the main stack
 	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkened(1.2)
+	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkenedBy(1.2)
 	
 	// Adds content management
 	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) =>
@@ -67,7 +67,7 @@ object ScrollViewTest extends App
 	}
 	
 	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
-	contentManager.valuePointer.addContinuousListener { i => println("Selected " + i.newValue) }
+	contentManager.valuePointer.addContinuousListener { i => println(s"Selected ${ i.newValue }") }
 	contentManager.enableKeyHandling(actorHandler)
 	contentManager.enableMouseHandling(false)
 	private val contentUpdateLoop = new ContentUpdateLoop(contentManager)

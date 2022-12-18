@@ -115,10 +115,9 @@ trait TextMeasurementContext
 	  * @param lineBounds Bounds that contain that text line
 	  * @return Possible caret lines within that text
 	  */
-	def caretsFromLine(line: String, lineBounds: Bounds) =
-	{
-		val startX = lineBounds.x
-		val startY = lineBounds.y
+	def caretsFromLine(line: String, lineBounds: Bounds) = {
+		val startX = lineBounds.leftX
+		val startY = lineBounds.topY
 		val endY = lineBounds.bottomY
 		// Calculates the middle point carets
 		val midPoints = line.indices.iterator.drop(1).map { index =>

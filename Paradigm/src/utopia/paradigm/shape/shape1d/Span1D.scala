@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape1d
 
-import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.range.{HasEnds, NumericSpan}
 import utopia.flow.operator.{ApproxSelfEquals, CanBeAboutZero, EqualsFunction}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.Axis
@@ -20,6 +20,13 @@ object Span1D
 	
 	
 	// OTHER    -------------------------
+	
+	/**
+	  * @param span A span
+	  * @param axis Axis on which that span applies
+	  * @return That span along the specified axis
+	  */
+	def apply(span: HasEnds[Double], axis: Axis): Span1D = apply(span.start, span.end, axis: Axis)
 	
 	/**
 	  * @param axis An axis

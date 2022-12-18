@@ -396,7 +396,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def subImage(area: Bounds) = source match {
 		case Some(source) =>
-			area.intersectionWith(Bounds(Point.origin, size)) match {
+			area.overlapWith(Bounds(Point.origin, size)) match {
 				case Some(overlap) => _subImage(source, overlap / scaling)
 				case None => Image(new BufferedImage(0, 0, source.getType), scaling, alpha,
 					specifiedOrigin.map { _ - area.position / scaling })
@@ -406,7 +406,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	// Only works when specified area is inside the original image's bounds
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) =
 	{
-		val newSource = img.getSubimage(relativeArea.x.toInt, relativeArea.y.toInt, relativeArea.width.toInt,
+		val newSource = img.getSubimage(relativeArea.leftX.toInt, relativeArea.topY.toInt, relativeArea.width.toInt,
 			relativeArea.height.toInt)
 		Image(newSource, scaling, alpha, specifiedOrigin.map { _ - relativeArea.position })
 	}

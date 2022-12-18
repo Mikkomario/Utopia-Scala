@@ -104,7 +104,7 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 	/**
 	  * @return A copy of this vector as a 2-dimensional vector along the X-Y-plane.
 	  */
-	def in2D = axis match {
+	def in2D: Vector2D = axis match {
 		case X => Vector2D(length)
 		case Y => Vector2D(0.0, length)
 		case _ => Vector2D.zero

@@ -262,7 +262,7 @@ trait ReachComponentLike extends Stackable2
 	{
 		if (size.isPositive) {
 			// Places the drawer so that the top left corner of the region will be drawn to (0,0)
-			region.intersectionWith(Bounds(Point.origin, size)) match {
+			region.overlapWith(Bounds(Point.origin, size)) match {
 				case Some(actualRegion) =>
 					Image.paint(actualRegion.size) { d =>
 						paintWith(d.translated(-position - region.position), Some(region))

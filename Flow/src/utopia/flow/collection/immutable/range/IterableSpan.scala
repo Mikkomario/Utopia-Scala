@@ -45,7 +45,7 @@ object IterableSpan
 	                                   (implicit override val ordering: Ordering[P])
 		extends IterableSpan[P]
 	{
-		override protected def withEnds(start: P, end: P) = copy(start, end)(advance)
+		override def withEnds(start: P, end: P) = copy(start, end)(advance)
 		
 		override protected def traverse(from: P, direction: Sign) = advance(from, direction)
 	}

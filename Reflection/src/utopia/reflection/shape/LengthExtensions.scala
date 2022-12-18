@@ -200,7 +200,7 @@ object LengthExtensions
 			}
 			
 			// Calculates the new position for the area
-			val topLeft = Point.calculateWith { axis =>
+			val topLeft = Point.fromFunction2D { axis =>
 				val (startMargin, endMargin) = insets.toInsets.sidesAlong(axis)
 				within.position(axis) + positionWithDirection(fittedArea(axis), within.size(axis),
 					startMargin, endMargin, a(axis).direction, !fitWithinBounds)

@@ -346,11 +346,10 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @param area Area that is copied
       * @param translation The amount of translation applied to the area
       */
-    def copyArea(area: Bounds, translation: HasDoubleDimensions) =
-    {
+    def copyArea(area: Bounds, translation: HasDoubleDimensions) = {
         if (translation.xyPair.exists { _ != 0 })
             graphics.copyArea(
-                area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
+                area.leftX.round.toInt, area.topY.round.toInt, area.width.round.toInt, area.height.round.toInt,
                 translation.x.round.toInt, translation.y.round.toInt)
     }
     
@@ -359,8 +358,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      * drawer so that it will use the provided transformation to draw relative
      * elements into absolute space
      */
-    def transformed(transform: AffineTransform) =
-    {
+    def transformed(transform: AffineTransform) = {
         val drawer = copy()
         drawer.graphics.transform(transform)
         drawer

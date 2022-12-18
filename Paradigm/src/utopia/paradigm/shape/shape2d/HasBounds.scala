@@ -1,8 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.flow.collection.immutable.range.HasEnds
+import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis, Axis2D}
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{DoubleVectorLike, HasDimensions}
 
 /**
   * Common trait for shapes that can specify a bounding box
@@ -45,54 +47,57 @@ trait HasBounds extends HasSize with Area2D
 	/**
 	  * @return The leftmost x-coordinate of this item's bounds (assuming positive size)
 	  */
-	def leftX = topLeft.x
+	def leftX = minAlong(X)
 	/**
 	  * @return The rightmost x-coordinate of this item's bounds (assuming positive size)
 	  */
-	def rightX = leftX + width
+	def rightX = maxAlong(X)
 	/**
 	  * @return The topmost y-coordinate of this item's bounds (assuming positive size)
 	  */
-	def topY = topLeft.y
+	def topY = minAlong(Y)
 	/**
 	  * @return The bottom-most y-coordinate of this item's bounds (assuming positive size)
 	  */
-	def bottomY = topY + height
+	def bottomY = maxAlong(Y)
 	
 	
 	// IMPLEMENTED  ---------------------
 	
 	override def size = bounds.size
 	
-	override def contains[V <: DoubleVectorLike[V]](point: V) =
-		point.x >= leftX && point.y >= topY && point.x <= rightX && point.y <= bottomY
+	override def contains[V <: DoubleVectorLike[V]](point: V): Boolean = contains(point: HasDoubleDimensions)
 	
 	
 	// OTHER    -------------------------
 	
 	/**
+	  * @param point A point
+	  * @return Whether this item's bounds contain that point (i.e. that point lies within said bounds)
+	  */
+	def contains(point: HasDoubleDimensions) = bounds.forAllDimensionsWith(point) { _ contains _ }
+	
+	/**
 	  * @param axis The targeted axis
 	  * @return The smallest coordinate within this item's bounds along the specified axis (assuming positive size)
 	  */
-	def minAlong(axis: Axis) = topLeft(axis)
+	def minAlong(axis: Axis) = bounds(axis).start
 	/**
 	  * @param axis The targeted axis
 	  * @return The largest coordinate within this item's bounds along the specified axis (assuming positive size)
 	  */
-	def maxAlong(axis: Axis) = topLeft(axis) + size(axis)
+	def maxAlong(axis: Axis) = bounds(axis).end
 	
 	/**
 	  * @param bounds A set of bounds
 	  * @return Whether this item's bounds overlap with the other set of bounds
 	  */
-	def overlapsWith(bounds: Bounds) =
-		Axis2D.values.forall { axis =>
-			maxAlong(axis) > bounds.minAlong(axis) && bounds.maxAlong(axis) > minAlong(axis)
-		}
-	
+	def overlapsWith(bounds: HasDimensions[HasEnds[Double]]) =
+		this.bounds.forAllDimensionsWith(bounds) { _ overlapsWith _ }
 	/**
 	  * @param bounds A set of bounds
 	  * @return Whether this item lies completely within the specified set of bounds
 	  */
-	def liesCompletelyWithin(bounds: Bounds) = bounds.contains(topLeft) && bounds.contains(topRight)
+	def liesCompletelyWithin(bounds: HasDimensions[HasEnds[Double]]) =
+		this.bounds.forAllDimensionsWith(bounds) { (my, their) => their.contains(my) }
 }

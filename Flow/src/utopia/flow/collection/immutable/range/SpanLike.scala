@@ -106,7 +106,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @param end New ending point (default = current end)
 	  * @return A copy of this element with the specified start and end points
 	  */
-	protected def withEnds(start: P = this.start, end: P = this.end): Repr
+	def withEnds(start: P = this.start, end: P = this.end): Repr
 
 	
 	// COMPUTED ------------------------
@@ -127,6 +127,12 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	
 	
 	// OTHER    -----------------------
+	
+	/**
+	  * @param f A mapping function to apply to the end-points of this span
+	  * @return A copy of this span with mapped end-points
+	  */
+	def mapEnds(f: P => P) = withEnds(f(start), f(end))
 	
 	/**
 	  * @param start A new starting point for this span

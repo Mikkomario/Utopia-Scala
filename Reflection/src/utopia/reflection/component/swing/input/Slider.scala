@@ -509,9 +509,9 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			val knobRadius = ((targetKnobDiameter min bounds.height) min bounds.width) / 2.0
-			val lineStartX = bounds.x + knobRadius
+			val lineStartX = bounds.leftX + knobRadius
 			val lineWidth = bounds.width - knobRadius * 2
-			val lineY = bounds.y + bounds.height / 2.0
+			val lineY = bounds.topY + bounds.height / 2.0
 			val leftSideWidth = lineWidth * doubleValue
 			val thresholdX = lineStartX + leftSideWidth
 			// Draws the right side line first

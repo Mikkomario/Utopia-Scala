@@ -94,7 +94,7 @@ trait NumericSpan[N]
 	
 	override implicit def ordering: Ordering[N] = n
 	
-	override protected def withEnds(start: N, end: N) = NumericSpan(start, end, step)(n)
+	override def withEnds(start: N, end: N) = NumericSpan(start, end, step)(n)
 	
 	override protected def traverse(from: N, direction: Sign) = n.plus(from, direction match {
 		case Positive => step

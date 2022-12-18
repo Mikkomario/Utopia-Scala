@@ -5,6 +5,7 @@
 - Rewrote **Dimensional**, **VectorLike** and similar traits completely
   - **Dimensional** is now **HasDimensions** (a new trait with name **Dimensional** was also introduced)
   - **VectorLike** is now **DoubleVectorLike**
+- **Bounds** now extends **Dimensional**, causing `.x` and `.y` to function differently
 - Moved all **ParadigmDataType** objects under the **ParadigmDataType** object
 - Renamed **Sized** to **HasSize** and **Bounded** to **HasBounds**
   - Renamed **SizedLike** to **Sized** and **BoundedLike** to **Bounded**

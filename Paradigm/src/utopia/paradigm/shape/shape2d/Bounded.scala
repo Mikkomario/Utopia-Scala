@@ -1,9 +1,10 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.{DoubleVectorLike, HasDimensions}
 
 /**
   * Common trait for shapes that can specify a bounding box
@@ -128,41 +129,16 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 		withBounds(Bounds(newTopLeft, newSize))
 	}
 	
-	/*
+	/**
 	  * Repositions this item so that it lies within the specified set of bounds.
 	  * The applied movement is kept to a minimum. Will never alter the size of this item.
-	  * If this item doesn't fit into the specified bounds, parts of this item are kept outside of the bounds,
-	  * but the outlying area is kept to a minimum.
+	  * If this item doesn't fit into the specified bounds,
+	  * this item is positioned so that it covers as much of the specified area as possible
 	  * @param area Target area
 	  * @return A copy of this item so that it lies within that specified area (if possible)
 	  */
-		/*
-	def slidInto(area: Bounds) =
-	{
-		// Case: Already fits or covers the specified area => Doesn't move
-		if (area.contains(bounds) || bounds.contains(area))
-			repr
-		else {
-			val overSize = (size - area.size).positive
-			if (overSize.isZero) {
-				val newPosition = Point.fromFunction2D { axis =>
-					if (maxAlong(axis) > area.maxAlong(axis))
-						area.maxAlong(axis) - size(axis)
-					else if (minAlong(axis) < area.minAlong(axis))
-						area.position(axis)
-					else
-						position(axis)
-				}
-				withPosition(newPosition)
-			}
-			else {
-				val translation = Vector2D.fromFunction2D { axis =>
-					TODO: Finish this function once Bounds has 1-dimensional components
-					???
-				}
-			}
-		}
-	}*/
+	def shiftedInto(area: HasDimensions[HasInclusiveEnds[Double]]) =
+		withBounds(bounds.mergeWith(area) { _ shiftedInto _ })
 	
 	/**
 	  * Creates a copy of this item with scaled bounds (both size AND position). Preserves shape.
@@ -194,11 +170,19 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  * @return A copy of this item with bounds that keep the same center-point but have enlarged size
 	  */
 	def enlarged[V <: DoubleVectorLike[V]](enlargement: V) =
-		withBounds(Bounds(topLeft - enlargement / 2, size + enlargement))
+		withBounds(bounds.mergeWith(enlargement) { (area, increase) =>
+			val halved = increase / 2
+			area.withEnds(area.start - halved, area.end + halved)
+		})
 	/**
 	  * Creates a copy of this item with shrunk bounds where the center-point remains the same
 	  * @param shrinking A size decrease to apply
 	  * @return A copy of this item with bounds that keep the same center-point but have shrunk size
 	  */
-	def shrunk[V <: DoubleVectorLike[V]](shrinking: V) = withBounds(Bounds(topLeft + shrinking / 2, size - shrinking))
+	def shrunk[V <: DoubleVectorLike[V]](shrinking: V) =
+		withBounds(bounds.mergeWith(shrinking) { (area, decrease) =>
+			// Won't shrink below length 0
+			val halved = (decrease min area.length) / 2
+			area.withEnds(area.start + halved, area.end - halved)
+		})
 }

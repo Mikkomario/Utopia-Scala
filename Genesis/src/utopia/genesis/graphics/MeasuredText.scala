@@ -170,8 +170,8 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			val lineIndex = {
 				if (lines.size > 1)
 					lineBounds.minIndexBy { case (b, _) =>
-						if (b.y > position.y)
-							b.y - position.y
+						if (b.topY > position.y)
+							b.topY - position.y
 						else if (b.bottomY < position.y)
 							position.y - b.bottomY
 						else
@@ -236,16 +236,14 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param direction Direction of movement
 	  * @return The next caret index. None if there are no available indices to that direction.
 	  */
-	def caretIndexNextTo(index: Int, direction: Direction2D) = direction.axis match
-	{
+	def caretIndexNextTo(index: Int, direction: Direction2D) = direction.axis match {
 		case X => Some(index + 1 * direction.sign.modifier).filter(isValidCaretIndex)
 		case Y => caretIndexParallelTo(index, direction.sign)
 	}
 	
-	private def caretX(lineIndex: Int, caretIndexOnLine: Int) =
-	{
+	private def caretX(lineIndex: Int, caretIndexOnLine: Int) = {
 		if (caretIndexOnLine < 0)
-			lineBounds(lineIndex)._1.x
+			lineBounds(lineIndex)._1.leftX
 		else if (caretIndexOnLine >= carets(lineIndex).size)
 			lineBounds(lineIndex)._1.rightX
 		else

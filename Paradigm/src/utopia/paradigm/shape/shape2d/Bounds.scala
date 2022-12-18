@@ -1,31 +1,37 @@
 package utopia.paradigm.shape.shape2d
 
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.enumeration.{Axis, Direction2D}
 import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
+import utopia.paradigm.shape.shape1d.Span1D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, DoubleVectorLike, HasDimensions}
 
 import java.awt.geom.RoundRectangle2D
 import scala.language.implicitConversions
 import scala.util.Success
 
-object Bounds extends FromModelFactory[Bounds]
+object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with FromModelFactory[Bounds]
 {
     // ATTRIBUTES    ----------------------
+    
+    override val zeroDimension = NumericSpan(0.0, 0.0)
+    override protected val dimensionsFactory = Dimensions(zeroDimension)
     
     /**
      * A zero bounds
      */
-    val zero = Bounds(Point.origin, Size.zero)
+    val zero = new Bounds(Right(dimensionsFactory.zero2D))
     
     /**
       * Collision axes used when testing for containment / overlap with Bounds
@@ -35,14 +41,32 @@ object Bounds extends FromModelFactory[Bounds]
     
     // IMPLICIT ---------------------------
     
-    implicit def fromAwt(awtBounds: java.awt.Rectangle): Bounds = Bounds(Point(awtBounds.x, awtBounds.y),
-        Size(awtBounds.width, awtBounds.height))
+    implicit def fromAwt(awtBounds: java.awt.Rectangle): Bounds =
+        Bounds(Point(awtBounds.x, awtBounds.y), Size(awtBounds.width, awtBounds.height))
     
     
-    // OPERATORS    -----------------------
+    // IMPLEMENTED  -----------------------
+    
+    override def apply(dimensions: Dimensions[NumericSpan[Double]]) =
+        new Bounds(Right(dimensions.withLength(2)))
+    
+    override def from(other: HasDimensions[NumericSpan[Double]]) = other match {
+        case b: Bounds => b
+        case o => apply(o.dimensions)
+    }
     
     override def apply(model: template.ModelLike[Property]) =
         Success(Bounds(model("position").getPoint, model("size").getSize))
+    
+    
+    // OTHER    -----------------------
+    
+    /**
+      * @param position The top-left corner of these bounds
+      * @param size The size of these bounds
+      * @return A set of bounds that combines these two values
+      */
+    def apply(position: Point, size: Size) = new Bounds(Left(position -> size))
     
     /**
       * Creates a new set of bounds
@@ -54,26 +78,17 @@ object Bounds extends FromModelFactory[Bounds]
       */
     def apply(x: Double, y: Double, width: Double, height: Double): Bounds = apply(Point(x, y), Size(width, height))
     
-    
-    // OTHER METHODS    -------------------
-    
     /**
      * Creates a rectangle that contains the area between the two coordinates. The order 
      * of the coordinates does not matter.
      */
-    def between(p1: Point, p2: Point) = 
-    {
-        val topLeft = p1 topLeft p2
-        val bottomRight = p1 bottomRight p2
-        
-        Bounds(topLeft, (bottomRight - topLeft).toSize)
-    }
+    def between(p1: Point, p2: Point) =
+        from(p1.dimensions.zipIteratorWith(p2.dimensions).map { case (s, e) => NumericSpan(s, e) })
     
     /**
      * Creates a set of bounds around a circle so that the whole sphere is contained.
      */
-    def around(circle: Circle) = 
-    {
+    def around(circle: Circle) = {
         val r = Vector3D(circle.radius, circle.radius, circle.radius)
         Bounds(circle.origin - r, (r * 2).toSize)
     }
@@ -82,14 +97,12 @@ object Bounds extends FromModelFactory[Bounds]
      * Creates a set of bounds that contains all of the provided bounds. Returns none if the provided 
      * collection is empty.
      */
-    def aroundOption(bounds: Iterable[Bounds]) =
-    {
+    def aroundOption(bounds: Iterable[Bounds]) = {
         if (bounds.isEmpty)
             None
         else if (bounds.size == 1)
             Some(bounds.head)
-        else
-        {
+        else {
             val topLeft = Point.topLeft(bounds.map{ _.topLeft })
             val bottomRight = Point.bottomRight(bounds.map { _.bottomRight })
             
@@ -122,10 +135,31 @@ object Bounds extends FromModelFactory[Bounds]
  * @author Mikko Hilpinen
  * @since Genesis 13.1.2017
  */
-// TODO: Add &&
-case class Bounds(override val position: Point, override val size: Size)
-    extends Rectangular with ValueConvertible with ModelConvertible with LinearScalable[Bounds] with Bounded[Bounds]
+class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]])
+    extends Dimensional[NumericSpan[Double], Bounds] with Rectangular with ValueConvertible with ModelConvertible
+        with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds] with Bounded[Bounds]
 {
+    // ATTRIBUTES   ----------------------
+    
+    override lazy val dimensions = data.rightOrMap { case (position, size) =>
+        Bounds.dimensionsFactory.fromFunction2D { axis =>
+            val start = position(axis)
+            NumericSpan(start, start + size(axis))
+        }
+    }
+    override lazy val position = data match {
+        case Left((pos, _)) => pos
+        case Right(dimensions) => Point(dimensions.map { _.start })
+    }
+    override lazy val size = data match {
+        case Left((_, size)) => size
+        case Right(dimensions) => Size(dimensions.map { _.length })
+    }
+    
+    override lazy val components =
+        dimensions.zipWithAxisIterator.map { case (span, axis) => Span1D(span, axis) }.toVector
+    
+    
     // COMPUTED PROPERTIES    ------------
     
     /**
@@ -140,44 +174,17 @@ case class Bounds(override val position: Point, override val size: Size)
     def diagonal = Line(topLeft, bottomRight)
     
     /**
-      * @return The x-coordinate of these bounds
-      */
-    def x = position.x
-    /**
-      * @return The y-coordinate of these bounds
-      */
-    def y = position.y
-    
-    /**
       * @return A rounded version of these bounds
       */
-    def round = {
-        val newPosition = position.round
-        if (newPosition == position)
-            Bounds(newPosition, size.round)
-        else
-            Bounds(newPosition, Size((rightX - newPosition.x).round.toDouble, (bottomY - newPosition.y).round.toDouble))
-    }
+    def round = mapEachDimension { _.mapEnds { _.round.toDouble } }
     /**
       * @return A copy of these bounds that rounds values for increased size and decreased position
       */
-    def ceil = {
-        val newPosition = position.floor
-        if (newPosition == position)
-            Bounds(newPosition, size.ceil)
-        else
-            Bounds(newPosition, Size((rightX - newPosition.x).ceil, (bottomY - newPosition.y).ceil))
-    }
+    def ceil = mapEachDimension { s => s.withEnds(s.start.floor, s.end.ceil) }
     /**
       * @return A copy of these bounds for decreased size and increased position
       */
-    def floor = {
-        val newPosition = position.ceil
-        if (newPosition == position)
-            Bounds(newPosition, size.floor)
-        else
-            Bounds(newPosition, Size((rightX - newPosition.x).floor, (bottomY - newPosition.y).floor))
-    }
+    def floor = mapEachDimension { s => s.withEnds(s.start.ceil, s.end.floor) }
     
     
     // IMPLEMENTED METHODS    ----------
@@ -197,11 +204,12 @@ case class Bounds(override val position: Point, override val size: Size)
     override def toModel = Model(Vector("position" -> position, "size" -> size))
     override def toShape = toAwt
     
-    override def topEdge = X(size.width).in2D
-    override def rightEdge = Y(size.height).in2D
+    override def topEdge = along(X).vector.in2D
+    override def rightEdge = along(Y).vector.in2D
     
     override def collisionAxes = Bounds.collisionAxes
     
+    override def withDimensions(newDimensions: Dimensions[NumericSpan[Double]]) = Bounds(newDimensions)
     override def withBounds(newBounds: Bounds) = newBounds
     
     override def translated(translation: HasDoubleDimensions): Bounds = withPosition(position + translation)
@@ -211,20 +219,24 @@ case class Bounds(override val position: Point, override val size: Size)
       * @param scaling A scaling factor
       * @return A scaled version of these bounds
       */
-    override def *(scaling: Double) = Bounds(position * scaling, size * scaling)
-    
-    
-    // OPERATORS    --------------------
+    override def *(scaling: Double) = mapEachDimension { _ * scaling }
     
     /**
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def +(translation: HasDoubleDimensions) = mapPosition { _ + translation }
+    override def +(translation: HasDoubleDimensions) = mergeWith(translation) { _ + _ }
+    
+    override def along(axis: Axis) = components.getOrElse(axis.index, Span1D.zeroAlong(axis))
+    
+    
+    // OPERATORS    --------------------
+    
     /**
       * @param insets Insets to add to these bounds
       * @return A copy of these bounds with specified insets added to the sides
       */
+    // TODO: Refactor once insets have been refactored
     def +(insets: Insets) = Bounds(position - Vector2D(insets.top, insets.left), size + insets.total)
     
     /**
@@ -236,6 +248,7 @@ case class Bounds(override val position: Point, override val size: Size)
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted
       */
+    // TODO: Refactor once insets have been refactored
     def -(insets: Insets) = Bounds(position + Vector2D(insets.top, insets.left), size - insets.total)
     
     /**
@@ -243,13 +256,13 @@ case class Bounds(override val position: Point, override val size: Size)
       * @param scaling A scaling factor
       * @return A scaled version of these bounds
       */
-    def *(scaling: HasDoubleDimensions) = Bounds(position * scaling, size * scaling)
+    def *(scaling: HasDoubleDimensions) = mergeWith(scaling) { _ * _ }
     /**
       * Divides both position and size
       * @param div A dividing factor
       * @return A divided version of these bounds
       */
-    def /(div: HasDoubleDimensions) = Bounds(position / div, size / div)
+    def /(div: HasDoubleDimensions) = mergeWith(div) { (span, div) => if (div == 0.0) span else span.mapEnds { _ / div } }
     
     
     // OTHER METHODS    ----------------
@@ -260,8 +273,7 @@ case class Bounds(override val position: Point, override val size: Size)
      * rounded at all, 1 means that the corners are rounded as much as possible, so that the ends of
      * the shape become ellipsoid. Default value is 0.5
      */
-    def toRoundedRectangle(roundingFactor: Double = 0.5) =
-    {
+    def toRoundedRectangle(roundingFactor: Double = 0.5) = {
         val rounding = math.min(width, height) * roundingFactor
         new RoundRectangle2D.Double(position.x, position.y, width, height, rounding, rounding)
     }
@@ -271,18 +283,16 @@ case class Bounds(override val position: Point, override val size: Size)
       * @return A new rounded rectangle
       */
     def toRoundedRectangleWithRadius(radius: Double) =
-    {
         new RoundRectangle2D.Double(position.x, position.y, width, height, radius * 2, radius * 2)
-    }
     
     /**
      * Checks whether the line completely lies within the rectangle bounds
      */
-    def contains(line: Line): Boolean = contains(line.start) && contains(line.end)
+    def contains(line: Line): Boolean = line.points.forall(contains)
     /**
      * Checks whether a set of bounds is contained within this bounds' area
      */
-    def contains(bounds: Bounds): Boolean = contains(bounds.topLeft) && contains(bounds.bottomRight)
+    def contains(bounds: Bounds): Boolean = forAllDimensionsWith(bounds) { _ contains _ }
     /**
       * @param item An item with bounds
       * @return Whether these bounds completely contain the specified item
@@ -305,31 +315,6 @@ case class Bounds(override val position: Point, override val size: Size)
     def lineIntersection(line: Line) = sides.flatMap { _.intersection(line) }
     
     /**
-      * Enlarges these bounds from the center
-      * @param widthIncrease The increase in width
-      * @param heightIncrease The increase in height
-      * @return A copy of these bounds with same center but increased size
-      */
-    @deprecated("Please use enlarged(VectorLike) instead", "v1.1")
-    def enlarged(widthIncrease: Double, heightIncrease: Double): Bounds = enlarged(Size(widthIncrease, heightIncrease))
-    
-    /**
-      * Shrinks these bounds from the center
-      * @param shrinking The size decrease
-      * @return A copy of these bounds with same center but decreased size
-      */
-    @deprecated("Please use shrunk(VectorLike) instead", "v1.1")
-    def shrinked(shrinking: Size) = enlarged(-shrinking)
-    /**
-      * Shrinks these bounds from the center
-      * @param widthDecrease The decrease in width
-      * @param heightDecrease The decrease in height
-      * @return A copy of these bounds with same center but decreased size
-      */
-    @deprecated("Please use shrunk(VectorLike) instead", "v1.1")
-    def shrinked(widthDecrease: Double, heightDecrease: Double): Bounds = shrunk(Size(widthDecrease, heightDecrease))
-    
-    /**
       * @param p New position
       * @return A copy of these bounds with specified position
       */
@@ -341,32 +326,25 @@ case class Bounds(override val position: Point, override val size: Size)
     def mapPosition(map: Point => Point) = withPosition(map(position))
     
     /**
-      * @param x X-translation applied
-      * @param y Y-translation applied
-      * @return A copy of these bounds with translated position
+      * @param other Another area
+      * @return The intersection between these two areas. None if there is no intersection.
       */
-    @deprecated("Please use translated(Dimensional) instead", "v1.1")
-    def translatedBy(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
-    
+    @deprecated("Replaced with .overlapWith", "v1.2")
+    def intersectionWith(other: Bounds) = overlapWith(other)
     /**
       * @param other Another area
       * @return The intersection between these two areas. None if there is no intersection.
       */
-    def intersectionWith(other: Bounds) = {
-        val newTopLeft = topLeft.bottomRight(other.topLeft)
-        val newBottomRight = bottomRight.topLeft(other.bottomRight)
-        
-        if (newTopLeft.x > newBottomRight.x || newTopLeft.y > newBottomRight.y)
-            None
-        else
-            Some(Bounds.between(newTopLeft, newBottomRight))
+    def overlapWith(other: HasDimensions[HasInclusiveEnds[Double]]) = {
+        x.overlapWith(other.x).flatMap { xOverlap =>
+            y.overlapWith(other.y).map { yOverlap => Bounds(xOverlap, yOverlap) }
+        }
     }
     /**
-      * @param area Another area
-      * @return The intersection between these two areas. None if there is no intersection.
+      * @param other Another set of bounds
+      * @return The overlap between these two sets of bounds
       */
-    @deprecated("Please use intersectionWith(Bounds) instead", "v1.1")
-    def within(area: Bounds) = intersectionWith(area)
+    def &&(other: Bounds) = overlapWith(other)
     
     /**
       * Fits these bounds to the specified area. Alters the size and position as little as possible.
@@ -396,14 +374,14 @@ case class Bounds(override val position: Point, override val size: Size)
         // Case: Only height (and possibly x) needs to be adjusted
         else if (width <= area.width)
         {
-            val newX = if (rightX >= area.rightX) area.rightX - width else if (x <= area.x) area.x else x
-            Bounds(Point(newX, area.y), Size(width, area.height))
+            val newX = if (rightX >= area.rightX) area.rightX - width else if (position.x <= area.position.x) area.position.x else position.x
+            Bounds(Point(newX, area.position.y), Size(width, area.height))
         }
         // Case: Only width (and possibly y) needs to be adjusted
         else if (height <= area.height)
         {
-            val newY = if (bottomY >= area.bottomY) area.bottomY - height else if (y <= area.y) area.y else y
-            Bounds(Point(area.x, newY), Size(area.width, height))
+            val newY = if (bottomY >= area.bottomY) area.bottomY - height else if (position.y <= area.position.y) area.position.y else position.y
+            Bounds(Point(area.position.x, newY), Size(area.width, height))
         }
         // Case: Both height and width need to be shrunk
         else
@@ -419,8 +397,12 @@ case class Bounds(override val position: Point, override val size: Size)
       * @param maxHeight Maximum height of resulting bounds
       * @return A bottom part of these bounds with up to a specific height
       */
-    def bottomSlice(maxHeight: Double) = if (height <= maxHeight) this else
-        Bounds(position + Y(height - maxHeight), Size(width, maxHeight))
+    def bottomSlice(maxHeight: Double) = {
+        if (height <= maxHeight)
+            this
+        else
+            Bounds(position + Y(height - maxHeight), Size(width, maxHeight))
+    }
     /**
       * @param maxWidth Maximum width of resulting bounds
       * @return A leftmost part of these bounds with up to a specific width
@@ -430,16 +412,19 @@ case class Bounds(override val position: Point, override val size: Size)
       * @param maxWidth Maximum width of resulting bounds
       * @return A rightmost part of these bounds with up to a specific width
       */
-    def rightSlice(maxWidth: Double) = if (width <= maxWidth) this else
-        Bounds(position + X(width - maxWidth), Size(maxWidth, height))
+    def rightSlice(maxWidth: Double) = {
+        if (width <= maxWidth)
+            this
+        else
+            Bounds(position + X(width - maxWidth), Size(maxWidth, height))
+    }
     /**
       * Slices these bounds from a specific direction
       * @param direction The direction from which these bounds are sliced
       * @param maxLength The maximum length of the taken are (parallel to 'direction')
       * @return A slice of these bounds
       */
-    def slice(direction: Direction2D, maxLength: Double) = direction match
-    {
+    def slice(direction: Direction2D, maxLength: Double) = direction match {
         case Direction2D.Up => topSlice(maxLength)
         case Direction2D.Down => bottomSlice(maxLength)
         case Direction2D.Left => leftSlice(maxLength)

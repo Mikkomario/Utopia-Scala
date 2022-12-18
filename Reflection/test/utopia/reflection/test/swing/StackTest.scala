@@ -1,6 +1,5 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.generic.model.mutable.DataType
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -37,7 +36,7 @@ object StackTest extends App
 	val stack = Stack.rowWithItems(items, StackLength.fixed(16), StackLength.fixed(16))
 
 	stack.addResizeListener(e => println(e.newSize))
-	stack.addAlternatingRowBackground(Color.yellow, Color.yellow.darkened(1.2))
+	stack.addAlternatingRowBackground(Color.yellow, Color.yellow.darkened)
 
 	// Creates the frame
 	val frame = Frame.windowed(stack, "Test")

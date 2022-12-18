@@ -218,7 +218,7 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
 	override def axes = Axis2D.values
 	
 	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
-		case Some(clip) => clip.intersectionWith(bounds).foreach { c => super.paintWith(drawer.clippedTo(c), Some(c)) }
+		case Some(clip) => clip.overlapWith(bounds).foreach { c => super.paintWith(drawer.clippedTo(c), Some(c)) }
 		case None => super.paintWith(drawer.clippedTo(bounds), Some(bounds))
 	}
 }

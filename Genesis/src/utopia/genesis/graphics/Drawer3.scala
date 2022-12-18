@@ -47,7 +47,7 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 	  */
 	def clear(area: Bounds) = {
 		val a = area.round
-		graphics.value.clearRect(a.x.toInt, a.y.toInt, a.width.toInt, a.height.toInt)
+		graphics.value.clearRect(a.position.x.toInt, a.position.y.toInt, a.width.toInt, a.height.toInt)
 	}
 	
 	/**
@@ -96,7 +96,7 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 	def copyArea(area: Bounds, translation: HasDoubleDimensions) = {
 		if (translation.xyPair.exists { _ != 0 })
 			graphics.value.copyArea(
-				area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
+				area.position.x.round.toInt, area.position.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
 				translation.x.round.toInt, translation.y.round.toInt)
 	}
 }

@@ -20,7 +20,7 @@ object Span
 	                           (implicit override val ordering: Ordering[P])
 		extends Span[P]
 	{
-		override protected def withEnds(start: P, end: P) = copy(start, end)
+		override def withEnds(start: P, end: P) = copy(start, end)
 	}
 }
 

@@ -124,6 +124,14 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  */
 	def zipWithAxis2D = values zip Axis2D.values
 	/**
+	  * @return An iterator that returns dimensions along with their axes
+	  */
+	def zipWithAxisIterator = values.iterator zip Axis.values
+	/**
+	  * @return An iterator that returns the first 0-2 dimensions, along with their axes
+	  */
+	def zipWithAxis2DIterator = values.iterator zip Axis2D.values
+	/**
 	  * @return A map based on these dimensions, where axes are used as keys.
 	  */
 	def toMap = Axis.values.zip(values).toMap

@@ -304,19 +304,17 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		val areaInViewSpace = area + contentOrigin
 		
 		// Calculates how much scrolling is required
-		val xTransition =
-		{
-			if (areaInViewSpace.x < 0)
-				areaInViewSpace.x
+		val xTransition = {
+			if (areaInViewSpace.leftX < 0)
+				areaInViewSpace.leftX
 			else if (areaInViewSpace.rightX > width)
 				areaInViewSpace.rightX - width
 			else
 				0
 		}
-		val yTransition =
-		{
-			if (areaInViewSpace.y < 0)
-				areaInViewSpace.y
+		val yTransition = {
+			if (areaInViewSpace.topY < 0)
+				areaInViewSpace.topY
 			else if (areaInViewSpace.bottomY > height)
 				areaInViewSpace.bottomY - height
 			else
