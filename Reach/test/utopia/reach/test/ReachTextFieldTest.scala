@@ -1,25 +1,24 @@
 package utopia.reach.test
 
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default
 import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.container.stack.StackLayout.Trailing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.DisplayFunction
+import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.stack.StackLength
 
 /**
   * A simple test for text fields
@@ -72,7 +71,7 @@ object ReachTextFieldTest extends App
 		}
 	}.parent
 	
-	val frame = Frame.windowed(canvas, "Reach Test", Program)
+	val frame = Frame.windowed(canvas, "Reach Test", Program, getAnchor = canvas.anchorPosition(_))
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
 }

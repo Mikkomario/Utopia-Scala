@@ -1,11 +1,12 @@
 package utopia.paradigm.enumeration
 
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{Sign, SignedOrZero}
 import utopia.paradigm.enumeration.LinearAlignment.Middle
 
 /**
-  * An enumeration for one dimensional item aligning
+  * An enumeration for one-dimensional item aligning
   * @author Mikko Hilpinen
   * @since Genesis 29.1.2022, v2.6.3
   */
@@ -32,8 +33,13 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	def position(length: Double, within: Double): Double
 	
 	/**
-	  * @param within A length
-	  * @return Location of a point within that length when using this alignment
+	  * Calculates the location matching this alignment on a one-dimensional line that starts from 0 and ends at
+	  * the specified length.
+	  * @param within Length of the target area
+	  * @return Location matching this alignment at that length, which is:
+	  *         Close => 0
+	  *         Middle => within / 2
+	  *         Far => within
 	  */
 	def origin(within: Double): Double
 	
@@ -55,6 +61,19 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	
 	override def unary_- = opposite
 	override def self = this
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	  * Calculates the location matching this alignment within a one-dimensional span.
+	  * @param within A span within which the location resides
+	  * @return The location within the specified span that matches this alignment, namely:
+	  *         Close => Start of the span,
+	  *         Middle => Middle of the span,
+	  *         Far => End of the span
+	  */
+	def origin(within: HasInclusiveEnds[Double]): Double = within.start + origin(within.end - within.start)
 }
 
 object LinearAlignment

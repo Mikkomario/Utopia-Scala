@@ -115,44 +115,29 @@ trait NumericSpan[N]
 	  */
 	def by(step: N) = NumericSpan(start, end, step)(n)
 	
-	// NB: The following functions are copied from SpanLike, where they are provided implicitly
-	// These implicits don't typically apply for numeric types, unfortunately, hence the duplication
-	
 	/**
 	  * @param distance A distance to move this span
 	  * @return A copy of this span where both the start and the end points have been moved the specified distance
 	  */
-	def shiftedBy(distance: N) = withEnds(n.plus(start, distance), n.plus(end, distance))
+	def shiftedBy(distance: N) = _shiftedBy(distance)(n.plus)
 	
 	/**
 	  * @param length New length to assign to this span
 	  * @return A copy of this span with the same starting point and the new length
 	  */
-	def withLength(length: N) = withEnd(n.plus(start, length))
+	def withLength(length: N) = _withLength(length)(n.plus)
 	/**
 	  * @param maxLength Largest allowed length
 	  * @return A copy of this span with length equal to or smaller than the specified maximum length.
 	  *         The starting point of this span is preserved.
 	  */
-	def withMaxLength(maxLength: N) = {
-		val newEnd = n.plus(start, maxLength)
-		if (newEnd >= end)
-			self
-		else
-			withEnd(newEnd)
-	}
+	def withMaxLength(maxLength: N) = _withMaxLength(maxLength)(n.plus)
 	/**
 	  * @param minLength Smallest allowed length
 	  * @return A copy of this span with length equal to or larger than the specified minimum length.
 	  *         The starting point of this span is preserved.
 	  */
-	def withMinLength(minLength: N) = {
-		val newEnd = n.plus(start, minLength)
-		if (newEnd <= end)
-			self
-		else
-			withEnd(newEnd)
-	}
+	def withMinLength(minLength: N) = _withMinLength(minLength)(n.plus)
 	
 	/**
 	  * Moves this span so that it either:
@@ -162,16 +147,5 @@ trait NumericSpan[N]
 	  * @param other Another span
 	  * @return A copy of this span that fulfills a condition specified above
 	  */
-	def shiftedInto(other: HasInclusiveEnds[N]) = {
-		if (start < other.start) {
-			if (end >= other.end)
-				self
-			else
-				shiftedBy(n.min(n.minus(other.start, start), n.minus(other.end, end)))
-		}
-		else if (end > other.end)
-			shiftedBy(n.negate(n.min(n.minus(start, other.start), n.minus(end, other.end))))
-		else
-			self
-	}
+	def shiftedInto(other: HasInclusiveEnds[N]) = _shiftedInto(other)(n.plus)(n.minus)
 }

@@ -44,6 +44,24 @@ trait HasBounds extends HasSize with Area2D
 	  * @return The bottom-right corner of this item's bounds (assuming positive size)
 	  */
 	def bottomRight = topLeft + size
+	
+	/**
+	  * @return A point at the center of this item vertically, at the left horizontally
+	  */
+	def centerLeft = topLeft + Y(height / 2)
+	/**
+	  * @return A point at the center of this item vertically, at the right horizontally
+	  */
+	def centerRight = topLeft + size * Vector2D(1, 0.5)
+	/**
+	  * @return A point at the center of this item horizontally, at the top vertically
+	  */
+	def centerTop = topLeft + X(width / 2)
+	/**
+	  * @return A point at the center of this item horizontally, at the bottom vertically
+	  */
+	def centerBottom = topLeft + size * Vector2D(0.5, 1)
+	
 	/**
 	  * @return The leftmost x-coordinate of this item's bounds (assuming positive size)
 	  */
@@ -60,6 +78,14 @@ trait HasBounds extends HasSize with Area2D
 	  * @return The bottom-most y-coordinate of this item's bounds (assuming positive size)
 	  */
 	def bottomY = maxAlong(Y)
+	/**
+	  * @return The center coordinate of this item along the x-axis
+	  */
+	def centerX = centerAlong(X)
+	/**
+	  * @return The center coordinate of this item along the y-axis
+	  */
+	def centerY = centerAlong(Y)
 	
 	
 	// IMPLEMENTED  ---------------------
@@ -87,6 +113,14 @@ trait HasBounds extends HasSize with Area2D
 	  * @return The largest coordinate within this item's bounds along the specified axis (assuming positive size)
 	  */
 	def maxAlong(axis: Axis) = bounds(axis).end
+	/**
+	  * @param axis Targeted axis
+	  * @return The center coordinate of this item along that axis
+	  */
+	def centerAlong(axis: Axis) = {
+		val range = bounds(axis)
+		(range.end + range.start) / 2
+	}
 	
 	/**
 	  * @param bounds A set of bounds

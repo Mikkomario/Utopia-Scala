@@ -23,6 +23,9 @@
 ### New Methods
 - **FocusRequestable** (type)
   - Added `.wrap(...)` and `.delegate(...)` for wrapping Reach components into FocusRequestable Reach components
+- **ReachCanvas**
+  - Added `.anchorPosition(...)` method, which may be used in a window constructor in order to enable 
+    focus-based anchoring / window positioning.
 ### Other
 - Visual highlighting updates to buttons and some fields
 - **SelectionList** now exposes the selected area pointer

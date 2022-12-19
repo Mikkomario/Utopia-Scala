@@ -20,10 +20,14 @@
 - Deprecated `.darkened(Double)` and `.lightened(Double)` in **HslLike** 
   in favor of `.darkened`, `.lightened`, `.darkenedBy(Double)` and `.lightenedBy(Double)` in **Color**
 ### New Methods
+- **Bounded**
+  - Added `.shiftedInto(Bounds)` and `.fittedInto(Bounds)` -functions
 - **Color**
   - Added darkening, lightening and highlighting functions
+- **HasBounds**
+  - Added `.centerLeft`, `.centerRight`, `.centerTop`, `.centerBottom`, `.centerX` and `.centerY` -properties
 - **HslLike**
-  - Added `.darkness` and related functions (darkness is just inverse of luminance)
+  - Added `.darkness` and -related functions (darkness is just inverse of luminance)
 - **Insets**
   - Added `.mapWithDirection(...)`
 

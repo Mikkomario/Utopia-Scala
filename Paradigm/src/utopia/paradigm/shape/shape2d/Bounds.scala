@@ -207,6 +207,8 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     override def topEdge = along(X).vector.in2D
     override def rightEdge = along(Y).vector.in2D
     
+    override def center = Point(dimensions.map { s => (s.start + s.end) / 2 })
+    
     override def collisionAxes = Bounds.collisionAxes
     
     override def withDimensions(newDimensions: Dimensions[NumericSpan[Double]]) = Bounds(newDimensions)

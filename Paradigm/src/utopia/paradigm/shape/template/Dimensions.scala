@@ -265,9 +265,26 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @tparam C Type of merge result
 	  * @return A set of dimensions consisting of merge results
 	  */
-	def mergeWith[B, C >: A](other: Dimensions[B])(merge: (A, B) => C) =
-		Dimensions(zeroValue, values.iterator.zipPad(other.values.iterator, zeroValue, other.zeroValue)
+	def mergeWith[B, C >: A](other: HasDimensions[B])(merge: (A, B) => C) = {
+		val d2 = other.dimensions
+		Dimensions(zeroValue, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
 			.map { case (a, b) => merge(a, b) }.toVector)
+	}
+	
+	/**
+	  * Combines these dimensions with other dimensions
+	  * @param other Other set of dimensions
+	  * @param zero A zero value to use in the new set of dimensions
+	  * @param merge A merging function to combine the two values
+	  * @tparam B Type of values in other dimensions
+	  * @tparam C Type of merge result
+	  * @return A set of dimensions consisting of merge results
+	  */
+	def mergeWith[B, C](other: HasDimensions[B], zero: C)(merge: (A, B) => C) = {
+		val d2 = other.dimensions
+		Dimensions(zero, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
+			.map { case (a, b) => merge(a, b) }.toVector)
+	}
 	
 	/**
 	  * @param other Another set of dimensions

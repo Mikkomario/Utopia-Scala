@@ -17,40 +17,24 @@ object SpanLike
 		  * @param distance A distance to move this span
 		  * @return A copy of this span where both the start and the end points have been moved the specified distance
 		  */
-		def shiftedBy(distance: D) = s.withEnds(s.start + distance, s.end + distance)
-		
+		def shiftedBy(distance: D) = s._shiftedBy(distance) { _ + _ }
 		/**
 		  * @param length New length to assign to this span
 		  * @return A copy of this span with the same starting point and the new length
 		  */
-		def withLength(length: D) = s.withEnd(s.start + length)
-		
+		def withLength(length: D) = s._withLength(length) { _ + _ }
 		/**
 		  * @param maxLength Largest allowed length
 		  * @return A copy of this span with length equal to or smaller than the specified maximum length.
 		  *         The starting point of this span is preserved.
 		  */
-		def withMaxLength(maxLength: D) = {
-			implicit val ord: Ordering[P] = s.ordering
-			val newEnd = s.start + maxLength
-			if (newEnd >= s.end)
-				s.self
-			else
-				s.withEnd(newEnd)
-		}
+		def withMaxLength(maxLength: D) = s._withMaxLength(maxLength) { _ + _ }
 		/**
 		  * @param minLength Smallest allowed length
 		  * @return A copy of this span with length equal to or larger than the specified minimum length.
 		  *         The starting point of this span is preserved.
 		  */
-		def withMinLength(minLength: D) = {
-			implicit val ord: Ordering[P] = s.ordering
-			val newEnd = s.start + minLength
-			if (newEnd <= s.end)
-				s.self
-			else
-				s.withEnd(newEnd)
-		}
+		def withMinLength(minLength: D) = s._withMinLength(minLength) { _ + _ }
 	}
 	
 	implicit class SubractableSpan[P <: Combinable[P, P] with Reversible[P], +Repr](val s: SpanLike[P, Repr])
@@ -69,19 +53,8 @@ object SpanLike
 		  * @param other Another span
 		  * @return A copy of this span that fulfills a condition specified above
 		  */
-		def shiftedInto(other: HasInclusiveEnds[P]) = {
-			implicit val ord: Ordering[P] = s.ordering
-			if (s.start < other.start) {
-				if (s.end >= other.end)
-					s.self
-				else
-					(s: CombinableSpan[P, P, Repr]).shiftedBy(ord.min(other.start - s.start, other.end - s.end))
-			}
-			else if (s.end > other.end)
-				(s: CombinableSpan[P, P, Repr]).shiftedBy(-ord.min(s.start - other.start, s.end - other.end))
-			else
-				s.self
-		}
+		def shiftedInto(other: HasInclusiveEnds[P]) =
+			s._shiftedInto(other) { (a: P, b: P) => a + b } { (a: P, b: P) => a - b }(s.ordering)
 	}
 }
 
@@ -243,6 +216,71 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  *         None if these spans don't overlap.
 	  */
 	def &(other: HasInclusiveEnds[P]) = overlapWith(other)
+	
+	/**
+	  * @param distance A distance to move this span
+	  * @param plus A function that combines a point and a distance
+	  * @return A copy of this span where both the start and the end points have been moved the specified distance
+	  */
+	protected def _shiftedBy[D](distance: D)(plus: (P, D) => P) =
+		withEnds(plus(start, distance), plus(end, distance))
+	/**
+	  * @param length New length to assign to this span
+	  * @param plus A function that combines a point and a distance
+	  * @return A copy of this span with the same starting point and the new length
+	  */
+	protected def _withLength[D](length: D)(plus: (P, D) => P) = withEnd(plus(start, length))
+	/**
+	  * @param maxLength Largest allowed length
+	  * @param plus A function that combines a point and a distance
+	  * @return A copy of this span with length equal to or smaller than the specified maximum length.
+	  *         The starting point of this span is preserved.
+	  */
+	protected def _withMaxLength[D](maxLength: D)(plus: (P, D) => P) = {
+		val newEnd = plus(start, maxLength)
+		if (newEnd >= end)
+			self
+		else
+			withEnd(newEnd)
+	}
+	/**
+	  * @param minLength Smallest allowed length
+	  * @param plus A function that combines a point and a distance
+	  * @return A copy of this span with length equal to or larger than the specified minimum length.
+	  *         The starting point of this span is preserved.
+	  */
+	protected def _withMinLength[D](minLength: D)(plus: (P, D) => P) = {
+		val newEnd = plus(start, minLength)
+		if (newEnd <= end)
+			self
+		else
+			withEnd(newEnd)
+	}
+	/**
+	  * Moves this span so that it either:
+	  * a) Lies completely within the specified span, or
+	  * b) Covers the specified span entirely
+	  * The applied movement is minimized
+	  * @param other Another span
+	  * @param plus A function that combines a point and a distance
+	  * @param minus A function that calculates the differences between two points
+	  * @param ord Implicit ordering to use for distances
+	  * @return A copy of this span that fulfills a condition specified above
+	  */
+	protected def _shiftedInto[D](other: HasInclusiveEnds[P])(plus: (P, D) => P)(minus: (P, P) => D)
+	                             (implicit ord: Ordering[D]) =
+	{
+		if (start < other.start) {
+			if (end >= other.end)
+				self
+			else
+				_shiftedBy(ord.min(minus(other.start, start), minus(other.end, end)))(plus)
+		}
+		else if (end > other.end)
+			_shiftedBy(ord.max(minus(other.start, start), minus(other.end, end)))(plus)
+		else
+			self
+	}
 	
 	private def _including(minMax: Pair[P]) = {
 		val myMinMax = this.minMax

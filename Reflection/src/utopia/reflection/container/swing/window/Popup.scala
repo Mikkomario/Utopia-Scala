@@ -56,11 +56,7 @@ object Popup
 		// If context isn't in a window (which it should), has to use a Frame instead of a dialog
 		val owner = context.parentWindow
 		val windowTitle = "Popup".local("en").localizationSkipped
-		val newWindow = owner match
-		{
-			case Some(window) => new Dialog(window, content, windowTitle, Program, resizeAlignment, borderless = true)
-			case None => Frame.windowed(content, windowTitle, Program, borderless = true)
-		}
+		val newWindow = Window(content, owner, windowTitle, Program, getAnchor = _.topLeft, borderless = true)
 		
 		// Calculates the absolute target position
 		val newPosition = context.absolutePosition + getTopLeft(context.size, newWindow.size)
