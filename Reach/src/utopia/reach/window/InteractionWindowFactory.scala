@@ -17,8 +17,8 @@ import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.cursor.CursorSet
 import utopia.reflection.color.ColorRole
 import utopia.reflection.component.context.{ButtonContextLike, ColorContext}
+import utopia.reflection.container.swing.window.Window
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.reflection.container.template.window.WindowButtonBlueprint
 import utopia.reflection.event.HotKey
 import utopia.reflection.localization.LocalizedString
@@ -108,7 +108,8 @@ trait InteractionWindowFactory[A]
 	  * @return 1: The window that was just opened, and
 	  *         2: a future of the closing of the window, with a selected result (or default if none was selected)
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None): (Window[ReachCanvas], Future[A]) =
+	def display(parentWindow: Option[java.awt.Window] = None,
+	            cursors: Option[CursorSet] = None): (Window[ReachCanvas], Future[A]) =
 	{
 		implicit val exc: ExecutionContext = executionContext
 		val context = standardContext
@@ -157,10 +158,7 @@ trait InteractionWindowFactory[A]
 		}.parentAndResult
 		
 		// Creates and sets up the dialog
-		val window = parentWindow match {
-			case Some(parent) => new Dialog(parent, content, title, Program)
-			case None => Frame.windowed(content, title, Program)
-		}
+		val window = Window(content, parentWindow, title, Program, context.margins.medium, content.anchorPosition(_))
 		
 		// Displays the dialog
 		window.startEventGenerators(context.actorHandler)
