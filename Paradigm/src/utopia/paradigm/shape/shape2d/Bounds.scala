@@ -12,7 +12,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Direction2D}
 import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.shape.shape1d.Span1D
+import utopia.paradigm.shape.shape1d.{Span1D, Vector1D}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, DoubleVectorLike, HasDimensions}
@@ -363,7 +363,7 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
         if (height <= maxHeight)
             this
         else
-            Bounds(position + Y(height - maxHeight), Size(width, maxHeight))
+            Bounds(position + (Y(height - maxHeight): Vector1D), Size(width, maxHeight))
     }
     /**
       * @param maxWidth Maximum width of resulting bounds
@@ -378,7 +378,7 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
         if (width <= maxWidth)
             this
         else
-            Bounds(position + X(width - maxWidth), Size(maxWidth, height))
+            Bounds(position + (X(width - maxWidth): Vector1D), Size(maxWidth, height))
     }
     /**
       * Slices these bounds from a specific direction

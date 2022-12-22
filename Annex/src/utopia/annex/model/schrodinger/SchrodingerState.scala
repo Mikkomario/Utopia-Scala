@@ -76,10 +76,15 @@ object SchrodingerState
 			case Some(sign) => apply(sign)
 			case None => instance
 		}
+		/**
+		  * @param isPositive Whether this flux is expected to resolve into a success
+		  * @return A flux with positive or negative expectancy
+		  */
+		def apply(isPositive: Boolean): Flux = apply(Sign(isPositive))
 	}
 	/**
 	  * A common trait for fluctuating / temporary Schrödinger states.
-	  * Also represents a Schrödinger state by itself.
+	  * Also selfesents a Schrödinger state by itself.
 	  */
 	sealed trait Flux extends SchrodingerState {
 		// ABSTRACT ---------------------
@@ -98,7 +103,7 @@ object SchrodingerState
 	  * A common trait for Flux states which have a sign.
 	  */
 	sealed trait SignedFlux extends Flux with BinarySigned[SignedFlux] {
-		override def repr = this
+		override def self = this
 		override def signOption = Some(sign)
 		override def expectancy = Some(Final(sign))
 	}
@@ -111,12 +116,17 @@ object SchrodingerState
 			case Positive => Alive
 			case Negative => Dead
 		}
+		/**
+		  * @param isAlive Whether to return Alive (true) or Dead (false)
+		  * @return Alive or Dead
+		  */
+		def apply(isAlive: Boolean) = if (isAlive) Alive else Dead
 	}
 	/**
 	  * A common trait for final (stable / resolved) Schrödinger states
 	  */
 	sealed trait Final extends SchrodingerState with BinarySigned[Final] {
-		override def repr = this
+		override def self = this
 		override def isFlux = false
 		override def signOption = Some(sign)
 	}

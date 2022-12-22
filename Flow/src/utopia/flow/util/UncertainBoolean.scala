@@ -81,7 +81,7 @@ sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def repr = this
+	override def self = this
 	override def unary_- = !this
 	
 	
@@ -184,7 +184,7 @@ object UncertainBoolean
 	{
 		override def value = Some(knownValue)
 		
-		override def repr = this
+		override def self = this
 		
 		override def unary_! = Certain(!knownValue)
 		override def unary_- = !this

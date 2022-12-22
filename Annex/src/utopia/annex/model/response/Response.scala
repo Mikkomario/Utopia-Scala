@@ -7,7 +7,7 @@ import utopia.disciple.http.response.BufferedResponse
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 /**
   * Represents a result of a sent request
@@ -20,20 +20,71 @@ sealed trait RequestResult
 	  * @return Whether result should be considered a success
 	  */
 	def isSuccess: Boolean
-	
 	/**
 	  * @return Whether this result should be considered a failure
 	  */
 	def isFailure = !isSuccess
+	
+	/**
+	  * @return Either an empty success or a failure, based on this response's status
+	  */
+	def toEmptyTry: Try[Unit]
+	
+	/**
+	  * If this is a successful response, attempts to parse its contents into a single entity
+	  * @param parser Parser used to interpret response body
+	  * @tparam A Type of parse result
+	  * @return Parsed response content on success. Failure if this response was not a success,
+	  *         if response body was empty or if parsing failed.
+	  */
+	def singleParsedFromSuccess[A](parser: FromModelFactory[A]): Try[A]
+	
+	/**
+	  * If this is a successful response, attempts to parse its contents into a vector of entities
+	  * @param parser Parser used to interpret response body elements
+	  * @tparam A Type of parse result
+	  * @return Parsed response content on success. Failure if this response was not a success or if parsing failed.
+	  */
+	def manyParsedFromSuccess[A](parser: FromModelFactory[A]): Try[Vector[A]]
+}
+
+sealed trait RequestFailure extends RequestResult
+{
+	// ABSTRACT --------------------------
+	
+	/**
+	  * @return Cause for this request failure
+	  */
+	def cause: Throwable
+	
+	
+	// COMPUTED ----------------------
+	
+	/**
+	  * @return A failure based on this result
+	  */
+	def toFailure[A] = Failure[A](cause)
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def isSuccess = false
+	
+	override def toEmptyTry = toFailure
+	override def singleParsedFromSuccess[A](parser: FromModelFactory[A]) = toFailure
+	override def manyParsedFromSuccess[A](parser: FromModelFactory[A]) = toFailure
 }
 
 /**
   * This request result is used when no response is received from the server
-  * @param error An error associated with this failure
+  * @param cause An error associated with this failure
   */
-case class NoConnection(error: Throwable) extends RequestResult
+case class NoConnection(cause: Throwable) extends RequestFailure
 {
-	override def isSuccess = false
+	// COMPUTED ----------------------
+	
+	@deprecated("Please use .cause instead", "v1.4")
+	def error = cause
 }
 
 /**
@@ -53,27 +104,6 @@ sealed trait Response extends RequestResult
 	  * @return Response headers
 	  */
 	def headers: Headers
-	
-	/**
-	  * @return Either an empty success or a failure, based on this response's status
-	  */
-	def toEmptyTry: Try[Unit]
-	
-	/**
-	  * If this is a successful response, attempts to parse its contents into a single entity
-	  * @param parser Parser used to interpret response body
-	  * @tparam A Type of parse result
-	  * @return Parsed response content on success. Failure if this response was not a success,
-	  *         if response body was empty or if parsing failed.
-	  */
-	def singleParsedFromSuccess[A](parser: FromModelFactory[A]): Try[A]
-	/**
-	  * If this is a successful response, attempts to parse its contents into a vector of entities
-	  * @param parser Parser used to interpret response body elements
-	  * @tparam A Type of parse result
-	  * @return Parsed response content on success. Failure if this response was not a success or if parsing failed.
-	  */
-	def manyParsedFromSuccess[A](parser: FromModelFactory[A]): Try[Vector[A]]
 }
 
 object Response
@@ -108,9 +138,7 @@ object Response
 		override def isSuccess = true
 		
 		override def toEmptyTry = scala.util.Success(())
-		
 		override def singleParsedFromSuccess[A](parser: FromModelFactory[A]) = body.tryParseSingleWith(parser)
-		
 		override def manyParsedFromSuccess[A](parser: FromModelFactory[A]) = body.vector(parser).parsed
 	}
 	
@@ -119,7 +147,8 @@ object Response
 	  * @param status Status returned by the server
 	  * @param message Error description or other message within the response body (optional)
 	  */
-	case class Failure(status: Status, message: Option[String] = None, headers: Headers) extends Response
+	case class Failure(status: Status, message: Option[String] = None, headers: Headers)
+		extends Response with RequestFailure
 	{
 		// COMPUTED --------------------------
 		
@@ -131,30 +160,17 @@ object Response
 		/**
 		  * @return An exception based on this failure
 		  */
-		def toException =
-		{
-			val errorMessage = message match
-			{
+		def toException = {
+			val errorMessage = message match {
 				case Some(message) => s"$message ($status)"
 				case None => s"Server responded with status $status"
 			}
 			new RequestFailedException(errorMessage)
 		}
 		
-		/**
-		  * @return A scala.util failure based on this failure state
-		  */
-		def toFailure[A] = scala.util.Failure[A](toException)
-		
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def isSuccess = false
-		
-		override def toEmptyTry = toFailure
-		
-		override def singleParsedFromSuccess[A](parser: FromModelFactory[A]) = toFailure
-		
-		override def manyParsedFromSuccess[A](parser: FromModelFactory[A]) = toFailure
+		override def cause = toException
 	}
 }

@@ -38,7 +38,7 @@ sealed trait Axis extends RichComparable[Axis]
     /**
       * A vector along this axis with the specified length
       */
-    def apply(length: Double) = Vector1D(length, this)
+    def apply(length: Double): Vector1D = Vector1D(length, this)
 }
 
 /**

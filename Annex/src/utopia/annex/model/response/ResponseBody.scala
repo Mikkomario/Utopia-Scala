@@ -1,6 +1,7 @@
 package utopia.annex.model.response
 
 import utopia.annex.model.error.EmptyResponseException
+import utopia.annex.model.response.ResponseBody.Content
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.MaybeEmpty
@@ -56,6 +57,11 @@ sealed abstract class ResponseBody(private val body: Value) extends MaybeEmpty[R
 	  * @return Whether this response is empty
 	  */
 	override def isEmpty = body.isEmpty
+	
+	override def notEmpty = this match {
+		case c: Content => Some(c)
+		case _ => None
+	}
 }
 
 object ResponseBody
