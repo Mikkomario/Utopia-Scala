@@ -81,7 +81,7 @@
 - Added generic Range traits: **Span**, **IterableSpan**, **NumericSpan**, **HasEnds**, and so on
 - Added **TimedTask** trait, which is now supported in **TimedTasks**, also
 - Added new ways to write **LocalTime** values (after importing **TimeExtensions**)
-- Added **SettableOnce**, which is like a **Promise** with **ChangeEvent**s
+- Added **SettableOnce** and **MutableOnce**, which are like **Promise**s with **ChangeEvent**s
 - Added **ReleasingPointer** class
 - Added **MaybeEmpty** trait and **NotEmpty** object for dealing with items that have the `.isEmpty` -property
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)

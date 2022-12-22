@@ -28,7 +28,8 @@ object Flag
 		
 		private var _value = false
 		
-		lazy val view = new FlagView(this)
+		override lazy val view = new FlagView(this)
+		override lazy val future = super.future
 		
 		
 		// IMPLEMENTED  ---------------------
