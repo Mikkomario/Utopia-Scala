@@ -48,6 +48,7 @@ object Reference
 	lazy val modelConvertible = apply(genericModelTemplates, "ModelConvertible")
 	lazy val modelDeclaration = apply(immutableGenericModels, "ModelDeclaration")
 	lazy val propertyDeclaration = apply(immutableGenericModels, "PropertyDeclaration")
+	lazy val fromModelFactory = apply(flowGenerics/"factory", "FromModelFactory")
 	lazy val fromModelFactoryWithSchema = apply(flowGenerics/"factory", "FromModelFactoryWithSchema")
 	
 	lazy val flowDataType = apply(genericModels/"mutable", "DataType")

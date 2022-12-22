@@ -109,7 +109,7 @@ object FactoryWriter
 		
 		val fromModelMethod = {
 			if (classToWrite.fromDbModelConversionMayFail)
-				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)"){
+				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model).toTry"){
 					_.dbProperties.map { _.modelName } }(_modelFromAssignments)
 			else
 				ClassMethodFactory
