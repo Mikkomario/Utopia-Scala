@@ -38,6 +38,12 @@ object StringUtilsTest extends App
 	assert(s.dropUntilLast("s") == "string")
 	assert(s.untilFirst("is") == "Th")
 	assert(s.untilLast("is") == "This ")
+	assert("banana".startingWith("abba", enablePartialReplacement = true) == "abbanana")
+	assert("abba".startingWith("ab") == "abba")
+	assert("abba".startingWith("abab") == "abababba")
+	assert("nana".endingWith("apple", enablePartialReplacement = true) == "nanapple")
+	assert("nana".endingWith("na") == "nana")
+	assert("nana".endingWith("nas") == "nananas")
 	
 	assert("a,b,\"c,d,e\",f,,h".split(",".ignoringQuotations).toVector ==
 		Vector("a", "b", "\"c,d,e\"", "f", "", "h"))

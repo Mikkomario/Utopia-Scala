@@ -1,6 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 
@@ -61,29 +62,24 @@ object StringExtensions
 		  * @param range A range
 		  * @return The portion of this string which falls into the specified range
 		  */
-		def slice(range: Range) =
-		{
+		def slice(range: Range) = {
 			if (range.isEmpty)
 				""
-			else
-			{
+			else {
 				val first = (range.start min range.last) max 0
 				val last = (range.start max range.last) min (s.length - 1)
 				s.substring(first, last + 1)
 			}
 		}
-		
 		/**
 		  * Cuts a range out of this string
 		  * @param range Range of characters to cut
 		  * @return The cut away part of this string, then the remaining part of this string
 		  */
-		def cut(range: Range) =
-		{
+		def cut(range: Range) = {
 			if (range.isEmpty)
 				"" -> s
-			else
-			{
+			else {
 				val first = (range.start min range.last) max 0
 				val last = (range.start max range.last) min (s.length - 1)
 				val cutText = s.substring(first, last + 1)
@@ -116,8 +112,7 @@ object StringExtensions
 		 * @param strings A number of strings
 		 * @return Whether this string contains all of the provided sub-strings (case-insensitive)
 		 */
-		def containsAllIgnoreCase(strings: IterableOnce[String]) =
-		{
+		def containsAllIgnoreCase(strings: IterableOnce[String]) = {
 			val lower = s.toLowerCase
 			strings.iterator.forall { searched => lower.contains(searched.toLowerCase) }
 		}
@@ -129,7 +124,6 @@ object StringExtensions
 		 */
 		def containsAllIgnoreCase(first: String, second: String, more: String*): Boolean = containsAllIgnoreCase(
 			Vector(first, second) ++ more)
-		
 		/**
 		  * Checks whether multiple instances of the searched string can be found from this string
 		  * @param searched A searched string
@@ -144,7 +138,6 @@ object StringExtensions
 		 * @return Whether this string starts with specified prefix (case-insensitive)
 		 */
 		def startsWithIgnoreCase(prefix: String) = s.toLowerCase.startsWith(prefix.toLowerCase)
-		
 		/**
 		 * @param suffix A suffix
 		 * @return Whether this string ends with specified suffix (case-insensitive)
@@ -152,27 +145,80 @@ object StringExtensions
 		def endsWithIgnoreCase(suffix: String) = s.toLowerCase.endsWith(suffix.toLowerCase)
 		
 		/**
+		  * @param prefix A prefix with which the resulting string will start
+		  * @param enablePartialReplacement Whether the prefix and this string may partially overlap, causing
+		  *                                 only a portion of the prefix to be added.
+		  *                                 For example, if true, "banana".startingWith("abba") will yield "abbanana";
+		  *                                 If false, this would yield "abbabanana" instead.
+		  * @return A copy of this string that starts with the specified string.
+		  *         If this string already starts with the specified string, returns this string.
+		  */
+		def startingWith(prefix: String, enablePartialReplacement: Boolean = false) = {
+			// Case: Partial replacement technique used
+			if (enablePartialReplacement) {
+				// Starts at the rightmost match option (the most rewarding)
+				// and moves left towards the more probable cases
+				NumericSpan(prefix.length min s.length, 0).findMap { len =>
+					if (s.take(len) == prefix.takeRight(len))
+						Some(s"${ prefix.dropRight(len) }$s")
+					else
+						None
+				}.getOrElse { s"$prefix$s" }
+			}
+			// Case: Already starts with the specified string
+			else if (s.startsWith(prefix))
+				s
+			// Case: Prepending required
+			else
+				s"$prefix$s"
+		}
+		/**
+		  * @param suffix                   A suffix with which the resulting string will end
+		  * @param enablePartialReplacement Whether the suffix and this string may partially overlap, causing
+		  *                                 only a portion of the suffix to be appended.
+		  *                                 For example, if true, "banana".endingWith("apple") will yield "bananapple";
+		  *                                 If false, this would yield "bananaapple" (2 a's) instead.
+		  * @return A copy of this string that ends with the specified string.
+		  *         If this string already ends with the specified string, returns this string.
+		  */
+		def endingWith(suffix: String, enablePartialReplacement: Boolean = false) = {
+			// Case: Partial replacement technique used
+			if (enablePartialReplacement) {
+				// Starts at the leftmost match option (the most rewarding)
+				// and moves right towards the more probable cases
+				NumericSpan(suffix.length min s.length, 0).findMap { len =>
+					if (s.takeRight(len) == suffix.take(len))
+						Some(s"$s${ suffix.drop(len) }")
+					else
+						None
+				}.getOrElse { s"$s$suffix" }
+			}
+			// Case: Already ends with the specified string
+			else if (s.endsWith(suffix))
+				s
+			// Case: Appending required
+			else
+				s"$s$suffix"
+		}
+		
+		/**
 		 * @param str A searched string
 		 * @return Index of the beginning of specified string in this string. None if specified string isn't a
 		 *         substring of this string
 		 */
-		def optionIndexOf(str: String) =
-		{
+		def optionIndexOf(str: String) = {
 			val raw = s.indexOf(str)
 			if (raw < 0) None else Some(raw)
 		}
-		
 		/**
 		 * @param str A searched string
 		 * @return Last index of the beginning of specified string in this string. None if specified string isn't a
 		 *         substring of this string
 		 */
-		def optionLastIndexOf(str: String) =
-		{
+		def optionLastIndexOf(str: String) = {
 			val raw = s.lastIndexOf(str)
 			if (raw < 0) None else Some(raw)
 		}
-		
 		/**
 		  * @param str Searched string
 		  * @return An iterator that returns the next index of the searched string
