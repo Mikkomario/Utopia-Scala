@@ -95,6 +95,8 @@
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
 - **Changing**
   - Added `.incrementalMap(...)` and `.incrementalMergeWith(...)` -methods
+- **Either** (**CollectionExtensions**)
+  - Added `.divergeMapLeft(...)` and `.divergeMapRight(...)`
 - **Iterable** (**CollectionExtensions**)
   - Added `.minMax` and `.minMaxOption`
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 

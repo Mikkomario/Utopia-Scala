@@ -1514,7 +1514,6 @@ object CollectionExtensions
 			case Left(l) => Some(l)
 			case Right(_) => None
 		}
-		
 		/**
 		  * @return This either's right value or None if this either is left (same as toOption)
 		  */
@@ -1530,7 +1529,6 @@ object CollectionExtensions
 			case Right(r) => Right(r)
 			case Left(l) => Left(f(l))
 		}
-		
 		/**
 		  * If this either is right, maps it
 		  * @param f A mapping function for left side
@@ -1543,6 +1541,29 @@ object CollectionExtensions
 		}
 		
 		/**
+		  * @param f A mapping function applied if this is left.
+		  *          Returns a new either.
+		  * @tparam L2 Type of left in the mapping result.
+		  * @tparam R2 Type of the resulting right type.
+		  * @return This if right, mapping result if left
+		  */
+		def divergeMapLeft[L2, R2 >: R](f: L => Either[L2, R2]) = e match {
+			case Right(r) => Right(r)
+			case Left(l) => f(l)
+		}
+		/**
+		  * @param f A mapping function applied if this is right.
+		  *          Returns a new either.
+		  * @tparam L2 Type of the resulting left type.
+		  * @tparam R2 Type of right in the mapping result.
+		  * @return This if left, mapping result if right
+		  */
+		def divergeMapRight[L2 >: L, R2](f: R => Either[L2, R2]) = e match {
+			case Right(r) => f(r)
+			case Left(l) => Left(l)
+		}
+		
+		/**
 		  * @param f A mapping function for left values
 		  * @tparam B Type of map result
 		  * @return Right value or the mapped left value
@@ -1551,7 +1572,6 @@ object CollectionExtensions
 			case Right(r) => r
 			case Left(l) => f(l)
 		}
-		
 		/**
 		  * @param f A mapping function for right values
 		  * @tparam B Type of map result
@@ -1573,7 +1593,6 @@ object CollectionExtensions
 			case Right(r) => rightMap(r)
 			case Left(l) => leftMap(l)
 		}
-		
 		/**
 		  * Maps this either, no matter which side it is
 		  * @param leftMap  Mapping function used when this either is left
