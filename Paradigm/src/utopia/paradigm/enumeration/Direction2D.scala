@@ -107,12 +107,6 @@ sealed trait Direction2D extends Direction2DLike[Direction2D, Direction2D]
 	  * @return This direction if it is vertical. None otherwise.
 	  */
 	def vertical = along(Y)
-	
-	/**
-	  * @return Whether this side resides at the positive (true) or the negative (false) side of the axis
-	  */
-	@deprecated("Please use sign instead", "v2.3")
-	def isPositiveDirection = sign.isPositive
 }
 
 /**
@@ -172,18 +166,6 @@ object Direction2D
 	{
 		case X => horizontal
 		case Y => vertical
-	}
-	
-	/**
-	  * @param axis Target axis
-	  * @param isPositive Whether direction should be positive (true) or negative (false)
-	  * @return A direction
-	  */
-	@deprecated("Please use apply(Axis2D, Sign) instead", "v2.3")
-	def apply(axis: Axis2D, isPositive: Boolean): Direction2D = axis match
-	{
-		case X => if (isPositive) Right else Left
-		case Y => if (isPositive) Down else Up
 	}
 	
 	/**

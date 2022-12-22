@@ -43,7 +43,7 @@ trait HasBounds extends HasSize with Area2D
 	/**
 	  * @return The bottom-right corner of this item's bounds (assuming positive size)
 	  */
-	def bottomRight = topLeft + size
+	def bottomRight = Point(bounds.dimensions.map { _.end })
 	
 	/**
 	  * @return A point at the center of this item vertically, at the left horizontally
