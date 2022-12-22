@@ -87,6 +87,7 @@
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait
+- Added **TryFuture** object that makes it easier to construct completed **Futures** with **Try** values.
 ### New Methods
 - **CanBeAboutZero**
   - Added `.notCloseZero`
