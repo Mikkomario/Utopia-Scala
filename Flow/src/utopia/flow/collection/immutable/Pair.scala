@@ -74,6 +74,21 @@ object Pair
 	implicit class RichCollPair[A](val p: Pair[Iterable[A]]) extends AnyVal
 	{
 		/**
+		  * @return An iterator that returns items from both sides of this pair.
+		  *         The items in the first (left) collection are all returned
+		  *         before items from the second (right) collection.
+		  */
+		def flatIterator = p.first.iterator ++ p.second.iterator
+		/**
+		  * @return An iterator that returns items from both sides of this pair,
+		  *         including the side on which that item appears (Negative = first / left, Positive = second / right).
+		  *         The items in the first (left) collection are all returned
+		  *         before items from the second (right) collection.
+		  */
+		def flatIteratorWithSides =
+			p.first.iterator.map { _ -> Negative } ++ p.second.iterator.map { _ -> Positive }
+		
+		/**
 		  * @return Zips the two collections in this pair together.
 		  *         (but only on the overlapping area, i.e. the common size)
 		  */
@@ -186,6 +201,12 @@ case class Pair[+A](first: A, second: A)
 	def isNotSymmetric = !isSymmetric
 	
 	/**
+	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
+	  *         Negative represents the left / first side, Positive represents the right / second side.
+	  */
+	def iteratorWithSides = iterator.zip(Sign.values)
+	
+	/**
 	  * @param ord Implicit ordering to apply
 	  * @tparam B Type of ordered values
 	  * @return A span from the first value of this pair to the second value of this pair
@@ -229,8 +250,7 @@ case class Pair[+A](first: A, second: A)
 	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
 	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
 	
-	override def apply(index: Int) = (index: @switch) match
-	{
+	override def apply(index: Int) = (index: @switch) match {
 		case 0 => first
 		case 1 => second
 		case _ => throw new IndexOutOfBoundsException(s"Attempting to access index $index of a pair")
@@ -336,6 +356,13 @@ case class Pair[+A](first: A, second: A)
 		case Negative => mapFirst(f)
 		case Positive => mapSecond(f)
 	}
+	/**
+	  * @param f A mapping function that accepts a value from this pair, and the side on which that value appears.
+	  *          Negative is the left / first side, Positive is the right / second side.
+	  * @tparam B Type of mapping results
+	  * @return A mapped copy of this pair
+	  */
+	def mapWithSides[B](f: (A, Sign) => B) = Pair(f(first, Negative), f(second, Positive))
 	
 	/**
 	  * @param f A reduce function that accepts the second item, then the first item
@@ -354,7 +381,6 @@ case class Pair[+A](first: A, second: A)
 	  */
 	def mergeWith[B, C](other: Pair[B])(f: (A, B) => C) =
 		Pair(f(first, other.first), f(second, other.second))
-	
 	/**
 	  * Merges this pair with another pair, resulting in a pair containing the entries from both
 	  * @param other Another pair
@@ -362,6 +388,13 @@ case class Pair[+A](first: A, second: A)
 	  * @return A pair that combines the values of both of these pairs in tuples
 	  */
 	def zip[B](other: Pair[B]) = Pair((first, other.first), (second, other.second))
+	/**
+	  * @param keys A pair of keys
+	  * @tparam K Type of keys used
+	  * @return A map where the specified set of pair are the keys and this pair are the values.
+	  *         The mapping is based on ordering (first to first, second to second)
+	  */
+	def toMapWith[K](keys: Pair[K]) = keys.iterator.zip(this).toMap
 	
 	/**
 	  * Merges together the two values in this pair using a function.

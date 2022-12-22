@@ -108,6 +108,7 @@
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
   - Added `.isSymmerticBy(...)`, `.isAsymmetricBy(...)`, 
     `.equalsUsing(EqualsFunction)`, `.notEqualsUsing(EqualsFunction)`, `~==` and `!~==`
+  - Added `.iteratorWithSides`, `.mapWithSides(...)` and `.toMapWith(Pair)`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **PointerWithEvents** (type)
   - Added `.empty`
