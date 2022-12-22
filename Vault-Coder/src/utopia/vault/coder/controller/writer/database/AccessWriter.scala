@@ -451,12 +451,12 @@ object AccessWriter
 				properties = Vector(
 					ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
 					childModelProp
-				) ++ propertyGettersFor(combo.childClass, childModelProp.name, combo.childName.prop),
-				methods = propertySettersFor(combo.childClass, childModelProp.name) { n => (combo.childName +: n).prop } +
+				) ++ propertyGettersFor(combo.childClass, childModelProp.name, combo.childName.prop, pullMany = true),
+				methods = propertySettersFor(combo.childClass, childModelProp.name) { n => (combo.childName +: n).props } +
 					MethodDeclaration("filter", explicitOutputType = Some(traitType), isOverridden = true)(
 						Parameter("additionalCondition", Reference.condition))(
 						s"new $traitName.SubAccess(this, additionalCondition)")
-				,
+				,// FIXME: Wrong naming in props and methods
 				description = s"A common trait for access points that return multiple ${ combo.name.pluralDoc } at a time",
 				author = combo.author
 			)
@@ -480,6 +480,7 @@ object AccessWriter
 		
 		// Properties and methods that will be written to the highest trait (which may vary)
 		val idsPullCode = classToWrite.idType.fromValuesCode("pullColumn(index)")
+		// TODO: Copy getters and setters into two separate functions
 		val highestTraitProperties = modelProperty +:
 			classToWrite.properties.flatMap { prop =>
 				// Only single-column properties are pulled
@@ -664,23 +665,32 @@ object AccessWriter
 		).write()
 	}
 	
-	private def propertyGettersFor(classToWrite: Class, modelPropName: String = "model", prefix: String = "")
+	private def propertyGettersFor(classToWrite: Class, modelPropName: String = "model", prefix: String = "",
+	                               pullMany: Boolean = false)
 	                              (implicit naming: NamingRules) =
 	{
 		classToWrite.properties.flatMap { prop =>
 			// Only single-column properties are pulled
 			prop.onlyDbVariant.map { dbProp =>
-				val pullCode = prop.dataType.optional
-					.fromValueCode(Vector(s"pullColumn($modelPropName.${ DbModelWriter.columnNameFrom(dbProp) })"))
-				ComputedProperty((prefix +: dbProp.name).prop, pullCode.references,
-					description = prop.description.nonEmptyOrElse(s"The ${ dbProp.name.doc } of this ${
-						classToWrite.name.doc }") + s". None if no ${ classToWrite.name.doc } (or value) was found.",
-					implicitParams = Vector(connectionParam))(
-					pullCode.text)
+				val pullColumn = s"pullColumn($modelPropName.${ DbModelWriter.columnNameFrom(dbProp) })"
+				val pullCode = {
+					if (pullMany)
+						prop.dataType.fromValuesCode(pullColumn)
+					else
+						prop.dataType.optional.fromValueCode(Vector(pullColumn))
+				}
+				val desc = {
+					if (pullMany)
+						s"${ prop.name.pluralDoc } of the accessible ${ classToWrite.name.pluralDoc }"
+					else
+						s"${ prop.description.nonEmptyOrElse(s"The ${ dbProp.name.doc } of this ${
+							classToWrite.name.doc }") }. None if no ${ classToWrite.name.doc } (or value) was found."
+				}
+				ComputedProperty((prefix +: dbProp.name).prop, pullCode.references, description = desc,
+					implicitParams = Vector(connectionParam))(pullCode.text)
 			}
 		}
 	}
-	
 	private def propertySettersFor(classToWrite: Class, modelPropName: String = "model")
 	                              (methodNameFromPropName: Name => String)
 	                              (implicit naming: NamingRules) =
