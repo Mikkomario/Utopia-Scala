@@ -1,9 +1,7 @@
 package utopia.reflection.container.swing.window
 
-import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process
-import utopia.flow.async.process.Delay
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
@@ -12,9 +10,9 @@ import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.util.ProgressState
 
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -51,12 +49,7 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[Pro
 		if (progressPointer.value.progress < 1)
 		{
 			val loadingStarted = Instant.now()
-			
-			val window = parentWindow match
-			{
-				case Some(parent) => new Dialog(parent, content, title, Program, Alignment.Left)
-				case None => Frame.windowed(content, title, Program, Alignment.Left)
-			}
+			val window = Window(content, parentWindow, title, Program, context.margins.medium, getAnchor = _.centerLeft)
 			
 			// Delays the window display a little, in case the loading progress was very short
 			process.Delay(loadingStarted + 0.25.seconds) {

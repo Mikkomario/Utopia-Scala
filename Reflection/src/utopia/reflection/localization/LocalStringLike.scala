@@ -1,5 +1,6 @@
 package utopia.reflection.localization
 
+import utopia.flow.operator.{Combinable, MaybeEmpty}
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -7,14 +8,9 @@ import utopia.flow.util.StringExtensions._
   * @author Mikko Hilpinen
   * @since 22.4.2019, v1+
   */
-trait LocalStringLike[Repr <: LocalStringLike[Repr]]
+trait LocalStringLike[Repr] extends Combinable[Repr, Repr] with MaybeEmpty[Repr]
 {
 	// ABSTRACT	--------------
-	
-	/**
-	  * @return This item
-	  */
-	def repr: Repr
 	
 	/**
 	  * @return A string representation of this string-like instance
@@ -32,13 +28,6 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	  * @return A modified copy of this string
 	  */
 	def modify(f: String => String): Repr
-	
-	/**
-	  * Adds another string to this string
-	  * @param other Another string
-	  * @return A combination of these two strings
-	  */
-	def +(other: Repr): Repr
 	
 	/**
 	  * Splits this string based on provided regex
@@ -70,15 +59,7 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	/**
 	  * @return Whether this string is empty
 	  */
-	def isEmpty = string.isEmpty
-	/**
-	  * @return Whether this string contains characters
-	  */
-	def nonEmpty = string.nonEmpty
-	/**
-	  * @return None if this string is empty. This string otherwise.
-	  */
-	def notEmpty = if (isEmpty) None else Some(repr)
+	override def isEmpty = string.isEmpty
 	
 	/**
 	  * @return This string split on newline characters
@@ -94,13 +75,4 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	// IMPLEMENTED	----------
 	
 	override def toString = string
-	
-	
-	// OTHER    --------------
-	
-	/**
-	  * @param default String to return if this one is empty
-	  * @return This if not empty, otherwise the default string
-	  */
-	def nonEmptyOrElse(default: => Repr) = if (isEmpty) default else repr
 }

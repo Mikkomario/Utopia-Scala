@@ -22,7 +22,7 @@ sealed trait Severity extends SelfComparable[Severity]
 	
 	// IMPLEMENTED  ---------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: Severity) = id - o.id
 }

@@ -69,7 +69,7 @@ case class Acceleration3D(override val amount: Velocity3D, override val duration
 	
 	override def zero = Acceleration3D.zero
 	
-	override def repr = this
+	override def self = this
 	
 	override def withDimensions(newDimensions: Dimensions[LinearAcceleration]) =
 		copy(Velocity3D(newDimensions.map { _ over duration }))

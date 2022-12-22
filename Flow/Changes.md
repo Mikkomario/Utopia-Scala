@@ -3,6 +3,8 @@
 ## v2.0 (in development)
 ### Breaking Changes
 - Reorganized the package structure
+- Renamed `def repr` to `def self` in multiple places, 
+  because `repr` conflicts with `final def repr: Iterable[A]` in **Iterable**
 - Changes relating to variants of **Changing** (or **ChangingLike**)
   - **Changing** is now an abstract class **AbstractChanging** already containing `listeners` and `dependencies` -variables
   - **ChangingLike**, then was renamed to **Changing** instead
@@ -69,19 +71,23 @@
 - Deprecated **Generator** and **Counter**
 - Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
 - Deprecated `.compareWith(...)` in **Pair** in favor of `.merge(...)`
+- Deprecated `.isNotSymmetric` in **Pair** in favor of `.isAsymmetric`
 ### Bugfixes
 - Fixed **Regex**`.times(Range)` that previously yielded invalid regular expressions
 ### New Features
 - **ModelDeclarations** now support optional properties
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
 - Added **ViewGraphNode** as a lazily initialized graph
+- Added generic Range traits: **Span**, **IterableSpan**, **NumericSpan**, **HasEnds**, and so on
 - Added **TimedTask** trait, which is now supported in **TimedTasks**, also
 - Added new ways to write **LocalTime** values (after importing **TimeExtensions**)
-- Added **SettableOnce**, which is like a **Promise** with **ChangeEvent**s
+- Added **SettableOnce** and **MutableOnce**, which are like **Promise**s with **ChangeEvent**s
 - Added **ReleasingPointer** class
+- Added **MaybeEmpty** trait and **NotEmpty** object for dealing with items that have the `.isEmpty` -property
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait
+- Added **TryFuture** object that makes it easier to construct completed **Futures** with **Try** values.
 ### New Methods
 - **CanBeAboutZero**
   - Added `.notCloseZero`
@@ -89,15 +95,23 @@
   - Added `.nonZeroOrElse(...)` and `.mapIfNotZero(...)`
 - **Changing**
   - Added `.incrementalMap(...)`, `.incrementalMergeWith(...)` and `.incrementalFlatMap(...)` -methods
+- **Either** (**CollectionExtensions**)
+  - Added `.divergeMapLeft(...)` and `.divergeMapRight(...)`
 - **Iterable** (**CollectionExtensions**)
+  - Added `.minMax` and `.minMaxOption`
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.
+- **Iterator** (**CollectionExtensions**)
+  - Added `.minMax` and `.minMaxOption`
 - **Lazy**
   - Added `.map(...)` and `.flatMap(...)`
 - **Path**
   - Added `.toTree`
 - **Pair**
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
+  - Added `.isSymmerticBy(...)`, `.isAsymmetricBy(...)`, 
+    `.equalsUsing(EqualsFunction)`, `.notEqualsUsing(EqualsFunction)`, `~==` and `!~==`
+  - Added `.iteratorWithSides`, `.mapWithSides(...)` and `.toMapWith(Pair)`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **PointerWithEvents** (type)
   - Added `.empty`

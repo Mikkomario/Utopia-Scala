@@ -77,7 +77,7 @@ case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def font = fontOverride.getOrElse(defaultFont)
 	

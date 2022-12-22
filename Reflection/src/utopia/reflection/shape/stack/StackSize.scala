@@ -1,6 +1,5 @@
 package utopia.reflection.shape.stack
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Combinable.SelfCombinable
 import utopia.flow.operator.{EqualsBy, LinearScalable}
 import utopia.paradigm.enumeration.Axis._
@@ -37,12 +36,6 @@ object StackSize extends DimensionsWrapperFactory[StackLength, StackSize]
     
     // CONSTRUCTOR    -------------------
     
-    /**
-      * @param width Width of this size
-      * @param height Height of this size
-      * @return A new size
-      */
-    def apply(width: StackLength, height: StackLength): StackSize = apply(Pair(width, height))
     /**
       * @param min Minimum size
       * @param optimal Optimal size
@@ -238,7 +231,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
     
     override def +(other: StackSize) = mergeWith(other) { _ + _ }
     
-    override def repr = this
+    override def self = this
     
     
     // OPERATORS    ------------------

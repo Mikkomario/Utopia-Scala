@@ -117,14 +117,12 @@ case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[C
 	  * @param bounds Target area within this pixel table (doesn't have to be contained within this table's area)
 	  * @return An iterator of the pixels which overlap with the specified area
 	  */
-	def apply(bounds: Bounds): Iterator[Color] =
-	{
+	def apply(bounds: Bounds): Iterator[Color] = {
 		if (isEmpty)
 			Iterator.empty
 		else
-			bounds.intersectionWith(Bounds(Point.origin, area)) match
-			{
-				case Some(area) => new PixelIterator(area.y.toInt, area.bottomY.toInt, area.x.toInt, area.rightX.toInt)
+			bounds.overlapWith(Bounds(Point.origin, area)) match {
+				case Some(area) => new PixelIterator(area.topY.toInt, area.bottomY.toInt, area.leftX.toInt, area.rightX.toInt)
 				case None => Iterator.empty
 			}
 	}
@@ -186,8 +184,9 @@ case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[C
 	  * @param area Clipping area
 	  * @return A copy of this table that only contains the part within the specified area
 	  */
-	def clippedTo(area: Bounds) = PixelTable(_pixels.slice(area.y.toInt, area.bottomY.toInt).map { row =>
-		row.slice(area.x.toInt, area.rightX.toInt) })
+	def clippedTo(area: Bounds) =
+		PixelTable(_pixels.slice(area.topY.toInt, area.bottomY.toInt)
+			.map { row => row.slice(area.leftX.toInt, area.rightX.toInt) })
 	
 	/**
 	  * Maps each pixel color

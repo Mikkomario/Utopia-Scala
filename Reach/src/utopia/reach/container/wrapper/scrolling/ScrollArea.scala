@@ -2,10 +2,10 @@ package utopia.reach.container.wrapper.scrolling
 
 import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.util.Drawer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.{Bounds, Size}
-import utopia.genesis.util.Drawer
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
 import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -210,6 +210,7 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	setupMouseHandling(actorHandler, scrollPerWheelClick)
 	sizePointer.addListener(ChangeListener.onAnyChange { updateScrollBarBounds() })
+	content.boundsPointer.addContinuousAnyChangeListener { updateScrollBarBounds(repaintAfter = true) }
 	
 	
 	// IMPLEMENTED	----------------------------
@@ -217,7 +218,7 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
 	override def axes = Axis2D.values
 	
 	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
-		case Some(clip) => clip.intersectionWith(bounds).foreach { c => super.paintWith(drawer, Some(c)) }
-		case None => super.paintWith(drawer, Some(bounds))
+		case Some(clip) => clip.overlapWith(bounds).foreach { c => super.paintWith(drawer.clippedTo(c), Some(c)) }
+		case None => super.paintWith(drawer.clippedTo(bounds), Some(bounds))
 	}
 }

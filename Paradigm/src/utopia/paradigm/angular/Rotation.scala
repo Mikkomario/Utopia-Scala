@@ -210,7 +210,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	
 	def ~==(other: Rotation) = radians * direction.modifier ~== other.radians * direction.modifier
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * Returns a multiplied version of this rotation

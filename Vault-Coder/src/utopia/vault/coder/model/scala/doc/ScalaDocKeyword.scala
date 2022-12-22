@@ -24,7 +24,7 @@ sealed trait ScalaDocKeyword extends SelfComparable[ScalaDocKeyword]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def toString = s"@$keywordString"
 	

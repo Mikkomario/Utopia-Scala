@@ -106,7 +106,7 @@ class Size private(override val dimensions: Dimensions[Double])
     
     // IMPLEMENTED    -----------------------
     
-    override def repr = this
+    override def self = this
     override def size = this
     
     override def isPositive = dimensions.forall { _ > 0 }

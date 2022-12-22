@@ -83,8 +83,7 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @return The relative luminance of this color, which is used in contrast calculations, for example
 	  * @see https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
 	  */
-	def relativeLuminance =
-	{
+	def relativeLuminance = {
 		// Calculation based on:
 		// https://stackoverflow.com/questions/61525100/convert-from-relative-luminance-to-hsl
 		// Each color channel has its own multiplier
@@ -189,8 +188,7 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @return The color contrast ratio between these two colors
 	  * @see https://webaim.org/articles/contrast/
 	  */
-	def contrastAgainst(other: RgbLike[_]) =
-	{
+	def contrastAgainst(other: RgbLike[_]) = {
 		// Calculation from: https://stackoverflow.com/questions/61525100/convert-from-relative-luminance-to-hsl
 		// Compares the relative luminosities of these two colors
 		val ratio = (relativeLuminance + 0.05) / (other.relativeLuminance + 0.05)

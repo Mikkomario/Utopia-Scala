@@ -21,8 +21,8 @@ object ButtonImageSet
 	def brightening(image: Image, intensity: Double = 1) =
 	{
 		val disabled = image.timesAlpha(0.55)
-		val focused = image.mapPixels { _.lightened(1 + (0.4 * intensity)) }
-		val pressed = focused.mapPixels { _.lightened(1 + (0.4 * intensity)) }
+		val focused = image.mapPixels { _.lightenedBy(intensity) }
+		val pressed = image.mapPixels { _.lightenedBy(intensity * 2) }
 		
 		ButtonImageSet(image, focused, pressed, disabled)
 	}
@@ -36,8 +36,8 @@ object ButtonImageSet
 	def darkening(image: Image, intensity: Double = 1) =
 	{
 		val disabled = image.timesAlpha(0.55)
-		val focused = image.mapPixels { _.darkened(1 + (0.4 * intensity)) }
-		val pressed = focused.mapPixels { _.darkened(1 + (0.4 * intensity)) }
+		val focused = image.mapPixels { _.darkenedBy(intensity) }
+		val pressed = image.mapPixels { _.darkenedBy(intensity) }
 		
 		ButtonImageSet(image, focused, pressed, disabled)
 	}

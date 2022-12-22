@@ -106,7 +106,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
     
     // IMPLEMENTED  -----------------
     
-    override def repr = toMatrix
+    override def self = toMatrix
     
     override def toString =
     {

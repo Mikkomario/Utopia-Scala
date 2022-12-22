@@ -47,7 +47,7 @@ case class ButtonContext(base: TextContext, buttonColorOverride: Option[Componen
 {
 	// IMPLEMENTED	---------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def buttonColor = buttonColorOverride.getOrElse(colorScheme.primary.forBackground(containerBackground))
 	

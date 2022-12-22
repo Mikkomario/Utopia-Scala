@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.scala.code
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.{CodeConvertible, Referencing}
@@ -45,18 +46,10 @@ object Code
   * @since 30.8.2021, v0.1
   */
 case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
-	extends Referencing with CodeConvertible
+	extends Referencing with CodeConvertible with MaybeEmpty[Code]
 {
 	// COMPUTED ------------------------------
 	
-	/**
-	  * @return Whether this code is totally empty
-	  */
-	def isEmpty = lines.isEmpty
-	/**
-	  * @return Whether this code contains something
-	  */
-	def nonEmpty = !isEmpty
 	/**
 	  * @return Whether this code contains multiple lines
 	  */
@@ -67,17 +60,19 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
 	def isSingleLine = lines.size < 2
 	
 	/**
-	  * @return None if this code is empty. Some(this) otherwise.
-	  */
-	def notEmpty = if (isEmpty) None else Some(this)
-	
-	/**
 	  * @return This code with line splitting applied
 	  */
 	def split = copy(lines = lines.flatMap { _.split })
 	
 	
 	// IMPLEMENTED  ---------------------------
+	
+	override def self = this
+	
+	/**
+	  * @return Whether this code is totally empty
+	  */
+	override def isEmpty = lines.isEmpty
 	
 	override def toString = lines.map { _.toString }.mkString("\n")
 	

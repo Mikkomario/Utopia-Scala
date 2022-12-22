@@ -57,7 +57,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	def :+(nodeContent: A): Repr = {
 		// Case: This node already contains that child => ignores
 		if (children.exists { _.nav ~== nodeContent })
-			repr
+			self
 		// Case: New child => inserts
 		else
 			createCopy(children = children :+ newNode(nodeContent))
@@ -93,7 +93,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 			Right(this :++ other.children)
 		// Case: Different roots => returns as separate trees
 		else
-			Left(Pair(repr, other))
+			Left(Pair(self, other))
 	}
 	/**
 	  * Merges this tree with another set of trees, where possible.
@@ -103,7 +103,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	  */
 	def ++(other: IterableOnce[Repr]) = {
 		// Combines the trees by nav, where possible (one tree at a time)
-		other.iterator.foldLeft(Vector(repr)) { (existingTrees, newTree) =>
+		other.iterator.foldLeft(Vector(self)) { (existingTrees, newTree) =>
 			existingTrees.mergeOrAppend(newTree) { _.nav ~== newTree.nav } { _ :++ _.children }
 		}
 	}
@@ -124,7 +124,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 			})
 		// Case: No children to add => No operation
 		else
-			repr
+			self
 	}
 	
 	/**
@@ -178,7 +178,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 					val remaining = path.tail
 					mapChildren { c => if (c.nav ~== nextStep) c.mapPath(remaining)(f) else c }
 				}
-			case None => f(repr)
+			case None => f(self)
 		}
 	}
 	/**
@@ -253,8 +253,8 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	  *         condition have been mapped.
 	  */
 	def mapAllWhere(find: Repr => Boolean)(map: Repr => Repr): Repr = {
-		if (find(repr))
-			map(repr)
+		if (find(self))
+			map(self)
 		else
 			createCopy(children  = children.map { _.mapAllWhere(find)(map) })
 	}
@@ -267,10 +267,10 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	  *             Right: A copy of this tree with a single node mapped
 	  */
 	def mapFirstWhere(find: Repr => Boolean)(map: Repr => Repr) =
-		_mapFirstWhere(find)(map).toRight(repr)
+		_mapFirstWhere(find)(map).toRight(self)
 	private def _mapFirstWhere(find: Repr => Boolean)(map: Repr => Repr): Option[Repr] = {
-		if (find(repr))
-			Some(map(repr))
+		if (find(self))
+			Some(map(self))
 		else
 			children.iterator.zipWithIndex.findMap { case (c, i) =>
 				c._mapFirstWhere(find)(map).map { c2 => createCopy(children = children.updated(i, c2)) }
@@ -302,8 +302,8 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 		if (branch.hasChildren)
 			mapFirstWhere { _.nav ~== branch.nav } { _ :++ branch.children }
 		else if (containsNav(branch.nav))
-			Right(repr)
+			Right(self)
 		else
-			Left(repr)
+			Left(self)
 	}
 }

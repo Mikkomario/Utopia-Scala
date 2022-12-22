@@ -1,11 +1,14 @@
 package utopia.flow.time
 
 import TimeExtensions._
+import utopia.flow.collection.immutable.range.IterableHasEnds
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.LocalDateType
 import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.time.DateRange.dateFormat
 
 import java.time.LocalDate
@@ -71,7 +74,8 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
   * @param start The first included date
   * @param end The first <b>excluded</b> date
   */
-case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDate] with ModelConvertible
+case class DateRange(override val start: LocalDate, override val end: LocalDate)
+	extends IterableHasEnds[LocalDate] with ModelConvertible
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -114,6 +118,10 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 	
 	// IMPLEMENTED ------------------------
 	
+	override def isInclusive = false
+	
+	override def ordering: Ordering[LocalDate] = implicitly
+	
 	override def toString = {
 		if (isEmpty)
 			"-"
@@ -130,33 +138,19 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 	override def isEmpty = start == end
 	
 	override def head = start
-	
 	override def last = end.previous
-	
 	override def headOption = if (isEmpty) None else Some(head)
-	
 	override def lastOption = if (isEmpty) None else Some(last)
-	
-	override def iterator =
-	{
-		// Checks the direction of advance
-		if (end >= start)
-			Iterator.iterate(start) { _.next }.takeWhile { _ < end }
-		else
-			Iterator.iterate(last) { _.previous }.takeWhile { _ >= start }
-	}
 	
 	override def toModel = Model(Vector("start" -> start, "end" -> end))
 	
+	override protected def traverse(from: LocalDate, direction: Sign) = direction match {
+		case Positive => from.tomorrow
+		case Negative => from.yesterday
+	}
+	
 	
 	// OTHER    ------------------------
-	
-	/**
-	  * @param date Target date
-	  * @return Whether this date range contains the specified date
-	  */
-	def contains(date: LocalDate) =
-		if (isChronological) date >= start && date < end else date > end && date <= start
 	
 	/**
 	  * @param other Another date range

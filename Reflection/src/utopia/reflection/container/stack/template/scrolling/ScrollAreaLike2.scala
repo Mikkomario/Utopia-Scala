@@ -317,19 +317,17 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		
 		// Calculates how much scrolling is required
 		// TODO: Refactor
-		val xTransition =
-		{
-			if (areaInViewSpace.x < 0)
-				areaInViewSpace.x
+		val xTransition = {
+			if (areaInViewSpace.leftX < 0)
+				areaInViewSpace.leftX
 			else if (areaInViewSpace.rightX > width)
 				areaInViewSpace.rightX - width
 			else
 				0
 		}
-		val yTransition =
-		{
-			if (areaInViewSpace.y < 0)
-				areaInViewSpace.y
+		val yTransition = {
+			if (areaInViewSpace.topY < 0)
+				areaInViewSpace.topY
 			else if (areaInViewSpace.bottomY > height)
 				areaInViewSpace.bottomY - height
 			else
@@ -340,10 +338,11 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		scroll(Vector2D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach { axis =>
-		if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
-			barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
-	}
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) =
+		Axis2D.values.foreach { axis =>
+			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
+				barBounds.get(axis).foreach { b => barDrawer.draw(drawer, b + position, axis) }
+		}
 	
 	/**
 	  * Converts a scroll bar drawer to a custom drawer, which should then be added to this view

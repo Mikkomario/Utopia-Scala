@@ -189,7 +189,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def current = clippedCache.current
 	override def value = clippedCache.value
@@ -231,7 +231,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	def reducedToBounds(clippingBounds: Bounds) = withClip {
 		this.clippingBounds match {
 			case Some(existingBounds) =>
-				clippingBounds.intersectionWith(existingBounds).getOrElse(clippingBounds.withSize(Size.zero))
+				clippingBounds.overlapWith(existingBounds).getOrElse(clippingBounds.withSize(Size.zero))
 			case None => clippingBounds
 		}
 	}

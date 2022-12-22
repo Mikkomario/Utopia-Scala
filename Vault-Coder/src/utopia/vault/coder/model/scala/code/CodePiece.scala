@@ -3,6 +3,7 @@ package utopia.vault.coder.model.scala.code
 import utopia.flow.generic.factory.FromValueFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Combinable.SelfCombinable
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.Referencing
 
@@ -39,7 +40,7 @@ object CodePiece extends FromValueFactory[CodePiece]
   * @since 9.10.2021, v1.1.1
   */
 case class CodePiece(text: String, references: Set[Reference] = Set())
-	extends Referencing with SelfCombinable[CodePiece]
+	extends Referencing with SelfCombinable[CodePiece] with MaybeEmpty[CodePiece]
 {
 	// COMPUTED ------------------------------
 	
@@ -47,19 +48,6 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @return Number of characters in this code piece
 	  */
 	def length = text.length
-	
-	/**
-	  * @return Whether this code piece is empty
-	  */
-	def isEmpty = text.isEmpty
-	/**
-	  * @return Whether this code piece contains text
-	  */
-	def nonEmpty = !isEmpty
-	/**
-	  * @return This piece of code, if not empty (None if empty).
-	  */
-	def notEmpty = if (isEmpty) None else Some(this)
 	
 	/**
 	  * @return A copy of this code piece wrapped in (parentheses)
@@ -101,6 +89,13 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def self = this
+	
+	/**
+	  * @return Whether this code piece is empty
+	  */
+	override def isEmpty = text.isEmpty
+	
 	override def toString = text
 	
 	/**
@@ -108,7 +103,7 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @param another Another code piece
 	  * @return A combination of these two pieces
 	  */
-	override def +(another: CodePiece) = copy(text + another.text, references ++ another.references)
+	override def +(another: CodePiece) = copy(s"$text${ another.text }", references ++ another.references)
 	
 	
 	// OTHER    ------------------------------
@@ -117,8 +112,8 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @param more More text
 	  * @return A copy of this code piece with more text included
 	  */
-	def +(more: String) = copy(text + more)
-	def +:(prefix: String) = copy(prefix + text)
+	def +(more: String) = copy(s"$text$more")
+	def +:(prefix: String) = copy(s"$prefix$text")
 	
 	/**
 	  * Applies a mapping function to the text portion of this code piece
@@ -135,7 +130,7 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  */
 	def append(other: CodePiece, separator: => String = "") = {
 		// Only adds the separator if the other piece is non-empty
-		val newText = if (other.isEmpty) text else if (isEmpty) other.text else text + separator + other.text
+		val newText = if (other.isEmpty) text else if (isEmpty) other.text else s"$text$separator${ other.text }"
 		copy(newText, references ++ other.references)
 	}
 	
@@ -143,7 +138,7 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @param prefix A prefix
 	  * @return A copy of this code piece with that prefix in the beginning
 	  */
-	def withPrefix(prefix: String) = copy(prefix + text)
+	def withPrefix(prefix: String) = copy(s"$prefix$text")
 	
 	/**
 	  * @param ref A reference

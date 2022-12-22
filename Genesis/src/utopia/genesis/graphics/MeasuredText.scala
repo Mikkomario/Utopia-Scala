@@ -1,13 +1,13 @@
 package utopia.genesis.graphics
 
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.parse.string.Regex
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{MaybeEmpty, Sign}
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.graphics.TextDrawHeight.LineHeight
-import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size, Vector2D}
 
 import scala.collection.immutable.VectorBuilder
@@ -27,6 +27,7 @@ import scala.collection.immutable.VectorBuilder
 case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Alignment = Alignment.TopLeft,
                         heightSettings: TextDrawHeight = LineHeight, betweenLinesAdjustment: Double = 0.0,
                         allowLineBreaks: Boolean = true)
+	extends MaybeEmpty[MeasuredText]
 {
 	// ATTRIBUTES	-----------------------------------
 	
@@ -82,15 +83,6 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	// COMPUTED	---------------------------------------
 	
 	/**
-	  * @return Whether this text is empty
-	  */
-	def isEmpty = text.isEmpty
-	/**
-	  * @return Whether this text is not empty
-	  */
-	def nonEmpty = !isEmpty
-	
-	/**
 	  * @return Size of this text area
 	  */
 	def size = bounds.size
@@ -107,6 +99,16 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @return The largest allowed caret index
 	  */
 	def maxCaretIndex = text.length
+	
+	
+	// IMPLEMENTED  -----------------------------------
+	
+	override def self = this
+	
+	/**
+	  * @return Whether this text is empty
+	  */
+	override def isEmpty = text.isEmpty
 	
 	
 	// OTHER	---------------------------------------
@@ -168,8 +170,8 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			val lineIndex = {
 				if (lines.size > 1)
 					lineBounds.minIndexBy { case (b, _) =>
-						if (b.y > position.y)
-							b.y - position.y
+						if (b.topY > position.y)
+							b.topY - position.y
 						else if (b.bottomY < position.y)
 							position.y - b.bottomY
 						else
@@ -234,16 +236,14 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param direction Direction of movement
 	  * @return The next caret index. None if there are no available indices to that direction.
 	  */
-	def caretIndexNextTo(index: Int, direction: Direction2D) = direction.axis match
-	{
+	def caretIndexNextTo(index: Int, direction: Direction2D) = direction.axis match {
 		case X => Some(index + 1 * direction.sign.modifier).filter(isValidCaretIndex)
 		case Y => caretIndexParallelTo(index, direction.sign)
 	}
 	
-	private def caretX(lineIndex: Int, caretIndexOnLine: Int) =
-	{
+	private def caretX(lineIndex: Int, caretIndexOnLine: Int) = {
 		if (caretIndexOnLine < 0)
-			lineBounds(lineIndex)._1.x
+			lineBounds(lineIndex)._1.leftX
 		else if (caretIndexOnLine >= carets(lineIndex).size)
 			lineBounds(lineIndex)._1.rightX
 		else

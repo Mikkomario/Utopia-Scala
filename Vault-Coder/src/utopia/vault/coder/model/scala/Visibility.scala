@@ -19,7 +19,7 @@ object Visibility
 	{
 		override def toScala = ""
 		
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: Visibility) = o match
 		{
@@ -34,7 +34,7 @@ object Visibility
 	{
 		override def toScala = "private"
 		
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: Visibility) = o match
 		{
@@ -49,7 +49,7 @@ object Visibility
 	{
 		override def toScala = "protected"
 		
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: Visibility) = o match
 		{

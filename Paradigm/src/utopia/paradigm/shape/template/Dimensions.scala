@@ -25,6 +25,10 @@ object Dimensions
 	  * A factory for building dimensions that consist of double numbers
 	  */
 	val double = apply(0.0)
+	/**
+	  * A factory for building dimensions that consists of integer numbers
+	  */
+	val int = apply(0)
 	
 	
 	// IMPLICIT -----------------------
@@ -120,6 +124,14 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  */
 	def zipWithAxis2D = values zip Axis2D.values
 	/**
+	  * @return An iterator that returns dimensions along with their axes
+	  */
+	def zipWithAxisIterator = values.iterator zip Axis.values
+	/**
+	  * @return An iterator that returns the first 0-2 dimensions, along with their axes
+	  */
+	def zipWithAxis2DIterator = values.iterator zip Axis2D.values
+	/**
 	  * @return A map based on these dimensions, where axes are used as keys.
 	  */
 	def toMap = Axis.values.zip(values).toMap
@@ -139,6 +151,8 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	
 	
 	// IMPLEMENTED  --------------------------
+	
+	override def self = this
 	
 	override def dimensions: Dimensions[A] = this
 	/**
@@ -251,9 +265,26 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @tparam C Type of merge result
 	  * @return A set of dimensions consisting of merge results
 	  */
-	def mergeWith[B, C >: A](other: Dimensions[B])(merge: (A, B) => C) =
-		Dimensions(zeroValue, values.iterator.zipPad(other.values.iterator, zeroValue, other.zeroValue)
+	def mergeWith[B, C >: A](other: HasDimensions[B])(merge: (A, B) => C) = {
+		val d2 = other.dimensions
+		Dimensions(zeroValue, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
 			.map { case (a, b) => merge(a, b) }.toVector)
+	}
+	
+	/**
+	  * Combines these dimensions with other dimensions
+	  * @param other Other set of dimensions
+	  * @param zero A zero value to use in the new set of dimensions
+	  * @param merge A merging function to combine the two values
+	  * @tparam B Type of values in other dimensions
+	  * @tparam C Type of merge result
+	  * @return A set of dimensions consisting of merge results
+	  */
+	def mergeWith[B, C](other: HasDimensions[B], zero: C)(merge: (A, B) => C) = {
+		val d2 = other.dimensions
+		Dimensions(zero, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
+			.map { case (a, b) => merge(a, b) }.toVector)
+	}
 	
 	/**
 	  * @param other Another set of dimensions

@@ -2,6 +2,7 @@ package utopia.vault.model.immutable
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.nosql.factory.row.FromRowFactory
 
 object Result
@@ -23,6 +24,7 @@ object Result
   * @param updatedRowCount Number of updated rows (on update)
  */
 case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = Vector(), updatedRowCount: Int = 0)
+    extends MaybeEmpty[Result]
 {
     // COMPUTED PROPERTIES    ------------
     
@@ -57,16 +59,6 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
     def firstValue = rows.headOption.map { _.value } getOrElse Value.empty
     
     /**
-     * Whether this result is empty and doesn't contain any rows or generated keys
-     */
-    def isEmpty = generatedKeys.isEmpty && rows.isEmpty
-    
-    /**
-      * @return Whether this result contains rows or generated keys
-      */
-    def nonEmpty = !isEmpty
-    
-    /**
      * The generated keys in integer format
      */
     def generatedIntKeys = generatedKeys.flatMap { _.int }
@@ -93,6 +85,13 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
     
     
     // IMPLEMENTED  ----------------------
+    
+    override def self = this
+    
+    /**
+      * Whether this result is empty and doesn't contain any rows or generated keys
+      */
+    override def isEmpty = generatedKeys.isEmpty && rows.isEmpty
     
     override def toString =
     {

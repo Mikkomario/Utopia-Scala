@@ -85,7 +85,7 @@ object ReachSwitchTest extends App
 		}
 	}
 	
-	val frame = Frame.windowed(canvas, "Reach Test", Program)
+	val frame = Frame.windowed(canvas, "Reach Test", Program, getAnchor = canvas.anchorPosition(_))
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
 }

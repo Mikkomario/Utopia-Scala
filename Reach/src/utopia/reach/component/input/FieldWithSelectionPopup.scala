@@ -1,13 +1,17 @@
 package utopia.reach.component.input
 
+import utopia.flow.async.process.Delay
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
@@ -37,6 +41,7 @@ import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 
 import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent}
+import scala.concurrent.ExecutionContext
 
 object FieldWithSelectionPopup extends ContextInsertableComponentFactoryFactory[TextContextLike,
 	FieldWithSelectionPopupFactory, ContextualFieldWithSelectionPopupFactory]
@@ -97,13 +102,13 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
 	                              noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
 	                              highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	                              focusColorRole: ColorRole = Secondary,
-	                              sameItemCheck: Option[(A, A) => Boolean] = None,
+	                              sameItemCheck: Option[EqualsFunction[A]] = None,
 	                              fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	                             (makeField: (FieldCreationContext, N) => C)
 	                             (makeDisplay: (ComponentHierarchy, A) => D)
 	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
-	                             (implicit scrollingContext: ScrollingContextLike) =
+	                             (implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext) =
 		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
@@ -151,19 +156,19 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
  leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), listLayout: StackLayout = Fit,
  listCap: StackLength = StackLength.fixedZero, noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
  highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
- sameItemCheck: Option[(A, A) => Boolean] = None,
+ sameItemCheck: Option[EqualsFunction[A]] = None,
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: (FieldCreationContext, N) => C)
 (makeDisplay: (ComponentHierarchy, A) => D)
 (makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]])
-(implicit scrollingContext: ScrollingContextLike)
+(implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
 {
 	// ATTRIBUTES	------------------------------
 	
 	// Follows the pop-up visibility state with a pointer
-	private val popUpDisplayPointer = new PointerWithEvents(false)
+	private val _popUpVisiblePointer = ResettableFlag()
 	private val rightIconPointer = rightExpandIcon match {
 		case Some(expandIcon) =>
 			rightCollapseIcon match
@@ -171,7 +176,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				case Some(collapseIcon) =>
 					// Makes sure both icons have the same size
 					if (expandIcon.size == collapseIcon.size)
-						popUpDisplayPointer.map { visible => Some(if (visible) collapseIcon else expandIcon) }
+						_popUpVisiblePointer.map { visible => Some(if (visible) collapseIcon else expandIcon) }
 					else
 					{
 						val smallerAndLarger = Vector(expandIcon, collapseIcon).sortBy { _.size.area }
@@ -183,7 +188,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 						
 						val (newExpandIcon, newCollapseIcon) =
 							if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
-						popUpDisplayPointer.map { visible => Some(if (visible) newCollapseIcon else newExpandIcon) }
+						_popUpVisiblePointer.map { visible => Some(if (visible) newCollapseIcon else newExpandIcon) }
 					}
 				case None => Fixed(Some(expandIcon))
 			}
@@ -199,16 +204,23 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		highlightStylePointer = highlightStylePointer, focusColorRole = focusColorRole,
 		fillBackground = fillBackground)(makeField)(makeRightHintLabel)
 	
+	private lazy val closePopUpListener: MouseButtonStateListener = MouseButtonStateListener.onLeftReleased { _ =>
+		hidePopup()
+		None
+	}
+	
 	// Creates the pop-up when necessary
 	private val lazyPopup = ResettableLazy {
-		println("Creating pop-up")
 		// Automatically hides the pop-up when it loses focus
 		val popup = field.createOwnedPopup(context.actorHandler, BottomLeft) { hierarchy =>
 			implicit val canvas: ReachCanvas = hierarchy.top
 			// Creates the pop-up content in open form first
 			val openList = Open { hierarchy =>
-				SelectionList(hierarchy).apply(context.actorHandler, field.innerBackgroundPointer, contentPointer,
-					valuePointer, Y, listLayout, context.defaultStackMargin, listCap, sameItemCheck)(makeDisplay)
+				val list = SelectionList(hierarchy).apply(context.actorHandler, field.innerBackgroundPointer, contentPointer,
+					valuePointer, Y, listLayout, context.defaultStackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
+				// When mouse is released inside the pop-up closes it
+				list.addMouseButtonListener(closePopUpListener)
+				list
 			}
 			val scrollContent = noOptionsView match
 			{
@@ -231,11 +243,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer.lazyMap { c => c: Color })))
 				.withResult(openList.component)
 		}.parent
-		println("Setting up pop-up")
 		popup.component.addComponentListener(PopupVisibilityTracker)
 		popup.setToHideWhenNotInFocus()
 		popup.addKeyStateListener(PopupKeyListener)
-		println("Pop-up set up")
 		popup
 	}
 	
@@ -250,10 +260,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		{
 			GlobalKeyboardEventHandler -= FieldKeyListener
 			cachedPopup.foreach { popup =>
-				println("Disposing of pop-up")
 				popup.close()
 				lazyPopup.reset()
-				popUpDisplayPointer.value = false
+				_popUpVisiblePointer.reset()
 				popup.component.removeComponentListener(PopupVisibilityTracker)
 			}
 		}
@@ -261,10 +270,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	// Updates pop-up location when field bounds change
 	// TODO: Should be based on the absolute bounds
-	field.boundsPointer.mergeWith(popUpDisplayPointer) { (fieldBounds, popupIsVisible) =>
+	field.boundsPointer.mergeWith(_popUpVisiblePointer) { (fieldBounds, popupIsVisible) =>
 		if (popupIsVisible)
 			cachedPopup.foreach { popup =>
-				println("Repositions the pop-up")
 				// Positions the pop-up
 				popup.position = field.absolutePosition + Y(fieldBounds.height)
 				// Matches field width, if possible
@@ -288,6 +296,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	// COMPUTED	---------------------------------
 	
+	/**
+	  * @return A pointer which shows whether a pop-up is being displayed
+	  */
+	def popUpVisiblePointer = _popUpVisiblePointer.view
+	
 	private def cachedPopup = lazyPopup.current
 	
 	
@@ -303,10 +316,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * Displays the selection pop-up
 	  */
-	def openPopup() = {
-		println("Displaying pop-up")
-		lazyPopup.value.display()
-	}
+	def openPopup() = lazyPopup.value.display()
 	
 	private def hidePopup() = cachedPopup.foreach { _.visible = false }
 	
@@ -326,32 +336,33 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		override def onKeyState(event: KeyStateEvent) = openPopup()
 		
 		// Is interested in key events while the field has focus and pop-up is not open
-		override def allowsHandlingFrom(handlerType: HandlerType) = !popUpDisplayPointer.value && field.hasFocus
+		override def allowsHandlingFrom(handlerType: HandlerType) = !_popUpVisiblePointer.value && field.hasFocus
 	}
 	
 	private object PopupKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES	-------------------------
 		
+		private implicit val log: Logger = SysErrLogger
+		
 		// Listens to enter and tabulator presses
 		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.keysFilter(KeyEvent.VK_TAB, KeyEvent.VK_ENTER)
+			KeyStateEvent.keysFilter(KeyEvent.VK_TAB, KeyEvent.VK_ENTER, KeyEvent.VK_ESCAPE, KeyEvent.VK_SPACE)
 		
 		
 		// IMPLEMENTED	-------------------------
 		
 		override def onKeyState(event: KeyStateEvent) =
 		{
-			println("Hides the pop-up")
 			// Hides the pop-up
 			hidePopup()
 			// On tabulator press, yields focus afterwards
 			if (event.index == KeyEvent.VK_TAB)
-				yieldFocus(if (event.keyStatus.shift) Negative else Positive)
+				Delay(0.1.seconds) { yieldFocus(if (event.keyStatus.shift) Negative else Positive) }
 		}
 		
 		// Only reacts to events while the pop-up is visible
-		override def allowsHandlingFrom(handlerType: HandlerType) = popUpDisplayPointer.value
+		override def allowsHandlingFrom(handlerType: HandlerType) = _popUpVisiblePointer.value
 	}
 	
 	private object PopupVisibilityTracker extends ComponentListener
@@ -359,11 +370,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// IMPLEMENTED	-------------------------
 		
 		override def componentResized(e: ComponentEvent) = ()
-		
 		override def componentMoved(e: ComponentEvent) = ()
 		
-		override def componentShown(e: ComponentEvent) = popUpDisplayPointer.value = true
-		
-		override def componentHidden(e: ComponentEvent) = popUpDisplayPointer.value = false
+		override def componentShown(e: ComponentEvent) = _popUpVisiblePointer.set()
+		override def componentHidden(e: ComponentEvent) = _popUpVisiblePointer.reset()
 	}
 }

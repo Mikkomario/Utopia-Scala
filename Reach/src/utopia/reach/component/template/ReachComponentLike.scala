@@ -1,20 +1,21 @@
 package utopia.reach.component.template
 
-import utopia.flow.collection.immutable.Tree
+import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
-import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.util.Priority
+import utopia.reflection.component.drawing.template.DrawLevel
+import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.reflection.component.template.layout.stack.Stackable2
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.text.Font
 
 /**
@@ -102,10 +103,11 @@ trait ReachComponentLike extends Stackable2
 	
 	/**
 	  * @return A tree representation of this component hierarchy (root node represents this component and branches
-	  *         below it are this component's children)
+	  *         below it are this component's children).
+	  *         Initialized lazily.
 	  */
-	// TODO: Use a lazily initialized tree when that becomes available
-	def toTree: Tree[ReachComponentLike] = Tree(this, children.toVector.map { _.toTree })
+	def toTree: LazyTree[ReachComponentLike] =
+		LazyTree.iterate(PreInitializedLazy(this)) { c => c.children.iterator.map { PreInitializedLazy(_) } }
 	
 	/**
 	  * @return An image of this component with its current size
@@ -235,6 +237,7 @@ trait ReachComponentLike extends Stackable2
 		}
 		
 		// Paints child components (only those that overlap with the clipping bounds)
+		// TODO: Make lazy
 		if (components.nonEmpty)
 		{
 			val remainingComponents = childClipZone match
@@ -259,7 +262,7 @@ trait ReachComponentLike extends Stackable2
 	{
 		if (size.isPositive) {
 			// Places the drawer so that the top left corner of the region will be drawn to (0,0)
-			region.intersectionWith(Bounds(Point.origin, size)) match {
+			region.overlapWith(Bounds(Point.origin, size)) match {
 				case Some(actualRegion) =>
 					Image.paint(actualRegion.size) { d =>
 						paintWith(d.translated(-position - region.position), Some(region))

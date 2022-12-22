@@ -2,8 +2,21 @@
 
 ## v2.0-alpha-10 (In Development)
 Supports changes in **Flow** v2.0
+### Breaking Changes
+- **Dialog** and **Frame** constructor parameters were changed in following ways:
+  - Added new parameter `screenBorderMargin: Double = 0.0`
+  - Replaced `resizeAlignment: Alignment` with `getAnchor: Bounds => Point = _.center`
 ### New Features
+- Rewrote **Window** positioning logic to support a so-called anchor position. 
+  This allows one to center the window around a specific (e.g. focused) component, for example, 
+  which makes window size changes less nauseating.
 - Added **SnapToGridLengthModifier**
+### New Methods
+- **Window** (type)
+  - Added a constructor function that creates either a windowed **Frame** or a **Dialog**, 
+    based on whether the parent window has been specified.
+### Other Changes
+- **Window** will now attempt to remain within screen boundaries when resizing
 
 ## v2.0-alpha-9 - 02.10.2022
 This update mostly reflects changes in Flow v1.17 and Paradigm v1.1.  

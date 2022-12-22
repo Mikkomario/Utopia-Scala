@@ -62,7 +62,7 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
     
     // IMPLEMENTED METHODS    ----------------
     
-    override def repr = this
+    override def self = this
     
     override def transformedWith(transformation: Matrix3D) =
     {

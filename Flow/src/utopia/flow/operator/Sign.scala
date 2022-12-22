@@ -27,6 +27,14 @@ sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
 	def opposite: Sign
 	
 	
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Whether this sign is negative
+	  */
+	def isNegative = !isPositive
+	
+	
 	// IMPLEMENTED  ------------------------
 	
 	override def unary_- = opposite
@@ -50,7 +58,7 @@ sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
 	  * @tparam R instance type
 	  * @return 'r' if this is positive, -r otherwise
 	  */
-	def *[R2, R <: Reversible[R2]](r: R) = if (isPositive) r.repr else -r
+	def *[R2, R <: Reversible[R2]](r: R) = if (isPositive) r.self else -r
 }
 
 object Sign
@@ -78,6 +86,12 @@ object Sign
 	  */
 	def of(number: Double): Sign = if (number >= 0.0) Positive else Negative
 	
+	/**
+	  * @param positiveCondition A condition for returning Positive
+	  * @return Positive if condition was true, Negative otherwise
+	  */
+	def apply(positiveCondition: Boolean) = if (positiveCondition) Positive else Negative
+	
 	
 	// NESTED   --------------------------
 	
@@ -90,7 +104,7 @@ object Sign
 		override def modifier = 1
 		
 		override def opposite = Negative
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: Sign) = o match {
 			case Positive => 0
@@ -107,7 +121,7 @@ object Sign
 		override def modifier = -1
 		
 		override def opposite = Positive
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: Sign) = o match {
 			case Positive => -1

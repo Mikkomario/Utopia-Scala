@@ -30,7 +30,7 @@ case class AnimatedAffineTransformation(f: Double => Matrix3D)
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def apply(progress: Double) = f(progress)
 	

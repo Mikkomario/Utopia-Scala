@@ -220,7 +220,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				val hoverR = hoverExtraRadius min (shorterSide / 2 - knobR)
 				
 				val y = bounds.center.y
-				val minX = bounds.x + hoverR
+				val minX = bounds.leftX + hoverR
 				val maxX = bounds.rightX - hoverR
 				
 				val minKnobX = minX + knobR

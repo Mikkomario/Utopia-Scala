@@ -5,36 +5,36 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
-import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
-import utopia.reflection.color.ColorRole.{Error, Secondary}
-import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer2}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
+import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointer, FocusableWrapper}
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
+import utopia.reflection.color.ColorRole.{Error, Secondary}
+import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
+import utopia.reflection.component.context.TextContextLike
+import utopia.reflection.component.drawing.immutable.TextDrawContext
+import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer2}
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.shape.Border
-import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.reflection.text.Font
 import utopia.reflection.util.ComponentCreationDefaults
 
 /**
@@ -327,12 +327,11 @@ class Field[C <: ReachComponentLike with Focusable]
 	/**
 	  * A pointer to this field's current inner background color. May vary based on state.
 	  */
-	val innerBackgroundPointer =
-	{
+	val innerBackgroundPointer = {
 		// TODO: Handle mouse over state (highlights one more time)
 		if (fillBackground)
 			contextBackgroundPointer.mergeWith(_focusPointer) { (context, focus) =>
-				context.highlightedBy(if (focus) 0.15 else 0.075)
+				context.highlightedBy(if (focus) 2 else 1)
 			}
 		else
 			contextBackgroundPointer

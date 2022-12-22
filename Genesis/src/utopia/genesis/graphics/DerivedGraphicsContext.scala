@@ -36,7 +36,7 @@ class DerivedGraphicsContext(lastTransformation: Matrix3D, parentTransformation:
 	
 	// IMPLEMENTED  ----------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def transformation = _transformation
 	

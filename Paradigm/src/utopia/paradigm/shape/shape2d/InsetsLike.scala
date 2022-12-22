@@ -2,13 +2,20 @@ package utopia.paradigm.shape.shape2d
 
 import utopia.flow.operator.LinearScalable
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis2D, Direction2D}
+import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
+import utopia.paradigm.shape.template.{Dimensional, Dimensions}
 
 import scala.collection.immutable.HashMap
 
-trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
+/**
+  * Common trait for factories which produce insets
+  * @tparam L Type of inset lengths used
+  * @tparam I Type of insets produced by this factory
+  */
+trait InsetsFactory[-L, +I]
 {
     // ABSTRACT ---------------------------
     
@@ -113,8 +120,11 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
 * Insets can be used for describing an area around a component (top, bottom, left and right)
 * @author Mikko Hilpinen
 * @since Genesis 25.3.2019
+  * @tparam L Type of lengths used by these insets
+  * @tparam S Type of 2-dimensional sizes acquired by combining lengths
+  * @tparam Repr Concrete implementation class of these insets
 **/
-trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
+trait InsetsLike[L, +S, +Repr] extends Dimensional[Pair[L], Repr] with LinearScalable[Repr]
 {
     // ABSTRACT ------------------
     
@@ -124,22 +134,22 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
     def amounts: Map[Direction2D, L]
     
     /**
+      * @return A zero length item
+      */
+    protected def zeroLength: L
+    
+    /**
       * @param newAmounts New lengths
       * @return A new copy of these insets with specified lengths
       */
-    protected def makeCopy(newAmounts: Map[Direction2D, L]): Repr
-    
-    /**
-      * @return A zero length item
-      */
-    protected def makeZero: L
+    protected def withAmounts(newAmounts: Map[Direction2D, L]): Repr
     
     /**
       * @param first The first item
       * @param second The second item
       * @return Combination (+) of these two items
       */
-    protected def combine(first: L, second: L): L
+    protected def plus(first: L, second: L): L
     
     /**
       * @param a The item to multiply
@@ -162,23 +172,20 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
     /**
       * @return Lengths of all the sides in these insets
       */
-    def sides = amounts.values.toVector
+    def lengths = amounts.values.toVector
     
     /**
      * @return Insets for the left side
      */
     def left = apply(Direction2D.Left)
-    
     /**
      * @return Insets for the right side
      */
     def right = apply(Direction2D.Right)
-    
     /**
      * @return Insets for the top side
      */
     def top = apply(Up)
-    
     /**
      * @return Insets for the bottom side
      */
@@ -188,7 +195,6 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
      * @return Total length of this inset's horizontal components
      */
     def horizontal = along(X)
-    
     /**
      * @return Total length of this inset's vertical components
      */
@@ -202,13 +208,12 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
     /**
       * @return A copy of these insets where up is down and left is right
       */
-    def opposite = makeCopy(amounts.map { case (k, v) => k.opposite -> v })
+    def opposite = withAmounts(amounts.map { case (k, v) => k.opposite -> v })
     
     /**
       * @return A copy of these insets where left and right have been swapped
       */
     def hMirrored = mirroredAlong(X)
-    
     /**
       * @return A copy of these insets where top and bottom have been swapped
       */
@@ -217,13 +222,12 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
     /**
       * @return The average width of these insets
       */
-    def average = amounts.values.reduceOption(combine).map { multiply(_, 0.25) }.getOrElse(makeZero)
+    def average = amounts.values.reduceOption(plus).map { multiply(_, 0.25) }.getOrElse(zeroLength)
     
     /**
       * @return A copy of these insets with only horizontal components (left & right)
       */
     def onlyHorizontal = onlyAxis(X)
-    
     /**
       * @return A copy of these insets with only vertical components (top & bottom)
       */
@@ -233,7 +237,6 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @return A copy of these insets without any horizontal components (left or right)
       */
     def withoutHorizontal = withoutAxis(X)
-    
     /**
       * @return A copy of these insets without any vertical components (top or bottom)
       */
@@ -242,14 +245,23 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
     
     // IMPLEMENTED  --------------
     
+    override def dimensions = Dimensions(Pair(zeroLength, zeroLength))(Pair(left, right), Pair(top, bottom))
+    
     override def toString = s"[${amounts.map { case (d, l) => s"$d:$l" }.mkString(", ")}]"
+    
+    override def withDimensions(newDimensions: Dimensions[Pair[L]]) = {
+        val horizontal = newDimensions.x
+        val vertical = newDimensions.y
+        withAmounts(Map(Direction2D.Left -> horizontal.first, Direction2D.Right -> horizontal.second,
+            Up -> vertical.first, Down -> vertical.second))
+    }
     
     /**
       * Multiplies each side of these insets
       * @param multi A multiplier
       * @return Multiplied insets
       */
-    override def *(multi: Double) = makeCopy(amounts.map { case (side, length) => side -> multiply(length, multi) })
+    override def *(multi: Double) = map { l => multiply(l, multi) }
     
     
     // OPERATORS    --------------
@@ -258,29 +270,28 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
      * @param multi A multiplier (may be different for different axes)
      * @return Multiplied copy of these insets
      */
-    def *(multi: Vector2D) = makeCopy(amounts.map { case (side, length) =>
-        side -> multiply(length, multi(side.axis)) })
+    def *(multi: Vector2D) =
+        withAmounts(amounts.map { case (side, length) => side -> multiply(length, multi(side.axis)) })
     
     /**
       * Adds two insets together
       * @param other Another insets
       * @return A combination of these two insets
       */
-    def +(other: InsetsLike[L, _, _]) = makeCopy(amounts.mergeWith[L](other.amounts)(combine))
-    
+    def +(other: InsetsLike[L, _, _]) = withAmounts(amounts.mergeWith[L](other.amounts)(plus))
     /**
       * Subtracts insets from each other
       * @param other Another insets
       * @return A subtraction of these two insets
       */
     def -(other: InsetsLike[L, _, _]) =
-        makeCopy(amounts.mergeWith[L](other.amounts) { (a, b) => combine(a, multiply(b, -1)) })
+        withAmounts(amounts.mergeWith[L](other.amounts) { (a, b) => plus(a, multiply(b, -1)) })
     
     /**
       * @param direction Direction to drop from these insets
       * @return A copy of these insets without an inset for the specified direction
       */
-    def -(direction: Direction2D) = makeCopy(amounts - direction)
+    def -(direction: Direction2D) = withAmounts(amounts - direction)
     
     
     // OTHER    ------------------
@@ -289,53 +300,53 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @param direction Target direction
       * @return The length of these insets towards that direction
       */
-    def apply(direction: Direction2D) = amounts.getOrElse(direction, makeZero)
+    def apply(direction: Direction2D) = amounts.getOrElse(direction, zeroLength)
     
     /**
      * @param axis Target axis
      * @return Total length of these insets along specified axis
      */
-    def along(axis: Axis2D) = amounts.view.filterKeys { _.axis == axis }.values.reduceOption(combine).getOrElse(makeZero)
+    def along(axis: Axis2D) =
+        amounts.view.filterKeys { _.axis == axis }.values.reduceOption(plus).getOrElse(zeroLength)
     
     /**
       * @param axis Target axis
-      * @return The two sides of insets along that axis (FFor x-axis, returns left -> right and for y-axis top -> bottom)
+      * @return The two sides of insets along that axis as a Pair
+      *         (i.e. for x-axis, returns left -> right and for y-axis top -> bottom)
       */
-    def sidesAlong(axis: Axis2D) = axis match
-    {
-        case X => left -> right
-        case Y => top -> bottom
+    def sidesAlong(axis: Axis2D) = axis match {
+        case X => Pair(left, right)
+        case Y => Pair(top, bottom)
     }
     
     /**
      * @param axis Target axis
      * @return A copy of these insets where values on targeted axis are swapped
      */
-    def mirroredAlong(axis: Axis2D) = makeCopy(amounts.map { case (k, v) => (if (k.axis == axis) k.opposite else k) -> v })
+    def mirroredAlong(axis: Axis2D) =
+        withAmounts(amounts.map { case (k, v) => (if (k.axis == axis) k.opposite else k) -> v })
     
     /**
      * @param direction The direction taken away from these insets
      * @return A copy of these insets without specified direction
      */
-    def withoutSide(direction: Direction2D) = makeCopy(amounts - direction)
-    
+    def withoutSide(direction: Direction2D) = withAmounts(amounts - direction)
     /**
       * @param directions Directions to exclude from these insets
       * @return A copy of these insets without the specified directions included
       */
-    def withoutSides(directions: IterableOnce[Direction2D]) = makeCopy(amounts -- directions)
+    def withoutSides(directions: IterableOnce[Direction2D]) = withAmounts(amounts -- directions)
     
     /**
       * @param axis Targeted axis
       * @return A copy of these insets with values only on the specified axis (Eg. for X-axis would only contain left and right)
       */
-    def onlyAxis(axis: Axis2D) = makeCopy(amounts.view.filterKeys { _.axis == axis }.toMap)
-    
+    def onlyAxis(axis: Axis) = withAmounts(amounts.view.filterKeys { _.axis == axis }.toMap)
     /**
       * @param axis Targeted axis
       * @return A copy of these insets without any values for the specified axis
       */
-    def withoutAxis(axis: Axis2D) = onlyAxis(axis.perpendicular)
+    def withoutAxis(axis: Axis) = withAmounts(amounts.view.filterKeys { _.axis != axis }.toMap)
     
     /**
       * Replaces one side of these insets
@@ -343,26 +354,23 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @param amount New length for that side insets
       * @return A copy of these insets with replaced side
       */
-    def withSide(side: Direction2D, amount: L) = makeCopy(amounts + (side -> amount))
+    def withSide(side: Direction2D, amount: L) = withAmounts(amounts + (side -> amount))
     
     /**
       * @param amount New top length
       * @return A copy of these insets with new top length
       */
     def withTop(amount: L) = withSide(Up, amount)
-    
     /**
       * @param amount New bottom length
       * @return A copy of these insets with new bottom length
       */
     def withBottom(amount: L) = withSide(Down, amount)
-    
     /**
       * @param amount New left length
       * @return A copy of these insets with new left length
       */
     def withLeft(amount: L) = withSide(Direction2D.Left, amount)
-    
     /**
       * @param amount New right length
       * @return A copy of these insets with new right length
@@ -383,21 +391,18 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @return A copy of these insets with mapped top
       */
     def mapTop(f: L => L) = mapSide(Up)(f)
-    
     /**
       * Modifies the bottom of these insets
       * @param f Mapping function
       * @return A copy of these insets with mapped bottom
       */
     def mapBottom(f: L => L) = mapSide(Down)(f)
-    
     /**
       * Modifies the left of these insets
       * @param f Mapping function
       * @return A copy of these insets with mapped left
       */
     def mapLeft(f: L => L) = mapSide(Direction2D.Left)(f)
-    
     /**
       * Modifies the right of these insets
       * @param f Mapping function
@@ -411,9 +416,8 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @param f Mapping function
       * @return A copy of these insets with mapped sides
       */
-    def mapSides(sides: IterableOnce[Direction2D])(f: L => L) = makeCopy(amounts ++
-        sides.iterator.map { d => d -> f(apply(d)) })
-    
+    def mapSides(sides: IterableOnce[Direction2D])(f: L => L) =
+        withAmounts(amounts ++ sides.iterator.map { d => d -> f(apply(d)) })
     /**
       * Maps sides along the specified axis
       * @param axis Targeted axis
@@ -421,14 +425,12 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @return A copy of these insets with two sides mapped
       */
     def mapAxis(axis: Axis2D)(f: L => L) = mapSides(axis.directions)(f)
-    
     /**
       * Maps left & right
       * @param f Mapping function
       * @return A mapped copy of these insets
       */
     def mapHorizontal(f: L => L) = mapAxis(X)(f)
-    
     /**
       * Maps top & bottom
       * @param f Mapping function
@@ -441,5 +443,11 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @param f A mapping function
       * @return copy of these insets with each side mapped
       */
-    def map(f: L => L) = mapSides(Direction2D.values)(f)
+    def map(f: L => L) = withAmounts(amounts.view.mapValues(f).toMap)
+    /**
+      * Maps all sides of these insets
+      * @param f A mapping function which accepts the direction of a side and the length of that side
+      * @return A mapped copy of these insets
+      */
+    def mapWithDirection(f: (Direction2D, L) => L) = withAmounts(amounts.map { case (dir, len) => dir -> f(dir, len) })
 }

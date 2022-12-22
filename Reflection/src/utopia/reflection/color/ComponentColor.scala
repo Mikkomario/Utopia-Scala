@@ -66,8 +66,7 @@ case class ComponentColor(background: Color)
 	/**
 	 * @return The overall shade of this color (either darker or lighter)
 	 */
-	def shade = textColorStandard match
-	{
+	def shade = textColorStandard match {
 		case Light => ColorShade.Dark
 		case Dark => ColorShade.Light
 	}
@@ -75,19 +74,7 @@ case class ComponentColor(background: Color)
 	/**
 	  * @return A highlighted copy of this component color
 	  */
-	def highlighted =
-	{
-		// Either darkens or lightens the color, depending on original color lightness
-		val newBG =
-		{
-			val originalLuminosity = background.luminosity
-			if (originalLuminosity < 0.6)
-				background.lightened(1 + originalLuminosity + 0.1)
-			else
-				background.darkened(1 + (1 - originalLuminosity + 0.1))
-		}
-		copy(background = newBG)
-	}
+	def highlighted = copy(background = background.highlighted)
 	
 	/**
 	  * @return A color set that consists only of this one color
@@ -103,20 +90,8 @@ case class ComponentColor(background: Color)
 	// OTHER	------------------------------
 	
 	/**
-	  * @param amount Amount of highlighting to do [0, 1]
+	  * @param intensity Amount of highlighting to do, where 0 is no highlighting and 1.0 is the default highlighting
 	  * @return A modified version of this color
 	  */
-	def highlightedBy(amount: Double) =
-	{
-		// Either darkens or lightens the color, depending on original color lightness
-		val newBG =
-		{
-			val originalLuminosity = background.luminosity
-			if (originalLuminosity < 0.6)
-				background.lightened(1 + originalLuminosity + amount)
-			else
-				background.darkened(1 + (1 - originalLuminosity + amount))
-		}
-		copy(background = newBG)
-	}
+	def highlightedBy(intensity: Double) = copy(background = background.highlightedBy(intensity))
 }

@@ -3,7 +3,7 @@ package utopia.flow.collection.template
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.{OrderedDepthIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions.ImplicitApproxEquals
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.{EqualsFunction, MaybeEmpty}
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
@@ -29,7 +29,7 @@ object TreeLike
   * @tparam A Type of item used when navigating through this tree. May also be considered the main content of this tree.
   * @tparam Repr Types of nodes in this tree
   */
-trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
+trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 {
 	// ABSTRACT   --------------------
 	
@@ -43,11 +43,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  * @return The navigation element of this tree node.
 	  */
 	def nav: A
-	
-	/**
-	  * @return "This" instance
-	  */
-	def repr: Repr
 	
 	/**
 	  * The child nodes directly under this node
@@ -73,14 +68,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	// COMPUTED PROPERTIES    --------
 	
 	/**
-	  * Whether this tree is empty and doesn't contain a single node below it
-	  */
-	def isEmpty = children.isEmpty
-	/**
-	  * @return Whether this tree contains at least one node below it
-	  */
-	def nonEmpty = !isEmpty
-	/**
 	  * @return Whether this tree has child nodes registered under it
 	  */
 	def hasChildren = children.nonEmpty
@@ -101,7 +88,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  *         Each branch is fully traversed before moving to its sibling.
 	  *         Starts with this node.
 	  */
-	def allNodesIterator: Iterator[Repr] = repr +: nodesBelowIterator
+	def allNodesIterator: Iterator[Repr] = self +: nodesBelowIterator
 	/**
 	  * @return An iterator that goes over all the nodes below this node.
 	  *         Will not include this node.
@@ -148,7 +135,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  *         If the ordering of the children is not as important, one should rather call .allNodesIterator,
 	  *         as it is more memory-efficient.
 	  */
-	def topDownNodesIterator = repr +: topDownNodesBelowIterator
+	def topDownNodesIterator = self +: topDownNodesBelowIterator
 	/**
 	  * @return An iterator that returns all children of this node, then all grandchildren
 	  *         of those children, then the children of the grandchildren, and so on.
@@ -184,7 +171,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  * @return An iterator that returns all leaf nodes that appear within this tree.
 	  *         Leaves are nodes that don't have any children, i.e. the "end" nodes.
 	  */
-	def leavesIterator = if (isEmpty) PollableOnce(repr) else leavesBelowIterator
+	def leavesIterator = if (isEmpty) PollableOnce(self) else leavesBelowIterator
 	/**
 	  * @return An iterator that returns all leaf nodes that appear under this node.
 	  *         This node is never included, even when it is a leaf node.
@@ -196,7 +183,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  *         Leaves are nodes that don't have any children, i.e. the "end" nodes.
 	  *         If this node is empty, returns a vector containing this node only.
 	  */
-	def leaves: Vector[Repr] = if (isEmpty) Vector(repr) else leavesBelow
+	def leaves: Vector[Repr] = if (isEmpty) Vector(self) else leavesBelow
 	/**
 	  * @return All leaf nodes that appear under this node.
 	  *         This node is never included, even when it is a leaf node.
@@ -216,7 +203,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  */
 	def branchesIterator = {
 		if (isEmpty)
-			PollableOnce(Vector(repr))
+			PollableOnce(Vector(self))
 		else
 			_branchesIterator.map { _.result().reverse }
 	}
@@ -237,12 +224,12 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 		// Case: This is a leaf node => Start a new reverse branch builder
 		if (isEmpty) {
 			val builder = new VectorBuilder[Repr]()
-			builder += repr
+			builder += self
 			PollableOnce(builder)
 		}
 		// Case: This is not a leaf node => Continues building the branches that were started below
 		else
-			children.iterator.flatMap { _._branchesIterator.map { b => b += repr; b } }
+			children.iterator.flatMap { _._branchesIterator.map { b => b += self; b } }
 	}
 	/**
 	  * @return All branches that appear within this tree.
@@ -287,12 +274,12 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	
 	// IMPLEMENTED  ----------------
 	
-	override def toString: String = {
-		if (isEmpty)
-			nav.toString
-		else
-			s"$nav: {${ children.map { _.toString }.reduce { _ + ", " + _ } }}"
-	}
+	/**
+	  * Whether this tree is empty and doesn't contain a single node below it
+	  */
+	override def isEmpty = children.isEmpty
+	
+	override def toString: String = if (isEmpty) nav.toString else s"$nav: {${ children.mkString(", ") }}"
 	
 	
 	// OTHER METHODS    ------------
@@ -307,7 +294,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  * @param path A path of navigational steps to take. Ordered.
 	  * @return Node at the end of that path. May be generated.
 	  */
-	def /(path: Seq[A]): Repr = path.foldLeft(repr) { _ / _ }
+	def /(path: Seq[A]): Repr = path.foldLeft(self) { _ / _ }
 	/**
 	  * Finds or generates a node directly under this one
 	  * @param nav The next navigation "step"
@@ -363,10 +350,10 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	  *         This node is always located at the beginning of the resulting path.
 	  */
 	def findWithPath(filter: Repr => Boolean): Option[Vector[Repr]] = {
-		if (filter(repr))
-			Some(Vector(repr))
+		if (filter(self))
+			Some(Vector(self))
 		else
-			children.findMap { _.findWithPath(filter) }.map { repr +: _ }
+			children.findMap { _.findWithPath(filter) }.map { self +: _ }
 	}
 	/**
 	  * Finds the top nodes under this node (whether they be direct children or grandchildren etc.) that satisfy the
@@ -381,14 +368,14 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]]
 	def filterWithPaths(filter: Repr => Boolean) = _filterWithPaths(filter).map { _.result().reverse }.caching
 	private def _filterWithPaths(filter: Repr => Boolean): Iterator[VectorBuilder[Repr @uncheckedVariance]] = {
 		// Case: This node represents a search result => Starts a new branch to it
-		if (filter(repr)) {
+		if (filter(self)) {
 			val builder = new VectorBuilder[Repr]()
-			builder += repr
+			builder += self
 			Iterator.single(builder)
 		}
 		// Case: This node is not a search result => looks from below and builds the paths if found
 		else
-			children.iterator.flatMap { _._filterWithPaths(filter) }.map { _ += repr }
+			children.iterator.flatMap { _._filterWithPaths(filter) }.map { _ += self }
 	}
 	/**
 	  * Finds The location of a specific nav element within this tree structure.

@@ -69,7 +69,7 @@ case class Ppi(value: Double) extends DoubleLike[Ppi]
 	
 	override def toString = s"${value.round} pixels per inch"
 	
-	override def repr = this
+	override def self = this
 	
 	override def *(mod: Double) = Ppi(value * mod)
 }

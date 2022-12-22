@@ -9,6 +9,7 @@ import utopia.reflection.shape.stack.modifier.StackSizeModifier
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
+// TODO: Make an abstract class
 trait CachingStackable2 extends Stackable2 with Constrainable
 {
 	// ATTRIBUTES	-----------------

@@ -5,7 +5,7 @@ import utopia.vault.coder.controller.writer.database.AccessWriter
 import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
 import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, ObjectDeclaration}
 import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, declaration}
@@ -36,7 +36,7 @@ object ModelWriter
 		val dataClassPackage = setup.modelPackage / s"partial.${ classToWrite.packageName }"
 		val propWrites = classToWrite.properties.map { prop =>
 			val propNameInModel = prop.jsonPropName.quoted
-			prop.toValueCode.withPrefix(propNameInModel + " -> ")
+			prop.toValueCode.withPrefix(s"$propNameInModel -> ")
 		}
 		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(Reference.model)) else
 			propWrites.reduceLeft { _.append(_, ", ") }.withinParenthesis.withPrefix("Vector")
@@ -47,10 +47,16 @@ object ModelWriter
 				classToWrite.properties.map(propertyDeclarationFrom).reduceLeftOption { _.append(_, ", ") }
 					.getOrElse(CodePiece.empty).withinParenthesis
 				).withinParenthesis
+		val dataClassType = ScalaType.basic(dataClassName)
+		val dataFactoryExtension: Extension = {
+			if (fromModelMayFail)
+				Reference.fromModelFactory(dataClassType)
+			else
+				Reference.fromModelFactoryWithSchema(dataClassType)
+		}
 		// Writes the data model and the data object
 		File(dataClassPackage,
-			ObjectDeclaration(dataClassName,
-				Vector(Reference.fromModelFactoryWithSchema(ScalaType.basic(dataClassName))),
+			ObjectDeclaration(dataClassName, Vector(dataFactoryExtension),
 				properties = Vector(
 					LazyValue("schema", modelDeclarationCode.references, isOverridden = !fromModelMayFail,
 						isLowMergePriority = true)(modelDeclarationCode.text)
@@ -118,8 +124,7 @@ object ModelWriter
 					None
 				else
 					Some(ObjectDeclaration(storedClass.name,
-						Vector(Reference.storedFromModelFactory(
-							ScalaType.basic(storedClass.name), ScalaType.basic(dataClassName))),
+						Vector(Reference.storedFromModelFactory(ScalaType.basic(storedClass.name), dataClassType)),
 						properties = Vector(
 							ComputedProperty("dataFactory", Set(dataClassRef), isOverridden = true)(dataClassName)
 						)
@@ -188,14 +193,12 @@ object ModelWriter
 		Reference.propertyDeclaration.targetCode + paramsCode.withinParenthesis
 	}
 	
-	// FIXME: Now reads "schema.validate(model).flatMap{ valid => " (toTry is missing)
-	// FIXME: Also, parent type is wrong
 	private def fromModelFor(classToWrite: Class, dataClassName: String)(implicit naming: NamingRules) = {
 		def _modelFromAssignments(assignments: CodePiece) =
 			assignments.withinParenthesis.withPrefix(dataClassName)
 		
 		if (classToWrite.fromDbModelConversionMayFail)
-			ClassMethodFactory.classFromModel(classToWrite, "schema.validate(model)"){
+			ClassMethodFactory.classFromModel(classToWrite, "schema.validate(model).toTry"){
 				_.dbProperties.map { _.jsonPropName } }(_modelFromAssignments)
 		else
 			ClassMethodFactory.classFromValidatedModel(classToWrite){

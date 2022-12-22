@@ -89,7 +89,7 @@ class Framing[C <: Stackable with AwtComponentRelated](initialComponent: C, val 
 	  */
 	def addRoundedBackgroundDrawing(color: Color) =
 	{
-		insets.sides.map { _.optimal }.filter { _ > 0.0 }.minOption match
+		insets.lengths.map { _.optimal }.filter { _ > 0.0 }.minOption match
 		{
 			case Some(minSide) => addCustomDrawer(RoundedBackgroundDrawer.withRadius(color, minSide, Normal))
 			case None => addCustomDrawer(RoundedBackgroundDrawer.withFactor(color, 0.25, Normal))

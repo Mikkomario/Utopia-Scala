@@ -1,5 +1,6 @@
 package utopia.vault.model.immutable
 
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.sql.Condition
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -50,18 +51,17 @@ object DataDeletionRule
 case class DataDeletionRule(targetTable: Table, timePropertyName: String,
                             standardLiveDuration: Duration = Duration.Inf,
                             conditionalLiveDurations: Map[Condition, FiniteDuration] = Map())
+	extends MaybeEmpty[DataDeletionRule]
 {
-	// COMPUTED	-------------------------
+	// IMPLEMENTED	-------------------------
 	
-	/**
-	  * @return Whether this deletion rule has an effect on the targeted table under certain conditions.
-	  */
-	def nonEmpty = standardLiveDuration.isFinite || conditionalLiveDurations.nonEmpty
+	override def self = this
+	
 	/**
 	  * @return Whether this deletion rule has no effect on the targeted table
 	  *         (no row live durations have been specified)
 	  */
-	def isEmpty = !nonEmpty
+	def isEmpty = !standardLiveDuration.isFinite && conditionalLiveDurations.isEmpty
 	
 	
 	// OTHER	-------------------------

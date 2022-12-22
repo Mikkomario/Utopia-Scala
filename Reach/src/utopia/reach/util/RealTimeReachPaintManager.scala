@@ -182,6 +182,11 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	// OTHER	-------------------------------------
 	
+	/**
+	  * @return Resets the buffer, so that the next draw operation will completely redraw the component contents
+	  */
+	def resetBuffer() = bufferPointer.clear()
+	
 	// Checks whether component size has changed since the last draw. Invalidates the drawn buffer if so.
 	private def checkForSizeChanges() =
 	{

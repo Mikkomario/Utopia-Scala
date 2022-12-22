@@ -16,7 +16,7 @@ object IntLike
 		
 		override def +(other: IntWrapper) = i + other.i
 		
-		override def repr = this
+		override def self = this
 		
 		override def isZero = i == 0
 		

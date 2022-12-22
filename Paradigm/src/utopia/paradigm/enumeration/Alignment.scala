@@ -190,16 +190,20 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	def positionAround(area: Size, anchor: Point = Point.origin) = anchor - origin(area)
 	
 	/**
-	  * @param within An area within which a point is aligned
-	  * @return Location of a point within that area (relative position)
+	  * Calculates a location matching this alignment within a relative size.
+	  * E.g. When used for left alignment, returns the center (Y) left (X) position of the specified size
+	  * (assuming (0,0) origin)
+	  * @param within A relative area with assumed origin of (0,0)
+	  * @return Location of a point matching this alignment within that area (relative position)
 	  */
-	def origin(within: Size) =
-		Point(dimensions.zipWithAxis.map { case (alignment, axis) => alignment.origin(within(axis)) })
+	def origin(within: Size) = Point(dimensions.mergeWith(within, 0.0) { _ origin _ })
 	/**
-	  * @param within An area within which a point is aligned
-	  * @return Location of a point within that area
+	  * Calculates the location matching this alignment within an area.
+	  * E.g. When used for left alignment, returns the center (Y) left (X) position of that area.
+	  * @param within An area
+	  * @return Location within the specified area that matches this alignment
 	  */
-	def origin(within: Bounds): Point = within.position + origin(within.size)
+	def origin(within: Bounds): Point = Point(dimensions.mergeWith(within, 0.0) { _ origin _ })
 	
 	/**
 	  * Positions a 2D area within a set of 2D boundaries. Won't check whether the area would fit within the boundaries.

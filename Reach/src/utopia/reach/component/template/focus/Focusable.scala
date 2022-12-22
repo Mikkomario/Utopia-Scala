@@ -74,7 +74,6 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  * @return Whether this component currently allows focus gain
 	  */
 	def allowsFocusEnter: Boolean
-	
 	/**
 	  * @return Whether this component currently allows focus leave
 	  */
@@ -107,7 +106,6 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  * Registers this component to the focus manager
 	  */
 	protected def enableFocusHandling() = focusManager.register(this)
-	
 	/**
 	  * Detaches this component from the focus manager
 	  */

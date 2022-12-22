@@ -40,7 +40,7 @@ class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Val
 	
 	// IMPLEMENTED  --------------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	def text_=(newText: String) = value = newText
 	

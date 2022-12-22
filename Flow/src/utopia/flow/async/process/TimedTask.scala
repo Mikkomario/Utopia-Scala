@@ -1,5 +1,6 @@
 package utopia.flow.async.process
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.WaitTarget.Until
 import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.{Now, Today, WeekDay}
@@ -7,8 +8,9 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.time.{Instant, LocalTime}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+import scala.util.{Failure, Success}
 
 object TimedTask
 {
@@ -21,7 +23,17 @@ object TimedTask
 	  *          or None if this task shouldn't be run anymore.
 	  * @return A new timed task
 	  */
-	def apply(firstTime: => Instant)(f: => Option[Instant]): TimedTask = new _TimedTask(firstTime)(f)
+	def apply(firstTime: => Instant = Now)(f: => Option[Instant]): TimedTask = new _TimedTask(firstTime)(Left(f))
+	/**
+	  * Creates a new timed task
+	  * @param firstTime The first time this task should be run (call-by-name)
+	  * @param f         A function that starts the task and returns a future
+	  *                  that resolves to the next time this task should be run,
+	  *                  or None if this task shouldn't be run anymore.
+	  * @return A new timed task
+	  */
+	def async(firstTime: => Instant = Now)(f: => Future[Option[Instant]]): TimedTask =
+		new _TimedTask(firstTime)(Right(f))
 	
 	/**
 	  * Creates a new timed task that runs only once
@@ -172,7 +184,9 @@ object TimedTask
 	
 	// NESTED   ----------------------------
 	
-	private class _TimedTask(firstTime: => Instant)(f: => Option[Instant]) extends TimedTask {
+	private class _TimedTask(firstTime: => Instant)(f: => Either[Option[Instant], Future[Option[Instant]]])
+		extends TimedTask
+	{
 		override def firstRunTime = firstTime
 		override def run() = f
 	}
@@ -195,8 +209,11 @@ trait TimedTask
 	/**
 	  * Runs this task once
 	  * @return The next time when this task should be run. None if this task shouldn't be run anymore.
+	  *         Either:
+	  *             Left) Immediately known result, or
+	  *             Right) Future of asynchronous process completion, along with that result
 	  */
-	def run(): Option[Instant]
+	def run(): Either[Option[Instant], Future[Option[Instant]]]
 	
 	
 	// COMPUTED ---------------------------
@@ -209,7 +226,31 @@ trait TimedTask
 	  * @return A new loop based on this task
 	  */
 	def toLoop(implicit exc: ExecutionContext, logger: Logger) =
-		LoopingProcess(Until(firstRunTime)) { _ => run().map { Until(_) } }
+		LoopingProcess(Until(firstRunTime)) { hurryPointer =>
+			run() match {
+				// Case: Blocked => Returns next loop time
+				case Left(result) => result.map { Until(_) }
+				// Case: Async
+				case Right(future) =>
+					// Case: Hurrying => Doesn't check the async result
+					if (hurryPointer.value)
+						None
+					// Case: Not hurrying (yet) => Waits for the async result
+					else {
+						// If has to hurry at any point, terminates the wait
+						val lock = new AnyRef
+						hurryPointer.onNextChange { _ => WaitUtils.notify(lock) }
+						future.waitWith(lock) match {
+							// Case: Success => Schedules next loop, if necessary
+							case Success(result) => result.map { Until(_) }
+							// Case: Failure => Terminates
+							case Failure(error) =>
+								logger(error)
+								None
+						}
+					}
+			}
+		}
 	
 	
 	// OTHER    ---------------------------

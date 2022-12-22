@@ -16,6 +16,7 @@ import scala.annotation.tailrec
   * @author Mikko Hilpinen
   * @since 3.10.2020, v0.1
   */
+// TODO: Add .parentComponent
 trait ComponentHierarchy
 {
 	// ABSTRACT	--------------------------

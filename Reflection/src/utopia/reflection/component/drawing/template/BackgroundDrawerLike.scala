@@ -26,7 +26,7 @@ trait BackgroundDrawerLike extends CustomDrawer
 	{
 		val targetBounds = drawer.clipBounds match
 		{
-			case Some(clipArea) => bounds.intersectionWith(clipArea).filter { _.size.isPositive }
+			case Some(clipArea) => bounds.overlapWith(clipArea).filter { _.size.isPositive }
 			case None => Some(bounds).filter { _.size.isPositive }
 		}
 		targetBounds.foreach { drawer.onlyFill(color).draw(_) }

@@ -198,7 +198,7 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	
 	override def withDimensions(newDimensions: Dimensions[Vector3D]) = Matrix3D(newDimensions)
 	
-	override def repr = this
+	override def self = this
 	
 	override def transformedWith(transformation: Matrix3D) = transformation(this)
 	

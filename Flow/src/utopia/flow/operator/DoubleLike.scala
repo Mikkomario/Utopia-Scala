@@ -20,7 +20,7 @@ object DoubleLike
 		
 		override def +(other: DoubleWrapper) = d + other.d
 		
-		override def repr = this
+		override def self = this
 		
 		override def zero = 0.0
 		

@@ -34,7 +34,7 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Pol
 	
 	override def transformedWith(transformation: Matrix2D) = mapCorners { _ * transformation }
 	
-	override def repr = this
+	override def self = this
 	
 	
 	// OTHER    -------------------

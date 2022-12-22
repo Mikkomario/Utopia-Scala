@@ -84,7 +84,7 @@ case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[D
 	
 	// IMPLEMENTED  -----------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: Distance) =
 	{

@@ -35,7 +35,7 @@ trait ColumnLengthLimit extends SelfComparable[ColumnLengthLimit]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: ColumnLengthLimit) = maxValue.compareTo(o.maxValue)
 }

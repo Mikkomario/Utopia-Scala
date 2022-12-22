@@ -136,6 +136,7 @@ trait MouseButtonStateListener extends Handleable
      * @param event The mouse event that occurred
       * @return If the read event was consumed during this process, should return the consume event
      */
+    // TODO: Return a custom type that can be interpreted from Unit implicitly
     def onMouseButtonState(event: MouseButtonStateEvent): Option[ConsumeEvent]
     
     /**

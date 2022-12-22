@@ -199,7 +199,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	/**
 	  * @return This node
 	  */
-	protected def repr: GNode
+	def self: GNode
     
     
     // COMPUTED PROPERTIES    -------
@@ -220,7 +220,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 		_allNodesIterator(visitedNodes)
 	}
 	private def _allNodesIterator(visitedNodes: mutable.Set[Any]): Iterator[GNode] = {
-		Iterator.single(repr) ++ leavingEdges.iterator.flatMap { edge =>
+		Iterator.single(self) ++ leavingEdges.iterator.flatMap { edge =>
 			val node = edge.end
 			if (visitedNodes.contains(node))
 				None
@@ -236,7 +236,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  */
 	def orderedAllNodesIterator = {
 		val visitedNodes = mutable.Set[Any](this)
-		OrderedDepthIterator(Iterator.single(repr)) { start =>
+		OrderedDepthIterator(Iterator.single(self)) { start =>
 			start.leavingEdges.iterator.flatMap { edge =>
 				val node = edge.end
 				if (visitedNodes.contains(node))
@@ -264,7 +264,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  */
 	def shortestRoutesIterator = {
 		val visitedNodes = mutable.Set[Any](this)
-		OrderedDepthIterator(Iterator.single(Vector[Edge]() -> repr)) { case (route, lastNode) =>
+		OrderedDepthIterator(Iterator.single(Vector[Edge]() -> self)) { case (route, lastNode) =>
 			lastNode.leavingEdges.iterator.flatMap { edge =>
 				val node = edge.end
 				if (visitedNodes.contains(node))
@@ -343,7 +343,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 		// Remembers which nodes have been visited (branch-specific)
 		val newTraversed = traversedNodes + this
 		// Creates the tree lazily
-		LazyTree(Lazy(repr), leavingEdges.iterator.flatMap { edge =>
+		LazyTree(Lazy(self), leavingEdges.iterator.flatMap { edge =>
 			val node = edge.end
 			// Case: A node would be a parent of this node in the tree => ends
 			if (newTraversed.contains(node))
@@ -390,7 +390,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  */
 	def /(path: Seq[E]): Set[GNode] = {
 		if (path.isEmpty)
-			Set(repr)
+			Set(self)
 		else {
 			var current = /(path.head).toSet
 			path.drop(1).foreach { p => current = current.flatMap { _/p } }
@@ -445,7 +445,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	                           (costOf: Edge => C)
 	                           (sumOf: (C, C) => C)
 	                           (implicit ord: Ordering[C]): Map[GNode, (Set[Vector[Edge]], C)] =
-		new PathsFinder[N, E, GNode, Edge, C](repr, destinations, startCost)(costOf)(sumOf).apply()
+		new PathsFinder[N, E, GNode, Edge, C](self, destinations, startCost)(costOf)(sumOf).apply()
 	/**
 	  * Finds the cheapest routes to multiple destination searches at once
 	  * @param destinations Destinations to find, where each is a node search function
@@ -674,11 +674,11 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	def traverseUntil[B](operation: GNode => Option[B]): Option[B] = traverseUntil(operation, Set())
 	@deprecated("Please use allNodesIterator instead", "v2.0")
 	private def traverseUntil[B](operation: GNode => Option[B], traversedNodes: Set[GNode]): Option[B] = {
-		val nodes = traversedNodes + repr
+		val nodes = traversedNodes + self
 		
 		// Performs the operation on self first
 		// If that didn't yield a result, tries children instead
-		operation(repr).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
+		operation(self).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
 	}
 	
 	/**
@@ -692,7 +692,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] =
 	{
 		val newTraversedNodes = traversedNodes + this
-		operation(repr)
+		operation(self)
 		endNodes.foldLeft(newTraversedNodes) { (traversed, node) =>
 			if (traversed.contains(node))
 				traversed

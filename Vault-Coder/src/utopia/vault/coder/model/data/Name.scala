@@ -208,7 +208,7 @@ case class Name(singular: String, plural: String, style: NamingConvention)
 	def toString(implicit naming: NamingRules) = doc
 	def toString(implicit context: NameContext, naming: NamingRules) = contextualSingular
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: Name) = singular.compareTo(o.singular)
 	

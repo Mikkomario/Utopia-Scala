@@ -2,15 +2,34 @@
 
 ## v0.5 (in development)
 ### Breaking Changes
+- **ComponentColor**`.highlightedBy(Double)` now behaves differently. The expected default amount is now 1.0 
+  (instead of 0.2 or 0.4 or something, like before)
 - **InteractionWindowFactory**`.display(...)` and `.displayOver(...)` now return a tuple containing: 
   - 1: The window that was opened and
   - 2: The window close result future (i.e. the earlier return value)
+- Some constructors now require an **EqualsFunction** instead of a regular function when asking for "same item -checks"
 - Renamed `additionalCustomDrawers` / `additionalDrawers` -parameter to `customDrawers` in some component 
   factory functions
+- Modified **SelectionList** constructors
 ### Bugfixes
 - Some fixes to **SelectionList** visuals
+- Some fixes to **FieldWithSelectionPopup** functionality
+- Fix to scroll bar drawing
 ### New Features
+- **SelectionList** now supports two new constructor parameters:
+  - `highlightModifier: Double` - A modified applied to all visual highlighting
+  - `alternativeKeyCondition: => Boolean` - An alternative condition for enabling arrow key events
 - Added **MessageWindowFactory** trait
+### New Methods
+- **FocusRequestable** (type)
+  - Added `.wrap(...)` and `.delegate(...)` for wrapping Reach components into FocusRequestable Reach components
+- **ReachCanvas**
+  - Added `.anchorPosition(...)` method, which may be used in a window constructor in order to enable 
+    focus-based anchoring / window positioning.
+### Other
+- Visual highlighting updates to buttons and some fields
+- **SelectionList** now exposes the selected area pointer
+- InteractionWindowFactory now asks for a **View** instead of **Changing** as the "defaultActionEnabledPointer"
 
 ## v0.4 - 02.10.2022
 This update focuses on TextField customizability, adding a number of new ways to affect text highlighting and 

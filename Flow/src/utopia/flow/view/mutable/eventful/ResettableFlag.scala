@@ -70,5 +70,15 @@ object ResettableFlag
   */
 trait ResettableFlag extends Flag with Resettable with Pointer[Boolean]
 {
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return A future that resolves when this flag is reset the next time
+	  */
+	def nextResetFuture = findMapNextFuture { if (_) None else Some(()) }
+	
+	
+	// IMPLEMENTED  ----------------------
+	
 	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
 }

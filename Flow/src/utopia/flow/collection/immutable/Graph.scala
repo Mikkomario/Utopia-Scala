@@ -3,6 +3,7 @@ package utopia.flow.collection.immutable
 import utopia.flow.collection.template.{GraphEdge, GraphNode}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Graph.{GraphViewEdge, GraphViewNode}
+import utopia.flow.operator.MaybeEmpty
 
 object Graph
 {
@@ -48,7 +49,7 @@ object Graph
  * @since 25.4.2020, v1.8
  */
 // TODO: Make lazy
-case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = false)
+case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = false) extends MaybeEmpty[Graph[N, E]]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -83,16 +84,6 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	// COMPUTED	----------------------------
 	
 	/**
-	 * @return Whether this graph is empty
-	 */
-	def isEmpty = connections.isEmpty
-	
-	/**
-	 * @return Whether this graph contains connections
-	 */
-	def nonEmpty = !isEmpty
-	
-	/**
 	 * @return All edges within this graph
 	 */
 	def edges = connections.map { case (_, edge, end) => GEdge(edge, end): GraphViewEdge[N, E] }
@@ -107,6 +98,16 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 *         opposite direction.
 	 */
 	def twoWayBound = if (isTwoWayBound) this else copy(isTwoWayBound = true)
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def self = this
+	
+	/**
+	  * @return Whether this graph is empty
+	  */
+	def isEmpty = connections.isEmpty
 	
 	
 	// OTHER	----------------------------
@@ -317,7 +318,7 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 				singleWay.toVector
 		}
 		
-		override protected def repr = this
+		override def self = this
 	}
 	
 	private case class GEdge(value: E, endContent: N) extends GraphViewEdge[N, E]

@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.reader
 
+import utopia.flow.operator.MaybeEmpty
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
 import utopia.vault.coder.model.scala.datatype.Reference
 
@@ -22,16 +23,9 @@ object ReadCodeBlock
   * @author Mikko Hilpinen
   * @since 1.11.2021, v1.3
   */
-case class ReadCodeBlock(lines: Vector[CodeLine])
+case class ReadCodeBlock(lines: Vector[CodeLine]) extends MaybeEmpty[ReadCodeBlock]
 {
-	/**
-	  * @return Whether this is an empty block of code
-	  */
-	def isEmpty = lines.isEmpty
-	/**
-	  * @return Whether this block contains at least one line of code
-	  */
-	def nonEmpty = lines.nonEmpty
+	// COMPUTED ----------------------
 	
 	/**
 	  * @return Whether this is a single line code block
@@ -41,6 +35,19 @@ case class ReadCodeBlock(lines: Vector[CodeLine])
 	  * @return Whether this block spans multiple lines
 	  */
 	def isMultiLine = lines.size > 1
+	
+	
+	// IMPLEMENTED  ------------------
+	
+	override def self = this
+	
+	/**
+	  * @return Whether this is an empty block of code
+	  */
+	override def isEmpty = lines.isEmpty
+	
+	
+	// OTHER    ----------------------
 	
 	/**
 	  * Converts this block to code

@@ -1,7 +1,7 @@
 package utopia.flow.parse.xml
 
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, EqualsFunction, ScopeUsable}
+import utopia.flow.operator.{ApproxEquals, EqualsFunction, MaybeEmpty, ScopeUsable}
 
 object Namespace
 {
@@ -25,28 +25,17 @@ object Namespace
   * @author Mikko Hilpinen
   * @since 20.6.2022, v1.15.1
   */
-case class Namespace(name: String) extends ScopeUsable[Namespace] with ApproxEquals[Namespace]
+case class Namespace(name: String)
+	extends ScopeUsable[Namespace] with ApproxEquals[Namespace] with MaybeEmpty[Namespace]
 {
-	// COMPUTED -------------------------
+	// IMPLEMENTED  ---------------------
+	
+	override def self = this
 	
 	/**
 	  * @return Whether this is an empty namespace
 	  */
-	def isEmpty = name.isEmpty
-	/**
-	  * @return Whether this is not an empty namespace
-	  */
-	def nonEmpty = !isEmpty
-	
-	/**
-	  * @return Some(this) if not empty, None otherwise
-	  */
-	def notEmpty = if (isEmpty) None else Some(this)
-	
-	
-	// IMPLEMENTED  ---------------------
-	
-	override def repr = this
+	override def isEmpty = name.isEmpty
 	
 	override def toString = name
 	

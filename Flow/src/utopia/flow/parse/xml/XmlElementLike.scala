@@ -58,6 +58,7 @@ object XmlElementLike
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
  */
+// TODO: Overwrite apply so that it may return attribute values, also
 trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     extends TreeLike[NamespacedString, Repr] with ModelConvertible
 {
@@ -66,7 +67,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     /**
       * @return "This" instance
       */
-    def repr: Repr
+    def self: Repr
     /**
       * @return Name of this xml element
       */
@@ -306,7 +307,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       */
     def valueOfChild(firstChildName: String, secondChildName: String, more: String*) = {
         val path = Vector(firstChildName, secondChildName) ++ more
-        path.foldLeftIterator(Some(repr): Option[Repr]) { (elem, next) => elem.flatMap { _.childWithName(next) } }
+        path.foldLeftIterator(Some(self): Option[Repr]) { (elem, next) => elem.flatMap { _.childWithName(next) } }
             .takeTo { _.isEmpty }
             .last
         match {

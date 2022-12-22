@@ -198,7 +198,7 @@ class ContextualFilledFramingBuilder[N, +F[X <: N] <: ContextualComponentFactory
 	{
 		val activeInsets = insets.toInsets
 		// The rounding amount is based on insets
-		val drawer = activeInsets.sides.map { _.optimal }.filter { _ > 0.0 }.minOption match
+		val drawer = activeInsets.lengths.map { _.optimal }.filter { _ > 0.0 }.minOption match
 		{
 			case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(background, minSideLength)
 			// If the insets default to 0, uses solid background drawing instead

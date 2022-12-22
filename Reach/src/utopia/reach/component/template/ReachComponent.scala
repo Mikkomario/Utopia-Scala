@@ -10,6 +10,7 @@ import utopia.reflection.component.template.layout.stack.CachingStackable2
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
+// TODO: Make an abstract class instead
 trait ReachComponent extends ReachComponentLike with CachingStackable2
 {
 	// ATTRIBUTES	-----------------------

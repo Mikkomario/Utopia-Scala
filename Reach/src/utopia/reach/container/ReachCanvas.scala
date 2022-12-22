@@ -30,6 +30,7 @@ import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
 import utopia.reflection.event.StackHierarchyListener
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reflection.shape.stack.StackSize
 
@@ -162,7 +163,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def drawBounds = Bounds(Point.origin, size)
 	
-	override def repaint() = super[ReachCanvasLike].repaint()
+	override def repaint() = {
+		currentPainter.foreach { _.resetBuffer() }
+		super[ReachCanvasLike].repaint()
+	}
 	
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
 	{
@@ -225,6 +229,27 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	// OTHER	------------------------------
 	
 	/**
+	  * Calculates the default window anchor position.
+	  * The anchor is placed at the center of the focused component by default.
+	  * If no component is in focus, a specific point within the window will be used instead.
+	  *
+	  * This function is intended to be passed as a window constructor's 'getAnchor' parameter.
+	  *
+	  * @param windowBounds Bounds of the resizing window (call-by-name)
+	  * @param defaultAlignment Alignment to use when no component is in focus.
+	  *                         E.g. When Left alignment is used, the window will expand to the right,
+	  *                         when BottomRight aligment is used, the window will expand up and left.
+	  *                         Default = Center = Window will attempt to expand equally on both / all sides.
+	  *
+	  * @return The anchor point to use at this time
+	  */
+	def anchorPosition(windowBounds: => Bounds, defaultAlignment: Alignment = Center) =
+		focusManager.absoluteFocusOwnerBounds match {
+			case Some(bounds) => bounds.center
+			case None => defaultAlignment.origin(windowBounds)
+		}
+	
+	/**
 	  * Creates a pop-up over the specified component-area
 	  * @param actorHandler Actor handler that will deliver action events for the pop-up
 	  * @param over Area over which the pop-up will be displayed
@@ -248,7 +273,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// newCanvas.isTransparent = true
 		val popup = Popup(this, newCanvas.parent, actorHandler, autoCloseLogic, alignment) { (_, popupSize) =>
 			// Calculates pop-up top left coordinates based on alignment
-			Point.calculateWith { axis =>
+			Point.fromFunction2D { axis =>
 				alignment(axis) match {
 					case Close => over.minAlong(axis) - popupSize(axis) - margin
 					case Middle => over.center(axis) - popupSize(axis) / 2

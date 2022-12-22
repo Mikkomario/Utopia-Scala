@@ -17,7 +17,7 @@ trait CanBeZero[+Repr] extends Any
 	/**
 	  * @return 'This' item
 	  */
-	def repr: Repr
+	def self: Repr
 	
 	/**
 	  * @return Whether this item is of zero length
@@ -34,7 +34,7 @@ trait CanBeZero[+Repr] extends Any
 	/**
 	  * @return This item if not zero. None otherwise.
 	  */
-	def notZero = if (isZero) None else Some(repr)
+	def notZero = if (isZero) None else Some(self)
 	
 	
 	// OTHER    ------------------------
@@ -44,12 +44,12 @@ trait CanBeZero[+Repr] extends Any
 	  * @tparam B Type of the default value
 	  * @return This item if not zero, otherwise the default value
 	  */
-	def nonZeroOrElse[B >: Repr](default: => B) = if (isZero) default else repr
+	def nonZeroOrElse[B >: Repr](default: => B) = if (isZero) default else self
 	/**
 	  * Maps this item, but only if not of value zero
 	  * @param f A mapping function to apply to non-zero items
 	  * @tparam B Type of map function result
 	  * @return This item if zero, otherwise the mapping function result
 	  */
-	def mapIfNotZero[B >: Repr](f: Repr => B) = if (isZero) repr else f(repr)
+	def mapIfNotZero[B >: Repr](f: Repr => B) = if (isZero) self else f(self)
 }

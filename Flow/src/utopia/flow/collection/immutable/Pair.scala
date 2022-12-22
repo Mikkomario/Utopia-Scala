@@ -1,14 +1,15 @@
 package utopia.flow.collection.immutable
 
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
-import utopia.flow.operator.{EqualsFunction, Sign}
+import utopia.flow.operator.{Combinable, EqualsFunction, Reversible, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
 import scala.collection.{IndexedSeqOps, mutable}
-import scala.language.implicitConversions
+import scala.language.{implicitConversions, reflectiveCalls}
 
 object Pair
 {
@@ -16,22 +17,6 @@ object Pair
 	
 	implicit def tupleToPair[A](tuple: (A, A)): Pair[A] = apply(tuple._1, tuple._2)
 	implicit def pairToTuple[A](pair: Pair[A]): (A, A) = pair.toTuple
-	
-	implicit class PairOfDoubles(val pair: Pair[Double]) extends AnyVal
-	{
-		/**
-		  * @return Difference between the two values in this pair
-		  */
-		def diff = pair.second - pair.first
-	}
-	
-	implicit class PairOfInts(val pair: Pair[Int]) extends AnyVal
-	{
-		/**
-		  * @return Difference between the two values in this pair
-		  */
-		def diff = pair.second - pair.first
-	}
 	
 	
 	// OTHER    ------------------------------------
@@ -53,8 +38,56 @@ object Pair
 	
 	// EXTENSIONS ----------------------------------
 	
+	implicit class SummingPair[A <: Combinable[A, A]](val p: Pair[A]) extends AnyVal
+	{
+		/**
+		  * @return The sum of the items in this pair
+		  */
+		def sum = p.first + p.second
+	}
+	
+	implicit class DifferencePair[A <: Combinable[A, R] with Reversible[A], R](val p: Pair[A]) extends AnyVal
+	{
+		/**
+		  * @return The difference between the items in this pair
+		  */
+		def diff = p.second - p.first
+	}
+	
+	implicit class NumericPair[N](val p: Pair[N])(implicit n: Numeric[N])
+	{
+		/**
+		  * @return Sum of the values in this pair
+		  */
+		def sum = n.plus(p.first, p.second)
+		/**
+		  * @return Difference between the values in this pair (second - first)
+		  */
+		def diff = n.minus(p.second, p.first)
+		/**
+		  * @param mod A multiplier
+		  * @return A multiplied copy of this pair
+		  */
+		def *(mod: N) = p.map { n.times(_, mod) }
+	}
+	
 	implicit class RichCollPair[A](val p: Pair[Iterable[A]]) extends AnyVal
 	{
+		/**
+		  * @return An iterator that returns items from both sides of this pair.
+		  *         The items in the first (left) collection are all returned
+		  *         before items from the second (right) collection.
+		  */
+		def flatIterator = p.first.iterator ++ p.second.iterator
+		/**
+		  * @return An iterator that returns items from both sides of this pair,
+		  *         including the side on which that item appears (Negative = first / left, Positive = second / right).
+		  *         The items in the first (left) collection are all returned
+		  *         before items from the second (right) collection.
+		  */
+		def flatIteratorWithSides =
+			p.first.iterator.map { _ -> Negative } ++ p.second.iterator.map { _ -> Positive }
+		
 		/**
 		  * @return Zips the two collections in this pair together.
 		  *         (but only on the overlapping area, i.e. the common size)
@@ -139,8 +172,8 @@ object Pair
  * @author Mikko Hilpinen
  * @since 21.9.2021, v1.12
  */
-// Currently cannot extend Reversible because of repr conflict in Iterable
-case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, IndexedSeq[A]] // with Reversible[Pair[A]]
+case class Pair[+A](first: A, second: A)
+	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, IndexedSeq[A]] with Reversible[Pair[A]]
 {
 	// COMPUTED --------------------------
 	
@@ -153,8 +186,6 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	 */
 	def toMap = Map(Negative -> first, Positive -> second)
 	
-	def unary_- = reverse
-	
 	/**
 	  * @return Whether the two values in this pair are equal
 	  */
@@ -162,15 +193,34 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	/**
 	  * @return Whether the two values in this pair are not equal
 	  */
+	def isAsymmetric = !isSymmetric
+	/**
+	  * @return Whether the two values in this pair are not equal
+	  */
+	@deprecated("Please use .isAsymmetric instead", "v2.0")
 	def isNotSymmetric = !isSymmetric
+	
+	/**
+	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
+	  *         Negative represents the left / first side, Positive represents the right / second side.
+	  */
+	def iteratorWithSides = iterator.zip(Sign.values)
+	
+	/**
+	  * @param ord Implicit ordering to apply
+	  * @tparam B Type of ordered values
+	  * @return A span from the first value of this pair to the second value of this pair
+	  */
+	def toSpan[B >: A](implicit ord: Ordering[B]) = Span[B](first, second)
 	
 	
 	// IMPLEMENTED  ----------------------
 	
-	// Cannot implement this because repr is final (and deprecated) in IterableOps for some reason (sheesh...)
-	// override def repr = this
+	override def self = this
 	
 	override def iterator: Iterator[A] = new PairIterator
+	
+	override def unary_- = reverse
 	
 	override def length = 2
 	override def knownSize = 2
@@ -193,15 +243,14 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	override def distinct = if (first == second) Vector(first) else this
 	override def distinctBy[B](f: A => B) = if (f(first) == f(second)) Vector(first) else this
 	
-	override def sorted[B >: A](implicit ord: Ordering[B]) = {
+	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = {
 		val cmp = ord.compare(first, second)
 		if (cmp > 0) reverse else this
 	}
 	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
 	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
 	
-	override def apply(index: Int) = (index: @switch) match
-	{
+	override def apply(index: Int) = (index: @switch) match {
 		case 0 => first
 		case 1 => second
 		case _ => throw new IndexOutOfBoundsException(s"Attempting to access index $index of a pair")
@@ -224,14 +273,6 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	
 	// OTHER    --------------------------
 	
-	/**
-	  * @param sign A sign
-	  * @return This pair on Positive, reversed copy on Negative
-	  */
-	def *(sign: Sign) = sign match {
-		case Positive => this
-		case Negative => reverse
-	}
 	/**
 	 * @param side A side (Positive = left = first, Negative = right = second)
 	 * @return The item of this pair from that side
@@ -315,6 +356,13 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 		case Negative => mapFirst(f)
 		case Positive => mapSecond(f)
 	}
+	/**
+	  * @param f A mapping function that accepts a value from this pair, and the side on which that value appears.
+	  *          Negative is the left / first side, Positive is the right / second side.
+	  * @tparam B Type of mapping results
+	  * @return A mapped copy of this pair
+	  */
+	def mapWithSides[B](f: (A, Sign) => B) = Pair(f(first, Negative), f(second, Positive))
 	
 	/**
 	  * @param f A reduce function that accepts the second item, then the first item
@@ -333,7 +381,6 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  */
 	def mergeWith[B, C](other: Pair[B])(f: (A, B) => C) =
 		Pair(f(first, other.first), f(second, other.second))
-	
 	/**
 	  * Merges this pair with another pair, resulting in a pair containing the entries from both
 	  * @param other Another pair
@@ -341,6 +388,13 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  * @return A pair that combines the values of both of these pairs in tuples
 	  */
 	def zip[B](other: Pair[B]) = Pair((first, other.first), (second, other.second))
+	/**
+	  * @param keys A pair of keys
+	  * @tparam K Type of keys used
+	  * @return A map where the specified set of pair are the keys and this pair are the values.
+	  *         The mapping is based on ordering (first to first, second to second)
+	  */
+	def toMapWith[K](keys: Pair[K]) = keys.iterator.zip(this).toMap
 	
 	/**
 	  * Merges together the two values in this pair using a function.
@@ -358,6 +412,46 @@ case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOp
 	  */
 	@deprecated("Renamed to .merge(...)", "v2.0")
 	def compareWith[B](f: (A, A) => B) = merge(f)
+	
+	/**
+	  * @param e An equals function
+	  * @return Whether the two values of this pair are equal when applying the specified function
+	  */
+	def equalsUsing(e: EqualsFunction[A]) = e.equals(first, second)
+	/**
+	  * @param e An equals function
+	  * @return Whether the two values of this pair are unequal when applying the specified function
+	  */
+	def notEqualsUsing(e: EqualsFunction[A]) = e.not(first, second)
+	/**
+	  * @param f A mapping function
+	  * @tparam B Type of mapping results
+	  * @return Whether the values in this pair are symmetric (i.e. equal) after applying the specified mapping function
+	  */
+	def isSymmetricBy[B](f: A => B) = merge { f(_) == f(_) }
+	/**
+	  * @param f A mapping function
+	  * @tparam B Type of mapping result
+	  * @return Whether the values in this pair are asymmetric (i.e. not equal)
+	  *         after applying the specified mapping function
+	  */
+	def isAsymmetricBy[B](f: A => B) = !isSymmetricBy(f)
+	
+	/**
+	  * @param other Another pair
+	  * @param eq Implicit equals function to use
+	  * @tparam B Type of values in the other pair
+	  * @return Whether these pairs are equal when using the specified function
+	  */
+	def ~==[B >: A](other: Pair[B])(implicit eq: EqualsFunction[B]) =
+		eq(first, other.first) && eq(second, other.second)
+	/**
+	  * @param other Another pair
+	  * @param eq    Implicit equals function to use
+	  * @tparam B Type of values in the other pair
+	  * @return Whether these pairs are not equal when using the specified function
+	  */
+	def !~==[B >: A](other: Pair[B])(implicit eq: EqualsFunction[B]) = !(this ~== other)
 	
 	
 	// NESTED   ------------------------------

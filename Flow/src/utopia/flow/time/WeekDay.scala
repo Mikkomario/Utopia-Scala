@@ -145,7 +145,7 @@ object WeekDay
 	object Monday extends WeekDay
 	{
 		override val index = 1
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.MONDAY
 		override def toString = "Monday"
 	}
@@ -153,7 +153,7 @@ object WeekDay
 	object Tuesday extends WeekDay
 	{
 		override val index = 2
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.TUESDAY
 		override def toString = "Tuesday"
 	}
@@ -161,7 +161,7 @@ object WeekDay
 	object Wednesday extends WeekDay
 	{
 		override val index = 3
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.WEDNESDAY
 		override def toString = "Wednesday"
 	}
@@ -169,7 +169,7 @@ object WeekDay
 	object Thursday extends WeekDay
 	{
 		override val index = 4
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.THURSDAY
 		override def toString = "Thursday"
 	}
@@ -177,7 +177,7 @@ object WeekDay
 	object Friday extends WeekDay
 	{
 		override val index = 5
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.FRIDAY
 		override def toString = "Friday"
 	}
@@ -185,7 +185,7 @@ object WeekDay
 	object Saturday extends WeekDay
 	{
 		override val index = 6
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.SATURDAY
 		override def toString = "Saturday"
 	}
@@ -193,7 +193,7 @@ object WeekDay
 	object Sunday extends WeekDay
 	{
 		override val index = 7
-		override def repr = this
+		override def self = this
 		override def toJava = DayOfWeek.SUNDAY
 		override def toString = "Sunday"
 	}

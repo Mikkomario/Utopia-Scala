@@ -11,7 +11,7 @@ object Dimensional
 	implicit class NumericDimensional[A, +R](val d: Dimensional[A, R])(implicit n: Numeric[A])
 		extends Combinable[HasDimensions[A], R] with Reversible[R] with Scalable[A, R]
 	{
-		override def repr = d.repr
+		override def self = d.self
 		
 		override def unary_- = d.mapEachDimension(n.negate)
 		
@@ -36,7 +36,7 @@ object Dimensional
 	implicit class ReversibleDimensional[A <: Reversible[A], +R](val d: Dimensional[A, R])
 		extends AnyVal with Reversible[R]
 	{
-		override def repr = d.repr
+		override def self = d.self
 		
 		override def unary_- = d.mapEachDimension { -_ }
 	}
@@ -159,7 +159,7 @@ trait Dimensional[A, +Repr] extends HasDimensions[A] with CanBeZero[Repr]
 	  *         Otherwise a copy of this item with a zero value on that axis.
 	  */
 	def positiveAlong(axis: Axis)(implicit ord: Ordering[A]) = {
-		if (isNegativeAlong(axis)) withDimension(axis, dimensions.zeroValue) else repr
+		if (isNegativeAlong(axis)) withDimension(axis, dimensions.zeroValue) else self
 	}
 	/**
 	  * @param axis Target axis
@@ -167,6 +167,6 @@ trait Dimensional[A, +Repr] extends HasDimensions[A] with CanBeZero[Repr]
 	  *         Otherwise a copy of this item with a zero value on that axis.
 	  */
 	def negativeAlong(axis: Axis)(implicit ord: Ordering[A]) = {
-		if (isPositiveAlong(axis)) withDimension(axis, dimensions.zeroValue) else repr
+		if (isPositiveAlong(axis)) withDimension(axis, dimensions.zeroValue) else self
 	}
 }

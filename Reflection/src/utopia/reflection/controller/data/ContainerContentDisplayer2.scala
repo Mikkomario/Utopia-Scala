@@ -97,7 +97,8 @@ object ContainerContentDisplayer2
 class ContainerContentDisplayer2[A, -W, Display <: Refreshable[A] with ComponentLike2, +P <: Changing[Vector[A]]]
 (protected val container: MutableMultiContainer2[W, Display], override val contentPointer: P,
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
-(makeItem: A => W) extends ContentDisplayer[A, Display, P]
+(makeItem: A => W)
+	extends ContentDisplayer[A, Display, P]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -111,11 +112,10 @@ class ContainerContentDisplayer2[A, -W, Display <: Refreshable[A] with Component
 	
 	// IMPLEMENTED	-----------------------
 	
-	override protected def representSameItem(a: A, b: A) = sameItemCheck(a, b)
-	
 	override protected def contentIsStateless = equalsCheck.isEmpty
 	
-	override protected def itemsAreEqual(a: A, b: A) = equalsCheck.map { _(a, b) }.getOrElse(sameItemCheck(a, b))
+	override protected def representSameItem(a: A, b: A) = sameItemCheck(a, b)
+	override protected def itemsAreEqual(a: A, b: A) = equalsCheck.getOrElse(sameItemCheck)(a, b)
 	
 	override def displays = container.components.toVector
 	
@@ -128,8 +128,7 @@ class ContainerContentDisplayer2[A, -W, Display <: Refreshable[A] with Component
 			else
 				current.splitAt(values.size)
 		}.toVector
-		if (existingSlots.nonEmpty)
-		{
+		if (existingSlots.nonEmpty) {
 			existingSlots.zip(values).foreach { case (d, v) => d.content = v }
 			container.addBack(existingSlots, index)
 		}

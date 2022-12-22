@@ -166,40 +166,32 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	// IMPLEMENTED	------------------------
 	
 	override def direction = _direction
-	def direction_=(newDirection: Axis2D) =
-	{
-		if (_direction != newDirection)
-		{
+	def direction_=(newDirection: Axis2D) = {
+		if (_direction != newDirection) {
 			_direction = newDirection
 			revalidate()
 		}
 	}
 	
 	override def layout = _layout
-	def layout_=(newLayout: StackLayout) =
-	{
-		if (_layout != newLayout)
-		{
+	def layout_=(newLayout: StackLayout) = {
+		if (_layout != newLayout) {
 			_layout = newLayout
 			revalidate()
 		}
 	}
 	
 	override def margin = _margin
-	def margin_=(newMargin: StackLength) =
-	{
-		if (_margin != newMargin)
-		{
+	def margin_=(newMargin: StackLength) = {
+		if (_margin != newMargin) {
 			_margin = newMargin
 			revalidate()
 		}
 	}
 	
 	override def cap = _cap
-	def cap_=(newCap: StackLength) =
-	{
-		if (_cap != newCap)
-		{
+	def cap_=(newCap: StackLength) = {
+		if (_cap != newCap) {
 			_cap = newCap
 			revalidate()
 		}
@@ -207,22 +199,18 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	
 	override def children = components
 	
-	override protected def add(component: OpenComponent[C, _], index: Int) =
-	{
-		if (!contains(component.component))
-		{
+	override protected def add(component: OpenComponent[C, _], index: Int) = {
+		if (!contains(component.component)) {
 			_components = (_components.take(index) :+ component.component) ++ _components.drop(index)
 			updatePointerFor(component)
 			revalidate()
 		}
 	}
 	
-	override protected def add(components: IterableOnce[OpenComponent[C, _]], index: Int) =
-	{
+	override protected def add(components: IterableOnce[OpenComponent[C, _]], index: Int) = {
 		// Needs to buffer the components (iterating multiple times)
 		val newComps = components.iterator.filterNot { c => contains(c.component) }.toVector
-		if (newComps.nonEmpty)
-		{
+		if (newComps.nonEmpty) {
 			_components = _components.take(index) ++ newComps.map { _.component } ++ _components.drop(index)
 			newComps.foreach(updatePointerFor)
 			revalidate()
@@ -230,15 +218,13 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	}
 	
 	// Disconnects the component and revalidates this container
-	override protected def remove(component: C) =
-	{
+	override protected def remove(component: C) = {
 		_components = _components.filterNot { _ == component }
 		pointers.get(component.hashCode()).foreach { _.value = false }
 		revalidate()
 	}
 	
-	override protected def remove(components: IterableOnce[C]) =
-	{
+	override protected def remove(components: IterableOnce[C]) = {
 		val buffered = components.iterator.toSet
 		_components = _components.filterNot(buffered.contains)
 		buffered.iterator.flatMap { c => pointers.get(c.hashCode()) }.foreach { _.value = false }
@@ -254,21 +240,17 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	  * @throws NoSuchElementException If the specified component has never been added to this stack previously
 	  */
 	@throws[NoSuchElementException]
-	override def addBack(component: C, index: Int = _components.size) =
-	{
-		if (!contains(component))
-		{
+	override def addBack(component: C, index: Int = _components.size) = {
+		if (!contains(component)) {
 			_components = (_components.take(index) :+ component) ++ _components.drop(index)
 			pointers(component.hashCode()).value = true
 			revalidate()
 		}
 	}
 	
-	override def addBack(components: IterableOnce[C], index: Int) =
-	{
+	override def addBack(components: IterableOnce[C], index: Int) = {
 		val newComps = components.iterator.filterNot(contains).toVector
-		if (newComps.nonEmpty)
-		{
+		if (newComps.nonEmpty) {
 			_components = _components.take(index) ++ newComps ++ _components.drop(index)
 			newComps.foreach { c => pointers(c.hashCode()).value = true }
 			revalidate()
@@ -284,10 +266,8 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	  */
 	def contains(component: C) = components.contains(component)
 	
-	private def updatePointerFor(c: OpenComponent[C, _]) =
-	{
-		pointers.get(c.component.hashCode()) match
-		{
+	private def updatePointerFor(c: OpenComponent[C, _]) = {
+		pointers.get(c.component.hashCode()) match {
 			case Some(existingPointer) => existingPointer.value = true
 			case None =>
 				val newPointer = new PointerWithEvents(true)

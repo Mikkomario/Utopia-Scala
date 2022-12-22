@@ -91,7 +91,7 @@ object ContainerSingleSelectionManager
   */
 class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with ComponentLike2, +PA <: Changing[Vector[A]]]
 (container: MutableMultiContainer2[W, Display], contentPointer: PA,
- override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+ override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => W)
 	extends ContainerContentDisplayer2[A, W, Display, PA](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)

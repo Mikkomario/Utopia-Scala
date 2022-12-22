@@ -125,7 +125,7 @@ class ViewGraphNode[N, E](valueView: View[N], override val leavingEdges: Iterabl
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override protected def repr = this
+	override def self = this
 	
 	override def value = valueView.value
 	

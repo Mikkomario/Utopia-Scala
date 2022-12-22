@@ -5,9 +5,31 @@
 - Rewrote **Dimensional**, **VectorLike** and similar traits completely
   - **Dimensional** is now **HasDimensions** (a new trait with name **Dimensional** was also introduced)
   - **VectorLike** is now **DoubleVectorLike**
+- **Bounds** now extends **Dimensional**, causing `.x` and `.y` to function differently
 - Moved all **ParadigmDataType** objects under the **ParadigmDataType** object
 - Renamed **Sized** to **HasSize** and **Bounded** to **HasBounds**
   - Renamed **SizedLike** to **Sized** and **BoundedLike** to **Bounded**
+- Made a number of changes to **InsetsLike**:
+  - **InsetsFactory** now only takes two type parameters
+  - Renamed `.makeZero` to `.zeroLength`
+  - Renamed `.makeCopy(...)` to `.withAmounts(...)`
+  - Renamed `.combine(...)` to `.plus(...)`
+  - Renamed `.sides` to `.lengths`
+  - **InsetsLike** now extends **Dimensional**
+### Deprecations
+- Deprecated `.darkened(Double)` and `.lightened(Double)` in **HslLike** 
+  in favor of `.darkened`, `.lightened`, `.darkenedBy(Double)` and `.lightenedBy(Double)` in **Color**
+### New Methods
+- **Bounded**
+  - Added `.shiftedInto(Bounds)` and `.fittedInto(Bounds)` -functions
+- **Color**
+  - Added darkening, lightening and highlighting functions
+- **HasBounds**
+  - Added `.centerLeft`, `.centerRight`, `.centerTop`, `.centerBottom`, `.centerX` and `.centerY` -properties
+- **HslLike**
+  - Added `.darkness` and -related functions (darkness is just inverse of luminance)
+- **Insets**
+  - Added `.mapWithDirection(...)`
 
 ## v1.1 - 02.10.2022
 This is a relatively major update, most important addition in which is the **Vector1D** class.  

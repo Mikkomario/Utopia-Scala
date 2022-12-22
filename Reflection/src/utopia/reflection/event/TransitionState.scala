@@ -16,7 +16,7 @@ object TransitionState
 	  */
 	case object NotStarted extends TransitionState
 	{
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: TransitionState) = o match
 		{
@@ -30,7 +30,7 @@ object TransitionState
 	  */
 	case object Ongoing extends TransitionState
 	{
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: TransitionState) = o match
 		{
@@ -45,7 +45,7 @@ object TransitionState
 	  */
 	case object Finished extends TransitionState
 	{
-		override def repr = this
+		override def self = this
 		
 		override def compareTo(o: TransitionState) = o match
 		{

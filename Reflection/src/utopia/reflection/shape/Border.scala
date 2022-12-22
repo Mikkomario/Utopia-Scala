@@ -161,28 +161,25 @@ object Border
 	  * Creates a new border that looks like it was raised
 	  * @param w The width of each side
 	  * @param baseColor Base color (actual colors will vary based on variance mod)
-	  * @param varianceMod The lightening / darkening mod used to alter the base color
+	  * @param intensity The intensity of color change applied where 0 is no change and 1 is the default change
 	  * @return A new border
 	  */
-	def raised(w: Double, baseColor: Color, varianceMod: Double) =
+	def raised(w: Double, baseColor: Color, intensity: Double = 1.0) =
 	{
-		// Amount of variance depends from the base color luminosity
-		val luminosityMod = baseColor.luminosity
-		
-		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod * 0.5 * (1 - luminosityMod) + 0.1))
-		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod * luminosityMod + 0.1), dark)
+		val dark = Border(Insets(0, w, 0, w), baseColor.darkenedBy(intensity))
+		val light = Border(dark.insets.opposite, baseColor.lightenedBy(intensity), dark)
 		
 		light
 	}
-	
 	/**
 	  * Creates a new border that looks like it was lowered
 	  * @param w The width of each side
 	  * @param baseColor Base color (actual colors will vary based on variance mod)
-	  * @param varianceMod The lightening / darkening mod used to alter the base color
+	  * @param intensity The intensity of color change applied where 0 is no change and 1 is the default change
 	  * @return A new border
 	  */
-	def lowered(w: Double, baseColor: Color, varianceMod: Double) = raised(w, baseColor, varianceMod).opposite
+	def lowered(w: Double, baseColor: Color, intensity: Double = 1.0) =
+		raised(w, baseColor, intensity).opposite
 }
 
 /**

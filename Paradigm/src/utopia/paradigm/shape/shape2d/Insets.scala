@@ -6,7 +6,7 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import scala.collection.immutable.HashMap
 
-object Insets extends InsetsFactory[Double, Size, Insets, Insets]
+object Insets extends InsetsFactory[Double, Insets]
 {
     // ATTRIBUTES   ------------------------
     
@@ -37,15 +37,20 @@ object Insets extends InsetsFactory[Double, Size, Insets, Insets]
 **/
 case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, Size, Insets]
 {
+    // ATTRIBUTES   --------------
+    
+    lazy override val dimensions = super.dimensions
+    
+    
     // IMPLEMENTED  --------------
     
-    override def repr = this
+    override def self = this
     
-    override protected def makeCopy(newAmounts: Map[Direction2D, Double]) = Insets(newAmounts)
+    override protected def withAmounts(newAmounts: Map[Direction2D, Double]) = Insets(newAmounts)
     
-    override protected def makeZero = 0.0
+    override protected def zeroLength = 0.0
     
-    override protected def combine(first: Double, second: Double) = first + second
+    override protected def plus(first: Double, second: Double) = first + second
     
     override protected def multiply(a: Double, multiplier: Double) = a * multiplier
     

@@ -153,7 +153,7 @@ object AsyncExtensions
 		}
 	}
 	
-	implicit class TryFuture[A](val f: Future[Try[A]]) extends AnyVal
+	implicit class FutureTry[A](val f: Future[Try[A]]) extends AnyVal
 	{
 		/**
 		  * @return The current result of this future, but only if successful.
@@ -265,7 +265,7 @@ object AsyncExtensions
 			this.f.onComplete { r => f(r.flatten) }
 	}
 	
-	implicit class FutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal
+	implicit class TryFutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal
 	{
 		/**
 		 * @return This try as a future

@@ -181,7 +181,7 @@ class Vector3D private(override val dimensions: Dimensions[Double])
 	
 	override def toString = s"($x, $y, $z)"
 	
-	override def repr = this
+	override def self = this
 	
 	override def toValue = new Value(Some(this), Vector3DType)
 	

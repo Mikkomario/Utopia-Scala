@@ -81,7 +81,7 @@ class Vector2D private(override val dimensions: Dimensions[Double])
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override def zero = Vector2D.zero
 	

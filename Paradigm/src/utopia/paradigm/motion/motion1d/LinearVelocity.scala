@@ -78,7 +78,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	override def isZero = amount == 0.0 || duration.isInfinite
 	override def isAboutZero = (amount ~== 0.0) || duration.isInfinite
 	
-	override def repr = this
+	override def self = this
 	
 	override def toString = s"$perMilliSecond/ms"
 	

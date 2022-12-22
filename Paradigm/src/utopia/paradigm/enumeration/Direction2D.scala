@@ -120,7 +120,7 @@ sealed trait Direction2D extends Direction2DLike[Direction2D, Direction2D]
   */
 sealed trait HorizontalDirection extends Direction2D with Direction2DLike[HorizontalDirection, VerticalDirection]
 {
-	override def repr = this
+	override def self = this
 	
 	override def axis = X
 	
@@ -132,7 +132,7 @@ sealed trait HorizontalDirection extends Direction2D with Direction2DLike[Horizo
   */
 sealed trait VerticalDirection extends Direction2D with Direction2DLike[VerticalDirection, HorizontalDirection]
 {
-	override def repr = this
+	override def self = this
 	
 	override def axis = Y
 	

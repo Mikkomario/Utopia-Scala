@@ -53,6 +53,11 @@ trait FlagLike extends Any with Changing[Boolean]
 		case None => map { !_ }
 	}
 	
+	/**
+	  * @return Future that resolves when this flag is set
+	  */
+	def future = findMapFuture { if (_) Some(()) else None }
+	
 	
 	// OTHER	-----------------
 	

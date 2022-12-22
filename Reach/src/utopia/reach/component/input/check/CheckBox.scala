@@ -23,6 +23,7 @@ import utopia.reflection.event.ButtonState
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.shape.LengthExtensions._
 
+// TODO: Also add a component for text box + label
 object CheckBox
 	extends ContextInsertableComponentFactoryFactory[ColorContextLike, CheckBoxFactory, ContextualCheckBoxFactory]
 {
@@ -154,6 +155,7 @@ case class FullContextualCheckBoxFactory[+N <: ColorContextLike](factory: Contex
   * @author Mikko Hilpinen
   * @since 25.2.2021, v0.1
   */
+// TODO: Change value pointer to a resettable flag
 class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Image, onHoverColor: Color,
                offHoverColor: Color, hoverRadius: Double = 0.0,
                override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),

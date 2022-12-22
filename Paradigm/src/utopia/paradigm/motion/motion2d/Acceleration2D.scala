@@ -66,7 +66,7 @@ case class Acceleration2D(override val amount: Velocity2D, override val duration
 	
 	override def zero = Acceleration2D.zero
 	
-	override def repr = this
+	override def self = this
 	
 	override protected def buildCopy(amount: Velocity2D, duration: Duration) = copy(amount, duration)
 	

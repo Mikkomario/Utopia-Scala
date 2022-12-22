@@ -73,7 +73,7 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	
 	override def +(another: ColorContrast) = ColorContrast(ratio + another.ratio)
 	
-	override def repr = this
+	override def self = this
 	
 	override def *(mod: Double) = ColorContrast(ratio * mod)
 	

@@ -1,6 +1,7 @@
 package utopia.reach.component.input.selection
 
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -8,13 +9,13 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
-import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
@@ -60,8 +61,12 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 	  * @param layout Stack layout used for determining display breadth (default = Fit = all have same breadth)
 	  * @param margin Margin placed between selectable items (default = any, preferring 0)
 	  * @param cap Cap placed at both ends of this list (default = always 0)
+	  * @param highlightModifier A modifier applied for selection and focus color highlights (default = 1.0)
 	  * @param sameItemCheck A function for testing whether two items should be considered equal
 	  *                      (specify only if equals method should <b>not</b> be used) (default = None)
+	  * @param alternativeKeyCondition A function that returns true in cases where selection key events should be
+	  *                                enabled. Key events are always enabled while this list is in focus.
+	  *                                Default = false = Key events are received only while in focus.
 	  * @param makeDisplay A function for creating a new display component. Accepts parent component hierarchy and
 	  *                    the initially displayed item.
 	  * @tparam A Type of displayed / selected value
@@ -73,9 +78,12 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[ComponentColor], contentPointer: P,
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), direction: Axis2D = Y,
 	 layout: StackLayout = Fit, margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
-	 sameItemCheck: Option[(A, A) => Boolean] = None)(makeDisplay: (ComponentHierarchy, A) => C) =
+	 highlightModifier: Double = 1.0, sameItemCheck: Option[EqualsFunction[A]] = None,
+	 alternativeKeyCondition: => Boolean = false)
+	(makeDisplay: (ComponentHierarchy, A) => C) =
 		new SelectionList[A, C, P](parentHierarchy, actorHandler, contextBackgroundPointer, contentPointer,
-			valuePointer, direction, layout, margin, cap, sameItemCheck)(makeDisplay)
+			valuePointer, direction, layout, margin, cap, highlightModifier, sameItemCheck,
+			alternativeKeyCondition)(makeDisplay)
 }
 
 case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: SelectionListFactory, context: N)
@@ -103,10 +111,11 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 direction: Axis2D = Y, layout: StackLayout = Fit, margin: StackLength = context.defaultStackMargin,
-	 cap: StackLength = StackLength.fixedZero, sameItemCheck: Option[(A, A) => Boolean] = None)
+	 cap: StackLength = StackLength.fixedZero,  highlightModifier: Double = 1.0,
+	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		factory(context.actorHandler, Fixed(context.containerBackground), contentPointer, valuePointer, direction,
-			layout, margin, cap, sameItemCheck)(makeDisplay)
+			layout, margin, cap, highlightModifier, sameItemCheck, alternativeKeyCondition)(makeDisplay)
 }
 
 /**
@@ -117,8 +126,8 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[ComponentColor],
  override val contentPointer: P, override val valuePointer: PointerWithEvents[Option[A]], direction: Axis2D,
- layout: StackLayout, margin: StackLength, cap: StackLength,
- sameItemCheck: Option[(A, A) => Boolean])
+ layout: StackLayout, margin: StackLength, cap: StackLength, highlightModifier: Double,
+ sameItemCheck: Option[EqualsFunction[A]], alternativeKeyCondition: => Boolean)
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P] with CursorDefining
@@ -132,15 +141,27 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	override var focusListeners: Seq[FocusListener] = Vector(focusTracker)
 	
 	private val stack = MutableStack(parentHierarchy)[C](direction, layout, margin, cap)
-	private val manager = sameItemCheck match
-	{
+	private val manager = sameItemCheck match {
 		case Some(check) => ContainerSingleSelectionManager.forImmutableStates(stack, contentPointer,
 			valuePointer)(check) { item => Open { makeDisplay(_, item) } }
 		case None => ContainerSingleSelectionManager.forStatelessItems(stack, contentPointer, valuePointer) { item =>
 			Open { makeDisplay(_, item) } }
 	}
 	
-	private val keyListener = SelectionKeyListener2.along(direction, hasFocus)(manager.moveSelection)
+	/**
+	  * A pointer that contains the currently selected sub-area within this list.
+	  * The origin (0,0) coordinates of the contained bounds are the position of this list.
+	  */
+	lazy val selectedAreaPointer = manager.selectedDisplayPointer.flatMap { _.headOption match {
+		case Some(display) =>
+			display.boundsPointer.map { b =>
+				stack.areaOf(display).filter { _.size.dimensions.forall { _ > 0.0 } }.orElse { Some(b) }
+			}
+		case None => Fixed(None)
+	} }
+	
+	private val keyListener = SelectionKeyListener2
+		.along(direction, hasFocus || alternativeKeyCondition)(manager.moveSelection)
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
 		Bounds.aroundOption(e.values.flatten).foreach { area => repaintArea(area.enlarged(direction(margin.optimal)), High) }
 		true
@@ -155,7 +176,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			GlobalMouseEventHandler += GlobalMouseReleaseListener
 			actorHandler += keyListener
 			addCustomDrawer(SelectionDrawer)
-			SelectionDrawer.selectedAreaPointer.addListener(repaintAreaListener)
+			selectedAreaPointer.addListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.addListener(repaintAreaListener)
 			canvas.cursorManager.foreach { _ += this }
 			enableFocusHandling()
@@ -165,7 +186,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			GlobalMouseEventHandler -= GlobalMouseReleaseListener
 			actorHandler -= keyListener
 			removeCustomDrawer(SelectionDrawer)
-			SelectionDrawer.selectedAreaPointer.removeListener(repaintAreaListener)
+			selectedAreaPointer.removeListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.removeListener(repaintAreaListener)
 			canvas.cursorManager.foreach { _ -= this }
 			disableFocusHandling()
@@ -173,7 +194,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	}
 	
 	// Repaints selected area when focus changes
-	focusPointer.addContinuousAnyChangeListener { SelectionDrawer.selectedAreaPointer.value.foreach { repaintArea(_) } }
+	focusPointer.addContinuousAnyChangeListener { selectedAreaPointer.value.foreach { repaintArea(_) } }
 	
 	// Listens to local mouse events
 	addMouseButtonListener(LocalMouseListener)
@@ -266,14 +287,15 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
+			if (!hasFocus)
+				requestFocus()
 			pressedDisplay = hoverComponentPointer.value
 			SelectionDrawer.hoverAreaPointer.value.foreach { repaintArea(_, High) }
 			pressedDisplay.map { d => ConsumeEvent(s"Pressed display $d") }
 		}
 		
 		// Only listens to mouse presses while the mouse is over this component
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
-		{
+		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
 			case MouseButtonStateHandlerType => relativeMousePosition.isDefined
 			case _ => true
 		}
@@ -305,7 +327,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	{
 		// ATTRIBUTES	---------------------------
 		
-		val selectedAreaPointer = manager.selectedDisplayPointer.map { _.headOption.flatMap(stack.areaOf) }
 		val hoverAreaPointer = LocalMouseListener.hoverComponentPointer.map { _.flatMap(stack.areaOf) }
 		
 		
@@ -324,12 +345,10 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			
 			// Checks whether currently selected area and the mouse area overlap
 			if (manager.selectedDisplay.exists(LocalMouseListener.currentDisplayUnderCursor.contains))
-				draw(selectedAreaPointer, if (LocalMouseListener.isPressed) 0.225 else if (hasFocus) 0.15 else 0.075)
-			else
-			{
-				if (hasFocus)
-					draw(selectedAreaPointer, 0.15)
-				draw(hoverAreaPointer, if (LocalMouseListener.isPressed) 0.225 else 0.075)
+				draw(selectedAreaPointer, if (LocalMouseListener.isPressed) 4 else if (hasFocus) 3 else 1)
+			else {
+				draw(selectedAreaPointer, if (hasFocus) 2 else 1)
+				draw(hoverAreaPointer, if (LocalMouseListener.isPressed) 3 else 1)
 			}
 		}
 	}

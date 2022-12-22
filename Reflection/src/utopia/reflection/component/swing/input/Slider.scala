@@ -339,24 +339,10 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		if (state.isInFocus) base + 1 else base
 	}
 	
-	private def currentKnobColor =
-	{
+	private def currentKnobColor = {
 		val base = knobColor(doubleValue)
 		val changes = colorChangeIterations
-		val changed =
-		{
-			if (changes > 0)
-			{
-				if (base.luminosity < 0.6)
-					Iterator.iterate(base) { _.lightened(1 + 0.4 * colorVariationIntensity) }
-						.drop(changes).next()
-				else
-					Iterator.iterate(base) { _.darkened(1 + 0.4 * colorVariationIntensity) }
-						.drop(changes).next()
-			}
-			else
-				base
-		}
+		val changed = if (changes > 0) base.highlightedBy(changes) else base
 		if (enabled)
 			changed
 		else
@@ -523,9 +509,9 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			val knobRadius = ((targetKnobDiameter min bounds.height) min bounds.width) / 2.0
-			val lineStartX = bounds.x + knobRadius
+			val lineStartX = bounds.leftX + knobRadius
 			val lineWidth = bounds.width - knobRadius * 2
-			val lineY = bounds.y + bounds.height / 2.0
+			val lineY = bounds.topY + bounds.height / 2.0
 			val leftSideWidth = lineWidth * doubleValue
 			val thresholdX = lineStartX + leftSideWidth
 			// Draws the right side line first

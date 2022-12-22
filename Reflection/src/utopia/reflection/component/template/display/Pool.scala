@@ -2,8 +2,7 @@ package utopia.reflection.component.template.display
 
 object Pool
 {
-	implicit class MultiPool(val p: Pool[Iterable[_]]) extends AnyVal
-	{
+	implicit class MultiPool(val p: Pool[Iterable[_]]) extends AnyVal {
 		/**
 		  * @return The current item count in this pool
 		  */
@@ -13,7 +12,6 @@ object Pool
 		  * @return Whether there is currently no content in this pool
 		  */
 		def isEmpty = p.content.isEmpty
-		
 		/**
 		  * @return Whether there is currently content in this pool
 		  */

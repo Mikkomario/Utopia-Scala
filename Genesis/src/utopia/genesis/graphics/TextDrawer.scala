@@ -16,7 +16,7 @@ class TextDrawer(protected override val graphics: LazyGraphics, color: Color) ex
 {
 	// IMPLEMENTED  -----------------------------
 	
-	override def repr = this
+	override def self = this
 	
 	override protected def withGraphics(newGraphics: LazyGraphics) = new TextDrawer(newGraphics, color)
 	

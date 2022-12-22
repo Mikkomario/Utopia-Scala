@@ -1,6 +1,6 @@
 package utopia.genesis.image
 
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.{LinearScalable, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
@@ -57,14 +57,14 @@ object Image
 		if (readClass.isDefined || Files.exists(path))
 		{
 			// ImageIO and class may return null. Image is read through class, if one is provided
-			val readResult = Try { readClass.map { c => Option(c.getResourceAsStream("/" + path.toString))
+			val readResult = Try { readClass.map { c => Option(c.getResourceAsStream(s"/${ path.toString }"))
 				.flatMap { _.consume { stream => Option(ImageIO.read(stream)) } } }
 				.getOrElse { Option(ImageIO.read(path.toFile)) } }
 			
 			readResult.flatMap
 			{
 				case Some(result) => Success(apply(result))
-				case None => Failure(new NoImageReaderAvailableException("Cannot read image from file: " + path.toString))
+				case None => Failure(new NoImageReaderAvailableException(s"Cannot read image from file: ${ path.toString }"))
 			}
 		}
 		else
@@ -168,7 +168,7 @@ object Image
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: Lazy[PixelTable])
-	extends ImageLike with LinearScalable[Image] with Sized[Image]
+	extends ImageLike with LinearScalable[Image] with Sized[Image] with MaybeEmpty[Image]
 {
 	// ATTRIBUTES	----------------
 	
@@ -276,12 +276,13 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	// IMPLEMENTED	----------------
 	
-	override def repr = this
+	override def self = this
 	
 	/**
 	  * @return Whether this image is actually completely empty
 	  */
 	override def isEmpty = source.isEmpty
+	override def nonEmpty = !isEmpty
 	
 	override def preCalculatedPixels = _pixels.current
 	/**
@@ -395,7 +396,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def subImage(area: Bounds) = source match {
 		case Some(source) =>
-			area.intersectionWith(Bounds(Point.origin, size)) match {
+			area.overlapWith(Bounds(Point.origin, size)) match {
 				case Some(overlap) => _subImage(source, overlap / scaling)
 				case None => Image(new BufferedImage(0, 0, source.getType), scaling, alpha,
 					specifiedOrigin.map { _ - area.position / scaling })
@@ -405,7 +406,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	// Only works when specified area is inside the original image's bounds
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) =
 	{
-		val newSource = img.getSubimage(relativeArea.x.toInt, relativeArea.y.toInt, relativeArea.width.toInt,
+		val newSource = img.getSubimage(relativeArea.leftX.toInt, relativeArea.topY.toInt, relativeArea.width.toInt,
 			relativeArea.height.toInt)
 		Image(newSource, scaling, alpha, specifiedOrigin.map { _ - relativeArea.position })
 	}
