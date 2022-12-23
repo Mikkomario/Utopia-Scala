@@ -8,5 +8,6 @@
     <inspection_tool class="ScalaUnusedSymbol" enabled="true" level="WEAK WARNING" enabled_by_default="true">
       <option name="reportPublicDeclarations" value="false" />
     </inspection_tool>
+    <inspection_tool class="ScalaWeakerAccess" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
   </profile>
 </component>

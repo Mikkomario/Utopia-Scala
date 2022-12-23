@@ -80,13 +80,6 @@ sealed trait Axis2D extends Axis
     // OTHER    ----------------------------
     
     /**
-      * @param isPositive Whether direction should be positive (true) or negative (false)
-      * @return A direction along this axis with specified sign
-      */
-    @deprecated("Please use toDirection(Sign) instead")
-    def direction(isPositive: Boolean) = Direction2D(this, if (isPositive) Positive else Negative)
-    
-    /**
       * @param sign Sign of the resulting direction
       * @return A direction along this axis with specified sign
       */

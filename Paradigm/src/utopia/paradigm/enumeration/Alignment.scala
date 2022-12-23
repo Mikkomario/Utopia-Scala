@@ -98,19 +98,6 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	def verticalDirection: Option[VerticalDirection] = vertical.direction.map { enumeration.VerticalDirection(_) }
 	
 	/**
-	  * @return Either positive, negative or None, based on whether this alignment will move items right, left
-	  *         or to neither direction
-	  */
-	@deprecated("Please use .horizontal.direction instead", "v2.6.3")
-	def horizontalDirectionSign = horizontalDirection.map { _.sign }
-	/**
-	  * @return Either positive, negative or None, based on whether this alignment will move items down, up
-	  *         or to neither direction
-	  */
-	@deprecated("Please use .vertical.direction instead", "v2.6.3")
-	def verticalDirectionSign = verticalDirection.map { _.sign }
-	
-	/**
 	  * @return A copy of this alignment that doesn't move items horizontally
 	  */
 	def onlyVertical = withHorizontal(Middle)

@@ -141,22 +141,24 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
 {
     // ATTRIBUTES   ----------------------
     
-    override lazy val dimensions = data.rightOrMap { case (position, size) =>
+    override lazy val dimensions: Dimensions[NumericSpan[Double]] = data.rightOrMap { case (position, size) =>
         Bounds.dimensionsFactory.fromFunction2D { axis =>
             val start = position(axis)
             NumericSpan(start, start + size(axis))
         }
     }
-    override lazy val position = data match {
+    // NB: position + size seems to break in a lot of places =>
+    // Will need to be careful with these, in case they break the compiler again in the future
+    override lazy val position: Point = data match {
         case Left((pos, _)) => pos
         case Right(dimensions) => Point(dimensions.map { _.start })
     }
-    override lazy val size = data match {
+    override lazy val size: Size = data match {
         case Left((_, size)) => size
         case Right(dimensions) => Size(dimensions.map { _.length })
     }
     
-    override lazy val components =
+    override lazy val components: Vector[Span1D] =
         dimensions.zipWithAxisIterator.map { case (span, axis) => Span1D(span, axis) }.toVector
     
     
@@ -193,7 +195,7 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     override def bounds = this
     
     override def topLeftCorner = position
-    override def bottomRightCorner = position + size
+    override def bottomRightCorner: Point = Point(dimensions.map { _.end })
     
     override def width = size.width
     override def height = size.height
@@ -201,7 +203,7 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     override def rightEdgeLength = height
     
     override def toValue = new Value(Some(this), BoundsType)
-    override def toModel = Model(Vector("position" -> position, "size" -> size))
+    override def toModel = Model.from("position" -> (position: Value), "size" -> (size: Value))
     override def toShape = toAwt
     
     override def topEdge = along(X).vector.in2D
@@ -362,8 +364,10 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     def bottomSlice(maxHeight: Double) = {
         if (height <= maxHeight)
             this
-        else
-            Bounds(position + (Y(height - maxHeight): Vector1D), Size(width, maxHeight))
+        else {
+            val adjust = Y(height - maxHeight)
+            Bounds(position + adjust, Size(width, maxHeight))
+        }
     }
     /**
       * @param maxWidth Maximum width of resulting bounds
@@ -377,8 +381,10 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     def rightSlice(maxWidth: Double) = {
         if (width <= maxWidth)
             this
-        else
-            Bounds(position + (X(width - maxWidth): Vector1D), Size(maxWidth, height))
+        else {
+            val adjust: Vector1D = X(width - maxWidth)
+            Bounds(position + adjust, Size(maxWidth, height))
+        }
     }
     /**
       * Slices these bounds from a specific direction

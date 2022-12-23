@@ -95,7 +95,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                 case None => targetNoForwardSlash
             }
             // Instantiates the connection
-            val connection = DriverManager.getConnection(fullTarget + settings.charsetString,
+            val connection = DriverManager.getConnection(s"$fullTarget${ settings.charsetString }",
                 settings.user, settings.password)
             
             // Sets up used database, if possible
@@ -165,7 +165,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     def apply(statement: SqlSegment): Result = 
     {
-        printIfDebugging("Executing statement: " + statement.description)
+        printIfDebugging(s"Executing statement: ${ statement.description }")
         val selectedTables: Set[Table] = if (statement.isSelect) statement.targetTables else HashSet()
         
         // Changes database if necessary
@@ -375,11 +375,11 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     {
         val ifExistsStr = if (checkIfExists) " IF EXISTS" else ""
         val charsetStr = defaultCharset match {
-            case Some(charset) => " DEFAULT CHARSET " + charset
+            case Some(charset) => s" DEFAULT CHARSET $charset"
             case None => ""
         }
         val collateStr = defaultCollate match {
-            case Some(collate) => " DEFAULT COLLATE " + collate
+            case Some(collate) => s" DEFAULT COLLATE $collate"
             case None => ""
         }
         val c = connection

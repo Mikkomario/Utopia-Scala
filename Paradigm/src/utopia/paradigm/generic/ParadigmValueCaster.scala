@@ -335,7 +335,7 @@ object ParadigmValueCaster extends ValueCaster
             Some(Pair(l.start, l.end))
         case BoundsType =>
             val b = value.getBounds
-            Some(Pair(b.position, b.size))
+            Some(Pair[Value](b.position: Value, b.size: Value))
         case Matrix2DType => Some(value.getMatrix2D.xyPair.map { v => v })
         case LinearVelocityType =>
             val v = value.getLinearVelocity

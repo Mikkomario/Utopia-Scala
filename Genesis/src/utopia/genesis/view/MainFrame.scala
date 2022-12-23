@@ -1,16 +1,13 @@
 package utopia.genesis.view
 
-import javax.swing.JFrame
-import javax.swing.JPanel
+import javax.swing.{JFrame, JPanel, WindowConstants}
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Toolkit
 import java.awt.Dimension
-
 import scala.collection.immutable.HashMap
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 import java.awt.Component
-
 import utopia.paradigm.shape.shape2d.Size
 import utopia.paradigm.shape.shape2d.Point
 import utopia.paradigm.shape.shape2d.Bounds
@@ -51,7 +48,7 @@ class MainFrame(initialContent: Component, val originalSize: Size, title: String
         
         setTitle(title)
         setLayout(new BorderLayout())
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
         
         getContentPane.setBackground(Color.BLACK)
         setVisible(true)

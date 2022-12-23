@@ -73,6 +73,7 @@ object Pair
 	
 	implicit class RichCollPair[A](val p: Pair[Iterable[A]]) extends AnyVal
 	{
+		/*
 		/**
 		  * @return An iterator that returns items from both sides of this pair.
 		  *         The items in the first (left) collection are all returned
@@ -87,6 +88,7 @@ object Pair
 		  */
 		def flatIteratorWithSides =
 			p.first.iterator.map { _ -> Negative } ++ p.second.iterator.map { _ -> Positive }
+		 */
 		
 		/**
 		  * @return Zips the two collections in this pair together.
@@ -460,18 +462,16 @@ case class Pair[+A](first: A, second: A)
 	{
 		// ATTRIBUTES   ----------------------
 		
-		var nextIndex = 0
+		private var nextIndex = 0
 		
 		
 		// IMPLEMENTED  ----------------------
 		
 		override def hasNext = nextIndex < 2
 		
-		override def next() =
-		{
+		override def next() = {
 			nextIndex += 1
-			nextIndex match
-			{
+			nextIndex match {
 				case 1 => first
 				case 2 => second
 				case _ => throw new IllegalStateException("next() called on consumed iterator")
