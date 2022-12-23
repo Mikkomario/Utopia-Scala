@@ -4,6 +4,7 @@ import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead}
 import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -28,10 +29,12 @@ object PullManySchrodinger
 	  *                 1) Current items (may be empty)
 	  *                 2) Pull result (placeholder or final), may be failure
 	  *                 3) State (flux or final)
-	  * @tparam A Type of individual pulled items
+	  * @tparam L The locally stored item variants (spirits)
+	  * @tparam R The remotely store item variants (instances)
 	  * @return A new schrödinger that wraps the specified pointer
 	  */
-	def wrap[A](pointer: Changing[(Vector[A], Try[Vector[A]], SchrodingerState)]) = new PullManySchrodinger[A](pointer)
+	def wrap[L, R](pointer: Changing[(Vector[L], Try[Vector[R]], SchrodingerState)]) =
+		new PullManySchrodinger[L, R](pointer)
 	/**
 	  * Creates a schrödinger that has already resolved into a success or a failure
 	  * @param results Pull results
@@ -41,7 +44,7 @@ object PullManySchrodinger
 	  * @return A schrödinger with static state (dead or alive)
 	  */
 	def resolved[A](results: Try[Vector[A]], requireNonEmpty: Boolean = false) =
-		wrap(Fixed(Schrodinger2.testEmptyState(Vector(), results, requireNonEmpty)))
+		wrap(Fixed(Schrodinger2.testEmptyState(Vector[A](), results, requireNonEmpty)(Identity)))
 	/**
 	  * Creates a schrödinger that has already resolved into a success or a failure
 	  * @param items         Pulled items
@@ -50,7 +53,7 @@ object PullManySchrodinger
 	  * @tparam A Type of individual pulled items
 	  * @return A schrödinger with static state (dead or alive)
 	  */
-	def resolved[A](items: Vector[A], requireNonEmpty: Boolean): PullManySchrodinger[A] =
+	def resolved[A](items: Vector[A], requireNonEmpty: Boolean): PullManySchrodinger[A, A] =
 		resolved(Success(items), requireNonEmpty)
 	
 	/**
@@ -65,7 +68,7 @@ object PullManySchrodinger
 	  * @tparam A Type of items, if this schrödinger were successful
 	  * @return A resolved, failed schrödinger
 	  */
-	def failed[A](cause: Throwable) = wrap[A](Fixed((Vector(), Failure(cause), Dead)))
+	def failed[A](cause: Throwable) = wrap[A, A](Fixed((Vector(), Failure(cause), Dead)))
 	
 	/**
 	  * Creates a schrodinger that contains 0-n locally cached values until server results arrive,
@@ -76,15 +79,17 @@ object PullManySchrodinger
 	  * @param parser       A parser used for parsing items from a server response
 	  * @param emptyIsDead  Whether an empty result (0 items) should be considered Dead and not Alive.
 	  *                     Default = false = Result is alive as long as it resolves successfully.
+	  * @param localize     A function that converts a remotely pulled instance into its local variant
 	  * @param exc          Implicit execution context
-	  * @tparam A Type of individual pulled items
+	  * @tparam L The locally stored item variants (spirits)
+	  * @tparam R The remotely store item variants (instances)
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
-	def apply[A](local: Vector[A], resultFuture: Future[RequestResult], parser: FromModelFactory[A],
-	             emptyIsDead: Boolean = false)
-	            (implicit exc: ExecutionContext) =
-		wrap(Schrodinger2.getPointer(local, Vector(), resultFuture, emptyIsDead) { _.parseMany(parser) })
+	def apply[L, R](local: Vector[L], resultFuture: Future[RequestResult], parser: FromModelFactory[R],
+	                emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext) =
+		wrap(Schrodinger2.getPointer(local, Vector[R](), resultFuture, emptyIsDead) { _.parseMany(parser) } {
+			_.map(localize) })
 	
 	/**
 	  * Creates a schrödinger that wraps a remote pull request that yields 0-n items if successful.
@@ -110,6 +115,8 @@ object PullManySchrodinger
   * Read items are stored in a Vector. Remote pull is either a success or a failure.
   * @author Mikko Hilpinen
   * @since 23.12.2022, v1.4
+  * @tparam L The locally stored item variants (spirits)
+  * @tparam R The remotely store item variants (instances)
   */
-class PullManySchrodinger[+A](pointer: Changing[(Vector[A], Try[Vector[A]], SchrodingerState)])
-	extends Schrodinger2[Vector[A], Try[Vector[A]]](pointer)
+class PullManySchrodinger[+L, +R](pointer: Changing[(Vector[L], Try[Vector[R]], SchrodingerState)])
+	extends Schrodinger2[Vector[L], Try[Vector[R]]](pointer)
