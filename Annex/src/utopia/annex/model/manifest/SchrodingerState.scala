@@ -1,7 +1,7 @@
-package utopia.annex.model.schrodinger
+package utopia.annex.model.manifest
 
-import utopia.flow.operator.{BinarySigned, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{BinarySigned, Sign}
 
 import scala.language.implicitConversions
 

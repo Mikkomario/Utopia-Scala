@@ -1,4 +1,4 @@
-package utopia.annex.model.schrodinger
+package utopia.annex.model.manifest
 
 import utopia.flow.view.template.Extender
 

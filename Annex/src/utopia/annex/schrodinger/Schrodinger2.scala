@@ -1,11 +1,13 @@
-package utopia.annex.model.schrodinger
+package utopia.annex.schrodinger
 
+import utopia.annex.model.manifest.{HasSchrodingerState, Manifest, SchrodingerState}
 import utopia.annex.model.response.ResponseBody.Content
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
-import utopia.annex.model.schrodinger.SchrodingerState.{Alive, Dead, Final, Flux, PositiveFlux}
+import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux, PositiveFlux}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.operator.MaybeEmpty.HasIsEmpty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
@@ -21,41 +23,6 @@ object Schrodinger2
 	def static[M, R](manifest: M, result: R, state: Final) = wrap(Fixed(manifest, result, state))
 	def success[M, R](manifest: M, result: R) = static(manifest, result, Alive)
 	def failure[M, R](manifest: M, result: R) = static(manifest, result, Dead)
-	
-	/**
-	  * Creates a schrodinger that contains 0-n locally cached values until server results arrive,
-	  * from which are parsed a new set of items, if possible.
-	  * Typically used when updating locally cached data.
-	  * @param local A result based on local data pull (0-n items as a Vector)
-	  * @param resultFuture A future that will contain the server response, if successful
-	  * @param parser A parser used for parsing items from a server response
-	  * @param emptyIsDead Whether an empty result (0 items) should be considered Dead and not Alive.
-	  *                    Default = false = Result is alive as long as it resolves successfully.
-	  * @param exc Implicit execution context
-	  * @tparam A Type of individual pulled items
-	  * @return A new schrödinger that contains local pull results
-	  *         and updates itself once the server-side results arrive.
-	  */
-	def pullMany[A](local: Vector[A], resultFuture: Future[RequestResult], parser: FromModelFactory[A],
-	                emptyIsDead: Boolean = false)
-	               (implicit exc: ExecutionContext) =
-		_get(local, Vector(), resultFuture, emptyIsDead) { _.parseMany(parser) }
-	/**
-	  * Creates a schrödinger that wraps a remote pull request that yields 0-n items if successful.
-	  * This is typically used in situations where no proper local data is available.
-	  * @param resultFuture A future that will yield the server response, provided one is acquired
-	  * @param parser A parser for reading items from the response
-	  * @param emptyIsDead Whether 0 items found is considered a failure (Dead).
-	  *                    Default = false = Successful request always yields Alive (provided parsing succeeds, also)
-	  * @param expectFailure Whether the request is expected to fail (default = false = expected to succeed)
-	  * @param exc Implicit execution context
-	  * @tparam A Type of items parsed
-	  * @return A new schrödinger that will contain an empty vector until server results arrive
-	  */
-	def pullManyRemote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A],
-	                      emptyIsDead: Boolean = false, expectFailure: Boolean = false)
-	                     (implicit exc: ExecutionContext) =
-		_getRemote[Vector[A]](Vector(), resultFuture, emptyIsDead, expectFailure) { _.parseMany(parser) }
 	
 	/**
 	  * Creates a schrödinger that contains 0-1 locally cached values until server results arrive,
@@ -191,53 +158,63 @@ object Schrodinger2
 	                                                emptyIsDead: Boolean = false)
 	                                               (parse: ResponseBody => Try[M])
 	                                               (implicit exc: ExecutionContext) =
-	{
-		_apply[M, Try[M]](local, Success(placeHolder), resultFuture, Flux(!emptyIsDead || !local.isEmpty)) {
-			case Right(body) => parse(body)
-			case Left(error) => Failure(error)
-		} { (placeHolder, parsed) =>
-			val state = {
-				if (emptyIsDead)
-					parsed.toOption.exists { !_.isEmpty }
-				else
-					parsed.isSuccess
-			}
-			parsed.getOrElse(placeHolder) -> Final(state)
-		}
-	}
+		wrap(getPointer(local, placeHolder, resultFuture, emptyIsDead)(parse))
 	private def _getRemote[M <: { def isEmpty: Boolean }](placeHolder: M, resultFuture: Future[RequestResult],
 	                                                      emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	                                                     (parse: ResponseBody => Try[M])
 	                                                     (implicit exc: ExecutionContext) =
-	{
-		_apply[M, Try[M]](placeHolder, Success(placeHolder), resultFuture, Flux(!expectFailure)) {
-			case Right(body) => parse(body)
-			case Left(error) => Failure(error)
-		} { (placeHolder, result) =>
-			val isSuccess = {
-				if (emptyIsDead)
-					result.toOption.exists { !_.isEmpty }
-				else
-					result.isSuccess
-			}
-			result.getOrElse(placeHolder) -> Final(isSuccess)
-		}
-	}
+		wrap(remoteGetPointer(placeHolder, resultFuture, emptyIsDead, expectFailure)(parse))
 	private def _pull[A](initialManifest: Try[A], placeHolderResult: Try[A], resultFuture: Future[RequestResult],
 	                     parser: FromModelFactory[A], flux: Flux = Flux)
 	                    (implicit exc: ExecutionContext) =
+		wrap(pullPointer(initialManifest, placeHolderResult, resultFuture, parser, flux))
+	private def _apply[M, R](initialManifest: M, placeHolderResult: R, resultFuture: Future[RequestResult],
+	                         flux: Flux = Flux)
+	                        (process: Either[Throwable, ResponseBody] => R)(merge: (M, R) => (M, R, Final))
+	           (implicit exc: ExecutionContext) =
+		wrap(makePointer(initialManifest, placeHolderResult, resultFuture, flux)(process)(merge))
+	
+	private[schrodinger] def getPointer[M <: {def isEmpty: Boolean}](local: M, placeHolder: M,
+	                                                                 resultFuture: Future[RequestResult],
+	                                                                 emptyIsDead: Boolean = false)
+	                                                                (parse: ResponseBody => Try[M])
+	                                                                (implicit exc: ExecutionContext) =
 	{
-		_apply[Try[A], Try[A]](initialManifest, placeHolderResult, resultFuture, flux) {
+		makePointer[M, Try[M]](local, Success(placeHolder), resultFuture, Flux(!emptyIsDead || !local.isEmpty)) {
+			case Right(body) => parse(body)
+			case Left(error) => Failure(error)
+		} { (placeHolder, parsed) => testEmptyState(placeHolder, parsed, emptyIsDead) }
+	}
+	private[schrodinger] def remoteGetPointer[M <: {def isEmpty: Boolean}](placeHolder: M,
+	                                                                       resultFuture: Future[RequestResult],
+	                                                                       emptyIsDead: Boolean = false,
+	                                                                       expectFailure: Boolean = false)
+	                                                                      (parse: ResponseBody => Try[M])
+	                                                                      (implicit exc: ExecutionContext) =
+	{
+		makePointer[M, Try[M]](placeHolder, Success(placeHolder), resultFuture, Flux(!expectFailure)) {
+			case Right(body) => parse(body)
+			case Left(error) => Failure(error)
+		} { (placeHolder, result) => testEmptyState(placeHolder, result, emptyIsDead) }
+	}
+	private[schrodinger] def pullPointer[A](initialManifest: Try[A], placeHolderResult: Try[A],
+	                                        resultFuture: Future[RequestResult], parser: FromModelFactory[A],
+	                                        flux: Flux = Flux)
+	                                       (implicit exc: ExecutionContext) =
+	{
+		makePointer[Try[A], Try[A]](initialManifest, placeHolderResult, resultFuture, flux) {
 			case Right(body) => body.tryParseSingleWith(parser)
 			case Left(error) => Failure(error)
 		} { (placeHolder, parsed) =>
-			parsed.orElse { if (placeHolder.isSuccess) placeHolder else parsed } -> Final(parsed.isSuccess)
+			val manifest = parsed.orElse { if (placeHolder.isSuccess) placeHolder else parsed }
+			(manifest, parsed, Final(parsed.isSuccess))
 		}
 	}
-	private def _apply[M, R](initialManifest: M, placeHolderResult: R, resultFuture: Future[RequestResult],
-	                         flux: Flux = Flux)
-	                        (process: Either[Throwable, ResponseBody] => R)(merge: (M, R) => (M, Final))
-	           (implicit exc: ExecutionContext) =
+	private[schrodinger] def makePointer[M, R](initialManifest: M, placeHolderResult: R,
+	                                           resultFuture: Future[RequestResult], flux: Flux = Flux)
+	                                          (process: Either[Throwable, ResponseBody] => R)
+	                                          (merge: (M, R) => (M, R, Final))
+	                                          (implicit exc: ExecutionContext) =
 	{
 		// Stores the state in a Volatile pointer
 		val pointer = Volatile[(M, R, SchrodingerState)]((initialManifest, placeHolderResult, flux))
@@ -253,12 +230,27 @@ object Schrodinger2
 				case Failure(error) => process(Left(error))
 			}
 			// Updates the pointer
-			pointer.update { case (placeHolder, _, _) =>
-				val (manifest, state) = merge(placeHolder, parsed)
-				(manifest, parsed, state)
-			}
+			pointer.update { case (placeHolder, _, _) => merge(placeHolder, parsed) }
 		}
-		wrap(pointer)
+		pointer
+	}
+	
+	private[schrodinger] def testEmptyState[M <: HasIsEmpty](placeHolder: M, result: Try[M], emptyIsDead: Boolean) =
+	{
+		// Converts an empty result into a failure, if necessary
+		val finalResult = {
+			if (emptyIsDead)
+				result.flatMap { items =>
+					if (items.isEmpty)
+						Failure(new IllegalStateException("Empty result"))
+					else
+						Success(items)
+				}
+			else
+				result
+		}
+		// Returns the manifest, the result and the state
+		(finalResult.getOrElse(placeHolder), finalResult, Final(finalResult.isSuccess))
 	}
 }
 

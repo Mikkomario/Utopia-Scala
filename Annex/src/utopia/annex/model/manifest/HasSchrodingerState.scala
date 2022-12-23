@@ -1,6 +1,6 @@
-package utopia.annex.model.schrodinger
+package utopia.annex.model.manifest
 
-import utopia.annex.model.schrodinger.SchrodingerState.{Alive, Dead, Final, Flux}
+import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux}
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 
