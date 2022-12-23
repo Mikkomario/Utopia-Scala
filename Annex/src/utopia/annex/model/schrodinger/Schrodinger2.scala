@@ -2,10 +2,11 @@ package utopia.annex.model.schrodinger
 
 import utopia.annex.model.response.ResponseBody.Content
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
-import utopia.annex.model.schrodinger.SchrodingerState.{Final, Flux}
+import utopia.annex.model.schrodinger.SchrodingerState.{Alive, Dead, Final, Flux, PositiveFlux}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
@@ -17,6 +18,9 @@ import scala.util.{Failure, Success, Try}
 object Schrodinger2
 {
 	def wrap[M, R](pointer: Changing[(M, R, SchrodingerState)]) = new Schrodinger2[M, R](pointer)
+	def static[M, R](manifest: M, result: R, state: Final) = wrap(Fixed(manifest, result, state))
+	def success[M, R](manifest: M, result: R) = static(manifest, result, Alive)
+	def failure[M, R](manifest: M, result: R) = static(manifest, result, Dead)
 	
 	/**
 	  * Creates a schrodinger that contains 0-n locally cached values until server results arrive,
@@ -35,9 +39,26 @@ object Schrodinger2
 	def pullMany[A](local: Vector[A], resultFuture: Future[RequestResult], parser: FromModelFactory[A],
 	                emptyIsDead: Boolean = false)
 	               (implicit exc: ExecutionContext) =
-		_get(local, Vector(), resultFuture, emptyIsDead) { _.vector(parser).parsed }
+		_get(local, Vector(), resultFuture, emptyIsDead) { _.parseMany(parser) }
 	/**
-	  * Creates a schrodinger that contains 0-1 locally cached values until server results arrive,
+	  * Creates a schrödinger that wraps a remote pull request that yields 0-n items if successful.
+	  * This is typically used in situations where no proper local data is available.
+	  * @param resultFuture A future that will yield the server response, provided one is acquired
+	  * @param parser A parser for reading items from the response
+	  * @param emptyIsDead Whether 0 items found is considered a failure (Dead).
+	  *                    Default = false = Successful request always yields Alive (provided parsing succeeds, also)
+	  * @param expectFailure Whether the request is expected to fail (default = false = expected to succeed)
+	  * @param exc Implicit execution context
+	  * @tparam A Type of items parsed
+	  * @return A new schrödinger that will contain an empty vector until server results arrive
+	  */
+	def pullManyRemote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A],
+	                      emptyIsDead: Boolean = false, expectFailure: Boolean = false)
+	                     (implicit exc: ExecutionContext) =
+		_getRemote[Vector[A]](Vector(), resultFuture, emptyIsDead, expectFailure) { _.parseMany(parser) }
+	
+	/**
+	  * Creates a schrödinger that contains 0-1 locally cached values until server results arrive,
 	  * from which a new item is parsed, if present and possible.
 	  * Typically used when updating locally cached data.
 	  * @param local        A result based on local data pull (0-n items as a Vector)
@@ -58,6 +79,52 @@ object Schrodinger2
 			case _ => Success(None)
 		}
 	/**
+	  * Creates a schrödinger that either **permanently** contains the local search result, if found, or
+	  * performs a remote search and contains the server results once they arrive.
+	  * In other words, remote search is only performed if no local results are found.
+	  * This type of schrödinger is typically used when the local data is expected to be accurate, when present.
+	  * @param local Local search results
+	  * @param parser A parser used for handling server-side results
+	  * @param emptyIsDead Whether an empty result (0 items) should be considered Dead and not Alive.
+	  *                    Default = false = Result is alive as long as it resolves successfully.
+	  * @param makeRequest A function for starting a remote search.
+	  *                    Yields a future that contains the result of this request.
+	  * @param exc Implicit execution context
+	  * @tparam A Type of search results, when found
+	  * @return A new schrödinger, either based on local results (final) or remote search (flux)
+	  */
+	def findAny[A](local: Option[A], parser: FromModelFactory[A], emptyIsDead: Boolean = false)
+	              (makeRequest: => Future[RequestResult])
+	              (implicit exc: ExecutionContext) =
+	{
+		// Case: Local results found => Skips the remote search
+		if (local.isDefined)
+			success(local, Success(local))
+		// Case: No local results => Performs the remote search
+		else
+			find(local, makeRequest, parser, emptyIsDead)
+	}
+	/**
+	  * Creates a schrödinger that wraps a remote search request which yields 0-1 items when successful.
+	  * This is typically used when no appropriate local data is available.
+	  * @param resultFuture  A future that will contain the server response, if successful
+	  * @param parser        A parser used for parsing items from a server response
+	  * @param emptyIsDead   Whether an empty result (0 items) should be considered Dead and not Alive.
+	  *                      Default = false = Result is alive as long as it resolves successfully.
+	  * @param expectFailure Whether the request is expected to fail (default = false = expected to succeed)
+	  * @param exc           Implicit execution context
+	  * @tparam A Type of found item
+	  * @return A new schrödinger that will contain None until server results arrive
+	  */
+	def findRemote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A], emptyIsDead: Boolean = false,
+	                  expectFailure: Boolean = false)
+	                 (implicit exc: ExecutionContext) =
+		_getRemote[Option[A]](None, resultFuture, emptyIsDead, expectFailure) {
+			case c: Content => c.parsedSingle(parser).map { Some(_) }
+			case _ => Success(None)
+		}
+	
+	/**
 	  * Pulls a local and a remote instance.
 	  * Stores the local instance (if available) until a remote instance is acquired.
 	  * Expects a non-empty response from the server.
@@ -73,14 +140,51 @@ object Schrodinger2
 	  */
 	def pull[A](local: Option[A], resultFuture: Future[RequestResult], parser: FromModelFactory[A])
 	           (implicit exc: ExecutionContext) =
+		_pull(local.toTry { new NoSuchElementException("No local data") },
+			Failure(new IllegalStateException("Remote result is still pending")), resultFuture, parser,
+			Flux(local.isDefined))
+	/**
+	  * Pulls a local instance if accessible. If not, pulls the remote instance instead.
+	  * In other words, remote pull is performed only if no local data is found.
+	  * Expects one of these pulls to yield an instance (i.e. case where no data is acquired is considered a failure).
+	  * This is typically used when data is expected to exist either locally or remotely and local data,
+	  * if present, is considered accurate enough to represent the final state.
+	  * @param local Local pull results (Some or None)
+	  * @param parser Parser used for parsing remote pull results
+	  * @param makeRequest A function that starts the remote pull. Yields a request result.
+	  * @param exc Implicit execution context
+	  * @tparam A Type of pull results, when acquired
+	  * @return A new schrödinger, either based on local data (final) or remote pull (flux)
+	  */
+	def pullAny[A](local: Option[A], parser: FromModelFactory[A])
+	              (makeRequest: => Future[RequestResult])(implicit exc: ExecutionContext) =
 	{
-		_apply[Try[A], Try[A]](local.toTry { new NoSuchElementException("No local data") },
-			Failure(new IllegalStateException("Remote result is still pending")), resultFuture, Flux(local.isDefined)) {
-			case Right(body) => body.tryParseSingleWith(parser)
-			case Left(error) => Failure(error)
-		} { (placeHolder, parsed) =>
-			parsed.orElse { if (placeHolder.isSuccess) placeHolder else parsed } -> Final(parsed.isSuccess)
+		local match {
+			// Case: Local results found => Skips the remote search
+			case Some(found) =>
+				val s = Success(found)
+				success(s, s)
+			// Case: No local results => Performs the remote search
+			case None => pull(local, makeRequest, parser)
 		}
+	}
+	/**
+	  * Creates a schrödinger that wraps a remote pull request (single instance).
+	  * Expects the request to succeed and to yield exactly one instance.
+	  * This is typically used when no data has been cached locally, or when local data is not appropriate to be used.
+	  * @param resultFuture A future that will contain the server response, if successful
+	  * @param parser       A parser used for parsing items from a server response
+	  * @param exc          Implicit execution context
+	  * @tparam A Type of the read item, when successful
+	  * @return A new schrödinger that contains a failure until server results arrive.
+	  *         Once the results arrive, contains parsing results
+	  *         (failure if request or parsing failed, or if no items were found, success otherwise)
+	  */
+	def pullRemote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A])
+	                 (implicit exc: ExecutionContext) =
+	{
+		val initial = Failure(new IllegalStateException("No results acquired yet"))
+		_pull(initial, initial, resultFuture, parser, PositiveFlux)
 	}
 	
 	private def _get[M <: { def isEmpty: Boolean }](local: M, placeHolder: M, resultFuture: Future[RequestResult],
@@ -101,12 +205,42 @@ object Schrodinger2
 			parsed.getOrElse(placeHolder) -> Final(state)
 		}
 	}
-	private def _apply[M, R](local: M, placeHolder: R, resultFuture: Future[RequestResult], flux: Flux = Flux)
+	private def _getRemote[M <: { def isEmpty: Boolean }](placeHolder: M, resultFuture: Future[RequestResult],
+	                                                      emptyIsDead: Boolean = false, expectFailure: Boolean = false)
+	                                                     (parse: ResponseBody => Try[M])
+	                                                     (implicit exc: ExecutionContext) =
+	{
+		_apply[M, Try[M]](placeHolder, Success(placeHolder), resultFuture, Flux(!expectFailure)) {
+			case Right(body) => parse(body)
+			case Left(error) => Failure(error)
+		} { (placeHolder, result) =>
+			val isSuccess = {
+				if (emptyIsDead)
+					result.toOption.exists { !_.isEmpty }
+				else
+					result.isSuccess
+			}
+			result.getOrElse(placeHolder) -> Final(isSuccess)
+		}
+	}
+	private def _pull[A](initialManifest: Try[A], placeHolderResult: Try[A], resultFuture: Future[RequestResult],
+	                     parser: FromModelFactory[A], flux: Flux = Flux)
+	                    (implicit exc: ExecutionContext) =
+	{
+		_apply[Try[A], Try[A]](initialManifest, placeHolderResult, resultFuture, flux) {
+			case Right(body) => body.tryParseSingleWith(parser)
+			case Left(error) => Failure(error)
+		} { (placeHolder, parsed) =>
+			parsed.orElse { if (placeHolder.isSuccess) placeHolder else parsed } -> Final(parsed.isSuccess)
+		}
+	}
+	private def _apply[M, R](initialManifest: M, placeHolderResult: R, resultFuture: Future[RequestResult],
+	                         flux: Flux = Flux)
 	                        (process: Either[Throwable, ResponseBody] => R)(merge: (M, R) => (M, Final))
 	           (implicit exc: ExecutionContext) =
 	{
 		// Stores the state in a Volatile pointer
-		val pointer = Volatile[(M, R, SchrodingerState)]((local, placeHolder, flux))
+		val pointer = Volatile[(M, R, SchrodingerState)]((initialManifest, placeHolderResult, flux))
 		// Updates the state with future result once it arrives
 		resultFuture.onComplete { result =>
 			// Parses the item(s) from the response body, if successful

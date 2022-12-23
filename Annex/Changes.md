@@ -2,6 +2,12 @@
 
 ## v1.4 (in development)
 Schrödinger update
+### New Features
+- **NoConnection** and **Response.Failure** now extend a new trait **RequestFailure**. 
+  This makes **RequestResult** pattern matching easier, because all failure states may be matched into a single case.
+### New Methods
+- **ResponseBody**
+  - Added `.parseMany(FromModelFactory)`
 
 ## v1.3.1 (In Development)
 Supports changes in **Flow** v2.0

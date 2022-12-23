@@ -47,6 +47,13 @@ sealed abstract class ResponseBody(private val body: Value) extends MaybeEmpty[R
 	  * @return Parsed instance. Failure if this body is empty or if parsing failed.
 	  */
 	def parsedSingle[A](implicit parser: FromModelFactory[A]) = tryParseSingleWith(parser)
+	/**
+	  * Attempts to parse the contents of this response body into 0-n items
+	  * @param parser Parser used for handling json models
+	  * @tparam A Type of parsed items
+	  * @return Parsed items. Failure if parsing failed for any item.
+	  */
+	def parseMany[A](implicit parser: FromModelFactory[A]) = vector.parsed
 	
 	
 	// IMPLEMENTED  ----------------------
