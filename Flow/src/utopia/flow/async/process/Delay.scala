@@ -14,8 +14,6 @@ import scala.util.Try
   */
 object Delay
 {
-	// TODO: Create a variant that may delay further based on some condition (delay end time is pointer-based)
-	
 	/**
 	  * Performs the specified function after a delay
 	  * @param target           Wait target that determines the length of the delay

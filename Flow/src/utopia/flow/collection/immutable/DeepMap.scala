@@ -160,7 +160,7 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 					value match {
 						case v: Value => v
 						case v: ValueConvertible => v.toValue
-						// TODO: Could be more advanced / precise
+						// NB: Could be more advanced / precise
 						case v => Value(Some(v), AnyType)
 					}
 			}

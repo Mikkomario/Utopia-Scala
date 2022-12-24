@@ -5,7 +5,7 @@ import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.generic.model.enumeration.ConversionReliability
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, LocalDateTimeType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, IntType, LocalDateTimeType, StringType, VectorType}
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 

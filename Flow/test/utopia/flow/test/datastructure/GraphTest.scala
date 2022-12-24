@@ -33,7 +33,7 @@ object GraphTest extends App
 	assert(node1.leavingEdges.size == 2)
 	assert(node2.leavingEdges.size == 1)
 	assert(node5.leavingEdges.isEmpty)
-	assert(node1.endNodes.contains(node2))
+	assert(node1.endNodes.exists { _ == node2 })
 	assert(node1.isDirectlyConnectedTo(node2))
 	assert(!node1.isDirectlyConnectedTo(node5))
 	assert(node1.allNodes.size == 5)

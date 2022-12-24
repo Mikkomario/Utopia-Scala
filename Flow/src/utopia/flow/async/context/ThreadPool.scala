@@ -114,26 +114,26 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
     // IMPLEMENTED    --------------------
     
     override def run() = {
-        while (!ended.isSet) {
+        while (ended.isNotSet) {
             // Finds the next task to perform, may fail if maximum idle duration is reached
-            val next = nextTask orElse {
+            val next = nextTask.orElse {
+                // Starts waiting for the next task
                 val nextFuture = waitingTask.setOne(Promise()).future
                 nextFuture.waitFor(maxIdleDuration).toOption
             }
             
             // If no task was found, ends
-            if (next.isEmpty)
-                ended.set()
-            else {
-                // Otherwise performs the task (caches errors)
-                Try { next.get.run() }.failure.foreach { logger(_, s"Exception reached thread $name") }
-                
-                // Takes the next task right away, if one is available
-                nextTask = getWaitingTask
+            next match {
+                // Case: Next task is available => Performs it (caches errors)
+                case Some(next) =>
+                    Try { next.run() }.failure.foreach { logger(_, s"Exception reached thread $name") }
+                    // Takes the next task right away, if one is available
+                    nextTask = getWaitingTask
+                // Case: No task available => Ends
+                case None => ended.set()
             }
         }
-        
-        // TODO: Clear memory?
+        waitingTask.clear()
     }
     
     
@@ -144,21 +144,21 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
      * @param task the task to be performed
      * @return whether this thread accepted the task
      */
-    def offer(task: Runnable) = 
-    {
+    def offer(task: Runnable) = {
         // Only accepts new tasks if not busy already
-        if (!ended.isSet)
-        {
-            // If this thread is waiting for another task, provides it
+        if (ended.isNotSet) {
             waitingTask.lock { opt =>
                 opt.filterNot { _.isCompleted } match {
+                    // Case: Waiting for a task => Provides a task
                     case Some(waitingThread) =>
                         waitingThread.success(task)
                         true
+                    // Case: Not waiting for a task => Rejects the task
                     case None => false
                 }
             }
         }
+        // Case: Already ended => Rejects the task
         else
             false
     }

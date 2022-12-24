@@ -192,13 +192,13 @@ abstract class AbstractSelectableTextLabel
 		
 		// Repaints (and possibly revalidates) this component when content or styling changes
 		measuredTextPointer.addListener { event =>
-			if (event.compareBy { _.size })
+			if (event.equalsBy { _.size })
 				repaint(VeryHigh)
 			else
 				revalidateAndRepaint(VeryHigh)
 		}
 		stylePointer.addListener { change =>
-			if (change.compareWith { _.hasSameDimensionsAs })
+			if (change.merge { _ hasSameDimensionsAs _ })
 				repaint()
 			else
 				revalidateAndRepaint()

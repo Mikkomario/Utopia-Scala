@@ -103,13 +103,9 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     
     // IMPLEMENTED  -----------
     
-    // TODO: Loses information about alternative property names => fix
-    override def toModel: Model = Model(declarations.toVector.sortBy { _.name }.map[(String, Value)] { prop =>
-        if (prop.hasDefault)
-            prop.name -> Model(Vector("datatype" -> prop.dataType.name, "default" -> prop.defaultValue))
-        else
-            prop.name -> prop.dataType.name
-    } ++ childDeclarations.map[String, Value] { case (childName, child) => childName -> child.toModel })
+    override def toModel: Model =
+        Model.withConstants(declarations.toVector.sortBy { _.name }.map { _.toConstant } ++
+            childDeclarations.map { case (childName, child) => Constant(childName, child.toModel) })
     
     
     // OPERATORS    -----------

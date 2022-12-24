@@ -5,6 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template.GraphNode.{AnyNode, PathsFinder}
+import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -207,8 +208,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	/**
 	  * The nodes accessible from this node
 	  */
-	// TODO: Use .distinctBy(Identity) instead?
-	def endNodes = leavingEdges.map { _.end }.toSet
+	def endNodes = leavingEdges.map { _.end }.distinctBy(Identity)
 	
 	/**
 	  * @return An iterator that returns all nodes within this graph, starting with this one.
@@ -678,7 +678,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 		
 		// Performs the operation on self first
 		// If that didn't yield a result, tries children instead
-		operation(self).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
+		operation(self).orElse(endNodes.toSet.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
 	}
 	
 	/**

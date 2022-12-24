@@ -1,7 +1,7 @@
 package utopia.flow.generic.model.mutable
 
-import utopia.flow.collection.immutable.{Pair, Tree}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Pair, Tree}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.{ConversionHandler, SuperTypeCaster}
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -456,6 +456,7 @@ trait DataType
       */
     // TODO: Only works on reference types. Use classtags with value types
     def isInstance(instance: Any) = supportedClass.isInstance(instance)
+    // def isInstance(a: Any) = classTag == ClassTag(a.getClass)
     /*
     def isInstance(instance: Any) =
     {

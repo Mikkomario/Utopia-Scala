@@ -127,7 +127,6 @@ object ConversionHandler
 	private def nodeForType(dataType: DataType) = conversionGraph.getOrElseUpdate(dataType,
 		new ConversionNode(dataType))
 	
-	// TODO: Should make String and Model extremely unfavorable mid-steps in conversions (and pair a little unfavorable too)
 	private def optimalRouteTo(sourceType: DataType, targetType: DataType): Option[ConversionRoute] =
 		optimalRoutes.getOrElseUpdate(sourceType -> targetType, {
 			val origin = nodeForType(sourceType)
@@ -140,7 +139,7 @@ object ConversionHandler
 				// If multiple cheapest routes are found, considers the return route, also
 				val routes = origin.cheapestRoutesTo(target) { _.value.cost }._1.minGroupBy { _.size }
 				if (routes.size > 1) {
-					// (Route, Number of irrevokable steps, return cost)
+					// (Route, Number of irrevocable steps, return cost)
 					val routesWithReturnCosts = routes.map { route =>
 						val returnRoutes = route.dropRight(1)
 							.map { edge => edge.end.cheapestRouteTo(origin) { _.value.cost } }
@@ -176,7 +175,7 @@ object ConversionHandler
 		// IMPLEMENTED METHODS    -----
 		
 		override def toString = if (steps.isEmpty) "Empty route" else steps.drop(1).foldLeft(
-			steps.head.conversion.toString)((str, step) => str + " => " + step.conversion.toString)
+			steps.head.conversion.toString)((str, step) => s"$str => ${ step.conversion.toString }")
 		
 		
 		// OPERATORS    ---------------

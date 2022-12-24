@@ -1,7 +1,6 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.template
-import utopia.flow.collection.template.GraphNode
 
 /**
   * Graph edges are used for connecting two nodes and storing data. Edges are immutable.
@@ -14,10 +13,15 @@ case class GraphEdge[+A, +Node](override val value: A, override val end: Node)
 	// OTHER METHODS    ----------
 	
 	/**
+	  * Creates a new edge that has different value / nav element
+	  * @param value The value of the new edge
+	  */
+	def withValue[B](value: B) = GraphEdge(value, end)
+	/**
 	  * Creates a new edge that has different content
 	  * @param content The contents of the new edge
 	  */
-	// TODO: Rename
+	@deprecated("Replaced with .withValue(B)", "v2.0")
 	def withContent[B](content: B) = GraphEdge(content, end)
 	
 	/**

@@ -1,6 +1,9 @@
 package utopia.flow.generic.model.immutable
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType
+
+import scala.collection.immutable.VectorBuilder
 
 object PropertyDeclaration
 {
@@ -102,6 +105,30 @@ trait PropertyDeclaration extends Equals
       * @return All name variations of the declared property
       */
     def names = name +: alternativeNames
+    
+    /**
+      * @return A constant based on this property declaration, for writing schemas as models
+      */
+    def toConstant = {
+        val value: Value = {
+            // Case: Simple declaration with only name and data type => String type property
+            if (alternativeNames.isEmpty && defaultValue.isEmpty && !isOptional)
+                dataType.name
+            // Case: More advanced declaration => Model type property
+            else {
+                val builder = new VectorBuilder[Constant]()
+                builder += Constant("datatype", dataType.name)
+                if (alternativeNames.nonEmpty)
+                    builder += Constant("alt_names", alternativeNames)
+                if (defaultValue.nonEmpty)
+                    builder += Constant("default", defaultValue)
+                if (isOptional)
+                    builder += Constant("optional", isOptional)
+                Model.withConstants(builder.result())
+            }
+        }
+       Constant(name, value)
+    }
     
     
     // IMPLEMENTED  ------------------

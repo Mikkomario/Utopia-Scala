@@ -65,8 +65,6 @@ case class ChangeEvent[+A](values: Pair[A])
 	  */
 	def map[B](f: A => B) = mapAsPair { _.map(f) }
 	
-	// TODO: Rename functions
-	
 	/**
 	  * Converts this change event to a string using a custom toString for the changed values
 	  * @param f A toString function used for the changed values
@@ -80,20 +78,25 @@ case class ChangeEvent[+A](values: Pair[A])
 	  * @tparam B Type of the mapped value
 	  * @return True if the mapped values are equal, false otherwise
 	  */
-	def compareBy[B](map: A => B) = map(oldValue) == map(newValue)
+	def equalsBy[B](map: A => B) = map(oldValue) == map(newValue)
+	@deprecated("Replaced with .equalsBy(...)")
+	def compareBy[B](map: A => B) = equalsBy(map)
 	/**
 	 * Checks whether certain aspects of the old and new value are different
 	 * @param map A mapping function applied for both the old and the new value
 	 * @tparam B Type of the mapped value
 	 * @return True if the mapped values are different, false otherwise
 	 */
-	def differentBy[B](map: A => B) = !compareBy(map)
+	def notEqualsBy[B](map: A => B) = !equalsBy(map)
+	@deprecated("Replaced with .notEqualsBy(...)")
+	def differentBy[B](map: A => B) = notEqualsBy(map)
 	/**
 	  * Applies a function from the old value to the new value
 	  * @param f A function for mapping into the applied function in the old value
 	  * @tparam R Result type of the found function
 	  * @return Result value of the found function when applied with the new value
 	  */
+	@deprecated("Please use .merge(...) instead", "v2.0")
 	def compareWith[R](f: A => A => R) = f(oldValue)(newValue)
 	
 	/**
