@@ -14,7 +14,6 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   */
 trait Animator[A] extends Actor with Drawable
 {
-	// TODO: Add animation events
 	// ATTRIBUTES	-------------------
 	
 	/**

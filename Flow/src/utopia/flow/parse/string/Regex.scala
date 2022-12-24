@@ -15,7 +15,7 @@ object Regex
 	implicit def stringToRegex(s: String): Regex = Regex(s)
 	
 	val anySingle = Regex(".")
-	val any = anySingle.zeroOrMoreTimes
+	val any = anySingle.anyTimes
 	val digit = Regex("\\d")
 	val nonDigit = Regex("\\D")
 	val whiteSpace = Regex("\\s")
@@ -122,10 +122,8 @@ case class Regex(string: String)
 	/**
 	  * @return Whether this regex is inside braces [...]
 	  */
-	def hasBrackets =
-	{
-		if (isDefined && string.startsWith("[") && string.endsWith("]"))
-		{
+	def hasBrackets = {
+		if (isDefined && string.startsWith("[") && string.endsWith("]")) {
 			// Makes sure the regex is not just a group of braced groups
 			val inside = string.substring(1, string.length - 1)
 			val firstStart = inside.indexOf('[')
@@ -152,10 +150,11 @@ case class Regex(string: String)
 	def withinParenthesis = Regex(s"($string)")
 	
 	/**
-	  * @return This regex in sequence 0 or more times
+	  * @return This regex in sequence 0-n times
 	  */
-	// TODO: Rename to anyNumberOfTimes (or create an alias)
-	def zeroOrMoreTimes = if (isEmpty || string.endsWith("*")) this else Regex(s"$string*")
+	def anyTimes = if (isEmpty || string.endsWith("*")) this else Regex(s"$string*")
+	@deprecated("Please use .anyTimes instead", "v2.0")
+	def zeroOrMoreTimes = anyTimes
 	/**
 	  * @return This regex in sequence one or more times
 	  */
@@ -187,7 +186,7 @@ case class Regex(string: String)
 	  * @param another Another regex
 	  * @return This regex followed by another regex
 	  */
-	def +(another: Regex) = Regex(string + another.string)
+	def +(another: Regex) = Regex(s"$string${ another.string }")
 	
 	/**
 	  * @param more Another regex
@@ -202,7 +201,7 @@ case class Regex(string: String)
 		else if (hasBrackets && more.hasBrackets)
 			(withoutBrackets + more.withoutBrackets).withBraces
 		else
-			Regex(string + "|" + more.string)
+			Regex(s"$string|${ more.string }")
 	}
 	
 	/**
@@ -257,8 +256,8 @@ case class Regex(string: String)
 		val notStart = !startRegex
 		val notEnd = !endRegex
 		
-		this + "(?=" + (notStart.zeroOrMoreTimes + startRegex + notEnd.zeroOrMoreTimes + endRegex).withinParenthesis
-			.zeroOrMoreTimes + Regex.noneOf(start.toString + end).zeroOrMoreTimes + "$)"
+		this + "(?=" + (notStart.anyTimes + startRegex + notEnd.anyTimes + endRegex).withinParenthesis
+			.anyTimes + Regex.noneOf(s"${ start.toString }$end").anyTimes + "$)"
 	}
 	
 	/**

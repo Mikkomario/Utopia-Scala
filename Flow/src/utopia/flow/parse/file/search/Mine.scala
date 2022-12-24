@@ -60,7 +60,6 @@ class Mine[R](val directory: Path)
 	 * @return Current status of this mine
 	 */
 	def status = _status.value
-	// TODO: Possibly add events
 	def status_=(newStatus: ExcavationStatus) = _status.value = newStatus
 	
 	/**

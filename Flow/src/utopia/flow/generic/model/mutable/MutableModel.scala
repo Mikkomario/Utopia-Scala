@@ -1,7 +1,7 @@
 package utopia.flow.generic.model.mutable
 
 import utopia.flow.event.listener.{ChangeListener, PropertyChangeListener}
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.{ChangeEvent, PropertyChangeEvent}
 import utopia.flow.event.model.PropertyChangeEvent.{PropertyAdded, PropertyRemoved, PropertySwapped, PropertyValueChange}
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template
@@ -154,27 +154,25 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
      */
     def +=(prop: V) = {
         val lowerName = prop.name.toLowerCase
+        def informListeners(event: => PropertyChangeEvent[V]) = {
+            if (listeners.nonEmpty) {
+                startListeningTo(prop)
+                // Generates an event, if necessary
+                val e = event
+                listeners.foreach { _.onPropertyChange(e) }
+            }
+        }
         propMap.get(lowerName) match {
             // Case: There already exists a property with that name => replaces it (generates a property change event)
             case Some(oldProp) =>
                 propMap += lowerName -> prop
                 // May start listening to value changes
-                if (listeners.nonEmpty) {
-                    startListeningTo(prop)
-                    // Generates an event, if necessary
-                    val event = PropertySwapped(ChangeEvent(oldProp, prop))
-                    listeners.foreach { _.onPropertyChange(event) }
-                }
+                informListeners(PropertySwapped(ChangeEvent(oldProp, prop)))
             // Case: Completely new attribute => generates a property added event and modifies property order as well
             case None =>
                 propMap += lowerName -> prop
                 propOrder :+= lowerName
-                // TODO: WET WET
-                if (listeners.nonEmpty) {
-                    startListeningTo(prop)
-                    val event = PropertyAdded(prop)
-                    listeners.foreach { _.onPropertyChange(event) }
-                }
+                informListeners(PropertyAdded(prop))
         }
     }
     /**

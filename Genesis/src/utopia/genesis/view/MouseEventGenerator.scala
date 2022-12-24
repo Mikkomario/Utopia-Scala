@@ -158,7 +158,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
         // IMPLEMENTED  -------------
         
         // TODO: Use an action queue in the simulated events to make sure release events are distributed AFTER the press events
-        override def mousePressed(e: MouseEvent) =  distributeEvent(e, isDown = true)
+        override def mousePressed(e: MouseEvent) = distributeEvent(e, isDown = true)
         override def mouseReleased(e: MouseEvent) = distributeEvent(e, isDown = false)
         
         override def mouseClicked(e: MouseEvent) = ()

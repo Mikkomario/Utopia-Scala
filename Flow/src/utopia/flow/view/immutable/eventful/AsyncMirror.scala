@@ -121,7 +121,6 @@ object AsyncMirror
 	  * @tparam Origin The type of process origins
 	  * @tparam Reflection The type of resulting (asynchronously mapped) values
 	  */
-	// TODO: Add alternative constructors
 	case class AsyncMirrorValue[+Origin, +Reflection](current: Reflection, activeOrigin: Option[Origin] = None,
 	                                                  queuedOrigin: Option[Origin] = None)
 	{

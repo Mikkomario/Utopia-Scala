@@ -153,9 +153,8 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
                       (implicit context: C2): Either[Error, (Resource[C2], Option[Path])] = path match
     {
         case Some(remaining) =>
-            // TODO: The match may not be exhaustive (because of the type parameter requirement)
-            resource.follow(remaining) match
-            {
+            // NB: The match may not be exhaustive (because of the type parameter requirement)
+            resource.follow(remaining) match {
                 case Follow(next, remaining) => follow(version, next, remaining)
                 case Ready(resource, path) => Right(resource -> path)
                 case e: Error => Left(e)

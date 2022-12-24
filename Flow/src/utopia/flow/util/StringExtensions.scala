@@ -417,7 +417,7 @@ object StringExtensions
 		  */
 		def notEmpty = if (s.isEmpty) None else Some(s)
 		
-		// TODO: These are copied from MayBeEmpty -
+		// NB: These are copied from MayBeEmpty -
 		//  Can't inherit it because implicit casting then fails with StringOps ambiguity
 		
 		/**

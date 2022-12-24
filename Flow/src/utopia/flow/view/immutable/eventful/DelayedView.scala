@@ -93,7 +93,6 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration)(implicit ex
 		// If no waiting is currently active, starts one
 		if (shouldStartWait)
 			Future {
-				// TODO: Build a more elegant version of this function
 				// Waits until a pause in changes
 				var waitNotBroken = true
 				var nextTarget = initialTarget

@@ -454,18 +454,8 @@ trait DataType
       * @param instance An instance that may or may not be of the supported type
       * @return Whether the provided value is an instance of this data type
       */
-    // TODO: Only works on reference types. Use classtags with value types
+    // NB: Only works with reference types
     def isInstance(instance: Any) = supportedClass.isInstance(instance)
-    // def isInstance(a: Any) = classTag == ClassTag(a.getClass)
-    /*
-    def isInstance(instance: Any) =
-    {
-        val B = ClassTag(supportedClass)
-    			ClassTag(element.getClass) match {
-    				case B => true
-    				case _ => false
-    	}
-    }*/
     
     /**
       * @param other Another data type

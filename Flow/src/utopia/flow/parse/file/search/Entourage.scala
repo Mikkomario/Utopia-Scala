@@ -25,7 +25,8 @@ class Entourage[R](origin: Mine[R], size: Int, startingPath: Vector[Mine[R]] = V
 	// Moves forward in the mines until a split is found
 	override def explore()(implicit exc: ExecutionContext) =
 	{
-		// TODO: Shouldn't this be asynchronous as well?
+		// _TODO: Shouldn't this be asynchronous as well?
+		// - How the heck am I supposed to know, coming back to this 3+ years later...
 		while (move()) { }
 		sentCompletions.future
 	}
