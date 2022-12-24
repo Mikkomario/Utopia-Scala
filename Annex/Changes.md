@@ -1,16 +1,16 @@
 # Utopia Annex - List of Changes
 
 ## v1.4 (in development)
-Schrödinger update
+### Deprecations
+- Deprecated all existing **Schrödinger** traits in favor of the new implementations
 ### New Features
+- Completely rewrote the **Schrödinger** classes to be pointer-based and to present only a read-only interface with 
+  a bunch of constructors for different use-cases.
 - **NoConnection** and **Response.Failure** now extend a new trait **RequestFailure**. 
   This makes **RequestResult** pattern matching easier, because all failure states may be matched into a single case.
 ### New Methods
 - **ResponseBody**
   - Added `.parseMany(FromModelFactory)`
-
-## v1.3.1 (In Development)
-Supports changes in **Flow** v2.0
 
 ## v1.3 - 02.10.2022
 This update introduces some smaller utility additions which aim to make this module more scalable.  
