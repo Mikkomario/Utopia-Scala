@@ -7,6 +7,7 @@ import utopia.annex.model.response.RequestNotSent
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Replaced with FindSchrodinger", "v1.4")
 trait PositiveFindSchrodinger[S, I] extends Schrodinger[Either[RequestNotSent, Option[I]], Option[S]]
 {
 	// ABSTRACT	---------------------------

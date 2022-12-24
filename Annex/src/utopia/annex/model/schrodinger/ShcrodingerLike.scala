@@ -14,6 +14,7 @@ import scala.concurrent.duration.Duration
   * @tparam R Type of received response
   * @tparam I Type of instance within response
   */
+@deprecated("Replaced with a rewritten version of Schrodinger at utopia.annex.schrodinger", "v1.4")
 trait ShcrodingerLike[+R, +I]
 {
 	// ABSTRACT ---------------------------

@@ -33,8 +33,8 @@ trait ApiRequest
 	def isDeprecated: Boolean
 	
 	/**
-	  * @return A model that can be stored locally to replicate this request in another session. None if this
-	  *         request needn't be persisted and replicated
+	  * @return A model that can be stored locally to replicate this request in another session.
+	  *         None if this request needn't be persisted and replicated
 	  */
 	def persistingModel: Option[Model]
 	

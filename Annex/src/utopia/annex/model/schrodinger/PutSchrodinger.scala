@@ -7,6 +7,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Replaced with a new version at utopia.annex.schrodinger", "v1.4")
 trait PutSchrodinger[S, I] extends Schrodinger[Try[I], S]
 {
 	// ABSTRACT	-------------------------

@@ -2,7 +2,6 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux}
 import utopia.annex.model.manifest.{HasSchrodingerState, Manifest, SchrodingerState}
-import utopia.annex.model.response.ResponseBody.Content
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -17,92 +16,48 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
-object Schrodinger2
+object Schrodinger
 {
-	def wrap[M, R](pointer: Changing[(M, R, SchrodingerState)]) = new Schrodinger2[M, R](pointer)
-	def static[M, R](manifest: M, result: R, state: Final) = wrap(Fixed(manifest, result, state))
-	def success[M, R](manifest: M, result: R) = static(manifest, result, Alive)
-	def failure[M, R](manifest: M, result: R) = static(manifest, result, Dead)
+	/**
+	  * Wraps a pointer into a schrödinger instance
+	  * @param pointer A pointer to wrap, which always contains 3 elements:
+	  *                 1) Manifest (used during and after the request)
+	  *                 2) Result (placeholder until request resolves, then processed request result)
+	  *                 3) State (flux, alive or dead)
+	  * @tparam M Type of manifest
+	  * @tparam R Type of results
+	  * @return A new schrödinger
+	  */
+	def wrap[M, R](pointer: Changing[(M, R, SchrodingerState)]) = new Schrodinger[M, R](pointer)
 	
-	// TODO: Move find functions to a separate class
 	/**
-	  * Creates a schrödinger that contains 0-1 locally cached values until server results arrive,
-	  * from which a new item is parsed, if present and possible.
-	  * Typically used when updating locally cached data.
-	  * @param local        A result based on local data pull (0-n items as a Vector)
-	  * @param resultFuture A future that will contain the server response, if successful
-	  * @param parser       A parser used for parsing items from a server response
-	  * @param emptyIsDead  Whether an empty result (0 items) should be considered Dead and not Alive.
-	  *                     Default = false = Result is alive as long as it resolves successfully.
-	  * @param exc          Implicit execution context
-	  * @tparam L Type of local search results
-	  * @tparam R Type of remote search results
-	  * @return A new schrödinger that contains local pull results
-	  *         and updates itself once the server-side results arrive.
+	  * Creates a new schrödinger that has already resolved into its final state
+	  * @param manifest Manifest of the final result
+	  * @param result Final result
+	  * @param state Alive or Dead, based on whether the result was a success or a failure
+	  * @tparam M Type of manifest
+	  * @tparam R Type or result
+	  * @return A new schrödinger that won't change
 	  */
-	def find[L, R](local: Option[L], resultFuture: Future[RequestResult],
-	               parser: FromModelFactory[R], emptyIsDead: Boolean = false)(localize: R => L)
-	              (implicit exc: ExecutionContext) =
-		_get[Option[L], Option[R]](local, None, resultFuture, emptyIsDead) {
-			case c: Content => c.parsedSingle(parser).map { Some(_) }
-			case _ => Success(None)
-		} { _.map(localize) }
+	def resolved[M, R](manifest: M, result: R, state: Final) = wrap(Fixed(manifest, result, state))
 	/**
-	  * Creates a schrödinger that either **permanently** contains the local search result, if found, or
-	  * performs a remote search and contains the server results once they arrive.
-	  * In other words, remote search is only performed if no local results are found.
-	  * This type of schrödinger is typically used when the local data is expected to be accurate, when present.
-	  * @param local Local search results
-	  * @param parser A parser used for handling server-side results
-	  * @param emptyIsDead Whether an empty result (0 items) should be considered Dead and not Alive.
-	  *                    Default = false = Result is alive as long as it resolves successfully.
-	  * @param makeRequest A function for starting a remote search.
-	  *                    Yields a future that contains the result of this request.
-	  * @param exc Implicit execution context
-	  * @tparam A Type of search results, when found
-	  * @return A new schrödinger, either based on local results (final) or remote search (flux)
+	  * Creates a new schrödinger that has successfully resolved into a final (success) state
+	  * @param manifest Manifest of the final result
+	  * @param result Final result
+	  * @tparam M Type of manifest
+	  * @tparam R Type or result
+	  * @return A new schrödinger that won't change
 	  */
-	def findAny[A](local: Option[A], parser: FromModelFactory[A], emptyIsDead: Boolean = false)
-	              (makeRequest: => Future[RequestResult])
-	              (implicit exc: ExecutionContext) =
-	{
-		// Case: Local results found => Skips the remote search
-		if (local.isDefined)
-			success(local, Success(local))
-		// Case: No local results => Performs the remote search
-		else
-			find(local, makeRequest, parser, emptyIsDead)(Identity)
-	}
+	def success[M, R](manifest: M, result: R) = resolved(manifest, result, Alive)
 	/**
-	  * Creates a schrödinger that wraps a remote search request which yields 0-1 items when successful.
-	  * This is typically used when no appropriate local data is available.
-	  * @param resultFuture  A future that will contain the server response, if successful
-	  * @param parser        A parser used for parsing items from a server response
-	  * @param emptyIsDead   Whether an empty result (0 items) should be considered Dead and not Alive.
-	  *                      Default = false = Result is alive as long as it resolves successfully.
-	  * @param expectFailure Whether the request is expected to fail (default = false = expected to succeed)
-	  * @param exc           Implicit execution context
-	  * @tparam A Type of found item
-	  * @return A new schrödinger that will contain None until server results arrive
+	  * Creates a new schrödinger that has resolved into a final failure state
+	  * @param manifest Manifest of the final result
+	  * @param result   Final result
+	  * @tparam M Type of manifest
+	  * @tparam R Type or result
+	  * @return A new schrödinger that won't change
 	  */
-	def findRemote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A], emptyIsDead: Boolean = false,
-	                  expectFailure: Boolean = false)
-	                 (implicit exc: ExecutionContext) =
-		_getRemote[Option[A]](None, resultFuture, emptyIsDead, expectFailure) {
-			case c: Content => c.parsedSingle(parser).map { Some(_) }
-			case _ => Success(None)
-		}
-	
-	private def _get[L <: HasIsEmpty, R <: HasIsEmpty](local: L, placeHolder: R, resultFuture: Future[RequestResult],
-	                                                emptyIsDead: Boolean = false)
-	                                               (parse: ResponseBody => Try[R])(localize: R => L)
-	                                               (implicit exc: ExecutionContext) =
-		wrap(getPointer(local, placeHolder, resultFuture, emptyIsDead)(parse)(localize: R => L))
-	private def _getRemote[M <: { def isEmpty: Boolean }](placeHolder: M, resultFuture: Future[RequestResult],
-	                                                      emptyIsDead: Boolean = false, expectFailure: Boolean = false)
-	                                                     (parse: ResponseBody => Try[M])
-	                                                     (implicit exc: ExecutionContext) =
-		wrap(remoteGetPointer(placeHolder, resultFuture, emptyIsDead, expectFailure)(parse))
+	def failure[M, R](manifest: M, result: R) = resolved(manifest, result, Dead)
 	
 	private[schrodinger] def getPointer[L <: HasIsEmpty, R <: HasIsEmpty](local: L, placeHolder: R,
 	                                                                      resultFuture: Future[RequestResult],
@@ -203,7 +158,7 @@ object Schrodinger2
   *           (i.e. the common class between the Schrödinger state, the alive state and the dead state)
   * @tparam R Type for tracking received responses
   */
-class Schrodinger2[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) extends HasSchrodingerState
+class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) extends HasSchrodingerState
 {
 	// ATTRIBUTES   ----------------------
 	

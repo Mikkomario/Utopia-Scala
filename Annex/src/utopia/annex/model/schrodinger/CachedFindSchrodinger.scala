@@ -14,6 +14,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 12.7.2020, v1
   */
+@deprecated("Replaced with PullSchrodinger", "v1.4")
 class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 {
 	// IMPLEMENTED	-------------------------------

@@ -15,6 +15,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 18.7.2020, v1
   */
+@deprecated("Replaced with FindSchrodinger", "v1.4")
 class TryFindSchrodinger[I](localResult: Try[I]) extends Schrodinger[Try[I], Try[I]]
 {
 	// IMPLEMENTED	--------------------------------

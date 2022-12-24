@@ -14,6 +14,13 @@ import scala.util.{Failure, Success, Try}
 
 object PullSchrodinger
 {
+	// ATTRIBUTES   ------------------------
+	
+	private lazy val pendingResultFailure = Failure(new IllegalStateException("Remote result is still pending"))
+	
+	
+	// OTHER    ----------------------------
+	
 	/**
 	  * Wraps a pointer
 	  * @param pointer A pointer that contains 3 elements:
@@ -66,8 +73,7 @@ object PullSchrodinger
 	  */
 	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult], parser: FromModelFactory[R])
 	               (localize: R => L)(implicit exc: ExecutionContext) =
-		_apply(local.toTry { new NoSuchElementException("No local data") },
-			Failure(new IllegalStateException("Remote result is still pending")), resultFuture, parser,
+		_apply(local.toTry { new NoSuchElementException("No local data") }, pendingResultFailure, resultFuture, parser,
 			Flux(local.isDefined))(localize)
 	
 	/**
@@ -108,16 +114,13 @@ object PullSchrodinger
 	  */
 	def remote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A])
 	                 (implicit exc: ExecutionContext) =
-	{
-		val initial = Failure(new IllegalStateException("No results acquired yet"))
-		_apply(initial, initial, resultFuture, parser, PositiveFlux)(Identity)
-	}
+		_apply(pendingResultFailure, pendingResultFailure, resultFuture, parser, PositiveFlux)(Identity)
 	
 	private def _apply[L, R](initialManifest: Try[L], placeHolderResult: Try[R], resultFuture: Future[RequestResult],
 	                         parser: FromModelFactory[R], flux: Flux = Flux)(localize: R => L)
 	                        (implicit exc: ExecutionContext) =
 	{
-		val p = Schrodinger2.makePointer[Try[L], Try[R]](initialManifest, placeHolderResult, resultFuture, flux) {
+		val p = Schrodinger.makePointer[Try[L], Try[R]](initialManifest, placeHolderResult, resultFuture, flux) {
 			case Right(body) => body.tryParseSingleWith(parser)
 			case Left(error) => Failure(error)
 		} { (placeHolder, parsed) =>
@@ -140,4 +143,4 @@ object PullSchrodinger
   * @tparam R Type of remotely read items (instances)
   */
 class PullSchrodinger[+L, +R](pointer: Changing[(Try[L], Try[R], SchrodingerState)])
-	extends Schrodinger2[Try[L], Try[R]](pointer)
+	extends Schrodinger[Try[L], Try[R]](pointer)

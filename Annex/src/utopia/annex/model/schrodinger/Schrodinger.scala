@@ -13,6 +13,7 @@ import scala.concurrent.ExecutionContext
   * @tparam R Type of received response
   * @tparam I Type of instance within response
   */
+@deprecated("Replaced with a new version at utopia.annex.schrodinger", "v1.4")
 trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 {
 	// ABSTRACT ---------------------------

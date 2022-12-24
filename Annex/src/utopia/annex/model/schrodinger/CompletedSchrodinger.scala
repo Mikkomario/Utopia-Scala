@@ -12,6 +12,7 @@ object CompletedSchrodinger
 	  * @tparam R Type of server result
 	  * @return A schrödinger completed with said result. The processed instance will match this result.
 	  */
+	@deprecated("Replaced with Schrodinger.resolved(...)", "v1.4")
 	def apply[R](result: R) = new CompletedSchrodinger(result, result)
 	
 	/**
@@ -19,6 +20,7 @@ object CompletedSchrodinger
 	  * @tparam R Type of result contents
 	  * @return A schrödinger completed with said result. Server response is specified result wrapped in Success(...)
 	  */
+	@deprecated("Replaced with Schrodinger.successful(...)", "v1.4")
 	def success[R](result: R) = new CompletedSchrodinger[Try[R], R](Success(result), result)
 }
 
@@ -28,6 +30,7 @@ object CompletedSchrodinger
   * @since 19.7.2020, v1
   * @tparam R Type of result this schrödinger was completed with
   */
+@deprecated("Replaced with a rewritten Schrodinger class at utopia.annex.schrodinger", "v1.4")
 case class CompletedSchrodinger[+R, +I](result: R, override val instance: I) extends ShcrodingerLike[R, I]
 {
 	// IMPLEMENTED	--------------------------

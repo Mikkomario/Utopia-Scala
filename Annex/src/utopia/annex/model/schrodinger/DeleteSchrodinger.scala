@@ -7,6 +7,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Replaced with a new version in utopia.annex.schrodinger", "v1.4")
 trait DeleteSchrodinger[G] extends Schrodinger[Try[Unit], Option[G]]
 {
 	// ABSTRACT	--------------------------------

@@ -44,7 +44,7 @@ object PullManySchrodinger
 	  * @return A schrödinger with static state (dead or alive)
 	  */
 	def resolved[A](results: Try[Vector[A]], requireNonEmpty: Boolean = false) =
-		wrap(Fixed(Schrodinger2.testEmptyState(Vector[A](), results, requireNonEmpty)(Identity)))
+		wrap(Fixed(Schrodinger.testEmptyState(Vector[A](), results, requireNonEmpty)(Identity)))
 	/**
 	  * Creates a schrödinger that has already resolved into a success or a failure
 	  * @param items         Pulled items
@@ -88,7 +88,7 @@ object PullManySchrodinger
 	  */
 	def apply[L, R](local: Vector[L], resultFuture: Future[RequestResult], parser: FromModelFactory[R],
 	                emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext) =
-		wrap(Schrodinger2.getPointer(local, Vector[R](), resultFuture, emptyIsDead) { _.parseMany(parser) } {
+		wrap(Schrodinger.getPointer(local, Vector[R](), resultFuture, emptyIsDead) { _.parseMany(parser) } {
 			_.map(localize) })
 	
 	/**
@@ -106,7 +106,7 @@ object PullManySchrodinger
 	def remote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A],
 	              emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	             (implicit exc: ExecutionContext) =
-		wrap(Schrodinger2.remoteGetPointer[Vector[A]](Vector(), resultFuture, emptyIsDead,
+		wrap(Schrodinger.remoteGetPointer[Vector[A]](Vector(), resultFuture, emptyIsDead,
 			expectFailure) { _.parseMany(parser) })
 }
 
@@ -119,4 +119,4 @@ object PullManySchrodinger
   * @tparam R The remotely store item variants (instances)
   */
 class PullManySchrodinger[+L, +R](pointer: Changing[(Vector[L], Try[Vector[R]], SchrodingerState)])
-	extends Schrodinger2[Vector[L], Try[Vector[R]]](pointer)
+	extends Schrodinger[Vector[L], Try[Vector[R]]](pointer)
