@@ -108,10 +108,11 @@
 - **Path**
   - Added `.toTree`
 - **Pair**
+  - Added `.flatMergeWith(Pair)(...)` and `.toMapWith(Pair)`
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
   - Added `.isSymmerticBy(...)`, `.isAsymmetricBy(...)`, 
     `.equalsUsing(EqualsFunction)`, `.notEqualsUsing(EqualsFunction)`, `~==` and `!~==`
-  - Added `.iteratorWithSides`, `.mapWithSides(...)` and `.toMapWith(Pair)`
+  - Added `.iteratorWithSides` and `.mapWithSides(...)`
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **PointerWithEvents** (type)
   - Added `.empty`
@@ -126,6 +127,7 @@
   and `.delayedBy(...)` are no longer abstract
 - **Path** `.parentOption` (via **FileExtensions**) now converts the path to a root path, if necessary
 - **Pair**`.sorted` now returns a **Pair**
+- Optimized `~==` implementation for **Strings**
 
 ## v1.17 - 02.10.2022
 This version contains a few larger changes and a large number of little updates and additions here and there.  

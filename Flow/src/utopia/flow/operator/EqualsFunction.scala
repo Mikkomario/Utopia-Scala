@@ -16,7 +16,9 @@ object EqualsFunction
 	/**
 	  * A case-insensitive string equality function
 	  */
-	lazy val stringCaseInsensitive = apply[String] { _.equalsIgnoreCase(_) }
+	lazy val stringCaseInsensitive = apply[String] { (a, b) =>
+		a.length == b.length && a.iterator.zip(b.iterator).forall { case (a, b) => a.toLower == b.toLower }
+	}
 	/**
 	  * A double equality function that rounds to 7th decimal place
 	  */

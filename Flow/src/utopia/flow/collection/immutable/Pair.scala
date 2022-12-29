@@ -374,15 +374,32 @@ case class Pair[+A](first: A, second: A)
 	def reverseReduce[B](f: (A, A) => B) = f(second, first)
 	
 	/**
-	  * Combines this pair with another pair
+	  * Combines this pair with another pair, matching first and second items together
 	  * @param other Another pair
-	  * @param f A merging function
+	  * @param f A merge function that accepts a value from both pairs.
+	  *          The values are always acquired from the same side on both pairs.
 	  * @tparam B Type of other pair
 	  * @tparam C Type of merge result
 	  * @return A combined pair
 	  */
 	def mergeWith[B, C](other: Pair[B])(f: (A, B) => C) =
 		Pair(f(first, other.first), f(second, other.second))
+	/**
+	  * Combines this pair with another pair, matching first and second items together
+	  * @param other Another pair
+	  * @param f A merge function that accepts a value from both pairs.
+	  *          The values are always acquired from the same side on both pairs.
+	  *          Returns 0-n items.
+	  * @tparam B Type of values in the other pair
+	  * @tparam C Type of individual merge results
+	  * @return All merge results as a vector
+	  */
+	def flatMergeWith[B, C](other: Pair[B])(f: (A, B) => IterableOnce[C]) = {
+		val builder = new VectorBuilder[C]()
+		builder ++= f(first, other.first)
+		builder ++= f(second, other.second)
+		builder.result()
+	}
 	/**
 	  * Merges this pair with another pair, resulting in a pair containing the entries from both
 	  * @param other Another pair
