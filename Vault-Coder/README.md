@@ -272,11 +272,15 @@ Each combination object should contains following properties:
   expect there to be children in queries
 - **"name": String (optional)** - Name of the combined class
   - If omitted, "ParentWithChild" (or "ParentWithChildren") -type of naming will be used
+- **name_plural: String (optional)** - Plural form of this class' name
+  - If omitted, the singular name is auto-pluralized
 - **"parent_alias" / "alias_parent": String (optional)** - Name to use for the parent class within this
   combination class
   - Also affects combination naming if `"name"` is not specified
 - **"child_alias" / "alias_child": String (optional)** - Name to use for the child / children in the combined class
   - Also affects combination naming if `"name"` is not specified
+- **"child_alias_plural / children_alias"** - Plural form of the child alias
+  - If omitted, auto-pluralization is used
 - **"doc": String (optional)** - A description of this combined model (used in documentation)
 
 ### Code Object Structure

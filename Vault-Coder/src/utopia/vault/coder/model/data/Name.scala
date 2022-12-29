@@ -42,21 +42,19 @@ object Name extends FromValueFactory[Name]
 	def apply(singular: String): Name = apply(singular, NamingConvention.of(singular))
 	/**
 	  * @param singular A singular version of this name
+	  * @param style    Style in which this name is given
+	  * @return Name based on the specified string
+	  */
+	def apply(singular: String, style: NamingConvention): Name =
+		apply(singular, pluralize(singular), style)
+	/**
+	  * @param singular A singular version of this name
 	  * @param context Implicit name context
 	  * @param naming Implicit naming rules
 	  * @return Name based on the specified string, interpreted according to the applicable context
 	  */
 	def contextual(singular: String)(implicit context: NameContext, naming: NamingRules) =
 		interpret(singular, naming(context))
-	
-	/**
-	  * @param singular A singular version of this name
-	  * @param style Style in which this name is given
-	  * @return Name based on the specified string
-	  */
-	def apply(singular: String, style: NamingConvention): Name =
-		apply(singular, pluralize(singular), style)
-	
 	/**
 	  * @param singular A singular version of this name
 	  * @param expectedStyle Style in which this name is expected to be given
@@ -74,9 +72,9 @@ object Name extends FromValueFactory[Name]
 				// Case: Ends with an 's' => prepends with 'many' or replaces double 's' with 'sses'
 				case 's' =>
 					if (singular.length == 1 || (singular: StringOps)(singular.length - 2) == 's')
-						singular + "ses"
+						s"${ singular }ses"
 					else
-						singular + "es"
+						s"${ singular }es"
 					/*else if (singular.startsWithIgnoreCase("many"))
 						singular
 					else {
@@ -86,15 +84,15 @@ object Name extends FromValueFactory[Name]
 				case 'y' =>
 					// Case: Ends with a y => replaces 'y' with 'ies'
 					if (singular.last.isLower)
-						singular.dropRight(1) + "ies"
+						s"${ singular.dropRight(1) }ies"
 					// Case: Ends with a Y (separate) => adds an 's'
 					else if (singular.length == 1 || (singular: StringOps)(singular.length - 2).isLower)
-						singular + 's'
+						s"${ singular }s"
 					// Case: Ends with a Y (with other upper-case characters before that) => replaces 'Y' with 'IES'
 					else
-						singular.dropRight(1) + "IES"
+						s"${ singular.dropRight(1) }IES"
 				// Default => appends 's'
-				case _ => singular + 's'
+				case _ => s"${ singular }s"
 			}
 	}
 }

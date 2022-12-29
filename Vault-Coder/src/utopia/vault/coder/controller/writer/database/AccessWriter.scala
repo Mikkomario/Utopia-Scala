@@ -204,7 +204,7 @@ object AccessWriter
 			if (combo.combinationType.isOneToMany)
 				Vector()
 			else
-				propertyGettersFor(combo.childClass, childModelProp.name, combo.childName.prop)
+				propertyGettersFor(combo.childClass, childModelProp.name) { n => (combo.childName + n).prop }
 		}
 		val childSetters = {
 			// Won't write setters if there are no getters
@@ -278,7 +278,7 @@ object AccessWriter
 		// Properties and methods that will be written to the highest trait (which may vary)
 		// These are: .model, .id and various property getters and setters
 		val pullIdCode = classToWrite.idType.optional.fromValueCode(s"pullColumn(index)")
-		val highestTraitProperties = modelProperty +: propertyGettersFor(classToWrite, modelProperty.name) :+
+		val highestTraitProperties = modelProperty +: propertyGettersFor(classToWrite, modelProperty.name) { _.prop } :+
 			ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(pullIdCode.text)
 		val highestTraitMethods = propertySettersFor(classToWrite, modelProperty.name) { _.prop } ++ deprecationMethod
 		
@@ -451,12 +451,14 @@ object AccessWriter
 				properties = Vector(
 					ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
 					childModelProp
-				) ++ propertyGettersFor(combo.childClass, childModelProp.name, combo.childName.prop, pullMany = true),
-				methods = propertySettersFor(combo.childClass, childModelProp.name) { n => (combo.childName +: n).props } +
+				) ++ propertyGettersFor(combo.childClass, childModelProp.name,
+					pullMany = true) { n => (combo.childName + n).props },
+				methods = propertySettersFor(combo.childClass,
+					childModelProp.name) { n => (combo.childName +: n).props } +
 					MethodDeclaration("filter", explicitOutputType = Some(traitType), isOverridden = true)(
 						Parameter("additionalCondition", Reference.condition))(
 						s"new $traitName.SubAccess(this, additionalCondition)")
-				,// FIXME: Wrong naming in props and methods
+				,
 				description = s"A common trait for access points that return multiple ${ combo.name.pluralDoc } at a time",
 				author = combo.author
 			)
@@ -480,19 +482,7 @@ object AccessWriter
 		
 		// Properties and methods that will be written to the highest trait (which may vary)
 		val idsPullCode = classToWrite.idType.fromValuesCode("pullColumn(index)")
-		// TODO: Copy getters and setters into two separate functions
-		val highestTraitProperties = modelProperty +:
-			classToWrite.properties.flatMap { prop =>
-				// Only single-column properties are pulled
-				prop.onlyDbVariant.map { dbProp =>
-					val pullCode = prop.dataType
-						.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })")
-					ComputedProperty(prop.name.props, pullCode.references,
-						description = s"${ prop.name.pluralDoc } of the accessible ${
-							classToWrite.name.pluralDoc }",
-						implicitParams = Vector(connectionParam))(pullCode.text)
-				}
-			} :+
+		val highestTraitProperties = modelProperty +: propertyGettersFor(classToWrite, pullMany = true) { _.props } :+
 			ComputedProperty("ids", idsPullCode.references, implicitParams = Vector(connectionParam))(idsPullCode.text)
 		val highestTraitMethods = propertySettersFor(classToWrite, modelProperty.name) { _.props } ++ deprecationMethod
 		
@@ -665,8 +655,8 @@ object AccessWriter
 		).write()
 	}
 	
-	private def propertyGettersFor(classToWrite: Class, modelPropName: String = "model", prefix: String = "",
-	                               pullMany: Boolean = false)
+	private def propertyGettersFor(classToWrite: Class, modelPropName: String = "model",
+	                               pullMany: Boolean = false)(parsePropName: Name => String)
 	                              (implicit naming: NamingRules) =
 	{
 		classToWrite.properties.flatMap { prop =>
@@ -686,7 +676,7 @@ object AccessWriter
 						s"${ prop.description.nonEmptyOrElse(s"The ${ dbProp.name.doc } of this ${
 							classToWrite.name.doc }") }. None if no ${ classToWrite.name.doc } (or value) was found."
 				}
-				ComputedProperty((prefix +: dbProp.name).prop, pullCode.references, description = desc,
+				ComputedProperty(parsePropName(dbProp.name), pullCode.references, description = desc,
 					implicitParams = Vector(connectionParam))(pullCode.text)
 			}
 		}

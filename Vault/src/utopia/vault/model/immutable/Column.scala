@@ -46,11 +46,11 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     /**
      * Creates a condition that checks whether the column value in the database is null
      */
-    def isNull = Condition(SqlSegment(columnNameWithTable + " IS NULL"))
+    def isNull = Condition(SqlSegment(s"$columnNameWithTable IS NULL"))
     /**
      * Creates a condition that checks whether the column value in the database is not null
      */
-    def isNotNull = Condition(SqlSegment(columnNameWithTable + " IS NOT NULL"))
+    def isNotNull = Condition(SqlSegment(s"$columnNameWithTable IS NOT NULL"))
     
     
     // IMPLEMENTED  -----------------------------

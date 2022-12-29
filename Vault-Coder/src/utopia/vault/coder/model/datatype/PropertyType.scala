@@ -843,6 +843,7 @@ object PropertyType
 		
 		override def defaultPropertyName = "value"
 		
+		// TODO: Should parse from json
 		override def fromValueCode(valueCode: String) = valueCode
 		override def fromValuesCode(valuesCode: String) = valuesCode
 		override def toValueCode(instanceCode: String) = instanceCode

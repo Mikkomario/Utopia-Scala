@@ -105,7 +105,7 @@ object ClassReader
 							.getOrElse {
 								if (combo.childrenDefinedAsPlural)
 									MultiCombined
-								else if (!(combo.childName ~== childClass.name.singular) &&
+								else if ((combo.childName !~== childClass.name.singular) &&
 									(combo.childName ~== childClass.name.plural))
 									MultiCombined
 								else if (combo.alwaysLinked.isCertainlyTrue)
@@ -113,24 +113,52 @@ object ClassReader
 								else
 									PossiblyCombined
 							}
-						// Determines combination name
-						val childAlias = combo.childAlias.notEmpty.map { alias =>
-							if (combinationType.isOneToMany)
-								Name(alias, alias, NamingConvention.of(alias, namingRules(ClassName)))
-							else
-								Name.interpret(alias, namingRules(ClassName))
+						def parseAlias(alias: String, pluralForm: String, pluralIsDefault: Boolean = false) = {
+							// Finds the alias name property, if defined
+							alias.notEmpty.map { alias =>
+								val namingConvention = NamingConvention.of(alias, namingRules(ClassPropName))
+								// Finds the plural form, if defined
+								pluralForm.notEmpty match {
+									// Case: Plural form is defined
+									case Some(pluralAlias) => Name(alias, pluralAlias, namingConvention)
+									// Case: Only one form is defined
+									case None =>
+										// Case: Expects the main alias to be pluralized => Uses plural as singular, also
+										if (pluralIsDefault)
+											Name(alias, alias, namingConvention)
+										// Case: Expects the main alias to be singular => Auto-pluralizes
+										else
+											Name.interpret(alias, namingConvention)
+								}
+							}
 						}
-						val parentAlias = combo.parentAlias.notEmpty
-							.map { alias => Name.interpret(alias, namingRules(ClassName)) }
+						// Determines combination name
+						val childAlias = parseAlias(combo.childAlias, combo.pluralChildAlias,
+							combinationType.isOneToMany)
+						val parentAlias = parseAlias(combo.parentAlias, combo.pluralParentAlias)
 						val comboName = combo.name.notEmpty match {
-							case Some(n) => Name.interpret(n, namingRules(ClassName))
+							// Case: Custom name has been given
+							case Some(name) =>
+								val namingConvention = NamingConvention.of(name, namingRules(ClassName))
+								combo.pluralName.notEmpty match {
+									// Case: Plural form has also been specified
+									case Some(pluralName) => Name(name, pluralName, namingConvention)
+									// Case: No plural form specified => Auto-pluralizes
+									case None => Name.interpret(name, namingConvention)
+								}
+							// Case: No name specified => Generates a name
 							case None =>
 								val childPart = childAlias.getOrElse(childClass.name)
-								val base = parentClass.name + "with"
+								val base = parentClass.name + Name("with", "with", CamelCase.lower)
+								// Case: There are multiple children => Plural child name is used in all name forms
+								// E.g. CarWithTires and CarsWithTires
 								if (combinationType.isOneToMany)
-									base + childPart.plural
+									base + Name(childPart.plural, childPart.plural, childPart.style)
+								// Case: There are 0-1 children => Both parent and child name follow same pluralization
+								// E.g. CarWithMotor => CarsWithMotors
 								else
-									base + childPart
+									Name(s"${base.singular}${ childPart.singularIn(base.style) }",
+										s"${ base.plural }${ childPart.pluralIn(base.style) }", base.style)
 						}
 						val isAlwaysLinked = combo.alwaysLinked.getOrElse {
 							combinationType match {
@@ -266,7 +294,12 @@ object ClassReader
 		}).flatMap { comboModel =>
 			comboModel("child", "children").string.map { childName =>
 				RawCombinationData(childName, comboModel("parent_alias", "alias_parent").getString,
-					comboModel("child_alias", "alias_child").getString, comboModel("type").getString,
+					comboModel("parent_alias_plural", "plural_parent_alias", "alias_parent_plural",
+						"plural_alias_parent").getString,
+					comboModel("child_alias", "alias_child").getString,
+					comboModel("child_alias_plural", "plural_child_alias", "alias_child_plural", "plural_alias_child",
+						"children_alias", "alias_children").getString,
+					comboModel("type").getString,
 					comboModel("name").getString.capitalize, comboModel("name_plural").getString.capitalize,
 					comboModel("doc").getString, comboModel("always_linked", "is_always_linked").boolean,
 					comboModel.containsNonEmpty("children"))
@@ -407,8 +440,8 @@ object ClassReader
 	
 	// NESTED   --------------------------------------
 	
-	private case class RawCombinationData(childName: String, parentAlias: String, childAlias: String,
-	                                      comboTypeName: String, name: String, namePlural: String, doc: String,
-	                                      alwaysLinked: UncertainBoolean,
-	                                      childrenDefinedAsPlural: Boolean)
+	private case class RawCombinationData(childName: String, parentAlias: String, pluralParentAlias: String,
+	                                      childAlias: String, pluralChildAlias: String, comboTypeName: String,
+	                                      name: String, pluralName: String, doc: String,
+	                                      alwaysLinked: UncertainBoolean, childrenDefinedAsPlural: Boolean)
 }
