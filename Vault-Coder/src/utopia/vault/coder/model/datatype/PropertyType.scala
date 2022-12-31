@@ -900,7 +900,7 @@ object PropertyType
 		override def fromValueCode(valueCode: String) =
 			CodePiece(s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})", fromValueReferences)
 		override def toValueCode(instanceCode: String) =
-			CodePiece(instanceCode + unitConversionCode, toValueReferences)
+			CodePiece(s"$instanceCode$unitConversionCode", toValueReferences)
 		override def optionFromValueCode(valueCode: String) =
 			CodePiece(s"$valueCode.long.map { FiniteDuration(_, TimeUnit.${unit.name}) }", fromValueReferences)
 		override def optionToValueCode(optionCode: String) =
