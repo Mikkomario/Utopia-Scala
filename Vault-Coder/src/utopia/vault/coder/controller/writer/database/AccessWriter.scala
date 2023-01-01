@@ -1,6 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, Name, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.datatype.PropertyType
@@ -64,9 +65,11 @@ object AccessWriter
 	
 	// TODO: Allow customization of package names
 	private def packageFor(accessPackage: Package, c: Class) = {
-		val base = accessPackage/c.packageName
-		val end = c.name.singularIn(UnderScore)
-		if (base.parts.lastOption.contains(end))
+		// Won't include the general package name part twice
+		val pckName = c.packageName
+		val base = accessPackage/pckName
+		val end = c.name.singularIn(UnderScore).split('_').filterNot { _ ~== pckName }.mkString("_")
+		if (end.isEmpty)
 			base
 		else
 			base/end
