@@ -152,9 +152,12 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       */
     def grouped(primaryTable: Table, secondaryTables: Iterable[Table]) =
     {
-        rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-            .view.mapValues { rows => rows.head -> secondaryTables.map { table => table -> rows.filter { _.containsDataForTable(table) }
-                .distinctBy { _.indexForTable(table) } }.toMap }.toMap
+        rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }.view
+            .mapValues { rows =>
+                rows.head -> secondaryTables.map { table =>
+                    table -> rows.filter { _.containsDataForTable(table) }.distinctBy { _.indexForTable(table) }
+                }.toMap
+            }.toMap
     }
     
     /**

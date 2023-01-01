@@ -99,6 +99,7 @@
   - Added `.divergeMapLeft(...)` and `.divergeMapRight(...)`
 - **Iterable** (**CollectionExtensions**)
   - Added `.minMax` and `.minMaxOption`
+  - Added `.hasEqualsSizeWith(Iterable)`, which is a potentially more efficient implementation of `.size == other.size`
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.
 - **Iterator** (**CollectionExtensions**)

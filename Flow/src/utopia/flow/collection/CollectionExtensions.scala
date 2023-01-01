@@ -646,6 +646,12 @@ object CollectionExtensions
 		def minMaxOption(implicit ord: Ordering[A]) = if (t.isEmpty) None else Some(minMax)
 		
 		/**
+		  * @param other Another collection
+		  * @return Whether these two collections have the same size
+		  */
+		def hasEqualSizeWith(other: Iterable[_]) = t.sizeCompare(other) == 0
+		
+		/**
 		  * Finds the item(s) that best match the specified conditions
 		  * @param matchers Search conditions used. The conditions that are introduced first are considered more
 		  *                 important than those which are introduced the last.

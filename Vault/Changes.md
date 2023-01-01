@@ -2,6 +2,9 @@
 
 ## v1.14.1 (in development)
 Adjusting to **Flow** v2.0 changes
+### BugFixes
+- **FromRowFactory**, when used with a table that doesn't have a primary column, 
+  will no longer reduce the result into a single row.
 ### New Methods
 - **Access**
   - Added `.findNotLinkedTo(Table)`

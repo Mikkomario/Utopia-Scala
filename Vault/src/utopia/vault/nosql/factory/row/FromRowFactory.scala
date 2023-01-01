@@ -46,13 +46,16 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	override def apply(result: Result): Vector[A] =
 	{
 		// Makes sure duplicate rows are not present by only including each index (group) once
+		// (Only works when all included tables use indexing)
 		val indices = tables.flatMap { table => table.primaryColumn }
-		result.rows.distinctBy { row => indices.map(row.apply) }.flatMap(parseIfPresent)
+		if (indices hasEqualSizeWith tables)
+			result.rows.distinctBy { row => indices.map(row.apply) }.flatMap(parseIfPresent)
+		else
+			result.rows.flatMap(parseIfPresent)
 	}
 	
 	override def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
-	                  joinType: JoinType = Inner)(implicit connection: Connection) =
-	{
+	                  joinType: JoinType = Inner)(implicit connection: Connection) = {
 		val select = {
 			if (joins.isEmpty)
 				SelectAll(target)
