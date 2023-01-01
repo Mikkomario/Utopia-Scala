@@ -459,26 +459,28 @@ This application will produce the following documents
     - access
       - single
         - **P**
-          - **UniqueXAccessLike.scala** - A trait common to distinct single access points that return instances 
-            of **X** or any combinations where **X** acts as the parent class
-            - Only generated for classes that use combinations
-          - **UniqueXAccess.scala** - A trait common to distinct single access points that return instances of **X**
-          - **DbSingleX.scala** - A class that accesses individual instances of **X** based on their id
-            - Also generated for various class combinations
-          - **DbX.scala** - The root access point for individual instances of **X**
-            - Also generated for various class combinations
+          - **X**
+            - **UniqueXAccessLike.scala** - A trait common to distinct single access points that return instances 
+              of **X** or any combinations where **X** acts as the parent class
+              - Only generated for classes that use combinations
+            - **UniqueXAccess.scala** - A trait common to distinct single access points that return instances of **X**
+            - **DbSingleX.scala** - A class that accesses individual instances of **X** based on their id
+              - Also generated for various class combinations
+            - **DbX.scala** - The root access point for individual instances of **X**
+              - Also generated for various class combinations
         - description
           - **DbXDescription.scala** - The root access point for individual descriptions targeting instances of **X**
             - Only generated for classes which support descriptions
       - many
         - **P**
-          - **ManyXsAccessLike.scala** - A trait common to access points that return multiple instances 
-            of **X** or its variations (combinations) at a time
-            - Only generated for classes that use combinations
-          - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
-            - Also generated for various class combinations
-          - **DbXs.scala** - The root access point for multiple instances of **X**
-            - Also generated for various class combinations
+          - **X**
+            - **ManyXsAccessLike.scala** - A trait common to access points that return multiple instances 
+              of **X** or its variations (combinations) at a time
+              - Only generated for classes that use combinations
+            - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
+              - Also generated for various class combinations
+            - **DbXs.scala** - The root access point for multiple instances of **X**
+              - Also generated for various class combinations
         - description
           - **DbXDescriptions.scala** - The root access point for accessing multiple **X**-descriptions at once
             - Only generated for classes which support descriptions

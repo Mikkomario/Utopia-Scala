@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, Name, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.datatype.PropertyType
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.datatype.TypeVariance.Covariance
 import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
@@ -62,13 +62,24 @@ object AccessWriter
 			(manyPrefix +: className) + accessTraitSuffix
 	}
 	
+	// TODO: Allow customization of package names
+	private def packageFor(accessPackage: Package, c: Class) = {
+		val base = accessPackage/c.packageName
+		val end = c.name.singularIn(UnderScore)
+		if (base.parts.lastOption.contains(end))
+			base
+		else
+			base/end
+	}
+	
 	/**
 	  * @param c     A class
 	  * @param setup Project setup (implicit)
 	  * @return Package that contains singular access points for that class
 	  */
-	def singleAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = setup.singleAccessPackage / c.packageName
-	private def manyAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = setup.manyAccessPackage / c.packageName
+	private def singleAccessPackageFor(c: Class)(implicit setup: ProjectSetup) =
+		packageFor(setup.singleAccessPackage, c)
+	private def manyAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = packageFor(setup.manyAccessPackage, c)
 	
 	/**
 	  * @param c     A class

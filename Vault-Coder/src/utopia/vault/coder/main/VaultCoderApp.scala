@@ -27,7 +27,7 @@ object VaultCoderApp extends App
 		println(s"Warning! Following arguments were not recognized: ${arguments.unrecognized.mkString(", ")}")
 	if (arguments.values.isEmpty) {
 		println("Hint: This program supports following command line arguments:")
-		arguments.schema.arguments.foreach { arg => println("- " + arg) }
+		arguments.schema.arguments.foreach { arg => println(s"- $arg") }
 		println()
 	}
 	

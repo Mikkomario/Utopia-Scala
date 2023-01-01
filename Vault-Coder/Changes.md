@@ -1,6 +1,8 @@
 # Utopia Vault Coder
 
 ## v1.7.1 (In Development)
+### Breaking Changes
+- Access traits and objects are now written in class-specific sub-packages
 ### Bugfixes
 - Fixed enumeration auto-indexing from 0-based (v1.7 -specific bug) back to 1-based
 - Fixed a bug where enumeration default values were not imported properly
