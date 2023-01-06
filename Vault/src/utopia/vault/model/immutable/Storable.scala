@@ -248,6 +248,7 @@ trait Storable extends ModelConvertible
      * instead of updating an existing row.
      * @return The generated index, if an insertion was made and one was generated or provided.
      */
+    // TODO: Refactor
     def insert()(implicit connection: Connection) = 
     {
         try {

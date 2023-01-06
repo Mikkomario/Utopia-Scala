@@ -1,6 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, Name, NamingRules, ProjectSetup, Property}
@@ -68,7 +69,13 @@ object AccessWriter
 		// Won't include the general package name part twice
 		val pckName = c.packageName
 		val base = accessPackage/pckName
-		val end = c.name.singularIn(UnderScore).split('_').filterNot { _ ~== pckName }.mkString("_")
+		val end = {
+			val full = c.name.singularIn(UnderScore).split('_').toVector
+			(full.indexWhereOption { _ ~== pckName } match {
+				case Some(idx) => full.drop(idx + 1)
+				case None => full
+			}).mkString("_")
+		}
 		if (end.isEmpty)
 			base
 		else
