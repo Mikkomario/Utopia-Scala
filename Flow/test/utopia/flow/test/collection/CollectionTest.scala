@@ -43,6 +43,8 @@ object CollectionTest extends App
 	assert(numbers.existsCount(3) { _ < 4 })
 	assert(!numbers.existsCount(2) { _ > 4 })
 	
+	assert(numbers.findAndPop { _ > 2 } == (Some(3), Vector(1, 2, 4, 5)), numbers.findAndPop { _ > 2 })
+	
 	/*
 	def lazyNumber(i: Int) = {
 		println(s"generating $i")

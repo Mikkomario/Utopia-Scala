@@ -117,6 +117,8 @@
   - Added a number of new methods for pairs that contain collections (accessed implicitly)
 - **PointerWithEvents** (type)
   - Added `.empty`
+- **Seq** (**CollectionExtensions**)
+  - Added `.findAndPop(...)`, which finds an item and removes it from the collection
 - **Signed**
   - Added a number of new utility functions
 - **Tree** (object)

@@ -414,6 +414,13 @@ case class Pair[+A](first: A, second: A)
 	  *         The mapping is based on ordering (first to first, second to second)
 	  */
 	def toMapWith[K](keys: Pair[K]) = keys.iterator.zip(this).toMap
+	/**
+	  * @param firstKey Key for the first (left) value in this pair
+	  * @param secondKey Key for the second (right) value in this pair
+	  * @tparam K Type of keys used
+	  * @return A map where with the specified keys and this pair's values as values
+	  */
+	def toMapWith[K](firstKey: K, secondKey: K): Map[K, A] = toMapWith(Pair(firstKey, secondKey))
 	
 	/**
 	  * Merges together the two values in this pair using a function.

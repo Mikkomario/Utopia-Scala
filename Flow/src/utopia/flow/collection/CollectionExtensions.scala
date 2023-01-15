@@ -811,6 +811,23 @@ object CollectionExtensions
 		}
 		
 		/**
+		  * Finds and removes an item from this sequence. If no item is found, no removal happens either.
+		  * @param f A find function to find the item to remove.
+		  * @param buildFrom A buildfrom for the filtered copy of this collection
+		  * @return Either:
+		  *             a) (Some(result), other items), if a result was found, or
+		  *             b) (None, this collection), if no result was found
+		  */
+		def findAndPop[B >: seq.A](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
+		{
+			val ops = seq(coll)
+			ops.indexWhereOption(f) match {
+				case Some(index) => Some(ops(index)) -> _withoutIndex(ops.iterator, index)
+				case None => None -> coll
+			}
+		}
+		
+		/**
 		  * @param index     Targeted index
 		  * @param buildFrom A build from (implicit)
 		  * @return A copy of this sequence without specified index
@@ -821,12 +838,15 @@ object CollectionExtensions
 				coll
 			else {
 				val seqOps = seq(coll)
-				if (index >= seqOps.size)
+				if (seqOps.sizeCompare(index) >= 0)
 					coll
 				else
-					buildFrom.fromSpecific(coll)(seqOps.iterator.take(index) ++ seqOps.iterator.drop(index + 1))
+					_withoutIndex(seqOps.iterator, index)
 			}
 		}
+		private def _withoutIndex(iter: Iterator[seq.A], index: Int)
+		                         (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
+			buildFrom.fromSpecific(coll)(iter.zipWithIndex.flatMap { case (a, i) => if (i == index) None else Some(a) })
 		
 		/**
 		  * Splits this collection into a number of smaller pieces. Preserves order.

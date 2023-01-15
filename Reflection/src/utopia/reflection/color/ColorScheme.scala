@@ -11,6 +11,7 @@ object ColorScheme
 	/**
 	  * Default shade of gray to use in light themed uis
 	  */
+	// FIXME: Dark == default
 	val defaultLightGray = ColorSet(Rgb.grayWithValue(225), Rgb.grayWithValue(245), Rgb.grayWithValue(225))
 	/**
 	  * Default shade of gray to use in dark themed uis
