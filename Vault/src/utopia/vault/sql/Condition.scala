@@ -77,8 +77,9 @@ object Condition
  * A where clause is often used after a join or a basic operation.
  * @author Mikko Hilpinen
  * @since 22.5.2017
+  * @param segment The sql segment that forms this condition. Doesn't include the "WHERE" -part.
  */
-case class Condition(private val segment: SqlSegment)
+case class Condition(segment: SqlSegment)
 {
     // COMPUTED PROPERTIES    ---------------
     
@@ -178,7 +179,7 @@ case class Condition(private val segment: SqlSegment)
         {
             val noParentheses = SqlSegment.combine(segment +: others.map { _.segment },
                 { case (first, second) => s"$first $separator $second" })
-            Condition(noParentheses.copy(sql = "(" + noParentheses.sql + ")"))
+            Condition(noParentheses.copy(sql = s"(${ noParentheses.sql })"))
         }
     }
 }

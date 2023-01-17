@@ -1,10 +1,16 @@
 # Utopia Vault - List of Changes
 
-## v1.14.1 (in development)
+## v1.15 (in development)
 Adjusting to **Flow** v2.0 changes
+### Breaking Changes
+- The `order: Option[OrderBy] = None` -parameter in **Access**`.findNotLinkedTo(...)` 
+  is now the 3rd and not the 2nd parameter.
+  - This is unlikely to cause major problems, but should be reviewed
 ### BugFixes
 - **FromRowFactory**, when used with a table that doesn't have a primary column, 
   will no longer reduce the result into a single row.
+### New Features
+- Added support for conditional joins. See **Join**`.where(Condition)`.
 ### New Methods
 - **Access**
   - Added `.findNotLinkedTo(Table)`
@@ -19,6 +25,7 @@ Adjusting to **Flow** v2.0 changes
     - For example, `"expand to 255 or crop"` will primarily attempt to make the column larger, but at will rather crop 
     input that's longer than 255 characters.
 - **References** object now returns **CachingSeq** instead of **Set** in many functions
+- `.segment` in **Condition** is now public instead of private
 
 ## v1.14 - 02.10.2022
 This update adds a number of functions to access points that utilize ordering, i.e. different variants of 

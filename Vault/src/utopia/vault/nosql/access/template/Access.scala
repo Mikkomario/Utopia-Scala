@@ -51,17 +51,25 @@ trait Access[+A] extends View
 	  * Finds all accessible items that are **not** linked to the specified table via a foreign key reference
 	  * from either direction.
 	  * @param table Another table
+	  * @param linkCondition A condition that must be fulfilled in order for a link to be made
+	  *                      (default = None = no condition needs to be met)
 	  * @param order Custom ordering to apply (default = None = use default ordering)
 	  * @param connection Implicit DB connection
 	  * @return Items that are not linked to the specified table
 	  */
-	def findNotLinkedTo(table: Table, order: Option[OrderBy] = None)(implicit connection: Connection) =
+	def findNotLinkedTo(table: Table, linkCondition: Option[Condition] = None, order: Option[OrderBy] = None)
+	                   (implicit connection: Connection) =
 		// Looks for the reference between these tables
 		References.between(this.table, table).headOption match {
 			// Case: Reference found => Converts it to a join and a search condition
 			case Some(ref) =>
 				val directionalRef = if (ref.from.table == this.table) ref else ref.reverse
-				find(directionalRef.to.column.isNull, order, Vector(directionalRef.toLeftJoin), JoinType.Left)
+				val baseJoin = directionalRef.toLeftJoin
+				val join = linkCondition match {
+					case Some(c) => baseJoin.where(c)
+					case None => baseJoin
+				}
+				find(directionalRef.to.column.isNull, order, Vector(join), JoinType.Left)
 			// Case: No reference found => No item is considered to be linked
 			case None => read(order = order)
 		}

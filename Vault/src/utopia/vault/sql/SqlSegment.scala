@@ -2,6 +2,7 @@ package utopia.vault.sql
 
 
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.NotEmpty
 
 import scala.collection.immutable.HashSet
 import utopia.vault.database.Connection
@@ -20,7 +21,7 @@ object SqlSegment
      * @param sqlReduce the reduce function used for appending the sql strings together. By default 
      * just adds a whitespace between the strings
      */
-    def combine(segments: Seq[SqlSegment], sqlReduce: (String, String) => String = { _ + " " + _ }) = 
+    def combine(segments: Seq[SqlSegment], sqlReduce: (String, String) => String = { (a, b) => s"$a $b" }) =
     {
         if (segments.isEmpty)
             SqlSegment.empty
@@ -71,10 +72,15 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
     override def toString = sql
     
     /**
-     * A textual description of the seqment. Contains the sql string as well as the included values
+     * A textual description of this segment. Contains the sql string as well as the included values
      */
-    def description = s"sql: $toString${if (values.isEmpty) "" else "\nvalues: " + 
-            values.map { _.description }.reduce(_ + ", " + _)}"
+    def description = {
+        val valuesPart = NotEmpty(values) match {
+            case Some(values) => s"\nValues: ${ values.view.map { _.description }.mkString(", ") }"
+            case None => ""
+        }
+        s"Sql: $toString$valuesPart"
+    }
     
     /**
      * Whether the segment is considered to be empty (no-op)
@@ -105,7 +111,7 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
                     }
                 case None => other.events
             }
-            SqlSegment(sql + " " + other.sql, values ++ other.values,
+            SqlSegment(s"$sql ${ other.sql }", values ++ other.values,
                 databaseName orElse other.databaseName, targetTables ++ other.targetTables, eventFunction,
                 isSelect || other.isSelect, generatesKeys || other.generatesKeys)
         }
@@ -116,7 +122,7 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
      * The new string will be added to the end of this segment. Adds a whitespace character 
      * between the two sql segments.
      */
-    def +(sql: String) = copy(sql = this.sql + " " + sql)
+    def +(sql: String) = copy(sql = s"${ this.sql } $sql")
     
     /**
      * Combines these two segments, but if the other segment is empty, skips it
@@ -138,7 +144,7 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
      * Prepends this sql segment with an sql string. The new string will be added to the beginning 
      * of this segment. A whitespace character is added between the two segments.
      */
-    def prepend(sql: String) = copy(sql = sql + " " + this.sql)
+    def prepend(sql: String) = copy(sql = s"$sql ${ this.sql }")
     
     
     // OTHER METHODS    ----------------
