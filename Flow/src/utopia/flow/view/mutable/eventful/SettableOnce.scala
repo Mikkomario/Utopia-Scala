@@ -3,6 +3,26 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractChanging
 
+object SettableOnce
+{
+	/**
+	  * @tparam A Type of set item
+	  * @return A new pointer that may only be set once
+	  */
+	def apply[A]() = new SettableOnce[A]()
+	
+	/**
+	  * @param value A preset value
+	  * @tparam A Type of the specified value
+	  * @return A pointer that has been set and can't be modified anymore
+	  */
+	def set[A](value: A) = {
+		val pointer = new SettableOnce[A]()
+		pointer.set(value)
+		pointer
+	}
+}
+
 /**
   * A container that works like a Promise, in the sense that it can only be set once.
   * Supports ChangeEvents.

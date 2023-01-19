@@ -5,7 +5,7 @@ import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.DataType.ModelType
 import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.{EqualsBy, MaybeEmpty}
 import utopia.flow.operator.EqualsExtensions._
 
 object Model
@@ -79,7 +79,7 @@ object Model
 class Model private(override val propertyMap: Map[String, Constant],
                     override protected val propertyOrder: Vector[String],
                     propFactory: PropertyFactory[Constant])
-    extends ModelLike[Constant] with EqualsBy with ValueConvertible
+    extends ModelLike[Constant] with EqualsBy with ValueConvertible with MaybeEmpty[Model]
 {
     // COMP. PROPERTIES    -------
     
@@ -102,9 +102,13 @@ class Model private(override val propertyMap: Map[String, Constant],
     
     // IMPLEMENTED METHODS    ----
     
+    override def self: Model = this
+    
     protected override def equalsProperties: Iterable[Any] = Vector(propertyMap)
     
     override def toValue = new Value(Some(this), ModelType)
+    
+    override def nonEmpty = !isEmpty
     
     override def newProperty(attName: String) = propFactory(attName)
     

@@ -100,6 +100,8 @@
 - **Iterable** (**CollectionExtensions**)
   - Added `.minMax` and `.minMaxOption`
   - Added `.hasEqualsSizeWith(Iterable)`, which is a potentially more efficient implementation of `.size == other.size`
+  - Added `.popWhile(...)`, which resembles `.takeWhile(...)`, 
+    except that it also collects the remaining items as a separate collection
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.
 - **Iterator** (**CollectionExtensions**)

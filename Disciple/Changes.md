@@ -1,7 +1,10 @@
 # Utopia Disciple - List of Changes
 
 ## v1.5.4 (In Development)
-Supports Changes in **Flow** v2.0
+### New Features
+- Added support for request and response interceptors in **Gateway**
+- Added the **AccessLogger** class, which may be placed as a request/response interceptor in order to log all 
+  outgoing requests and their results
 
 ## v1.5.3 - 02.10.2022
 This update mostly supports the changes introduced in **Flow** v1.17, 

@@ -5,18 +5,20 @@ import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
 import org.apache.hc.client5.http.impl.classic.{CloseableHttpResponse, HttpClientBuilder, HttpClients}
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
-import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.http.message.BasicNameValuePair
+import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.net.URIBuilder
 import utopia.access.http.Method._
 import utopia.access.http.{Headers, Method, Status}
+import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.parse.json.{JsonReader, JsonParser}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.json.{JsonParser, JsonReader}
+import utopia.flow.time.TimeExtensions._
 
 import java.io.OutputStream
 import java.net.{URI, URLEncoder}
@@ -46,21 +48,26 @@ object Gateway
 	  *                          None if no encoding should be used (default).
 	  * @param defaultResponseEncoding Default character encoding used when parsing response data
 	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
+	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
 	  *                            Use false if you wish to force parameters to uri parameters.
 	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
 	  *                                 applying them. False if you want the parameters to be added "as is"
 	  *                                 (using .toString). This mostly affects string values, whether they should be
 	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
-	  * @return
+	  * @return A new gateway instance
 	  */
 	def apply(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
 	          maxConnectionsTotal: Int = 10,
 	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	          requestInterceptors: Seq[RequestInterceptor] = Vector(),
+	          responseInterceptors: Seq[ResponseInterceptor] = Vector(),
 	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true) =
 		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
-			defaultResponseEncoding, b => b, allowBodyParameters, allowJsonInUriParameters)
+			defaultResponseEncoding, requestInterceptors, responseInterceptors, Identity, allowBodyParameters,
+			allowJsonInUriParameters)
 	
 	/**
 	  * Creates a new gateway instance
@@ -77,6 +84,8 @@ object Gateway
 	  *                          None if no encoding should be used (default).
 	  * @param defaultResponseEncoding Default character encoding used when parsing response data
 	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
+	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
 	  *                            Use false if you wish to force parameters to uri parameters.
 	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
@@ -84,16 +93,18 @@ object Gateway
 	  *                                 (using .toString). This mostly affects string values, whether they should be
 	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
 	  * @param customizeClient A function for customizing the http client when it is first created
-	  * @return
+	  * @return A new gateway instance
 	  */
 	def custom(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
 	           maxConnectionsTotal: Int = 10,
 	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	           requestInterceptors: Seq[RequestInterceptor] = Vector(),
+	           responseInterceptors: Seq[ResponseInterceptor] = Vector(),
 	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
 		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
-			defaultResponseEncoding, customizeClient, allowBodyParameters,
+			defaultResponseEncoding, requestInterceptors, responseInterceptors, customizeClient, allowBodyParameters,
 			allowJsonInUriParameters)
 }
 
@@ -115,6 +126,8 @@ object Gateway
   *                          None if no encoding should be used (default).
   * @param defaultResponseEncoding Default character encoding used when parsing response data
   *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+  * @param requestInterceptors Interceptors that access and potentially modify all outgoing requests (default = empty)
+  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
   * @param customizeClient A function for customizing the http client when it is first created (default = identity)
   * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
   *                            Use false if you wish to force parameters to uri parameters.
@@ -127,7 +140,9 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
               parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
-              customizeClient: HttpClientBuilder => HttpClientBuilder = b => b,
+              requestInterceptors: Seq[RequestInterceptor] = Vector(),
+              responseInterceptors: Seq[ResponseInterceptor] = Vector(),
+              customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
               allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
 {
     // ATTRIBUTES    -------------------------
@@ -147,6 +162,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
     private lazy val client = customizeClient(
 	    HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)).build()
     
+	
     // OTHER METHODS    ----------------------
     
     // TODO: Add support for multipart body:
@@ -162,22 +178,19 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
      */
     def makeBlockingRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R) =
     {
-        Try
-        {
+	    // Intercepts the request, if appropriate
+	    val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
+        Try {
             // Makes the base request (uri + params + body)
-            val base = makeRequestBase(request.method, request.requestUri, request.params, request.body)
-            
+            val base = makeRequestBase(req.method, req.requestUri, req.params, req.body)
             // Adds the headers
-            request.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
-            
+	        req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
 			// Sets the timeout
-			val config =
-			{
+			val config = {
 				val builder = RequestConfig.custom()
-				(request.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
+				(req.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
 					.foreach { case (timeoutType, millis) =>
-						timeoutType match
-						{
+						timeoutType match {
 							case ConnectionTimeout => builder.setConnectTimeout(millis, TimeUnit.MILLISECONDS)
 							case ReadTimeout => builder.setResponseTimeout(millis, TimeUnit.MILLISECONDS)
 							case ManagerTimeout => builder.setConnectionRequestTimeout(millis, TimeUnit.MILLISECONDS)
@@ -188,10 +201,18 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 			base.setConfig(config)
 			
             // Performs the request and consumes any response
-			client.execute(base).consume { response => consumeResponse(Success(wrapResponse(response))) }
+			client.execute(base).consume { rawResponse =>
+				// Intercepts the response, if appropriate
+				val response = responseInterceptors
+					.foldLeft(Success(wrapResponse(rawResponse)): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) }
+				consumeResponse(response)
+			}
         } match {
 			case Success(result) => result
-            case Failure(error) => consumeResponse(Failure(error))
+            case Failure(error) =>
+	            // Intercepts request failures, also
+	            consumeResponse(responseInterceptors
+		            .foldLeft(Failure(error): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) })
         }
     }
     

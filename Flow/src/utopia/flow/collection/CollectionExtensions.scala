@@ -6,6 +6,7 @@ import utopia.flow.collection.mutable.iterator.{FoldingIterator, GroupIterator, 
 import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.eventful.Flag
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
@@ -434,6 +435,31 @@ object CollectionExtensions
 	
 	class IterableOperations[Repr, I <: IsIterable[Repr]](coll: Repr, iter: I)
 	{
+		/**
+		  * Collects the results of a 'takeWhile' operation, also returning the remaining items as a separate
+		  * collection.
+		  * In other words, collects into one collection all the initial consecutive items which satisfy the specified
+		  * condition. Once a non-satisfying item has been found, collects it and all the remaining items into another
+		  * collection.
+		  * @param f A function for determining whether an item should be collected to the first collection
+		  * @param bf An implicit buildFrom for the resulting collections
+		  * @return The initial consecutive items which satisfied the specified predicate,
+		  *         followed by the remaining items.
+		  */
+		def popWhile(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
+			val ops = iter(coll)
+			val popBuilder = bf.newBuilder(coll)
+			val remainBuilder = bf.newBuilder(coll)
+			val foundFlag = Flag()
+			val currentBuilderPointer = foundFlag.map { if (_) remainBuilder else popBuilder }
+			ops.foreach { item =>
+				if (foundFlag.isNotSet && !f(item))
+					foundFlag.set()
+				currentBuilderPointer.value += item
+			}
+			popBuilder.result() -> remainBuilder.result()
+		}
+		
 		/**
 		  * Finds the item or items with the maximum value, based on a mapping function. Works like maxBy, except that
 		  * multiple values are returned in cases where items map to the same (maximum) value.
