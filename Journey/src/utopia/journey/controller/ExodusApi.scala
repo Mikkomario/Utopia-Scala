@@ -12,6 +12,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.journey.model.UserCredentials
 
@@ -37,6 +38,8 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 	
 	
 	// IMPLEMENTED	---------------------------
+	
+	override protected implicit def log: Logger = SysErrLogger
 	
 	override protected def headers = Headers.currentDateHeaders.withBearerAuthorization(sessionKey)
 	

@@ -1,14 +1,18 @@
 package utopia.disciple.http.response
 
-import java.io.InputStream
 import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.parse.AutoClose._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.parse.json.{JsonReader, JsonParser}
+import utopia.flow.generic.model.mutable.DataType.ModelType
+import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.xml.XmlReader
+import utopia.flow.util.logging.Logger
 
+import java.io.InputStream
 import scala.io.{Codec, Source}
 import scala.util.{Failure, Success, Try}
 
@@ -18,12 +22,13 @@ object ResponseParser
 	
 	/**
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger An implicit logger used for recording parsing failures
 	  * @return A response parser that produces string content (empty string on read failures and empty responses)
 	  */
-	def string(implicit defaultEncoding: Codec) = parseOrDefault("") { (stream, headers, _) =>
-		Try { Source.fromInputStream(stream)(headers.codec.getOrElse(defaultEncoding)).consume { _.getLines().mkString } }
-	}
-	
+	def string(implicit defaultEncoding: Codec, logger: Logger) =
+		parseOrDefault("") { (stream, headers, _) =>
+			Try { Source.fromInputStream(stream)(headers.codec.getOrElse(defaultEncoding)).consume { _.getLines().mkString } }
+		}
 	/**
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
 	  * @return A response parser that produces string content (empty string on empty responses, Try[string] otherwise)
@@ -39,51 +44,161 @@ object ResponseParser
 	def xml(implicit defaultEncoding: Codec) = failOnEmpty { (stream, headers, _) =>
 		XmlReader.parseStream(stream, headers.codec.getOrElse(defaultEncoding).charSet) }
 	
+	/**
+	  * @param parser         Json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger          An implicit logger used for recording parsing failures
+	  * @return A response parser that produces a value (empty value on empty responses and parsing failures)
+	  */
+	def value(implicit parser: JsonParser, defaultEncoding: Codec, logger: Logger) =
+		valueWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces a value (empty value on empty responses)
+	  */
+	def tryValue(implicit parser: JsonParser, defaultEncoding: Codec) =
+		tryValueWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger          An implicit logger used for recording parsing failures
+	  * @return A response parser that produces a model (empty model on empty responses and parsing failures)
+	  */
+	def model(implicit parser: JsonParser, defaultEncoding: Codec, logger: Logger) =
+		modelWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces models. Fails on conversion and parsing failures.
+	  */
+	def tryModel(implicit parser: JsonParser, defaultEncoding: Codec) =
+		tryModelWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger          An implicit logger used for recording parsing failures
+	  * @return A response parser that produces a value vector (empty vector on empty responses).
+	  *         If the response contained a non-vector value, it is wrapped in a vector.
+	  */
+	def values(implicit parser: JsonParser, defaultEncoding: Codec, logger: Logger) =
+		valuesWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces a value vector (empty vector on empty responses).
+	  *         If the response contained a non-vector value, it is wrapped in a vector.
+	  *         Contains a failure on parsing failures.
+	  */
+	def tryValues(implicit parser: JsonParser, defaultEncoding: Codec) =
+		tryValuesWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger          An implicit logger used for recording parsing failures
+	  * @return A response parser that produces a model vector (empty vector on empty responses and parsing failures).
+	  *         If the response contained a singular model, it is wrapped in a vector.
+	  */
+	def models(implicit parser: JsonParser, defaultEncoding: Codec, logger: Logger) =
+		modelsWith(Some(parser))
+	/**
+	  * @param parser         A json parser
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces a model vector (empty vector on empty responses).
+	  *         If the response contained a singular model, it is wrapped in a vector.
+	  *         Contains a failure if json parsing or any model parsing failed.
+	  */
+	def tryModels(implicit parser: JsonParser, defaultEncoding: Codec) =
+		tryModelsWith(Some(parser))
+	
 	
 	// OTHER	-----------------------------
 	
 	/**
 	  * @param parsers Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger An implicit logger used for recording parsing failures
+	  * @return A response parser that produces a value (empty value on empty responses and parsing failures)
+	  */
+	def valueWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec, logger: Logger) =
+		parseOrDefault(Value.empty) { (stream, headers, _) => parseValue(stream, headers, parsers) }
+	/**
+	  * @param parsers Available json parsers
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
 	  * @return A response parser that produces a value (empty value on empty responses)
 	  */
-	def valueWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
-		parseOrDefault(Value.empty) { (stream, headers, _) => parseValue(stream, headers, parsers) }
-	
+	def tryValueWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+		defaultOnEmpty(Value.empty) { (stream, headers, _) => parseValue(stream, headers, parsers) }
 	/**
 	  * @param parsers Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger An implicit logger used for recording parsing failures
 	  * @return A response parser that produces a model (empty model on empty responses and parsing failures)
 	  */
-	def modelWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+	def modelWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec, logger: Logger) =
 		parseOrDefault(Model.empty) { (stream, headers, _) => parseValue(stream, headers, parsers).map { _.getModel } }
+	/**
+	  * @param parsers Available json parsers
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces models. Fails on conversion and parsing failures.
+	  */
+	def tryModelWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+		defaultOnEmpty(Model.empty) { (stream, headers, _) =>
+			parseValue(stream, headers, parsers).flatMap { v =>
+				v.castTo(ModelType).toTry { DataTypeException(s"Can't cast ${ v.description } to a model") }
+					.map { _.getModel }
+			}
+		}
 	
 	/**
 	  * @param parsers Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger An implicit logger used for recording parsing failures
 	  * @return A response parser that produces a value vector (empty vector on empty responses).
 	  *         If the response contained a non-vector value, it is wrapped in a vector.
 	  */
-	def valuesWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+	def valuesWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec, logger: Logger) =
 		parseOrDefault(Vector[Value]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { value =>
 			if (value.isEmpty)
 				Vector()
 			else
 				value.vectorOr(Vector(value))
 		} }
-	
+	/**
+	  * @param parsers         Available json parsers
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces a value vector (empty vector on empty responses).
+	  *         If the response contained a non-vector value, it is wrapped in a vector.
+	  *         Contains a failure on parsing failures.
+	  */
+	def tryValuesWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+		defaultOnEmpty(Vector[Value]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { v =>
+			if (v.isEmpty) Vector() else v.vectorOr(Vector(v))
+		} }
 	/**
 	  * @param parsers Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @param logger An implicit logger used for recording parsing failures
 	  * @return A response parser that produces a model vector (empty vector on empty responses and parsing failures).
 	  *         If the response contained a singular model, it is wrapped in a vector.
 	  */
-	def modelsWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+	def modelsWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec, logger: Logger) =
 		parseOrDefault(Vector[Model]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { value =>
 			if (value.isEmpty)
 				Vector()
 			else
 				value.vectorOr { Vector(value) }.flatMap { _.model }
+		} }
+	/**
+	  * @param parsers         Available json parsers
+	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
+	  * @return A response parser that produces a model vector (empty vector on empty responses).
+	  *         If the response contained a singular model, it is wrapped in a vector.
+	  *         Contains a failure if json parsing or any model parsing failed.
+	  */
+	def tryModelsWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
+		defaultOnEmpty(Vector[Model]()) { (stream, headers, _) => parseValue(stream, headers, parsers).flatMap { v =>
+			v.getVector.tryMap { _.tryModel }
 		} }
 	
 	/**
@@ -95,7 +210,6 @@ object ResponseParser
 	  */
 	def apply[A](parseBody: (InputStream, Headers, Status) => A)(processEmpty: (Headers, Status) => A) =
 		new ResponseParser[A](parseBody, processEmpty)
-	
 	/**
 	  * Creates a new response parser that provides the specified default value for empty responses
 	  * @param default Default value (call by name)
@@ -105,18 +219,18 @@ object ResponseParser
 	  */
 	def defaultOnEmpty[A](default: => A)(parseBody: (InputStream, Headers, Status) => Try[A]) =
 		new ResponseParser[Try[A]](parseBody, (_, _) => Success(default))
-	
 	/**
 	  * Creates a new response parser that uses the specified default value in case of both parsing failures and
 	  * empty responses
 	  * @param default Default result (call by name)
 	  * @param parseBody Function for parsing response body (may fail)
+	  * @param logger An implicit logger used for recording parsing failures
 	  * @tparam A Type of successful parse result
 	  * @return A new parser
 	  */
-	def parseOrDefault[A](default: => A)(parseBody: (InputStream, Headers, Status) => Try[A]) = new ResponseParser[A](
-		(stream, headers, status) => parseBody(stream, headers, status).getOrElse(default), (_, _) => default)
-	
+	def parseOrDefault[A](default: => A)(parseBody: (InputStream, Headers, Status) => Try[A])(implicit logger: Logger) =
+		new ResponseParser[A]((stream, headers, status) =>
+			parseBody(stream, headers, status).getOrMap { error => logger(error); default }, (_, _) => default)
 	/**
 	  * Creates a parser that simply fails on empty responses
 	  * @param parseBody A function for processing non-empty responses (may fail)
@@ -125,7 +239,6 @@ object ResponseParser
 	  */
 	def failOnEmpty[A](parseBody: (InputStream, Headers, Status) => Try[A]) = new ResponseParser[Try[A]](
 		parseBody, (_, _) => Failure(new NoContentException("Response doesn't contain a body")))
-	
 	/**
 	  * Creates a new response parser based on two functions, one for successful statuses (1XX - 3XX) and another for
 	  * failure statuses (4XX - 5XX)
@@ -147,7 +260,6 @@ object ResponseParser
 			else
 				parseSuccess(None, headers)
 		}
-	
 	/**
 	  * Creates a new response parser based on two functions, one for successful statuses (1XX - 3XX) and another for
 	  * failure statuses (4XX - 5XX)
@@ -161,7 +273,6 @@ object ResponseParser
 									(parseFailure: (Option[InputStream], Headers) => F) =
 		successOrFailure[Either[F, S]] { (stream, headers) => Right(parseSuccess(stream, headers)) } {
 			(stream, headers) => Left(parseFailure(stream, headers)) }
-	
 	/**
 	  * Combines two response parsers, using one in success statuses and other for failure statuses
 	  * @param successParser Success response parser
@@ -191,11 +302,9 @@ object ResponseParser
 		val encoding = headers.codec.getOrElse(defaultEncoding)
 		// On non-json content types, produces a string value (except for xml content type, which is converted to
 		// a model)
-		if (headers.contentType.forall { _.subType ~== "json" })
-		{
+		if (headers.contentType.forall { _.subType ~== "json" }) {
 			// Checks whether a custom parser can be used
-			parsers.find { _.defaultEncoding == encoding } match
-			{
+			parsers.find { _.defaultEncoding == encoding } match {
 				case Some(parser) => parser(stream)
 				case None => JsonReader(stream, encoding)
 			}

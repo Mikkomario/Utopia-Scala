@@ -219,78 +219,80 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 	{
 		// Sends the request and handles the result once it arrives
 		val requestTime = Now.toInstant
-		config.gateway.modelResponseFor(request).tryMapIfSuccess { response =>
+		config.gateway.tryModelResponseFor(request).tryMapIfSuccess { response =>
 			// Case: Success => Parses token(s) and saves them
-			if (response.isSuccess)
-			{
-				val containsAccessToken = response.body.containsNonEmpty("access_token")
-				val containsRefreshToken = response.body.containsNonEmpty("refresh_token")
-				
-				if (containsAccessToken || containsRefreshToken)
-				{
-					val expiration = requestTime + response.body("expires_in").int.map { _.seconds }
-						.getOrElse(defaultSessionDuration)
-					val rawScopes = response.body("scope").string match
-					{
-						case Some(scope) => scope.split(" ").toVector.map { _.trim }.filter { _.nonEmpty }
-						case None =>
-							logger(new NoSuchElementException(
-								s"No 'scope' attribute in response body. Available properties: [${
-									response.body.nonEmptyProperties.map { _.name }.mkString(", ")}]"),
-								"No scope attribute in token response body")
-							Vector()
-					}
+			if (response.isSuccess) {
+				response.body.flatMap { body =>
+					val containsAccessToken = body.containsNonEmpty("access_token")
+					val containsRefreshToken = body.containsNonEmpty("refresh_token")
 					
-					connectionPool.tryWith { implicit connection =>
-						// Processes the scopes first
-						val scopes = processScopes(serviceId, rawScopes)
-						// Inserts the new token(s), along with the scopes
-						val accessToken = response.body("access_token").string.map { token =>
-							insertToken(userId, token, scopes, Some(expiration))
+					if (containsAccessToken || containsRefreshToken) {
+						val expiration = requestTime + body("expires_in").int.map { _.seconds }
+							.getOrElse(defaultSessionDuration)
+						val rawScopes = body("scope").string match {
+							case Some(scope) => scope.split(" ").toVector.map { _.trim }.filter { _.nonEmpty }
+							case None =>
+								logger(new NoSuchElementException(
+									s"No 'scope' attribute in response body. Available properties: [${
+										body.nonEmptyProperties.map { _.name }.mkString(", ")
+									}]"),
+									"No scope attribute in token response body")
+								Vector()
 						}
-						val refreshToken = response.body("refresh_token").string.map { token =>
-							def insertNew() = insertToken(userId, token, scopes,
-								config.refreshTokenDuration.finite.map { requestTime + _ }, isRefreshToken = true)
-							// Checks whether the refresh token is a duplicate with the previously used or
-							// whether the previous token should be replaced
-							existingRefreshToken match
-							{
-								case Some(existingToken) =>
-									// Case: The new token is a duplicate of the previous => doesn't insert a new token
-									if (existingToken.token.token == token)
-									{
-										// May extend the scopes of the existing token
-										val newScopes = scopes
-											.filterNot { scope => existingToken.scopes.exists { _.id == scope.id } }
-										if (newScopes.nonEmpty)
-											AuthTokenScopeLinkModel.insert(
-												newScopes.map { s => AuthTokenScopeLinkData(existingToken.id, s.id) })
-										existingToken
-									}
-									// Case: New token is different => overwrites the previous token
-									else
-									{
-										DbAuthToken(existingToken.id).deprecate()
-										insertNew()
-									}
-								// Case: There was no previous refresh token => inserts a new token
-								case None => insertNew()
+						
+						connectionPool.tryWith { implicit connection =>
+							// Processes the scopes first
+							val scopes = processScopes(serviceId, rawScopes)
+							// Inserts the new token(s), along with the scopes
+							val accessToken = body("access_token").string.map { token =>
+								insertToken(userId, token, scopes, Some(expiration))
 							}
+							val refreshToken = body("refresh_token").string.map { token =>
+								def insertNew() = insertToken(userId, token, scopes,
+									config.refreshTokenDuration.finite.map { requestTime + _ }, isRefreshToken = true)
+								// Checks whether the refresh token is a duplicate with the previously used or
+								// whether the previous token should be replaced
+								existingRefreshToken match {
+									case Some(existingToken) =>
+										// Case: The new token is a duplicate of the previous => doesn't insert a new token
+										if (existingToken.token.token == token) {
+											// May extend the scopes of the existing token
+											val newScopes = scopes
+												.filterNot { scope => existingToken.scopes.exists { _.id == scope.id } }
+											if (newScopes.nonEmpty)
+												AuthTokenScopeLinkModel.insert(
+													newScopes.map { s => AuthTokenScopeLinkData(existingToken.id, s.id) })
+											existingToken
+										}
+										// Case: New token is different => overwrites the previous token
+										else {
+											DbAuthToken(existingToken.id).deprecate()
+											insertNew()
+										}
+									// Case: There was no previous refresh token => inserts a new token
+									case None => insertNew()
+								}
+							}
+							// Returns the tokens and the scopes
+							Vector(refreshToken, accessToken).flatten
 						}
-						// Returns the tokens and the scopes
-						Vector(refreshToken, accessToken).flatten
 					}
+					else
+						Failure(new NoSuchElementException(
+							s"No 'access_token' or 'refresh_token' property in the response. Available keys: [${
+								body.nonEmptyProperties.map { _.name }.mkString(", ")
+							}]"))
 				}
-				else
-					Failure(new NoSuchElementException(
-						s"No 'access_token' or 'refresh_token' property in the response. Available keys: [${
-							response.body.nonEmptyProperties.map { _.name }.mkString(", ")}]"))
 			}
 			// Case: Failure
-			else
-			{
-				val message = response.body("error").string.orElse { response.body("message").string }
-					.getOrElse { s"Service responded with ${response.status}" }
+			else {
+				val message = response.body match {
+					case Success(body) =>
+						body("error").string.orElse { body("message").string }
+							.getOrElse { s"Service responded with ${ response.status }" }
+					case Failure(error) =>
+						s"Can't parse response body (${ error.getMessage }). Response status is ${ response.status }"
+				}
 				Failure(new RequestFailedException(message))
 			}
 		}

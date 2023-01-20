@@ -14,6 +14,7 @@ import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestExce
 import utopia.disciple.apache.Gateway
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.journey.model.error.NoUserDataError
 import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.metropolis.model.combined.user.UserCreationResult
@@ -31,6 +32,8 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	extends Api
 {
 	// IMPLEMENTED	-----------------------------
+	
+	override protected implicit def log: Logger = SysErrLogger
 	
 	override protected def headers = Headers.currentDateHeaders
 	

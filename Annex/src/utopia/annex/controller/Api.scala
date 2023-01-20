@@ -8,6 +8,7 @@ import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -21,6 +22,11 @@ import scala.util.Try
 trait Api
 {
 	// ABSTRACT	-------------------------
+	
+	/**
+	  * @return A logging implementation used for recording non-critical errors
+	  */
+	protected implicit def log: Logger
 	
 	/**
 	  * @return Gateway to use when making http requests (See Utopia Disciple: utopia.disciple.apache.Gateway)
@@ -46,13 +52,14 @@ trait Api
 	
 	// OTHER	-------------------------
 	
-	private def uri(path: String) = if (path.startsWith("/")) rootPath + path else s"$rootPath/$path"
+	private def uri(path: String) =
+		if (path.startsWith("/") || rootPath.endsWith("/")) s"$rootPath$path" else s"$rootPath/$path"
 	
 	/**
 	  * Reads data from server
 	  * @param path Targeted path (after base uri)
 	  * @param timeout Connection timeout duration (default = maximum timeout)
-	  * @param params Included paramters (optional)
+	  * @param params Included parameters (optional)
 	  * @param headersMod A modifier function for passed headers (optional)
 	  * @param context Execution context
 	  * @return Response from server (asynchronous)

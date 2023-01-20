@@ -1,10 +1,15 @@
 # Utopia Disciple - List of Changes
 
-## v1.5.4 (In Development)
+## v1.6 (In Development)
+### Breaking Changes
+- Many **ResponseParser** constructors now require an implicit **Logger** parameter in order to record parsing failures
 ### New Features
 - Added support for request and response interceptors in **Gateway**
 - Added the **AccessLogger** class, which may be placed as a request/response interceptor in order to log all 
   outgoing requests and their results
+### New Methods
+- Added a number of new constructors to **ResponseParser**, 
+  and a number of new utility response-reading functions to **Gateway**
 
 ## v1.5.3 - 02.10.2022
 This update mostly supports the changes introduced in **Flow** v1.17, 

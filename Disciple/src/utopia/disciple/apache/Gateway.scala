@@ -19,6 +19,7 @@ import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 
 import java.io.OutputStream
 import java.net.{URI, URLEncoder}
@@ -242,29 +243,59 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 	  * responses and read failures)
 	  * @param request Request to send
 	  * @param exc Implicit execution context
+	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def stringResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(ResponseParser.string)
+	def stringResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
+		responseFor(request)(ResponseParser.string)
+	/**
+	  * Performs an asynchronous request and parses the response body into a string
+	  * @param request Request to send
+	  * @param exc     Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def tryStringResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.tryString)
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a value (empty value on empty responses and
 	  * read failures). Supports json and xml content types. Other content types are read as raw strings.
 	  * @param request Request to send
 	  * @param exc Implicit execution context
+	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def valueResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(
-		ResponseParser.valueWith(jsonParsers))
+	def valueResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
+		responseFor(request)(ResponseParser.valueWith(jsonParsers))
+	/**
+	  * Performs an asynchronous request and parses response body into a value.
+	  * Supports json and xml content types. Other content types are read as raw strings.
+	  * @param request Request to send
+	  * @param exc     Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def tryValueResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.tryValueWith(jsonParsers))
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a model (empty model on empty responses and
 	  * read/parse failures). Supports json and xml content types.
 	  * @param request Request to send
 	  * @param exc Implicit execution context
+	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def modelResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(
-		ResponseParser.modelWith(jsonParsers))
+	def modelResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
+		responseFor(request)(ResponseParser.modelWith(jsonParsers))
+	/**
+	  * Performs an asynchronous request and parses response body into a model.
+	  * Supports json and xml content types.
+	  * @param request Request to send
+	  * @param exc     Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def tryModelResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.tryModelWith(jsonParsers))
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a value vector (empty vector on empty responses and
@@ -272,21 +303,42 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 	  * converted to values, then wrapped in a vector.
 	  * @param request Request to send
 	  * @param exc Implicit execution context
+	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def valueVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
+	def valueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
 		responseFor(request)(ResponseParser.valuesWith(jsonParsers))
-	
+	/**
+	  * Performs an asynchronous request and parses response body into a value vector.
+	  * Supports json and xml content types. Other content types are interpreted as strings and
+	  * converted to values, then wrapped in a vector.
+	  * @param request Request to send
+	  * @param exc     Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def tryValueVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.tryValuesWith(jsonParsers))
 	/**
 	  * Performs an asynchronous request and parses response body into a model vector (empty vector on empty responses and
 	  * read/parse failures). Supports json and xml content types. Responses with only a single model have their
 	  * contents wrapped in a vector.
 	  * @param request Request to send
 	  * @param exc Implicit execution context
+	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def modelVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
+	def modelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
 		responseFor(request)(ResponseParser.modelsWith(jsonParsers))
+	/**
+	  * Performs an asynchronous request and parses response body into a model vector.
+	  * Supports json and xml content types. Responses with only a single model have their
+	  * contents wrapped in a vector.
+	  * @param request Request to send
+	  * @param exc     Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def tryModelVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.tryModelsWith(jsonParsers))
 	
 	/**
 	  * Performs an asynchronous request and parses response body into an xml element (failure on empty responses and

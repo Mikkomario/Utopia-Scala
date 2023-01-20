@@ -183,8 +183,7 @@ case class Value(content: Option[Any], dataType: DataType) extends JsonConvertib
      * @return This value casted to a new data type. If the value couldn't be casted, an empty 
      * value is returned instead
      */
-    def withType(dataType: DataType) = ConversionHandler.cast(this, dataType)
-        .getOrElse(Value.emptyWithType(dataType))
+    def withType(dataType: DataType) = castTo(dataType).getOrElse(Value.emptyWithType(dataType))
     
     /**
      * Returns the contents of this value, casted to the desired type range

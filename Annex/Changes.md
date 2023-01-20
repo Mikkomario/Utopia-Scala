@@ -1,6 +1,9 @@
 # Utopia Annex - List of Changes
 
 ## v1.4 (in development)
+### Breaking Changes
+- **Api** implementations are now required to implement `implicit protected def log: Logger`. 
+  This property is used for catching errors encountered during response body parsing.
 ### Deprecations
 - Deprecated all existing **Schrödinger** traits in favor of the new implementations
 ### New Features

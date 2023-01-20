@@ -24,6 +24,10 @@ object StringExtensions
 		  * @return A copy of this string with all control characters (\t, \n, \r and so forth) removed
 		  */
 		def stripControlCharacters = s.filter { _ >= space }
+		/**
+		  * @return A copy of this string where all the backslash (i.e. '\') characters have been escaped as \\ instead.
+		  */
+		def escapeBackSlashes = s.replace("\\", "\\\\")
 		
 		/**
 		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>

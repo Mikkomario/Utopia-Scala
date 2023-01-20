@@ -21,15 +21,16 @@ object BasicJsonValueConverter extends ValueConverter[String]
 	{
 		dataType match {
 			case StringType =>
-				"\"" + value.getString.replace("\"", "\\\"")
-					.replace("\n", "\\n") + "\""
-			/*.replace("\\", "\\\\")*/
+				s"\"${ value.getString
+					.replace("\"", "\\\"")
+					.replace("\n", "\\n")
+				}\""
 			case VectorType => s"[${ value.getVector.map { _.toJson }.mkString(", ") }]"
 			case ModelType => value.getModel.toJson
 			// Handles instant type separately to format it correctly
-			case InstantType => "\"" + value.getString + "\""
+			case InstantType => s"\"${ value.getString }\""
 			// Same treatment is given to dates
-			case LocalDateType => "\"" + value.getString + "\""
+			case LocalDateType => s"\"${ value.getString }\""
 			case _ => value.getString
 		}
 	}
