@@ -401,6 +401,20 @@ case class Pair[+A](first: A, second: A)
 		builder.result()
 	}
 	/**
+	 * @param other Another pair
+	 * @param f A predicate that compares the values of these pairs
+	 * @tparam B Type of values in the other pair
+	 * @return Whether the specified predicate returns true for either side
+	 */
+	def existsWith[B](other: Pair[B])(f: (A, B) => Boolean) = f(first, other.first) || f(second, other.second)
+	/**
+	 * @param other Another pair
+	 * @param f     A predicate that compares the values of these pairs
+	 * @tparam B Type of values in the other pair
+	 * @return Whether the specified predicate returns true for both sides
+	 */
+	def forallWith[B](other: Pair[B])(f: (A, B) => Boolean) = f(first, other.first) && f(second, other.second)
+	/**
 	  * Merges this pair with another pair, resulting in a pair containing the entries from both
 	  * @param other Another pair
 	  * @tparam B Type of items in the other pair

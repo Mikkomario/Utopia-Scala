@@ -1,5 +1,6 @@
 package utopia.genesis.image
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{LinearScalable, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
@@ -26,7 +27,7 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector2D.identity, 1.0, None, PreInitializedLazy(PixelTable.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, None, PreInitializedLazy(Pixels.empty))
 	
 	/**
 	  * Creates a new image
@@ -42,7 +43,16 @@ object Image
 	  */
 	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0,
 			  origin: Option[Point] = None): Image =
-		new Image(Some(image), scaling, alpha, origin, Lazy { PixelTable.fromBufferedImage(image) })
+		new Image(Some(image), scaling, alpha, origin, Lazy { Pixels.fromBufferedImage(image, lazily = true) })
+	
+	/**
+	  * @param pixels A set of pixels
+	  * @return An image based on those pixels
+	  */
+	def fromPixels(pixels: Pixels) = pixels.notEmpty match {
+		case Some(pixels) => apply(Some(pixels.toBufferedImage), Vector2D.identity, 1.0, None, PreInitializedLazy(pixels))
+		case None => empty
+	}
 	
 	/**
 	  * Reads an image from a file
@@ -167,7 +177,7 @@ object Image
   */
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
-						 private val _pixels: Lazy[PixelTable])
+						 private val _pixels: Lazy[Pixels])
 	extends ImageLike with LinearScalable[Image] with Sized[Image] with MaybeEmpty[Image]
 {
 	// ATTRIBUTES	----------------
@@ -213,9 +223,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	/**
 	  * @return A copy of this image where x-axis is reversed
 	  */
-	def flippedHorizontally =
-	{
-		val flipped = mapPixelTable { _.flippedHorizontally }
+	def flippedHorizontally = {
+		val flipped = mapPixels { _.flippedHorizontally }
 		specifiedOrigin match
 		{
 			// If an origin has been specified, flips it as well
@@ -228,11 +237,9 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	/**
 	  * @return A copy of this image where y-axis is reversed
 	  */
-	def flippedVertically =
-	{
-		val flipped = mapPixelTable { _.flippedVertically }
-		specifiedOrigin match
-		{
+	def flippedVertically = {
+		val flipped = mapPixels { _.flippedVertically }
+		specifiedOrigin match {
 			// If an origin has been specified, flips it as well
 			case Some(oldOrigin) =>
 				val newOrigin = Point(oldOrigin.x, sourceResolution.height - oldOrigin.y)
@@ -284,10 +291,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	override def isEmpty = source.isEmpty
 	override def nonEmpty = !isEmpty
 	
-	override def preCalculatedPixels = _pixels.current
-	/**
-	  * @return The pixels in this image
-	  */
 	override def pixels = _pixels.value
 	
 	override def *(scaling: Double): Image = withScaling(this.scaling * scaling)
@@ -482,7 +485,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param f A mapping function for pixel tables
 	  * @return A copy of this image with mapped pixels
 	  */
-	def mapPixelTable(f: PixelTable => PixelTable) = {
+	def mapPixels(f: Pixels => Pixels) = {
 		if (source.isDefined) {
 			val newPixels = f(pixels)
 			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, PreInitializedLazy(newPixels))
@@ -491,22 +494,33 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			this
 	}
 	/**
+	  * @param f A mapping function for pixel tables
+	  * @return A copy of this image with mapped pixels
+	  */
+	@deprecated("Please use .mapPixels instead")
+	def mapPixelTable(f: Pixels => Pixels) = mapPixels(f)
+	/**
 	  * @param f A function that maps pixel colors
 	  * @return A copy of this image with mapped pixels
 	  */
-	def mapPixels(f: Color => Color) = mapPixelTable { _.map(f) }
+	def mapEachPixel(f: Color => Color) = mapPixels { _.map(f) }
 	/**
 	  * @param f A function that maps pixel colors, also taking relative pixel coordinate
 	  * @return A copy of this image with mapped pixels
 	  */
-	def mapPixelsWithIndex(f: (Color, Point) => Color) = mapPixelTable { _.mapWithIndex(f) }
+	def mapPixelsWithIndex(f: (Color, Pair[Int]) => Color) = mapPixels { _.mapWithIndex(f) }
+	/**
+	  * @param f A function that maps pixel colors, also taking relative pixel coordinate
+	  * @return A copy of this image with mapped pixels
+	  */
+	def mapPixelPoints(f: (Color, Point) => Color) = mapPixels { _.mapPoints(f) }
 	/**
 	  * @param area The mapped relative area
 	  * @param f A function that maps pixel colors
 	  * @return A copy of this image with pixels mapped within the target area
 	  */
-	def mapArea(area: Area2D)(f: Color => Color) = mapPixelsWithIndex {
-		(c, p) => if (area.contains(p * scaling)) f(c) else c }
+	def mapArea(area: Area2D)(f: Color => Color) =
+		mapPixelPoints { (c, p) => if (area.contains(p * scaling)) f(c) else c }
 	
 	/**
 	  * Creates a blurred copy of this image
@@ -525,7 +539,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param hueAdjust The amount of shift applied to color hue
 	  * @return A new image with adjusted hue
 	  */
-	def withAdjustedHue(hueAdjust: Rotation) = mapPixels { _ + hueAdjust }
+	def withAdjustedHue(hueAdjust: Rotation) = mapEachPixel { _ + hueAdjust }
 	/**
 	  * Creates a version of this image with a certain hue range adjusted
 	  * @param sourceHue The hue that is targeted
@@ -559,7 +573,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	 * @param hue Hue for every pixel in this image
 	 * @return A new image with all pixels set to provided color. Original alpha channel is preserved, however.
 	 */
-	def withColorOverlay(hue: Color) = mapPixels { c => hue.withAlpha(c.alpha) }
+	def withColorOverlay(hue: Color) = mapEachPixel { c => hue.withAlpha(c.alpha) }
 	
 	/**
 	  * Creates a new image with altered source resolution. This method can be used when you wish to lower the original

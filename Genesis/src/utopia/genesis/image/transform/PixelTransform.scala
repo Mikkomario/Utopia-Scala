@@ -22,9 +22,8 @@ trait PixelTransform extends ImageTransform
 	
 	// IMPLEMENTED	----------------
 	
-	override def apply(source: Image) = source.mapPixels(apply)
-	
-	override def apply(target: MutableImage) = target.updatePixels(apply)
+	override def apply(source: Image) = source.mapEachPixel(apply)
+	override def apply(target: MutableImage) = target.updateEachPixel(apply)
 	
 	
 	// OPERATORS	----------------

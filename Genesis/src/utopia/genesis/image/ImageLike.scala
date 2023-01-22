@@ -58,15 +58,9 @@ trait ImageLike extends HasSize
 	def isEmpty: Boolean
 	
 	/**
-	  * @return Pixel data for this image. The acquisition of these pixels may be a slow operation.
+	  * @return Pixel data for this image.
 	  */
-	def pixels: PixelTable
-	
-	/**
-	  * @return Precalculated pixel data for this image. This should return faster than <i>pixels</i>, but returns
-	  *         None if the pixels haven't been precalculated.
-	  */
-	def preCalculatedPixels: Option[PixelTable]
+	def pixels: Pixels
 	
 	
 	// COMPUTED	--------------------
@@ -125,82 +119,23 @@ trait ImageLike extends HasSize
 	  * @param point Targeted point in this image <b>relative to this image's origin</b>
 	  * @return A color of this image at the specified location
 	  */
-	def pixelAt(point: Point) =
-	{
-		// Utilizes a pre-calculated pixel table if one is already available,
-		// although will not create one just for this method call
-		preCalculatedPixels match
-		{
-			case Some(pixels) => pixels.lookup(point).getOrElse(Color.transparentBlack)
-			case None =>
-				source match
-				{
-					case Some(image) =>
-						// Converts the point to an image coordinate
-						val pointInImage = ((point - bounds.topLeft) / scaling).round
-						val x = pointInImage.x.toInt
-						val y = pointInImage.y.toInt
-						if (x >= 0 && y >= 0 && x < image.getWidth && y < image.getHeight)
-						{
-							// Fetches the pixel color in that location
-							val rgb = image.getRGB(x, y)
-							Color.fromInt(rgb)
-						}
-						else
-							Color.transparentBlack
-					case None => Color.transparentBlack
-				}
-		}
-	}
-	
+	def pixelAt(point: Point) = pixels.lookup(point).getOrElse(Color.transparentBlack)
 	/**
 	  * @param area Targeted area within this image. The (0,0) location is relative to the top left corner of this image
 	  * @return An iterator that traverses through the pixels in that area
 	  */
-	def pixelsAt(area: Bounds) =
-	{
-		// Uses a pixel table if one is available
-		preCalculatedPixels match
-		{
-			case Some(pixels) => pixels(area / scaling)
-			case None =>
-				(area / scaling).overlapWith(Bounds(Point.origin, sourceResolution)) match {
-					case Some(insideArea) =>
-						if (insideArea.size.isPositive)
-						{
-							// If the specified area covers 50% of this image or more, calculates the whole pixel table
-							if (insideArea.area >= sourceResolution.area * 0.5)
-								pixels(insideArea)
-							else
-							{
-								source match
-								{
-									// Iterates over the targeted pixels
-									case Some(image) =>
-										new ImageIterator(image, insideArea.leftX.toInt, insideArea.topY.toInt,
-											insideArea.rightX.toInt, insideArea.bottomY.toInt)
-									case None => Vector().iterator
-								}
-							}
-						}
-						else
-							Vector().iterator
-					case None => Vector().iterator
-				}
-		}
-	}
+	def pixelsAt(area: Bounds) = pixels.view(area / scaling)
 	
 	/**
 	  * @param area Targeted area within this image. The (0,0) is at the top left corner of this image
 	  * @return The average luminosity of the pixels in the targeted area
 	  */
-	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(pixelsAt(area))
-	
+	def averageLuminosityOf(area: Bounds) = pixelsAt(area).averageLuminosity
 	/**
 	  * @param area Targeted area within this image. The (0,0) is at the top left corner of this image
 	  * @return The average relative luminance (perceived lightness) of the pixels in the targeted area
 	  */
-	def averageRelativeLuminanceOf(area: Bounds) = Color.averageRelativeLuminanceOf(pixelsAt(area))
+	def averageRelativeLuminanceOf(area: Bounds) = pixelsAt(area).averageRelativeLuminance
 	
 	/**
 	  * Draws this image using a specific drawer
@@ -306,36 +241,5 @@ trait ImageLike extends HasSize
 			}
 			transformedDrawer.drawAwtImage(s)
 		}
-	}
-}
-
-private class ImageIterator(image: BufferedImage, startX: Int, startY: Int, endX: Int, endY: Int)
-	extends Iterator[Color]
-{
-	// ATTRIBUTES	-----------------------
-	
-	private val lastX = endX - 1
-	
-	private var nextX = startX
-	private var nextY = startY
-	
-	
-	// IMPLEMENTED	-----------------------
-	
-	override def hasNext = nextY < endY && nextX < endX
-	
-	override def next() =
-	{
-		// Fetches the color
-		val rgb = image.getRGB(nextX, nextY)
-		// Moves the cursor
-		if (nextX < lastX)
-			nextX += 1
-		else
-		{
-			nextX = startX
-			nextY += 1
-		}
-		Color.fromInt(rgb)
 	}
 }

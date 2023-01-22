@@ -1,7 +1,20 @@
 # Utopia Reflection - List of Changes
 
-## v3.1.1 (In Development)
-Supports changes in **Flow** v2.0
+## v3.2 (In Development)
+### Breaking Changes
+- Rewrote **PixelTable** as **Pixels**, which is now used by the **Image** classes
+- Renamed **Image**`.mapPixels(...)` to `.mapEachPixel(...)`
+- Renamed **MutableImage**`.updatePixels(...)` to `.updateEachPixel(...)`
+- **Image**`.mapPixelsWithIndex(...)` and **MutableImage**`.updatePixelsWithIndex(...)` 
+  now provide a **Pair** instead of a **Point** for the specified function.
+  - Added new `.mapPixelPoints(...)` and `.updatePixelPoints(...)`, respectively, to compensate for this change
+- Removed `.preCalculatedPixels` from **ImageLike**, as **Pixels** now supports lazy initialization
+### Deprecations
+- Deprecated **PixelTable** in favor of **Pixels**
+- Deprecated **Image**`.mapPixelTable(...)` in favor of `.mapPixels(...)`
+- Deprecated **MutableImage**`.updatePixelTable(...)` in favor of `.updatePixels(...)`
+### New Methods
+- Added new `.fromPixels(Pixels)` constructor to **Image**
 
 ## v3.1 - 02.10.2022
 This update reflects the changes in **Flow** v1.17 and **Paradigm** v1.1.  

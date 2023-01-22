@@ -2,6 +2,7 @@ package utopia.flow.collection
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.collection.mutable.iterator.{FoldingIterator, GroupIterator, IteratorWithEvents, LimitedLengthIterator, PairingIterator, PollableOnce, PollingIterator, TerminatingIterator, ZipPadIterator}
 import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
 import utopia.flow.util.logging.Logger
@@ -1060,13 +1061,22 @@ object CollectionExtensions
 		  * @param range Range to slice from this sequence
 		  * @return Slice of this sequence
 		  */
-		def slice(range: Range): Repr =
-		{
+		def slice(range: Range): Repr = {
 			if (range.nonEmpty)
 				seq.slice(range.head, range.last + 1)
 			else
 				seq.empty
 		}
+		/**
+		 * @param range The start and the end indices
+		 * @return A sequence within this sequence that matches the specified range
+		 */
+		def slice(range: Pair[Int]): Repr = seq.slice(range.first, range.second)
+		/**
+		 * @param range The start and the end indices
+		 * @return A sequence within this sequence that matches the specified range
+		 */
+		def slice(range: HasInclusiveEnds[Int]): Repr = seq.slice(range.start, range.end)
 		
 		/**
 		  * @param another Another sequence

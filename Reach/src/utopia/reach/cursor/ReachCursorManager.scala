@@ -46,7 +46,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 				if (image.alpha >= 1)
 					image
 				else
-					image.mapPixels { _.timesAlpha(image.alpha) }
+					image.mapEachPixel { _.timesAlpha(image.alpha) }
 		}
 		correctedImage.toAwt match
 		{

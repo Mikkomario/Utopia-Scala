@@ -5,6 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size}
 
+@deprecated("Replaced with Pixels", "v3.2")
 object PixelTable
 {
 	/**
@@ -38,6 +39,7 @@ object PixelTable
   * @since 15.6.2019, v2.1+
   */
 // First y-coordinate, then x-coordinate
+@deprecated("Replaced with Pixels", "v3.2")
 case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[Color]
 {
 	// COMPUTED	-----------------------

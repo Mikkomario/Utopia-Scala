@@ -1,5 +1,6 @@
 package utopia.genesis.image
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.AutoClose._
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.paradigm.color.Color
@@ -43,10 +44,9 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	private var _source = initialSource
 	
 	private val pixelsCache = MutableLazy {
-		source match
-		{
-			case Some(image) => PixelTable.fromBufferedImage(image)
-			case None => PixelTable.empty
+		source match {
+			case Some(image) => Pixels.fromBufferedImage(image, lazily = true)
+			case None => Pixels.empty
 		}
 	}
 	
@@ -99,8 +99,6 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	override def isEmpty = source.isEmpty
 	
 	override def pixels = pixelsCache.value
-	
-	override def preCalculatedPixels = pixelsCache.current
 	
 	
 	// OTHER	----------------------------------
@@ -220,30 +218,38 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	def limitHeight(maxHeight: Double) = limitAlong(Y, maxHeight)
 	
 	/**
-	  * Maps the pixel table of this image
-	  * @param f A function for mapping a pixel table
+	  * Maps the pixels of this image
+	  * @param f A function for mapping all pixels at once
 	  */
-	def updatePixelTable(f: PixelTable => PixelTable) =
-	{
-		if (source.isDefined)
-		{
+	def updatePixels(f: Pixels => Pixels) = {
+		if (source.isDefined) {
 			val newPixels = f(pixels)
 			_source = Some(newPixels.toBufferedImage)
 			pixelsCache.value = newPixels
 		}
 	}
+	/**
+	  * Maps the pixel table of this image
+	  * @param f A function for mapping a pixel table
+	  */
+	@deprecated("Please use .updatePixels(...) instead", "v3.2")
+	def updatePixelTable(f: Pixels => Pixels) = updatePixels(f)
 	
 	/**
 	  * Maps all of the pixels in this image
 	  * @param f A function for mapping pixel colors
 	  */
-	def updatePixels(f: Color => Color) = updatePixelTable { _.map(f) }
-	
+	def updateEachPixel(f: Color => Color) = updatePixels { _.map(f) }
 	/**
 	  * Maps all of the pixels in this image
 	  * @param f A function for mapping pixel colors, also accepts pixel location (in source resolution context)
 	  */
-	def updatePixelsWithIndex(f: (Color, Point) => Color) = updatePixelTable { _.mapWithIndex(f) }
+	def updatePixelsWithIndex(f: (Color, Pair[Int]) => Color) = updatePixels { _.mapWithIndex(f) }
+	/**
+	  * Maps all of the pixels in this image
+	  * @param f A function for mapping pixel colors, also accepts pixel location (in source resolution context)
+	  */
+	def updatePixelPoints(f: (Color, Point) => Color) = updatePixels { _.mapPoints(f) }
 	
 	/**
 	  * Maps pixels in this image in a specified area
@@ -251,7 +257,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  *             of this image
 	  * @param f A mapping function for pixel colors
 	  */
-	def updateArea(area: Area2D)(f: Color => Color) = updatePixelsWithIndex { (c, p) =>
+	def updateArea(area: Area2D)(f: Color => Color) = updatePixelPoints { (c, p) =>
 		if (area.contains(p * scaling)) f(c) else c
 	}
 	
@@ -260,8 +266,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param newSize New size for this image
 	  * @param preserveShape Whether image shape should be preserved (default = true)
 	  */
-	def resize(newSize: Size, preserveShape: Boolean = true) =
-	{
+	def resize(newSize: Size, preserveShape: Boolean = true) = {
 		if (preserveShape)
 			*=((newSize.width / width) min (newSize.height / height))
 		else
@@ -271,18 +276,15 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	/**
 	  * Flips this image horizontally
 	  */
-	def flipHorizontally() =
-	{
-		updatePixelTable { _.flippedHorizontally }
+	def flipHorizontally() = {
+		updatePixels { _.flippedHorizontally }
 		updateSpecifiedOrigin { _.map { o => Point(sourceResolution.width - o.x, o.y) } }
 	}
-	
 	/**
 	  * Flips this image vertically
 	  */
-	def flipVertically() =
-	{
-		updatePixelTable { _.flippedVertically }
+	def flipVertically() = {
+		updatePixels { _.flippedVertically }
 		updateSpecifiedOrigin { _.map { o => Point(o.x, sourceResolution.height - o.y) } }
 	}
 	
@@ -290,7 +292,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Applies a color overlay on this image
 	  * @param hue Color to use for all pixels
 	  */
-	def addColorOverlay(hue: Color) = updatePixels { c => hue.withAlpha(c.alpha) }
+	def addColorOverlay(hue: Color) = updateEachPixel { c => hue.withAlpha(c.alpha) }
 	
 	/**
 	  * Applies an image transformation to this image
@@ -302,18 +304,15 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Increases the contrast in this image
 	  */
 	def increaseContrast() = transformWith(IncreaseContrast)
-	
 	/**
 	  * Inverts the colors in this image
 	  */
 	def invert() = transformWith(Invert)
-	
 	/**
 	  * Blurs this image
 	  * @param intensity Blur intensity [0, 1] (default = 1)
 	  */
 	def blur(intensity: Double = 1) = transformWith(Blur(intensity))
-	
 	/**
 	  * Sharpens this image
 	  * @param intensity Sharpening intensity (default = 5)
@@ -324,8 +323,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Adjusts the hue in this image by specified amount
 	  * @param amount Rotation to apply to image hue for all pixels
 	  */
-	def adjustHue(amount: Rotation) = updatePixels { _ + amount }
-	
+	def adjustHue(amount: Rotation) = updateEachPixel { _ + amount }
 	/**
 	  * Adjusts the hue in this image
 	  * @param sourceHue Targeted hue
@@ -361,8 +359,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	def overlay(image: Image, overlayPosition: Point = Point.origin) =
 	{
 		if (image.nonEmpty)
-			source match
-			{
+			source match {
 				case Some(target) =>
 					// Draws the overlay image on the source directly
 					// Calculates applied scaling
@@ -373,11 +370,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 				case None =>
 					// Overwrites the source with the new image
 					_source = image.toAwt
-					image.preCalculatedPixels match
-					{
-						case Some(pixels) => pixelsCache.value = pixels
-						case None => pixelsCache.reset()
-					}
+					pixelsCache.value = image.pixels
 			}
 	}
 	

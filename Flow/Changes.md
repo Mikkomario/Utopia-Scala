@@ -76,6 +76,7 @@
 - Fixed **Regex**`.times(Range)` that previously yielded invalid regular expressions
 ### New Features
 - **ModelDeclarations** now support optional properties
+- Added **Matrix** trait & implementation
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
 - Added **ViewGraphNode** as a lazily initialized graph
 - Added generic Range traits: **Span**, **IterableSpan**, **NumericSpan**, **HasEnds**, and so on
@@ -111,6 +112,7 @@
 - **Path**
   - Added `.toTree`
 - **Pair**
+  - Added `.existsWith(...)` and `.forallWith(...)`
   - Added `.flatMergeWith(Pair)(...)` and `.toMapWith(Pair)`
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
   - Added `.isSymmerticBy(...)`, `.isAsymmetricBy(...)`, 
@@ -121,6 +123,7 @@
   - Added `.empty`
 - **Seq** (**CollectionExtensions**)
   - Added `.findAndPop(...)`, which finds an item and removes it from the collection
+  - Added new `.slice(...)` variations
 - **Signed**
   - Added a number of new utility functions
 - **Tree** (object)
