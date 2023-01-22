@@ -4,6 +4,7 @@ import utopia.flow.generic.casting.ValueConverter
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType._
+import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.HashSet
 
@@ -22,6 +23,7 @@ object BasicJsonValueConverter extends ValueConverter[String]
 		dataType match {
 			case StringType =>
 				s"\"${ value.getString
+					.escapeBackSlashes
 					.replace("\"", "\\\"")
 					.replace("\n", "\\n")
 				}\""
