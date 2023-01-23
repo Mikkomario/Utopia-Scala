@@ -1,7 +1,6 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Matrix.MatrixView
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -28,7 +27,7 @@ object Matrix
 		cols.headOption match {
 			case Some(firstCol) =>
 				val height = firstCol.size
-				new _Matrix[A](View.fixed(cols), Lazy { (0 until height).map(cols.apply) })
+				new _Matrix[A](View.fixed(cols), Lazy { (0 until height).map { y => cols.map { _(y) } } })
 			case None => empty
 		}
 	}
@@ -42,10 +41,33 @@ object Matrix
 		rows.headOption match {
 			case Some(firstRow) =>
 				val width = firstRow.size
-				new _Matrix[A](Lazy { (0 until width).map(rows.apply) }, View.fixed(rows))
+				new _Matrix[A](Lazy { (0 until width).map { x => rows.map { _(x) } } }, View.fixed(rows))
 			case None => empty
 		}
 	}
+	
+	/**
+	 * Fills a matrix
+	 * @param size The size of the resulting matrix
+	 * @param f    A function for filling each cell. Accepts the cell coordinate as a Pair.
+	 * @tparam A Type of cell values
+	 * @return A new matrix
+	 */
+	def fill[A](size: Pair[Int])(f: Pair[Int] => A) =
+		withColumns((0 until size.first).map { x =>
+			(0 until size.second).map { y => f(Pair(x, y)) }
+		})
+	/**
+	 * Lazily fills a matrix
+	 * @param size The size of the resulting matrix
+	 * @param f A function for filling each cell. Accepts the cell coordinate as a Pair.
+	 * @tparam A Type of cell values
+	 * @return A new matrix
+	 */
+	def lazyFill[A](size: Pair[Int])(f: Pair[Int] => A) =
+		withColumns((0 until size.first).lazyMap { x =>
+			(0 until size.second).lazyMap { y => f(Pair(x, y)) }
+		})
 	
 	
 	// NESTED   ------------------------------
@@ -58,48 +80,6 @@ object Matrix
 		override def transpose: Matrix[A] = this
 		
 		override def view(area: Pair[NumericSpan[Int]]) = this
-	}
-	
-	private class MatrixView[+A](matrix: Matrix[A], area: Pair[NumericSpan[Int]]) extends Matrix[A]
-	{
-		// ATTRIBUTES   --------------------
-		
-		override lazy val width = endX - startX
-		override lazy val height = endY - startY
-		
-		override lazy val columns = matrix.columns.slice(area.second).lazyMap { _.slice(area.first) }
-		override lazy val rows = matrix.rows.slice(area.first).lazyMap { _.slice(area.second) }
-		
-		
-		// COMPUTED ------------------------
-		
-		private def startX = area.first.start
-		private def endX = area.first.end
-		private def startY = area.second.start
-		private def endY = area.second.end
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override def transpose: Matrix[A] = new _Matrix[A](Lazy { rows }, Lazy { columns })
-		
-		override def iteratorWithIndex =
-			area.second.iterator.flatMap { y =>
-				area.first.iterator.map { x => (matrix(x, y), Pair(x - startX, y - startY)) } }
-		override def apply(column: Int, row: Int) = matrix(startX + column, startY + row)
-		
-		override def take(size: Pair[Int]): Matrix[A] = {
-			if (size.exists { _ <= 0 })
-				empty
-			else
-				new MatrixView(matrix, area.mergeWith(size) { (span, len) => span.withMaxLength(len) })
-		}
-		override def drop(size: Pair[Int]): Matrix[A] = {
-			if (size.zip(area).exists { case (len, span) => len >= span.length })
-				empty
-			else
-				new MatrixView(matrix, area.mergeWith(size) { (span, len) => span.withStart(span.end - len) })
-		}
 	}
 	
 	private class _Matrix[A](colView: View[IndexedSeq[IndexedSeq[A]]], rowView: View[IndexedSeq[IndexedSeq[A]]])
@@ -126,18 +106,12 @@ trait Matrix[+A] extends MatrixLike[A, Matrix[A]]
 	
 	override def self: Matrix[A] = this
 	
+	override def transpose: Matrix[A] = new Matrix._Matrix[A](Lazy { rows }, Lazy { columns })
+	
 	/**
 	  * @param area Viewed area, as an x-range (for columns) and then an y-range (for rows)
 	  * @return A view of this matrix that covers only the specified sub-region.
 	  *         Non-overlapping part (i.e. the targeted area outside of this matrix) of the area is not included.
 	  */
-	def view(area: Pair[NumericSpan[Int]]): Matrix[A] = {
-		val s = size
-		if (area.existsWith(s) { (span, len) => span.end < 0 || span.start > len })
-			Matrix.empty
-		else
-			new MatrixView[A](this, area.mergeWith(s) { (span, len) =>
-				NumericSpan(span.start max 0, span.end.min(len - 1))
-			})
-	}
+	def view(area: Pair[NumericSpan[Int]]) = MatrixView(this, area)
 }

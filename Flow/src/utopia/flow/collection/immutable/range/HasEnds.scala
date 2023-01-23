@@ -75,6 +75,11 @@ trait HasEnds[P]
 	def nonEmpty = !isEmpty
 	
 	
+	// IMPLEMENTED  ---------------------
+	
+	override def toString = if (isInclusive) s"$start to $end" else s"$start until $end"
+	
+	
 	// OTHER    -------------------------
 	
 	/**

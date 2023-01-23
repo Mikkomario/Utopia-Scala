@@ -1,10 +1,9 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{Combinable, EqualsBy, Reversible, Scalable, Sign}
+import utopia.flow.operator._
 
 import scala.language.implicitConversions
-import scala.math.Ordered.orderingToOrdered
 
 object NumericSpan
 {

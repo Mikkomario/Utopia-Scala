@@ -32,4 +32,6 @@ object Span
 trait Span[P] extends SpanLike[P, Span[P]]
 {
 	override protected def self = this
+	
+	override def toString = s"$start to $end"
 }

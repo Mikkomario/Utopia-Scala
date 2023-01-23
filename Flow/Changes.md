@@ -75,8 +75,7 @@
 ### Bugfixes
 - Fixed **Regex**`.times(Range)` that previously yielded invalid regular expressions
 ### New Features
-- **ModelDeclarations** now support optional properties
-- Added **Matrix** trait & implementation
+- Added both immutable and mutable **Matrix** traits and implementations
 - Added **CachingMap**, **LazyTree** and **LazyInitIterator**
 - Added **ViewGraphNode** as a lazily initialized graph
 - Added generic Range traits: **Span**, **IterableSpan**, **NumericSpan**, **HasEnds**, and so on
@@ -89,6 +88,7 @@
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait
 - Added **TryFuture** object that makes it easier to construct completed **Futures** with **Try** values.
+- **ModelDeclarations** now support optional properties
 ### New Methods
 - **CanBeAboutZero**
   - Added `.notCloseZero`
@@ -113,7 +113,7 @@
   - Added `.toTree`
 - **Pair**
   - Added `.existsWith(...)` and `.forallWith(...)`
-  - Added `.flatMergeWith(Pair)(...)` and `.toMapWith(Pair)`
+  - Added `.flatMergeWith(Pair)(...)`, `.findMergeWith(Pair)(...)` and `.toMapWith(Pair)`
   - Added `.oppositeOf(...)` and `.oppositeToWhere(...)`
   - Added `.isSymmerticBy(...)`, `.isAsymmetricBy(...)`, 
     `.equalsUsing(EqualsFunction)`, `.notEqualsUsing(EqualsFunction)`, `~==` and `!~==`

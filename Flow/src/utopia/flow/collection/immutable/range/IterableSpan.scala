@@ -61,4 +61,6 @@ trait IterableSpan[P] extends Span[P] with IterableHasInclusiveEnds[P] with Span
 	// IMPLEMENTED  -------------------------
 	
 	override protected def self = this
+	
+	override def toString = super[SpanLike].toString
 }

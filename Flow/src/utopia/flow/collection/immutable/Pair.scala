@@ -401,6 +401,18 @@ case class Pair[+A](first: A, second: A)
 		builder.result()
 	}
 	/**
+	  * Attempts to merge this pair with another pair
+	  * @param other Another pair
+	  * @param f A merge function that combines values from both of these pairs.
+	  *          Returns None in cases where merging is not possible.
+	  *          Will be called 1-2 times.
+	  * @tparam B Type of values in the other pair
+	  * @tparam C Type of merged values, when successful
+	  * @return A pair with two merge result values, or None if the specified function returned None at any point.
+	  */
+	def findMergeWith[B, C](other: Pair[B])(f: (A, B) => Option[C]) =
+		f(first, other.first).flatMap { a => f(second, other.second).map { Pair(a, _) } }
+	/**
 	 * @param other Another pair
 	 * @param f A predicate that compares the values of these pairs
 	 * @tparam B Type of values in the other pair
