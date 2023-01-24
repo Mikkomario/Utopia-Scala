@@ -32,7 +32,7 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
     /**
      * A zero bounds
      */
-    val zero = new Bounds(Right(dimensionsFactory.zero2D))
+    val zero = new Bounds(dimensionsFactory.zero2D)
     
     /**
       * Collision axes used when testing for containment / overlap with Bounds
@@ -49,7 +49,7 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
     // IMPLEMENTED  -----------------------
     
     override def apply(dimensions: Dimensions[NumericSpan[Double]]) =
-        new Bounds(Right(dimensions.withLength(2)))
+        new Bounds(dimensions.withLength(2))
     
     override def from(other: HasDimensions[NumericSpan[Double]]) = other match {
         case b: Bounds => b
@@ -67,7 +67,8 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
       * @param size The size of these bounds
       * @return A set of bounds that combines these two values
       */
-    def apply(position: Point, size: Size) = new Bounds(Left(position -> size))
+    def apply(position: Point, size: Size) =
+        new Bounds(position.dimensions.mergeWith(size.dimensions, zeroDimension) { (s, len) => NumericSpan(s, s + len) })
     
     /**
       * Creates a new set of bounds
@@ -132,28 +133,23 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
  * @author Mikko Hilpinen
  * @since Genesis 13.1.2017
  */
-class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]])
+class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     extends Dimensional[NumericSpan[Double], Bounds] with Rectangular with ValueConvertible with ModelConvertible
         with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds] with Bounded[Bounds] with EqualsBy
 {
     // ATTRIBUTES   ----------------------
     
+    /*
     override lazy val dimensions: Dimensions[NumericSpan[Double]] = data.rightOrMap { case (position, size) =>
         Bounds.dimensionsFactory.fromFunction2D { axis =>
             val start = position(axis)
             NumericSpan(start, start + size(axis))
         }
-    }
+    }*/
     // NB: position + size seems to break in a lot of places =>
     // Will need to be careful with these, in case they break the compiler again in the future
-    override lazy val position: Point = data match {
-        case Left((pos, _)) => pos
-        case Right(dimensions) => Point(dimensions.map { _.min })
-    }
-    override lazy val size: Size = data match {
-        case Left((_, size)) => size
-        case Right(dimensions) => Size(dimensions.map { _.length.abs })
-    }
+    override lazy val position: Point = Point(dimensions.map { _.min })
+    override lazy val size: Size = Size(dimensions.map { _.length.abs })
     
     override lazy val components: Vector[Span1D] =
         dimensions.zipWithAxisIterator.map { case (span, axis) => Span1D(span, axis) }.toVector
@@ -199,8 +195,8 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     
     override protected def equalsProperties = Vector(dimensions)
     
-    override def topLeftCorner = position
-    override def bottomRightCorner: Point = Point(dimensions.map { _.max })
+    override def topLeftCorner = Point(dimensions.map { _.start })
+    override def bottomRightCorner: Point = Point(dimensions.map { _.end })
     
     override def width = size.width
     override def height = size.height

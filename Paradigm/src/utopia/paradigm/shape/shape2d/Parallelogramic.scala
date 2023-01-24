@@ -78,9 +78,12 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	
 	// IMPLEMENTED	--------------
 	
-	override def corners =
-		LazyVector.fromFunctions(() => topLeftCorner, () => topRightCorner, () => bottomRightCorner,
-			() => bottomLeftCorner)
+	override def corners = LazyVector.fromFunctions(
+		() => topLeftCorner,
+		() => topRightCorner,
+		() => bottomRightCorner,
+		() => bottomLeftCorner
+	)
 	override def edges = Vector(topEdge, rightEdge, bottomEdge, leftEdge)
 	
 	override def collisionAxes = Vector(topEdge, rightEdge).map { _.normal2D }

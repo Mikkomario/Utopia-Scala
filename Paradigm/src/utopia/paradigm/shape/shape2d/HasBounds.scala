@@ -29,21 +29,21 @@ trait HasBounds extends HasSize with Area2D
 	def position: Point = bounds.position
 	
 	/**
-	  * @return The top-left corner of this item's bounds (assuming positive size)
+	  * @return The top-left corner of this item's bounds
 	  */
 	def topLeft = bounds.position
 	/**
-	  * @return The top-right corner of this item's bounds (assuming positive size)
+	  * @return The top-right corner of this item's bounds
 	  */
 	def topRight = topLeft + X(width)
 	/**
-	  * @return The bottom-left corner of this item's bounds (assuming positive size)
+	  * @return The bottom-left corner of this item's bounds
 	  */
 	def bottomLeft = topLeft + Y(height)
 	/**
-	  * @return The bottom-right corner of this item's bounds (assuming positive size)
+	  * @return The bottom-right corner of this item's bounds
 	  */
-	def bottomRight = Point(bounds.dimensions.map { _.end })
+	def bottomRight = Point(bounds.dimensions.map { _.max })
 	
 	/**
 	  * @return A point at the center of this item vertically, at the left horizontally
@@ -63,19 +63,19 @@ trait HasBounds extends HasSize with Area2D
 	def centerBottom = topLeft + size * Vector2D(0.5, 1)
 	
 	/**
-	  * @return The leftmost x-coordinate of this item's bounds (assuming positive size)
+	  * @return The leftmost x-coordinate of this item's bounds
 	  */
 	def leftX = minAlong(X)
 	/**
-	  * @return The rightmost x-coordinate of this item's bounds (assuming positive size)
+	  * @return The rightmost x-coordinate of this item's bounds
 	  */
 	def rightX = maxAlong(X)
 	/**
-	  * @return The topmost y-coordinate of this item's bounds (assuming positive size)
+	  * @return The topmost y-coordinate of this item's bounds
 	  */
 	def topY = minAlong(Y)
 	/**
-	  * @return The bottom-most y-coordinate of this item's bounds (assuming positive size)
+	  * @return The bottom-most y-coordinate of this item's bounds
 	  */
 	def bottomY = maxAlong(Y)
 	/**
@@ -105,14 +105,14 @@ trait HasBounds extends HasSize with Area2D
 	
 	/**
 	  * @param axis The targeted axis
-	  * @return The smallest coordinate within this item's bounds along the specified axis (assuming positive size)
+	  * @return The smallest coordinate within this item's bounds along the specified axis
 	  */
-	def minAlong(axis: Axis) = bounds(axis).start
+	def minAlong(axis: Axis) = bounds(axis).min
 	/**
 	  * @param axis The targeted axis
-	  * @return The largest coordinate within this item's bounds along the specified axis (assuming positive size)
+	  * @return The largest coordinate within this item's bounds along the specified axis
 	  */
-	def maxAlong(axis: Axis) = bounds(axis).end
+	def maxAlong(axis: Axis) = bounds(axis).max
 	/**
 	  * @param axis Targeted axis
 	  * @return The center coordinate of this item along that axis

@@ -100,10 +100,12 @@ trait MatrixLike[V <: DoubleVectorLike[V], +Repr] extends Dimensional[V, Repr] w
 	  * @return A transformed vector
 	  */
 	// Vector multiplication: x*x-transformation + y*y-transformation
-	// TODO: Handle the case of 0-dimension vectors
-	def apply(vector: HasDoubleDimensions): V = vector.dimensions.iterator.zip(columns)
-		.map { case (c, transformation) => transformation * c }
-		.reduce { _ + _ }
+	// TODO: See if padding with 1.0 causes strange problems. Added it in order to make affine transformations
+	//  (i.e. translation) work with 2D vectors
+	def apply(vector: HasDoubleDimensions): V =
+		vector.dimensions.padTo(columns.size, 1.0).zipIteratorWith(columns)
+			.map { case (c, transformation) => transformation * c }
+			.reduce { _ + _ }
 	
 	/**
 	  * Transforms the specified matrix

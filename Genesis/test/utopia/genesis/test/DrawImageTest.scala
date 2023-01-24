@@ -42,7 +42,10 @@ object DrawImageTest extends App
 	
 	// Creates test objects
 	val t1 = new ImageDrawer(Point.origin, { d => d.draw(Circle(Point(200, 200), 200)) },
-		Some({ d => d.draw(Bounds.between(Point(10, 10), Point(30, 30)))(ds2) }))
+		Some({ d =>
+			// d.scaled(2).draw(Bounds.between(Point(10, 10), Point(30, 30)))(ds2)
+			d.draw(Bounds.between(Point(10, 10), Point(30, 30)))(ds2)
+		}))
 	val t2 = new ImageDrawer(Point(0, 400), { d =>
 		d.draw(Bounds.between(Point(10, 10), Point(390, 390)))
 		d.draw(Circle(Point(200, 200), 100))(ds2)

@@ -1,6 +1,7 @@
 package utopia.genesis.test
 
-import utopia.paradigm.angular.Rotation
+import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Matrix2D, Parallelogram, Point, Size, Vector2D}
@@ -12,8 +13,35 @@ object ShapeTest extends App
 {
     ParadigmDataType.setup()
     
+    // Tests bounds corner calculation
+    val b1 = Bounds(Point(1, 2), Size(1, 2))
+    
+    assert(b1.topLeftCorner == Point(1, 2))
+    assert(b1.topRightCorner == Point(2, 2))
+    assert(b1.bottomRightCorner == Point(2, 4))
+    assert(b1.bottomLeftCorner == Point(1, 4))
+    assert(b1.topLeft == b1.topLeftCorner)
+    assert(b1.topRight == b1.topRightCorner)
+    assert(b1.bottomRight == b1.bottomRightCorner)
+    assert(b1.bottomLeft == b1.bottomLeftCorner)
+    
+    val b2 = Bounds(Point(1, 2), Size(-1, -2))
+    
+    assert(b2.topLeftCorner == Point(1, 2))
+    assert(b2.topRightCorner == Point(0, 2))
+    assert(b2.bottomRightCorner == Point(0, 0), b2.bottomRightCorner)
+    assert(b2.bottomLeftCorner == Point(1, 0), b2.bottomLeftCorner)
+    assert(b2.topLeft == b2.bottomRightCorner, b2.topLeft)
+    assert(b2.topRight == b2.bottomLeftCorner, b2.topRight)
+    assert(b2.bottomRight == b2.topLeftCorner, b2.bottomRight)
+    assert(b2.bottomLeft == b2.topRightCorner, b2.bottomLeft)
+    
     val line1 = Line(Point.origin, Point(10))
     val line2 = Line(Point(0, 1), Point(2, -1))
+    
+    // Tests basic line functions
+    assert(line1.start == Point.origin)
+    assert(line1.end == Point(10, 0))
     
     assert(line1(0) ~== line1.start)
     assert(line1(1) ~== line1.end)
@@ -29,7 +57,7 @@ object ShapeTest extends App
     assert(intersection12.get ~== Point(1))
     
     val line5 = Line(Point(1, 2), Point(1, 1))
-    assert(line1.intersection(line5, onlyPointsInSegment = false).isDefined)
+    assert(line1.intersection(line5, onlyPointsInSegment = false).exists { _ ~== Point(1, 0) })
     assert(line1.intersection(line5).isEmpty, line1.intersection(line5))
     assert(line5.intersection(line1).isEmpty, line5.intersection(line1))
     
@@ -99,6 +127,17 @@ object ShapeTest extends App
     
     val par2 = par1 * Matrix2D.rotation(Rotation.ofDegrees(45))
     println(par2)
+    
+    // Tests line lenDir and line translation
+    val l1 = Line.lenDir(NumericSpan(2.0, 4.0), Angle.ofDegrees(90))
+    
+    assert(l1.start ~== Point(0, 2))
+    assert(l1.end ~== Point(0, 4))
+    
+    val l2 = l1.translated(Vector2D(4, 2))
+    
+    assert(l2.start ~== Point(4, 4), l2)
+    assert(l2.end ~== Point(4, 6), l2)
     
     println("Success!")
 }

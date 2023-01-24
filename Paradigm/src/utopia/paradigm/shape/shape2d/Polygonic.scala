@@ -203,7 +203,6 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		val projectedCorners = corners.map { _.toVector.projectedOver(axis).toPoint }
 		val start = projectedCorners.min
 		val end = projectedCorners.max
-		
 		Line(start, end)
 	}
 	
