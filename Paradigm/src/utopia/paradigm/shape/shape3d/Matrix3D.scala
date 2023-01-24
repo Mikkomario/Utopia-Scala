@@ -223,8 +223,7 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	  * @param rowIndexToDrop Index of the row to exclude from the resulting matrix [0, 2]
 	  * @return A 2x2 matrix containing the remaining items
 	  */
-	def dropTo2D(columnIndexToDrop: Int, rowIndexToDrop: Int) =
-	{
+	def dropTo2D(columnIndexToDrop: Int, rowIndexToDrop: Int) = {
 		implicit val bf: BuildFrom[Any, Vector3D, Dimensions[Vector3D]] = Dimensions(Vector3D.zero)
 		val newColumns = columns.withoutIndex(columnIndexToDrop).map { _.withoutDimensionAtIndex(rowIndexToDrop) }
 		Matrix2D(newColumns.head, newColumns(1))

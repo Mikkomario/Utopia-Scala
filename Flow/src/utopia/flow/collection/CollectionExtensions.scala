@@ -890,13 +890,12 @@ object CollectionExtensions
 		  * @param buildFrom A build from (implicit)
 		  * @return A copy of this sequence without specified index
 		  */
-		def withoutIndex(index: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-		{
+		def withoutIndex(index: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr = {
 			if (index < 0)
 				coll
 			else {
 				val seqOps = seq(coll)
-				if (seqOps.sizeCompare(index) >= 0)
+				if (seqOps.sizeCompare(index) <= 0)
 					coll
 				else
 					_withoutIndex(seqOps.iterator, index)

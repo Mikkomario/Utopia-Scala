@@ -45,16 +45,14 @@ object CollectionTest extends App
 	
 	assert(numbers.findAndPop { _ > 2 } == (Some(3), Vector(1, 2, 4, 5)), numbers.findAndPop { _ > 2 })
 	
-	/*
-	def lazyNumber(i: Int) = {
-		println(s"generating $i")
-		i
-	}
-	val lv = LazyVector(() => lazyNumber(1), () => lazyNumber(2), () => lazyNumber(3))
-	val lv2 = lv.map { -_ }
-	
-	println(lv2(2))
-	 */
+	// Tests withoutIndex
+	val v1 = Vector(1, 2, 3, 4)
+	assert(v1.withoutIndex(0) == Vector(2, 3, 4), v1.withoutIndex(0))
+	assert(v1.withoutIndex(1) == Vector(1, 3, 4), v1.withoutIndex(1))
+	assert(v1.withoutIndex(2) == Vector(1, 2, 4), v1.withoutIndex(2))
+	assert(v1.withoutIndex(3) == Vector(1, 2, 3), v1.withoutIndex(3))
+	assert(v1.withoutIndex(-1) == v1, v1.withoutIndex(-1))
+	assert(v1.withoutIndex(4) == v1, v1.withoutIndex(4))
 	
 	println("Success!")
 }

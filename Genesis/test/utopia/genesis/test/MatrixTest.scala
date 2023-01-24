@@ -13,6 +13,21 @@ object MatrixTest extends App
 {
 	ParadigmDataType.setup()
 	
+	// Testing very basic 3D matrix functions
+	val m3 = Matrix3D(
+		1, 2, 3,
+		4, 5, 6,
+		7, 8, 9
+	)
+	assert(m3.columns.size == 3)
+	assert(m3.rows.size == 3)
+	assert(m3.columns.head == Vector3D(1, 4, 7))
+	assert(m3.columns.last == Vector3D(3, 6, 9))
+	assert(m3.rows.head == Vector3D(1, 2, 3))
+	assert(m3.rows.last == Vector3D(7, 8, 9))
+	assert(m3.row(1) == Vector3D(4, 5, 6))
+	assert(m3.column(1) == Vector3D(2, 5, 8))
+	
 	// Testing matrix multiplication
 	val m1 = Matrix3D(
 		10, 20, 10,
@@ -31,11 +46,6 @@ object MatrixTest extends App
 	), m1(m2))
 	
 	// Testing matrix vector multiplication
-	val m3 = Matrix3D(
-		1, 2, 3,
-		4, 5, 6,
-		7, 8, 9
-	)
 	val v1 = Vector3D(2, 1, 3)
 	assert(m3(v1) == Vector3D(13, 31, 49), m3(v1))
 	
@@ -45,6 +55,30 @@ object MatrixTest extends App
 		3, 8
 	)
 	assert(m5.determinant == 14, m5.determinant)
+	
+	// Testing 3D matrix dropTo2D
+	val m7 = Matrix3D(
+		1, 2, 3,
+		0, 1, 4,
+		5, 6, 0
+	)
+	assert(m7.mapWithIndices { (v, _, _) => v } == m7)
+	assert(m7.dropTo2D(0, 0) == Matrix2D(
+		1, 4,
+		6, 0
+	), m7.dropTo2D(0, 0))
+	assert(m7.dropTo2D(1, 0) == Matrix2D(
+		0, 4,
+		5, 0
+	), m7.dropTo2D(1, 0))
+	assert(m7.dropTo2D(1, 2) == Matrix2D(
+		1, 3,
+		0, 4
+	), m7.dropTo2D(1, 2))
+	assert(m7.dropTo2D(0, 1) == Matrix2D(
+		2, 3,
+		6, 0
+	), m7.dropTo2D(0, 1))
 	
 	// Testing 3D matrix determinant
 	val m4 = Matrix3D(
@@ -66,28 +100,6 @@ object MatrixTest extends App
 	assert(m6(m6.inverse.get) ~== Matrix2D.identity, m6(m6.inverse.get))
 	
 	// Testing 3D matrix inverse
-	val m7 = Matrix3D(
-		1, 2, 3,
-		0, 1, 4,
-		5, 6, 0
-	)
-	assert(m7.mapWithIndices { (v, _, _) => v } == m7)
-	assert(m7.dropTo2D(0, 0) == Matrix2D(
-		1, 4,
-		6, 0
-	))
-	assert(m7.dropTo2D(1, 0) == Matrix2D(
-		0, 4,
-		5, 0
-	))
-	assert(m7.dropTo2D(1, 2) == Matrix2D(
-		1, 3,
-		0, 4
-	))
-	assert(m7.dropTo2D(0, 1) == Matrix2D(
-		2, 3,
-		6, 0
-	))
 	assert(m7.determinant == 1.0)
 	assert(m7.transposed == Matrix3D(
 		1, 0, 5,
