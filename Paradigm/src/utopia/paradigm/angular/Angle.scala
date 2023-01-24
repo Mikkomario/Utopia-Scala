@@ -82,6 +82,11 @@ object Angle
      * is converted to radians internally)
      */
     def ofDegrees(degrees: Double) = ofRadians(degrees.toRadians)
+    /**
+     * @param circleRatio Ratio of a circle [0, 1] to the positive (clockwise) direction
+     * @return That ratio as an angle
+     */
+    def ofCircles(circleRatio: Double) = ofRadians(circleRatio * 2 * math.Pi)
     
     
     // OTHER    ----------------------------------
@@ -136,7 +141,7 @@ case class Angle private(radians: Double)
     // COMPUTED PROPERTIES    --------
     
     /**
-      * @return This angle as a ratio of a full circle [0, 1]
+      * @return This angle as a ratio of a full circle [0, 1[
       */
     def circleRatio = radians / (2 * math.Pi)
     
@@ -146,7 +151,6 @@ case class Angle private(radians: Double)
     @deprecated("Please use .radians instead", "v2.3")
     def toRadians = radians /*{ val downscaled = rawRadians % (2 * math.Pi)
         if (downscaled < 0) downscaled + 2 * math.Pi else downscaled }*/
-    
     /**
      * This angle in degrees. between 0 and 360
      */
@@ -162,27 +166,22 @@ case class Angle private(radians: Double)
       * @return Sine of this angle
       */
     def sine = math.sin(radians)
-    
     /**
       * @return Arc sine of this angle
       */
     def arcSine = math.asin(radians)
-    
     /**
       * @return Cosine of this angle
       */
     def cosine = math.cos(radians)
-    
     /**
       * @return Arc cosine of this angle
       */
     def arcCosine = math.acos(radians)
-    
     /**
       * @return Tangent (tan) of this angle
       */
     def tangent = math.tan(radians)
-    
     /**
       * @return Arc tangent (atan) of this sine
       */
@@ -228,27 +227,23 @@ case class Angle private(radians: Double)
     def *(mod: Double) = Angle.ofRadians(radians * mod)
     
     
-    // OPERATORS    ------------------
+    // OTHER    ------------------
     
     /**
      * The necessary rotation from the other angle to the this angle. Returns the shortest 
      * route, which means that the value is always between -Pi and Pi
      */
-    def -(other: Angle) = 
-    {
+    def -(other: Angle) = {
         val rawValue = radians - other.radians
-        if (rawValue > math.Pi)
-        {
+        if (rawValue > math.Pi) {
             // > 180 degrees positive -> < 180 degrees negative
             Rotation(2 * math.Pi - rawValue, Counterclockwise)
         }
-        else if (rawValue < -math.Pi)
-        {
+        else if (rawValue < -math.Pi) {
             // > 180 degrees negative -> < 180 degrees positive
             Rotation(rawValue + 2 * math.Pi, Clockwise)
         }
-        else
-        {
+        else {
             // Negative values are returned as positive counter-clockwise rotation
             if (rawValue < 0)
                 Rotation(-rawValue, Counterclockwise)
@@ -256,6 +251,11 @@ case class Angle private(radians: Double)
                 Rotation(rawValue, Clockwise)
         }
     }
+    /**
+     * @param zero The angle that is considered to be the zero angle
+     * @return This angle in the coordinate system where the specified angle is considered zero
+     */
+    def relativeTo(zero: Angle) = Angle.ofRadians(radians - zero.radians)
     
     /**
      * Applies a rotation (radians) to this angle in clockwise direction

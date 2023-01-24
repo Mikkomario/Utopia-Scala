@@ -2,9 +2,10 @@ package utopia.flow.collection
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
-import utopia.flow.collection.immutable.range.{HasEnds, HasInclusiveEnds}
-import utopia.flow.collection.mutable.iterator.{FoldingIterator, GroupIterator, IteratorWithEvents, LimitedLengthIterator, PairingIterator, PollableOnce, PollingIterator, TerminatingIterator, ZipPadIterator}
-import utopia.flow.operator.{CombinedOrdering, EqualsFunction}
+import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.collection.mutable.iterator._
+import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{CombinedOrdering, EqualsFunction, Sign}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.Flag
@@ -12,9 +13,9 @@ import utopia.flow.view.mutable.eventful.Flag
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
-import scala.util.{Failure, Success, Try}
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
+import scala.util.{Failure, Success, Try}
 
 /**
   * This object contains some extensions for the more traditional collections / data structures
@@ -232,8 +233,7 @@ object CollectionExtensions
 		  * @param f             A test function
 		  * @return Whether 'requiredCount' number of items were found where the specified function 'f' returned true
 		  */
-		def existsCount(requiredCount: Int)(f: A => Boolean) =
-		{
+		def existsCount(requiredCount: Int)(f: A => Boolean) = {
 			val iter = i.iterator
 			var currentCount = 0
 			while (iter.hasNext && currentCount < requiredCount) {
@@ -241,6 +241,23 @@ object CollectionExtensions
 					currentCount += 1
 			}
 			currentCount == requiredCount
+		}
+		/**
+		 * Checks whether there exists exactly 'count' items in this collection that satisfy the specified predicate.
+		 * Consumes items until the result may be determined (i.e. count has been exceeded).
+		 * @param count Required number of matches
+		 * @param f     A function for testing items
+		 * @return Whether there exist exactly 'count' items in this collection for which 'f' returned true.
+		 */
+		def existsExactCount(count: Int)(f: A => Boolean) = {
+			val iter = i.iterator
+			val tooMany = count + 1
+			var found = 0
+			while (found < tooMany && iter.hasNext) {
+				if (f(iter.next()))
+					found += 1
+			}
+			found == count
 		}
 		
 		/**
@@ -616,6 +633,20 @@ object CollectionExtensions
 	
 	implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
 	{
+		/**
+		 * @param sign Targeted side, where negative is head and positive is last
+		 * @return Targeted ending item of this collection
+		 */
+		def end(sign: Sign) = sign match {
+			case Negative => t.head
+			case Positive => t.last
+		}
+		/**
+		 * @param sign Targeted side, where negative is head and positive is last
+		 * @return Targeted ending item of this collection. None if this item is empty.
+		 */
+		def endOption(sign: Sign) = if (t.isEmpty) None else end(sign)
+		
 		/**
 		  * @return Duplicate items within this Iterable
 		  */

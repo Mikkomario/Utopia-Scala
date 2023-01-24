@@ -2,6 +2,8 @@ package utopia.flow.collection.template
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 
 import scala.collection.IndexedSeqView
 
@@ -95,6 +97,15 @@ trait MatrixLike[+A, +V] extends PartialFunction[Pair[Int], A]
 	// OTHER    ---------------------------
 	
 	/**
+	 * @param axis Targeted axis, where Negative is the X-axis (rows) and Positive is the Y-axis (columns)
+	 * @return A view into either the rows or the columns of this matrix
+	 */
+	def viewLinesAlong(axis: Sign) = axis match {
+		case Negative => rowsView
+		case Positive => columnsView
+	}
+	
+	/**
 	 * Reads the value of a single cell in this matrix
 	 * @param column Targeted column index [0, width[, i.e. the x-coordinate
 	 * @param row    Targeted row index [0, height[, i.e. the y-coordinate
@@ -140,6 +151,22 @@ trait MatrixLike[+A, +V] extends PartialFunction[Pair[Int], A]
 	 */
 	def viewBetween(points: Pair[Pair[Int]]): V =
 		viewBetween(points.first.first, points.second.first, points.first.second, points.second.second)
+	
+	/**
+	  * Views a region within this matrix
+	  * @param center The center of the region
+	  * @param radius Radius of the region (horizontally & vertically)
+	  * @return A view into the specified region within this matrix
+	  */
+	def viewRegionAround(center: Pair[Int], radius: Pair[Int] = Pair.twice(1)) =
+		view(center.mergeWith(radius) { (p, r) => NumericSpan(p - r, p + r) })
+	/**
+	  * Views a square region within this matrix
+	  * @param center The center of the region
+	  * @param radius Radius of the region
+	  * @return A view into the specified region within this matrix
+	  */
+	def viewRegionAround(center: Pair[Int], radius: Int): V = viewRegionAround(center, Pair.twice(radius))
 	
 	/**
 	 * @param span Targeted horizontal span
@@ -192,4 +219,23 @@ trait MatrixLike[+A, +V] extends PartialFunction[Pair[Int], A]
 	 * @return A sub-region of this matrix containing the remaining rows
 	 */
 	def dropRows(height: Int) = drop(Pair(0, height))
+	
+	/**
+	  * Crops the specified amount on all sides
+	  * @param amount Amount of cells to crop from the sides
+	  * @return A cropped view into this matrix
+	  */
+	def crop(amount: Pair[Int]) = {
+		val s = size
+		if (s.existsWith(amount) { _ <= _ * 2 })
+			empty
+		else
+			view(s.mergeWith(amount) { (len, amount) =>NumericSpan(amount, len - amount - 1) })
+	}
+	/**
+	  * Crops the specified amount on all sides
+	  * @param amount Amount of cells to crop from the sides
+	  * @return A cropped view into this matrix
+	  */
+	def crop(amount: Int): V = crop(Pair.twice(amount))
 }

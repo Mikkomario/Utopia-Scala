@@ -20,8 +20,17 @@
 - Deprecated `.darkened(Double)` and `.lightened(Double)` in **HslLike** 
   in favor of `.darkened`, `.lightened`, `.darkenedBy(Double)` and `.lightenedBy(Double)` in **Color**
 ### New Methods
+- **Angle**
+  - Object
+    - Added new `.ofCircles(Double)` constructor
+  - Class
+    - Added `.relativeTo(Angle)`
+- **Axis**
+  - Added `.sign` -property
 - **Bounded**
   - Added `.shiftedInto(Bounds)` and `.fittedInto(Bounds)` -functions
+- **Circle** (type)
+  - Added `.zero` -property
 - **Color**
   - Added darkening, lightening and highlighting functions
 - **HasBounds**
@@ -30,6 +39,10 @@
   - Added `.darkness` and -related functions (darkness is just inverse of luminance)
 - **Insets**
   - Added `.mapWithDirection(...)`
+- **Line** (type)
+  - Added `.lenDir(HasInclusiveEnds[Double], Angle)` constructor
+### Other Changes
+- **Circle** now has a default value for origin
 
 ## v1.1 - 02.10.2022
 This is a relatively major update, most important addition in which is the **Vector1D** class.  

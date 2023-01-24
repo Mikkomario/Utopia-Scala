@@ -105,6 +105,9 @@
     except that it also collects the remaining items as a separate collection
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 
     or appends it.
+  - Added `.end(Sign)` and `.endOption(Sign)` for head/last -access
+- **IterableOnce**
+  - Added `.existsExactCount(Int)(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.minMax` and `.minMaxOption`
 - **Lazy**

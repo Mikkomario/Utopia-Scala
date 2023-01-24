@@ -45,6 +45,7 @@ object MouseTest2 extends App
         {
             lastMousePosition = event.mousePosition
             mouseOver = contains2D(event.mousePosition)
+	        println(s"Mouse moved. Over = $mouseOver")
         }
         
         // It is possible to use super type filters in event filters, nice!
@@ -56,7 +57,10 @@ object MouseTest2 extends App
         // Switches the state
         override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
-			if (contains2D(event.mousePosition)) isOn = !isOn
+			if (contains2D(event.mousePosition)) {
+				println("Switches mode")
+				isOn = !isOn
+			}
 			None
 		}
         

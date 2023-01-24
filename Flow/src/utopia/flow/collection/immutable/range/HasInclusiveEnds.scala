@@ -1,6 +1,8 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
   * A common trait for items which, like ranges, have two ends: A start and an end. Both of these are inclusive.
@@ -51,5 +53,14 @@ trait HasInclusiveEnds[P] extends HasEnds[P]
 			_ends.second
 		else
 			point
+	}
+	
+	/**
+	 * @param side The targeted side, where negative is the start and positive is the end
+	 * @return The targeted end of this span
+	 */
+	def endAt(side: Sign) = side match {
+		case Negative => start
+		case Positive => end
 	}
 }

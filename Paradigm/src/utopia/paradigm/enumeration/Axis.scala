@@ -49,6 +49,11 @@ sealed trait Axis2D extends Axis
     // ABSTRACT ----------------------------
     
     /**
+     * @return The sign of this axis, where negative (0) represents the X-axis and positive (1) represents the Y-axis
+     */
+    def sign: Sign
+    
+    /**
       * The axis perpendicular to this one
       */
     def perpendicular: Axis2D
@@ -137,7 +142,8 @@ object Axis
       */
     case object X extends Axis2D
     {
-        override def index = 0
+        override def sign: Sign = Negative
+        override val index = 0
         def perpendicular = Y
         def apply(alignment: LinearAlignment): Alignment = Alignment.horizontal(alignment)
     }
@@ -147,7 +153,8 @@ object Axis
       */
     case object Y extends Axis2D
     {
-        override def index = 1
+        override def sign: Sign = Positive
+        override val index = 1
         def perpendicular = X
         def apply(alignment: LinearAlignment): Alignment = Alignment.vertical(alignment)
     }
@@ -157,6 +164,6 @@ object Axis
       */
     case object Z extends Axis
     {
-        override def index = 2
+        override val index = 2
     }
 }

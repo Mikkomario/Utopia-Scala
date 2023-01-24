@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.generic.model.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -8,6 +9,7 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.HasLength
 import utopia.flow.operator.EqualsExtensions._
+import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.path.LinearPathLike
@@ -51,6 +53,15 @@ object Line extends FromModelFactory[Line]
      * @return A line with the provided position and vector part
      */
     def ofVector(position: Point, vector: HasDoubleDimensions) = Line(position, position + vector)
+    
+    /**
+     * Creates a new line that goes to the specified direction with the specified length end-points
+     * @param length The length start and end-points
+     * @param direction Direction of this line
+     * @return A new line
+     */
+    def lenDir(length: HasInclusiveEnds[Double], direction: Angle) =
+        apply(length.toPair.map { len => Point.lenDir(len, direction) })
     
     /**
      * Creates a set of edges for the provided vertices. The vertices are iterated in order and an 

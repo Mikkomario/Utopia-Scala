@@ -18,6 +18,11 @@ import scala.util.Success
 
 object Circle extends FromModelFactory[Circle]
 {
+    /**
+     * A circle with zero radius and origin at (0,0)
+     */
+    val zero = Circle(radius = 0.0)
+    
     override def apply(model: template.ModelLike[Property]) =
         Success(Circle(model("origin").getPoint, model("radius").getDouble))
 }
@@ -27,7 +32,7 @@ object Circle extends FromModelFactory[Circle]
  * @author Mikko Hilpinen
  * @since Genesis 1.1.2017
  */
-case class Circle(origin: Point, radius: Double)
+case class Circle(origin: Point = Point.origin, radius: Double)
     extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
         with LinearScalable[Circle] with Combinable[HasDoubleDimensions, Circle] with HasBounds
 {
