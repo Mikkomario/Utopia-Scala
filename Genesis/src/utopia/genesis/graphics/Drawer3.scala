@@ -1,5 +1,6 @@
 package utopia.genesis.graphics
 
+import utopia.flow.operator.ScopeUsable
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, ShapeConvertible}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
@@ -20,7 +21,8 @@ object Drawer3
   * @author Mikko Hilpinen
   * @since 29.1.2022, v2.6.3
   */
-class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsContextLike[Drawer3] with AutoCloseable
+class Drawer3(protected override val graphics: LazyGraphics)
+	extends GraphicsContextLike[Drawer3] with AutoCloseable with ScopeUsable[Drawer3]
 {
 	// IMPLEMENTED  --------------------------
 	
