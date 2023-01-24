@@ -96,15 +96,15 @@ case class Version private(numbers: Vector[Int], suffix: String) extends SelfCom
 	/**
 	 * @return Whether this version represents a major update (in relation to a previous version)
 	 */
-	def isMajorUpdate = numbers.size == 1
+	def isMajorUpdate = numbers hasSize 1
 	/**
 	 * @return Whether this version represents a standard update (in relation to a previous version)
 	 */
-	def isStandardUpdate = numbers.size == 2
+	def isStandardUpdate = numbers hasSize 2
 	/**
 	 * @return Whether this version represents a patch (in relation to a previous version)
 	 */
-	def isPatch = numbers.size >= 3
+	def isPatch = numbers.hasSize >= 3
 	
 	/**
 	 * @return A copy of this version without suffix (returns self if didn't have a suffix to begin with)

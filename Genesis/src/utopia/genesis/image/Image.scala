@@ -729,8 +729,10 @@ case class Image private(override protected val source: Option[BufferedImage], o
 		if (isEmpty)
 			this
 		else {
+			// TODO: Remove test prints
 			// Calculates new bounds
 			val transformedBounds = (bounds * transformation).bounds
+			println(s"Transforms $bounds with $transformation => ${ bounds * transformation } => ${ transformedBounds }")
 			val transformedOrigin = Point.origin * transformation
 			
 			// Creates the buffer image

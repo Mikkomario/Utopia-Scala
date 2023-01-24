@@ -9,6 +9,7 @@ import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.exodus.model.enumeration.ExodusScope.PersonalActions
 import utopia.exodus.model.enumeration.ExodusTask.ChangeRoles
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
@@ -93,7 +94,7 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 											{
 												// The target user must be left with at least 1 role
 												val rolesToRemove = targetUserRoleIds & roleIds
-												if (rolesToRemove.size == targetUserRoleIds.size)
+												if (rolesToRemove.hasSize.of(targetUserRoleIds))
 													Result.Failure(Forbidden,
 														"The targeted user must be left with at least 1 role")
 												else
@@ -147,7 +148,7 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 										Result.Failure(Forbidden,
 											"You must specify another organization owner before leaving the owner role")
 									// Case: Attempting to remove every role => fails
-									else if (roleIdsToRemove.size == activeUserRoleIds.size)
+									else if (roleIdsToRemove.hasSize of activeUserRoleIds)
 										Result.Failure(Forbidden, "You must leave at least one role")
 									// Case: Valid request => fulfills it
 									else {

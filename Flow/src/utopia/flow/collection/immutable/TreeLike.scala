@@ -172,7 +172,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	def mapPath(path: Seq[A])(f: Repr => Repr): Repr = {
 		path.headOption match {
 			case Some(nextStep) =>
-				if (path.size == 1)
+				if (path hasSize 1)
 					mapChildren { c => if (c.nav ~== nextStep) f(c) else c }
 				else {
 					val remaining = path.tail

@@ -1,5 +1,6 @@
 package utopia.access.http.error
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.access.http.ContentType
 
 object ContentTypeException
@@ -15,7 +16,7 @@ object ContentTypeException
 		val allowedString = {
 			if (allowed.isEmpty)
 				""
-			else if (allowed.size == 1)
+			else if (allowed hasSize 1)
 				s", please use ${allowed.head}"
 			else
 				s", accepted types: [${allowed.mkString(", ")}]"

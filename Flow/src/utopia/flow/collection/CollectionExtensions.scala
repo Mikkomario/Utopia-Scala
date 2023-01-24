@@ -6,6 +6,7 @@ import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{CombinedOrdering, EqualsFunction, Sign}
+import utopia.flow.util.HasSize
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.Flag
@@ -634,6 +635,18 @@ object CollectionExtensions
 	implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
 	{
 		/**
+		  * @return An instance used for testing the size of this collection against fixed values and
+		  *         sizes of other collections.
+		  *         This function allows more effective size comparisons, compared to using .size == ...
+		  */
+		def hasSize = new HasSize(t)
+		/**
+		  * @return The only item in this collection.
+		  *         None if this collection is empty or has more than one item.
+		  */
+		def only = if (hasSize(1)) Some(t.head) else None
+		
+		/**
 		 * @param sign Targeted side, where negative is head and positive is last
 		 * @return Targeted ending item of this collection
 		 */
@@ -710,6 +723,17 @@ object CollectionExtensions
 		def hasEqualSizeWith(other: Iterable[_]) = t.sizeCompare(other) == 0
 		
 		/**
+		  * Tests whether these two collections are equal when using the specified equals function.
+		  * The size, order and contents must match.
+		  * @param other Another collection
+		  * @param eq An equals function to use
+		  * @tparam B Type of items in the other collection
+		  * @return Whether these collections are equal
+		  */
+		def ~==[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) =
+			hasSize.of(other) && t.iterator.zip(other.iterator).forall { case (a, b) => eq(a, b) }
+		
+		/**
 		  * Finds the item(s) that best match the specified conditions
 		  * @param matchers Search conditions used. The conditions that are introduced first are considered more
 		  *                 important than those which are introduced the last.
@@ -719,7 +743,7 @@ object CollectionExtensions
 		{
 			// If there is only a single option, that is the best match. If there are 0 options, there's no best match
 			// If there are no matchers left, cannot make a distinction between items
-			if (t.size < 2 || matchers.isEmpty)
+			if (hasSize < 2 || matchers.isEmpty)
 				t.toVector
 			else {
 				val nextMatcher = matchers.head
@@ -913,7 +937,7 @@ object CollectionExtensions
 		  */
 		def splitToSegments(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Vector[Repr] = {
 			val seqOps = seq(coll)
-			if (seqOps.size <= maxLength)
+			if (seqOps.sizeCompare(maxLength) <= 0)
 				Vector(buildFrom.fromSpecific(coll)(seqOps))
 			else {
 				val factory = buildFrom.toFactory(coll)
@@ -1110,8 +1134,9 @@ object CollectionExtensions
 		  * @tparam B Type of another sequence's content
 		  * @return Whether these two sequences are equal when using specified equality function
 		  */
-		def compareWith[B, CC2[X]](another: SeqOps[B, CC2, _])(equals: (A, B) => Boolean) = seq.size == another.size &&
-			seq.indices.forall { i => equals(seq(i), another(i)) }
+		@deprecated("Replaced with ~==", "v2.0")
+		def compareWith[B, CC2[X]](another: SeqOps[B, CC2, _])(equals: (A, B) => Boolean) =
+			seq.size == another.size && seq.indices.forall { i => equals(seq(i), another(i)) }
 		
 		/**
 		  * Sorts this collection based on multiple orderings (second ordering is only used if first one fails to

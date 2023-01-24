@@ -104,8 +104,8 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	private def map(f: Point => Point) = {
 		val topLeft2 = f(topLeftCorner)
 		val topRight2 = f(topRightCorner).toVector
-		val bottomLeft2 = f(bottomLeftCorner).toVector
+		val bottomRight2 = f(bottomRightCorner).toVector
 		
-		Parallelogram(topLeft2, topRight2 - topLeft2, bottomLeft2 - topLeft2)
+		Parallelogram(topLeft2, topRight2 - topLeft2, bottomRight2 - topRight2)
 	}
 }

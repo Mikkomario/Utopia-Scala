@@ -157,7 +157,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Right((attributes +Constant("value", value)).properties)
         }
         // Case: Wraps a single child => Attempts to convert it into a single property
-        else if (children.size == 1)
+        else if (children hasSize 1)
         {
             val childName = children.head.localName
             children.head.toConstants match {

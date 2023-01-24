@@ -10,5 +10,5 @@ case class Parallelogram(topLeftCorner: Point, topEdge: Vector2D, rightEdge: Vec
 {
 	override def self = this
 	
-	override def toString = s"Origin: $topLeft, Top Edge: $topEdge, Right Edge: $leftEdge"
+	override def toString = s"Origin: $topLeft, Top Edge: $topEdge, Right Edge: $rightEdge"
 }

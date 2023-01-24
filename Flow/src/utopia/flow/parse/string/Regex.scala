@@ -233,7 +233,7 @@ case class Regex(string: String)
 	@throws[IllegalArgumentException]("If the specified range is empty")
 	def times(range: Range): Regex = {
 		if (range.nonEmpty) {
-			if (range.size == 1)
+			if (range hasSize 1)
 				times(range.head)
 			else
 				Regex(string + s"{${range.min},${range.max}}")

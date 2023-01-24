@@ -75,7 +75,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	
 	// Reacts to changes in the pointers
 	imagePointer.addContinuousListener { change =>
-		if (change.compareBy { _.size } && change.compareBy { _.sourceResolution })
+		if (change.equalsBy { _.size } && change.equalsBy { _.sourceResolution })
 			repaint()
 		else
 			revalidateAndRepaint()

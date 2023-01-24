@@ -7,7 +7,8 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.operator.{Combinable, EqualsBy, LinearScalable}
+import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Direction2D}
 import utopia.paradigm.generic.ParadigmDataType.BoundsType
@@ -97,23 +98,19 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
      * Creates a set of bounds that contains all of the provided bounds. Returns none if the provided 
      * collection is empty.
      */
-    def aroundOption(bounds: Iterable[Bounds]) = {
-        if (bounds.isEmpty)
-            None
-        else if (bounds.size == 1)
-            Some(bounds.head)
-        else {
-            val topLeft = Point.topLeft(bounds.map{ _.topLeft })
-            val bottomRight = Point.bottomRight(bounds.map { _.bottomRight })
-            
-            Some(between(topLeft, bottomRight))
-        }
-    }
-    
+    def aroundOption(bounds: Iterable[Bounds]) = NotEmpty(bounds).map(around)
     /**
      * Creates a bounds instance that contains all specified bounds. Will throw on empty collection
      */
-    def around(bounds: Iterable[Bounds]) = aroundOption(bounds).get
+    def around(bounds: Iterable[Bounds]) = {
+        if (bounds hasSize 1)
+            bounds.head
+        else {
+            val topLeft = Point.topLeft(bounds.map { _.topLeft })
+            val bottomRight = Point.bottomRight(bounds.map { _.bottomRight })
+            between(topLeft, bottomRight)
+        }
+    }
     
     /**
      * Creates a rectangle around line so that the line becomes one of the rectangle's diagonals
@@ -137,7 +134,7 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
  */
 class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]])
     extends Dimensional[NumericSpan[Double], Bounds] with Rectangular with ValueConvertible with ModelConvertible
-        with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds] with Bounded[Bounds]
+        with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds] with Bounded[Bounds] with EqualsBy
 {
     // ATTRIBUTES   ----------------------
     
@@ -151,11 +148,11 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     // Will need to be careful with these, in case they break the compiler again in the future
     override lazy val position: Point = data match {
         case Left((pos, _)) => pos
-        case Right(dimensions) => Point(dimensions.map { _.start })
+        case Right(dimensions) => Point(dimensions.map { _.min })
     }
     override lazy val size: Size = data match {
         case Left((_, size)) => size
-        case Right(dimensions) => Size(dimensions.map { _.length })
+        case Right(dimensions) => Size(dimensions.map { _.length.abs })
     }
     
     override lazy val components: Vector[Span1D] =
@@ -182,11 +179,17 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     /**
       * @return A copy of these bounds that rounds values for increased size and decreased position
       */
-    def ceil = mapEachDimension { s => s.withEnds(s.start.floor, s.end.ceil) }
+    def ceil = mapEachDimension { s =>
+        val minMax = s.minMax
+        s.withEnds(minMax.first.floor, minMax.second.ceil)
+    }
     /**
       * @return A copy of these bounds for decreased size and increased position
       */
-    def floor = mapEachDimension { s => s.withEnds(s.start.ceil, s.end.floor) }
+    def floor = mapEachDimension { s =>
+        val minMax = s.minMax
+        s.withEnds(minMax.first.ceil, minMax.second.floor)
+    }
     
     
     // IMPLEMENTED METHODS    ----------
@@ -194,8 +197,10 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
     override def self = this
     override def bounds = this
     
+    override protected def equalsProperties = Vector(dimensions)
+    
     override def topLeftCorner = position
-    override def bottomRightCorner: Point = Point(dimensions.map { _.end })
+    override def bottomRightCorner: Point = Point(dimensions.map { _.max })
     
     override def width = size.width
     override def height = size.height
@@ -241,7 +246,8 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
       * @return A copy of these bounds with specified insets added to the sides
       */
     def +(insets: Insets) = mergeWith(insets) { (area, insets) =>
-        area.withEnds(area.start - insets.first, area.end + insets.second)
+        val minMax = area.minMax
+        area.withEnds(minMax.first - insets.first, minMax.second + insets.second)
     }
     
     /**
@@ -254,7 +260,8 @@ class Bounds private(data: Either[(Point, Size), Dimensions[NumericSpan[Double]]
       * @return A copy of these bounds with the specified insets subtracted
       */
     def -(insets: Insets) = mergeWith(insets) { (area, insets) =>
-        area.withEnds(area.start + insets.first, area.end - insets.second)
+        val minMax = area.minMax
+        area.withEnds(minMax.first + insets.first, minMax.second - insets.second)
     }
     
     /**

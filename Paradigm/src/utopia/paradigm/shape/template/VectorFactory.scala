@@ -73,6 +73,13 @@ trait VectorFactory[+V] extends DimensionsWrapperFactory[Double, V]
 	  */
 	def topLeft[V2 <: Dimensional[Double, V2]](points: IterableOnce[V2]) = merge(points) { _ topLeft _ }
 	/**
+	  * @tparam V2 Type of points
+	  * @return A vector where each dimension is the minimum between these points.
+	  *         Empty vector if the specified set of items was empty.
+	  */
+	def topLeft[V2 <: Dimensional[Double, V2]](first: V2, second: V2, more: V2*): V =
+		topLeft(Vector(first, second) ++ more)
+	/**
 	  * @param points A set of points
 	  * @tparam V2 Type of points
 	  * @return A vector where each dimension is the minimum between these points.
@@ -87,6 +94,13 @@ trait VectorFactory[+V] extends DimensionsWrapperFactory[Double, V]
 	  *         Empty vector if the specified set of items was empty.
 	  */
 	def bottomRight[V2 <: Dimensional[Double, V2]](points: IterableOnce[V2]) = merge(points) { _ bottomRight _ }
+	/**
+	  * @tparam V2 Type of points
+	  * @return A vector where each dimension is the maximum between these points.
+	  *         Empty vector if the specified set of items was empty.
+	  */
+	def bottomRight[V2 <: Dimensional[Double, V2]](first: V2, second: V2, more: V2*): V =
+		bottomRight(Vector(first, second) ++ more)
 	/**
 	  * @param points A set of points
 	  * @tparam V2 Type of points

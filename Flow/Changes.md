@@ -99,8 +99,9 @@
 - **Either** (**CollectionExtensions**)
   - Added `.divergeMapLeft(...)` and `.divergeMapRight(...)`
 - **Iterable** (**CollectionExtensions**)
+  - Added `.hasSize` for more effective size comparisons (see **HasSize**)
+  - Added `.only`, which returns **Some** when the collection contains exactly one item
   - Added `.minMax` and `.minMaxOption`
-  - Added `.hasEqualsSizeWith(Iterable)`, which is a potentially more efficient implementation of `.size == other.size`
   - Added `.popWhile(...)`, which resembles `.takeWhile(...)`, 
     except that it also collects the remaining items as a separate collection
   - Added `.mapOrAppend(...)` and `.mergeOrAppend(...)` that either maps/merges an item into the collection, 

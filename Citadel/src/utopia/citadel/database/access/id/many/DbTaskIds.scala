@@ -3,6 +3,7 @@ package utopia.citadel.database.access.id.many
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.factory.organization.UserRoleRightFactory
 import utopia.citadel.database.model.organization.UserRoleRightModel
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
@@ -46,7 +47,7 @@ object DbTaskIds extends ManyIntIdAccess
 	{
 		if (roleIds.isEmpty)
 			Set[Int]()
-		else if (roleIds.size == 1)
+		else if (roleIds hasSize 1)
 			forUserRoleWithId(roleIds.head).toSet
 		else
 			UserRoleRightFactory.findMany(UserRoleRightModel.roleIdColumn.in(roleIds)).map { _.taskId }.toSet

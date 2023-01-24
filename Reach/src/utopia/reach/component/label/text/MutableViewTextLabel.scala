@@ -214,7 +214,7 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	
 	// Revalidates and repaints this component on all text changes
 	textPointer.addListener { event =>
-		if (event.compareBy { _.size })
+		if (event.equalsBy { _.size })
 			repaint()
 		else
 			revalidateAndRepaint()

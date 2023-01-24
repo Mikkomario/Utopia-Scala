@@ -37,7 +37,7 @@ object GraphNode
 				val result = apply(Map(start -> new PathFinder(start, startCost, Set(Vector()))), Set(),
 					incompleteDestinations, Vector(), Map())
 				// Adds some auto-completed destinations, if there were some
-				if (incompleteDestinations.size < destinations.size)
+				if (incompleteDestinations.hasSize < destinations)
 					result + (start -> (Set(Vector[Edge]()) -> startCost))
 				else
 					result
@@ -67,7 +67,7 @@ object GraphNode
 						val bestFinders = (finders ++ earlierResults)
 							.filter { f => ord.equiv(f.currentCost, bestNewCost) }
 						// Case: Only one finder arrived to this location => picks it as it is
-						if (bestFinders.size == 1)
+						if (bestFinders hasSize 1)
 							Some(bestFinders.head)
 						// Case: Merging => Takes the finders of smallest cost and combines them
 						else

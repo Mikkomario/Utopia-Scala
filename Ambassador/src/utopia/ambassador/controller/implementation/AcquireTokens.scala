@@ -158,8 +158,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 			if (tokenFutures.isEmpty)
 				Future.successful(Success(Map[Int, AuthTokenWithScopes]()))
 			// Case: Only one service was used => Wraps the token as a map
-			else if (tokenFutures.size == 1)
-			{
+			else if (tokenFutures hasSize 1) {
 				val (serviceId, tokenFuture) = tokenFutures.head
 				tokenFuture.mapIfSuccess { token => Map(serviceId -> token) }
 			}

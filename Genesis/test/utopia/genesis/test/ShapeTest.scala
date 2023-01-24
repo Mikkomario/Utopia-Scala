@@ -1,7 +1,9 @@
 package utopia.genesis.test
 
+import utopia.paradigm.angular.Rotation
+import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Matrix2D, Parallelogram, Point, Size, Vector2D}
 
 /**
  * This test is for some intersection methods and other shape (line, circle) specific methods
@@ -50,11 +52,25 @@ object ShapeTest extends App
     assert(line1.clipped(Point(-2, -2), Vector2D(-1)).isEmpty)
     assert(line1.clipped(Point(1, 1), Vector2D(1, 1)).get == Line(Point(2), Point(10)))
     
-    // Tests bounds combining
+    // Tests topLeft & bottomRight
+    val p1 = Point(-30, -5)
+    val p2 = Point(20, -30)
     val bounds1 = Bounds(Point.origin, Size(20, 10))
-    val bounds2 = Bounds(Point(-30, -5), Size(5, 5))
+    val bounds2 = Bounds(p1, Size(5, 5))
     
-    assert(Bounds.around(Vector(bounds1, bounds2)) == Bounds.between(Point(-30, -5), Point(20, 10)))
+    assert(bounds1.topLeft == Point.origin)
+    assert(bounds2.topLeft == p1)
+    assert(bounds1.bottomRight == Point(20, 10))
+    assert(bounds2.bottomRight == Point(-25, 0))
+    
+    assert(Point.topLeft(p1, p2) == Point(-30, -30))
+    assert(Point.bottomRight(p1, p2) == Point(20, -5))
+    
+    // Tests bounds combining
+    assert(Bounds.between(Point(-30, -5), Point(20, 10)) == Bounds(Point(-30, -5), Size(50, 15)),
+        Bounds.between(Point(-30, -5), Point(20, 10)))
+    assert(Bounds.around(Vector(bounds1, bounds2)) == Bounds.between(Point(-30, -5), Point(20, 10)),
+        Bounds.around(Vector(bounds1, bounds2)))
     
     // Tests some other bounds methods
     assert(bounds1.bottomSlice(5) == Bounds(Point(0, 5), Size(20, 5)))
@@ -63,6 +79,26 @@ object ShapeTest extends App
     val bounds3 = Bounds(Point(10), Size(20, 10))
     
     assert(bounds3.overlapsWith(bounds1))
+    
+    // Tests parallelogram & bounds
+    assert(bounds1.topLeftCorner == Point.origin)
+    assert(bounds2.topLeftCorner == p1)
+    assert(bounds1.topEdge == Vector2D(20, 0))
+    assert(bounds2.topEdge == Vector2D(5, 0))
+    assert(bounds1.rightEdge == Vector2D(0, 10))
+    assert(bounds2.rightEdge == Vector2D(0, 5))
+    
+    val par1 = Parallelogram(Point(-10, -10), Vector2D(20, 0), Vector2D(0, 20))
+    
+    assert(par1.topRightCorner == Point(10, -10))
+    assert(par1.bottomRightCorner == Point(10, 10))
+    assert(par1.bottomLeftCorner == Point(-10, 10))
+    assert(par1.bounds == Bounds.between(Point(-10, -10), Point(10, 10)))
+    
+    assert(par1.translated(X(10)) == par1.copy(topLeftCorner = Point(0, -10)))
+    
+    val par2 = par1 * Matrix2D.rotation(Rotation.ofDegrees(45))
+    println(par2)
     
     println("Success!")
 }

@@ -48,7 +48,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
                 filtered
             else {
                 // If all were busy, tries to create a new thread
-                if (filtered.size < maxSize)
+                if (filtered.hasSize < maxSize)
                     filtered :+ WorkerThread.temp(nextThreadName(), maxIdleDuration, task) { nextQueueTask() }
                 else {
                     // If max thread limit is reached, pushes the task to queue

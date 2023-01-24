@@ -225,10 +225,9 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 	{
 		if (parentTokenIds.isEmpty)
 			Set[Int]()
-		else
-		{
+		else {
 			val childTokenIds = {
-				if (parentTokenIds.size == 1)
+				if (parentTokenIds.hasSize(1))
 					DbTokens.createdUsingTokenWithId(parentTokenIds.head).ids.toSet
 				else
 					DbTokens.createdUsingAnyOfTokens(parentTokenIds).ids.toSet

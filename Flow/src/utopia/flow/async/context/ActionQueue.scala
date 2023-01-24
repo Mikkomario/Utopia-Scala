@@ -1,5 +1,6 @@
 package utopia.flow.async.context
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -47,7 +48,7 @@ class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext)
 		{
 			current =>
 				val incomplete = current.filterNot { _.isCompleted }
-				if (incomplete.size < maxWidth)
+				if (incomplete.hasSize < maxWidth)
 					incomplete :+ Future { handle() }
 				else
 					incomplete

@@ -239,14 +239,14 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	
 	// Revalidates and/or repaints this component on all text changes
 	textPointer.addListener { event =>
-		if (event.compareBy { _.size })
+		if (event.equalsBy { _.size })
 			repaint()
 		else
 			revalidateAndRepaint()
 	}
 	// Style changes (color & alignment) also trigger a revalidation / repaint
 	stylePointer.addListener { event =>
-		if (event.compareBy { _.color } || event.compareBy { _.alignment })
+		if (event.equalsBy { _.color } || event.equalsBy { _.alignment })
 			repaint(Priority.Low)
 	}
 	
