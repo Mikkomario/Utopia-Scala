@@ -1,7 +1,8 @@
 package utopia.flow.generic.casting
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, PairType, StringType, VectorType}
 import utopia.flow.generic.model.template.ValueConvertible
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
@@ -95,6 +96,11 @@ object ValueConversions
 			case Some(v) => v.toValue
 			case None => Value.empty
 		}
+	}
+	
+	implicit class ValueOfPair[V](val p: Pair[V])(implicit f: V => Value) extends ValueConvertible
+	{
+		override implicit def toValue: Value = new Value(Some(p.map(f)), PairType)
 	}
 	
 	/*

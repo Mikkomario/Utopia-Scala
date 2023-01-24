@@ -55,12 +55,10 @@ case class Request(requestUri: String, method: Method = Get, params: Model = Mod
      * Adds a new parameter to this request
      */
     def +(parameter: Constant) = copy(params = params + parameter)
-    
     /**
      * Adds a new parameter to this request
      */
     def +(parameter: (String, Value)): Request = this + Constant(parameter._1, parameter._2)
-    
     /**
      * Adds multiple new parameters to this request
      */

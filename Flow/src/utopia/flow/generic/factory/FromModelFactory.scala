@@ -3,7 +3,28 @@ package utopia.flow.generic.factory
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.parse.json.{JsonReader, JsonParser}
 
+import scala.language.implicitConversions
 import scala.util.Try
+
+object FromModelFactory
+{
+	// OTHER    ---------------------
+	
+	/**
+	 * @param f A parsing function that accepts a model and returns parsed item or a failure
+	 * @tparam A Type of parsed items
+	 * @return A new from model factory
+	 */
+	implicit def apply[A](f: ModelLike[Property] => Try[A]): FromModelFactory[A] = new FunctionalFactory[A](f)
+	
+	
+	// NESTED   ---------------------
+	
+	private class FunctionalFactory[+A](f: ModelLike[Property] => Try[A]) extends FromModelFactory[A]
+	{
+		override def apply(model: ModelLike[Property]): Try[A] = f(model)
+	}
+}
 
 /**
   * This trait is extended by instance factories that can convert model data into object data.
