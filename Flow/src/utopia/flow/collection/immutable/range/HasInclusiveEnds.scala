@@ -1,7 +1,8 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Sign
+import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.{End, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
@@ -45,7 +46,6 @@ trait HasInclusiveEnds[P] extends HasEnds[P]
 	  *         The point is adjusted as little as possible.
 	  */
 	def restrict(point: P) = {
-		implicit val ord: Ordering[P] = ordering
 		val _ends = minMax
 		if (ordering.lt(point, _ends.first))
 			_ends.first
@@ -56,9 +56,18 @@ trait HasInclusiveEnds[P] extends HasEnds[P]
 	}
 	
 	/**
+	  * @param end The targeted end of this span
+	  * @return The item at the targeted end
+	  */
+	def apply(end: End) = end match {
+		case First => start
+		case Last => this.end
+	}
+	/**
 	 * @param side The targeted side, where negative is the start and positive is the end
 	 * @return The targeted end of this span
 	 */
+	@deprecated("Replaced with .apply(End)", "v2.0")
 	def endAt(side: Sign) = side match {
 		case Negative => start
 		case Positive => end

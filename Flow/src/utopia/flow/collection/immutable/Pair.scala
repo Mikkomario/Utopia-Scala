@@ -2,8 +2,8 @@ package utopia.flow.collection.immutable
 
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
-import utopia.flow.operator.{Combinable, EqualsFunction, Reversible, Sign}
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.{Combinable, End, EqualsFunction, Reversible, Sign}
 
 import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance
@@ -186,7 +186,7 @@ case class Pair[+A](first: A, second: A)
 	/**
 	 * @return A map with the same contents with this pair (first item linked with Negative, second with Positive)
 	 */
-	def toMap = Map(Negative -> first, Positive -> second)
+	def toMap: Map[End, A] = Map(First -> first, Last -> second)
 	
 	/**
 	  * @return Whether the two values in this pair are equal
@@ -276,12 +276,12 @@ case class Pair[+A](first: A, second: A)
 	// OTHER    --------------------------
 	
 	/**
-	 * @param side A side (Positive = left = first, Negative = right = second)
+	 * @param side The targeted side
 	 * @return The item of this pair from that side
 	 */
-	def apply(side: Sign) = side match {
-		case Positive => first
-		case Negative => second
+	def apply(side: End) = side match {
+		case First => first
+		case Last => second
 	}
 	
 	/**
@@ -289,8 +289,8 @@ case class Pair[+A](first: A, second: A)
 	 * @return The side (Negative for left / first, Positive for right / second) on which that item resides
 	 *         in this pair. None if that item is not in this pair.
 	 */
-	def sideOf[B >: A](item: B): Option[Sign] =
-		if (item == first) Some(Negative) else if (item == second) Some(Positive) else None
+	def sideOf[B >: A](item: B): Option[End] =
+		if (item == first) Some(First) else if (item == second) Some(Last) else None
 	/**
 	  * @param item An item
 	  * @return The item opposite to the specified item.
@@ -331,9 +331,9 @@ case class Pair[+A](first: A, second: A)
 	  * @tparam B Type of the new item
 	  * @return A copy of this pair with the specified item replacing one of the items in this pair
 	  */
-	def withItem[B >: A](newItem: B, side: Sign) = side match {
-		case Negative => withFirst(newItem)
-		case Positive => withSecond(newItem)
+	def withSide[B >: A](newItem: B, side: End) = side match {
+		case First => withFirst(newItem)
+		case Last => withSecond(newItem)
 	}
 	
 	/**
@@ -349,14 +349,14 @@ case class Pair[+A](first: A, second: A)
 	  */
 	def mapSecond[B >: A](f: A => B) = withSecond(f(second))
 	/**
-	  * @param side Targeted side (Negative = left / first, Positive = right / second)
+	  * @param side Targeted side
 	  * @param f A mapping function
 	  * @tparam B Type of function result
 	  * @return A copy of this pair with the targeted item mapped
 	  */
-	def mapSide[B >: A](side: Sign)(f: A => B) = side match {
-		case Negative => mapFirst(f)
-		case Positive => mapSecond(f)
+	def mapSide[B >: A](side: End)(f: A => B) = side match {
+		case First => mapFirst(f)
+		case Last => mapSecond(f)
 	}
 	/**
 	  * @param f A mapping function that accepts a value from this pair, and the side on which that value appears.
@@ -364,7 +364,7 @@ case class Pair[+A](first: A, second: A)
 	  * @tparam B Type of mapping results
 	  * @return A mapped copy of this pair
 	  */
-	def mapWithSides[B](f: (A, Sign) => B) = Pair(f(first, Negative), f(second, Positive))
+	def mapWithSides[B](f: (A, End) => B) = Pair(f(first, First), f(second, Last))
 	
 	/**
 	  * @param f A reduce function that accepts the second item, then the first item

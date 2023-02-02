@@ -4,8 +4,10 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.collection.mutable.iterator._
+import utopia.flow.operator.End.{EndingSequence, First, Last}
+import utopia.flow.operator.Extreme.{Max, Min}
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{CombinedOrdering, EqualsFunction, Sign}
+import utopia.flow.operator.{CombinedOrdering, End, EqualsFunction, Extreme, Identity, Sign}
 import utopia.flow.util.HasSize
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
@@ -50,7 +52,6 @@ object CollectionExtensions
 			
 			builder.result()
 		}
-		
 		/**
 		  * Filters this collection so that only distinct values remain. Compares the values by mapping them.
 		  * @param f         A mapping function to produce comparable values
@@ -99,7 +100,6 @@ object CollectionExtensions
 		  */
 		def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
 			implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
-		
 		/**
 		  * Converts this iterable item to a map with possibly multiple values per key
 		  * @param f  A function for mapping items to key value pairs
@@ -125,15 +125,13 @@ object CollectionExtensions
 		  * @param f A function that takes an item and performs an operation that may fail
 		  * @return Failure if any of the operations failed, success otherwise.
 		  */
-		def tryForeach[U](f: iter.A => Try[U]): Try[Unit] =
-		{
+		def tryForeach[U](f: iter.A => Try[U]): Try[Unit] = {
 			val iterOps = iter(coll)
 			iterOps.iterator.map(f).find { _.isFailure } match {
 				case Some(failure) => failure.map { _ => () }
 				case None => Success(())
 			}
 		}
-		
 		/**
 		  * Maps the contents of this collection. Mapping may fail, interrupting all remaining mappings
 		  * @param f  A mapping function. May fail.
@@ -142,13 +140,11 @@ object CollectionExtensions
 		  * @tparam To Type of final collection
 		  * @return Mapped collection if all mappings succeeded. Failure otherwise.
 		  */
-		def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
-		{
+		def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] = {
 			val buffer = bf.newBuilder(coll)
 			// Maps items until the mapping function fails
 			tryForeach { f(_).map { buffer += _ } }.map { _ => buffer.result() }
 		}
-		
 		/**
 		  * FlatMaps the contents of this collection. Mapping may fail, however, cancelling all remaining mappings
 		  * @param f  A mapping function. May fail.
@@ -157,8 +153,7 @@ object CollectionExtensions
 		  * @tparam To Type of final collection
 		  * @return Flat mapped collection if all mappings succeeded. Failure otherwise.
 		  */
-		def tryFlatMap[B, To](f: iter.A => Try[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
-		{
+		def tryFlatMap[B, To](f: iter.A => Try[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]): Try[To] = {
 			val buffer = bf.newBuilder(coll)
 			tryForeach { f(_).map { buffer ++= _ } }.map { _ => buffer.result() }
 		}
@@ -172,8 +167,7 @@ object CollectionExtensions
 		  * @return All elements of this collection until the first item that matches the specified condition +
 		  *         the matching item itself. Contains all items of this collection if the condition was never met.
 		  */
-		def takeTo[That](endCondition: iter.A => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, That]): That =
-		{
+		def takeTo[That](endCondition: iter.A => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, That]): That = {
 			val iterOps = iter(coll)
 			buildFrom.fromSpecific(coll)(TerminatingIterator(iterOps.iterator)(endCondition))
 		}
@@ -194,6 +188,73 @@ object CollectionExtensions
 			
 			falseBuilder.result() -> trueBuilder.result()
 		}
+		
+		/**
+		  * Collects the most extreme items from this collection, based on the specified mapping function
+		  * @param extreme The extreme being collected (min | max)
+		  * @param f A mapping function
+		  * @param bf Implicit buildfrom
+		  * @param ord Implicit ordering applied for the mapped values
+		  * @tparam B Type of map results
+		  * @tparam To Type of resulting collection
+		  * @return All items in this collection that share the most extreme (i.e. min | max) mapping result
+		  */
+		def filterBy[B, To](extreme: Extreme)(f: iter.A => B)
+		                   (implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
+		{
+			val iterator = iter(coll).iterator
+			if (iterator.hasNext) {
+				val actualOrdering = extreme.ascendingToExtreme(ord)
+				var lastBuilder = bf.newBuilder(coll)
+				var bestValue = f(iterator.next())
+				iterator.foreach { item =>
+					val value = f(item)
+					val cmp = actualOrdering.compare(value, bestValue)
+					if (cmp == 0)
+						lastBuilder += item
+					else if (cmp > 0) {
+						lastBuilder = bf.newBuilder(coll)
+						lastBuilder += item
+						bestValue = value
+					}
+				}
+				lastBuilder.result()
+			}
+			else
+				bf.fromSpecific(coll)(Iterator.empty)
+		}
+		/**
+		  * Collects the largest items from this collection, based on the specified mapping function
+		  * @param f       A mapping function
+		  * @param bf      Implicit buildfrom
+		  * @param ord     Implicit ordering applied for the mapped values
+		  * @tparam B  Type of map results
+		  * @tparam To Type of resulting collection
+		  * @return All items in this collection that share the maximum mapping result
+		  */
+		def filterMaxBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]): To =
+			filterBy(Max)(f)
+		/**
+		  * Collects the smallest items from this collection, based on the specified mapping function
+		  * @param f       A mapping function
+		  * @param bf      Implicit buildfrom
+		  * @param ord     Implicit ordering applied for the mapped values
+		  * @tparam B  Type of map results
+		  * @tparam To Type of resulting collection
+		  * @return All items in this collection that share the smallest mapping result
+		  */
+		def filterMinBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]): To =
+			filterBy(Min)(f)
+		/**
+		  * Collects the most extreme items from this collection
+		  * @param extreme The extreme being collected (min | max)
+		  * @param bf      Implicit buildfrom
+		  * @param ord     Implicit ordering to use
+		  * @tparam To Type of resulting collection
+		  * @return All items in this collection that share the status of the most extreme value (i.e. min | max)
+		  */
+		def filter[To](extreme: Extreme)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[iter.A]) =
+			filterBy[iter.A, To](extreme)(Identity)
 	}
 	
 	implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
@@ -276,7 +337,6 @@ object CollectionExtensions
 		  * @return A lazily initialized collection containing the mapping results
 		  */
 		def lazyMap[B](f: A => B) = LazySeq[B](i.iterator.map { a => Lazy { f(a) } })
-		
 		/**
 		  * Lazily maps the contents of this collection
 		  * @param f A mapping function that returns 0-n lazily initialized items for each element
@@ -292,8 +352,7 @@ object CollectionExtensions
 		  * @tparam R Type of right group items
 		  * @return Left group and right group
 		  */
-		def divideWith[L, R](f: A => Either[L, R]) =
-		{
+		def divideWith[L, R](f: A => Either[L, R]) = {
 			val lBuilder = new VectorBuilder[L]()
 			val rBuilder = new VectorBuilder[R]()
 			i.iterator.map(f).foreach {
@@ -302,7 +361,6 @@ object CollectionExtensions
 			}
 			lBuilder.result() -> rBuilder.result()
 		}
-		
 		/**
 		  * Divides / maps the items in this collection to two groups
 		  * @param f A function for separating / mapping the items
@@ -312,7 +370,6 @@ object CollectionExtensions
 		  */
 		@deprecated("Please use .divideWith(...) instead", "v1.4.1")
 		def dividedWith[L, R](f: A => Either[L, R]) = divideWith[L, R](f)
-		
 		/**
 		  * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
 		  * resulting group(s)
@@ -322,8 +379,7 @@ object CollectionExtensions
 		  * @tparam R Type of right group items
 		  * @return Collected left group items and collected right group items as two separate vectors
 		  */
-		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) =
-		{
+		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
 			val lBuilder = new VectorBuilder[L]()
 			val rBuilder = new VectorBuilder[R]()
 			i.iterator.flatMap(f).foreach {
@@ -332,7 +388,6 @@ object CollectionExtensions
 			}
 			lBuilder.result() -> rBuilder.result()
 		}
-		
 		/**
 		  * Maps the items in this collection into two different collections
 		  * @param f A mapping function that produces two results (left -> right) for each item
@@ -340,8 +395,7 @@ object CollectionExtensions
 		  * @tparam R Type of right result item
 		  * @return Left results -> right results
 		  */
-		def splitMap[L, R](f: A => (L, R)) =
-		{
+		def splitMap[L, R](f: A => (L, R)) = {
 			val lBuilder = new VectorBuilder[L]
 			val rBuilder = new VectorBuilder[R]
 			i.iterator.map(f).foreach { case (l, r) =>
@@ -350,7 +404,6 @@ object CollectionExtensions
 			}
 			lBuilder.result() -> rBuilder.result()
 		}
-		
 		/**
 		  * Maps items in this collection into two groups, where an item maps to
 		  * x left group items and y right group items
@@ -361,8 +414,7 @@ object CollectionExtensions
 		  * @tparam R Type of right side map results
 		  * @return Left side map results, collected together + right side map results, collected together (tuple)
 		  */
-		def splitFlatMap[L, R](f: A => (IterableOnce[L], IterableOnce[R])) =
-		{
+		def splitFlatMap[L, R](f: A => (IterableOnce[L], IterableOnce[R])) = {
 			val lBuilder = new VectorBuilder[L]()
 			val rBuilder = new VectorBuilder[R]()
 			i.iterator.map(f).foreach { case (lefts, rights) =>
@@ -379,7 +431,6 @@ object CollectionExtensions
 		  * @return An iterator that folds the items in this collection and returns every iteration result
 		  */
 		def foldLeftIterator[V](start: V)(f: (V, A) => V) = new FoldingIterator[A, V](start, i.iterator)(f)
-		
 		/**
 		  * @param f A reduce function
 		  * @return An iterator that reduces the items in this collection and returns every iteration result
@@ -489,6 +540,7 @@ object CollectionExtensions
 		  * @tparam To Type of the resulting collection
 		  * @return A version of this collection that only contains the items that mapped to the largest available value
 		  */
+		@deprecated("Please use .filterBy(Extreme) instead", "v2.0")
 		def maxGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]): To = {
 			val iterOps = iter(coll)
 			if (iterOps.isEmpty)
@@ -509,6 +561,7 @@ object CollectionExtensions
 		  * @tparam To Type of the resulting collection
 		  * @return A version of this collection that only contains the items that mapped to the smallest available value
 		  */
+		@deprecated("Please use .filterBy(Extreme) instead", "v2.0")
 		def minGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
 			maxGroupBy(f)(bf, ord.reverse)
 		
@@ -647,9 +700,44 @@ object CollectionExtensions
 		def only = if (hasSize(1)) Some(t.head) else None
 		
 		/**
+		  * @param end Targeted end of this collection
+		  * @throws NoSuchElementException If this collection is empty
+		  * @return The item at the specified end of this collection
+		  */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def apply(end: End) = end match {
+			case First => t.head
+			case Last => t.last
+		}
+		/**
+		  * @param end Targeted end of this collection
+		  * @return The item at the specified end of this collection. None if this collection is empty.
+		  */
+		def find(end: End) = end match {
+			case First => t.headOption
+			case Last => t.lastOption
+		}
+		
+		/**
+		  * @param extreme The targeted extreme
+		  * @param ord     Implicit ordering to use
+		  * @return The most extreme item in this collection
+		  * @throws NoSuchElementException If this collection is empty
+		  */
+		@throws[NoSuchElementException]("This collection is empty")
+		def apply(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.from(t)
+		/**
+		  * @param extreme The targeted extreme
+		  * @param ord     Implicit ordering to use
+		  * @return The most extreme item in this collection. None if this collection is empty.
+		  */
+		def find(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.optionFrom(t)
+		
+		/**
 		 * @param sign Targeted side, where negative is head and positive is last
 		 * @return Targeted ending item of this collection
 		 */
+		@deprecated("Replaced with .apply(End)", "v2.0")
 		def end(sign: Sign) = sign match {
 			case Negative => t.head
 			case Positive => t.last
@@ -658,6 +746,7 @@ object CollectionExtensions
 		 * @param sign Targeted side, where negative is head and positive is last
 		 * @return Targeted ending item of this collection. None if this item is empty.
 		 */
+		@deprecated("Replaced with .find(End)", "v2.0")
 		def endOption(sign: Sign) = if (t.isEmpty) None else end(sign)
 		
 		/**
@@ -959,8 +1048,7 @@ object CollectionExtensions
 		  * @param f A function called for each item
 		  * @tparam U Arbitrary result type
 		  */
-		def foreachWithIndex[U](f: (seq.A, Int) => U) =
-		{
+		def foreachWithIndex[U](f: (seq.A, Int) => U) = {
 			val seqOps = seq(coll)
 			seqOps.zipWithIndex.foreach { case (item, index) => f(item, index) }
 		}
@@ -986,15 +1074,22 @@ object CollectionExtensions
 	implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =
 		new SeqOperations(coll, seq)
 	
-	implicit class RichSeqLike[A, CC[X], Repr](val seq: SeqOps[A, CC, Repr]) extends AnyVal
+	implicit class RichSeqLike[A, CC[_], Repr](val seq: SeqOps[A, CC, Repr]) extends AnyVal
 	{
+		/**
+		  * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
+		  *         collection, except the first and the last item. The first item will be presented once as the first
+		  *         argument. The last item will be presented once as the second argument. If this sequence
+		  *         contains less than two items, an empty seq is returned.
+		  */
+		def paired = (1 until seq.size).map { i => Pair(seq(i - 1), seq(i)) }
+		
 		/**
 		  * Same as apply except returns None on non-existing indices
 		  * @param index Target index
 		  * @return Value from index or None if no such index exists
 		  */
 		def getOption(index: Int) = if (seq.isDefinedAt(index)) Some(seq(index)) else None
-		
 		/**
 		  * Same as apply except returns a default value on non-existing indices
 		  * @param index   Target index
@@ -1008,34 +1103,29 @@ object CollectionExtensions
 		  * @param find a function for finding the correct item
 		  * @return The index of the item in this seq or None if no such item was found
 		  */
-		def indexWhereOption(find: A => Boolean) =
-		{
+		def indexWhereOption(find: A => Boolean) = {
 			val result = seq.indexWhere(find)
 			if (result < 0)
 				None
 			else
 				Some(result)
 		}
-		
 		/**
 		  * Finds the index of the last item that matches the predicate
 		  * @param find a function for finding the correct item
 		  * @return The index of the item in this seq or None if no such item was found
 		  */
-		def lastIndexWhereOption(find: A => Boolean) =
-		{
+		def lastIndexWhereOption(find: A => Boolean) = {
 			val result = seq.lastIndexWhere(find)
 			if (result < 0) None else Some(result)
 		}
-		
 		/**
 		  * Finds the index of the specified item
 		  * @param item Searched item
 		  * @tparam B Item type
 		  * @return The index of specified item or none if no such index was found
 		  */
-		def optionIndexOf[B >: A](item: B) =
-		{
+		def optionIndexOf[B >: A](item: B) = {
 			val result = seq.indexOf(item)
 			if (result >= 0)
 				Some(result)
@@ -1044,62 +1134,21 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * @param f     A mapping function
-		  * @param order Ordering for mapped values
-		  * @tparam B Type of map result
-		  * @return The index in this sequence that contains the largest value when mapped
-		  * @throws NoSuchElementException If this sequence is empty
+		  * @param end The targeted end and length
+		  * @return The first or last n items of this collection
 		  */
-		@throws[NoSuchElementException]("Throws when called for an empty sequence")
-		def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
-		{
-			var maxIndex = 0
-			var maxResult = f(seq.head)
-			seq.indices.drop(1).foreach { index =>
-				val result = f(seq(index))
-				if (order.compare(result, maxResult) > 0) {
-					maxIndex = index
-					maxResult = result
-				}
-			}
-			maxIndex
+		def take(end: EndingSequence): Repr = end.end match {
+			case First => seq.take(end.length)
+			case Last => seq.takeRight(end.length)
 		}
-		
 		/**
-		  * @param f     A mapping function
-		  * @param order Ordering for mapped values
-		  * @tparam B Type of map result
-		  * @return The index in this sequence that contains the smallest value when mapped
-		  * @throws NoSuchElementException If this sequence is empty
+		  * @param end The targeted end and length
+		  * @return This collection without the first or last n items of this collection
 		  */
-		@throws[NoSuchElementException]("Throws when called for an empty sequence")
-		def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxIndexBy(f)(order.reverse)
-		
-		/**
-		  * @param f     A mapping function
-		  * @param order Ordering for mapped values
-		  * @tparam B Type of map result
-		  * @return The index in this sequence that contains the largest value when mapped.
-		  *         None if this sequence is empty.
-		  */
-		def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = if (seq.isEmpty) None else Some(maxIndexBy(f))
-		
-		/**
-		  * @param f     A mapping function
-		  * @param order Ordering for mapped values
-		  * @tparam B Type of map result
-		  * @return The index in this sequence that contains the smallest value when mapped.
-		  *         None if this sequence is empty.
-		  */
-		def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxOptionIndexBy(f)(order.reverse)
-		
-		/**
-		  * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
-		  *         collection, except the first and the last item. The first item will be presented once as the first
-		  *         argument. The last item will be presented once as the second argument. If this sequence
-		  *         contains less than two items, an empty seq is returned.
-		  */
-		def paired = (1 until seq.size).map { i => Pair(seq(i - 1), seq(i)) }
+		def drop(end: EndingSequence): Repr = end.end match {
+			case First => seq.drop(end.length)
+			case Last => seq.dropRight(end.length)
+		}
 		
 		/**
 		  * Drops items from the right as long as the specified condition returns true
@@ -1190,6 +1239,64 @@ object CollectionExtensions
 				(beginning :+ item) ++ end
 			}
 		}
+	}
+	
+	implicit class RichSeq[A](val s: Seq[A]) extends AnyVal
+	{
+		/**
+		  * @param end Targeted end of this collection
+		  * @return The index of the element at that end of this collection. Out of bounds if this collection is empty.
+		  */
+		def indexOf(end: End) = end.indexFrom(s)
+		
+		/**
+		  * @param f     A mapping function
+		  * @param order Ordering for mapped values
+		  * @tparam B Type of map result
+		  * @return The index in this sequence that contains the largest value when mapped
+		  * @throws NoSuchElementException If this sequence is empty
+		  */
+		@throws[NoSuchElementException]("Throws when called for an empty sequence")
+		def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
+		{
+			var maxIndex = 0
+			var maxResult = f(s.head)
+			s.indices.drop(1).foreach { index =>
+				val result = f(s(index))
+				if (order.compare(result, maxResult) > 0) {
+					maxIndex = index
+					maxResult = result
+				}
+			}
+			maxIndex
+		}
+		/**
+		  * @param f     A mapping function
+		  * @param order Ordering for mapped values
+		  * @tparam B Type of map result
+		  * @return The index in this sequence that contains the smallest value when mapped
+		  * @throws NoSuchElementException If this sequence is empty
+		  */
+		@throws[NoSuchElementException]("Throws when called for an empty sequence")
+		def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxIndexBy(f)(order.reverse)
+		/**
+		  * @param f     A mapping function
+		  * @param order Ordering for mapped values
+		  * @tparam B Type of map result
+		  * @return The index in this sequence that contains the largest value when mapped.
+		  *         None if this sequence is empty.
+		  */
+		def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
+			if (s.isEmpty) None else Some(maxIndexBy(f))
+		/**
+		  * @param f     A mapping function
+		  * @param order Ordering for mapped values
+		  * @tparam B Type of map result
+		  * @return The index in this sequence that contains the smallest value when mapped.
+		  *         None if this sequence is empty.
+		  */
+		def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
+			maxOptionIndexBy(f)(order.reverse)
 	}
 	
 	implicit class RichIndexedSeq[A](val s: IndexedSeq[A]) extends AnyVal

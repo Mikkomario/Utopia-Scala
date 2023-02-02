@@ -4,6 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.parse.AutoClose._

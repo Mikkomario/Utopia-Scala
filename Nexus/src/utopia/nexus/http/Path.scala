@@ -158,8 +158,8 @@ case class Path(parts: Seq[String])
      * @return The portion of this path that comes before the specified element. None if the specified element is not
      *         part of this path or if it was the first element in this path.
      */
-    def before(element: String) = parts.optionIndexOf(element).filter { _ > 0 }.map { index => Path(parts.take(index)) }
-    
+    def before(element: String) =
+        parts.optionIndexOf(element).filter { _ > 0 }.map { index => Path(parts.take(index)) }
     /**
      * @param element Searched element
      * @return A portion of this path that ends with the specified element. None if this path didn't contain specified

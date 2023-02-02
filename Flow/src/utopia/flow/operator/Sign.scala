@@ -1,13 +1,14 @@
 package utopia.flow.operator
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.Extreme.{Max, Min}
 
 /**
   * An enumeration for sign (positive or negative), which can also be used as binary direction enumeration
   * @author Mikko Hilpinen
   * @since 21.9.2021, v1.12
   */
-sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
+sealed trait Sign extends Binary[Sign]
 {
 	// ABSTRACT	-----------------------------
 	
@@ -22,9 +23,9 @@ sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
 	def modifier: Short
 	
 	/**
-	  * @return Direction opposite to this one
+	  * @return The extreme on this side
 	  */
-	def opposite: Sign
+	def extreme: Extreme
 	
 	
 	// COMPUTED ----------------------------
@@ -33,11 +34,6 @@ sealed trait Sign extends SelfComparable[Sign] with Reversible[Sign]
 	  * @return Whether this sign is negative
 	  */
 	def isNegative = !isPositive
-	
-	
-	// IMPLEMENTED  ------------------------
-	
-	override def unary_- = opposite
 	
 	
 	// OTHER	----------------------------
@@ -68,7 +64,7 @@ object Sign
 	/**
 	  * All 2 sign values (first positive, then negative)
 	  */
-	val values = Pair(Positive, Negative)
+	val values = Pair[Sign](Positive, Negative)
 	
 	
 	// OTHER    --------------------------
@@ -102,8 +98,9 @@ object Sign
 	{
 		override def isPositive = true
 		override def modifier = 1
+		override def extreme = Max
 		
-		override def opposite = Negative
+		override def unary_- = Negative
 		override def self = this
 		
 		override def compareTo(o: Sign) = o match {
@@ -119,8 +116,9 @@ object Sign
 	{
 		override def isPositive = false
 		override def modifier = -1
+		override def extreme = Min
 		
-		override def opposite = Positive
+		override def unary_- = Positive
 		override def self = this
 		
 		override def compareTo(o: Sign) = o match {

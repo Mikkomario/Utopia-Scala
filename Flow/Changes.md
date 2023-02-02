@@ -72,6 +72,8 @@
 - Deprecated `.iterator` in **Lazy** in favor of `.valueIterator`
 - Deprecated `.compareWith(...)` in **Pair** in favor of `.merge(...)`
 - Deprecated `.isNotSymmetric` in **Pair** in favor of `.isAsymmetric`
+- Deprecated `.maxGroupBy(...)` and `.minGroupBy(...)` in **CollectionExtensions** in favor of 
+  `.filterBy(Extreme)(...)` and its variants. 
 ### Bugfixes
 - Fixed **Regex**`.times(Range)` that previously yielded invalid regular expressions
 ### New Features
@@ -84,6 +86,8 @@
 - Added **SettableOnce** and **MutableOnce**, which are like **Promise**s with **ChangeEvent**s
 - Added **ReleasingPointer** class
 - Added **MaybeEmpty** trait and **NotEmpty** object for dealing with items that have the `.isEmpty` -property
+- Added **End** and **Extreme** -enumerations (first, last, min, max)
+  - Added new related methods via **CollectionExtensions**, also
 - Added **Identity** object which functions as an identity function (i.e. `a => a`)
 - Added **NoOpLogger** object
 - Added **ApproxSelfEquals** trait
