@@ -1,6 +1,8 @@
 # Utopia Annex - List of Changes
 
-## v1.4 (in development)
+## v1.4 - 02.02.2023
+This update is compatible with the latest **Flow** (v2.0) and **Disciple** (v1.6) updates.  
+In addition, the **Schrödinger** concept has been completely rewritten.
 ### Breaking Changes
 - **Api** implementations are now required to implement `implicit protected def log: Logger`. 
   This property is used for catching errors encountered during response body parsing.

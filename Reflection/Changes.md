@@ -1,7 +1,8 @@
 # Utopia Reflection - List of Changes
 
 ## v2.0-alpha-10 (In Development)
-Supports changes in **Flow** v2.0
+This update focuses on window resizing and repositioning logic. The new implementation can be configured to 
+function in a more appropriate manner, while the previous implementation was very rigid in terms of customization.
 ### Breaking Changes
 - **Dialog** and **Frame** constructor parameters were changed in following ways:
   - Added new parameter `screenBorderMargin: Double = 0.0`

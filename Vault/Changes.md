@@ -1,7 +1,8 @@
 # Utopia Vault - List of Changes
 
-## v1.15 (in development)
-Adjusting to **Flow** v2.0 changes
+## v1.15 - 02.02.2023
+This update focuses mostly on bugfixes and better joining support.  
+One neat update is the addition of combinable column length rules.
 ### Breaking Changes
 - The `order: Option[OrderBy] = None` -parameter in **Access**`.findNotLinkedTo(...)` 
   is now the 3rd and not the 2nd parameter.

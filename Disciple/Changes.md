@@ -1,6 +1,8 @@
 # Utopia Disciple - List of Changes
 
 ## v1.6 (In Development)
+This update introduces request and response -interception, which enables more customization options. 
+In addition, the **ResponseParser** class is updated with better error handling capabilities.
 ### Breaking Changes
 - Many **ResponseParser** constructors now require an implicit **Logger** parameter in order to record parsing failures
 ### New Features

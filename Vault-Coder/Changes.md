@@ -1,6 +1,9 @@
 # Utopia Vault Coder
 
-## v1.7.1 (In Development)
+## v1.8 (In Development)
+This version of the Vault Coder writes more code than the previous versions, potentially saving you some time 
+during development. The biggest style change you need to be aware of is the introduction of sub-packaging in 
+access packages. Besides that, you will mostly get bugfixes and more extensive code-generation.
 ### Breaking Changes
 - Access traits and objects are now written in class-specific sub-packages
 ### Bugfixes
@@ -19,6 +22,8 @@
 - Possibly combined model constructors now contain a default parameter value of None
 ### Known Bugs
 - Merging misplaces type declarations and their documentation
+- Merging removes method overrides
+- Merging doesn't fully support functional types yet
 
 ## v1.7 - 02.10.2022
 This relatively major update focuses on two completely new features:

@@ -1,6 +1,10 @@
 # Utopia Reach - List of Changes
 
-## v0.5 (in development)
+## v0.5 - 02.02.2023
+This update contains some style updates in cases where the original implementation wasn't very beautiful. 
+Most functional updates focus on the **SelectionList** component.  
+Another neat update is support for focus-based window resizing logic, 
+which makes resizing windows more reasonable to use.
 ### Breaking Changes
 - **ComponentColor**`.highlightedBy(Double)` now behaves differently. The expected default amount is now 1.0 
   (instead of 0.2 or 0.4 or something, like before)

@@ -1,6 +1,11 @@
 # Utopia Flow - List of Changes
 
-## v2.0 (in development)
+## v2.0 - 02.02.2023
+This update represents a major refactoring of the standard **Flow** features.  
+While most updates concern naming and package structure, there are also a number of new features and data structures.
+
+While this update may be tedious to apply (you'll need a lot of Shift + Ctrl + R), you are rewarded with a 
+nice set of new tools and a more intuitive naming and package structure.
 ### Breaking Changes
 - Reorganized the package structure
 - Renamed `def repr` to `def self` in multiple places, 

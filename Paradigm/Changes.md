@@ -1,6 +1,12 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.2 (In Development)
+This update reflects in style the **Flow** v2.0 update. Multiple classes and concepts have been rewritten 
+and a more intuitive naming logic is applied.
+
+While there are a fair number of breaking changes, you shouldn't encounter too many, unless you have created 
+your own shape classes which extend from the base traits. 
+I.e. the external interfaces to many updated classes remain very similar.
 ### Breaking Changes
 - Rewrote **Dimensional**, **VectorLike** and similar traits completely
   - **Dimensional** is now **HasDimensions** (a new trait with name **Dimensional** was also introduced)
