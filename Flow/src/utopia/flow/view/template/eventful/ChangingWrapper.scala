@@ -54,7 +54,6 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def map[B](f: A => B) = wrapped.map(f)
 	override def lazyMap[B](f: A => B) = wrapped.lazyMap(f)
 	
-	
 	override def incrementalMap[B](initialMap: A => B)(incrementMap: (B, ChangeEvent[A]) => B) =
 		wrapped.incrementalMap(initialMap)(incrementMap)
 	override def incrementalMergeWith[B, R](other: Changing[B])(initialMerge: (A, B) => R)
