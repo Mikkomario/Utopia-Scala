@@ -51,7 +51,7 @@ object ImageViewStackTest extends App
 				Vector(
 					factories.next()(ImageLabel).apply(icon1, customDrawers = Vector(BackgroundDrawer(Color.green))) -> pointer1,
 					factories.next()(ViewImageLabel).apply(pointer3.map { if (_) icon2 else icon3 },
-						additionalCustomDrawers = Vector(BackgroundDrawer(Color.cyan))) -> pointer2
+						customDrawers = Vector(BackgroundDrawer(Color.cyan))) -> pointer2
 				)
 			}
 	}

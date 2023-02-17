@@ -4,6 +4,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 
 import java.awt.FontMetrics
 import scala.collection.immutable.VectorBuilder
+import scala.language.implicitConversions
 
 object FontMetricsWrapper
 {
