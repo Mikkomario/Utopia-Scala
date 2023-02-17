@@ -182,13 +182,12 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		addMouseButtonListener(ShowPopupKeyListener)
 	}
 	
-	private def displayPopup() =
-	{
-		if (visiblePopup.isEmpty)
-		{
+	private def displayPopup() = {
+		if (visiblePopup.isEmpty) {
 			// Creates and displays the popup
 			val popup = Popup(mainDisplay, popupContentView, actorHandler, WhenFocusLost) {
-				(fieldSize, _) => Point(0, fieldSize.height) }
+				(fieldSize, _) => Point(0, fieldSize.height)
+			}
 			visiblePopup = Some(popup)
 			// Relays key events to the search field
 			popup.addConstraint(PopUpWidthModifier)

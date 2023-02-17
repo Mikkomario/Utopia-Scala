@@ -24,16 +24,16 @@ class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insetsPointer Pointer to the insets placed around the image (default = always 0)
 	  * @param alignmentPointer Pointer to the alignment used when positioning the image in this label
 	  *                         (default = always center)
-	  * @param additionalCustomDrawers Additional custom drawers assigned to this label (default = empty)
+	  * @param customDrawers Additional custom drawers assigned to this label (default = empty)
 	  * @param allowUpscaling Whether the image should be allowed to scale up to its source resolution (default = true)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
 	  * @return A new image label
 	  */
 	def apply(imagePointer: Changing[Image], insetsPointer: Changing[StackInsets] = Fixed(StackInsets.zero),
 	          alignmentPointer: Changing[Alignment] = Fixed(Alignment.Center),
-	          additionalCustomDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
+	          customDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
 	          useLowPrioritySize: Boolean = false) =
-		new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer, additionalCustomDrawers,
+		new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer, customDrawers,
 			allowUpscaling, useLowPrioritySize)
 	
 	/**
@@ -41,16 +41,16 @@ class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param imagePointer Pointer to the drawn image
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when positioning the image in this label (default = center)
-	  * @param additionalCustomDrawers Additional custom drawers assigned to this label (default = empty)
+	  * @param customDrawers Additional custom drawers assigned to this label (default = empty)
 	  * @param allowUpscaling Whether the image should be allowed to scale up to its source resolution (default = true)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
 	  * @return A new image label
 	  */
 	def withStaticLayout(imagePointer: Changing[Image], insets: StackInsets = StackInsets.zero,
 	                     alignment: Alignment = Alignment.Center,
-	                     additionalCustomDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
+	                     customDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
 	                     useLowPrioritySize: Boolean = false) =
-		apply(imagePointer, Fixed(insets), Fixed(alignment), additionalCustomDrawers, allowUpscaling,
+		apply(imagePointer, Fixed(insets), Fixed(alignment), customDrawers, allowUpscaling,
 			useLowPrioritySize)
 }
 
@@ -82,7 +82,6 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	}
 	insetsPointer.addContinuousListener { _ => revalidateAndRepaint() }
 	alignmentPointer.addContinuousListener { _ => repaint() }
-	
 	
 	
 	// COMPUTED	-------------------------------------

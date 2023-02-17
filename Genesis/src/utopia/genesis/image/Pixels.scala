@@ -101,6 +101,9 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	
 	// IMPLEMENTED	-------------------
 	
+	override def width: Int = matrix.width
+	override def height: Int = matrix.height
+	
 	override def columns = matrix.columns
 	override def rows = matrix.rows
 	

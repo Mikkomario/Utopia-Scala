@@ -1,6 +1,13 @@
 # Utopia Reflection - List of Changes
 
-## v2.0-alpha-10 (In Development)
+## v2.0-alpha-11 (in development)
+### New Methods
+- **CursorSet** (type)
+  - Added `.loadIcons(...)` for easier setup
+### Other Methods
+- **Screen** edge check logic in **Window** and **Popup** now test for **Screen** insets as well
+
+## v2.0-alpha-10 - 02.02.2023
 This update focuses on window resizing and repositioning logic. The new implementation can be configured to 
 function in a more appropriate manner, while the previous implementation was very rigid in terms of customization.
 ### Breaking Changes

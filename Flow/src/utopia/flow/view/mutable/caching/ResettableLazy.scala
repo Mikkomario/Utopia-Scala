@@ -83,6 +83,15 @@ object ResettableLazy
   */
 trait ResettableLazy[+A] extends Lazy[A] with Resettable
 {
+	// COMPUTED ----------------------
+	
+	/**
+	 * @return An infinite iterator that first returns the first value in this lazy,
+	 *         and then continues providing new values (using newValue())
+	 */
+	def resettingValueIterator = valueIterator ++ Iterator.continually { newValue() }
+	
+	
 	// OTHER	----------------------
 	
 	/**

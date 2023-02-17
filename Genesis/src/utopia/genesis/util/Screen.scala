@@ -33,11 +33,9 @@ object Screen
      * The actual size of the monitor in pixels. Requires calling 'registerRealScreenSize' in order to return different
      * values.
      */
-	def actualSize =
-	{
+	def actualSize = {
 		val standard = standardSize
-		screenSizeMod match
-		{
+		screenSizeMod match {
 			case Some(scaling) => standard * scaling
 			case None => standard
 		}
@@ -57,11 +55,9 @@ object Screen
 	 * @return Pixels per inch resolution of the screen (zero ppi when there is no screen). Takes into account forced
 	  *         scaling from the OS, provided that the real screen size has been manually registered.
 	 */
-	def ppi =
-	{
+	def ppi = {
 		val base = Try { measurement.Ppi(toolkit.getScreenResolution) }.getOrElse(measurement.Ppi.zero)
-		screenSizeMod match
-		{
+		screenSizeMod match {
 			case Some(scaling) => base / scaling.maxDimension
 			case None => base
 		}
@@ -91,11 +87,9 @@ object Screen
 	  * but forced OS scaling may alter its use.
 	  * @param configuration the graphics configuration where the insets are read
 	  */
-	def actualInsetsAt(configuration: GraphicsConfiguration) =
-	{
+	def actualInsetsAt(configuration: GraphicsConfiguration) = {
 		val standard = insetsAt(configuration)
-		screenSizeMod match
-		{
+		screenSizeMod match {
 			case Some(scaling) => standard * scaling
 			case None => standard
 		}

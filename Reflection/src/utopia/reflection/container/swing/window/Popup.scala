@@ -62,13 +62,13 @@ object Popup
 		val newPosition = context.absolutePosition + getTopLeft(context.size, newWindow.size)
 		
 		// Sets pop-up position, but makes sure it fits into screen
-		val maxPosition = (Screen.size - newWindow.size).toPoint
+		val screenInsets = Screen.insetsAt(newWindow.component.getGraphicsConfiguration)
+		val maxPosition = (Screen.size - newWindow.size - Size(screenInsets.right, screenInsets.bottom)).toPoint
 		newWindow.position = newPosition topLeft maxPosition
 		
 		// Determines auto close logic
 		// FIXME: HideOnOutsideClickListener triggers immediately
-		autoCloseLogic match
-		{
+		autoCloseLogic match {
 			case WhenFocusLost => newWindow.component.addWindowFocusListener(new HideOnFocusLostListener(newWindow))
 			case WhenClickedOutside => GlobalMouseEventHandler += new HideOnOutsideClickListener(newWindow)
 			case WhenAnyKeyPressed => GlobalKeyboardEventHandler += new HideOnKeyPressListener(newWindow)

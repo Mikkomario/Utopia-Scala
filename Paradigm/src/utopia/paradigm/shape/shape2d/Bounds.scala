@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -86,6 +87,11 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
      */
     def between(p1: Point, p2: Point) =
         from(p1.dimensions.zipIteratorWith(p2.dimensions).map { case (s, e) => NumericSpan(s, e) })
+    /**
+     * @param points Two points
+     * @return A set of bounds that just contains the two specified points
+     */
+    def between(points: Pair[Point]): Bounds = between(points.first, points.second)
     
     /**
      * Creates a set of bounds around a circle so that the whole sphere is contained.

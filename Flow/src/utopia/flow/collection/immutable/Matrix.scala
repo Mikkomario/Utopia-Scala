@@ -27,7 +27,8 @@ object Matrix
 		cols.headOption match {
 			case Some(firstCol) =>
 				val height = firstCol.size
-				new _Matrix[A](View.fixed(cols), Lazy { (0 until height).map { y => cols.map { _(y) } } })
+				new _Matrix[A](View.fixed(cols), Lazy { (0 until height).map { y => cols.map { _(y) } } },
+					Lazy { cols.size }, View.fixed(height))
 			case None => empty
 		}
 	}
@@ -41,7 +42,8 @@ object Matrix
 		rows.headOption match {
 			case Some(firstRow) =>
 				val width = firstRow.size
-				new _Matrix[A](Lazy { (0 until width).map { x => rows.map { _(x) } } }, View.fixed(rows))
+				new _Matrix[A](Lazy { (0 until width).map { x => rows.map { _(x) } } }, View.fixed(rows),
+					View.fixed(width), Lazy { rows.size })
 			case None => empty
 		}
 	}
@@ -77,18 +79,25 @@ object Matrix
 		override val columns: IndexedSeq[IndexedSeq[A]] = Vector()
 		override val rows: IndexedSeq[IndexedSeq[A]] = Vector()
 		
+		override def width: Int = 0
+		override def height: Int = 0
+		
 		override def transpose: Matrix[A] = this
 		
 		override def view(area: Pair[NumericSpan[Int]]) = this
 	}
 	
-	private class _Matrix[A](colView: View[IndexedSeq[IndexedSeq[A]]], rowView: View[IndexedSeq[IndexedSeq[A]]])
+	private class _Matrix[A](colView: View[IndexedSeq[IndexedSeq[A]]], rowView: View[IndexedSeq[IndexedSeq[A]]],
+	                         widthView: View[Int], heightView: View[Int])
 		extends Matrix[A]
 	{
 		override def columns: IndexedSeq[IndexedSeq[A]] = colView.value
 		override def rows: IndexedSeq[IndexedSeq[A]] = rowView.value
 		
-		override def transpose: Matrix[A] = new _Matrix[A](rowView, colView)
+		override def width: Int = widthView.value
+		override def height: Int = heightView.value
+		
+		override def transpose: Matrix[A] = new _Matrix[A](rowView, colView, heightView, widthView)
 	}
 }
 
@@ -106,7 +115,8 @@ trait Matrix[+A] extends MatrixLike[A, Matrix[A]]
 	
 	override def self: Matrix[A] = this
 	
-	override def transpose: Matrix[A] = new Matrix._Matrix[A](Lazy { rows }, Lazy { columns })
+	override def transpose: Matrix[A] = new Matrix._Matrix[A](Lazy { rows }, Lazy { columns },
+		View { height }, View { width })
 	
 	/**
 	  * @param area Viewed area, as an x-range (for columns) and then an y-range (for rows)

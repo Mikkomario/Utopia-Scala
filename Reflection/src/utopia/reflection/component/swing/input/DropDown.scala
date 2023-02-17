@@ -150,8 +150,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 		textLabel.background = focusColor
 		textLabel.repaint()
 	} {
-		if (!isDisplayingPopUp)
-		{
+		if (!isDisplayingPopUp) {
 			textLabel.isTransparent = true
 			textLabel.repaint()
 		}

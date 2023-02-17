@@ -100,19 +100,19 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
+	  * @param customDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
 	def withColouredIcon(icon: SingleColorIcon, role: ColorRole, preferredShade: ColorShade = Standard,
-						 insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-						 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-						 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
+	                     insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
+	                     hotKeys: Set[HotKey] = Set(), customDrawers: Vector[CustomDrawer] = Vector(),
+	                     additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 						(action: => Unit) =
 		factory(icon.asIndividualButtonWithColor(context.color(role, preferredShade)), insets, alignment, hotKeys,
-			additionalDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
+			customDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 }
 
 /**
@@ -120,6 +120,7 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
+// TODO: Add enabled & disabled -feature
 class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
 				  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
 				  additionalDrawers: Vector[CustomDrawer] = Vector(),

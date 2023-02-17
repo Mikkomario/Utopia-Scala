@@ -9,18 +9,20 @@ object ResettableFlag
 	// OTHER    ------------------------
 	
 	/**
+	 * @param initialValue The initial value of this flag
 	  * @return A new resettable flag
 	  */
-	def apply(): ResettableFlag = new _ResettableFlag()
+	def apply(initialValue: Boolean = false): ResettableFlag = new _ResettableFlag()
 	
 	
 	// NESTED   -----------------------
 	
-	private class _ResettableFlag extends AbstractChanging[Boolean] with ResettableFlag with Pointer[Boolean]
+	private class _ResettableFlag(initialValue: Boolean = false)
+		extends AbstractChanging[Boolean] with ResettableFlag with Pointer[Boolean]
 	{
 		// ATTRIBUTES   -----------------------
 		
-		private var _value = false
+		private var _value = initialValue
 		
 		lazy val view = new FlagView(this)
 		

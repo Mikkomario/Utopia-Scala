@@ -107,8 +107,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	_attachmentPointer.addListener { event =>
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
-		if (event.newValue)
-		{
+		if (event.newValue) {
 			layoutUpdateQueue.clear()
 			updateWholeLayout(size)
 		}
@@ -142,8 +141,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def component: JComponent with Container = panel
 	
-	override def updateLayout(): Unit =
-	{
+	override def updateLayout(): Unit = {
 		// Updates content size and layout
 		updateLayout(layoutUpdateQueue.popAll().toSet, size)
 		
@@ -151,8 +149,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		updateFinishedQueue.popAll().foreach { _() }
 	}
 	
-	override def stackSize = currentContent match
-	{
+	override def stackSize = currentContent match {
 		case Some(content) => content.stackSize
 		case None => StackSize.any
 	}
@@ -168,10 +165,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		super[ReachCanvasLike].repaint()
 	}
 	
-	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
-	{
-		super.distributeMouseButtonEvent(event) match
-		{
+	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) = {
+		super.distributeMouseButtonEvent(event) match {
 			case Some(consumed) =>
 				val newEvent = event.consumed(consumed)
 				currentContent.foreach { _.distributeMouseButtonEvent(newEvent) }
@@ -179,18 +174,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			case None => currentContent.flatMap { _.distributeMouseButtonEvent(event) }
 		}
 	}
-	
-	override def distributeMouseMoveEvent(event: MouseMoveEvent) =
-	{
+	override def distributeMouseMoveEvent(event: MouseMoveEvent) = {
 		super.distributeMouseMoveEvent(event)
 		currentContent.foreach { _.distributeMouseMoveEvent(event) }
 	}
-	
 	// TODO: WET WET
-	override def distributeMouseWheelEvent(event: MouseWheelEvent) =
-	{
-		super.distributeMouseWheelEvent(event) match
-		{
+	override def distributeMouseWheelEvent(event: MouseWheelEvent) = {
+		super.distributeMouseWheelEvent(event) match {
 			case Some(consumed) =>
 				val newEvent = event.consumed(consumed)
 				currentContent.foreach { _.distributeMouseWheelEvent(newEvent) }
@@ -204,21 +194,18 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
 	  *                         this canvas has been revalidated
 	  */
-	override def revalidate(updateComponents: Seq[ReachComponentLike]): Unit =
-	{
+	override def revalidate(updateComponents: Seq[ReachComponentLike]): Unit = {
 		if (updateComponents.nonEmpty)
 			layoutUpdateQueue :+= updateComponents
 		revalidate()
 	}
-	
 	/**
 	  * Revalidates this component's layout. Calls the specified function when whole component layout has been updated.
 	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
 	  *                         this canvas has been revalidated
 	  * @param f A function called after layout has been updated.
 	  */
-	override def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit) =
-	{
+	override def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit) = {
 		// Queues the action
 		updateFinishedQueue :+= (() => f)
 		// Queues revalidation
@@ -304,8 +291,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// setBackground(Color.black.toAwt)
 		
 		// Makes this canvas element focusable and disables the default focus traversal keys
-		if (focusEnabled)
-		{
+		if (focusEnabled) {
 			setFocusable(true)
 			setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
 			setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
@@ -346,6 +332,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	{
 		// ATTRIBUTES	-----------------------------
 		
+		private val minCursorDistance = 10
+		
 		private var lastMousePosition = Point.origin
 		private var lastCursorImage: Option[Image] = None
 		
@@ -359,19 +347,16 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		override def onMouseMove(event: MouseMoveEvent) =
 		{
 			val newPosition = event.mousePosition - position
-			if (lastMousePosition != newPosition)
-			{
+			if ((lastMousePosition - newPosition).length >= minCursorDistance) {
 				lastMousePosition = newPosition
-				if (bounds.contains(event.mousePosition))
-				{
+				if (bounds.contains(event.mousePosition)) {
 					val newImage = cursorManager.cursorImageAt(newPosition) { area =>
 						shadeCalculatorFuture.current match {
 							case Some(calculate) => calculate(area)
 							case None => Dark
 						}
 					}
-					if (!lastCursorImage.contains(newImage))
-					{
+					if (!lastCursorImage.contains(newImage)) {
 						lastCursorImage = Some(newImage)
 						cursorManager.cursorForImage(newImage).foreach(component.setCursor)
 					}

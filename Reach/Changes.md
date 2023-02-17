@@ -1,5 +1,9 @@
 # Utopia Reach - List of Changes
 
+## v0.5.1 (in development)
+### Other Changes
+- `CursorDefining.defineCursorFor(...)` now allows for more precise cursor customization
+
 ## v0.5 - 02.02.2023
 This update contains some style updates in cases where the original implementation wasn't very beautiful. 
 Most functional updates focus on the **SelectionList** component.  

@@ -3,7 +3,7 @@ package utopia.flow.util.logging
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 
-import java.time.Instant
+import scala.collection.immutable.VectorBuilder
 
 /**
   * Used for tracking actions and logging tasks with durations
@@ -14,7 +14,8 @@ class TimeLogger
 {
 	// ATTRIBUTES	-------------------------
 	
-	private var startTime = Instant.now()
+	private var startTime = Now.toInstant
+	private val linesBuilder = new VectorBuilder[String]()
 	
 	
 	// OTHER	-----------------------------
@@ -25,7 +26,13 @@ class TimeLogger
 	  */
 	def checkPoint(description: String) =
 	{
-		println(description + s" (${(Instant.now() - startTime).description})")
-		startTime = Now
+		val time = Now.toInstant
+		linesBuilder += (description + s" (${(time - startTime).description})")
+		startTime = time
+	}
+	
+	def print() = {
+		linesBuilder.result().foreach { println(_) }
+		linesBuilder.clear()
 	}
 }

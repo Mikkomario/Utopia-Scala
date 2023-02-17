@@ -64,8 +64,7 @@ trait ComponentHierarchy
 	  * @return A modifier used when calculating the position of the bottom component (outside this hierarchy)
 	  *         relative to hierarchy top
 	  */
-	def positionToTopModifier: Vector2D = parent match
-	{
+	def positionToTopModifier: Vector2D = parent match {
 		case Left(_) => Vector2D.zero
 		case Right((block, component)) => block.positionToTopModifier + component.position
 	}
@@ -173,27 +172,22 @@ trait ComponentHierarchy
 	  * Repaints the whole component hierarchy (if linked)
 	  */
 	def repaintAll() = if (isLinked) top.repaint()
-	
 	/**
 	  * Repaints a sub-section of the bottom component (if linked to top)
 	  * @param area Area inside the bottom component
 	  * @param priority Priority used for this repaint operation. Higher priority areas are painted first
 	  *                 (default = Normal)
 	  */
-	def repaint(area: => Bounds, priority: Priority = Normal) =
-	{
+	def repaint(area: => Bounds, priority: Priority = Normal) = {
 		if (isLinked)
 			top.repaint(area + positionToTopModifier, priority)
 	}
-	
 	/**
 	  * Repaints the bottom component
 	  */
-	def repaintBottom(priority: Priority = Normal) =
-	{
+	def repaintBottom(priority: Priority = Normal) = {
 		if (isLinked)
-			parent match
-			{
+			parent match {
 				case Left(canvas) => canvas.repaint()
 				case Right((block, component)) => block.repaint(component.bounds, priority)
 			}

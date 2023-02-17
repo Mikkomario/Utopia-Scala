@@ -34,9 +34,6 @@ trait MatrixLike[+A, +Repr] extends utopia.flow.collection.template.MatrixLike[A
 	
 	override def isEmpty: Boolean = columns.headOption.forall { _.isEmpty }
 	
-	override def width = columns.size
-	override def height = rows.size
-	
 	override def columnsView = columns.view.map { _.view }
 	override def rowsView = rows.view.map { _.view }
 	

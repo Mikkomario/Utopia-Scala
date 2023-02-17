@@ -92,6 +92,7 @@ class LazyVector[+A] private(wrapped: IndexedSeq[Lazy[A]])
 	// IMPLEMENTED  --------------------------
 	
 	override def length = wrapped.length
+	override def knownSize = wrapped.knownSize
 	
 	override protected def factory = LazyVector
 	override def lazyContents = wrapped

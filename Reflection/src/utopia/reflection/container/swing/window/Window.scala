@@ -479,21 +479,27 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	}
 	
 	private def positionWithinScreen(proposed: Point) = {
-		val remainingArea = Screen.size - size
+		val insets = Screen.insetsAt(component.getGraphicsConfiguration)
+		val screen = Screen.size
+		val remainingArea = screen- size - insets.total
 		bounds = Bounds.fromFunction2D { axis =>
+			val axisInsets = insets(axis)
+			lazy val maxLength = screen(axis) - axisInsets.sum
 			// Case: Window doesn't fit within the screen => Shrinks
 			if (remainingArea(axis) <= 0)
-				NumericSpan(0.0, Screen.size(axis))
+				NumericSpan(axisInsets.first, maxLength)
 			else {
 				val p = proposed(axis)
 				val s = size(axis)
-				val margin = (screenBorderMargin * 2) min (remainingArea(axis) / 2.0)
+				val margin = screenBorderMargin min (remainingArea(axis) / 2.0)
 				
 				// Case: Margin should be applied on left / top
-				if (p < margin)
-					NumericSpan(margin, margin + s)
+				if (p < margin) {
+					val start = margin + axisInsets.first
+					NumericSpan(start, start + s)
+				}
 				else {
-					val maxEnd = Screen.size(axis) - margin
+					val maxEnd = screen(axis) - margin - axisInsets.second
 					// Case: Margin should be applied on right / bottom
 					if (p + s > maxEnd)
 						NumericSpan(maxEnd - s, maxEnd)

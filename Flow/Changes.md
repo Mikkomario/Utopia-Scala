@@ -1,5 +1,11 @@
 # Utopia Flow - List of Changes
 
+## v2.0.1 (in development)
+### Bugfixes
+- There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
+### Other
+- In **TimeLogger**, `.print()` must now be called separately
+
 ## v2.0 - 02.02.2023
 This update represents a major refactoring of the standard **Flow** features.  
 While most updates concern naming and package structure, there are also a number of new features and data structures.

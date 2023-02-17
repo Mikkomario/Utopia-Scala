@@ -1,12 +1,12 @@
 package utopia.reach.util
 
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
-import utopia.flow.operator.Sign
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.Sign
+import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.genesis.image.Image
+import utopia.genesis.util.Drawer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
-import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.util.AwtEventThread
@@ -61,8 +61,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	// IMPLEMENTED	---------------------------------
 	
-	override def paintWith(drawer: Drawer) =
-	{
+	override def paintWith(drawer: Drawer) = {
 		// Checks whether component size changed. Invalidates buffer if so.
 		checkForSizeChanges()
 		flatten().drawWith(drawer, component.position)
@@ -76,8 +75,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		val newImage = flatten(region)
 		// Paints the image buffer, at least partially
 		paint { drawer =>
-			val modifiedDrawer = region match
-			{
+			val modifiedDrawer = region match {
 				case Some(region) => drawer.clippedTo(region)
 				case None => drawer
 			}
@@ -85,8 +83,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		}
 	}
 	
-	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match
-	{
+	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match {
 		case Some(region) =>
 			// Extends the queue. May start the drawing process as well
 			val firstDrawArea = queuePointer.pop { case (processing, queue) =>
@@ -94,16 +91,13 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 				if (processing.isEmpty)
 					Some(region) -> (Some(region) -> queue)
 				// Case: Draw process currently active => queues the region
-				else
-				{
+				else {
 					// Checks whether the region could be merged into one of the existing regions
 					val existingRegions = queue.getOrElse(priority, Vector())
-					val newRegions =
-					{
+					val newRegions = {
 						if (existingRegions.isEmpty)
 							Vector(region)
-						else
-						{
+						else {
 							val newRegionsBuilder = new VectorBuilder[Bounds]()
 							var mergeSucceeded = false
 							existingRegions.foreach { b =>
@@ -210,15 +204,13 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		}
 		
 		// Applies or discards updates
-		if (shouldAddUpdates)
-		{
+		if (shouldAddUpdates) {
 			// If the update buffer was overfilled (None), recreates the buffer completely
 			queuedUpdatesPointer.pop {
 				// Case: Update buffer was not overfilled
 				case Some(updates) =>
 					// Checks for updates to apply, based on the targeted region
-					val (updatesToDelay, updatesToApply) = region match
-					{
+					val (updatesToDelay, updatesToApply) = region match {
 						case Some(region) =>
 							updates.divideBy { case (image, position) =>
 								Bounds(position, image.size).overlapsWith(region)
@@ -226,11 +218,9 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 						case None => Vector() -> updates
 					}
 					// Calculates the new buffer state
-					val newImage =
-					{
+					val newImage = {
 						// Case: There were updates queued => Updates the buffer also
-						if (updatesToApply.nonEmpty)
-						{
+						if (updatesToApply.nonEmpty) {
 							val updatedBuffer = updatesToApply.foldLeft(baseImage) { (image, update) =>
 								image.withOverlay(update._1, update._2)
 							}
@@ -249,8 +239,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 					newImage -> Some(Vector())
 			}
 		}
-		else
-		{
+		else {
 			queuedUpdatesPointer.setOne(Vector())
 			baseImage
 		}

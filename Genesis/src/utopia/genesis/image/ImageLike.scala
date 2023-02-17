@@ -4,11 +4,13 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 
 import java.awt.image.BufferedImage
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.util.Drawer
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size, HasSize, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, HasSize, Matrix2D, Point, Size, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 

@@ -15,13 +15,14 @@ object MatrixView
 	  * @tparam A Type of matrix cell values
 	  * @return A view into the targeted matrix
 	  */
-	def apply[A](matrix: template.MatrixLike[A, _], viewArea: Pair[NumericSpan[Int]]) =
+	def apply[A](matrix: template.MatrixLike[A, _], viewArea: Pair[NumericSpan[Int]]) = {
 		viewArea.findMergeWith(matrix.size) { (span, len) =>
 			if (len == 0) None else span.overlapWith(NumericSpan(0, len - 1))
 		} match {
 			case Some(area) => new _MatrixView[A](matrix, area)
 			case None => Matrix.empty
 		}
+	}
 	
 	
 	// NESTED   ----------------------------
