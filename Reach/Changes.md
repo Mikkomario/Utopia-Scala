@@ -1,6 +1,8 @@
 # Utopia Reach - List of Changes
 
 ## v0.5.1 (in development)
+### New Features
+- Drag-and-drop support for external files. See **DragAndDropManager** and **DragAndDropTarget**.
 ### Other Changes
 - `CursorDefining.defineCursorFor(...)` now allows for more precise cursor customization
 
