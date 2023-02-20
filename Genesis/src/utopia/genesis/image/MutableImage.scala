@@ -43,6 +43,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	
 	private var _source = initialSource
 	
+	// TODO: Use a mutable pixel matrix
 	private val pixelsCache = MutableLazy {
 		source match {
 			case Some(image) => Pixels.fromBufferedImage(image, lazily = true)

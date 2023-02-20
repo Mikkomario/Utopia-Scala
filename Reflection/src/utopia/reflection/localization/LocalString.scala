@@ -51,11 +51,11 @@ object LocalString
 		 */
 		def autoLocalized(implicit languageCode: String, localizer: Localizer): LocalizedString = s
 		
-		/**
+		/*
 		  * @param languageCode ISO code of the string's language (implicit)
 		  * @return A local version of string with localization skipped
 		  */
-		def localizationSkipped(implicit languageCode: String) = local.localizationSkipped
+		// def localizationSkipped(implicit languageCode: String) = local.localizationSkipped
 		
 		/**
 		  * @return A local version of string with no language information and localization skipped
