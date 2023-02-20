@@ -9,6 +9,8 @@ trait ColorRole
 
 trait AdditionalColorRole extends ColorRole
 {
+	// ABSTRACT -------------------------
+	
 	/**
 	  * @return A role that can be used instead of this color when another shade is required or this
 	  *         color is not available.

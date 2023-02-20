@@ -1,10 +1,18 @@
 # Utopia Flow - List of Changes
 
-## v2.0.1 (in development)
+## v2.1 (in development)
+### Breaking Changes
+- Replaced `allowReplace: Boolean` -parameter with `conflictResolve: FileConflictResolution` in move and copy -operations
 ### Bugfixes
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
+### New Features
+- Custom file conflict resolutions can now be used in standard file move and copy operations
+### New Methods
+- **Pointer**
+  - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` to **Pointers** that contains **Options** 
 ### Other
 - In **TimeLogger**, `.print()` must now be called separately
+- **Path**`.write(...)` and its variants (in **FileExtensions**) now automatically create the parent directories before writing
 
 ## v2.0 - 02.02.2023
 This update represents a major refactoring of the standard **Flow** features.  

@@ -4,21 +4,21 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.IterateLines
-import utopia.flow.parse.AutoClose._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 
 import java.awt.Desktop
 import java.io._
-import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
+import java.nio.file._
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success, Try}
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 /**
   * Provides some extensions to be used with java.nio.file classes
@@ -541,11 +541,10 @@ object FileExtensions
 		/**
 		  * Moves this file / directory to another directory
 		  * @param targetDirectory Target parent directory for this file
-		  * @param replaceIfExists Whether a file already existing at target path should be replaced with this one,
-		  *                        if present (default = true)
+		  * @param conflictResolve How file overlap conflicts should be handled. Default = Overwrite the old file.
 		  * @return Link to the target path. Failure if file moving failed or if couldn't replace an existing file
 		  */
-		def moveTo(targetDirectory: Path, replaceIfExists: Boolean = true): Try[Path] =
+		def moveTo(targetDirectory: Path, conflictResolve: FileConflictResolution = Overwrite): Try[Path] =
 		{
 			// Might not need to move at all
 			if (parentOption.contains(targetDirectory))
@@ -555,20 +554,15 @@ object FileExtensions
 			else {
 				// Directories with content will have to be first copied, then removed
 				if (isDirectory)
-					copyTo(targetDirectory, replaceIfExists).flatMap { newDir => delete().map { _ => newDir } }
+					copyTo(targetDirectory, conflictResolve).flatMap { newDir => delete().map { _ => newDir } }
 				else {
 					// May need to create target directory if it doesn't exist yet
 					targetDirectory.asExistingDirectory.flatMap { dir =>
 						// May need to delete an existing file / directory
 						val newLocation = dir / fileName
 						val emptyTarget = {
-							if (newLocation.exists) {
-								if (replaceIfExists)
-									newLocation.delete().map { _ => newLocation }
-								else
-									Failure(new IOException(
-										s"Cannot move $p to $targetDirectory because $newLocation already exists and overwrite is disabled"))
-							}
+							if (newLocation.exists)
+								conflictResolve(newLocation)
 							else
 								Success(newLocation)
 						}
@@ -580,19 +574,18 @@ object FileExtensions
 		/**
 		  * Copies this file / directory to another directory
 		  * @param targetDirectory Target parent directory for this file
-		  * @param replaceIfExists Whether a file already existing at target path should be replaced with this one,
-		  *                        if present (default = true)
+		  * @param conflictResolve How file overlap conflicts should be handled. Default = Overwrite the old file.
 		  * @return Link to the target path. Failure if file moving failed or if couldn't replace an existing file
 		  */
-		def copyTo(targetDirectory: Path, replaceIfExists: Boolean = true) = copyAs(targetDirectory / fileName, replaceIfExists)
+		def copyTo(targetDirectory: Path, conflictResolve: FileConflictResolution = Overwrite) =
+			copyAs(targetDirectory/fileName, conflictResolve)
 		/**
 		  * Copies this file / directory to a new location (over specified path)
 		  * @param targetPath   Location, including file name, for the new copy
-		  * @param allowReplace Whether a file already existing at target path should be replaced with this one,
-		  *                     if present (default = true)
+		  * @param conflictResolve How file overlap conflicts should be handled. Default = Overwrite the old file.
 		  * @return Link to the target path. Failure if file moving failed or if couldn't replace an existing file
 		  */
-		def copyAs(targetPath: Path, allowReplace: Boolean = true) =
+		def copyAs(targetPath: Path, conflictResolve: FileConflictResolution = Overwrite) =
 		{
 			// May not need to perform any copy
 			if (targetPath == p)
@@ -603,17 +596,11 @@ object FileExtensions
 				// If the target path already exists, it may need to deleted first, if not, parent directories may
 				// need to be created
 				val prepareResult = {
-					if (targetPath.exists) {
-						if (allowReplace)
-							targetPath.delete().map { _ => targetPath }
-						else
-							Failure(new IOException(
-								s"Cannot copy $p over $targetPath because $targetPath already exists and overwrite is disabled"))
-					}
+					if (targetPath.exists)
+						conflictResolve(targetPath)
 					else
 						targetPath.createParentDirectories()
 				}
-				
 				// May need to create parent directories
 				prepareResult.flatMap { target => recursiveCopyAs(target) }
 			}
@@ -631,18 +618,15 @@ object FileExtensions
 		/**
 		  * Moves and possibly renames this file
 		  * @param targetPath   New path for this file, including the file name
-		  * @param allowReplace Whether a file already existing at target path should be replaced with this one,
-		  *                     if present (default = true)
+		  * @param conflictResolve How file overlap conflicts should be handled. Default = Overwrite the old file.
 		  * @return This file's new path. Failure if moving or file deletion failed or if tried to overwrite a file
 		  *         while allowReplace = false.
 		  */
-		def moveAs(targetPath: Path, allowReplace: Boolean = true) = {
+		def moveAs(targetPath: Path, conflictResolve: FileConflictResolution = Overwrite) = {
 			if (targetPath == p)
 				Success(p)
 			else
-				copyAs(targetPath, allowReplace).flatMap { newPath =>
-					delete().map { _ => newPath }
-				}
+				copyAs(targetPath, conflictResolve).flatMap { newPath => delete().map { _ => newPath } }
 		}
 		/**
 		  * Renames this file or directory
@@ -838,7 +822,8 @@ object FileExtensions
 		  * @param codec Charset / codec used (implicit)
 		  * @return This path. Failure if writing failed.
 		  */
-		def write(text: String)(implicit codec: Codec) = Try { Files.write(p, text.getBytes(codec.charSet)) }
+		def write(text: String)(implicit codec: Codec) =
+			createParentDirectories().flatMap { p => Try { Files.write(p, text.getBytes(codec.charSet)) } }
 		/**
 		  * Writes a json-convertible instance to this file
 		  * @param json A json-convertible instance that will produce contents of this file

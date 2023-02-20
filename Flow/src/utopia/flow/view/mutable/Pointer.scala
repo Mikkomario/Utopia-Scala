@@ -66,11 +66,26 @@ object Pointer
 		  * Removes the current value from this pointer
 		  */
 		def clear() = p.value = None
-		
 		/**
 		  * @return Removes and returns the current value from this pointer
 		  */
 		def pop() = p.getAndSet(None)
+		
+		/**
+		 * Preserves the item in this pointer only if it satisfies the specified condition
+		 * @param f A filter function
+		 * @return This pointer
+		 */
+		def filterCurrent(f: A => Boolean) = {
+			p.update { v => v.filter(f) }
+			p
+		}
+		/**
+		 * Removes the item from this pointer if it satisfies the specified condition
+		 * @param f A filter function
+		 * @return This pointer
+		 */
+		def filterNotCurrent(f: A => Boolean) = filterCurrent { !f(_) }
 		
 		/**
 		  * Updates the value of this pointer if there is no value already, returns the value after the update

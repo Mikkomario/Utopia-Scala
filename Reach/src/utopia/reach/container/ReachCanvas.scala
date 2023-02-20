@@ -3,6 +3,7 @@ package utopia.reach.container
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -32,6 +33,7 @@ import utopia.reflection.event.StackHierarchyListener
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
+import utopia.reach.dnd.DragAndDropManager
 import utopia.reflection.shape.stack.StackSize
 
 import java.awt.event.KeyEvent
@@ -101,6 +103,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	private val cursorPainter = cursorManager.map { new CursorSwapper(_) }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
+	
+	/**
+	 * The drag and drop -manager used by this canvas
+	 */
+	lazy val dragAndDropManager = new DragAndDropManager(this)(SysErrLogger)
 	
 	
 	// INITIAL CODE	---------------------------
