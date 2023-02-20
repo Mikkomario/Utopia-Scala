@@ -8,6 +8,8 @@
 ### New Features
 - Custom file conflict resolutions can now be used in standard file move and copy operations
 ### New Methods
+- **Path** (**FileExtensions**)
+  - Added `.isChildOf(Path)`
 - **Pointer**
   - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` to **Pointers** that contains **Options** 
 ### Other

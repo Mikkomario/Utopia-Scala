@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 
 ## v2.0-alpha-11 (in development)
+### Breaking Changes
+- **ContainerContentDisplayer2** now uses **EqualsFunction** and not a normal function when comparing items
 ### New Methods
 - **CursorSet** (type)
   - Added `.loadIcons(...)` for easier setup
