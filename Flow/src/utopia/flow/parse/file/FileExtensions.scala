@@ -287,6 +287,12 @@ object FileExtensions
 		// OTHER    -------------------------------
 		
 		/**
+		 * @param directory A directory
+		 * @return Whether this path is a sub-path of the specified path
+		 */
+		def isChildOf(directory: Path) = relativeTo(directory).isRight
+		
+		/**
 		  * @param another A sub-path
 		  * @return This path extended with another path
 		  */

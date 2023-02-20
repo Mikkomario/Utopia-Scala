@@ -13,7 +13,6 @@ object ContainerContentDisplayer2
 	  * Short version of typical pointer used in these methods
 	  */
 	private type P[X] = Changing[Vector[X]]
-	
 	/**
 	  * Short version for a refreshable display component
 	  */
@@ -32,7 +31,7 @@ object ContainerContentDisplayer2
 	  */
 	def forStatelessItems[A, W, Display <: D[A]](container: MutableMultiContainer2[W, Display],
 												 contentPointer: P[A],
-												 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })
+												 equalsCheck: EqualsFunction[A] = EqualsFunction.default)
 												(makeDisplay: A => W) =
 		new ContainerContentDisplayer2[A, W, Display, P[A]](container, contentPointer, equalsCheck)(makeDisplay)
 	
@@ -51,7 +50,7 @@ object ContainerContentDisplayer2
 	  * @return New content displayer
 	  */
 	def forImmutableStates[A, W, Display <: D[A]](container: MutableMultiContainer2[W, Display], contentPointer: P[A])
-												 (sameItemCheck: (A, A) => Boolean)
+												 (sameItemCheck: EqualsFunction[A])
 												 (makeDisplay: A => W) =
 		new ContainerContentDisplayer2[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
@@ -71,7 +70,7 @@ object ContainerContentDisplayer2
 	  * @return New content displayer
 	  */
 	def forMutableItems[A, W, Display <: D[A]](container: MutableMultiContainer2[W, Display], contentPointer: P[A])
-											  (sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)
+											  (sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])
 											  (makeDisplay: A => W) =
 		new ContainerContentDisplayer2[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
