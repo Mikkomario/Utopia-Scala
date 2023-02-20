@@ -54,11 +54,11 @@ trait MouseEvent[+Repr]
 {
     // ABSTRACT ----------------------
     
+    // TODO: Instead of these two values, use a RelativePoint value
     /**
       * @return The current (relative) mouse position
       */
     def mousePosition: Point
-    
     /**
       * @return Mouse position in the current screen coordinate system (in pixels)
       */
@@ -73,6 +73,7 @@ trait MouseEvent[+Repr]
       * @param f A mapping function for this event's position
       * @return A copy of this event with mapped position
       */
+    // FIXME: This documentation is misleading. Doesn't map the absolute position.
     def mapPosition(f: Point => Point): Repr
     
     
@@ -99,5 +100,6 @@ trait MouseEvent[+Repr]
       * @param origin New origin
       * @return A copy of this event where positions are relative to the specified origin
       */
+    // FIXME: This also is a misleading function, as it assumes an absolute starting state
     def relativeTo(origin: Point) = translated(-origin)
 }

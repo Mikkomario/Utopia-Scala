@@ -1,6 +1,10 @@
-# Utopia Reflection - List of Changes
+# Utopia Genesis - List of Changes
 
-## v3.2 (In Development)
+## v3.2.1 (in development)
+### New Features
+- Added mouse drag -tracking. See **MouseDragListener** and **GlobalMouseEventHandler**
+
+## v3.2 - 02.02.2023
 This update introduces the rewritten version of **PixelTable**, named **Pixels**.  
 There are a number of breaking method name changes included, 
 but the new interface is overall more flexible than the previous and should be of more use.

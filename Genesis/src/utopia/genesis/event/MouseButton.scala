@@ -31,7 +31,7 @@ object MouseButton
     /**
      * The different specified button types, does not include possible special buttons
      */
-    val values = Vector(Left, Middle, Right)
+    val values = Vector[MouseButton](Left, Middle, Right)
     
     
     // OTHER METHODS    ------------

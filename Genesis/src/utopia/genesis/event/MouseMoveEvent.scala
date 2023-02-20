@@ -43,10 +43,12 @@ object MouseMoveEvent
  * @author Mikko Hilpinen
  * @since 10.1.2017
  */
+// TODO: Convert into a trait
 case class MouseMoveEvent(override val mousePosition: Point, previousMousePosition: Point,
                           override val absoluteMousePosition: Point,
                           override val buttonStatus: MouseButtonStatus,
-                          duration: FiniteDuration) extends MouseEvent[MouseMoveEvent]
+                          duration: FiniteDuration)
+    extends MouseEvent[MouseMoveEvent]
 {
     // COMPUTED PROPERTIES    -----------
     

@@ -1,6 +1,8 @@
 # Utopia Paradigm - List of Changes
 
-## v1.2 (In Development)
+## v1.2.1 (in development)
+
+## v1.2 - 02.02.2023
 This update reflects in style the **Flow** v2.0 update. Multiple classes and concepts have been rewritten 
 and a more intuitive naming logic is applied.
 ### New Methods

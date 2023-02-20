@@ -4,7 +4,9 @@ import scala.language.implicitConversions
 
 object Filter
 {
-	implicit def functionAsFilter[T](f: T => Boolean): Filter[T] = (item: T) => f(item)
+	implicit def apply[A](f: A => Boolean): Filter[A] = (item: A) => f(item)
+	
+	def functionAsFilter[T](f: T => Boolean): Filter[T] = (item: T) => f(item)
 }
 
 /**
