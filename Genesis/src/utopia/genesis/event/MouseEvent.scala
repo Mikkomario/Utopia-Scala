@@ -2,7 +2,7 @@ package utopia.genesis.event
 
 import utopia.inception.util.Filter
 import utopia.genesis.event.MouseButton._
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, RelativePoint}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 object MouseEvent
@@ -75,6 +75,14 @@ trait MouseEvent[+Repr]
       */
     // FIXME: This documentation is misleading. Doesn't map the absolute position.
     def mapPosition(f: Point => Point): Repr
+    
+    
+    // COMPUTED ----------------------
+    
+    /**
+     * @return The position where the mouse cursor is currently over
+     */
+    def position = RelativePoint(mousePosition, absoluteMousePosition)
     
     
     // OTHER    ----------------------

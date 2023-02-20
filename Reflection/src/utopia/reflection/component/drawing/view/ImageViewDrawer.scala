@@ -22,7 +22,7 @@ object ImageViewDrawer
 	def withStaticStyle(imagePointer: View[Image], insets: StackInsets = StackInsets.any,
 	                    alignment: Alignment = Alignment.Center, drawLevel: DrawLevel = Normal,
 	                    useUpscaling: Boolean = true) =
-		apply(imagePointer, View(insets), View(alignment), drawLevel, useUpscaling)
+		apply(imagePointer, View.fixed(insets), View.fixed(alignment), drawLevel, useUpscaling)
 }
 
 /**
@@ -30,9 +30,11 @@ object ImageViewDrawer
   * @author Mikko Hilpinen
   * @since 21.10.2020, v2
   */
-case class ImageViewDrawer(imagePointer: View[Image], insetsPointer: View[StackInsets],
-                           alignmentPointer: View[Alignment], override val drawLevel: DrawLevel = Normal,
-                           override val useUpscaling: Boolean = true) extends ImageDrawerLike
+case class ImageViewDrawer(imagePointer: View[Image], insetsPointer: View[StackInsets] = View.fixed(StackInsets.any),
+                           alignmentPointer: View[Alignment] = View.fixed(Alignment.Center),
+                           override val drawLevel: DrawLevel = Normal,
+                           override val useUpscaling: Boolean = true)
+	extends ImageDrawerLike
 {
 	// IMPLEMENTED	------------------------
 	

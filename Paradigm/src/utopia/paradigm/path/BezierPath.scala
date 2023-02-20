@@ -23,9 +23,9 @@ object BezierPath
 	{
 		if (points.isEmpty)
 			throw new IllegalArgumentException("Bezier path must be initialized with at least 1 point")
-		else if (points.size == 1)
+		else if (points hasSize 1)
 			EmptyPath(points.head)
-		else if (points.size == 2)
+		else if (points hasSize 2)
 			LinearPath(points.head, points(1))
 		else
 		{

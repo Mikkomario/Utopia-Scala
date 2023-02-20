@@ -288,7 +288,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	/**
 	  * @return Whether this image is actually completely empty
 	  */
-	override def isEmpty = source.isEmpty
+	override def isEmpty = source.isEmpty || size.dimensions.exists { _ < 1.0 }
 	override def nonEmpty = !isEmpty
 	
 	override def pixels = _pixels.value

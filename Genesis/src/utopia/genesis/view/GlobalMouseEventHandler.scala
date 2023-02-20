@@ -18,12 +18,20 @@ object GlobalMouseEventHandler
 	
 	private var generators = Set[MouseEventGenerator]()
 	
-	private lazy val buttonHandler = mutable.MouseButtonStateHandler()
-	private lazy val moveHandler = mutable.MouseMoveHandler()
+	private val buttonHandler = mutable.MouseButtonStateHandler()
+	private val moveHandler = mutable.MouseMoveHandler()
 	private lazy val wheelHandler = mutable.MouseWheelHandler()
-	private lazy val dragHandler = mutable.MouseDragHandler()
+	private val dragHandler = mutable.MouseDragHandler()
 	
-	private lazy val handlers = HandlerRelay(buttonHandler, moveHandler, wheelHandler)
+	private lazy val handlers = HandlerRelay(buttonHandler, moveHandler, wheelHandler, dragHandler)
+	
+	private val dragTracker = new DragTracker(dragHandler)
+	
+	
+	// INITIAL CODE --------------------------------
+	
+	buttonHandler += dragTracker
+	moveHandler += dragTracker
 	
 	
 	// COMPUTED	------------------------------------
@@ -121,55 +129,4 @@ object GlobalMouseEventHandler
 	  * @param listener A listener that will no longer receive mouse-related events
 	  */
 	def -=(listener: Handleable) = handlers -= listener
-	
-	
-	// NESTED   ----------------------------
-	
-	private object DragManager extends MouseButtonStateListener with MouseMoveListener
-	{
-		// ATTRIBUTES   --------------------
-		
-		private val dragPointers = MouseButton.values
-			.map { b => b -> Pointer.empty[(DragStart, Option[MouseMoveEvent])]() }.toMap
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override def onMouseButtonState(event: MouseButtonStateEvent): Option[ConsumeEvent] = {
-			event.button.foreach { button =>
-				val pointer = dragPointers(button)
-				// Case: Mouse button pressed => Prepares a drag
-				if (event.isDown) {
-					val p = RelativePoint(event.mousePosition, event.absoluteMousePosition)
-					pointer.value = Some(DragStart(p), None)
-				}
-				// Case: Mouse button release => Generates a drag end event, if there was movement
-				else
-					pointer.pop().foreach { case (start, lastMove) =>
-						lastMove.foreach { move =>
-							val event = MouseDragEvent(start.position, move, button, start.keyState, isDown = false)
-							dragHandler.onMouseDrag(event)
-						}
-					}
-			}
-			None
-		}
-		
-		// Updates mouse positions and generates drag events
-		override def onMouseMove(event: MouseMoveEvent): Unit = {
-			val events = dragPointers.flatMap { case (button, pointer) =>
-				pointer.updateAndGet { _.map { case (start, _) => start -> Some(event) } }
-					.map { case (start, _) => MouseDragEvent(start.position, event, button, start.keyState) }
-			}
-			events.foreach(dragHandler.onMouseDrag)
-		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
-		
-		
-		// NESTED   ------------------------
-		
-		private case class DragStart(position: RelativePoint,
-		                             keyState: KeyStatus = GlobalKeyboardEventHandler.keyStatus)
-	}
 }
