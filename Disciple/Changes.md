@@ -1,6 +1,12 @@
 # Utopia Disciple - List of Changes
 
-## v1.6 (In Development)
+## v1.6.1 (in development)
+### New Features
+- Added `disableTrustStoreVerification: Boolean = false` parameter to **Gateway** constructors, allowing the user to 
+  disable SSL trust store verification process entirely, when needed.
+  - This is a workaround to a pesky "trustAnchors parameter must be non-empty" -error
+
+## v1.6 - 02.02.2023
 This update introduces request and response -interception, which enables more customization options. 
 In addition, the **ResponseParser** class is updated with better error handling capabilities.
 ### Breaking Changes

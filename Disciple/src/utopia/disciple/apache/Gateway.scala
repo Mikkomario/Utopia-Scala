@@ -5,9 +5,13 @@ import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
 import org.apache.hc.client5.http.impl.classic.{CloseableHttpResponse, HttpClientBuilder, HttpClients}
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
+import org.apache.hc.client5.http.socket.{ConnectionSocketFactory, PlainConnectionSocketFactory}
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory
+import org.apache.hc.core5.http.config.RegistryBuilder
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.net.URIBuilder
+import org.apache.hc.core5.ssl.SSLContexts
 import utopia.access.http.Method._
 import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
@@ -57,6 +61,14 @@ object Gateway
 	  *                                 applying them. False if you want the parameters to be added "as is"
 	  *                                 (using .toString). This mostly affects string values, whether they should be
 	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  * @param disableTrustStoreVerification Whether the SSL trust store verification process should be disabled entirely.
+	  *                                      Setting this to true may compromise data security, but will work around
+	  *                                      Java's "trustAnchors parameter must be non-empty" -error.
+	  *                                      Default = false = verify outgoing requests using the SSL trust store.
+	  *                                      Use with discretion.
+	  *
+	  *                                      If you wish to fix these errors properly instead, please check:
+	  *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 	  * @return A new gateway instance
 	  */
 	def apply(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
@@ -65,10 +77,11 @@ object Gateway
 	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
 	          requestInterceptors: Seq[RequestInterceptor] = Vector(),
 	          responseInterceptors: Seq[ResponseInterceptor] = Vector(),
-	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true) =
+	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
+	          disableTrustStoreVerification: Boolean = false) =
 		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
 			defaultResponseEncoding, requestInterceptors, responseInterceptors, Identity, allowBodyParameters,
-			allowJsonInUriParameters)
+			allowJsonInUriParameters, disableTrustStoreVerification)
 	
 	/**
 	  * Creates a new gateway instance
@@ -93,6 +106,14 @@ object Gateway
 	  *                                 applying them. False if you want the parameters to be added "as is"
 	  *                                 (using .toString). This mostly affects string values, whether they should be
 	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  * @param disableTrustStoreVerification Whether the SSL trust store verification process should be disabled entirely.
+	  *                                      Setting this to true may compromise data security, but will work around
+	  *                                      Java's "trustAnchors parameter must be non-empty" -error.
+	  *                                      Default = false = verify outgoing requests using the SSL trust store.
+	  *                                      Use with discretion.
+	  *
+	  *                                      If you wish to fix these errors properly instead, please check:
+	  *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 	  * @param customizeClient A function for customizing the http client when it is first created
 	  * @return A new gateway instance
 	  */
@@ -102,11 +123,12 @@ object Gateway
 	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
 	           requestInterceptors: Seq[RequestInterceptor] = Vector(),
 	           responseInterceptors: Seq[ResponseInterceptor] = Vector(),
-	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
+	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
+	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
 		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
 			defaultResponseEncoding, requestInterceptors, responseInterceptors, customizeClient, allowBodyParameters,
-			allowJsonInUriParameters)
+			allowJsonInUriParameters, disableTrustStoreVerification)
 }
 
 /**
@@ -136,6 +158,14 @@ object Gateway
   *                                 applying them. False if you want the parameters to be added "as is"
   *                                 (using .toString). This mostly affects string values, whether they should be
   *                                 wrapped in quotation marks or not. (default = true = use json value format)
+  * @param disableTrustStoreVerification Whether the SSL trust store verification process should be disabled entirely.
+  *                                      Setting this to true may compromise data security, but will work around
+  *                                      Java's "trustAnchors parameter must be non-empty" -error.
+  *                                      Default = false = verify outgoing requests using the SSL trust store.
+  *                                      Use with discretion.
+  *
+  *                                      If you wish to fix these errors properly instead, please check:
+  *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 **/
 class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
@@ -144,7 +174,8 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
               requestInterceptors: Seq[RequestInterceptor] = Vector(),
               responseInterceptors: Seq[ResponseInterceptor] = Vector(),
               customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
-              allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
+              allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
+              disableTrustStoreVerification: Boolean = false)
 {
     // ATTRIBUTES    -------------------------
 	
@@ -154,10 +185,26 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 	  */
 	private implicit val _defaultResponseEncoding: Codec = defaultResponseEncoding
 	
-	// TODO: SSL handling should be configurable. Now there is no way to modify connectionManager from outside.
-    private lazy val connectionManager = new PoolingHttpClientConnectionManager()
-	connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
-	connectionManager.setMaxTotal(maxConnectionsTotal)
+    private lazy val connectionManager = {
+	    val manager = {
+		    if (disableTrustStoreVerification) {
+			    // From https://www.baeldung.com/httpclient-ssl
+			    // The tutorial used one function which didn't exist in HttpClient v5
+			    val sslSocketFactory = new SSLConnectionSocketFactory(
+				    SSLContexts.custom().loadTrustMaterial(null, (_: Any, _: Any) => true).build())
+			    val socketFactoryRegistry = RegistryBuilder.create[ConnectionSocketFactory]()
+				    .register("https", sslSocketFactory)
+				    .register("http", new PlainConnectionSocketFactory())
+				    .build()
+			    new PoolingHttpClientConnectionManager(socketFactoryRegistry)
+		    }
+		    else
+			    new PoolingHttpClientConnectionManager()
+	    }
+	    manager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
+	    manager.setMaxTotal(maxConnectionsTotal)
+	    manager
+    }
 	
 	// TODO: Add customizable timeouts (see https://www.baeldung.com/httpclient-timeout)
     private lazy val client = customizeClient(
