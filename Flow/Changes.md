@@ -11,7 +11,7 @@
 - **Path** (**FileExtensions**)
   - Added `.isChildOf(Path)`
 - **Pointer**
-  - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` to **Pointers** that contains **Options** 
+  - Added `.filterCurrent(...)`, `.filterNotCurrent(...)` and `.mapCurrent(...)` to **Pointers** that contains **Options** 
 ### Other
 - In **TimeLogger**, `.print()` must now be called separately
 - **Path**`.write(...)` and its variants (in **FileExtensions**) now automatically create the parent directories before writing

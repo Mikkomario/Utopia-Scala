@@ -97,6 +97,12 @@ object Pointer
 			p.value = Some(newValue)
 			newValue
 		}
+		
+		/**
+		 * Updates the current value in this pointer, but only if defined
+		 * @param f A mapping function that applies to the current value only
+		 */
+		def mapCurrent(f: A => A) = p.update { _.map(f) }
 	}
 	
 	implicit class VectorPointer[A](val p: Pointer[Vector[A]]) extends AnyVal
