@@ -38,9 +38,12 @@ trait Described
 		descriptions.find { _.description.roleId == roleId }.map { _.description }
 	/**
 	 * @param roleId If of the targeted description role
-	 * @return Text associated with that description role, if available
+	 * @return Text associated with that description role. Empty if not available.
 	 */
-	def textOfRoleWithId(roleId: Int) = descriptionWithRoleId(roleId).map { _.text }
+	def textOfRoleWithId(roleId: Int) = descriptionWithRoleId(roleId) match {
+		case Some(desc) => desc.text
+		case None => ""
+	}
 	
 	/**
 	  * @param role A description role
@@ -56,11 +59,14 @@ trait Described
 	 * @param primaryRole Primary searched description role
 	 * @param secondaryRole Role used as backup
 	 * @param moreRoles More backup roles
-	 * @return The first available description text from those roles
+	 * @return The first available description text from those roles. Empty if no description is found.
 	 */
 	def apply(primaryRole: DescriptionRoleIdWrapper, secondaryRole: DescriptionRoleIdWrapper,
-	          moreRoles: DescriptionRoleIdWrapper*): Option[String] =
-		(Vector(primaryRole, secondaryRole) ++ moreRoles).findMap(apply)
+	          moreRoles: DescriptionRoleIdWrapper*): String =
+		(Vector(primaryRole, secondaryRole) ++ moreRoles).findMap(description) match {
+			case Some(desc) => desc.text
+			case None => ""
+		}
 	
 	/**
 	 * @param role A description role

@@ -1,6 +1,10 @@
 # Utopia Metropolis - List of Changes
 
-## v2.1.3 (In Development)
+## v2.2 (in development)
+### Breaking Changes
+- **Described**`.apply(...)` -variations now return **String** instead of an **Option**
+
+## v2.1.3 - 02.02.2023
 This update supports the changes introduced in **Flow** v2.0.
 
 ## v2.1.2 - 02.10.2022

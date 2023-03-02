@@ -1,5 +1,6 @@
 package utopia.metropolis.model.combined.language
 
+import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.DescriptionRole
@@ -32,6 +33,6 @@ case class DescribedLanguage(language: Language, descriptions: Set[LinkedDescrip
 	 * @param role A description role
 	 * @return That description text of this language, if available - otherwise language code
 	 */
-	def descriptionOrCode(role: DescriptionRoleIdWrapper) = apply(role).getOrElse(language.isoCode)
+	def descriptionOrCode(role: DescriptionRoleIdWrapper) = apply(role).nonEmptyOrElse(language.isoCode)
 }
 
