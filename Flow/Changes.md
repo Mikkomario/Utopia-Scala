@@ -7,6 +7,7 @@
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
 ### New Features
 - Custom file conflict resolutions can now be used in standard file move and copy operations
+- Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 ### New Methods
 - **Path** (**FileExtensions**)
   - Added `.isChildOf(Path)`
