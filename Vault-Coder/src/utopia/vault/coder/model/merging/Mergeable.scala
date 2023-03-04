@@ -10,6 +10,13 @@ package utopia.vault.coder.model.merging
 trait Mergeable[-I, +O]
 {
 	/**
+	  * @param other Another item
+	  * @return Whether this item matches the other item.
+	  *         I.e. whether these two items should be merged together when different.
+	  */
+	def matches(other: I): Boolean
+	
+	/**
 	  * Merges this item with another item
 	  * @param other Another item
 	  * @return Merged item + possible merge conflicts

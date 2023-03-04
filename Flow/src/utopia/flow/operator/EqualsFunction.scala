@@ -43,7 +43,8 @@ object EqualsFunction
 	  * @tparam B Type of map result
 	  * @return An equals function that compares items of type A by mapping them to type B
 	  */
-	def by[A, B](f: A => B)(implicit e: EqualsFunction[B]) = apply[A] { (a, b) => e(f(a), f(b)) }
+	def by[A, B](f: A => B)(implicit e: EqualsFunction[B] = default) =
+		apply[A] { (a, b) => e(f(a), f(b)) }
 	
 	
 	// NESTED   ---------------------------

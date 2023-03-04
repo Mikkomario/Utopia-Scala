@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala.datatype
 
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.scala.Package
@@ -20,6 +21,16 @@ object ScalaType
 	val long = basic("Long")
 	val double = basic("Double")
 	val boolean = basic("Boolean")
+	
+	/**
+	  * A function that matches types that have the same base type
+	  */
+	implicit val matchFunction: EqualsFunction[ScalaType] = EqualsFunction.by { t: ScalaType =>
+		t.data match {
+			case Right(ref) => ref.target
+			case Left(str) => str
+		}
+	}
 	
 	
 	// IMPLICIT  ------------------------------
@@ -127,10 +138,8 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 {
 	// ATTRIBUTES   ------------------------------
 	
-	override lazy val toScala: CodePiece =
-	{
-		val base = data match
-		{
+	override lazy val toScala: CodePiece = {
+		val base = data match {
 			case Left(basic) => CodePiece(basic)
 			case Right(reference) => CodePiece(reference.target, Set(reference))
 		}
@@ -140,8 +149,7 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 			else
 				base + typeParameters.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinSquareBrackets
 		}
-		category match
-		{
+		category match {
 			case Standard => withTypeParams
 			case CallByName => withTypeParams.withPrefix("=> ")
 			case ScalaTypeCategory.Function(parameterTypes) =>
@@ -170,7 +178,7 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 	  * @param other Another type
 	  * @return Whether these types are similar, when considering their base types
 	  */
-	def isSimilarTo(other: ScalaType) = {
+	def matches(other: ScalaType) = {
 		val myPart = data match {
 			case Right(ref) => ref.target
 			case Left(str) => str

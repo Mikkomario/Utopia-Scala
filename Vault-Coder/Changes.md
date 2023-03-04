@@ -1,6 +1,12 @@
 # Utopia Vault Coder
 
-## v1.8 (In Development)
+## v1.8.1 (in development)
+### Bugfixes
+- `.apply(...)` implementation in factory objects that use potentially failing value conversions is now fixed
+- Merging now preserves function overrides. I.e. methods with same name but different types of parameters are 
+  considered different methods and not merged.
+
+## v1.8 - 02.02.2023
 This version of the Vault Coder writes more code than the previous versions, potentially saving you some time 
 during development. The biggest style change you need to be aware of is the introduction of sub-packaging in 
 access packages. Besides that, you will mostly get bugfixes and more extensive code-generation.

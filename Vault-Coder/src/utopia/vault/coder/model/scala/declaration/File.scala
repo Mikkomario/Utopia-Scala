@@ -98,6 +98,9 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 		refsBuilder.result() ++ mainCode.split
 	}
 	
+	override def matches(other: File): Boolean =
+		packagePath == other.packagePath && declarations.head.name == other.declarations.head.name
+	
 	override def mergeWith(other: File) =
 	{
 		val conflictsBuilder = new VectorBuilder[MergeConflict]()

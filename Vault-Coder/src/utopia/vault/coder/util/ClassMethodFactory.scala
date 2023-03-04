@@ -94,7 +94,7 @@ object ClassMethodFactory
 		
 		// Needs to validate the specified model
 		val validateMapMethod = if (tryProperties.isEmpty) ".map" else ".flatMap"
-		builder += validatedModelCode + validateMapMethod + "{ valid => "
+		builder += validatedModelCode + validateMapMethod + " { valid => "
 		builder.indent()
 		
 		declareTryProps(builder, tryProperties.dropRight(1), "flatMap")(propNamesInModel)

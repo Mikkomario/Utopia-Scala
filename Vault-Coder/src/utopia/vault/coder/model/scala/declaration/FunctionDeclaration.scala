@@ -1,12 +1,13 @@
 package utopia.vault.coder.model.scala.declaration
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
-import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.Return
 import utopia.vault.coder.model.scala.datatype.{GenericType, ScalaType}
+import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.Return
 import utopia.vault.coder.model.scala.doc.ScalaDocPart
 import utopia.vault.coder.model.scala.{Annotation, Parameters, Visibility}
 
@@ -140,6 +141,8 @@ trait FunctionDeclaration[+Repr]
 		
 		builder.result()
 	}
+	
+	override def matches(other: FunctionDeclaration[_]): Boolean = name == other.name && (params ~== other.params)
 	
 	override def mergeWith(other: FunctionDeclaration[_]) =
 	{

@@ -1,9 +1,11 @@
 package utopia.vault.coder.model.scala
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.{EqualsFunction, MaybeEmpty}
 import utopia.vault.coder.model.merging.MergeConflict
+import utopia.vault.coder.model.scala.Parameters.parameterEqualsByType
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.ScalaType
 import utopia.vault.coder.model.scala.template.{Documented, ScalaConvertible}
 
 import scala.language.implicitConversions
@@ -16,6 +18,17 @@ object Parameters
 	  * An empty parameters list
 	  */
 	val empty = apply(Vector(), Vector())
+	
+	private val parameterEqualsByType: EqualsFunction[Parameter] =
+		EqualsFunction.by { p: Parameter => p.dataType }(ScalaType.matchFunction)
+	
+	/**
+	  * A function that matches two sets of parameters based on their base types listed.
+	  * E.g. (first: String, second: Option[Int]) matches (a: String, b: Option[Double]).
+	  */
+	implicit val matchFunction: EqualsFunction[Parameters] = EqualsFunction { (a, b) =>
+		(a.lists.flatten ++ a.implicits).~==(b.lists.flatten ++ b.implicits)(parameterEqualsByType)
+	}
 	
 	
 	// IMPLICIT -----------------------------

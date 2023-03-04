@@ -162,6 +162,8 @@ trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration
 		builder.result()
 	}
 	
+	override def matches(other: InstanceDeclaration): Boolean = name == other.name
+	
 	override def mergeWith(other: InstanceDeclaration) =
 	{
 		val parties = Pair(this, other)
@@ -183,11 +185,9 @@ trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration
 			conflictsBuilder += MergeConflict.note(s"Annotation ${ their.toScala } was (partially) overwritten")
 		}
 		
-		def _mergeDeclarations[A <: Mergeable[A, A] with Declaration](my: Vector[A], their: Vector[A]): Vector[A] =
-		{
+		def _mergeDeclarations[A <: Mergeable[A, A] with Declaration](my: Vector[A], their: Vector[A]): Vector[A] = {
 			my.map { declaration =>
-				their.find { _.name == declaration.name } match
-				{
+				their.find { _ matches declaration } match {
 					case Some(otherVersion) =>
 						val (merged, conflicts) = declaration.mergeWith(otherVersion)
 						conflictsBuilder ++= conflicts
@@ -202,7 +202,7 @@ trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration
 		val newNested = _mergeDeclarations(nested.toVector, other.nested.toVector).toSet
 		
 		val (comparableExtensions, addedExtensions) = other.extensions.divideWith { ext =>
-			extensions.find { _.parentType.isSimilarTo(ext.parentType)} match {
+			extensions.find { _.parentType.matches(ext.parentType)} match {
 				case Some(myVersion) => Left(myVersion -> ext)
 				case None => Right(ext)
 			}

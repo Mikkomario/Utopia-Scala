@@ -43,4 +43,12 @@ object EqualsExtensions
 		def hasEqualContentWith[B >: A](other: Iterable[B])(implicit equals: EqualsFunction[B]) =
 			c.sizeCompare(other) == 0 && c.forall { a => other.exists { _ ~== a } }
 	}
+	
+	implicit class ApproxEqualsOption[+A](val o: Option[A]) extends AnyVal
+	{
+		def ~==[B >: A](other: Option[B])(implicit eq: EqualsFunction[B]) = o match {
+			case Some(a) => other.exists { b => a ~== b }
+			case None => other.isEmpty
+		}
+	}
 }
