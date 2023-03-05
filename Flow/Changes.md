@@ -16,6 +16,8 @@
 ### Other
 - In **TimeLogger**, `.print()` must now be called separately
 - **Path**`.write(...)` and its variants (in **FileExtensions**) now automatically create the parent directories before writing
+- `EqualsFunction.by(...)` now has a default **EqualsFunction** parameter
+- EqualsExtensions now contains `~==` separately for **Options** 
 
 ## v2.0 - 02.02.2023
 This update represents a major refactoring of the standard **Flow** features.  
