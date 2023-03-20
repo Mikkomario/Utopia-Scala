@@ -9,6 +9,8 @@
 - Custom file conflict resolutions can now be used in standard file move and copy operations
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 ### New Methods
+- **MatrixLike**
+  - Added `.columnIndices` and `.rowIndices`
 - **Path** (**FileExtensions**)
   - Added `.isChildOf(Path)`
 - **Pointer**

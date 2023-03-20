@@ -66,6 +66,15 @@ trait MatrixLike[+A, +V] extends PartialFunction[Pair[Int], A]
 	def size = Pair(width, height)
 	
 	/**
+	 * @return Valid column indices within this matrix
+	 */
+	def columnIndices = 0 until width
+	/**
+	 * @return Valid row indices within this matrix
+	 */
+	def rowIndices = 0 until height
+	
+	/**
 	 * @return An iterator that returns all cell values in this matrix
 	 */
 	def iterator = indexIterator.map(apply)

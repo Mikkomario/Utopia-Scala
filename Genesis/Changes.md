@@ -3,6 +3,9 @@
 ## v3.2.1 (in development)
 ### New Features
 - Added mouse drag -tracking. See **MouseDragListener** and **GlobalMouseEventHandler**
+### New Methods
+- **Image**
+  - Added `.cropped`, which removes all surrounding fully transparent pixel rows and columns
 
 ## v3.2 - 02.02.2023
 This update introduces the rewritten version of **PixelTable**, named **Pixels**.  

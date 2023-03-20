@@ -221,6 +221,29 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	def withOriginalSize = if (scaling == Vector2D.identity) this else withScaling(1)
 	
 	/**
+	 * @return A copy of this image that contains minimum amount of pixels.
+	 *         I.e. empty (invisible) rows and columns are removed from the edges.
+	 *         The origin of this image is preserved, if defined.
+	 */
+	def cropped = {
+		val px = pixels
+		// Finds the first row that contains visible pixels
+		px.rowIndices.find { y => px.columnIndices.exists { x => px(x, y).alpha > 0.0 } } match {
+			case Some(minY) =>
+				// Finds the last row that contains visible pixels
+				val maxY = px.rowIndices.findLast { y => px.columnIndices.exists { x => px(x, y).alpha > 0.0 } }.get
+				val colRange = minY to maxY
+				// Finds the first and last column that contain visible pixels
+				val minX = px.columnIndices.find { x => colRange.exists { y => px(x, y).alpha > 0.0 } }.get
+				val maxX = px.columnIndices.findLast { x => colRange.exists { y => px(x, y).alpha > 0.0 } }.get
+				// Returns the cropped image, preserves the origin
+				crop(Insets(minX, px.width - maxX, minY, px.height - maxY))
+			// Case: No visible pixels found => returns an empty image
+			case None => Image.empty
+		}
+	}
+	
+	/**
 	  * @return A copy of this image where x-axis is reversed
 	  */
 	def flippedHorizontally = {

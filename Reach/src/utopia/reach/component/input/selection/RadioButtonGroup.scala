@@ -129,8 +129,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	// INITIAL CODE	------------------------
 	
 	// While focused, allows the user to change items with arrow keys
-	if (buttons.size > 1)
-	{
+	if (buttons.size > 1) {
 		addHierarchyListener { isAttached =>
 			if (isAttached)
 				GlobalKeyboardEventHandler += ArrowKeyListener
