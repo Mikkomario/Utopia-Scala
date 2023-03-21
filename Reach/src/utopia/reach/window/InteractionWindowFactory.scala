@@ -120,6 +120,8 @@ trait InteractionWindowFactory[A]
 		val enterEnabledConditionPointer = Pointer[View[Boolean]](AlwaysTrue)
 		
 		// Creates the main content stack with 1-3 rows (based on button layouts)
+		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.
+		//  Alternatively room should be allowed for a header component separately
 		val (content, buttons) = ReachCanvas(cursors) { hierarchy =>
 			Framing(hierarchy).buildFilledWithContext(context, context.containerBackground, Stack)
 				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>

@@ -218,10 +218,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 								 (implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// Checks whether segmentation should be used
-		val segmentGroup =
-		{
-			if (groups.rows.count { _.usesSegmentLayout } > 1)
-			{
+		val segmentGroup = {
+			if (groups.rows.count { _.usesSegmentLayout } > 1) {
 				// Checks what layouts to use inside the segments
 				val isLeftFitAllowed = groups.rows.forall { _.allowsFitSegmentLayoutForSide(Direction2D.Left) }
 				val isRightFitAllowed = groups.rows.forall { _.allowsFitSegmentLayoutForSide(Direction2D.Right) }
@@ -235,8 +233,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		// If there are multiple groups to use, wraps them in a stack. Otherwise presents the group as is
 		if (groups.isSingleGroup)
 			groupToComponent(factories, groups.groups.head, segmentGroup, fieldsBuffer)
-		else
-		{
+		else {
 			val rowGroups = groups.groups
 			// Checks whether the groups visibility may change
 			// Case: All groups always remain visible => uses a static stack
@@ -245,8 +242,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 					groups.groups.map { group => groupToComponent(factories, group, segmentGroup, fieldsBuffer)._1 }
 				}.parent -> AlwaysTrue
 			// Case: Some groups may appear or disappear => uses a view stack
-			else
-			{
+			else {
 				val stack = factories(ViewStack).build(Mixed).withFixedStyle() { factories =>
 					groups.groups.map { group => groupToComponent(factories.next(), group, segmentGroup, fieldsBuffer) }
 				}.parent
@@ -274,8 +270,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 					group.rows.map { blueprint => actualizeRow(factories, blueprint, segmentGroup, fieldsBuffer)._1 }
 				}.parent -> AlwaysTrue
 			// Case: Some rows are not always visible => uses a view stack
-			else
-			{
+			else {
 				val stack = factories(ViewStack).build(Mixed).withFixedStyle(areRelated = true) { factories =>
 					group.rows.map { blueprint => actualizeRow(factories.next(), blueprint, segmentGroup, fieldsBuffer) }
 				}.parent
@@ -290,8 +285,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 							(implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// Case: Two components are used
-		if (blueprint.displaysName)
-		{
+		if (blueprint.displaysName) {
 			// Case: The two components are next to each other horizontally
 			if (blueprint.fieldAlignment.affectsHorizontalOnly) {
 				segmentGroup match {

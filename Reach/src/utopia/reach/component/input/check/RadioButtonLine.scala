@@ -81,6 +81,7 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 					textColorPointer.map { color => context.textDrawContext.copy(color = color) })
 				label.addMouseButtonListener(MouseButtonStateListener.onLeftPressedInside { label.bounds } { _ =>
 					radioButton.select()
+					radioButton.requestFocus()
 					Some(ConsumeEvent("Radio button selected via label"))
 				})
 				// Adds mouse functionality to the label

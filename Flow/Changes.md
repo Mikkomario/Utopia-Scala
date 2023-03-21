@@ -5,16 +5,23 @@
 - Replaced `allowReplace: Boolean` -parameter with `conflictResolve: FileConflictResolution` in move and copy -operations
 ### Bugfixes
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
+- Fixed **Path**`.relativeTo(Path)`
 ### New Features
 - Custom file conflict resolutions can now be used in standard file move and copy operations
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 ### New Methods
+- **Iterable** (**CollectionExtensions**)
+  - Added `.replaceOrAppend(...)`, which is a variation of `.mergeOrAppend(...)`
 - **MatrixLike**
   - Added `.columnIndices` and `.rowIndices`
 - **Path** (**FileExtensions**)
   - Added `.isChildOf(Path)`
 - **Pointer**
-  - Added `.filterCurrent(...)`, `.filterNotCurrent(...)` and `.mapCurrent(...)` to **Pointers** that contains **Options** 
+  - Added `.filterCurrent(...)`, `.filterNotCurrent(...)` and `.mapCurrent(...)` to **Pointers** that contains **Options**
+- **StdIn** (**ConsoleExtensions**)
+  - Added `.readLineIteratorWithPrompt(String)`
+- **Try** (**CollectionExtensions**)
+  - Added `.logFailure` and `.logFailureWithMessage(String)`
 ### Other
 - In **TimeLogger**, `.print()` must now be called separately
 - **Path**`.write(...)` and its variants (in **FileExtensions**) now automatically create the parent directories before writing

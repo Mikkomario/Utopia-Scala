@@ -6,6 +6,7 @@
 ### New Features
 - Drag-and-drop support for external files. See **DragAndDropManager** and **DragAndDropTarget**.
 ### Other Changes
+- **RadioButtonLine** now requests focus when the label is clicked
 - `CursorDefining.defineCursorFor(...)` now allows for more precise cursor customization
 
 ## v0.5 - 02.02.2023

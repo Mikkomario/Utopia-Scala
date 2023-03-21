@@ -450,7 +450,7 @@ object FileExtensions
 			if (bLength > aLength)
 				Left(a)
 			// Case: The other path is a parent of this path => Returns the remaining portion as a relative path
-			else if ((0 to bLength).forall { i => b.getName(i) == a.getName(i) }) {
+			else if ((0 until bLength).forall { i => b.getName(i) == a.getName(i) }) {
 				if (bLength == aLength)
 					Right(Paths.get(""))
 				else

@@ -649,6 +649,16 @@ object CollectionExtensions
 		def mergeOrAppend(item: iter.A)(findMatch: iter.A => Boolean)(merge: (iter.A, iter.A) => iter.A)
 		                 (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
 			mapOrAppend { a => if (findMatch(a)) Some(item) else None }(item)
+		/**
+		 * Replaces an existing item with a new version, or appends that version to the end of this collection
+		 * @param item An item to place in this collection
+		 * @param findMatch A function for finding the item to replace
+		 * @param buildFrom An implicit buildfrom for the resulting collection
+		 * @return A copy of this collection with either one item replaced or the specified item appended
+		 */
+		def replaceOrAppend(item: iter.A)(findMatch: iter.A => Boolean)
+		                   (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+			mergeOrAppend(item)(findMatch) { (_, i) => i }
 	}
 	
 	implicit def iterableOperations[Repr](coll: Repr)
@@ -1708,11 +1718,22 @@ object CollectionExtensions
 		  * The success value of this try. None if this try was a failure
 		  */
 		def success = t.toOption
-		
 		/**
 		  * The failure (throwable) value of this try. None if this try was a success.
 		  */
 		def failure = t.failed.toOption
+		
+		/**
+		 * Logs the captured failure, if applicable
+		 * @param log Logging implementation to use
+		 */
+		def logFailure(implicit log: Logger) = failure.foreach { log(_) }
+		/**
+		 * Logs the captured failure, if applicable
+		 * @param message Message to record with the failure (call-by-name)
+		 * @param log Logging implementation to use
+		 */
+		def logFailureWithMessage(message: => String)(implicit log: Logger) = failure.foreach { log(_, message) }
 		
 		/**
 		  * @param f A mapping function for possible failure

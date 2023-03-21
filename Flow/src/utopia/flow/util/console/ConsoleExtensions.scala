@@ -94,26 +94,30 @@ object ConsoleExtensions
 		def readIterator = Iterator.continually { read() }
 		
 		/**
+		 * @param prompt Prompt shown before each new line
+		 * @return An iterator that reads new lines
+		 */
+		def readLineIteratorWithPrompt(prompt: String) =
+			Iterator.continually { printAndReadLine(prompt) }
+		
+		/**
 		 * @return Reads lines until a non-empty response is given
 		 */
-		def readLineUntilNotEmpty(prompt: String = "") =
-		{
+		def readLineUntilNotEmpty(prompt: String = "") = {
 			prompt.notEmpty.foreach(println)
 			readLineIterator.find { _.nonEmpty }.get
 		}
 		/**
 		 * @return Reads lines while a non-empty response is given
 		 */
-		def readLineWhileNotEmpty(prompt: String = "") =
-		{
+		def readLineWhileNotEmpty(prompt: String = "") = {
 			prompt.notEmpty.foreach(println)
 			readLineIterator.takeWhile { _.nonEmpty }.toVector
 		}
 		/**
 		 * Reads lines until a non-empty value is given
 		 */
-		def readUntilNotEmpty(prompt: String = "") =
-		{
+		def readUntilNotEmpty(prompt: String = "") = {
 			prompt.notEmpty.foreach(println)
 			readIterator.find { _.isDefined }.get
 		}
@@ -126,8 +130,7 @@ object ConsoleExtensions
 		 * @tparam A Type of valid item
 		 * @return Read valid item or None if user provided an empty input
 		 */
-		def readValidOrEmpty[A](initialPrompt: String = "")(validate: Value => Either[String, A]) =
-		{
+		def readValidOrEmpty[A](initialPrompt: String = "")(validate: Value => Either[String, A]) = {
 			initialPrompt.notEmpty.foreach(println)
 			readIterator.findMap { input =>
 				if (input.isEmpty)
