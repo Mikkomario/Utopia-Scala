@@ -3,13 +3,14 @@ package utopia.flow.async.process
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.WaitTarget.Until
 import utopia.flow.operator.CombinedOrdering
-import utopia.flow.time.{Now, Today, WeekDay}
+import utopia.flow.time.{Now, Today, WeekDay, WeekDays}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.time.{Instant, LocalTime}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+import scala.math.Ordered.orderingToOrdered
 import scala.util.{Failure, Success}
 
 object TimedTask
@@ -118,10 +119,11 @@ object TimedTask
 	  * @param day The week day when this task should be run
 	  * @param time The time of day when this task should be run
 	  * @param f Task to run
+	  * @param w Week days calendar system
 	  * @tparam U Arbitrary function result type
 	  * @return A new timed task
 	  */
-	def weeklyAt[U](day: WeekDay, time: LocalTime)(f: => U) = {
+	def weeklyAt[U](day: WeekDay, time: LocalTime)(f: => U)(implicit w: WeekDays) = {
 		apply {
 			val today = Today.weekDay
 			val daysWait = today.until(day)
@@ -140,10 +142,11 @@ object TimedTask
 	  *              1: The week day on which this task should be run and
 	  *              2: The (local) time of day when this task should be run
 	  * @param f The task to run
+	  * @param w Week days calendar system
 	  * @tparam U U Arbitrary function result type
 	  * @return new timed task
 	  */
-	def weeklyAt[U](times: IterableOnce[(WeekDay, LocalTime)])(f: => U) = {
+	def weeklyAt[U](times: IterableOnce[(WeekDay, LocalTime)])(f: => U)(implicit w: WeekDays) = {
 		val _times = Vector.from(times).sorted(CombinedOrdering(
 			Ordering.by { p: (WeekDay, LocalTime) => p._1 }, Ordering.by { p: (WeekDay, LocalTime) => p._2 }))
 		if (_times.isEmpty)
@@ -173,12 +176,13 @@ object TimedTask
 	  * @param firstTime First task run time
 	  * @param secondTime Second task run time
 	  * @param more More task run times
+	  * @param w Week days calendar system
 	  * @param f The task to run
 	  * @tparam U U Arbitrary function result type
 	  * @return new timed task
 	  */
 	def weeklyAt[U](firstTime: (WeekDay, LocalTime), secondTime: (WeekDay, LocalTime), more: (WeekDay, LocalTime)*)
-	               (f: => U): TimedTask =
+	               (f: => U)(implicit w: WeekDays): TimedTask =
 		weeklyAt[U](Vector(firstTime, secondTime) ++ more)(f)
 	
 	

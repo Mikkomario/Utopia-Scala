@@ -1,9 +1,10 @@
 package utopia.flow.test.time
 
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WeekDays
+import utopia.flow.time.WeekDays.MondayToSunday
 
 import scala.concurrent.duration.FiniteDuration
-
 import java.time.format.DateTimeFormatter
 import java.time._
 import java.util.concurrent.TimeUnit
@@ -15,6 +16,8 @@ import java.util.concurrent.TimeUnit
  */
 object TimeNumberTest extends App
 {
+	implicit val weekdays: WeekDays = MondayToSunday
+	
 	assert(13.nanos == FiniteDuration(13, TimeUnit.NANOSECONDS))
 	assert(13.millis == FiniteDuration(13, TimeUnit.MILLISECONDS))
 	assert(13.seconds == FiniteDuration(13, TimeUnit.SECONDS))
@@ -35,9 +38,9 @@ object TimeNumberTest extends App
 	println(Instant.now().toStringWith(DateTimeFormatter.ISO_DATE_TIME))
 	
 	// Also tests some other time extensions
-	val weeksAtAug2019 = (Year.of(2019) + Month.AUGUST).weeks()
-	assert(weeksAtAug2019.head.size == 4)
-	assert(weeksAtAug2019.last.size == 6)
+	val weeksAtMar2023 = (Year.of(2023) + Month.MARCH).weeks
+	assert(weeksAtMar2023.head.size == 5, weeksAtMar2023.head)
+	assert(weeksAtMar2023.last.size == 5, weeksAtMar2023.last)
 	// println(LocalDate.now.yearMonth.weeks().map { _.map { d => s"${d.getDayOfMonth} ${d.weekDay}" }.mkString(", ") }.mkString("\n"))
 	
 	assert((LocalDate.of(2020, 1, 1) + 2.weeks).isEqual(LocalDate.of(2020, 1, 15)))

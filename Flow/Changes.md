@@ -2,12 +2,16 @@
 
 ## v2.1 (in development)
 ### Breaking Changes
+- Many **WeekDay** -related functions now require an implicit **WeekDays** -parameter
+- `WeekDay.current()` is now `WeekDay.current`
+- `YearMonth.week(WeekDay)` is now `YearMonth.week(implicit WeekDays)`
 - Replaced `allowReplace: Boolean` -parameter with `conflictResolve: FileConflictResolution` in move and copy -operations
 ### Bugfixes
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
 - Fixed **Path**`.relativeTo(Path)`
 ### New Features
 - Custom file conflict resolutions can now be used in standard file move and copy operations
+- The first day of the week may be configured using **WeekDays**
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 ### New Methods
 - **Iterable** (**CollectionExtensions**)

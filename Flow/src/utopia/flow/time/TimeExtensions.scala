@@ -1,17 +1,16 @@
 package utopia.flow.time
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.SelfComparable
 
-import scala.language.implicitConversions
-import utopia.flow.time.WeekDay.Monday
-
+import java.time._
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAmount
-import java.time._
 import java.util.concurrent.TimeUnit
-import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
+import scala.math.Ordered.orderingToOrdered
 import scala.util.Try
 
 /**
@@ -522,17 +521,7 @@ object TimeExtensions
 		  * @return Next 'weekDay' after this day. May be this day if 'includeSelf' is set to true.
 		  */
 		def next(weekDay: WeekDay, includeSelf: Boolean = false) =
-		{
-			val current = this.weekDay
-			if (current == weekDay) {
-				if (includeSelf)
-					d
-				else
-					this + 1.weeks
-			}
-			else
-				this + (weekDay - current)
-		}
+			Iterator.iterate(if (includeSelf) d else tomorrow) { _.tomorrow }.find { _.weekDay == weekDay }.get
 		/**
 		  * @param weekDay     A week day
 		  * @param includeSelf Whether this date should be returned in case it has that week day (default = false,
@@ -541,17 +530,7 @@ object TimeExtensions
 		  * @return Last 'weekDay' before this day. May be this day if 'includeSelf' is set to true.
 		  */
 		def previous(weekDay: WeekDay, includeSelf: Boolean = false) =
-		{
-			val current = this.weekDay
-			if (current == weekDay) {
-				if (includeSelf)
-					d
-				else
-					this - 1.weeks
-			}
-			else
-				this - (current - weekDay)
-		}
+			Iterator.iterate(if (includeSelf) d else yesterday) { _.yesterday }.find { _.weekDay == weekDay }.get
 		
 		/**
 		  * @param other Another date
@@ -927,6 +906,36 @@ object TimeExtensions
 		  */
 		def next = this + 1
 		
+		/**
+		  * Separates this month to weeks
+		  * @param w Week calendar system to apply
+		  * @return A vector that contains all weeks in this month, first and last week may contain less than 7
+		  *         days.
+		  */
+		def weeks(implicit w: WeekDays) = {
+			val d = dates
+			val firstDay = w.first
+			val weekLength = w.values.size
+			
+			val firstCompleteWeekStartIndex = d.iterator.indexWhere { _.weekDay == firstDay }
+			// The first week and the last week may be incomplete
+			val firstWeek = {
+				if (firstCompleteWeekStartIndex == 0)
+					None
+				else
+					Some(DateRange.exclusive(d.head, d(firstCompleteWeekStartIndex)))
+			}
+			val followingWeeks = Iterator
+				.iterate(Pair(firstCompleteWeekStartIndex,
+					firstCompleteWeekStartIndex + weekLength - 1)) { _.map { _ + weekLength }
+				}
+				.takeWhile { _.first < d.size }
+				.map { _.map { i => d(i min (d.size - 1)) } }
+				.map { p => DateRange.inclusive(p.first, p.last) }
+			
+			(firstWeek.iterator ++ followingWeeks).toVector
+		}
+		
 		
 		// IMPLEMENTED--------------------
 		
@@ -964,31 +973,6 @@ object TimeExtensions
 		  */
 		@throws[DateTimeException]("If specified day is out of range")
 		def /(dayOfMonth: Int) = apply(dayOfMonth)
-		
-		/**
-		  * Separates this month to weeks
-		  * @param firstDayOfWeek The first day of a week (default = Monday)
-		  * @return A vector that contains all weeks in this month, first and last week may contain less than 7
-		  *         days.
-		  */
-		def weeks(firstDayOfWeek: WeekDay = Monday) =
-		{
-			val d = dates
-			// Month may start at the middle of the week
-			val incompleteStart = d.takeWhile { _.weekDay > firstDayOfWeek }.toVector
-			
-			val weeksBuffer = new VectorBuilder[Vector[LocalDate]]()
-			if (incompleteStart.nonEmpty)
-				weeksBuffer += incompleteStart
-			
-			var nextWeekStartIndex = incompleteStart.size
-			while (nextWeekStartIndex < d.size) {
-				weeksBuffer += d.slice(nextWeekStartIndex, nextWeekStartIndex + 7).toVector
-				nextWeekStartIndex += 7
-			}
-			
-			weeksBuffer.result()
-		}
 	}
 	
 	implicit class ExtendedPeriod(val p: Period) extends AnyVal with SelfComparable[Period]

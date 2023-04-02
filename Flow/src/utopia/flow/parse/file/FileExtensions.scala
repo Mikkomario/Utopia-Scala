@@ -358,7 +358,7 @@ object FileExtensions
 		
 		/**
 		  * Iterates over the children of this directory
-		  * @param f A function that accepts an iterator that returns all paths that are the children of this directory.
+		  * @param f A function that accepts an iterator that returns all paths that are the direct children of this directory.
 		  *          Receives an empty iterator in case this is not an existing directory. The function may throw.
 		  *          The errors thrown by the function are caught by this function.
 		  * @tparam A Type of returned value
@@ -556,7 +556,7 @@ object FileExtensions
 			if (parentOption.contains(targetDirectory))
 				Success(p)
 			else if (notExists)
-				Failure(new FileNotFoundException(s"Cannot move $p because it doesn't exist"))
+				Failure(new FileNotFoundException(s"Cannot move ${p.toAbsolutePath} because it doesn't exist"))
 			else {
 				// Directories with content will have to be first copied, then removed
 				if (isDirectory)

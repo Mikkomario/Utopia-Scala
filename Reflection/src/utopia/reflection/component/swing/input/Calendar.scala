@@ -4,6 +4,7 @@ import java.time._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{WeekDay, WeekDays}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
@@ -47,20 +48,20 @@ object Calendar
 	  * @param dateTextColor Text color used in date number buttons
 	  * @param dateInsets Insets used inside date number buttons
 	  * @param selectionHoverColor Color used to highlight the field mouse is hovering over
-	  * @param selectedColor Color used to highlight selected field
-	  * @param firstDayOfWeek First day of a week (default = Monday)
+	  * @param weekDays Calendar system to use
 	  * @return A new calendar
 	  */
 		// TODO: Update to a new version that uses new drop down implementations
 	def apply(monthDropDown: JDropDownWrapper[Month], yearDropDown: JDropDownWrapper[Year], forwardIcon: ButtonImageSet,
 			  backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
-			  dayNameDisplayFunction: DisplayFunction[DayOfWeek], dayNameFont: Font, dayNameTextColor: Color,
+			  dayNameDisplayFunction: DisplayFunction[WeekDay], dayNameFont: Font, dayNameTextColor: Color,
 			  dayNameInsets: StackInsets, dateFont: Font, dateTextColor: Color, dateInsets: StackInsets,
-			  selectionHoverColor: Color, selectedColor: Color, firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY) =
+			  selectionHoverColor: Color, selectedColor: Color)
+	         (implicit weekDays: WeekDays) =
 	{
-		def makeDayNameLabel(day: DayOfWeek) =
+		def makeDayNameLabel(day: WeekDay) =
 		{
-			new ItemLabel[DayOfWeek](new PointerWithEvents(day), dayNameDisplayFunction, dayNameFont, dayNameTextColor,
+			new ItemLabel[WeekDay](new PointerWithEvents(day), dayNameDisplayFunction, dayNameFont, dayNameTextColor,
 				dayNameInsets, Alignment.Center)
 		}
 		def makeDateLabel(date: Int) = new DateLabel(date, dateFont, dateInsets, dateTextColor, selectionHoverColor,
@@ -117,13 +118,13 @@ object Calendar
   * @param insideCalendarMargin Margins used between items inside the calendar portion
   * @param makeDayNameLabel A function for making labels for each week day name
   * @param makeDateButton A function for making an interactive element for each day of a month
-  * @param firstDayOfWeek The day to be considered first in a week (default = Monday)
+  * @param weekDays Calendar system to use
   */
 class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDropDownWrapper[Year], forwardIcon: ButtonImageSet,
-			   backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
-			   val insideCalendarMargin: StackSize, makeDayNameLabel: DayOfWeek => AwtComponentRelated with Stackable,
-			   private val makeDateButton: Int => AwtComponentRelated with Stackable with InteractionWithPointer[Boolean],
-			   val firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY)
+               backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
+               val insideCalendarMargin: StackSize, makeDayNameLabel: WeekDay => AwtComponentRelated with Stackable,
+               private val makeDateButton: Int => AwtComponentRelated with Stackable with InteractionWithPointer[Boolean])
+              (implicit weekDays: WeekDays)
 	extends StackableAwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[LocalDate]
 {
 	// ATTRIBUTES	-----------------------
@@ -141,10 +142,6 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		monthDropDown.selectOne(currentDate.month)
 		monthDropDown.selectAny()
 	}
-	
-	// Week days starting from the specified first day of week
-	private val weekDays = (DayOfWeek.values().dropWhile { _.getValue < firstDayOfWeek.getValue } ++
-		DayOfWeek.values().takeWhile { _.getValue < firstDayOfWeek.getValue }).toVector
 	
 	private val segmentGroup = new SegmentGroup()
 	
@@ -166,7 +163,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			margin = headerHMargin, layout = Center)
 		
 		// Calendar consists of names & numbers parts
-		val dayNameLabels = weekDays.map(makeDayNameLabel)
+		val dayNameLabels = weekDays.values.map(makeDayNameLabel)
 		val dayNameRow = Stack.rowWithItems(segmentGroup.wrap(dayNameLabels), insideCalendarMargin.width)
 		
 		currentSelection.addValueListener(SelectionChangeListener)
@@ -209,19 +206,16 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	/**
 	  * @return The smallest possible month that is currently selectable
 	  */
-	def minMonth =
-	{
+	def minMonth = {
 		if (yearDropDown.isEmpty || monthDropDown.isEmpty)
 			value.yearMonth
 		else
 			yearDropDown.content.min + monthDropDown.content.min
 	}
-	
 	/**
 	  * @return The largest possible month that is currently selectable
 	  */
-	def maxMonth =
-	{
+	def maxMonth = {
 		if (yearDropDown.isEmpty || monthDropDown.isEmpty)
 			value.yearMonth
 		else
@@ -231,8 +225,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	/**
 	  * @return Currently selected month
 	  */
-	def selectedMonth =
-	{
+	def selectedMonth = {
 		val year = yearDropDown.selected.getOrElse(value.year)
 		val month = monthDropDown.selected.getOrElse(value.month)
 		year + month
@@ -320,15 +313,13 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		
 		override val valuePointer = new PointerWithEvents[Option[LocalDate]](None)
 		
-		val buttons =
-		{
+		private val buttons = {
 			// Groups dates by weeks
-			val weeks = yearMonth.weeks(firstDayOfWeek)
-			weeks.map { _.map { d => d -> makeDateButton(d.getDayOfMonth) } }
+			val weeks = yearMonth.weeks
+			weeks.map { _.map { d => d -> makeDateButton(d.getDayOfMonth) }.toVector }
 		}
 		
-		val rows =
-		{
+		private val rows = {
 			// Adds empty labels as placeholders on partial weeks
 			val firstRow = if (buttons.head.size >= 7) buttons.head.map { _._2 } else
 				Vector.fill(7 - buttons.head.size) { new StackSpace(StackSize.any.withLowPriority) } ++ buttons.head.map { _._2 }
@@ -352,7 +343,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			rowElements.map { items => Stack.rowWithItems(segmentGroup.wrap(items), insideCalendarMargin.width) }
 		}
 		
-		val content = Stack.columnWithItems(rows, margin = insideCalendarMargin.height)
+		private val content = Stack.columnWithItems(rows, margin = insideCalendarMargin.height)
 		
 		
 		// INITIAL CODE	------------------

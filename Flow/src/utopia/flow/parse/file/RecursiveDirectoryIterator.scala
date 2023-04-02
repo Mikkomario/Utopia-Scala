@@ -17,8 +17,7 @@ class RecursiveDirectoryIterator(origin: Path) extends Iterator[Try[Path]]
 	// ATTRIBUTES   --------------------------
 	
 	private val originContainer = PollableOnce(origin)
-	private lazy val cachedChildren = origin.children match
-	{
+	private lazy val cachedChildren = origin.children match {
 		case Success(children) =>
 			// Stops iterating on a failure
 			Right(children.iterator.flatMap { new RecursiveDirectoryIterator(_) }.takeTo { _.isFailure })
@@ -36,8 +35,7 @@ class RecursiveDirectoryIterator(origin: Path) extends Iterator[Try[Path]]
 	override def next() = originContainer.poll() match {
 		case Some(origin) => Success(origin)
 		case None =>
-			cachedChildren match
-			{
+			cachedChildren match {
 				case Right(iterator) => iterator.next()
 				case Left(error) => Failure(error.get())
 			}

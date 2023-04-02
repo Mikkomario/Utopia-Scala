@@ -1,15 +1,12 @@
 package utopia.reflection.test.swing
 
-import java.nio.file.Paths
-import java.time.format.TextStyle
-import java.time.{DayOfWeek, Month, Year}
-import java.util.Locale
-
-import utopia.paradigm.color.Color
-import utopia.paradigm.generic.ParadigmDataType
+import utopia.flow.time.WeekDays
+import utopia.flow.time.WeekDays.MondayToSunday
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reflection.component.swing.input.{Calendar, JDropDownWrapper}
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -17,11 +14,14 @@ import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.DisplayFunction
+import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.reflection.test.TestContext._
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.test.TestContext._
+
+import java.nio.file.Paths
+import java.time.{Month, Year}
 
 /**
   * Tests calendar component visually
@@ -30,6 +30,7 @@ import utopia.reflection.test.TestContext._
   */
 object CalendarTest extends App
 {
+	implicit val weekdays: WeekDays = MondayToSunday
 	ParadigmDataType.setup()
 	
 	val basicFont = Font("Arial", 14, Plain, 2)
@@ -45,7 +46,7 @@ object CalendarTest extends App
 	val forwardImages = ButtonImageSet.varyingAlpha(buttonImage.flippedHorizontally, 0.66, 1)
 	
 	val calendar = Calendar(monthSelect, yearSelect, forwardImages, backImages, 8.any, StackLength(0, 8, 16),
-		DisplayFunction.noLocalization[DayOfWeek] { _.getDisplayName(TextStyle.SHORT, Locale.getDefault) }, smallFont,
+		DisplayFunction.raw, smallFont,
 		Color.textBlack, StackInsets.symmetric(4.upscaling, 8.upscaling), smallFont, Color.textBlack,
 		StackInsets.symmetric(4.upscaling, 6.upscaling), Color.black.withAlpha(0.33), Color.cyan)
 	
