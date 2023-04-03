@@ -39,6 +39,8 @@ trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] wit
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = TokenFactory
 	
 	override def filter(additionalCondition: Condition): ManyTokensAccess = 

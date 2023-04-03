@@ -58,6 +58,8 @@ trait ManyApiKeysAccess extends ManyRowModelAccess[ApiKey] with Indexed with Fil
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ApiKeyFactory
 	
 	override def filter(additionalCondition: Condition): ManyApiKeysAccess = 

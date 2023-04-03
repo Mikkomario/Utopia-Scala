@@ -11,7 +11,6 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
-import utopia.vault.sql.SqlExtensions._
 
 object ManyLanguagesAccess
 {
@@ -53,6 +52,8 @@ trait ManyLanguagesAccess
 	
 	
 	// IMPLEMENTED	--------------------
+	
+	override protected def self = this
 	
 	override def factory = LanguageFactory
 	

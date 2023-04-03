@@ -30,6 +30,8 @@ trait ManyEmailValidationAttemptsAccess
 {
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = EmailValidationAttemptFactory
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidationAttemptsAccess = 

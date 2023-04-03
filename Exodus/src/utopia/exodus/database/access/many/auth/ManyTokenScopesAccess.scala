@@ -29,6 +29,8 @@ trait ManyTokenScopesAccess extends ManyScopesAccessLike[TokenScope, ManyTokenSc
 	
 	// IMPLEMENTED  -------------------------
 	
+	override protected def self = this
+	
 	override def factory = TokenScopeFactory
 	
 	override def filter(additionalCondition: Condition): ManyTokenScopesAccess =

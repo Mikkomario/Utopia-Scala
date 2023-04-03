@@ -3,7 +3,6 @@ package utopia.citadel.database.model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.model.immutable.{DataDeletionRule, Table}
 import utopia.vault.nosql.template.Deprecatable
-import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration

@@ -60,6 +60,8 @@ trait ManyDescriptionRolesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = DescriptionRoleFactory
 	
 	override protected def describedFactory = DescribedDescriptionRole

@@ -60,6 +60,8 @@ trait ManyProblemCasesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ProblemCaseFactory
 	
 	override def filter(additionalCondition: Condition): ManyProblemCasesAccess = 

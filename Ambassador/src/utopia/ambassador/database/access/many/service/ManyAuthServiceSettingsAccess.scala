@@ -125,6 +125,8 @@ trait ManyAuthServiceSettingsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthServiceSettingsFactory
 	
 	override def filter(additionalCondition: Condition): ManyAuthServiceSettingsAccess = 

@@ -32,6 +32,9 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 */
 	def pull(implicit connection: Connection) = read(globalCondition, factory.defaultOrdering)
 	
+	
+	// OTHER    -----------------------------
+	
 	/**
 	 * Reads all accessible values of a column
 	 * @param column Targeted column
@@ -41,7 +44,6 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 */
 	def pullColumn(column: Column, joins: Joinable*)(implicit connection: Connection) =
 		readColumn(column, order = factory.defaultOrdering, joins = joins)
-	
 	/**
 	 * Reads all accessible values of a column / attribute
 	 * @param attributeName Name of the targeted attribute

@@ -1,7 +1,6 @@
 package utopia.vault.nosql.storable.deprecation
 
 import utopia.flow.time.Now
-import utopia.vault.sql.SqlExtensions._
 
 /**
  * A common trait for model factories that support deprecation by utilizing a

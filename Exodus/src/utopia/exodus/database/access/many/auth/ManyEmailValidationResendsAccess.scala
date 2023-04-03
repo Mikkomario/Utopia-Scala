@@ -53,6 +53,8 @@ trait ManyEmailValidationResendsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = EmailValidationResendFactory
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidationResendsAccess = 

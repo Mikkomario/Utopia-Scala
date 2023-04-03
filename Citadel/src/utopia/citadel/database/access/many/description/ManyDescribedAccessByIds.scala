@@ -1,7 +1,6 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * A common trait for access points that target multiple items that use descriptions and where the search condition

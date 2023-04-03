@@ -68,6 +68,8 @@ trait ManyUserLanguageLinksAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = UserLanguageLinkFactory
 	
 	override def _filter(additionalCondition: Condition): ManyUserLanguageLinksAccess =

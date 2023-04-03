@@ -70,6 +70,8 @@ trait ManyIncompleteAuthsAccess extends ManyRowModelAccess[IncompleteAuth] with 
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = IncompleteAuthFactory
 	
 	override def filter(additionalCondition: Condition): ManyIncompleteAuthsAccess = 

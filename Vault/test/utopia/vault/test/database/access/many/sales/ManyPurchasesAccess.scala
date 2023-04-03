@@ -63,6 +63,8 @@ trait ManyPurchasesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = PurchaseFactory
 	
 	override def filter(additionalCondition: Condition): ManyPurchasesAccess = 

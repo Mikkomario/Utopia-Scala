@@ -58,6 +58,8 @@ trait ManyUserPasswordsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = UserPasswordFactory
 	
 	override def filter(additionalCondition: Condition): ManyUserPasswordsAccess = 

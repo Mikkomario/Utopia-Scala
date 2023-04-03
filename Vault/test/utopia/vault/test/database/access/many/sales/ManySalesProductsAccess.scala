@@ -26,6 +26,8 @@ trait ManySalesProductsAccess
 {
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = SalesProductFactory
 	
 	override def filter(additionalCondition: Condition): ManySalesProductsAccess = 

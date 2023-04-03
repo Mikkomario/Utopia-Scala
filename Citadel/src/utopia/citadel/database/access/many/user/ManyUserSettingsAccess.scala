@@ -10,7 +10,6 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
-import utopia.vault.sql.SqlExtensions._
 
 object ManyUserSettingsAccess
 {
@@ -71,6 +70,8 @@ trait ManyUserSettingsAccess
 	
 	
 	// IMPLEMENTED	--------------------
+	
+	override protected def self = this
 	
 	override def factory = UserSettingsFactory
 	

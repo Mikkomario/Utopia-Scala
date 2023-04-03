@@ -6,7 +6,6 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
 import utopia.vault.sql.{SelectDistinct, Where}
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple user roles at once

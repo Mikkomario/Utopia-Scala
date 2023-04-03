@@ -25,6 +25,8 @@ trait ManyAuthPreparationScopesAccess
 {
 	// IMPLEMENTED  ----------------------------
 	
+	override protected def self = this
+	
 	override protected def _filter(condition: Condition): ManyAuthPreparationScopesAccess =
 		new SubAccess(this, condition)
 	override def factory = AuthPreparationScopeFactory

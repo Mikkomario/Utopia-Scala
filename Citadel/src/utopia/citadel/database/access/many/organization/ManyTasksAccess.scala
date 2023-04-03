@@ -47,6 +47,8 @@ trait ManyTasksAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = TaskFactory
 	
 	override protected def describedFactory = DescribedTask

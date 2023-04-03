@@ -7,7 +7,6 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyColumnAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple service names at a time

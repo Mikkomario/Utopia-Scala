@@ -63,6 +63,8 @@ trait ManySettingValuesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = SettingValueFactory
 	
 	override def filter(additionalCondition: Condition): ManySettingValuesAccess = 

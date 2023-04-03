@@ -10,7 +10,6 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
-import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
@@ -62,6 +61,8 @@ trait ManyMembershipsWithRolesAccess
 	
 	
 	// IMPLEMENTED  --------------------------
+	
+	override protected def self = this
 	
 	override def factory = MembershipWithRolesFactory
 	

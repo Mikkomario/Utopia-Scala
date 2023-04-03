@@ -56,6 +56,8 @@ trait ManyProblemsAccess extends ManyRowModelAccess[Problem] with Indexed with F
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ProblemFactory
 	
 	override def filter(additionalCondition: Condition): ManyProblemsAccess = 

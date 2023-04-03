@@ -63,6 +63,8 @@ trait ManyUserRolesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = UserRoleFactory
 	
 	override protected def describedFactory = DescribedUserRole

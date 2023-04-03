@@ -11,7 +11,6 @@ import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for constructing TokenModel instances and for inserting tokens to the database

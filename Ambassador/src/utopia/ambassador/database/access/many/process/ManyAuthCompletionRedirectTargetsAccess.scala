@@ -67,6 +67,8 @@ trait ManyAuthCompletionRedirectTargetsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthCompletionRedirectTargetFactory
 	
 	override def filter(additionalCondition: Condition): ManyAuthCompletionRedirectTargetsAccess = 

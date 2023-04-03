@@ -67,6 +67,8 @@ trait ManyDeviceTokensAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = DeviceTokenFactory
 	
 	override def filter(additionalCondition: Condition): ManyDeviceTokensAccess = 

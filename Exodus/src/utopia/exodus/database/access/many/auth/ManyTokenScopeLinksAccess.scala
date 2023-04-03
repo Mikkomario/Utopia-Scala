@@ -67,6 +67,8 @@ trait ManyTokenScopeLinksAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = TokenScopeLinkFactory
 	
 	override def filter(additionalCondition: Condition): ManyTokenScopeLinksAccess = 

@@ -7,7 +7,6 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.column.SingleIntIdAccess
 import utopia.vault.nosql.view.{FactoryView, UnconditionalView}
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing individual service ids in the DB

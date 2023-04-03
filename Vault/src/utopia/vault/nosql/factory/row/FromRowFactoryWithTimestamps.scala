@@ -7,7 +7,6 @@ import utopia.vault.model.enumeration.ComparisonOperator.{Larger, LargerOrEqual,
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{Condition, JoinType, OrderBy}
-import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
@@ -33,7 +32,7 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	  */
 	def creationTimeColumn = column(creationTimePropertyName)
 	/**
-	  * @return Ordering that uses row creation time
+	  * @return Ordering that uses row creation time (descending)
 	  */
 	def creationTimeOrdering = OrderBy.descending(creationTimeColumn)
 	

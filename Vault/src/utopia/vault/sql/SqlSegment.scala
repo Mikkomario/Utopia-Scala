@@ -88,20 +88,61 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
     def isEmpty = sql.isEmpty
     
     
-    // OPERATORS    ---------------------
+    // OTHER    ---------------------
+    
+    /**
+      * @param f A mapping function for this statement's sql string
+      * @return A mapped copy of this segment
+      */
+    def mapSql(f: String => String) = copy(sql = f(sql))
     
     /**
      * Combines two sql segments to create a single, larger segment. A whitespace character is 
      * added between the two sql segments.
      */
-    def +(other: SqlSegment) =
-    {
+    def +(other: SqlSegment) = mergeWith(other) { (my, their) => s"$my $their" }
+    /**
+     * Appends this sql segment with an sql string. 
+     * The new string will be added to the end of this segment. Adds a whitespace character 
+     * between the two sql segments.
+     */
+    def +(sql: String) = copy(sql = s"${ this.sql } $sql")
+    /**
+     * Combines these two segments, but if the other segment is empty, skips it
+     * @param other Another sql segment which may also be empty
+     * @return A combination of these two sql segments
+     */
+    def +(other: Option[SqlSegment]): SqlSegment = other.map { this + _ }.getOrElse(this)
+    /**
+     * Combines these two segments, but if the other segment is empty, skips it
+     * @param other Another segment (converted implicitly)
+     * @param convertToSegment An implicit conversion to segment
+     * @tparam S Type of converted item
+     * @return A combination of these two sql segments
+     */
+    def +[S](other: Option[S])(implicit convertToSegment: S => SqlSegment): SqlSegment =
+        this + other.map(convertToSegment)
+    
+    /**
+     * Prepends this sql segment with an sql string. The new string will be added to the beginning 
+     * of this segment. A whitespace character is added between the two segments.
+     */
+    def prepend(sql: String) = copy(sql = s"$sql ${ this.sql }")
+    
+    /**
+      * Combines this segment with another sql segment
+      * @param other Another sql segment
+      * @param mergeSql A function for merging the sql statement strings together.
+      *                 Accepts the sql from this statement and the sql from the other statement.
+      *                 Returns a single sql statement.
+      * @return A merged sql statement
+      */
+    def mergeWith(other: SqlSegment)(mergeSql: (String, String) => String) = {
         if (other.isEmpty)
             this
         else if (isEmpty)
             other
-        else
-        {
+        else {
             val eventFunction = events match {
                 case Some(myFunction) =>
                     other.events match {
@@ -111,43 +152,11 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
                     }
                 case None => other.events
             }
-            SqlSegment(s"$sql ${ other.sql }", values ++ other.values,
+            SqlSegment(mergeSql(sql, other.sql), values ++ other.values,
                 databaseName orElse other.databaseName, targetTables ++ other.targetTables, eventFunction,
                 isSelect || other.isSelect, generatesKeys || other.generatesKeys)
         }
     }
-    
-    /**
-     * Appends this sql segment with an sql string. 
-     * The new string will be added to the end of this segment. Adds a whitespace character 
-     * between the two sql segments.
-     */
-    def +(sql: String) = copy(sql = s"${ this.sql } $sql")
-    
-    /**
-     * Combines these two segments, but if the other segment is empty, skips it
-     * @param other Another sql segment which may also be empty
-     * @return A combination of these two sql segments
-     */
-    def +(other: Option[SqlSegment]): SqlSegment = other.map { this + _ }.getOrElse(this)
-    
-    /**
-     * Combines these two segments, but if the other segment is empty, skips it
-     * @param other Another segment (converted implicitly)
-     * @param convertToSegment An implicit conversion to segment
-     * @tparam S Type of converted item
-     * @return A combination of these two sql segments
-     */
-    def +[S](other: Option[S])(implicit convertToSegment: S => SqlSegment): SqlSegment = this + other.map(convertToSegment)
-    
-    /**
-     * Prepends this sql segment with an sql string. The new string will be added to the beginning 
-     * of this segment. A whitespace character is added between the two segments.
-     */
-    def prepend(sql: String) = copy(sql = s"$sql ${ this.sql }")
-    
-    
-    // OTHER METHODS    ----------------
     
     /**
      * Runs this sql segment / statement over a database connection

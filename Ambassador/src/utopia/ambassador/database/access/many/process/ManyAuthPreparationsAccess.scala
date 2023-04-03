@@ -64,6 +64,8 @@ trait ManyAuthPreparationsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthPreparationFactory
 	
 	override def filter(additionalCondition: Condition): ManyAuthPreparationsAccess = 

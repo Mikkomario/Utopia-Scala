@@ -5,7 +5,6 @@ import utopia.flow.async.process.LoopingProcess
 import java.time.{Instant, LocalTime}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
-import utopia.vault.sql.SqlExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger

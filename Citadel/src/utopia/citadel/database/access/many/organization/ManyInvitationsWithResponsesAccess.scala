@@ -60,6 +60,8 @@ trait ManyInvitationsWithResponsesAccess
 	
 	// IMPLEMENTED  -----------------------------------
 	
+	override protected def self = this
+	
 	override def factory = InvitationWithResponseFactory
 	
 	override protected def _filter(condition: Condition): ManyInvitationsWithResponsesAccess =

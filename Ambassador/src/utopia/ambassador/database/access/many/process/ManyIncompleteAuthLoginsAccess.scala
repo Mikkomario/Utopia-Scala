@@ -64,6 +64,8 @@ trait ManyIncompleteAuthLoginsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = IncompleteAuthLoginFactory
 	
 	override def filter(additionalCondition: Condition): ManyIncompleteAuthLoginsAccess = 

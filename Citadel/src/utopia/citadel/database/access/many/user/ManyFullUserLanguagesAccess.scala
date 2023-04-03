@@ -23,6 +23,8 @@ trait ManyFullUserLanguagesAccess extends ManyUserLanguageLinksAccessLike[FullUs
 {
 	// IMPLEMENTED  ----------------------------
 	
+	override protected def self = this
+	
 	override def factory = FullUserLanguageFactory
 	
 	override protected def _filter(condition: Condition): ManyFullUserLanguagesAccess =

@@ -3,7 +3,6 @@ package utopia.ambassador.database.access.many.process
 import utopia.ambassador.model.stored.process.IncompleteAuth
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.NonDeprecatedView
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * The root access point when targeting multiple IncompleteAuths at a time

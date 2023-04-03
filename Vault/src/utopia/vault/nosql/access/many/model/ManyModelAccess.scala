@@ -1,5 +1,6 @@
 package utopia.vault.nosql.access.many.model
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
@@ -14,8 +15,7 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait ManyModelAccess[+A] extends ManyAccess[A]
-	with DistinctModelAccess[A, Vector[A], Vector[Value]]
+trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vector[A], Vector[Value]]
 {
 	// COMPUTED --------------------------------
 	
@@ -53,6 +53,14 @@ trait ManyModelAccess[+A] extends ManyAccess[A]
 	// OTHER    -------------------------------
 	
 	/**
+	  * @param f A mapping function
+	  * @param c Implicit DB Connection
+	  * @tparam B Type of map results
+	  * @return A map where each accessible item is mapped to a map result
+	  */
+	def toMapBy[B](f: A => B)(implicit c: Connection) = pull.iterator.map { a => f(a) -> a }.toMap
+	
+	/**
 	 * @param order Order to use in the results
 	 * @param connection DB Connection (implicit)
 	 * @return An iterator to all models accessible from this access point. The iterator is usable
@@ -60,4 +68,31 @@ trait ManyModelAccess[+A] extends ManyAccess[A]
 	 */
 	def orderedIterator(order: OrderBy)(implicit connection: Connection) =
 		factory.iterator(globalCondition, Some(order))
+	
+	/**
+	  * Pulls a column-to-column map based on the accessible items
+	  * @param keyColumn Column used as map keys (should contain unique values)
+	  * @param valueColumn Column used as map values
+	  * @param joins Joins to apply (optional)
+	  * @param con Implicit DB Connection
+	  * @return A map that contains all read key-value pairs (as values)
+	  */
+	def pullColumnMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) = {
+		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
+			globalCondition.map { Where(_) }
+		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.toMap
+	}
+	/**
+	  * Pulls a column-to-columns map based on the accessible items
+	  * @param keyColumn Column used as map keys
+	  * @param valueColumn Column used as individual values
+	  * @param joins Joins to apply (optional)
+	  * @param con Implicit DB Connection
+	  * @return A map that contains all read values grouped by keys (as values)
+	  */
+	def pullColumnMultiMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) = {
+		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
+			globalCondition.map { Where(_) }
+		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.asMultiMap
+	}
 }

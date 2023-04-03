@@ -3,7 +3,6 @@ package utopia.vault.test.app
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.Connection
-import utopia.vault.sql.SqlExtensions._
 import utopia.vault.test.database.TestConnectionPool
 import utopia.vault.test.database.TestThreadPool.executionContext
 import utopia.vault.test.database.access.many.sales.DbSalesProducts

@@ -16,7 +16,7 @@ object Select
      * Creates an sql segment that selects a number of columns from a table
      */
     def apply(target: SqlTarget, columns: Seq[Column]) = SqlSegment(s"SELECT ${ 
-        if (columns.isEmpty) "NULL" else columns.view.map { _.columnNameWithTable }.reduceLeft { _ + ", " + _ } } FROM",
+        if (columns.isEmpty) "NULL" else columns.view.map { _.columnNameWithTable }.mkString(", ") } FROM",
         isSelect = true) + target.toSqlSegment
     
     /**

@@ -55,6 +55,8 @@ trait ManyLanguageFamiliaritiesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = LanguageFamiliarityFactory
 	
 	override protected def describedFactory = DescribedLanguageFamiliarity

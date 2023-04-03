@@ -50,6 +50,8 @@ trait ManyProblemRepeatsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ProblemRepeatFactory
 	
 	override def filter(additionalCondition: Condition): ManyProblemRepeatsAccess = 

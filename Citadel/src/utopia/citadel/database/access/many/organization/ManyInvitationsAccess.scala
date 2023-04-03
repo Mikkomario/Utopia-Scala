@@ -38,6 +38,8 @@ trait ManyInvitationsAccess extends ManyInvitationsAccessLike[Invitation, ManyIn
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = InvitationFactory
 	
 	override protected def _filter(condition: Condition): ManyInvitationsAccess = new SubAccess(this, condition)

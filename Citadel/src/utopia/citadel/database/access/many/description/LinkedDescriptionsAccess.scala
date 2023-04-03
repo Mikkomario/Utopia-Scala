@@ -11,7 +11,6 @@ import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
-import utopia.vault.sql.SqlExtensions._
 
 object LinkedDescriptionsAccess
 {

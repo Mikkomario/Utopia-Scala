@@ -52,6 +52,8 @@ trait ManyAuthServicesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthServiceFactory
 	
 	override def filter(additionalCondition: Condition): ManyAuthServicesAccess = 

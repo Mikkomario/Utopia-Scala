@@ -37,6 +37,8 @@ trait ManyAuthTokensAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthTokenFactory
 	
 	override def _filter(additionalCondition: Condition): ManyAuthTokensAccess =

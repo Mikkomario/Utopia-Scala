@@ -7,7 +7,6 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple task ids at once

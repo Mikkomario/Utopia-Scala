@@ -76,6 +76,8 @@ trait ManyDescriptionsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = DescriptionFactory
 	
 	override def filter(additionalCondition: Condition): ManyDescriptionsAccess = 

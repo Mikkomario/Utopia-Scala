@@ -13,7 +13,6 @@ import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
-import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
@@ -68,6 +67,8 @@ trait LinkedDescriptionsAccessLike
 	
 	
 	// IMPLEMENTED  --------------------
+	
+	override protected def self = this
 	
 	override def filter(additionalCondition: Condition): LinkedDescriptionsAccessLike =
 		new LinkedDescriptionsSubView(this, additionalCondition)

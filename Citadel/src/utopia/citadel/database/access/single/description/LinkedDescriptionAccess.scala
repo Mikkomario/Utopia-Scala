@@ -14,7 +14,6 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
 import utopia.vault.nosql.view.{NonDeprecatedView, RowFactoryView, SubView}
-import utopia.vault.sql.SqlExtensions._
 
 object LinkedDescriptionAccess
 {

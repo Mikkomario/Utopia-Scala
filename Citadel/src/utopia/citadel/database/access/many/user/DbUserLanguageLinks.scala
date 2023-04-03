@@ -2,7 +2,6 @@ package utopia.citadel.database.access.many.user
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.UnconditionalView
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * The root access point when targeting multiple UserLanguages at a time

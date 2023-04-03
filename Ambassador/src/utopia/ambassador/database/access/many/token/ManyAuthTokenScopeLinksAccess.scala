@@ -60,6 +60,8 @@ trait ManyAuthTokenScopeLinksAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthTokenScopeLinkFactory
 	
 	override def filter(additionalCondition: Condition): ManyAuthTokenScopeLinksAccess = 

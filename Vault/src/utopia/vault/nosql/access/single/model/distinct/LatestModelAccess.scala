@@ -34,6 +34,8 @@ object LatestModelAccess
 	                                           override val globalCondition: Option[Condition] = None)
 		extends LatestModelAccess[A] with FilterableView[LatestModelAccessWrapper[A]]
 	{
+		override protected def self = this
+		
 		override def filter(additionalCondition: Condition) =
 			new LatestModelAccessWrapper(factory, Some(mergeCondition(additionalCondition)))
 	}

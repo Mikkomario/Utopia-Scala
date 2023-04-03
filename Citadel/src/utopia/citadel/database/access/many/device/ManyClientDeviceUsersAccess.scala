@@ -62,6 +62,8 @@ trait ManyClientDeviceUsersAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ClientDeviceUserFactory
 	
 	override def filter(additionalCondition: Condition): ManyClientDeviceUsersAccess =

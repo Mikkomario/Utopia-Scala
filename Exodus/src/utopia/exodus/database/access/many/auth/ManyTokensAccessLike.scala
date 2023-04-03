@@ -9,7 +9,6 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * A common trait for access points which target multiple tokens or similar instances at a time

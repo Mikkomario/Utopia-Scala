@@ -21,6 +21,8 @@ object ManyTaskScopesAccess
 trait ManyTaskScopesAccess
 	extends ManyScopesAccessLike[TaskScope, ManyTaskScopesAccess] with ManyRowModelAccess[TaskScope]
 {
+	override protected def self = this
+	
 	override def factory = TaskScopeFactory
 	
 	override protected def _filter(condition: Condition): ManyTaskScopesAccess = new SubAccess(this, condition)

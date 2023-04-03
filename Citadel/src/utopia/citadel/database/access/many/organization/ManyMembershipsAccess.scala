@@ -25,6 +25,8 @@ trait ManyMembershipsAccess
 {
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = MembershipFactory
 	
 	override def _filter(additionalCondition: Condition): ManyMembershipsAccess =

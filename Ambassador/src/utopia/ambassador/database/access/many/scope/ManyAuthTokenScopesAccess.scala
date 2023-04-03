@@ -22,6 +22,8 @@ object ManyAuthTokenScopesAccess
 trait ManyAuthTokenScopesAccess
 	extends ManyScopesAccessLike[AuthTokenScope, ManyAuthTokenScopesAccess] with ManyRowModelAccess[AuthTokenScope]
 {
+	override protected def self = this
+	
 	override def factory = AuthTokenScopeFactory
 	
 	override protected def _filter(condition: Condition): ManyAuthTokenScopesAccess =

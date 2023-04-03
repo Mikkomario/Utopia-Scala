@@ -51,6 +51,8 @@ trait ManyEmailValidationPurposesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = EmailValidationPurposeFactory
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidationPurposesAccess = 

@@ -59,6 +59,8 @@ trait ManyElectronicSignaturesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ElectronicSignatureFactory
 	
 	override def filter(additionalCondition: Condition): ManyElectronicSignaturesAccess = 

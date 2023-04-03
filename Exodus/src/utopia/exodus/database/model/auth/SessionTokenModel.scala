@@ -11,7 +11,6 @@ import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.template.Deprecatable
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for constructing SessionTokenModel instances and for inserting SessionTokens to the database

@@ -5,7 +5,6 @@ import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
@@ -68,8 +67,7 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
 	 * @param connection Implicit DB Connection
 	 * @return The number of affected items
 	 */
-	def deprecateIds(ids: Iterable[Value])(implicit connection: Connection) =
-	{
+	def deprecateIds(ids: Iterable[Value])(implicit connection: Connection) = {
 		if (ids.isEmpty)
 			0
 		else

@@ -1,6 +1,5 @@
 package utopia.vault.sql
 
-
 import utopia.flow.generic.model.immutable.Value
 
 import scala.language.implicitConversions
@@ -10,6 +9,7 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 17.6.2021
  */
+@deprecated("These conversions are now implicitly available in the ConditionElement itself", "v1.16")
 object SqlExtensions
 {
     /**

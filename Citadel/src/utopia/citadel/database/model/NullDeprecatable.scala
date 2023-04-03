@@ -4,7 +4,6 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 

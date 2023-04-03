@@ -1,9 +1,10 @@
 package utopia.vault.model.immutable
 
-import utopia.vault.sql.SqlExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.operator.EqualsExtensions._
 import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
@@ -49,8 +50,11 @@ trait Storable extends ModelConvertible
      * The index of this storable instance. Index is the primary method way to identify the 
      * instance in database context.
      */
-    def index = table.primaryColumn.flatMap { column => valueProperties.find { case (name, _) => 
-            name.equalsIgnoreCase(column.name) }.map { case (_, value) => value } }.getOrElse(Value.empty)
+    def index = {
+        table.primaryColumn.flatMap { primary =>
+            valueProperties.findMap { case (name, value) => if (name ~== primary.name) Some(value) else None }
+        }.getOrElse(Value.empty)
+    }
     
     /**
      * A declaration that describes this instance. The declaration is based on the instance's table
@@ -58,16 +62,9 @@ trait Storable extends ModelConvertible
     def declaration = table.toModelDeclaration
     
     /**
-     * A condition for finding the row for this storable's index (will never use NULL index)
+     * A condition for finding the row matching this item's index (will never use NULL index)
      */
-    def indexCondition =
-    {
-        val i = index
-        if (i.isDefined)
-            table.primaryColumn.map(_ <=> index)
-        else
-            None
-    }
+    def indexCondition = index.notEmpty.flatMap { i => table.primaryColumn.map { _ <=> i } }
     
     /**
       * @return A condition based on this storable instance. All DEFINED properties are included in the condition.
@@ -90,7 +87,8 @@ trait Storable extends ModelConvertible
       * @param combineOperator Operator used when combining individual conditions (Default = And = &&)
       * @return A condition based on this storable instance and specified operators
       */
-    def toConditionWithOperator(comparisonOperator: ComparisonOperator = Equal, combineOperator: BasicCombineOperator = And) =
+    def toConditionWithOperator(comparisonOperator: ComparisonOperator = Equal,
+                                combineOperator: BasicCombineOperator = And) =
         makeCondition({ _.makeCondition(comparisonOperator, _) }, combineOperator)
     
     /**
@@ -102,17 +100,14 @@ trait Storable extends ModelConvertible
      * @return a condition based on this storable instance. None if the instance didn't contain 
      * any properties that could be used for forming a condition
      */
-    def toConditionWith(firstLimitKey: String, moreLimitKeys: String*) =
-    {
+    def toConditionWith(firstLimitKey: String, moreLimitKeys: String*) = {
         val limitKeys = firstLimitKey +: moreLimitKeys
         val model = toModel
         val columns = if (limitKeys.isEmpty) table.columns else table.columns.filter {
             c => limitKeys.exists(c.name.equalsIgnoreCase) }
-        val conditions = columns.flatMap
-        {
-            c =>
-                val value = model(c.name)
-                if (value.isEmpty) None else Some(c <=> value)
+        val conditions = columns.flatMap { c =>
+            val value = model(c.name)
+            if (value.isEmpty) None else Some(c <=> value)
         }
         
         conditions.headOption.map { _ && conditions.drop(1) }
@@ -128,8 +123,7 @@ trait Storable extends ModelConvertible
      * @return The existing or generated index of the instance. In case of auto-increment table, this index was
      * just generated.
      */
-    def push(writeNulls: Boolean = false)(implicit connection: Connection) = 
-    {
+    def push(writeNulls: Boolean = false)(implicit connection: Connection) = {
         // Either inserts as a new row or updates an existing row
         if (update(writeNulls))
             index
@@ -143,21 +137,13 @@ trait Storable extends ModelConvertible
      * @param writeNulls whether null values should be updated to the database. Defaults to false.
      * @return whether the database was actually updated
      */
-    def update(writeNulls: Boolean = false)(implicit connection: Connection) = 
-    {
+    def update(writeNulls: Boolean = false)(implicit connection: Connection) = {
         val update = indexCondition.map { cond => toUpdateStatement(writeNulls = writeNulls) + Where(cond) }
-        
-        update.exists
-        {
-            statement =>
-                try
-                {
-                    statement.execute().updatedRows
-                }
-                catch
-                {
-                    case e: DBException => e.rethrow(s"Failed to update storable: $toJson")
-                }
+        update.exists { statement =>
+            try { statement.execute().updatedRows }
+            catch {
+                case e: DBException => e.rethrow(s"Failed to update storable: $toJson")
+            }
         }
     }
     
@@ -189,8 +175,7 @@ trait Storable extends ModelConvertible
         val originalModel = if (writeNulls) toModel else toModel.withoutEmptyValues
         val updateModel = if (writeIndex || primaryColumn.isEmpty) 
                 originalModel else originalModel - primaryColumn.get.name
-        customTarget match
-        {
+        customTarget match {
             case Some(target) => Update(target, table, updateModel)
             case None => Update(table, updateModel)
         }
@@ -201,20 +186,13 @@ trait Storable extends ModelConvertible
      * @param propertyNames the names of the properties that are updated / pushed to the database
      * @return whether any update was performed
      */
-    def updateProperties(propertyNames: Iterable[String])(implicit connection: Connection) =
-    {
+    def updateProperties(propertyNames: Iterable[String])(implicit connection: Connection) = {
         val update = indexCondition.map { cond => updateStatementForProperties(propertyNames) + Where(cond) }
-        update.foreach
-        {
-            statement =>
-                try
-                {
-                    statement.execute()
-                }
-                catch
-                {
-                    case e: DBException => e.rethrow(s"Failed to update storable: $toJson")
-                }
+        update.foreach { statement =>
+            try { statement.execute() }
+            catch {
+                case e: DBException => e.rethrow(s"Failed to update storable: $toJson")
+            }
         }
         update.isDefined
     }
@@ -230,13 +208,11 @@ trait Storable extends ModelConvertible
      * Creates an update statement that updates only the specified properties
      * @param propertyNames the names of the properties that will be included in the update segment
      */
-    def updateStatementForProperties(propertyNames: Iterable[String]) =
-    {
-        def updatedProperties = valueProperties.filter { case (name, _) => 
-                propertyNames.exists(name.equalsIgnoreCase) }
+    def updateStatementForProperties(propertyNames: Iterable[String]) = {
+        def updatedProperties = valueProperties
+            .filter { case (name, _) => propertyNames.exists(name.equalsIgnoreCase) }
         Update(table, Model(updatedProperties))
     }
-    
     /**
      * Creates an update statement that updates only the specified properties
      */
@@ -247,28 +223,34 @@ trait Storable extends ModelConvertible
      * Pushes storable data to the database, but will always insert the instance as a new row 
      * instead of updating an existing row.
      * @return The generated index, if an insertion was made and one was generated or provided.
+      * @throws IllegalStateException If inserting an item without index into a non-auto-increment-indexing table
+      *                               that contains a primary key
      */
-    // TODO: Refactor
-    def insert()(implicit connection: Connection) = 
-    {
+    @throws[IllegalStateException]("No primary key specified when required")
+    def insert()(implicit connection: Connection) = {
         try {
-            val primaryColumn = table.primaryColumn
-            // If table uses auto-increment index or no index at all, inserts without index
-            // Otherwise requires a specified index
-            if (primaryColumn.isDefined) {
-                if (table.usesAutoIncrement)
-                    Insert(table, toModel - primaryColumn.get.name).generatedKeys.headOption
-                        .getOrElse(Value.emptyWithType(primaryColumn.get.dataType))
-                else {
-                    val i = index
-                    if (i.isDefined)
-                        Insert(table, toModel)
-                    i
-                }
-            }
-            else {
-                Insert(table, toModel)
-                Value.empty
+            table.primaryColumn match {
+                // Case: Table uses indexing
+                case Some(primary) =>
+                    // Case: Auto-Increment indexing used => Will never insert a custom index
+                    if (table.usesAutoIncrement)
+                        Insert(table, toModel - primary.name).generatedKeys.headOption
+                            .getOrElse(Value.emptyWithType(primary.dataType))
+                    // Case: Indexing required => Throws if index hasn't been specified
+                    else {
+                        index.notEmpty match {
+                            case Some(i) =>
+                                Insert(table, toModel)
+                                i
+                            case None =>
+                                throw new IllegalStateException(s"Attempting to insert storable $toJson to table ${
+                                    table.name} without specifying the primary key")
+                        }
+                    }
+                // Case: No indexing used. Simply inserts a new row.
+                case None =>
+                    Insert(table, toModel)
+                    Value.empty
             }
         }
         catch {
@@ -280,7 +262,8 @@ trait Storable extends ModelConvertible
      * Deletes this storable instance from the database. If the storable has no index, this 
      * method does nothing
      */
-    def delete()(implicit connection: Connection) = indexCondition.map { Delete(table) + Where(_) }.foreach { _.execute() }
+    def delete()(implicit connection: Connection) =
+        indexCondition.map { Delete(table) + Where(_) }.foreach { _.execute() }
     
     /**
       * Searches for a row by using this storable instance as the search condition
@@ -298,7 +281,8 @@ trait Storable extends ModelConvertible
       * @tparam B Type of resulting object
       * @return Objects from the database matching this condition
       */
-    def searchMany[B](factory: FromRowFactory[B])(implicit connection: Connection) = factory.findMany(toCondition)
+    def searchMany[B](factory: FromRowFactory[B])(implicit connection: Connection) =
+        factory.findMany(toCondition)
     
     // NB: Throws if there were no specified attributes
     private def makeCondition(makePart: (Column, Value) => Condition, combineOperator: BasicCombineOperator = And) =

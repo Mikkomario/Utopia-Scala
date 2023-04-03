@@ -54,6 +54,8 @@ trait ManyOrganizationsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = OrganizationFactory
 	
 	override protected def describedFactory = DescribedOrganization

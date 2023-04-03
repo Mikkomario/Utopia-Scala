@@ -10,7 +10,6 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-import utopia.vault.sql.SqlExtensions._
 
 object DescriptionLinksAccess
 {
@@ -82,6 +81,8 @@ trait DescriptionLinksAccess
 	
 	
 	// IMPLEMENTED  -------------------------------
+	
+	override protected def self = this
 	
 	override def filter(additionalCondition: Condition): DescriptionLinksAccess =
 		DescriptionLinksAccess(factory, linkModel, Some(mergeCondition(additionalCondition)))

@@ -4,7 +4,6 @@ import utopia.exodus.model.combined.auth.TypedToken
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * A root access point to tokens, including their type information

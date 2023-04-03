@@ -70,6 +70,8 @@ trait ManyTokenTypesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = TokenTypeFactory
 	
 	override def filter(additionalCondition: Condition): ManyTokenTypesAccess = 

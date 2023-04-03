@@ -55,6 +55,8 @@ trait ManyClientDevicesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ClientDeviceFactory
 	
 	override protected def describedFactory = DescribedClientDevice

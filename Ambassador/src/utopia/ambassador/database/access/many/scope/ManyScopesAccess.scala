@@ -57,6 +57,8 @@ trait ManyScopesAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = ScopeFactory
 	
 	override protected def describedFactory = DescribedScope

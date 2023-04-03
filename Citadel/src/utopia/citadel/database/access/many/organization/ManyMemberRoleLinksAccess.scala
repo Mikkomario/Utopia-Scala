@@ -37,6 +37,8 @@ trait ManyMemberRoleLinksAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = MemberRoleLinkFactory
 	
 	override def _filter(additionalCondition: Condition): ManyMemberRoleLinksAccess =

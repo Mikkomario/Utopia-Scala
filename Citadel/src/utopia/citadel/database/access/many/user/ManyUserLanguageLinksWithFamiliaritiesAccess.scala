@@ -24,6 +24,8 @@ trait ManyUserLanguageLinksWithFamiliaritiesAccess
 	extends ManyUserLanguageLinksAccessLike[UserLanguageLinkWithFamiliarity,
 		ManyUserLanguageLinksWithFamiliaritiesAccess]
 {
+	override protected def self = this
+	
 	override def factory = UserLanguageLinkWithFamiliarityFactory
 	
 	override protected def _filter(condition: Condition): ManyUserLanguageLinksWithFamiliaritiesAccess =

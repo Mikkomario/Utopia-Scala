@@ -3,7 +3,6 @@ package utopia.exodus.database.access.many.auth
 import utopia.exodus.model.stored.auth.Token
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * The root access point when targeting multiple tokens at a time

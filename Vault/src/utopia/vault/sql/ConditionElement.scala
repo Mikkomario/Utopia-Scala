@@ -2,8 +2,39 @@ package utopia.vault.sql
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.model.enumeration.ComparisonOperator
-import SqlExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.model.immutable.Value
+
+import scala.language.implicitConversions
+
+object ConditionElement
+{
+    // IMPLICIT ------------------------
+    
+    implicit def valueToConditionElement(v: Value): ConditionElement = new ValueAsElement(v)
+    implicit def indirectValueToConditionElement[V](v: V)(implicit f: V => Value): ConditionElement =
+        valueToConditionElement(f(v))
+    
+    
+    // OTHER    -----------------------
+    
+    /**
+      * @param sqlSegment An sql segment that represents a condition element
+      * @return A condition element that wraps that sql segment
+      */
+    def apply(sqlSegment: SqlSegment): ConditionElement = new SegmentAsElement(sqlSegment)
+    
+    
+    // NESTED   ------------------------
+    
+    private class ValueAsElement(val value: Value) extends ConditionElement {
+        override def toSqlSegment = SqlSegment("?", Vector(value))
+    }
+    
+    private class SegmentAsElement(segment: SqlSegment) extends ConditionElement {
+        override def toSqlSegment: SqlSegment = segment
+    }
+}
 
 /**
  * ConditionElements are elements used in logical conditions. Usually two or more elements are 
@@ -21,7 +52,16 @@ trait ConditionElement
     def toSqlSegment: SqlSegment
     
     
-    // OPERATORS    -----------------------------
+    // COMPUTED -----------------------------
+    
+    /**
+      * @return a condition element that represents the time of this element value.
+      *         Intended to be used for Timestamp and DateTime condition elements.
+      */
+    def time: ConditionElement = ConditionElement(toSqlSegment.mapSql { sql => s"TIME($sql)" })
+    
+    
+    // OTHER    -----------------------------
     
     /**
      * Creates an equality condition between two elements
@@ -47,9 +87,6 @@ trait ConditionElement
      * Creates a smaller than or equals condition
      */
     def <=(other: ConditionElement) = makeCondition("<=", other)
-    
-    
-    // OTHER METHODS    ---------------------
     
     /**
      * Creates a between condition that returns true when this element value is between the two 
@@ -120,24 +157,29 @@ trait ConditionElement
       * @return A condition where this element must match the specified expression
       */
     def like(matchString: ConditionElement) = Condition(toSqlSegment + "LIKE" + matchString.toSqlSegment)
-    
     /**
       * @param matchString A string
       * @return A condition where this element must start with the specified string
       */
     def startsWith(matchString: String) = like(matchString + "%")
-    
     /**
       * @param matchString A string
       * @return A condition where this element must end with the specified string
       */
     def endsWith(matchString: String) = like("%" + matchString)
-    
     /**
       * @param matchString A string
       * @return A condition where this element must contain the specified string
       */
     def contains(matchString: String) = like(s"%$matchString%")
+    /**
+      * @param string A string
+      * @return A condition that returns true if this element appears within the specified string
+      */
+    def appearsWithin(string: String) = {
+        val myStatement = toSqlSegment
+        myStatement.copy(sql = s"? LIKE CONCAT('%', ${myStatement.sql}, '%')", values = string +: myStatement.values)
+    }
     
     /**
       * Creates a simple condition based on two condition elements. This element is used as the first operand.

@@ -45,6 +45,8 @@ trait ManyUsersAccess extends ManyRowModelAccess[User] with Indexed with Filtera
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = UserFactory
 	
 	override def filter(additionalCondition: Condition): ManyUsersAccess = 

@@ -68,16 +68,23 @@ case class OrderBy(keys: Vector[(Column, OrderDirection)])
     /**
      * @return This ordering as an sql segment
      */
-    def toSqlSegment =
-    {
+    def toSqlSegment = {
         if (keys.isEmpty)
             SqlSegment.empty
-        else
-        {
+        else {
             val sqlParts = keys.map{ case (column, direction) => s"${column.columnNameWithTable} ${direction.toSql}" }
-            SqlSegment("ORDER BY " + sqlParts.mkString(", "))
+            SqlSegment(s"ORDER BY ${ sqlParts.mkString(", ") }")
         }
     }
+    
+    /**
+      * @return A copy of this order that ascends (i.e. goes from the smallest to the greatest)
+      */
+    def ascending = withDirection(Ascending)
+    /**
+      * @return A copy of this order that descends (i.e. goes from the greatest to the smallest)
+      */
+    def descending = withDirection(Descending)
     
     
     // OTHER    -----------------------
@@ -89,7 +96,6 @@ case class OrderBy(keys: Vector[(Column, OrderDirection)])
      */
     def +(newOrderPair: (Column, OrderDirection)) = if (keys.exists { _._1 == newOrderPair._1 }) this else
         copy(keys = keys :+ newOrderPair)
-    
     /**
      * Adds a new ordering to this order by. The new order will be less important than the existing orderings
      * @param column Column the ordering is based on
@@ -103,11 +109,16 @@ case class OrderBy(keys: Vector[(Column, OrderDirection)])
      * @return A copy of this ordering without specified key used
      */
     def -(column: Column) = copy(keys = keys.filterNot { _._1 == column })
-    
     /**
      * Combines two orderings. This ordering is considered determining
      * @param other Another ordering
      * @return A conbination of these two orderings
      */
     def ++(other: OrderBy) = copy(keys = keys ++ other.keys.filterNot { o => keys.exists { _._1 == o._1 } })
+    
+    /**
+      * @param direction Direction to apply to ALL ordering columns
+      * @return A copy of this ordering that uses the specified direction for all targeted columns
+      */
+    def withDirection(direction: OrderDirection) = OrderBy(keys.map { _._1 -> direction })
 }

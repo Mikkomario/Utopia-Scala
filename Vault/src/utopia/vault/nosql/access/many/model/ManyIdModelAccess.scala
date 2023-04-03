@@ -2,7 +2,6 @@ package utopia.vault.nosql.access.many.model
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.nosql.factory.FromResultFactory
-import utopia.vault.sql.SqlExtensions._
 
 /**
  * Used for accessing multiple models based on their ids

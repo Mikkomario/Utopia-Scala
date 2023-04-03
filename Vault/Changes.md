@@ -1,5 +1,32 @@
 # Utopia Vault - List of Changes
 
+## v1.16 (in development)
+### Breaking Changes
+- **FilterableView** now requires the implementation of `.self`
+### Deprecations
+- Deprecated **SqlExtensions**
+### New Features
+- Added **TimeDeprecatableView** and **NullDeprecatableView** in order to make accessing deprecatable items easier
+### New Methods
+- **ChronoRowFactoryView**
+  - Added `.takeLatest(Int)`, `.takeEarliest(Int)` and `.createdDuring(HasInclusiveEnds[Instant])`
+- **ConditionElement**
+  - Added `.time`
+  - Added `.appearsWithin(String)`
+- **ManyModelAccess**
+  - Added `.toMapBy(...)`, `.pullColumnMap(...)` and `.pullColumnMultiMap(...)`
+- **OrderBy**
+  - Added `.withDirection(OrderDirection)`, `.ascending` and `.descending`
+- **RowFactoryView**
+  - Added `.take(Int, OrderBy)`
+- **SqlSegment**
+  - Added `.mapSql(...)` and `.mergeWith(SqlSegment)(...)`
+### Other Changes
+- **Value** to **ConditionElement** conversion is now implicitly available, you don't need to 
+  import `SqlExtensions._` anymore
+- **Storable**`.insert()` now throws if index is not specified in a context where one is required. 
+  Previously the insert was simply skipped.
+
 ## v1.15 - 02.02.2023
 This update focuses mostly on bugfixes and better joining support.  
 One neat update is the addition of combinable column length rules.

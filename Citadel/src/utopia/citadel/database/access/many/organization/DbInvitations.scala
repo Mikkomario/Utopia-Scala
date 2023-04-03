@@ -3,7 +3,6 @@ package utopia.citadel.database.access.many.organization
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * The root access point when targeting multiple Invitations at a time

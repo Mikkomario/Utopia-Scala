@@ -70,6 +70,8 @@ trait ManyEmailValidatedSessionsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = EmailValidatedSessionFactory
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidatedSessionsAccess = 

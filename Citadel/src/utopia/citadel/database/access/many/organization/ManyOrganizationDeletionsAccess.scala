@@ -44,6 +44,8 @@ trait ManyOrganizationDeletionsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = OrganizationDeletionFactory
 	
 	override def _filter(additionalCondition: Condition): ManyOrganizationDeletionsAccess =

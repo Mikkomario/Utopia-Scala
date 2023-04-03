@@ -80,6 +80,8 @@ trait ManySessionTokensAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = SessionTokenFactory
 	
 	override def filter(additionalCondition: Condition): ManySessionTokensAccess = 

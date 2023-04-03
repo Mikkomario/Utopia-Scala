@@ -64,6 +64,8 @@ trait ManyAuthRedirectsAccess
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = AuthRedirectFactory
 	
 	override def filter(additionalCondition: Condition): ManyAuthRedirectsAccess = 

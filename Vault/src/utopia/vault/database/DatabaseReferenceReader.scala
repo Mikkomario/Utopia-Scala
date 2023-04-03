@@ -5,7 +5,6 @@ import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.vault.sql.Select
 import utopia.vault.sql.Where
-import utopia.vault.sql.SqlExtensions._
 import utopia.vault.sql.ConditionElement
 import utopia.vault.model.immutable.{Column, Reference, Table}
 

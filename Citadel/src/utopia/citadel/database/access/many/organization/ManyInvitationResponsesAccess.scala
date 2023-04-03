@@ -76,6 +76,8 @@ trait ManyInvitationResponsesAccess extends ManyRowModelAccess[InvitationRespons
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def self = this
+	
 	override def factory = InvitationResponseFactory
 	
 	override def filter(additionalCondition: Condition): ManyInvitationResponsesAccess = 

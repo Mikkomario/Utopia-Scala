@@ -64,11 +64,6 @@ If you want to log errors or make all parsing errors fatal, please change `Error
 If you want to manage column length limits, I'd recommend calling `ColumnLengthRules.loadFrom(Path)`, which reads 
 column length management settings from a .json file.
 
-### Extensions you should be aware of
-- utopia.vault.sql.**Extensions**
-    - Allows you to use values (or value convertible items) as condition elements
-    - Usually works in combination with utopia.flow.generic.**ValueConversions**
-
 ### You should get familiar with these classes
 - **ConnectionPool** - When you need to open new database connections
 - **Connection** - When you need to use database connections (usually passed as an implicit parameter)

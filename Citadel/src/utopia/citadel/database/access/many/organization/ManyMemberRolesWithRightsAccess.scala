@@ -40,6 +40,8 @@ trait ManyMemberRolesWithRightsAccess
 	
 	// IMPLEMENTED  ------------------------------
 	
+	override protected def self = this
+	
 	override def factory = MemberRoleWithRightsFactory
 	
 	override def _filter(additionalCondition: Condition): ManyMemberRolesWithRightsAccess =

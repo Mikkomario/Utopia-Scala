@@ -2,7 +2,6 @@ package utopia.exodus.database.access.many.auth
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.UnconditionalView
-import utopia.vault.sql.SqlExtensions._
 
 /**
   * The root access point when targeting multiple EmailValidationResends at a time
