@@ -7,25 +7,25 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.multi.stack.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.focus.FocusRequestable
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.container.stack.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Window
-import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
+import utopia.reflection.container.template.window.{RowGroup, RowGroups, WindowButtonBlueprint}
 import utopia.reflection.event.HotKey
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reflection.shape.LengthExtensions._
 
 import java.awt.event.KeyEvent
@@ -61,7 +61,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	/**
 	  * @return Input creation blueprints and the context to use in subsequent creation method calls
 	  */
-	protected def inputTemplate: (Vector[RowGroups[InputRowBlueprint[ReachComponentLike with FocusRequestable, TextContext]]], N)
+	protected def inputTemplate: (Vector[RowGroups[InputRowBlueprint]], N)
 	
 	/**
 	  * @return Icon representing window close action (used in warning pop-ups and the default close button)
@@ -112,12 +112,12 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val context = fieldCreationContext
 		val (nameContext, fieldContext) = makeFieldNameAndFieldContext(context)
 		implicit val rowContext: FieldRowContext = FieldRowContext(nameContext, fieldContext)
-		val managedFieldsBuilder = new VectorBuilder[(String, ManagedField[RowField])]
+		val fieldsBuilder = new VectorBuilder[(String, InputField)]
 		
 		// Creates component layouts based on the template row groups
 		val openGroups = template.map { groups =>
 			Open { hierarchy =>
-				groupsToComponent(Mixed(hierarchy).withContext(context), groups, managedFieldsBuilder)
+				groupsToComponent(Mixed(hierarchy).withContext(context), groups, fieldsBuilder)
 			}
 		}
 		
@@ -125,17 +125,16 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val content = buildLayout(factories, openGroups, dialogContext)
 		
 		// Creates the data interface (reading input data from fields)
-		val fields = managedFieldsBuilder.result().toMap
+		val fields = fieldsBuilder.result().toMap
 		def tryReadData() = {
 			val resultBuffer = new VectorBuilder[Constant]()
 			// Reads values until one read fails
 			val failure = fields.view.map { case (key, field) =>
 				// Attempts to read field value, may fail
-				field.currentValue match
-				{
+				field.value match {
 					case Left(errorMessage) =>
-						showWarningFor(field.field, errorMessage)
-						Some(key -> field.field)
+						showWarningFor(field, errorMessage)
+						Some(key -> field)
 					case Right(value) =>
 						// Stores values in the buffer
 						resultBuffer += Constant(key, value)
@@ -213,8 +212,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	}
 	
 	private def groupsToComponent(factories: ContextualMixed[ColorContext],
-								  groups: RowGroups[InputRowBlueprint[RowField, TextContext]],
-								  fieldsBuffer: VectorBuilder[(String, ManagedField[RowField])])
+								  groups: RowGroups[InputRowBlueprint],
+								  fieldsBuffer: VectorBuilder[(String, InputField)])
 								 (implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// Checks whether segmentation should be used
@@ -253,9 +252,9 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	}
 	
 	private def groupToComponent(factories: ContextualMixed[ColorContext],
-								 group: RowGroup[InputRowBlueprint[RowField, TextContext]],
+								 group: RowGroup[InputRowBlueprint],
 								 segmentGroup: Option[SegmentGroup],
-								 fieldsBuffer: VectorBuilder[(String, ManagedField[RowField])])
+								 fieldsBuffer: VectorBuilder[(String, InputField)])
 								(implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// If this group consists of multiple rows, wraps them in a stack. Otherwise presents the row as is
@@ -280,8 +279,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	}
 	
 	private def actualizeRow(factories: ContextualMixed[ColorContext],
-							 blueprint: InputRowBlueprint[RowField, TextContext], segmentGroup: Option[SegmentGroup],
-							 fieldsBuilder: VectorBuilder[(String, ManagedField[RowField])])
+							 blueprint: InputRowBlueprint, segmentGroup: Option[SegmentGroup],
+							 fieldsBuilder: VectorBuilder[(String, InputField)])
 							(implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
 	{
 		// Case: Two components are used
@@ -334,8 +333,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	}
 	
 	private def createHorizontalFieldAndNameRow(factories: => ContextualMixed[ColorContext],
-												blueprint: InputRowBlueprint[RowField, TextContext],
-												fieldsBuilder: VectorBuilder[(String, ManagedField[RowField])])
+												blueprint: InputRowBlueprint,
+												fieldsBuilder: VectorBuilder[(String, InputField)])
 											   (implicit context: FieldRowContext) =
 	{
 		val fieldNameComesFirst = blueprint.fieldAlignment.horizontal != Close
@@ -343,8 +342,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	}
 	
 	private def createFieldAndName(factories: => ContextualMixed[ColorContext],
-								   blueprint: InputRowBlueprint[RowField, TextContext],
-								   fieldsBuilder: VectorBuilder[(String, ManagedField[RowField])],
+								   blueprint: InputRowBlueprint,
+								   fieldsBuilder: VectorBuilder[(String, InputField)],
 								   fieldNameIsFirst: Boolean, expandLabel: Boolean)
 								  (implicit context: FieldRowContext) =
 	{

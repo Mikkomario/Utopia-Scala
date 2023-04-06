@@ -3,12 +3,11 @@ package utopia.reach.window
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
-import utopia.paradigm.enumeration.HorizontalDirection
+import utopia.paradigm.enumeration.{Alignment, HorizontalDirection}
 import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reflection.container.template.window.ManagedField
+import utopia.reflection.component.context.TextContext
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
 
 object InputRowBlueprint
 {
@@ -22,18 +21,15 @@ object InputRowBlueprint
 	  * @param isScalable Whether the field can be scaled horizontally (default = true)
 	  * @param createField A function for creating a new managed field when component creation context is known.
 	  *                    Accepts component creation factory and produces a managed field.
-	  * @tparam C Type of wrapped field
-	  * @tparam Top Type of most abstract allowed component creation context
-	  * @tparam N Type of utilized component creation context
 	  * @tparam F Type of contextual component factory version
 	  * @return A new input row blueprint
 	  */
-	def using[C, Top, N <: Top, F[X <: Top] <: ContextualComponentFactory[X, _ >: Top, F]]
-	(factory: ContextInsertableComponentFactoryFactory[_ >: Top, _, F], key: String,
+	def using[F[X <: TextContext] <: ContextualComponentFactory[X, _ >: TextContext, F]]
+	(factory: ContextInsertableComponentFactoryFactory[_ >: TextContext, _, F], key: String,
 	 displayName: LocalizedString  = LocalizedString.empty,
 	 fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
-	 isScalable: Boolean = true)(createField: F[N] => ManagedField[C]) =
-		apply[C, N](key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
+	 isScalable: Boolean = true)(createField: F[TextContext] => InputField) =
+		apply(key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
 			createField(factory.withContext(hierarchy, context))
 		}
 }
@@ -50,10 +46,10 @@ object InputRowBlueprint
   * @param createField A function for creating a new managed field when component creation context is known.
   *                    Accepts component creation hierarchy and context.
   */
-case class InputRowBlueprint[+C, -N](key: String, displayName: LocalizedString = LocalizedString.empty,
-                                     fieldAlignment: Alignment = Alignment.Right,
-                                     visibilityPointer: Changing[Boolean] = AlwaysTrue, isScalable: Boolean = true)
-									(createField: (ComponentHierarchy, N) => ManagedField[C])
+case class InputRowBlueprint(key: String, displayName: LocalizedString = LocalizedString.empty,
+                             fieldAlignment: Alignment = Alignment.Right,
+                             visibilityPointer: Changing[Boolean] = AlwaysTrue, isScalable: Boolean = true)
+                            (createField: (ComponentHierarchy, TextContext) => InputField)
 {
 	// COMPUTED	-----------------------------
 	
@@ -87,7 +83,8 @@ case class InputRowBlueprint[+C, -N](key: String, displayName: LocalizedString =
 	  * @param context Component creation context
 	  * @return A new managed field
 	  */
-	def apply(hierarchy: ComponentHierarchy, context: N) = createField(hierarchy, context)
+	def apply(hierarchy: ComponentHierarchy, context: TextContext) =
+		createField(hierarchy, context)
 	
 	/**
 	  * Creates a new managed field
@@ -95,7 +92,8 @@ case class InputRowBlueprint[+C, -N](key: String, displayName: LocalizedString =
 	  * @param context Component creation context (implicit)
 	  * @return A new managed field
 	  */
-	def contextual(hierarchy: ComponentHierarchy)(implicit context: N) = apply(hierarchy, context)
+	def contextual(hierarchy: ComponentHierarchy)(implicit context: TextContext) =
+		apply(hierarchy, context)
 	
 	/**
 	  * @param direction Segment side direction

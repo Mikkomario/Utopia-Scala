@@ -6,6 +6,7 @@ import utopia.flow.generic.model.template.ValueConvertible
 import utopia.reflection.component.template.input.Input
 import utopia.reflection.localization.LocalizedString
 
+@deprecated("Replaced with InputField in Reach", "v2.0")
 object ManagedField
 {
 	// IMPLICIT	--------------------------
@@ -169,6 +170,7 @@ object ManagedField
   * @author Mikko Hilpinen
   * @since 26.2.2021, v1
   */
+@deprecated("Replaced with InputField in Reach", "v2.0")
 trait ManagedField[+C]
 {
 	// ABSTRACT	--------------------------
@@ -177,7 +179,6 @@ trait ManagedField[+C]
 	  * @return The managed input field
 	  */
 	def field: C
-	
 	/**
 	  * @return The current managed field value. Either<br>
 	  *         Left: a message on invalid value failure or<br>

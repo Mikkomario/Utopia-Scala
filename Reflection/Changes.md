@@ -4,6 +4,8 @@
 ### Breaking Changes
 - **ContainerContentDisplayer2** now uses **EqualsFunction** and not a normal function when comparing items
 - **Calendar** now uses **WeekDay** instead of **DayOfWeek**
+### Deprecations
+- Deprecated **ManagedField** in favor of **InputField** (in **Reach**)
 ### New Methods
 - **CursorSet** (type)
   - Added `.loadIcons(...)` for easier setup

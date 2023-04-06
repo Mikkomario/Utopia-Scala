@@ -1,7 +1,12 @@
 # Utopia Reach - List of Changes
 
-## v0.5.1 (in development)
+## v0.6 (in development)
 ### Breaking Changes
+- **InputRowBluePrint** now only accepts **InputFields** instead of various kinds of **ManagedFields**
+  - Removed much of generic type support from this class because the compiler couldn't keep up with the generic types
+    - **ManagedField** was only used in **InputWindowFactory**, and there it only supported type 
+      **ReachComponent with FocusRequestable**, hence the removal of generic type support in this instance
+  - **ManagedField** had a lot of problems with the compiler as well, hence the new **InputField** trait / approach
 - In some component construction methods, renamed `additionalDrawers` to `customDrawers`
 ### New Features
 - Drag-and-drop support for external files. See **DragAndDropManager** and **DragAndDropTarget**.

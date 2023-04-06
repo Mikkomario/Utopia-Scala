@@ -1,38 +1,38 @@
 package utopia.reach.test
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.generic.ParadigmDataType
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.util.ScreenExtensions._
-import utopia.paradigm.measurement.DistanceExtensions._
-import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.{ColorContext, ColorContextLike, TextContext}
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
-import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
-import ManagedField._
-import utopia.flow.generic.model.immutable.Model
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
-import utopia.reach.component.input.check.{CheckBox, ContextualCheckBoxFactory}
-import utopia.reach.component.input.selection.{ContextualRadioButtonGroupFactory, RadioButtonGroup}
-import utopia.reach.component.input.text.{ContextualDurationFieldFactory, ContextualTextFieldFactory, DurationField, TextField}
+import utopia.genesis.handling.ActorLoop
+import utopia.genesis.util.ScreenExtensions._
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.measurement.DistanceExtensions._
+import utopia.paradigm.shape.shape2d.Size
+import utopia.reach.component.factory.ContextualMixed
+import utopia.reach.component.input.check.CheckBox
+import utopia.reach.component.input.selection.RadioButtonGroup
+import utopia.reach.component.input.text.{DurationField, TextField}
+import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
+import utopia.reach.window.InputField._
+import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
+import utopia.reflection.color.ColorRole
+import utopia.reflection.color.ColorRole.Secondary
+import utopia.reflection.component.context.ColorContext
+import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.template.window.{RowGroup, RowGroups, WindowButtonBlueprint}
 import utopia.reflection.image.SingleColorIconCache
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -45,8 +45,8 @@ object InputWindowTest extends App
 	ParadigmDataType.setup()
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
-	import utopia.reflection.test.TestContext._
 	import TestCursors._
+	import utopia.reflection.test.TestContext._
 	
 	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
 	val selectedBoxIcon = icons("check-box-selected.png")
@@ -75,46 +75,37 @@ object InputWindowTest extends App
 		override protected def inputTemplate =
 		{
 			val nameErrorPointer = new PointerWithEvents(LocalizedString.empty)
-			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF: ContextualTextFieldFactory[TextContext] =>
+			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF =>
 				val textPointer = new PointerWithEvents[String]("")
 				val displayErrorPointer = nameErrorPointer.mergeWith(textPointer) { (error, text) =>
 					if (text.isEmpty) error else LocalizedString.empty
 				}
 				val field = fieldF.forString(defaultFieldWidth, Fixed("First Name"),
 					errorMessagePointer = displayErrorPointer, textPointer = textPointer)
-				field.testWith { s =>
-					if (s.isEmpty)
-					{
+				field.validateWith { s =>
+					if (s.isEmpty) {
 						nameErrorPointer.value = "Required Field"
-						Some("Please insert a value first")
+						"Please insert a value first"
 					}
 					else
-						None
+						LocalizedString.empty
 				}
 			}
-			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) { fieldF: ContextualTextFieldFactory[TextContext] =>
-				fieldF.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional"))
-			}
-			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex", Alignment.BottomLeft) { fieldF: ContextualRadioButtonGroupFactory[TextContext] =>
-				fieldF.apply(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female"))
-			}
+			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) {
+				_.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional")) }
+			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex",
+				Alignment.BottomLeft) { _(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female")) }
 			
-			val durationField = InputRowBlueprint.using(DurationField, "durationSeconds", "Login Duration") { fieldF: ContextualDurationFieldFactory[TextContext] =>
-				val field = fieldF.apply(maxValue = 24.hours)
-				ManagedField.alwaysSucceed(field) { field.value.toSeconds }
+			val durationField = InputRowBlueprint.using(DurationField, "durationSeconds",
+				"Login Duration") { _.apply(maxValue = 24.hours).convertWith { _.toSeconds }
 			}
 			
 			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
 				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
-				isScalable = false) { fieldF: ContextualCheckBoxFactory[ColorContextLike] =>
-				val field = fieldF(selectedBoxIcon, unselectedBoxIcon)
-				// TODO: There should be a better way to do this
-				ManagedField(field) {
-					if (field.value)
-						Right(true)
-					else
-						Left("You must accept the terms and conditions to continue")
-				}
+				isScalable = false) {
+					_(selectedBoxIcon, unselectedBoxIcon).validateWith {
+						if (_) LocalizedString.empty else "You must accept the terms and conditions to continue"
+					}
 			}
 			
 			Vector(RowGroups(RowGroup(firstNameField, lastNameField),
