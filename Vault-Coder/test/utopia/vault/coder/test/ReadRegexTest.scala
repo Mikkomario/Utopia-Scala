@@ -11,12 +11,12 @@ import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, Declaratio
 object ReadRegexTest extends App
 {
 	private val visibilityRegex = (Regex("protected ") || Regex("private ")).withinParenthesis
-	private val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(p.keyword + " ") }
+	private val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(s"${ p.keyword } ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private val declarationModifierRegex = (visibilityRegex || declarationPrefixRegex).withinParenthesis
-	private val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
+	private val declarationKeywordRegex = DeclarationType.values.map { d => Regex(s"${ d.keyword } ") }
 		.reduceLeft { _ || _ }.withinParenthesis
-	private val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
+	private val declarationStartRegex = declarationModifierRegex.anyTimes + declarationKeywordRegex
 	private val namedDeclarationStartRegex = declarationStartRegex +
 		((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
 		(Regex.word + Regex.alphaNumeric).withinParenthesis.noneOrOnce +

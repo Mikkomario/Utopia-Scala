@@ -9,15 +9,21 @@
 ### Bugfixes
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
 - Fixed **Path**`.relativeTo(Path)`
+### Deprecations
+- Deprecated `.equalsUsing(...)` and `.notEqualsUsing(...)` in favor of `.isSymmetricWith(...)` and `.isAsymmetricWith(...)`
 ### New Features
 - Custom file conflict resolutions can now be used in standard file move and copy operations
 - The first day of the week may be configured using **WeekDays**
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 ### New Methods
 - **Iterable** (**CollectionExtensions**)
+  - Added `.toMapBy(...)`
   - Added `.replaceOrAppend(...)`, which is a variation of `.mergeOrAppend(...)`
+  - Added alias `.hasEqualContentWith(Iterable)(EqualsFunction)` for `~==`
 - **MatrixLike**
   - Added `.columnIndices` and `.rowIndices`
+- **Pair**
+  - Added `.isSymmetricWith(EqualsFunction)` and `.isAsymmetricWith(EqualsFunction)`
 - **Path** (**FileExtensions**)
   - Added `.isChildOf(Path)`
 - **Pointer**
@@ -28,7 +34,9 @@
   - Added `.logFailure` and `.logFailureWithMessage(String)`
 ### Other
 - In **TimeLogger**, `.print()` must now be called separately
-- **Path**`.write(...)` and its variants (in **FileExtensions**) now automatically create the parent directories before writing
+- **Pair**`.isSymmetric` and `.isAsymmetric` now accept an implicit **EqualsFunction** parameter (where default is ==)
+- **Path**`.write(...)` and its variants (in **FileExtensions**) now automatically create the 
+  parent directories before writing
 - `EqualsFunction.by(...)` now has a default **EqualsFunction** parameter
 - EqualsExtensions now contains `~==` separately for **Options** 
 

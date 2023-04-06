@@ -710,6 +710,14 @@ object CollectionExtensions
 		def only = if (hasSize(1)) Some(t.head) else None
 		
 		/**
+		  * Converts this collection to a map, by pairing each value with a map result key
+		  * @param f A function that extracts a key from each item (expected to return unique results)
+		  * @tparam K Type of keys used
+		  * @return A new map where each item from this collection is mapped to a key
+		  */
+		def toMapBy[K](f: A => K) = t.iterator.map { a => f(a) -> a }.toMap
+		
+		/**
 		  * @param end Targeted end of this collection
 		  * @throws NoSuchElementException If this collection is empty
 		  * @return The item at the specified end of this collection
@@ -822,6 +830,7 @@ object CollectionExtensions
 		def hasEqualSizeWith(other: Iterable[_]) = t.sizeCompare(other) == 0
 		
 		/**
+		  * Alias for [[hasEqualContentWith]].
 		  * Tests whether these two collections are equal when using the specified equals function.
 		  * The size, order and contents must match.
 		  * @param other Another collection
@@ -829,7 +838,16 @@ object CollectionExtensions
 		  * @tparam B Type of items in the other collection
 		  * @return Whether these collections are equal
 		  */
-		def ~==[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) =
+		def ~==[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) = hasEqualContentWith(other)
+		/**
+		  * Tests whether these two collections are equal when using the specified equals function.
+		  * The size, order and contents must match.
+		  * @param other Another collection
+		  * @param eq    An equals function to use
+		  * @tparam B Type of items in the other collection
+		  * @return Whether these collections are equal
+		  */
+		def hasEqualContentWith[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) =
 			hasSize.of(other) && t.iterator.zip(other.iterator).forall { case (a, b) => eq(a, b) }
 		
 		/**
@@ -838,8 +856,7 @@ object CollectionExtensions
 		  *                 important than those which are introduced the last.
 		  * @return The items in this collection that best match the specified conditions
 		  */
-		def bestMatch(matchers: Seq[A => Boolean]): Vector[A] =
-		{
+		def bestMatch(matchers: Seq[A => Boolean]): Vector[A] = {
 			// If there is only a single option, that is the best match. If there are 0 options, there's no best match
 			// If there are no matchers left, cannot make a distinction between items
 			if (hasSize < 2 || matchers.isEmpty)
@@ -855,10 +872,8 @@ object CollectionExtensions
 					bestMatch(matchers.drop(1))
 			}
 		}
-		
 		def bestMatch(firstMatcher: A => Boolean, secondMatcher: A => Boolean, more: (A => Boolean)*): Vector[A] =
 			bestMatch(Vector(firstMatcher, secondMatcher) ++ more)
-		
 		/**
 		  * Filters this collection with the specified filter function, but if the results would be empty, returns
 		  * this collection instead
@@ -906,8 +921,7 @@ object CollectionExtensions
 		  * @tparam B Type of map function result
 		  * @return The first successful map result or failure if none of the items in this collection could be mapped
 		  */
-		def tryFindMap[B](f: A => Try[B]) =
-		{
+		def tryFindMap[B](f: A => Try[B]) = {
 			val iter = t.iterator.map(f)
 			if (iter.hasNext) {
 				// Returns the first result if its a success or if no successes were found
@@ -929,7 +943,6 @@ object CollectionExtensions
 		  * @return Whether this collection contains an equal item
 		  */
 		def containsEqual[B >: A](item: B)(implicit equals: EqualsFunction[B]) = t.exists { equals(_, item) }
-		
 		/**
 		  * @param items  Items to test
 		  * @param equals Equals function to use (implicit)

@@ -1,9 +1,11 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
@@ -27,6 +29,8 @@ import scala.util.{Failure, Success, Try}
   */
 object FileExtensions
 {
+	private lazy val hasSameLastModifiedEquals = EqualsFunction[Path] { _.hasSameLastModifiedAs(_) }
+	
 	/**
 	  * Converts a string to a path
 	  */
@@ -810,10 +814,9 @@ object FileExtensions
 			val directLastModifiedComparison = lastModified.success.exists { another.lastModified.success.contains }
 			if (isDirectory && another.isDirectory) {
 				if (directLastModifiedComparison) {
-					children.getOrElse(Vector()).sortBy { _.fileName }
-						.compareWith(another.children.getOrElse(Vector()).sortBy { _.fileName }) { (a, b) =>
-							a.hasSameLastModifiedAs(b)
-						}
+					Pair(children, another.children)
+						.map { _.getOrElse(Vector()).sortBy { _.fileName } }
+						.isSymmetricWith { _.~==(_)(hasSameLastModifiedEquals) }
 				}
 				else
 					false

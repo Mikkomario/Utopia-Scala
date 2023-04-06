@@ -5,12 +5,6 @@ import utopia.vault.sql.Condition
 
 import scala.language.implicitConversions
 
-object UniqueIdAccess
-{
-	// Implicitly accesses the unique content
-	implicit def autoAccess[A](idAccess: UniqueIdAccess[A])(implicit connection: Connection): Option[A] = idAccess.pull
-}
-
 /**
   * Common trait for id access points which point to a unique id
   * @author Mikko Hilpinen

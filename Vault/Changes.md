@@ -3,6 +3,9 @@
 ## v1.16 (in development)
 ### Breaking Changes
 - **FilterableView** now requires the implementation of `.self`
+- Removed implicit conversions from access points to **Vector** and **Option**
+  - While this change may require you to fix a couple of build errors, 
+    it will also help you avoid accidental database queries
 ### Deprecations
 - Deprecated **SqlExtensions**
 ### New Features

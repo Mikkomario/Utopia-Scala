@@ -50,7 +50,7 @@ object AuthDbExtensions
 		 * @return Whether this user has access to perform that task when that service is considered
 		 */
 		def isAuthorizedForServiceTask(serviceId: Int, taskId: Int)(implicit connection: Connection) =
-			AuthUtils.testTaskAccess(DbTask(taskId).scopes.forServiceWithId(serviceId), accessibleScopeIds)
+			AuthUtils.testTaskAccess(DbTask(taskId).scopes.forServiceWithId(serviceId).pull, accessibleScopeIds)
 	}
 	
 	implicit class DbAuthTask(val a: DbSingleTask) extends AnyVal

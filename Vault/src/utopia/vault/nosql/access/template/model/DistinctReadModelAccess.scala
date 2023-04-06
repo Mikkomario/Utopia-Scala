@@ -6,13 +6,6 @@ import utopia.vault.model.template.Joinable
 
 import scala.language.implicitConversions
 
-object DistinctReadModelAccess
-{
-	// Automatically accesses results of .pull
-	implicit def autoAccess[A](accessor: DistinctReadModelAccess[_, A, _])
-	                          (implicit connection: Connection): A = accessor.pull
-}
-
 /**
  * A common trait for model accessors which are able to target a distinct value / values with the pull method.
  * These accessors also support auto-access to their values.

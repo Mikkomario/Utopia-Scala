@@ -57,7 +57,7 @@ object AuthUtils
 		// Reads the redirection target from the preparation, if possible
 		preparation
 			.flatMap { preparation =>
-				DbAuthPreparation(preparation.id).redirectTargets.forResult(errorMessage.isEmpty, deniedAccess)
+				DbAuthPreparation(preparation.id).redirectTargets.forResult(errorMessage.isEmpty, deniedAccess).pull
 					.maxByOption { _.resultFilter.priorityIndex }
 					.map { target => target.resultFilter -> target.url }
 			}

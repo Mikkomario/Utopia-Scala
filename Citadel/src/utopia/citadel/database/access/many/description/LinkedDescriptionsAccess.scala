@@ -328,7 +328,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 			// options exhausted
 			languageIds.headOption match {
 				case Some(languageId) =>
-					val readDescriptions = inLanguageWithId(languageId).withRoleIds(roleIds)
+					val readDescriptions = inLanguageWithId(languageId).withRoleIds(roleIds).pull
 					val newRemainingRoleIds = roleIds -- readDescriptions.map { _.description.roleId }
 					if (newRemainingRoleIds.nonEmpty && languageIds.size > 1)
 						readDescriptions ++ withRolesInPreferredLanguages(newRemainingRoleIds)(

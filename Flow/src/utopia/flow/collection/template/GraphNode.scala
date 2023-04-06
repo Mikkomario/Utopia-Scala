@@ -96,7 +96,7 @@ object GraphNode
 						if (arrived.isEmpty)
 							Left(destination)
 						else {
-							val bestResults = arrived.minGroupBy { _.currentCost }
+							val bestResults = arrived.filterMinBy { _.currentCost }
 							val bestResult = bestResults.head
 							// The latest result may still be improved upon
 							Right((destination, bestResult.currentNode,
@@ -108,7 +108,7 @@ object GraphNode
 					val betterResults = remainingImprovableDestinations.flatMap { case (destination, minCost) =>
 						val arrived = newFinders.filter { o => destination(o.currentNode) }.filter { _.currentCost <= minCost }
 						if (arrived.nonEmpty) {
-							val bestResults = arrived.minGroupBy { _.currentCost }
+							val bestResults = arrived.filterMinBy { _.currentCost }
 							val bestResult = bestResults.head
 							val newRoutes = pastResults.get(bestResult.currentNode)
 								.filter { case (_, cost) => ord.equiv(cost, bestResult.currentCost) } match

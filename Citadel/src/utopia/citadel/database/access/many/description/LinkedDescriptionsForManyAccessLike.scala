@@ -38,7 +38,7 @@ trait LinkedDescriptionsForManyAccessLike extends LinkedDescriptionsAccessLike
 		val languageId = languageIds.mostPreferred
 		val newAccessPoint = subGroup(remainingTargetIds)
 		// Target id -> Descriptions
-		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleIds(remainingRoleIds)
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleIds(remainingRoleIds).pull
 			.groupBy { _.targetId }
 		
 		// Reads the rest of the descriptions recursively
@@ -74,12 +74,10 @@ trait LinkedDescriptionsForManyAccessLike extends LinkedDescriptionsAccessLike
 		val languageId = languageIds.mostPreferred
 		val newAccessPoint = subGroup(remainingTargetIds)
 		// Target id -> Description link
-		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleId(roleId)
-			.map { link => link.targetId -> link }.toMap
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleId(roleId).toMapBy { _.targetId }
 		
 		// Reads the rest of the descriptions recursively, if possible and necessary
-		if (languageIds.size > 1)
-		{
+		if (languageIds.size > 1) {
 			val newRemainingTargetIds = remainingTargetIds -- readDescriptions.keySet
 			if (remainingTargetIds.isEmpty)
 				readDescriptions

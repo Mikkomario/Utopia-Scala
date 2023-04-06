@@ -33,8 +33,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends LeafResourc
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// In GET request, reads descriptions in requested languages
-		if (context.request.method == Get)
-		{
+		if (context.request.method == Get) {
 			context.authorizedInOrganization(organizationId) { (session, _, connection) =>
 				implicit val c: Connection = connection
 				// Checks the languages the user wants to use and gathers descriptions in those languages
@@ -50,15 +49,13 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends LeafResourc
 			}
 		}
 		// In PUT request, updates descriptions based on posted model
-		else
-		{
+		else {
 			// Authorizes the request and parses posted description(s)
 			context.authorizedForTask(organizationId, DocumentOrganization.id) { (session, _, connection) =>
 				context.handlePost(NewDescription) { newDescription =>
 					implicit val c: Connection = connection
 					// Makes sure language id is valid
-					if (DbLanguage(newDescription.languageId).isDefined)
-					{
+					if (DbLanguage(newDescription.languageId).nonEmpty) {
 						// Updates the organization's descriptions accordingly
 						val dbDescriptions = DbOrganizationDescriptions(organizationId)
 						val insertedDescriptions = dbDescriptions.update(newDescription, session.ownerId)

@@ -191,16 +191,17 @@ case class Pair[+A](first: A, second: A)
 	/**
 	  * @return Whether the two values in this pair are equal
 	  */
-	def isSymmetric = first == second
+	def isSymmetric(implicit eq: EqualsFunction[A] = EqualsFunction.default) = eq(first, second)
 	/**
 	  * @return Whether the two values in this pair are not equal
 	  */
-	def isAsymmetric = !isSymmetric
+	def isAsymmetric(implicit eq: EqualsFunction[A] = EqualsFunction.default) = !isSymmetric
 	/**
 	  * @return Whether the two values in this pair are not equal
 	  */
 	@deprecated("Please use .isAsymmetric instead", "v2.0")
 	def isNotSymmetric = !isSymmetric
+	
 	
 	/**
 	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
@@ -469,12 +470,25 @@ case class Pair[+A](first: A, second: A)
 	  * @param e An equals function
 	  * @return Whether the two values of this pair are equal when applying the specified function
 	  */
+	@deprecated("Renamed to .isSymmetricWith(EqualsFunction)", "2.1")
 	def equalsUsing(e: EqualsFunction[A]) = e.equals(first, second)
 	/**
 	  * @param e An equals function
 	  * @return Whether the two values of this pair are unequal when applying the specified function
 	  */
+	@deprecated("Renamed to .isAsymmetricWith(EqualsFunction)", "2.1")
 	def notEqualsUsing(e: EqualsFunction[A]) = e.not(first, second)
+	
+	/**
+	  * @param e An equals function
+	  * @return Whether the two values of this pair are equal when applying the specified function
+	  */
+	def isSymmetricWith(e: EqualsFunction[A]) = e.equals(first, second)
+	/**
+	  * @param e An equals function
+	  * @return Whether the two values of this pair are unequal when applying the specified function
+	  */
+	def isAsymmetricWith(e: EqualsFunction[A]) = e.not(first, second)
 	/**
 	  * @param f A mapping function
 	  * @tparam B Type of mapping results

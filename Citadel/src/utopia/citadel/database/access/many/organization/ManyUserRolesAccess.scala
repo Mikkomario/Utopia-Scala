@@ -51,11 +51,10 @@ trait ManyUserRolesAccess
 	  * @param languageIds Ids of the languages in which role descriptions are read
 	  * @return Detailed copies of these user roles
 	  */
-	def detailed(implicit connection: Connection, languageIds: LanguageIds) =
-	{
+	def detailed(implicit connection: Connection, languageIds: LanguageIds) = {
 		// Reads described copies first, then attaches task link information
 		val roles = described
-		val rights = DbUserRoleRights.withAnyOfRoles(roles.map { _.id })
+		val rights = DbUserRoleRights.withAnyOfRoles(roles.map { _.id }).pull
 		val taskIdsPerRoleId = rights.groupMap { _.roleId } { _.taskId }
 		roles.map { role => role.withAllowedTaskIds(taskIdsPerRoleId.getOrElse(role.id, Set()).toSet) }
 	}

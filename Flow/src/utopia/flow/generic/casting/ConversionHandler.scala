@@ -137,7 +137,7 @@ object ConversionHandler
 				Some(ConversionRoute(Vector(directEdges.map { _.value }.minBy { _.cost })))
 			else {
 				// If multiple cheapest routes are found, considers the return route, also
-				val routes = origin.cheapestRoutesTo(target) { _.value.cost }._1.minGroupBy { _.size }
+				val routes = origin.cheapestRoutesTo(target) { _.value.cost }._1.filterMinBy { _.size }
 				if (routes.size > 1) {
 					// (Route, Number of irrevocable steps, return cost)
 					val routesWithReturnCosts = routes.map { route =>
@@ -146,7 +146,7 @@ object ConversionHandler
 						(route, returnRoutes.count { _.isEmpty },
 							returnRoutes.flatten.foldLeft(0) { _ + _.foldLeft(0) { _ + _.value.cost } })
 					}
-					val bestRoute = routesWithReturnCosts.minGroupBy { _._2 }.minBy { _._3 }._1
+					val bestRoute = routesWithReturnCosts.filterMinBy { _._2 }.minBy { _._3 }._1
 					Some(ConversionRoute(bestRoute.map { _.value }))
 				}
 				else

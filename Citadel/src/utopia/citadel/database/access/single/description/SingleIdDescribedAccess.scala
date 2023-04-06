@@ -50,7 +50,7 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 * @return A fully described copy of this instance which includes all available descriptions
 	 *         in all available languages
 	 */
-	def fullyDescribed(implicit connection: Connection) = pullDescribed { descriptions }
+	def fullyDescribed(implicit connection: Connection) = pullDescribed { descriptions.pull }
 	/**
 	  * @param connection Implicit DB Connection
 	  * @param languageIds Ids of the accepted languages, from most preferred to least preferred
@@ -69,7 +69,7 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 * @return A described copy of this instance, containing descriptions only in the targeted language
 	 */
 	def describedInLanguageWithId(languageId: Int)(implicit connection: Connection) =
-		pullDescribed(descriptions.inLanguageWithId(languageId))
+		pullDescribed(descriptions.inLanguageWithId(languageId).pull)
 	/**
 	 * @param languageIds Ids of the accepted languages, from most preferred to least preferred
 	 * @param connection Implicit DB Connection

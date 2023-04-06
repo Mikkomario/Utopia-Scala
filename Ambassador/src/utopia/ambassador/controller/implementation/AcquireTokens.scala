@@ -78,13 +78,12 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 	                  (implicit exc: ExecutionContext, connection: Connection, connectionPool: ConnectionPool) =
 	{
 		// Reads the required scopes first
-		val scopes = DbTask(taskId).scopes.forServiceWithId(serviceId)
+		val scopes = DbTask(taskId).scopes.forServiceWithId(serviceId).pull
 		// Case: No scopes are required => returns None
 		if (scopes.isEmpty)
 			None
 		// Case: Some scopes need to be accessed => Acquires the token
-		else
-		{
+		else {
 			// Since all the scopes are within a single service, can simplify the response a little bit
 			val tokensFuture = forTaskScopes(userId, scopes).mapIfSuccess { _.head._2 }
 			Some(tokensFuture)
