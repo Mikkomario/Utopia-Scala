@@ -1,25 +1,25 @@
 package utopia.vault.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.builder.MultiMapBuilder
 import utopia.flow.collection.mutable.iterator.PollingIterator
 import utopia.flow.parse.string.{IterateLines, Regex}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.MutatingOnce
 import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
-import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
-import utopia.vault.coder.model.scala.datatype.TypeVariance.Invariance
-import utopia.vault.coder.model.scala.{Annotation, Package, Parameter, Parameters}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
-import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, InheritanceLimitType, Reference, ScalaType, TypeRequirement, TypeVariance}
+import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
+import utopia.vault.coder.model.scala.datatype.TypeVariance.Invariance
+import utopia.vault.coder.model.scala.datatype._
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Implicit, Lazy, Override}
 import utopia.vault.coder.model.scala.declaration.FunctionDeclarationType.{FunctionD, ValueD, VariableD}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue, LazyValue, Variable}
-import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, FunctionDeclarationType, InstanceDeclarationType, MethodDeclaration, PropertyDeclaration}
+import utopia.vault.coder.model.scala.declaration._
 import utopia.vault.coder.model.scala.doc.{ScalaDoc, ScalaDocKeyword, ScalaDocPart}
+import utopia.vault.coder.model.scala.{Annotation, Package, Parameter, Parameters}
 
 import java.nio.file.Path
 import scala.collection.immutable.VectorBuilder
@@ -36,16 +36,16 @@ object ScalaParser
 	
 	private lazy val annotationStartRegex = Regex.escape('@')
 	private lazy val visibilityRegex = (Regex("protected ") || Regex("private ")).withinParenthesis
-	private lazy val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(p.keyword + " ") }
+	private lazy val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(s"${ p.keyword } ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private lazy val declarationModifierRegex = (visibilityRegex || declarationPrefixRegex).withinParenthesis
-	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
+	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(s"${ d.keyword } ") }
 		.reduceLeft { _ || _ }.withinParenthesis
-	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
+	private lazy val declarationStartRegex = declarationModifierRegex.anyTimes + declarationKeywordRegex
 	private val namedDeclarationStartRegex = {
 		val operatorRegex = Regex.anyOf("!+-=/*&%?:<>|").oneOrMoreTimes.withinParenthesis
 		val nameRegex = (((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
-			(Regex.wordCharacter.zeroOrMoreTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+			(Regex.wordCharacter.anyTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
 			(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce).withinParenthesis
 		
 		declarationStartRegex + (operatorRegex || nameRegex).withinParenthesis
@@ -62,7 +62,7 @@ object ScalaParser
 	private lazy val commentStartRegex = Regex("\\/\\*")
 	private lazy val commentEndRegex = Regex("\\*\\/")
 	private lazy val emptyScalaDocLineRegex = (Regex.newLine || Regex.whiteSpace || Regex.escape('\t') ||
-		Regex.escape('*')).withinParenthesis.zeroOrMoreTimes
+		Regex.escape('*')).withinParenthesis.anyTimes
 	private lazy val segmentSeparatorRegex = Regex.upperCaseLetter.oneOrMoreTimes +
 		(Regex.escape('\t') || Regex.whiteSpace).withinParenthesis.oneOrMoreTimes +
 		Regex.escape('-').oneOrMoreTimes
@@ -260,10 +260,10 @@ object ScalaParser
 							declarationStart
 					}
 					val declarationType = DeclarationType.values
-						.find { d => declarationStart.contains(d.keyword + " ") }.get
+						.find { d => declarationStart.contains(s"${ d.keyword } ") }.get
 					// Parses prefixes and visibility
 					val prefixes = declarationType.availablePrefixes
-						.filter { prefix => declarationStart.contains(prefix.keyword + " ") }
+						.filter { prefix => declarationStart.contains(s"${ prefix.keyword } ") }
 					val visibility = {
 						if (declarationStart.contains("private "))
 							Private
@@ -299,11 +299,12 @@ object ScalaParser
 						else
 							None -> afterGenericTypes.trim.notEmpty
 					}
-					/*parameters.foreach { p => println(s"Read ${p.lists.size} parameter lists and ${
-						p.implicits.size} implicit parameters - remaining: '${afterParameterLists.getOrElse("")}'") }*/
+					/*
+					parameters.foreach { p => println(s"Read ${p.lists.size} parameter lists and ${
+						p.implicits.size} implicit parameters - remaining: '${afterParameterLists.getOrElse("")}'") }
+					 */
 					// Handles functions and instances differently
-					declarationType match
-					{
+					declarationType match {
 						case declarationType: FunctionDeclarationType =>
 							// println("Interpreted as a function declaration")
 							// Checks whether explicit parameter type has been specified
@@ -312,9 +313,9 @@ object ScalaParser
 							
 							// Expects an assignment operator before a body
 							// - if no operator is given, assumes that the function is abstract
+							// println(s"Processing declaration end $declarationEnd")
 							val body = {
-								if (declarationEnd.contains('='))
-								{
+								if (declarationEnd.contains('=')) {
 									val lineAfterAssignment = declarationEnd.afterFirst("=").trim
 									val firstBodyLine = {
 										if (lineAfterAssignment.isEmpty)
@@ -363,8 +364,7 @@ object ScalaParser
 										val moreBodyLines = linesIter
 											.collectWhile { _.indentation > declarationLine.indentation }
 											.dropRightWhile { _.isEmpty }
-										val allCodeLine = CodeLine(firstBodyLine.code +
-											moreBodyLines.map { _.code }.mkString)
+										val allCodeLine = CodeLine(s"${ firstBodyLine.code }${ moreBodyLines.map { _.code }.mkString }")
 										Code(Vector(allCodeLine), refMap.keySet.filter { target =>
 											allCodeLine.code.contains(target) }.map(refMap.apply))
 									}
@@ -704,7 +704,7 @@ object ScalaParser
 	// Returns parsed type + remaining string
 	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) =
 	{
-		// println(s"Parsing scala type from: '$string'")
+		// println(s"\nParsing scala type from: '$string'")
 		
 		// Case: Starts with parentheses => Leads to either tuple or function type
 		if (string.startsWith("(")) {
@@ -735,7 +735,7 @@ object ScalaParser
 			// Parses the type name until generic types list or some interrupting character
 			val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' && c != '.' }
 			val (mainTypeString, remaining) = if (mainPartEndIndex < 0) mainPart -> "" else
-				mainPart.take(mainPartEndIndex) -> mainPart.drop(mainPartEndIndex)
+				mainPart.take(mainPartEndIndex) -> mainPart.drop(mainPartEndIndex).trim
 			// println(s"Main type is: $mainTypeString - Remaining: $remaining")
 			// Checks whether the main type is referencing a type
 			val mainType = refMap.get(mainTypeString) match {
@@ -749,6 +749,12 @@ object ScalaParser
 				// println(s"Types part is '$typesPart' - remaining: $afterTypes")
 				val (types, _) = scalaTypesFrom(typesPart, refMap)
 				ScalaType(mainType, types, if (isCallByName) CallByName else Standard) -> afterTypes
+			}
+			// Checks for functional type
+			else if (remaining.startsWith("=>")) {
+				val functionResultPart = remaining.afterFirst("=>").trim
+				val (resultType, afterResult) = scalaTypeFrom(functionResultPart, refMap)
+				resultType.fromParameters(Vector(ScalaType(mainType))) -> afterResult
 			}
 			else
 				ScalaType(mainType, category = if (isCallByName) CallByName else Standard) -> remaining.trim
@@ -824,16 +830,20 @@ object ScalaParser
 			// - doesn't utilize indentation in this method
 			val (listLines, remainingAfter) = readBlockLike(CodeLine(listStartLine.drop(1)), remainingLinesIter,
 				'(', ')')
-			/*println(s"Immediately started parsing. Found: '${listLines.map { _.code }.mkString}' (${
-				listLines.size} lines) - remaining: $remainingAfter")*/
+			/*
+			println(s"Immediately started parsing. Found: '${listLines.map { _.code }.mkString}' (${
+				listLines.size} lines) - remaining: $remainingAfter")
+			 */
 			listsBuilder += listLines.map { _.code }.mkString
 			// Collects lists while the remaining part keeps initiating new lists
 			codeAfter = remainingAfter
 			while (codeAfter.exists { _.startsWith("(") }) {
 				val (listLines, remainingAfter) = readBlockLike(CodeLine(codeAfter.get.drop(1)), remainingLinesIter,
 					'(', ')')
-				// println(s"Got ${ listLines.size } lines from ${codeAfter.get}:")
-				// listLines.foreach { l => println(s"- '$l'") }
+				/*
+				println(s"Got ${ listLines.size } lines from ${codeAfter.get}:")
+				listLines.foreach { l => println(s"- '$l'") }
+				 */
 				listsBuilder += listLines.map { _.code }.mkString
 				codeAfter = remainingAfter
 			}
@@ -881,24 +891,57 @@ object ScalaParser
 	private def readBlockLike(blockStartLine: CodeLine, remainingLinesIter: Iterator[CodeLine],
 	                          openChar: Char, closeChar: Char) =
 	{
+		// println(s"\nLooking for $openChar$closeChar blocks...")
+		// Collects the block lines into a vector
 		val blockLinesBuilder = new VectorBuilder[CodeLine]()
-		// Opens the first line
-		var openBlockCount = 1 + blockStartLine.code.count { _ == openChar } -
-			blockStartLine.code.count { _ == closeChar }
-		var lastLine = blockStartLine
-		// Adds multiple lines if necessary
-		while (openBlockCount > 0 && remainingLinesIter.hasNext) {
-			blockLinesBuilder += lastLine
-			lastLine = remainingLinesIter.next()
-			openBlockCount = openBlockCount +
-				lastLine.code.count { _ == openChar } - lastLine.code.count { _ == closeChar }
+		// Keeps track of open blocks
+		var openBlocksCount = 1
+		var line = blockStartLine
+		var remaining: Option[String] = None // Some when this process should return
+		while (remaining.isEmpty) {
+			// println(s"Next line: '$line'; Blocks currently open: $openBlocksCount")
+			// Checks the current line
+			openBlockCountAfter(line.code, openBlocksCount, openChar, closeChar) match {
+				// Case: Block completes on this line => Splits it into two and returns
+				case Right((blockPart, remainingLine)) =>
+					// println(s"Block closes on this line after '$blockPart'; Remaining part is '$remainingLine'")
+					blockLinesBuilder += line.withCode(blockPart.dropRight(1))
+					remaining = Some(remainingLine.dropWhile { _ == ' ' })
+				// Case: Block continues after this line => Moves to the next line, if possible
+				case Left(newOpenBlocksCount) =>
+					blockLinesBuilder += line
+					openBlocksCount = newOpenBlocksCount
+					if (remainingLinesIter.hasNext)
+						line = remainingLinesIter.next()
+					else
+						remaining = Some("")
+			}
 		}
-		// Handles the last line, possibly splitting it to two parts
-		val (lastLineBlockPart, afterPart) = separateBlockClosuresFrom(lastLine, (openBlockCount - 1) max 0,
-			openChar, closeChar)
-		blockLinesBuilder += lastLineBlockPart
-		// Returns all lines plus the part after the last closure
-		blockLinesBuilder.result() -> Some(afterPart.dropWhile { _ == ' ' }).filter { _.nonEmpty }
+		blockLinesBuilder.result() -> remaining.filter { _.nonEmpty }
+	}
+	
+	private def openBlockCountAfter(line: String, startCount: Int, openChar: Char, closeChar: Char) = {
+		// Checks one character at a time, until openings are matching the closings or the line ends
+		val indexIter = line.indices.iterator
+		var openCount = startCount
+		while (openCount > 0 && indexIter.hasNext) {
+			val next = line(indexIter.next())
+			// Case: Going deeper
+			if (next == openChar)
+				openCount += 1
+			// Case: Closing the last opening
+			else if (next == closeChar)
+				openCount -= 1
+		}
+		// Case: Matching openings and closing found => Returns the block part and the remaining part
+		if (openCount <= 0)
+			indexIter.nextOption() match {
+				case Some(remainingStartIndex) => Right(line.take(remainingStartIndex) -> line.drop(remainingStartIndex))
+				case None => Right(line -> "")
+			}
+		// Case: Line ended while the block is still open => Returns the remaining depth
+		else
+			Left(openCount)
 	}
 	
 	private def readOneLineRawParameterLists(line: String) =
@@ -941,48 +984,5 @@ object ScalaParser
 		}
 		// println(s"The block part was interpreted to be: '${line.take(lastIndex)}'")
 		line.take(lastIndex).trim -> line.drop(lastIndex + 1).trim
-	}
-	
-	// Returns part before the last included closure (without closing character) +
-	// part after last included closure
-	// ClosuresToInclude indicates the number of closing characters to include in the first part without cutting it
-	private def separateBlockClosuresFrom(line: CodeLine, extraClosuresToInclude: Int, openChar: Char, closeChar: Char) =
-	{
-		//println(s"\nSeparating $openChar - $closeChar from ${ line.code }, including extra $extraClosuresToInclude closures")
-		// Contains indices of opening characters
-		val openIndices = line.code.iterator.zipWithIndex.filter { _._1 == openChar }.map { _._2 }.caching
-		// Each item contains: 1) Index of char, 2) Number of such chars already encountered
-		val closeIndices = line.code.iterator.zipWithIndex.filter { _._1 == closeChar }.map { _._2 }.zipWithIndex.caching
-		
-		val splitIndex = closeIndices.findMap { case (closeIndex, pastClosures) =>
-			val openings = openIndices.iterator.takeWhile { _ < closeIndex }.size
-			// println(s"Testing the ${pastClosures + 1}th closure at index $closeIndex, where there have been $openings new openings")
-			if (pastClosures >= openings + extraClosuresToInclude) {
-				// println("Cutting here")
-				Some(closeIndex)
-			}
-			else {
-				// println("Continuing search")
-				None
-			}
-		}
-		/*
-		val splitIndex = {
-			if (closuresToInclude <= 0)
-				line.code.indexOf(closeChar)
-			else
-			{
-				// Closure indices from left to right
-				val closureIterator = line.code.indexOfIterator(closeChar.toString)
-				closureIterator.skip(closuresToInclude)
-				closureIterator.next()
-			}
-		}*/
-		val (lineCode, remainingCode) = splitIndex match {
-			case Some(splitIndex) => line.code.substring(0, splitIndex) -> line.code.substring(splitIndex + 1)
-			case None => line.code -> ""
-		}
-		// println(s"Took '$lineCode', left '$remainingCode'")
-		line.copy(code = lineCode) -> remainingCode
 	}
 }

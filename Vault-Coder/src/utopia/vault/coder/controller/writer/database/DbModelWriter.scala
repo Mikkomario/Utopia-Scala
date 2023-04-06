@@ -302,8 +302,8 @@ object DbModelWriter
 		override def extensionFor(dbModelClass: ScalaType) = Reference.deprecatable
 		
 		override def properties(implicit naming: NamingRules) = Vector(
-			ComputedProperty("nonDeprecatedCondition", Set(Reference.valueConversions, Reference.sqlExtensions,
-				Reference.now), isOverridden = true)(
+			ComputedProperty("nonDeprecatedCondition", Set(Reference.valueConversions, Reference.now),
+				isOverridden = true)(
 				s"${columnNameFrom(deprecationPropName)}.isNull && ${columnNameFrom(expirationPropName)} > Now")
 		)
 		override def methods = Set()

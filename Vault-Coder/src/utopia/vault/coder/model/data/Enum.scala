@@ -19,7 +19,8 @@ import utopia.vault.coder.model.scala.datatype.Reference
   * @param description Description / documentation of this enumeration (default = empty)
   * @param author Author who wrote this enumeration (default = empty)
   */
-case class Enum(name: Name, packagePath: Package, values: Vector[EnumerationValue], defaultValue: Option[EnumerationValue] = None,
+case class Enum(name: Name, packagePath: Package, values: Vector[EnumerationValue],
+                defaultValue: Option[EnumerationValue] = None,
                 idPropName: Name = "id", idType: PropertyType = IntNumber(Tiny),
                 description: String = "", author: String = "")
 {

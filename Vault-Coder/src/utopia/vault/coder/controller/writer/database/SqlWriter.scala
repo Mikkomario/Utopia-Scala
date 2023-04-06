@@ -3,11 +3,12 @@ package utopia.vault.coder.controller.writer.database
 import utopia.flow.time.Today
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
-import utopia.vault.coder.model.datatype.PropertyType.ClassReference
+import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue}
 import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
 
 import java.io.PrintWriter
@@ -161,6 +162,8 @@ object SqlWriter
 	private def writeClass(writer: PrintWriter, classToWrite: Class, initialsMap: Map[String, String])
 	                      (implicit setup: ProjectSetup, naming: NamingRules): Unit =
 	{
+		implicit val wr: PrintWriter = writer
+		
 		val tableName = classToWrite.tableName
 		lazy val classInitials = initialsMap(tableName)
 		def prefixColumn(column: DbProperty, parentType: PropertyType): String =
@@ -172,7 +175,7 @@ object SqlWriter
 			if (setup.prefixSqlProperties) {
 				referredTableName.flatMap(initialsMap.get) match {
 					case Some(refInitials) => s"${classInitials}_${refInitials}_$colName"
-					case None => classInitials + "_" + colName
+					case None => s"${ classInitials }_$colName"
 				}
 			}
 			else
@@ -184,7 +187,7 @@ object SqlWriter
 			.map { prop => prop -> prop.dbProperties.map { dbProp => dbProp -> prefixColumn(dbProp, prop.dataType) } }
 		val columns = namedProps.flatMap { _._2 }
 		
-		classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
+		writeDocumentation(classToWrite.description)
 		// Writes property documentation
 		val maxColumnNameLength: Int = columns.map { _._2.length }.maxOption.getOrElse(0)
 		namedProps.foreach { case (prop, columns) =>
@@ -196,8 +199,14 @@ object SqlWriter
 					else
 						s"${prop.name} (${columns.map { _._2 }.mkString(", ")})"
 				}
-				val propIntroduction = (name + ":").padTo(maxColumnNameLength + 1, ' ')
-				writer.println(s"-- $propIntroduction ${ prop.description }")
+				val propIntroduction = s"$name:".padTo(maxColumnNameLength + 1, ' ')
+				val enumValuesPart = prop.dataType match {
+					case EnumValue(enumeration) =>
+						s"\nReferences enumeration ${ enumeration.name.enumName }\nPossible values are: ${
+							enumeration.values.map { value => s"${ value.id } = ${ value.name.doc }" }.mkString(", ") }"
+					case _ => ""
+				}
+				writeDocumentation(s"$propIntroduction ${prop.description}$enumValuesPart")
 			}
 		}
 		// Writes the table
@@ -206,7 +215,7 @@ object SqlWriter
 		if (columns.isEmpty)
 			writer.println(idBase)
 		else {
-			writer.println(idBase + ", ")
+			writer.println(s"$idBase, ")
 			
 			val propertyDeclarations = columns.map { case (prop, name) =>
 				val defaultPart = prop.default.mapIfNotEmpty { " DEFAULT " + _ }
@@ -229,7 +238,7 @@ object SqlWriter
 						val refColumnName = {
 							val base = rawColumnName.column
 							if (setup.prefixSqlProperties)
-								refInitials + "_" + base
+								s"${ refInitials }_$base"
 							else
 								base
 						}
@@ -245,7 +254,7 @@ object SqlWriter
 								else
 									s"${ classInitials }_${ refInitials }_$nameWithoutId"
 							}
-							base + "_ref"
+							s"${ base }_ref"
 						}
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${
 							constraintNameBase }_idx ($columnName) REFERENCES `$refTableName`(`$refColumnName`) ON DELETE ${
@@ -258,15 +267,14 @@ object SqlWriter
 			val allDeclarations = propertyDeclarations ++ individualIndexDeclarations ++ comboIndexDeclarations ++
 				foreignKeyDeclarations
 			allDeclarations.dropRight(1).foreach { line => writer.println(s"\t$line, ") }
-			writer.println("\t" + allDeclarations.last)
+			writer.println(s"\t${ allDeclarations.last }")
 		}
 		
 		writer.println(")Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;")
 		writer.println()
 	}
 	
-	private def initialsFrom(tableNames: Iterable[String], charsToTake: Int = 1): Map[String, String] =
-	{
+	private def initialsFrom(tableNames: Iterable[String], charsToTake: Int = 1): Map[String, String] = {
 		// Generates initials
 		val namePairs = tableNames.map { tableName => tableName -> initialsFrom(tableName, charsToTake) }
 		val nameMap = namePairs.toMap
@@ -281,11 +289,18 @@ object SqlWriter
 			nameMap ++ initialsFrom(duplicates, charsToTake + 1)
 	}
 	
-	private def initialsFrom(tableName: String, charsToTake: Int): String =
-	{
+	private def initialsFrom(tableName: String, charsToTake: Int): String = {
 		if (charsToTake >= tableName.length)
 			tableName
 		else
 			tableName.split("_").map { _.take(charsToTake) }.mkString
+	}
+	
+	private def writeDocumentation(doc: String)(implicit writer: PrintWriter) = {
+		doc.notEmpty.foreach { doc =>
+			val lines = doc.linesIterator.map(Regex.newLine.filterNot).toVector
+			writer.println(s"-- ${lines.head}")
+			lines.tail.foreach { line => writer.println(s"-- \t\t$line") }
+		}
 	}
 }

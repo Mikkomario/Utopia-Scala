@@ -18,6 +18,8 @@ object Class
 	  * @param name Name of this class (in code)
 	  * @param properties Properties in this class
 	  * @param packageName Name of the package in which to wrap this class (default = empty)
+	  * @param customSubPackageName Name to apply for this class's package when writing access points.
+	  *                                   Empty if to be auto-generated (default).
 	  * @param idName Name of this class' id property (default = id)
 	  * @param description A description of this class (default = empty)
 	  * @param author Author who wrote this class (may be empty)
@@ -26,11 +28,11 @@ object Class
 	  *                           (default = false)
 	  * @return A new class
 	  */
-	def apply(name: Name, properties: Vector[Property], packageName: String = "",
+	def apply(name: Name, properties: Vector[Property], packageName: String = "", customSubPackageName: String = "",
 	          comboIndexColumnNames: Vector[Vector[String]] = Vector(), idName: Name = defaultIdName,
 	          description: String = "", author: String = "", useLongId: Boolean = false,
 	          writeGenericAccess: Boolean = false): Class =
-		apply(name, None, idName, properties, packageName, comboIndexColumnNames, None,
+		apply(name, None, idName, properties, packageName, customSubPackageName, comboIndexColumnNames, None,
 			description, author, useLongId, writeGenericAccess)
 	
 	/**
@@ -38,6 +40,8 @@ object Class
 	  * @param name Name of this class (in code)
 	  * @param properties Properties in this class
 	  * @param packageName Name of the package in which to wrap this class (default = empty)
+	  * @param customSubPackageName Name to apply for this class's package when writing access points.
+	  *                             Empty if to be auto-generated (default).
 	  * @param idName Name of this class' id property (default = id)
 	  * @param description A description of this class (default = empty)
 	  * @param author Author who wrote this class (may be empty)
@@ -48,12 +52,13 @@ object Class
 	  *                           (default = false)
 	  * @return A new class
 	  */
-	def described(name: Name, properties: Vector[Property], packageName: String = "",
+	// WET WET
+	def described(name: Name, properties: Vector[Property], packageName: String = "", customSubPackageName: String = "",
 	              comboIndexColumnNames: Vector[Vector[String]] = Vector(), idName: Name = defaultIdName,
 	              description: String = "", author: String = "", descriptionLinkName: Option[Name] = None,
 	              useLongId: Boolean = false, writeGenericAccess: Boolean = false): Class =
 	{
-		apply(name, None, idName, properties, packageName, comboIndexColumnNames,
+		apply(name, None, idName, properties, packageName, customSubPackageName, comboIndexColumnNames,
 			Some[Name](descriptionLinkName.getOrElse { name + "id" }), description, author, useLongId,
 			writeGenericAccess)
 	}
@@ -68,6 +73,8 @@ object Class
   * @param idName Name of this class' id (index) property
   * @param properties Properties in this class
   * @param packageName Name of the package in which to wrap this class (may be empty)
+  * @param customAccessSubPackageName Name to apply for this class's package when writing access points.
+  *                                   Empty if to be auto-generated.
   * @param comboIndexColumnNames Combo-indices for this class. Each item (vector) represents a single combo-index.
   *                              The items (strings) in combo-indices represent column names.
   * @param descriptionLinkName Name of the property that refers to this class from a description link (optional)
@@ -77,7 +84,7 @@ object Class
   */
 // TODO: customTableName should be Option[Name]
 case class Class(name: Name, customTableName: Option[String], idName: Name, properties: Vector[Property],
-                 packageName: String, comboIndexColumnNames: Vector[Vector[String]],
+                 packageName: String, customAccessSubPackageName: String, comboIndexColumnNames: Vector[Vector[String]],
                  descriptionLinkName: Option[Name], description: String, author: String, useLongId: Boolean,
                  writeGenericAccess: Boolean)
 {
@@ -139,6 +146,14 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 		case Deprecation | Expiration => true
 		case _ => false
 	} }
+	/**
+	  * @return Whether this class supports expiration
+	  */
+	def isExpiring = properties.exists { _.dataType.isInstanceOf[Expiration.type] }
+	/**
+	  * @return Whether this class supports deprecation
+	  */
+	def isNullDeprecatable = properties.exists { _.dataType.isInstanceOf[Deprecation.type] }
 	
 	/**
 	  * @return Whether this class refers to one or more enumerations in its properties

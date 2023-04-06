@@ -22,7 +22,7 @@ object CodeLine
 	private lazy val repeatableRegexes = Vector(
 		Regex("with ") -> false,
 		(Regex.escape(',') + Regex.whiteSpace.noneOrOnce).withinParenthesis.ignoringQuotations -> true,
-		Regex("s").noneOrOnce + Regex.escape('\"') + (!Regex.escape('\"')).zeroOrMoreTimes +
+		Regex("s").noneOrOnce + Regex.escape('\"') + (!Regex.escape('\"')).anyTimes +
 			Regex.escape('\"') -> false,
 		(Regex.anyOf("+-*/").oneOrMoreTimes + Regex.whiteSpace) -> true,
 		(Regex.whiteSpace + Regex.word + Regex.whiteSpace) +
@@ -141,6 +141,11 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 	  */
 	def prepend(prefix: String) = copy(code = s"$prefix$code")
 	
+	/**
+	  * @param code New code to assign
+	  * @return A copy of this line with the specified code
+	  */
+	def withCode(code: String) = copy(code = code)
 	/**
 	  * @param f A mapping function for the code part
 	  * @return A mapped version of this code line (indentation is kept as is)

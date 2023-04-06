@@ -191,7 +191,7 @@ object ClassReader
 					val values = model("values", "vals").getVector.zipWithIndex.map { case(v, index) =>
 						v.model match {
 							case Some(model) => enumValueFrom(model, index, underScoreIdName)
-							case None => EnumerationValue(v.getString, index.toString)
+							case None => EnumerationValue(v.getString, (index + 1).toString)
 						}
 					}
 					val idType = model("index_type", "id_type", "type").string
@@ -307,8 +307,8 @@ object ClassReader
 		}
 		
 		val readClass = new Class(name, tableName.map { _.table }, idName.getOrElse(Class.defaultIdName),
-			properties, packageName, comboIndexColumnNames, descriptionLinkColumnName,
-			classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
+			properties, packageName, classModel("access_package", "sub_package", "access").getString, comboIndexColumnNames,
+			descriptionLinkColumnName, classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
 			classModel("use_long_id").getBoolean,
 			// Writes generic access point if this class has combinations, or if explicitly specified
 			classModel("has_combos", "generic_access", "tree_inheritance").booleanOr(comboInfo.nonEmpty))
@@ -416,10 +416,16 @@ object ClassReader
 		// A custom default value may be carried over to sql under some circumstances
 		val sqlDefault = model("sql_default", "sql_def").stringOr { default.toSql.getOrElse("") }
 		
-		val rawLimit = model("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
-		val limit = rawLimit.int match {
-			case Some(max) => s"to $max"
-			case None => rawLimit.getString
+		val limit = {
+			val raw = model("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
+			val base = raw.int match {
+				case Some(max) => s"to $max"
+				case None => raw.getString
+			}
+			if (model("allow_crop", "crop").getBoolean)
+				s"$base or crop"
+			else
+				base
 		}
 		
 		DbPropertyOverrides(name, finalColumnName, sqlDefault, limit, model("indexed", "index", "is_index").boolean)

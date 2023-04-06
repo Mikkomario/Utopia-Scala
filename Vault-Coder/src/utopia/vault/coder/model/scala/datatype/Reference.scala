@@ -35,6 +35,7 @@ object Reference
 	lazy val valueUnwraps = extensions(typeCasting, "ValueUnwraps")
 	lazy val collectionExtensions = extensions(flow/"collection", "CollectionExtensions")
 	lazy val timeExtensions = extensions(flowTime, "TimeExtensions")
+	@deprecated("Deprecated in Vault", "v1.8.1")
 	lazy val sqlExtensions = extensions(sql, "SqlExtensions")
 	
 	// Flow
@@ -86,14 +87,18 @@ object Reference
 	lazy val storableWithFactory = apply(vaultModels/"immutable", "StorableWithFactory")
 	lazy val dataInserter = apply(noSql/"storable", "DataInserter")
 	
+	lazy val view = apply(viewAccess, "View")
 	lazy val subView = apply(viewAccess, "SubView")
 	lazy val unconditionalView = apply(viewAccess, "UnconditionalView")
 	lazy val nonDeprecatedView = apply(viewAccess, "NonDeprecatedView")
 	lazy val filterableView = apply(viewAccess, "FilterableView")
 	lazy val chronoRowFactoryView = apply(viewAccess, "ChronoRowFactoryView")
+	lazy val timeDeprecatableView = apply(viewAccess, "TimeDeprecatableView")
+	lazy val nullDeprecatableView = apply(viewAccess, "NullDeprecatableView")
 	
 	lazy val singleModelAccess = apply(Package.singleModelAccess, "SingleModelAccess")
 	lazy val singleRowModelAccess = apply(Package.singleModelAccess, "SingleRowModelAccess")
+	lazy val singleChronoRowModelAccess = apply(Package.singleModelAccess, "SingleChronoRowModelAccess")
 	lazy val manyModelAccess = apply(Package.manyModelAccess, "ManyModelAccess")
 	lazy val manyRowModelAccess = apply(Package.manyModelAccess, "ManyRowModelAccess")
 	lazy val distinctModelAccess = apply(access/"template.model", "DistinctModelAccess")

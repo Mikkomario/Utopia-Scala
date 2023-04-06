@@ -122,6 +122,9 @@ Class objects should contain following properties:
   - Default is `"id"`
 - **"use_long_id": Boolean (optional)** - Whether Long should be used in the id property instead of `Int`. 
   Defaults to `false`.
+- **"access_package" / "sub_access" / "access": String (optional)** - Custom sub-package name to use 
+  when writing access classes
+  - If left empty, the name will be auto-generated based on the class name and the package name
 - **"doc": String (optional)** - A description of this class, which is written to class documentation
 - **"author": String (optional)** - Author of this class. If omitted, the project author will be used.
 - **"combinations" / "combos": [Object]** - An array of **combination objects** for this class 
@@ -229,6 +232,10 @@ Each property object should contain following properties:
     - `"expand to X"` / `"to X"` - Expands the column maximum length until the specified limit `X`
     - `X` - Expands the column maximum length until the specified limit `X`
   - These are only applicable to `String` and `Int` types
+- **"allow_crop" / "crop": Boolean (optional)** - Whether "or crop" should be appended to the specified length rule. 
+  Default = false.
+  - When true, this will make it so that the column is expanded to certain length, 
+    but the input will be cropped if the length would exceed the specified limit.
 - **"default" / "def": Code (optional)** - The default value assigned for this property in the data model
   - See [Code Object Structure](#code-object-structure) for specifics
   - If empty or omitted, data type -specific default will be used, if there is one

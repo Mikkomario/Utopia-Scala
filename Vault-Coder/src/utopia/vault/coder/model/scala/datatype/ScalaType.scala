@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala.datatype
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
@@ -153,8 +154,17 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 			case Standard => withTypeParams
 			case CallByName => withTypeParams.withPrefix("=> ")
 			case ScalaTypeCategory.Function(parameterTypes) =>
-				val parameterList = if (parameterTypes.isEmpty) CodePiece("()") else
-					parameterTypes.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinParenthesis
+				val parameterList = {
+					if (parameterTypes.isEmpty)
+						CodePiece("()")
+					else
+						parameterTypes.only match {
+							case Some(only) => only.toScala
+							case None =>
+								parameterTypes.map { _.toScala }.reduceLeft { _.append(_, ", ") }
+									.withinParenthesis
+						}
+				}
 				parameterList.append(withTypeParams, " => ")
 		}
 	}
@@ -166,8 +176,7 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 	  * @param parameterTypes A list of accepted parameter types
 	  * @return A functional data type that returns this data type
 	  */
-	def fromParameters(parameterTypes: Vector[ScalaType]) = category match
-	{
+	def fromParameters(parameterTypes: Vector[ScalaType]) = category match {
 		// Functions that return functions don't handle references properly at this time
 		case _ :ScalaTypeCategory.Function =>
 			ScalaType(Left(toScala.text), category = ScalaTypeCategory.Function(parameterTypes))

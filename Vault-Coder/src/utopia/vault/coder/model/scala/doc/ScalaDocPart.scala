@@ -54,13 +54,11 @@ object ScalaDocPart
   */
 case class ScalaDocPart(content: Vector[String], keyword: Option[ScalaDocKeyword]) extends CodeConvertible
 {
-	override def toCode =
-	{
+	override def toCode = {
 		if (content.isEmpty)
 			Code.empty
 		else
-			keyword match
-			{
+			keyword match {
 				case Some(keyword) => Code.from(s"$keyword ${content.head}" +: content.tail)
 				case None => Code.from(content)
 			}

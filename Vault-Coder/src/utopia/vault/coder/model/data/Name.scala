@@ -13,6 +13,11 @@ import scala.language.implicitConversions
 
 object Name extends FromValueFactory[Name]
 {
+	// ATTRIBUTES   -------------------------
+	
+	private val vocals = Set('a', 'e', 'i', 'o', 'u', 'y')
+	
+	
 	// IMPLICIT -----------------------------
 	
 	// Implicitly converts strings
@@ -75,16 +80,14 @@ object Name extends FromValueFactory[Name]
 						s"${ singular }ses"
 					else
 						s"${ singular }es"
-					/*else if (singular.startsWithIgnoreCase("many"))
-						singular
-					else {
-						val style = NamingConvention.of(singular)
-						style.combine(style.convert("many", Text.lower), singular)
-					}*/
 				case 'y' =>
-					// Case: Ends with a y => replaces 'y' with 'ies'
-					if (singular.last.isLower)
-						s"${ singular.dropRight(1) }ies"
+					// Case: Ends with a consonant + y => replaces 'y' with 'ies', vocal + y appends 's'
+					if (singular.last.isLower) {
+						if (singular.length > 1 && vocals.contains(singular.charAt(singular.length - 2)))
+							s"${singular}s"
+						else
+							s"${ singular.dropRight(1) }ies"
+					}
 					// Case: Ends with a Y (separate) => adds an 's'
 					else if (singular.length == 1 || (singular: StringOps)(singular.length - 2).isLower)
 						s"${ singular }s"

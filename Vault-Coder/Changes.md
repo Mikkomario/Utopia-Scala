@@ -1,10 +1,27 @@
 # Utopia Vault Coder
 
-## v1.8.1 (in development)
+## v1.9 (in development)
 ### Bugfixes
 - `.apply(...)` implementation in factory objects that use potentially failing value conversions is now fixed
+- Fixed a bug where certain enumeration ids would be 0-based instead of 1-based
 - Merging now preserves function overrides. I.e. methods with same name but different types of parameters are 
   considered different methods and not merged.
+- Scala parser now properly handles functional types
+- Fixed a bug where the scala parser would make functions abstract
+- Line breaks within documentation elements are now properly handled in sql
+- Fixed a bug where certain words ending with y would be pluralized incorrectly
+### New Features
+- Access sub-package name may now be customized (see README)
+- Added support for `allow_crop` -property when defining class properties (see README)
+- Generated UniqueXAccess traits now implement filtering
+  - Also, generated single access root points provide a new utility function `.filterDistinct(Condition)`
+### Other Changes
+- Supports Vault v1.16
+- Generated UniqueXAccess traits now extend SingleChronoRowModelFactory where appropriate
+- Generated access traits now extends **NullDeprecatableView** or **TimeDeprecatableView**, where applicable
+- Enumeration values are now listed in sql comments
+- Rewrote sub-access and filtering implementations so that they're simpler
+- The `+Repr` type parameter in ManyXAccessLike has no super type requirement anymore
 
 ## v1.8 - 02.02.2023
 This version of the Vault Coder writes more code than the previous versions, potentially saving you some time 
