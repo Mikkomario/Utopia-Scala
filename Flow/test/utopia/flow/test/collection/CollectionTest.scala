@@ -54,5 +54,15 @@ object CollectionTest extends App
 	assert(v1.withoutIndex(-1) == v1, v1.withoutIndex(-1))
 	assert(v1.withoutIndex(4) == v1, v1.withoutIndex(4))
 	
+	// Tests oneOrMany
+	assert(result1.oneOrMany == Right(result1))
+	assert(result2.oneOrMany == Left("Car"))
+	
+	words.emptyOneOrMany match {
+		case None => assert(false)
+		case Some(Left(_)) => assert(false)
+		case Some(Right(many)) => assert(many == words)
+	}
+	
 	println("Success!")
 }

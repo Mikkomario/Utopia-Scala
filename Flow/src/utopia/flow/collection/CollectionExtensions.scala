@@ -665,6 +665,27 @@ object CollectionExtensions
 	                                     (implicit iter: IsIterable[Repr]): IterableOperations[Repr, iter.type] =
 		new IterableOperations(coll, iter)
 	
+	// Used for operations that expose the underlying element type 'A'
+	class IterableOperations2[A, C](coll: C, ops: IterableOps[A, Iterable, _])
+	{
+		/**
+		  * @return Either
+		  *             Left: The only item within this collection, if the size of this collection is exactly 1, or
+		  *             Right: This collection
+		  */
+		def oneOrMany = if (ops.sizeCompare(1) == 0) Left(ops.head) else Right(coll)
+		/**
+		  * @return Returns one of three cases:
+		  *             1) None - if this collection is empty,
+		  *             2) Some(Left(item)) - If this collection only contains a single item, and
+		  *             3) Some(Right(this)) - If this collection contains 2 or more items
+		  */
+		def emptyOneOrMany = if (ops.isEmpty) None else Some(oneOrMany)
+	}
+	
+	implicit def iterableOperations2[Repr](coll: Repr)(implicit it: IsIterable[Repr]): IterableOperations2[it.A, Repr] =
+		new IterableOperations2[it.A, Repr](coll, it(coll))
+	
 	implicit class RichIterableLike[A, CC[X], Repr <: Iterable[_]](val t: IterableOps[A, CC, Repr]) extends AnyVal
 	{
 		/**

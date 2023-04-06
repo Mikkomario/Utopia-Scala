@@ -17,6 +17,7 @@
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 ### New Methods
 - **Iterable** (**CollectionExtensions**)
+  - Added `.oneOrMany` and `.emptyOneOrMany`
   - Added `.toMapBy(...)`
   - Added `.replaceOrAppend(...)`, which is a variation of `.mergeOrAppend(...)`
   - Added alias `.hasEqualContentWith(Iterable)(EqualsFunction)` for `~==`
