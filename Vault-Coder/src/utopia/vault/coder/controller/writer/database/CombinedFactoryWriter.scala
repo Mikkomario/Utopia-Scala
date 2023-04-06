@@ -57,15 +57,28 @@ object CombinedFactoryWriter
 			else
 				None
 		}
+		// If the parent type uses row time indexing, and this is not a one-to-many combination,
+		// Utilizes the same indexing
+		val creation = {
+			if (data.combinationType.isOneToOne && data.parentClass.recordsIndexedCreationTime) {
+				val extension: Extension = Reference.fromRowFactoryWithTimestamps(references.combined)
+				val function = ComputedProperty("creationTimePropertyName", Set(parentFactoryRef),
+					isOverridden = true)(s"${parentFactoryRef.target}.creationTimePropertyName")
+				Some(extension -> function)
+			}
+			else
+				None
+		}
 		
 		File(setup.factoryPackage/data.packageName,
 			ObjectDeclaration((data.name + FactoryWriter.classNameSuffix).className,
-				Vector(data.combinationType.extensionWith(references)) ++ deprecation.map { _._1 },
+				Vector(data.combinationType.extensionWith(references)) ++
+					creation.map { _._1 } ++ deprecation.map { _._1 },
 				properties = Vector(
 					ComputedProperty("parentFactory", Set(parentFactoryRef), isOverridden = true)(
 						parentFactoryRef.target),
 					ComputedProperty("childFactory", Set(childFactoryRef), isOverridden = true)(childFactoryRef.target)
-				) ++ linkingProperty ++ deprecation.map { _._2 },
+				) ++ linkingProperty ++ creation.map { _._2 } ++ deprecation.map { _._2 },
 				methods = Set(data.combinationType.factoryApplyMethodWith(data.parentName, data.childName, references)),
 				description = s"Used for reading ${data.name.pluralDoc} from the database", author = data.author,
 				since = DeclarationDate.versionedToday

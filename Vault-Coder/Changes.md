@@ -19,6 +19,7 @@
 - Supports Vault v1.16
 - Generated UniqueXAccess traits now extend SingleChronoRowModelFactory where appropriate
 - Generated access traits now extends **NullDeprecatableView** or **TimeDeprecatableView**, where applicable
+- Generated combined factory objects now extend **FromRowFactoryWithTimestamps** where appropriate
 - Enumeration values are now listed in sql comments
 - Rewrote sub-access and filtering implementations so that they're simpler
 - The `+Repr` type parameter in ManyXAccessLike has no super type requirement anymore
