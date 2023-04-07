@@ -110,8 +110,7 @@ case class FontMetricsWrapper(private val wrapped: FontMetrics)
 	  * @param text Text
 	  * @return Boundaries of that text, where (0,0) is the leftmost point of the baseline
 	  */
-	def boundsOf(text: String) =
-	{
+	def boundsOf(text: String) = {
 		if (text.isEmpty)
 			Bounds(Point(0, -ascent), Size(0, ascent + descent))
 		else {

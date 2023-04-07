@@ -28,8 +28,9 @@ object LazyGraphics
   * A graphics instance wrapper that applies predefined changes (transformation, custom mutations, clipping) lazily
   * @author Mikko Hilpinen
   * @since 28.1.2022, v2.6.3
-  * @param parent The parent graphics instance. Either Left: A simple graphics object (lazy)
-  *               or Right: A LazyGraphics instance.
+  * @param parent The parent graphics instance. Either
+  *               Left: A simple graphics object (lazy), or
+  *               Right: A LazyGraphics instance.
   * @param newTransformation Transformation to apply over the parent's transformation state.
   *                       None if no transformation is necessary.
   * @param mutation A custom mutation to apply to the generated graphics instance. None if no mutation is necessary.
@@ -83,13 +84,18 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 		}
 	}
 	
+	/**
+	  * Clipping area applied to this graphics instance.
+	  * The area is specified within this instance's transformation context.
+	  */
+	lazy val clipping = _clipping.map { _.value }
 	// A clipped version of the available graphics instance
 	private val clippedCache = Lazy {
-		_clipping match {
+		clipping match {
 			// Case: Clipping is required => applies it to a new child graphics instance
 			case Some(clipping) =>
 				val graphics = baseCache.value.createChild()
-				graphics.clip(clipping.value.toShape)
+				graphics.clip(clipping.toShape)
 				graphics
 			// Case: No clipping is required => uses the base graphics instance
 			case None => baseCache.value
@@ -110,11 +116,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 			}
 	}
 	
-	/**
-	  * Clipping area applied to this graphics instance.
-	  * The area is specified within this instance's transformation context.
-	  */
-	lazy val clipping = _clipping.map { _.value }
+	
 	/**
 	  * Clipping boundaries applied when using this graphics instance.
 	  * The boundaries are specified within this instance's transformation context.
@@ -150,11 +152,11 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	}
 	
 	// Materials used when constructing this (or dependent) graphics context
-	// Either:
-	// Right: A pre-calculated graphics instance
-	// Left: Some graphics instance + changes to perform on that graphics instance:
-	//      1) Transformation to apply (lazy)
-	//      2) Mutations to apply (ordered)
+	// Either
+	//      Right: A pre-calculated graphics instance
+	//      Left: Some graphics instance + changes to perform on that graphics instance:
+	//          1) Transformation to apply (lazy)
+	//          2) Mutations to apply (ordered)
 	private def materials: Either[(ClosingGraphics, Option[Lazy[Matrix3D]], Seq[ClosingGraphics => Unit]), ClosingGraphics] =
 		baseCache.current match {
 			// Case: Has already prepared a graphics object => uses that

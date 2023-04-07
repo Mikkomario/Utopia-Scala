@@ -1,13 +1,12 @@
 package utopia.genesis.graphics
 
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.ResettableFlag
+import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.Extender
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D
-import scala.concurrent.ExecutionContext
 
 object ClosingGraphics
 {
@@ -28,7 +27,7 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => 
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private lazy val closedPointer = ResettableFlag()
+	private lazy val closedPointer = Flag()
 	private lazy val statePointer = closedPointer || parentClosedPointer
 	
 	
@@ -37,7 +36,7 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => 
 	/**
 	  * @return Future of the closing event of this graphics instance
 	  */
-	def closeFuture(implicit exc: ExecutionContext) = statePointer.futureWhere { c => c }
+	def closeFuture = statePointer.futureWhere { c => c }
 	
 	/**
 	  * @return Whether this graphics instance has been closed already

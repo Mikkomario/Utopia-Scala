@@ -8,7 +8,7 @@ import utopia.paradigm.shape.shape3d.Matrix3D
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-// TODO: Remove this class
+@deprecated("Replaced with GraphicsContext2", "v3.2.1")
 trait GraphicsContext
 	extends LinearTransformable[GraphicsContext] with AffineTransformable[GraphicsContext]
 {

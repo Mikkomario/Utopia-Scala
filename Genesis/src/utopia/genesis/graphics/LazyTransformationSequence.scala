@@ -1,5 +1,6 @@
 package utopia.genesis.graphics
 
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
@@ -45,8 +46,7 @@ class LazyTransformationSequence(val parent: Option[LazyTransformationSequence],
 	/**
 	  * @return An iterator that iterates over parent transformation states, from bottom to top
 	  */
-	def parentStatesIterator =
-		Iterator.iterate(parent) { _.flatMap { _.parent } }.takeWhile { _.isDefined }.flatMap { _.map { _.value } }
+	def parentStatesIterator = OptionsIterator.iterate(parent) { _.parent }
 	
 	
 	// IMPLEMENTED  --------------------------

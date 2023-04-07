@@ -8,7 +8,7 @@ import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-// TODO: Remove this class
+@deprecated("Replaced with Drawer3", "v3.2.1")
 trait Drawer2 extends LinearTransformable[Drawer2] with AffineTransformable[Drawer2] with AutoCloseable
 {
 	// ABSTRACT -------------------------------

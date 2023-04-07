@@ -15,7 +15,7 @@ import utopia.paradigm.shape.shape3d.Matrix3D
   *                   a transformation to apply so that that clipping area appears in the relative
   *                   (current) coordinate system
   */
-// TODO: Remove this class (Replaced with Drawer3)
+@deprecated("Replaced with Drawer3", "v3.2.1")
 class DerivedDrawer(parentGraphics: => (ClosingGraphics, Option[Matrix3D], Seq[ClosingGraphics => Unit]),
                     parentClip: => (Polygonic, Option[Matrix3D])) extends Drawer2
 {

@@ -7,7 +7,7 @@ import utopia.flow.view.template.eventful.Changing
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-// TODO: Remove this class
+@deprecated("Deprecated for removal", "v3.2.1")
 trait GraphicsContextAccess
 {
 	// ABSTRACT ---------------------------

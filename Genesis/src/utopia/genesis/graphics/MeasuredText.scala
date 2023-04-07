@@ -35,8 +35,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * Individual lines of text
 	  */
 	lazy val lines = {
-		if (allowLineBreaks)
-		{
+		if (allowLineBreaks) {
 			// Makes sure the line breaks at the end of the text are also included
 			// Regex.newLine.startIndexIteratorIn(???)
 			val lineBreaksAtEnd = text.reverseIterator.takeWhile { c => Regex.newLine(c.toString) }.size
@@ -46,8 +45,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			Vector(text.stripControlCharacters)
 	}
 	
-	lazy val (firstLineCaretIndices, lastLineCaretIndices) =
-	{
+	lazy val (firstLineCaretIndices, lastLineCaretIndices) = {
 		val startBuilder = new VectorBuilder[Int]()
 		val endBuilder = new VectorBuilder[Int]()
 		startBuilder.sizeHint(lines.size)

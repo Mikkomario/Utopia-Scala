@@ -8,7 +8,7 @@ import utopia.paradigm.shape.shape3d.Matrix3D
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-// TODO: Remove this class
+@deprecated("Deprecated for removal", "v3.2.1")
 class RootDrawer(override protected val graphics: ClosingGraphics) extends Drawer2 with AutoCloseable
 {
 	// ATTRIBUTES   --------------------------
