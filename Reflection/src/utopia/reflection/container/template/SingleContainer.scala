@@ -7,6 +7,7 @@ import utopia.reflection.component.template.ComponentLike
   * @author Mikko Hilpinen
   * @since 21.4.2019, v1+
   */
+@deprecated("Replaced with a new version", "v2.0")
 trait SingleContainer[C <: ComponentLike] extends Container[C]
 {
 	// COMPUTED	-----------------

@@ -1,17 +1,20 @@
 package utopia.reflection.component.swing.template
 
-import java.awt.Component
-import java.awt.event.MouseEvent
 import utopia.flow.view.mutable.caching.MutableLazy
-import utopia.paradigm.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
+import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.mutable._
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Point, Size}
-import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.{ComponentLike2, ReflectionComponentLike}
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
 import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.text.Font
 import utopia.reflection.util.{AwtEventThread, ComponentToImage}
+
+import java.awt.Component
+import java.awt.event.MouseEvent
 
 object AwtComponentWrapper
 {
@@ -27,7 +30,7 @@ object AwtComponentWrapper
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
+abstract class AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelated
 {
     // ATTRIBUTES    ----------------------
     
@@ -39,9 +42,6 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     override val mouseButtonHandler = MouseButtonStateHandler()
     override val mouseMoveHandler = MouseMoveHandler()
     override val mouseWheelHandler = MouseWheelHandler()
-    
-    override val keyStateHandler = KeyStateHandler()
-    override val keyTypedHandler = KeyTypedHandler()
     
     /**
      * The currently active resize listeners for this wrapper. Please note that the listeners
@@ -68,12 +68,13 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     
     // IMPLEMENTED    ---------------------
     
+    override def fontMetricsWith(font: Font): FontMetricsWrapper = component.getFontMetrics(font.toAwt)
+    
     /**
       * @return This component's current position
       */
     override def position = cachedPosition.value
-    override def position_=(p: Point) =
-    {
+    override def position_=(p: Point) = {
         cachedPosition.value = p
         updateBounds()
     }
@@ -82,18 +83,15 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
       * @return This component's current size
       */
     override def size = cachedSize.value
-    override def size_=(s: Size) =
-    {
+    override def size_=(s: Size) = {
         // Informs resize listeners, if there are any
         if (resizeListeners.isEmpty)
             cachedSize.value = s
-        else
-        {
+        else {
             val oldSize = size
             cachedSize.value = s
             
-            if (oldSize !~== s)
-            {
+            if (oldSize !~== s) {
                 val newEvent = ResizeEvent(oldSize, s)
                 resizeListeners.foreach { _.onResizeEvent(newEvent) }
             }
@@ -143,13 +141,6 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
       */
     override def isTransparent = !component.isOpaque
     
-    /**
-      * @return The font metrics object for this component. None if font hasn't been specified.
-      */
-    override def fontMetrics =
-        Option(component.getFont).map { component.getFontMetrics(_) } orElse
-            Option(component.getGraphics).map { _.getFontMetrics }
-    
     // Absolute position needs to be calculated separately since parent might wrap multiple windows
     override def absolutePosition = parentsInWindow.foldLeft(position) { _ + _.position }
     
@@ -174,13 +165,13 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
      * Transforms this wrapper into a Stackable
      */
-    def withStackSize(getSize: () => StackSize, update: () => Unit = () => ()): AwtComponentWrapperWrapper with Stackable =
+    def withStackSize(getSize: () => StackSize, update: () => Unit = () => ()): AwtComponentWrapperWrapper with ReflectionStackable =
         new AwtComponentWrapperWrapperWithStackable(this, getSize, update)
     
     /**
      * Transforms this wrapper into a Stackable
      */
-    def withStackSize(size: StackSize): AwtComponentWrapperWrapper with Stackable = withStackSize(() => size)
+    def withStackSize(size: StackSize): AwtComponentWrapperWrapper with ReflectionStackable = withStackSize(() => size)
     
     private def updateBounds(): Unit = AwtEventThread.async {
         // Updates own position and size
@@ -237,10 +228,10 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     }
 }
 
-private class SimpleAwtComponentWrapper(val component: Component, override val children: Seq[ComponentLike]) extends AwtComponentWrapper
+private class SimpleAwtComponentWrapper(val component: Component, override val children: Seq[ComponentLike2]) extends AwtComponentWrapper
 
 private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtComponentWrapper, getSize: () => StackSize, update: () => Unit)
-    extends AwtComponentWrapperWrapper with CachingStackable with StackLeaf
+    extends CachingReflectionStackable with AwtComponentWrapperWrapper with StackLeaf
 {
     // IMPLEMENTED  ---------------------
     

@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import scala.collection.immutable.HashMap
 import scala.concurrent.duration.FiniteDuration
 
+@deprecated("Replaced with a new version", "v2.0")
 object ScrollAreaLike
 {
 	/**

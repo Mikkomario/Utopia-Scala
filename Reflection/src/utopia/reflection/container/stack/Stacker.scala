@@ -16,6 +16,7 @@ import scala.collection.immutable.VectorBuilder
  * @author Mikko Hilpinen
  * @since 17.1.2020, v1
  */
+@deprecated("Replaced with a new version", "v2.0")
 object Stacker
 {
 	/**

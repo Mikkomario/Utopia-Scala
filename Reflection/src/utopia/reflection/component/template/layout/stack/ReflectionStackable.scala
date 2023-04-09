@@ -1,77 +1,74 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Axis._
-import utopia.paradigm.enumeration.Direction2D
 import utopia.genesis.util.Fps
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D}
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.ReflectionComponentLike
+import utopia.reflection.container.stack.StackLayout.Fit
+import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.event.StackHierarchyListener
-import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{Future, Promise}
 
-@deprecated("Replaced with a new version", "v2.0")
 object Stackable
 {
 	// AwtComponent stackables can be stacked & framed easily
-	implicit class AwtStackable[S <: Stackable with AwtComponentRelated](val s: S) extends AnyVal
+	implicit class AwtStackable[S <: ReflectionStackable with AwtComponentRelated](val s: S) extends AnyVal
 	{
 		/**
 		  * Creates a stack with this item along with some others
 		  * @param elements Other elements
-		  * @param axis Stack axis
-		  * @param margin The margin between items (defaults to any, preferring 0)
-		  * @param cap The cap at each end of stack (default = no cap = fixed to 0)
-		  * @param layout The stack layout (default = Fit)
+		  * @param axis     Stack axis
+		  * @param margin   The margin between items (defaults to any, preferring 0)
+		  * @param cap      The cap at each end of stack (default = no cap = fixed to 0)
+		  * @param layout   The stack layout (default = Fit)
 		  * @tparam S2 Stack element type
 		  * @return A new stack
 		  */
-		def stackWith[S2 >: S <: Stackable with AwtComponentRelated](elements: Seq[S2], axis: Axis2D,
-																	 margin: StackLength = StackLength.any,
-																	 cap: StackLength = StackLength.fixed(0),
-																	 layout: StackLayout = Fit) =
+		def stackWith[S2 >: S <: ReflectionStackable with AwtComponentRelated](elements: Seq[S2], axis: Axis2D,
+		                                                                       margin: StackLength = StackLength.any,
+		                                                                       cap: StackLength = StackLength.fixed(0),
+		                                                                       layout: StackLayout = Fit) =
 			Stack.withItems(s +: elements, axis, margin, cap, layout)
 		
 		/**
 		  * Creates a horizontal stack with this item along with some others
 		  * @param elements Other elements
-		  * @param margin Margin between elements (defaults to any, preferring 0)
-		  * @param cap Cap at each end of the stack (default = fixed to 0)
-		  * @param layout Stack layout (default = Fit)
+		  * @param margin   Margin between elements (defaults to any, preferring 0)
+		  * @param cap      Cap at each end of the stack (default = fixed to 0)
+		  * @param layout   Stack layout (default = Fit)
 		  * @tparam S2 Stack element type
 		  * @return A new stack with these items
 		  */
-		def rowWith[S2 >: S <: Stackable with AwtComponentRelated](elements: Seq[S2],
-																   margin: StackLength = StackLength.any,
-																   cap: StackLength = StackLength.fixed(0),
-																   layout: StackLayout = Fit) =
+		def rowWith[S2 >: S <: ReflectionStackable with AwtComponentRelated](elements: Seq[S2],
+		                                                           margin: StackLength = StackLength.any,
+		                                                           cap: StackLength = StackLength.fixed(0),
+		                                                           layout: StackLayout = Fit) =
 			s.stackWith(elements, X, margin, cap, layout)
 		
 		/**
 		  * Creates a vertical stack with this item along with some others
 		  * @param elements Other elements
-		  * @param margin margin between elements (defaults to any, preferring 0)
-		  * @param cap Cap at each end of the stack (default = fixed to 0)
-		  * @param layout Stack layout (default = Fit)
+		  * @param margin   margin between elements (defaults to any, preferring 0)
+		  * @param cap      Cap at each end of the stack (default = fixed to 0)
+		  * @param layout   Stack layout (default = Fit)
 		  * @tparam S2 Stack element type
 		  * @return A new stack with these items
 		  */
-		def columnWith[S2 >: S <: Stackable with AwtComponentRelated](elements: Seq[S2],
-																	  margin: StackLength = StackLength.any,
-																	  cap: StackLength = StackLength.fixed(0),
-																	  layout: StackLayout = Fit) =
+		def columnWith[S2 >: S <: ReflectionStackable with AwtComponentRelated](elements: Seq[S2],
+		                                                              margin: StackLength = StackLength.any,
+		                                                              cap: StackLength = StackLength.fixed(0),
+		                                                              layout: StackLayout = Fit) =
 			s.stackWith(elements, Y, margin, cap, layout)
 		
 		/**
@@ -91,7 +88,7 @@ object Stackable
 		/**
 		  * Frames this item
 		  * @param margins The symmetric margins placed around this item
-		  * @param color Background color of the framing
+		  * @param color   Background color of the framing
 		  * @return A framing with this item inside it
 		  */
 		def framed(margins: StackSize, color: Color) =
@@ -104,7 +101,7 @@ object Stackable
 		/**
 		  * Frames this item
 		  * @param insets The insets/margins placed around this item
-		  * @param color Background color of the framing
+		  * @param color  Background color of the framing
 		  * @return A framing with this item inside it
 		  */
 		def framed(insets: StackInsets, color: Color) =
@@ -117,7 +114,7 @@ object Stackable
 		/**
 		  * Frames this item
 		  * @param sideLength Frame side length on each side
-		  * @param color Frame background color
+		  * @param color      Frame background color
 		  * @return A new framing with this item inside it
 		  */
 		def framed(sideLength: StackLength, color: Color): Framing[S] = framed(StackInsets.symmetric(sideLength), color)
@@ -125,7 +122,7 @@ object Stackable
 		/**
 		  * Frames this item, using a rounded background shape
 		  * @param insets Insets placed round this item
-		  * @param color Background color to use
+		  * @param color  Background color to use
 		  * @return A framing that contains this item and draws a rounded background shape
 		  */
 		def inRoundedFraming(insets: StackInsets, color: Color) =
@@ -138,7 +135,7 @@ object Stackable
 		/**
 		  * Frames this item, using a rounded background shape
 		  * @param sideLength The length of each side margin
-		  * @param color Background color to use
+		  * @param color      Background color to use
 		  * @return A framing that contains this item and draws a rounded background shape
 		  */
 		def inRoundedFraming(sideLength: StackLength, color: Color): Framing[S] =
@@ -160,14 +157,14 @@ object Stackable
 		def aligned(alignment: Alignment) = AlignFrame(s, alignment)
 		
 		/**
-		 * @param side Target side
-		 * @return This item framed so that it will be placed to specified side of container
-		 */
+		  * @param side Target side
+		  * @return This item framed so that it will be placed to specified side of container
+		  */
 		def alignedToSide(side: Direction2D) = aligned(Alignment forDirection side)
 		
 		/**
-		 * @return This item wrapped in a frame that places it at the center
-		 */
+		  * @return This item wrapped in a frame that places it at the center
+		  */
 		def alignedToCenter = aligned(Center)
 		
 		/**
@@ -188,14 +185,14 @@ object Stackable
 			AnimatedSizeContainer.contextual(s)
 		
 		/**
-		  * @param actorHandler An actor handler to deliver action events
+		  * @param actorHandler       An actor handler to deliver action events
 		  * @param transitionDuration Duration of each size transition (defaults to global default)
-		  * @param maxRefreshRate Maximum size refresh rate (defaults to global default)
+		  * @param maxRefreshRate     Maximum size refresh rate (defaults to global default)
 		  * @return This component wrapped in a component that animates its size adjustments
 		  */
 		def withAnimatedSizeUsing(actorHandler: ActorHandler,
-							 transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-							 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
+		                          transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+		                          maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 			AnimatedSizeContainer(s, actorHandler, transitionDuration, maxRefreshRate)
 	}
 }
@@ -205,27 +202,9 @@ object Stackable
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-@deprecated("Replaced with a new version", "v2.0")
-trait Stackable extends ComponentLike
+trait ReflectionStackable extends Stackable2 with ReflectionComponentLike
 {
 	// ABSTRACT	---------------------
-	
-	/**
-	  * Updates the layout (and other contents) of this stackable instance. This method will be called if the component,
-	  * or its child is revalidated. The stack sizes of this component, as well as those of revalidating children
-	  * should be reset at this point.
-	  */
-	def updateLayout(): Unit
-	
-	/**
-	  * The current sizes of this wrapper. Invisible wrappers should always have a stack size of zero.
-	  */
-	def stackSize: StackSize
-	
-	/**
-	  * Resets cached stackSize, if there is one, so that it will be recalculated when requested next time
-	  */
-	def resetCachedSize(): Unit
 	
 	/**
 	  * @return A unique identifier for this stackable instance. These id's are used in stack hierarchy to
@@ -237,7 +216,8 @@ trait Stackable extends ComponentLike
 	/**
 	  * Child components under this stackable instance (all of which should be stackable)
 	  */
-	override def children: Seq[Stackable] = Vector()
+	// TODO: Remove?
+	override def children: Seq[ReflectionStackable] = Vector()
 	
 	/**
 	  * @return Whether this stackable instance is currently attached to the main stack hierarchy
@@ -266,30 +246,9 @@ trait Stackable extends ComponentLike
 	// COMPUTED	---------------------
 	
 	/**
-	  * @return Optimal width for this component
-	  */
-	def optimalWidth = stackSize.width.optimal
-	
-	/**
-	  * @return Optimal height for this component
-	  */
-	def optimalHeight = stackSize.height.optimal
-	
-	/**
-	  * @return Whether this component is now larger than its maximum size
-	  */
-	def isOverSized = stackSize.maxWidth.exists { _ < width } || stackSize.maxHeight.exists { _ < height }
-	
-	/**
-	  * @return Whether this component is now smaller than its minimum size
-	  */
-	def isUnderSized = width < stackSize.minWidth || height < stackSize.minHeight
-	
-	/**
 	  * @return A description of this item's (and all its children) stack attachment status (true or false)
 	  */
-	def attachmentDescription: String =
-	{
+	def attachmentDescription: String = {
 		val base = s"${getClass.getSimpleName}:$isAttachedToMainHierarchy"
 		val c = children
 		if (c.isEmpty)
@@ -306,30 +265,17 @@ trait Stackable extends ComponentLike
 	/**
 	  * Requests a revalidation for this item (only affects this item after connected to the main stack hierarchy)
 	  */
-	def revalidate() =
-	{
+	def revalidate() = {
 		if (isAttachedToMainHierarchy)
 			StackHierarchyManager.requestValidationFor(this)
 	}
 	
 	/**
-	 * Sets the size of this component to optimal (by stack size)
-	 */
-	def setToOptimalSize() = size = stackSize.optimal
-	
-	/**
-	 * Sets the size of this component to minimum (by stack size)
-	 */
-	def setToMinSize() = size = stackSize.min
-	
-	/**
 	  * Detaches this stackable instance from the main stack hierarchy. If this instance was not connected to said
 	  * hierarchy, does nothing.
 	  */
-	def detachFromMainStackHierarchy() =
-	{
-		if (isAttachedToMainHierarchy)
-		{
+	def detachFromMainStackHierarchy() = {
+		if (isAttachedToMainHierarchy) {
 			StackHierarchyManager.unregister(this)
 			isAttachedToMainHierarchy = false
 		}
@@ -340,8 +286,7 @@ trait Stackable extends ComponentLike
 	  * connection only if the parent is already attached to the main stack hierarchy.
 	  * @param parent Parent for this stackable to register under.
 	  */
-	def attachToStackHierarchyUnder(parent: Stackable) =
-	{
+	def attachToStackHierarchyUnder(parent: ReflectionStackable) = {
 		if (parent.isAttachedToMainHierarchy)
 		{
 			StackHierarchyManager.registerConnection(parent, this)
@@ -370,8 +315,7 @@ trait Stackable extends ComponentLike
 	  * @param callIfAttached Whether the specified listener should be called immediately in case this component
 	  *                       is already attached to the main stack hierarchy. Default = false.
 	  */
-	def addStackHierarchyChangeListener(listener: StackHierarchyListener, callIfAttached: Boolean = false) =
-	{
+	def addStackHierarchyChangeListener(listener: StackHierarchyListener, callIfAttached: Boolean = false) = {
 		val currentListeners = stackHierarchyListeners
 		if (!currentListeners.contains(listener))
 		{

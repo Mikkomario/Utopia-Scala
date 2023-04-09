@@ -14,6 +14,7 @@ import utopia.reflection.shape.stack.StackSize
   * @author Mikko Hilpinen
   * @since 17.12.2019, v1+
   */
+@deprecated("Replaced with a new version", "v2.0")
 trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with ComponentWrapper with CachingStackable
 {
 	// ABSTRACT	----------------------

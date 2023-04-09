@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack.template
 
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.template.ContainerLike
 import utopia.reflection.event.StackHierarchyListener
 
@@ -9,7 +9,7 @@ import utopia.reflection.event.StackHierarchyListener
   * @author Mikko Hilpinen
   * @since 21.4.2019, v1+
   */
-trait StackContainerLike[C <: Stackable] extends ContainerLike[C] with Stackable
+trait StackContainerLike[C <: ReflectionStackable] extends ContainerLike[C] with ReflectionStackable
 {
 	// ATTRIBUTES	-----------------------
 	
@@ -20,7 +20,7 @@ trait StackContainerLike[C <: Stackable] extends ContainerLike[C] with Stackable
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def children: Seq[Stackable] = components
+	override def children: Seq[ReflectionStackable] = components
 	
 	override def isAttachedToMainHierarchy = _isAttachedToMainHierarchy
 	

@@ -8,7 +8,8 @@ import utopia.reflection.event.StackHierarchyListener
   * @author Mikko Hilpinen
   * @since 13.3.2020, v1
   */
-trait StackLeaf extends Stackable
+// TODO: Rename
+trait StackLeaf extends ReflectionStackable
 {
 	// ATTRIBUTES	-----------------------
 	

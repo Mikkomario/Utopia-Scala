@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.reflection.component.template.ComponentWrapper
+import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.event.StackHierarchyListener
 
 /**
@@ -8,23 +8,16 @@ import utopia.reflection.event.StackHierarchyListener
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-@deprecated("Replaced with a new version", "v2.0")
-trait StackableWrapper extends ComponentWrapper with Stackable
+trait ReflectionStackableWrapper extends StackableWrapper2 with ReflectionStackable with ReflectionComponentWrapper
 {
 	// ABSTRACT	---------------------
 	
-	override protected def wrapped: Stackable
+	override protected def wrapped: ReflectionStackable
 	
 	
 	// IMPLEMENTED	-----------------
 	
 	override def children = wrapped.children
-	
-	override def updateLayout() = wrapped.updateLayout()
-	
-	override def stackSize = wrapped.stackSize
-	
-	override def resetCachedSize() = wrapped.resetCachedSize()
 	
 	override def stackId = wrapped.stackId
 	

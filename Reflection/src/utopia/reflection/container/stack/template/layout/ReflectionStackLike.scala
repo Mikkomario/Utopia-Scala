@@ -3,8 +3,8 @@ package utopia.reflection.container.stack.template.layout
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.template.layout.stack.{StackSizeCalculating, Stackable, StackableWrapper}
 import utopia.reflection.component.template.layout.{Area, AreaOfItems}
+import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper, StackSizeCalculating, Stackable, StackableWrapper}
 import utopia.reflection.container.stack.template.MultiStackContainer
 import utopia.reflection.container.stack.{StackLayout, Stacker}
 import utopia.reflection.shape.stack.StackLength
@@ -14,8 +14,8 @@ import utopia.reflection.shape.stack.StackLength
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-@deprecated("Replaced with a new version", "v2.0")
-trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCalculating with AreaOfItems[C]
+trait ReflectionStackLike[C <: ReflectionStackable]
+    extends MultiStackContainer[C] with StackSizeCalculating with AreaOfItems[C]
 {
 	// ATTRIBUTES    --------------------
     
@@ -68,14 +68,12 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     
     override def components = _components map { _.source }
     
-    override def insert(component: C, index: Int) =
-    {
+    override def insert(component: C, index: Int) = {
         _components = _components.inserted(new StackItem[C](component), index)
         super.insert(component, index)
     }
     
-    override def -=(component: C) =
-    {
+    override def -=(component: C) = {
         _components = _components.filterNot { _.source == component }
         super.-=(component)
     }
@@ -161,7 +159,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     def dropLast(amount: Int) = _components dropRight amount map { _.source } foreach { -= }
 }
 
-private class StackItem[C <: Stackable](val source: C) extends Area with StackableWrapper
+private class StackItem[C <: ReflectionStackable](val source: C) extends Area with ReflectionStackableWrapper
 {
     // ATTRIBUTES    -------------------
     
@@ -172,9 +170,11 @@ private class StackItem[C <: Stackable](val source: C) extends Area with Stackab
     // IMPLEMENTED    -----------------
     
     override def position = nextPosition getOrElse source.position
+    
     override def position_=(p: Point) = nextPosition = Some(p)
     
     override def size = nextSize getOrElse source.size
+    
     override def size_=(s: Size) = nextSize = Some(s)
     
     override protected def wrapped = source
@@ -182,7 +182,7 @@ private class StackItem[C <: Stackable](val source: C) extends Area with Stackab
     
     // OTHER    -----------------------
     
-    def updateBounds() = 
+    def updateBounds() =
     {
         nextPosition filterNot { _ ~== source.position } foreach { source.position = _ }
         nextPosition = None

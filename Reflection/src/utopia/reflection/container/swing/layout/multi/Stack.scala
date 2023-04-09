@@ -10,10 +10,10 @@ import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, CachingStackable, CachingStackable2, ReflectionStackable, Stackable, Stackable2}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.stack.template.layout.StackLike
+import utopia.reflection.container.stack.template.layout.{StackLike, StackLike2}
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.shape.stack.StackLength
 
@@ -23,7 +23,7 @@ object Stack
 {
     // TYPES    --------------------
     
-    type AwtStackable = Stackable with AwtComponentRelated
+    type AwtStackable = ReflectionStackable with AwtComponentRelated
     
     
     // ATTRIBUTES   ----------------
@@ -193,7 +193,7 @@ object Stack
 **/
 class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override val margin: StackLength = StackLength.any,
                                      override val cap: StackLength = StackLength.fixedZero, override val layout: StackLayout = Fit)
-    extends StackLike[C] with AwtComponentWrapperWrapper with CachingStackable with SwingComponentRelated
+    extends CachingReflectionStackable with StackLike2[C] with AwtComponentWrapperWrapper with SwingComponentRelated
         with AwtContainerRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES    --------------------
@@ -208,8 +208,6 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     
     // IMPLEMENTED    -------------------
-    
-    override def children = super[StackLike].children
     
     override def drawable = panel
     

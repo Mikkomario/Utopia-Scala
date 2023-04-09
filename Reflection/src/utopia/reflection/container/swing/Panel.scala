@@ -1,11 +1,11 @@
 package utopia.reflection.container.swing
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, CustomDrawComponent, JWrapper}
-import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.component.template.ComponentLike2
+import utopia.reflection.container.template.mutable.MutableMultiContainer2
 import utopia.reflection.util.AwtEventThread
 
 import java.awt.{Container, Graphics}
@@ -16,7 +16,7 @@ import javax.swing.{JComponent, JPanel}
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[C] with JWrapper with
+class Panel[C <: ComponentLike2 with AwtComponentRelated] extends MutableMultiContainer2[C, C] with JWrapper with
 	AwtContainerRelated with MutableCustomDrawableWrapper
 {
     // ATTRIBUTES    -------------------
@@ -33,19 +33,23 @@ class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[
 	
 	override def components = _components
 	
-	override protected def add(component: C, index: Int) =
-	{
-	    _components = _components.inserted(component, index)
-		// Adds the component to the underlying panel in GUI thread
-		AwtEventThread.async { panel.add(component.component) }
+	override protected def add(component: C, index: Int): Unit = add(Vector(component), index)
+	override protected def add(components: IterableOnce[C], index: Int): Unit = {
+		NotEmpty(Vector.from(components)).foreach { newComps =>
+			_components = _components.take(index) ++ newComps ++ _components.drop(index)
+			// Adds the component to the underlying panel in GUI thread
+			AwtEventThread.async { newComps.foreach { c => panel.add(c.component) } }
+		}
 	}
+	override def addBack(component: C, index: Int): Unit = add(component, index)
+	override def addBack(components: IterableOnce[C], index: Int): Unit = add(components, index)
 	
-	override protected def remove(component: C) =
-	{
+	override protected def remove(component: C) = {
 	    _components = components filterNot { _.equals(component) }
 		// Panel action is done in the GUI thread
 		AwtEventThread.async { panel.remove(component.component) }
 	}
+	override protected def remove(components: IterableOnce[C]): Unit = components.iterator.foreach(remove)
 }
 
 private class CustomPanel extends JPanel with CustomDrawComponent

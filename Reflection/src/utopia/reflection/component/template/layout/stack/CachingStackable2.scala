@@ -9,8 +9,7 @@ import utopia.reflection.shape.stack.modifier.StackSizeModifier
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-// TODO: Make an abstract class
-trait CachingStackable2 extends Stackable2 with Constrainable
+abstract class CachingStackable2 extends Stackable2 with Constrainable
 {
 	// ATTRIBUTES	-----------------
 	
@@ -22,8 +21,7 @@ trait CachingStackable2 extends Stackable2 with Constrainable
 	
 	override def constraints = _constraints
 	
-	override def constraints_=(newConstraints: Vector[StackSizeModifier]) =
-	{
+	override def constraints_=(newConstraints: Vector[StackSizeModifier]) = {
 		_constraints = newConstraints
 		resetCachedSize()
 	}

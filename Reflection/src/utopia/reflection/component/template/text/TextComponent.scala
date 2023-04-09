@@ -14,6 +14,7 @@ import utopia.reflection.text.Font
   * @author Mikko Hilpinen
   * @since 10.12.2019, v1+
   */
+@deprecated("Replaced with a new version", "v2.0")
 trait TextComponent extends Stackable with Alignable
 {
 	// ABSTRACT	--------------------------

@@ -6,7 +6,7 @@ import utopia.flow.collection.mutable.{GraphNode, VolatileList}
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.util.AwtEventThread
 
 import scala.collection.immutable.VectorBuilder
@@ -23,7 +23,7 @@ object StackHierarchyManager
 {
 	// TYPES	-------------------------
 	
-	private type Node = GraphNode[Stackable, Int]
+	private type Node = GraphNode[ReflectionStackable, Int]
 	private type Edge = GraphEdge[Int, Node]
 	
 	
@@ -35,7 +35,7 @@ object StackHierarchyManager
 	// Id -> Node -> Children, used for finding children
 	private val graph = mutable.HashMap[Int, Node]()
 	
-	private val validationQueue = VolatileList[Stackable]()
+	private val validationQueue = VolatileList[ReflectionStackable]()
 	
 	private var validationLoop: Option[RevalidateLoop] = None
 	
@@ -83,7 +83,7 @@ object StackHierarchyManager
 	  * @return All components that are above the specified component in this stack hierarchy, from the highest
 	  *         to the lowest. Ends with the specified component. Not empty.
 	  */
-	def upperHierarchyOf(component: Stackable) = ids.get(component.stackId) match
+	def upperHierarchyOf(component: ReflectionStackable) = ids.get(component.stackId) match
 	{
 		case Some(id) =>
 			// Case: Master component
@@ -95,7 +95,7 @@ object StackHierarchyManager
 				{
 					case Some(masterNode) =>
 						// Collects the whole component path
-						val builder = new VectorBuilder[Stackable]()
+						val builder = new VectorBuilder[ReflectionStackable]()
 						builder += masterNode.value
 						var lastNode = masterNode
 						var remainingIds = id.parts.drop(1)
@@ -124,7 +124,7 @@ object StackHierarchyManager
 	  * Requests validation for the specified item
 	  * @param item An item
 	  */
-	def requestValidationFor(item: Stackable) =
+	def requestValidationFor(item: ReflectionStackable) =
 	{
 		// Queues the item
 		validationQueue :+= item
@@ -137,7 +137,7 @@ object StackHierarchyManager
 	  * Requests validation for the specified item
 	  * @param items Items to revalidate
 	  */
-	def requestValidationFor(items: Iterable[Stackable]) =
+	def requestValidationFor(items: Iterable[ReflectionStackable]) =
 	{
 		// Queues the item
 		validationQueue ++= items
@@ -229,7 +229,7 @@ object StackHierarchyManager
 	  * item to this stack hierarchy, you will also need to reattach all its child components.
 	  * @param item The stackable item to be removed from this hierarchy
 	  */
-	def unregister(item: Stackable) =
+	def unregister(item: ReflectionStackable) =
 	{
 		// Removes the provided item and each child from both ids and graph
 		ids.get(item.stackId).foreach { itemId =>
@@ -256,7 +256,7 @@ object StackHierarchyManager
 	  * it from under another item. This method should be used only for items that user their own stack hierarchy
 	  * @param component A component
 	  */
-	def registerIndividual(component: Stackable): Unit =
+	def registerIndividual(component: ReflectionStackable): Unit =
 	{
 		// Only registers the component if it hasn't been registered yet
 		if (!ids.contains(component.stackId))
@@ -271,7 +271,7 @@ object StackHierarchyManager
 	  * @param parent A parent element
 	  * @param child A child element
 	  */
-	def registerConnection(parent: Stackable, child: Stackable) =
+	def registerConnection(parent: ReflectionStackable, child: ReflectionStackable) =
 	{
 		// If the child already had a parent, makes the child a master (top level component) first
 		ids.get(child.stackId).foreach { childId =>
@@ -341,13 +341,13 @@ object StackHierarchyManager
 			graphOptionForId(id).flatMap { n => (n / id.parts.drop(1)).headOption }
 	}
 	
-	private def parentId(item: Stackable) = ids.get(item.stackId) match
+	private def parentId(item: ReflectionStackable) = ids.get(item.stackId) match
 	{
 		case Some(existing) => existing
 		case None => addRoot(item)
 	}
 	
-	private def _detach(item: Stackable): Unit =
+	private def _detach(item: ReflectionStackable): Unit =
 	{
 		ids.get(item.stackId).foreach { childId =>
 			childId.parentId.foreach { parentId =>
@@ -368,7 +368,7 @@ object StackHierarchyManager
 		}
 	}
 	
-	private def addRoot(item: Stackable) =
+	private def addRoot(item: ReflectionStackable) =
 	{
 		// Creates a new id
 		val newId = StackId.root(indexCounter.next())

@@ -42,14 +42,12 @@ trait ComponentLike2 extends Area
       * @param text Text to be presented
       * @return The width the text would take in this component, using the specified font
       */
-    def textWidthWith(font: Font, text: String) =
-    {
+    def textWidthWith(font: Font, text: String) = {
         if (text.isEmpty)
             0
         else
             fontMetricsWith(font).widthOf(text)
     }
-    
     /**
       * @param font Font being used
       * @return The height of a single line of text in this component, using the specified font
@@ -65,38 +63,33 @@ trait ComponentLike2 extends Area
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseButtonEvent(event: MouseButtonStateEvent): Option[ConsumeEvent] =
-    {
+    def distributeMouseButtonEvent(event: MouseButtonStateEvent): Option[ConsumeEvent] = {
         // Informs children first
         val consumeEvent = distributeConsumableMouseEvent[MouseButtonStateEvent](event, _.distributeMouseButtonEvent(_))
         
         // Then informs own handler
         mouseButtonHandler.onMouseButtonState(consumeEvent.map(event.consumed).getOrElse(event))
     }
-    
     /**
       * Distributes a mouse move event to this wrapper and children
       * @param event A mouse move event. Should be within this component's parent's context
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseMoveEvent(event: MouseMoveEvent): Unit =
-    {
+    def distributeMouseMoveEvent(event: MouseMoveEvent): Unit = {
         // Informs own listeners first
         mouseMoveHandler.onMouseMove(event)
         
         distributeEvent[MouseMoveEvent](event, e => Vector(e.mousePosition, e.previousMousePosition),
             _.relativeTo(_), _.distributeMouseMoveEvent(_))
     }
-    
     /**
       * Distributes a mouse wheel event to this wrapper and children
       * @param event A mouse wheel event. Should be within this component's parent's context
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseWheelEvent(event: MouseWheelEvent): Option[ConsumeEvent] =
-    {
+    def distributeMouseWheelEvent(event: MouseWheelEvent): Option[ConsumeEvent] = {
         // Informs children first
         val consumeEvent = distributeConsumableMouseEvent[MouseWheelEvent](event, _.distributeMouseWheelEvent(_))
         
@@ -109,13 +102,11 @@ trait ComponentLike2 extends Area
       * @param listener A new listener
       */
     def addMouseButtonListener(listener: MouseButtonStateListener) = mouseButtonHandler += listener
-    
     /**
       * Adds a new mouse move listener to this wrapper
       * @param listener A new listener
       */
     def addMouseMoveListener(listener: MouseMoveListener) = mouseMoveHandler += listener
-    
     /**
       * Adds a new mouse wheel listener to this wrapper
       * @param listener A new listener
@@ -126,16 +117,13 @@ trait ComponentLike2 extends Area
       * Removes a listener from this wrapper
       * @param listener A listener to be removed
       */
-    def removeMouseListener(listener: Handleable) = forMeAndChildren
-    {
-        c =>
-            c.mouseButtonHandler -= listener
-            c.mouseMoveHandler -= listener
-            c.mouseWheelHandler -= listener
+    def removeMouseListener(listener: Handleable) = forMeAndChildren { c =>
+        c.mouseButtonHandler -= listener
+        c.mouseMoveHandler -= listener
+        c.mouseWheelHandler -= listener
     }
     
-    private def forMeAndChildren[U](operation: ComponentLike2 => U): Unit =
-    {
+    private def forMeAndChildren[U](operation: ComponentLike2 => U): Unit = {
         operation(this)
         children.foreach(operation)
     }
@@ -146,8 +134,7 @@ trait ComponentLike2 extends Area
         // If has children, informs them. Event position is modified and only events within this component's area
         // are relayed forward
         val myBounds = bounds
-        if (positionsFromEvent(event).exists { myBounds.contains(_) })
-        {
+        if (positionsFromEvent(event).exists { myBounds.contains(_) }) {
             val translated = translateEvent(event, myBounds.position)
             // Only visible children are informed of events
             children.foreach { c => childAccept(c, translated) }
@@ -157,8 +144,7 @@ trait ComponentLike2 extends Area
     private def distributeConsumableMouseEvent[E <: MouseEvent[E] with Consumable[E]](event: E, childAccept: (ComponentLike2, E) => Option[ConsumeEvent]) =
     {
         val myBounds = bounds
-        if (myBounds.contains(event.mousePosition))
-        {
+        if (myBounds.contains(event.mousePosition)) {
             val translatedEvent = event.relativeTo(myBounds.position)
             translatedEvent.distributeAmong(children)(childAccept)
         }

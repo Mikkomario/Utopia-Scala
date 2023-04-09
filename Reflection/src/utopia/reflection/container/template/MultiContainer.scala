@@ -8,6 +8,7 @@ import utopia.reflection.component.template.ComponentLike
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
+@deprecated("Replaced with a new version", "v2.0")
 trait MultiContainer[C <: ComponentLike] extends Container[C]
 {
 	// OPERATORS    ---------------

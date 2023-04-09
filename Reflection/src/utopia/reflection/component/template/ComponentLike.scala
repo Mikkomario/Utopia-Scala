@@ -16,6 +16,7 @@ import utopia.reflection.event.ResizeListener
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
+@deprecated("Replaced with a new version", "v2.0")
 trait ComponentLike extends Area
 {
     // ABSTRACT    ------------------------

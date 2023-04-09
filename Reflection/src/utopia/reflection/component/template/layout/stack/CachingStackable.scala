@@ -9,6 +9,7 @@ import utopia.reflection.shape.stack.modifier.StackSizeModifier
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
+@deprecated("Replaced with a new version", "v2.0")
 trait CachingStackable extends Stackable with Constrainable
 {
 	// ATTRIBUTES	-----------------

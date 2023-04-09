@@ -9,15 +9,14 @@ import utopia.reflection.event.ResizeListener
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-@deprecated("Replaced with a new version", "v2.0")
-trait ComponentWrapper extends ComponentLike
+trait ReflectionComponentWrapper extends ReflectionComponentLike with ComponentWrapper2
 {
 	// ABSTRACT	-------------------
 	
 	/**
 	  * @return The component wrapped by this wrapper
 	  */
-	protected def wrapped: ComponentLike
+	protected override def wrapped: ReflectionComponentLike
 	
 	
 	// IMPLEMENTED	---------------
@@ -35,13 +34,11 @@ trait ComponentWrapper extends ComponentLike
 	
 	override def isTransparent = wrapped.isTransparent
 	
-	override def fontMetrics = wrapped.fontMetrics
-	
 	override def mouseButtonHandler = wrapped.mouseButtonHandler
 	override def mouseMoveHandler = wrapped.mouseMoveHandler
 	override def mouseWheelHandler = wrapped.mouseWheelHandler
-	override def keyStateHandler = wrapped.keyStateHandler
-	override def keyTypedHandler = wrapped.keyTypedHandler
+	// override def keyStateHandler = wrapped.keyStateHandler
+	// override def keyTypedHandler = wrapped.keyTypedHandler
 	
 	override def position = wrapped.position
 	override def position_=(p: Point) = wrapped.position = p
