@@ -1,11 +1,11 @@
 package utopia.reflection.component.swing.template
 
-import java.awt.Graphics
-
-import utopia.genesis.util.Drawer
-import utopia.reflection.component.drawing.mutable.CustomDrawable
+import utopia.genesis.graphics.Drawer3
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
+
+import java.awt.{Graphics, Graphics2D}
 
 /**
   * This trait is extended by awt components that allow custom drawing. Please note that this trait should only be
@@ -14,7 +14,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreg
   * @author Mikko Hilpinen
   * @since 29.4.2019, v1+
   */
-trait CustomDrawComponent extends CustomDrawable
+trait CustomDrawComponent extends MutableCustomDrawable
 {
 	// ATTRIBUTES	----------------------
 	
@@ -28,12 +28,13 @@ trait CustomDrawComponent extends CustomDrawable
 	  * @param g A graphics instance
 	  * @param superPaintComponent The default implementation of paint component
 	  */
-	def customPaintComponent(g: Graphics, superPaintComponent: Graphics => Unit) = Drawer.use(g)
-	{
-		drawer =>
+	def customPaintComponent(g: Graphics, superPaintComponent: Graphics => Unit) = {
+		val graphics = g.asInstanceOf[Graphics2D]
+		Drawer3(graphics).use { drawer =>
 			customDraw(Background, drawer)
-			superPaintComponent(drawer.graphics)
+			superPaintComponent(graphics)
 			customDraw(Normal, drawer)
+		}
 	}
 	
 	/**
@@ -41,10 +42,9 @@ trait CustomDrawComponent extends CustomDrawable
 	  * @param g A graphics instance
 	  * @param superPaintChildren The default implementation of paint component
 	  */
-	def customPaintChildren(g: Graphics, superPaintChildren: Graphics => Unit) =
-	{
+	def customPaintChildren(g: Graphics, superPaintChildren: Graphics => Unit) = {
 		superPaintChildren(g)
-		Drawer.use(g) { customDraw(Foreground, _) }
+		Drawer3(g.asInstanceOf[Graphics2D]).use { customDraw(Foreground, _) }
 	}
 	
 	/**

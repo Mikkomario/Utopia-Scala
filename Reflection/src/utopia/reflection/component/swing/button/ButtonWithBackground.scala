@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.button
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.mutable.CustomDrawable
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.view.BorderViewDrawer
 import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.Border
@@ -12,7 +12,7 @@ import utopia.reflection.shape.Border
   * @author Mikko Hilpinen
   * @since 24.9.2020, v1.3
   */
-abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends ButtonLike with CustomDrawable
+abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends ButtonLike with MutableCustomDrawable
 {
 	// ATTRIBUTES   -------------------
 	

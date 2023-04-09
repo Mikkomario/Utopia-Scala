@@ -6,38 +6,37 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult}
+import utopia.reach.cursor.{CursorSet, ReachCursorManager}
+import utopia.reach.dnd.DragAndDropManager
+import utopia.reach.focus.ReachFocusManager
+import utopia.reach.util.RealTimeReachPaintManager
 import utopia.reflection.color.ColorShade.Dark
 import utopia.reflection.color.ColorShadeVariant
-import utopia.reflection.component.drawing.mutable.CustomDrawable
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer}
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
-import utopia.reach.cursor.{CursorSet, ReachCursorManager}
-import utopia.reach.focus.ReachFocusManager
-import utopia.reach.util.RealTimeReachPaintManager
 import utopia.reflection.event.StackHierarchyListener
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
-import utopia.reach.dnd.DragAndDropManager
 import utopia.reflection.shape.stack.StackSize
 
 import java.awt.event.KeyEvent
-import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager}
+import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}
 import java.util
 import javax.swing.{JComponent, JPanel}
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -78,15 +77,15 @@ object ReachCanvas
   */
 // TODO: Stack hierarchy attachment link should be considered broken while this component is invisible or otherwise not shown
 class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet],
+                          override val customDrawers: Vector[CustomDrawer] = Vector(),
 						  disableDoubleBufferingDuringDraw: Boolean = true, syncAfterDraw: Boolean = true,
 						  focusEnabled: Boolean = true)
 						 (implicit exc: ExecutionContext)
 	extends ReachCanvasLike with JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated
-		with CustomDrawable
+		with CustomDrawable2
 {
 	// ATTRIBUTES	---------------------------
 	
-	override var customDrawers = Vector[CustomDrawer]()
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	
 	private val layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
@@ -309,7 +308,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		
 		override def paint(g: Graphics) = paintComponent(g)
 		
-		override def paintComponent(g: Graphics) = currentPainter.foreach { p => Drawer.use(g)(p.paintWith) }
+		override def paintComponent(g: Graphics) =
+			currentPainter.foreach { p => Drawer3(g.asInstanceOf[Graphics2D]).use(p.paintWith) }
 		
 		// Never paints children (because won't have any children)
 		override def paintChildren(g: Graphics) = ()

@@ -4,6 +4,7 @@ import utopia.genesis.handling
 import utopia.genesis.util.{DepthRange, Drawer}
 import utopia.inception.handling.mutable.DeepHandler
 
+@deprecated("Replaced with a new implementation", "v3.3")
 object DrawableHandler
 {
 	/**
@@ -33,6 +34,7 @@ object DrawableHandler
   * @param drawDepth The drawing depth of this handler
   * @param customizer A function for customizing drawers used by this handler. None means that no customizing is done
   */
+@deprecated("Replaced with a new implementation", "v3.3")
 class DrawableHandler(initialElements: IterableOnce[handling.Drawable], override val drawDepth: Int,
 					  val customizer: Option[Drawer => Drawer])
 	extends DeepHandler[handling.Drawable](initialElements) with handling.DrawableHandler

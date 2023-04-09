@@ -1,10 +1,10 @@
 package utopia.reflection.component.swing.button
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.template.input.InteractionWithPointer
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.input.InteractionWithPointer
 import utopia.reflection.event.ButtonState
 
 /**
@@ -19,7 +19,7 @@ import utopia.reflection.event.ButtonState
   */
 class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys: Set[Int] = Set(),
                     hotKeyChars: Iterable[Char] = Set(), initialState: Boolean = false)
-	extends StackableAwtComponentWrapperWrapper with CustomDrawableWrapper with ButtonLike
+	extends StackableAwtComponentWrapperWrapper with MutableCustomDrawableWrapper with ButtonLike
 		with InteractionWithPointer[Boolean] with SwingComponentRelated
 {
 	// ATTRIBUTES	---------------------
@@ -57,8 +57,7 @@ class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys
 	
 	override def drawable = label
 	
-	override protected def updateStyleForState(newState: ButtonState) =
-	{
+	override protected def updateStyleForState(newState: ButtonState) = {
 		if (isOn)
 			label.image = onImages(newState)
 		else

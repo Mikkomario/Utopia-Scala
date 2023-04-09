@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.label
 
-import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
+import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.swing.EmptyJComponent
 import utopia.reflection.component.swing.template.JWrapper
 
@@ -17,7 +17,7 @@ object Label
   * @author Mikko Hilpinen
   * @since 21.4.2019, v1+
   */
-class Label extends JWrapper with CustomDrawableWrapper
+class Label extends JWrapper with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	-----------------
 	
@@ -26,7 +26,7 @@ class Label extends JWrapper with CustomDrawableWrapper
 	
 	// IMPLEMENTED	-----------------
 	
-	override def drawable: CustomDrawable = _label
+	override def drawable: MutableCustomDrawable = _label
 	
 	override def component = _label
 }

@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
@@ -42,6 +43,9 @@ object ScrollViewTest extends App
 {
 	ParadigmDataType.setup()
 	
+	private implicit val selectionDs: DrawSettings = DrawSettings(Color.black.withAlpha(0.33))(
+		StrokeSettings(Color.black.withAlpha(0.8), 2))
+	
 	// Label creation function
 	val basicFont = Font("Arial", 12, Plain, 2)
 	val displayFunction = DisplayFunction.interpolating("Label number %i")
@@ -62,9 +66,7 @@ object ScrollViewTest extends App
 	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkenedBy(1.2)
 	
 	// Adds content management
-	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) =>
-		d.withColor(Color.black.withAlpha(0.33), Color.black.withAlpha(0.8)).withStroke(2).draw(b)
-	}
+	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) => d.draw(b) }
 	
 	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
 	contentManager.valuePointer.addContinuousListener { i => println(s"Selected ${ i.newValue }") }

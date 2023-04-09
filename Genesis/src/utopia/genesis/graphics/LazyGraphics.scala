@@ -48,28 +48,19 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	
 	// Calculates the graphic instance only when necessary
 	private val baseCache: Lazy[ClosingGraphics] = Lazy {
-		val myTransformation = newTransformation.map { _.value }
 		// Acquires a parent graphics instance and checks which transformations and mutations to apply to it
 		val (graphics, fullTransformation, allMutations) = parent match {
 			// Case: Parent is a graphics instance => uses that
-			case Left(graphics) => (graphics.value, myTransformation, mutation.toVector)
+			case Left(graphics) => (graphics.value, newTransformation, mutation.toVector)
 			// Case: Parent is lazily calculated => uses available state
 			case Right(parent) =>
 				parent.materials match {
 					// Case: Parent has prepared a graphics instance => uses that
-					case Right(graphics) => (graphics, myTransformation, mutation.toVector)
+					case Right(graphics) => (graphics, newTransformation, mutation.toVector)
 					// Case: Parent is yet to prepare a graphics instance => uses some other parent and applies
 					// all pending transformations and mutations
-					case Left((graphics, firstTransformation, firstMutations)) =>
-						val combinedTransformation = firstTransformation match {
-							case Some(first) =>
-								myTransformation match {
-									case Some(last) => Some(first.value(last))
-									case None => Some(first.value)
-								}
-							case None => myTransformation
-						}
-						(graphics, combinedTransformation, firstMutations ++ mutation)
+					case Left((graphics, parentTransformation, parentMutations)) =>
+						(graphics, combineTransforms(parentTransformation), parentMutations ++ mutation)
 				}
 		}
 		// Case: No transformations needed => uses parent graphics instance
@@ -78,7 +69,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 		// Case: Mutations / transformations to apply => creates a modified child instance to use
 		else {
 			val newGraphics = graphics.createChild()
-			fullTransformation.foreach(newGraphics.transform)
+			fullTransformation.foreach { t => newGraphics.transform(t.value) }
 			allMutations.foreach { _(newGraphics) }
 			newGraphics
 		}
@@ -172,18 +163,8 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 							// Case: Parent has pre-calculated graphics => Uses those as the base
 							case Right(graphics) => Left((graphics, newTransformation, mutation.toVector))
 							// Case: Parent is yet to calculate their own graphics version => combines changes
-							case Left((graphics, firstTransformation, firstMutations)) =>
-								// Calculates the full transformation to apply (lazy)
-								val completeTransformation = newTransformation match {
-									case Some(lastTransformation) =>
-										firstTransformation match {
-											case Some(firstTransformation) =>
-												Some(Lazy { lastTransformation.value(firstTransformation.value) })
-											case None => Some(lastTransformation)
-										}
-									case None => firstTransformation
-								}
-								Left((graphics, completeTransformation, firstMutations ++ mutation))
+							case Left((graphics, parentTransformation, parentMutations)) =>
+								Left((graphics, combineTransforms(parentTransformation), parentMutations ++ mutation))
 						}
 				}
 		}
@@ -230,7 +211,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	  * @return A copy of this graphics instance where clipping is reduced to the specified bounds.
 	  *         Applies current clipping area bounds (not necessarily shape) as well.
 	  */
-	def reducedToBounds(clippingBounds: Bounds) = withClip {
+	def clippedToBounds(clippingBounds: Bounds) = withClip {
 		this.clippingBounds match {
 			case Some(existingBounds) =>
 				clippingBounds.overlapWith(existingBounds).getOrElse(clippingBounds.withSize(Size.zero))
@@ -249,5 +230,21 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 		// Sets rendering hints based on desktop settings
 		Try { Option(Toolkit.getDefaultToolkit.getDesktopProperty("awt.font.desktophints"))
 			.map { _.asInstanceOf[java.util.Map[_, _]] }.foreach(g.setRenderingHints) }
+	}
+	
+	private def combineTransforms(parentTransform: Option[Lazy[Matrix3D]]) = {
+		newTransformation match {
+			// Case: New transformation being applied
+			case Some(myTransformation) =>
+				parentTransform match {
+					// Case: Parent transformation also defined => merges the two
+					case Some(parentTransform) =>
+						Some(Lazy { parentTransform.value(myTransformation.value) })
+					// Case: No parent transformation => Uses own transformation only
+					case None => Some(myTransformation)
+				}
+			// Case: No new transformation to apply => Uses parent state
+			case None => parentTransform
+		}
 	}
 }

@@ -1,15 +1,15 @@
 package utopia.reach.container.layered
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.genesis.graphics.Drawer3
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.reflection.component.template.layout.stack.StackSizeCalculating
 import utopia.reflection.container.template.MultiContainer2
-import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackSize
 
 /**
   * A template trait for containers which hold multiple overlaid layers of components
@@ -83,7 +83,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 	}
 	
 	// TODO: Add support for visual effects (with buffering)
-	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) =
+	override def paintWith(drawer: Drawer3, clipZone: Option[Bounds]) =
 	{
 		paintContent(drawer, Background, clipZone)
 		paintContent(drawer, Normal, clipZone)

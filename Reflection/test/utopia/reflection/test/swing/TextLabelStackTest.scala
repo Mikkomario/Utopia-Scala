@@ -2,6 +2,7 @@ package utopia.reflection.test.swing
 
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
+import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
@@ -28,6 +29,8 @@ import utopia.reflection.test.TestContext._
   */
 object TextLabelStackTest extends App
 {
+	private implicit val ds: DrawSettings = DrawSettings(Color.red.withAlpha(0.5))(StrokeSettings(Color.red))
+	
 	ParadigmDataType.setup()
 
 	// Creates the labels
@@ -47,10 +50,7 @@ object TextLabelStackTest extends App
 	stack.background = Color.black
 
 	// Tests custom drawing
-	labels(1).addCustomDrawer() { (d, b) =>
-		d.withColor(Color.red.withAlpha(0.5).toAwt,
-			Color.red.toAwt).draw(b.shrunk(Size.square(4)))
-	}
+	labels(1).addCustomDrawer() { (d, b) => d.draw(b.shrunk(Size.square(4))) }
 
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()

@@ -3,16 +3,16 @@ package utopia.reach.component.input.check
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.{Actor, KeyStateListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, KeyStateListener}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
-import utopia.genesis.util.Drawer
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
@@ -36,7 +36,7 @@ object Switch extends ContextInsertableComponentFactoryFactory[ColorContextLike,
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private val shadowColor = Color.black.withAlpha(0.1)
+	private val shadowDs = DrawSettings.onlyFill(Color.black.withAlpha(0.1))
 	
 	
 	// IMPLEMENTED	--------------------------------
@@ -208,10 +208,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
-			if (bounds.size.isPositive)
-			{
+		override def draw(drawer: Drawer3, bounds: Bounds) = {
+			if (bounds.size.isPositive) {
 				val actualDrawer = if (enabled) drawer else drawer.withAlpha(0.66)
 				
 				// Calculates drawn area bounds
@@ -229,14 +227,12 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				val knobX = minKnobX + (maxKnobX - minKnobX) * progress
 				
 				// Draws the hover area, if necessary
-				if (hoverR > 0 && enabled)
-				{
+				if (hoverR > 0 && enabled) {
 					val hoverAlpha = Switch.this.state.hoverAlpha
-					if (hoverAlpha > 0)
-					{
+					if (hoverAlpha > 0) {
 						val baseHoverColor = if (value) color else Color.textBlackDisabled
-						actualDrawer.onlyFill(baseHoverColor.timesAlpha(hoverAlpha))
-							.draw(Circle(Point(knobX, y), knobR + hoverR))
+						actualDrawer.draw(Circle(Point(knobX, y), knobR + hoverR))(
+							DrawSettings.onlyFill(baseHoverColor.timesAlpha(hoverAlpha)))
 					}
 				}
 				
@@ -244,22 +240,21 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				val barR = knobR * 0.7
 				val barStartY = y - barR
 				val barHeight = 2 * barR
-				if (progress < 1)
-				{
-					actualDrawer.onlyFill(color.timesAlpha(0.66).grayscale)
-						.draw(Bounds(Point(knobX - barR, barStartY), Size(maxKnobX - knobX + 2 * barR, barHeight))
-							.toRoundedRectangle(1.0))
+				if (progress < 1) {
+					actualDrawer.draw(
+						Bounds(Point(knobX - barR, barStartY), Size(maxKnobX - knobX + 2 * barR, barHeight))
+							.toRoundedRectangle(1.0))(
+						DrawSettings.onlyFill(color.timesAlpha(0.66).grayscale))
 				}
-				if (progress > 0)
-				{
-					actualDrawer.onlyFill(color.timesAlpha(0.5))
-						.draw(Bounds(Point(minKnobX - barR, barStartY), Size(knobX - minKnobX + 2 * barR, barHeight))
-							.toRoundedRectangle(1.0))
+				if (progress > 0) {
+					actualDrawer.draw(
+						Bounds(Point(minKnobX - barR, barStartY), Size(knobX - minKnobX + 2 * barR, barHeight))
+							.toRoundedRectangle(1.0))(
+						DrawSettings.onlyFill(color.timesAlpha(0.5)))
 				}
 				
 				// Draws knob shadow and the knob itself
-				val knobColor =
-				{
+				val knobColor = {
 					if (progress >= 1)
 						color
 					else if (progress <= 0)
@@ -269,8 +264,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				}
 				val knob = Circle(Point(knobX, y), knobR)
 				if (enabled && knobShadowOffset.nonZero)
-					actualDrawer.onlyFill(Switch.shadowColor).draw(knob + knobShadowOffset)
-				actualDrawer.onlyFill(knobColor).draw(knob)
+					actualDrawer.draw(knob + knobShadowOffset)(Switch.shadowDs)
+				actualDrawer.draw(knob)(DrawSettings.onlyFill(knobColor))
 			}
 		}
 		

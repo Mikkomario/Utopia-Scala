@@ -1,13 +1,14 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.handling.Drawable
+import utopia.genesis.graphics.Drawer3
+import utopia.genesis.handling.Drawable2
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size}
-import utopia.genesis.util.{DefaultSetup, Drawer}
+import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size}
 
 import java.nio.file.Paths
 
@@ -55,11 +56,11 @@ object ImageTest extends App
 	setup.start()
 }
 
-private class ImageDrawer(val image: Image, position: Point) extends Drawable with Handleable
+private class ImageDrawer(val image: Image, position: Point) extends Drawable2 with Handleable
 {
-	override def draw(drawer: Drawer) =
+	override def draw(drawer: Drawer3) =
 	{
-		image.drawWith(drawer, position/*, Some(Matrix2D.quarterRotationCounterClockwise)*/)
+		image.drawWith2(drawer, position/*, Some(Matrix2D.quarterRotationCounterClockwise)*/)
 		// drawer.onlyFill(Color.red).draw(Circle(position, 3))
 	}
 }

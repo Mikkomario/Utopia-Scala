@@ -4,7 +4,7 @@ import utopia.paradigm.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.BackgroundSensitive
 import utopia.reflection.component.drawing.immutable.RoundedBackgroundDrawer
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
@@ -54,7 +54,7 @@ object Framing
   * @since 26.4.2019, v1+
   */
 class Framing[C <: Stackable with AwtComponentRelated](initialComponent: C, val insets: StackInsets) extends
-	FramingLike[C] with SwingComponentRelated with AwtContainerRelated with CustomDrawableWrapper
+	FramingLike[C] with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	--------------------
 	

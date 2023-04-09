@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.button
 
+import utopia.genesis.graphics.Drawer3
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
-import utopia.reflection.component.drawing.mutable.CustomDrawable
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.event.ButtonState
 
@@ -11,7 +11,7 @@ import utopia.reflection.event.ButtonState
   * @author Mikko Hilpinen
   * @since 3.8.2019, v1+
   */
-trait CustomDrawableButtonLike extends ButtonLike with CustomDrawable
+trait CustomDrawableButtonLike extends ButtonLike with MutableCustomDrawable
 {
 	// IMPLEMENTED	----------------------
 	
@@ -35,6 +35,6 @@ trait CustomDrawableButtonLike extends ButtonLike with CustomDrawable
 		
 		override def drawLevel = stateDrawer.drawLevel
 		
-		override def draw(drawer: Drawer, bounds: Bounds) = stateDrawer.draw(state, drawer, bounds)
+		override def draw(drawer: Drawer3, bounds: Bounds) = stateDrawer.draw(state, drawer, bounds)
 	}
 }

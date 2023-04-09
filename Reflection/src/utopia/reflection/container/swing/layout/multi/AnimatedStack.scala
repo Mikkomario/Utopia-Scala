@@ -1,20 +1,20 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Point
-import utopia.genesis.util.Fps
 import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.AreaOfItems
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.AnimatedChangesContainer
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 
@@ -97,7 +97,7 @@ class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Ax
 	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]](
 		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, Some(direction), animationDuration,
 		maxRefreshRate, fadingIsEnabled)
-		with SwingComponentRelated with CustomDrawableWrapper with AreaOfItems[C] with AwtContainerRelated
+		with SwingComponentRelated with MutableCustomDrawableWrapper with AreaOfItems[C] with AwtContainerRelated
 {
 	// IMPLEMENTED	-------------------------
 	

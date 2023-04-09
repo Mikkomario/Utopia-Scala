@@ -2,7 +2,7 @@ package utopia.reflection.component.swing
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.layout.stack.StackLeaf
@@ -52,7 +52,7 @@ object StackSpace
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
-class StackSpace(override val stackSize: StackSize) extends JWrapper with StackLeaf with CustomDrawableWrapper
+class StackSpace(override val stackSize: StackSize) extends JWrapper with StackLeaf with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	---------------------------
 	

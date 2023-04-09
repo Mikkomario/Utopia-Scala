@@ -1,8 +1,8 @@
 package utopia.reflection.component.drawing.template
 
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 
 /**
   * Used for drawing a background using a rounded rectangle
@@ -28,19 +28,15 @@ trait RoundedBackgroundDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
-	{
-		if (bounds.size.isPositive)
-		{
-			drawer.onlyFill(color).disposeAfter { d =>
-				rounding match
-				{
-					case Left(radius) =>
-						// Won't scale the radius over maximum (circular shape)
-						val maxRadius = bounds.size.minDimension / 2.0
-						d.draw(bounds.toRoundedRectangleWithRadius(radius min maxRadius))
-					case Right(factor) => d.draw(bounds.toRoundedRectangle(factor))
-				}
+	override def draw(drawer: Drawer3, bounds: Bounds) = {
+		if (bounds.size.isPositive) {
+			implicit val ds: DrawSettings = DrawSettings.onlyFill(color)
+			rounding match {
+				case Left(radius) =>
+					// Won't scale the radius over maximum (circular shape)
+					val maxRadius = bounds.size.minDimension / 2.0
+					drawer.draw(bounds.toRoundedRectangleWithRadius(radius min maxRadius))
+				case Right(factor) => drawer.draw(bounds.toRoundedRectangle(factor))
 			}
 		}
 	}

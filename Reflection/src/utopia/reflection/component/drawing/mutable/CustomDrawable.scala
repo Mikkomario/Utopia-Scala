@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.mutable
 
+import utopia.genesis.graphics.Drawer3
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 
@@ -10,6 +10,7 @@ import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
   * @author Mikko Hilpinen
   * @since 29.4.2019, v1+
   */
+@deprecated("Replaced with CustomDrawable and MutableCustomDrawable", "v2.0")
 trait CustomDrawable
 {
 	// ABSTRACT	----------------
@@ -56,7 +57,7 @@ trait CustomDrawable
 	  *               (can't be seen through). Default = false.
 	  * @param f A drawing function
 	  */
-	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): Unit =
+	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer3, Bounds) => Unit): Unit =
 		addCustomDrawer(CustomDrawer(drawLevel, opaque)(f))
 	
 	/**
@@ -64,9 +65,8 @@ trait CustomDrawable
 	  * @param level Target draw level
 	  * @param drawer A drawer that will do the actual drawing
 	  */
-	def customDraw(level: DrawLevel, drawer: Drawer) =
-	{
+	def customDraw(level: DrawLevel, drawer: Drawer3) = {
 		val b = drawBounds
-		customDrawers.filter { _.drawLevel == level }.foreach { d => drawer.withCopy { d.draw(_, b) } }
+		customDrawers.filter { _.drawLevel == level }.foreach { _.draw(drawer, b) }
 	}
 }

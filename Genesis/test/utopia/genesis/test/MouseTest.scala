@@ -27,6 +27,7 @@ import java.awt.Color
  * @author Mikko Hilpinen
  * @since 4.2.2017
  */
+@deprecated("Replaced with a new version", "v3.3")
 object MouseTest extends App
 {
     class TestObject(position: Point, radius: Double) extends Drawable with
@@ -39,7 +40,7 @@ object MouseTest extends App
         private var isOn = false
         private var transformation = AffineTransformation.translation(position.toVector)
         
-        override def draw(drawer: Drawer) = 
+        override def draw(drawer: Drawer) =
         {
             val copy = drawer.withPaint(Some(if (isOn) Color.BLUE else if (mouseOver) Color.CYAN
                     else Color.LIGHT_GRAY)).withAlpha(0.75)

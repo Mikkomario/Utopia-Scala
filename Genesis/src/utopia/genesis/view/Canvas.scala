@@ -27,6 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param scalingPolicy How this panel handles scaling
   * @param clearPrevious Whether the results of previous draws should be cleared before the next redraw
  */
+@deprecated("Replaced with a new implementation", "v3.3")
 class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val scalingPolicy: ScalingPolicy = Project,
              var clearPrevious: Boolean = true) extends JPanel(null)
 {

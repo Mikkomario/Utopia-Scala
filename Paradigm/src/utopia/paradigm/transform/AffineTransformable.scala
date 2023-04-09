@@ -22,11 +22,16 @@ trait AffineTransformable[+Transformed]
 	// OTHER	--------------------------
 	
 	/**
+	  * @param transformation A transformation to apply to this item
+	  * @return A transformed copy of this item
+	  */
+	def transformedWith(transformation: AffineTransformation): Transformed = transformedWith(transformation.toMatrix)
+	
+	/**
 	  * @param transformation An affine transformation matrix to apply to this instance
 	  * @return A transformed copy of this instance
 	  */
 	def *(transformation: Matrix3D) = transformedWith(transformation)
-	
 	/**
 	  * @param transformation Transformation to apply to this instance
 	  * @return A transformed copy of this instance

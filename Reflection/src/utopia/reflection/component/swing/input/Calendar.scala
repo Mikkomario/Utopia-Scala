@@ -1,31 +1,31 @@
 package utopia.reflection.component.swing.input
 
-import java.time._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{WeekDay, WeekDays}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.Size
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.view.SelectionCircleViewDrawer
-import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionGroup}
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{ButtonImageSet, CustomDrawableButtonLike, ImageButton}
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.{AwtComponentRelated, StackableAwtComponentWrapperWrapper}
+import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionGroup}
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.localization.DisplayFunction
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 
+import java.time._
 import scala.collection.immutable.HashMap
 
 object Calendar
@@ -73,7 +73,7 @@ object Calendar
 	
 	private class DateLabel(val date: Int, font: Font, insets: StackInsets, textColor: Color, hoverColor: Color,
 							selectedColor: Color)
-		extends StackableAwtComponentWrapperWrapper with CustomDrawableWrapper
+		extends StackableAwtComponentWrapperWrapper with MutableCustomDrawableWrapper
 		with CustomDrawableButtonLike with InteractionWithPointer[Boolean]
 	{
 		// ATTRIBUTES	-----------------
@@ -125,7 +125,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
                val insideCalendarMargin: StackSize, makeDayNameLabel: WeekDay => AwtComponentRelated with Stackable,
                private val makeDateButton: Int => AwtComponentRelated with Stackable with InteractionWithPointer[Boolean])
               (implicit weekDays: WeekDays)
-	extends StackableAwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[LocalDate]
+	extends StackableAwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[LocalDate]
 {
 	// ATTRIBUTES	-----------------------
 	

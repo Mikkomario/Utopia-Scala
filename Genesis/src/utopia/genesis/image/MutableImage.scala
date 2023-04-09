@@ -357,15 +357,14 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param overlayPosition The position where the overlay image's origin will be placed
 	  *                        (relative to this image's origin). Default = (0,0) = Image origins will overlap.
 	  */
-	def overlay(image: Image, overlayPosition: Point = Point.origin) =
-	{
+	def overlay(image: Image, overlayPosition: Point = Point.origin) = {
 		if (image.nonEmpty)
 			source match {
 				case Some(target) =>
 					// Draws the overlay image on the source directly
 					// Calculates applied scaling
-					Drawer.use(target.createGraphics()) { d =>
-						(image / scaling).drawWith(d.clippedTo(Bounds(Point.origin, sourceResolution)),
+					Drawer3(target.createGraphics()).consume { d =>
+						(image / scaling).drawWith2(d.withClip(Bounds(Point.origin, sourceResolution)),
 							sourceResolutionOrigin + overlayPosition)
 					}
 				case None =>
@@ -379,6 +378,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Applies a paint function over this image
 	  * @param paint A function that will paint over this image. The provided drawer is clipped to this image's area.
 	  */
+	@deprecated("Please use the new implementation instead", "v3.3")
 	def paintOver(paint: Drawer => Unit) = source.foreach { target => Drawer.use(target.createGraphics())(paint)
 		// { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
 	}

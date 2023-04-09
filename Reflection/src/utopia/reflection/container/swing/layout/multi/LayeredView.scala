@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
+import utopia.paradigm.enumeration.Alignment
+import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.swing.template.{AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.Alignable
@@ -9,17 +10,16 @@ import utopia.reflection.container.stack.template.StackContainerLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.AlignFrame
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.paradigm.enumeration.Alignment
 
 /**
  * This container consists of two views, one in the background and another in the foreground
  * @author Mikko Hilpinen
  * @since 18.1.2020, v1
  */
-class LayeredView[Background <: AwtStackable with CustomDrawable, Foreground <: AwtStackable with CustomDrawable]
+class LayeredView[Background <: AwtStackable with MutableCustomDrawable, Foreground <: AwtStackable with MutableCustomDrawable]
 (background: Background, foreground: Foreground, initialAlignment: Alignment)
 	extends AwtComponentWrapperWrapper with CachingStackable with SwingComponentRelated with AwtContainerRelated
-		with CustomDrawableWrapper with Alignable with StackContainerLike[AwtStackable]
+		with MutableCustomDrawableWrapper with Alignable with StackContainerLike[AwtStackable]
 {
 	// ATTRIBUTES	---------------------
 	

@@ -3,25 +3,25 @@ package utopia.reflection.component.swing.input
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
+import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
-import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.genesis.util.Drawer
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.input.InteractionWithPointer
-import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
+import utopia.reflection.component.template.input.InteractionWithPointer
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
@@ -60,7 +60,8 @@ object Switch
 class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
 			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 			 initialState: Boolean = false)
-	extends AwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[Boolean] with Stackable
+	extends AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[Boolean]
+		with Stackable
 {
 	// ATTRIBUTES	-----------------
 	
@@ -197,7 +198,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
+		override def draw(drawer: Drawer3, bounds: Bounds) =
 		{
 			val x = state
 			
@@ -216,16 +217,11 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			val drawColor = if (isEnabled) knobColor else knobColor.timesAlpha(0.55)
 			
 			// Performs the actual drawing
-			drawer.noEdges.disposeAfter
-			{
-				d =>
-					d.withFillColor(baseColor).draw(areaBounds.toRoundedRectangle(1))
-					d.withFillColor(drawColor).draw(circle)
-			}
+			drawer.draw(areaBounds.toRoundedRectangle(1))(DrawSettings.onlyFill(baseColor))
+			drawer.draw(circle)(DrawSettings.onlyFill(drawColor))
 		}
 		
-		override def act(duration: FiniteDuration) =
-		{
+		override def act(duration: FiniteDuration) = {
 			val increment = duration / animationDuration
 			currentProgress = (currentProgress + increment) min 1.0
 			repaint()

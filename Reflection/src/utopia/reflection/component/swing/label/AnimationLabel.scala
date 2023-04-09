@@ -1,32 +1,32 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.time.Now
-
-import java.time.Instant
-import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.animation.TimedAnimation
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.{Image, Strip}
-import utopia.paradigm.angular.Rotation
-import utopia.paradigm.transform.AffineTransformation
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point}
-import utopia.genesis.util.{Drawer, Fps}
+import utopia.genesis.util.Fps
 import utopia.inception.handling.HandlerType
+import utopia.paradigm.angular.Rotation
+import utopia.paradigm.animation.TimedAnimation
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point}
+import utopia.paradigm.transform.AffineTransformation
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.event.StackHierarchyListener
-import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 
+import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
+import scala.math.Ordering.Double.TotalOrdering
 
 object AnimationLabel
 {
@@ -147,13 +147,13 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 	
 	// NESTED	----------------------------
 	
-	object ContentDrawer extends CustomDrawer
+	private object ContentDrawer extends CustomDrawer
 	{
 		override def drawLevel = Normal
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
+		override def draw(drawer: Drawer3, bounds: Bounds) =
 		{
 			// Determines the draw location and scaling
 			val originalSize = stackSize.optimal
@@ -161,12 +161,11 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 			val drawPosition = alignment.position(displaySize, bounds)
 			val scaling = (displaySize / originalSize).toVector
 			// Performs the actual drawing
-			drawer.transformed(AffineTransformation(drawPosition.toVector + drawOrigin * scaling, scaling = scaling))
-				.disposeAfter(animator.draw)
+			animator.draw(drawer * AffineTransformation(drawPosition.toVector + drawOrigin * scaling, scaling = scaling))
 		}
 	}
 	
-	object Repainter extends Actor
+	private object Repainter extends Actor
 	{
 		private val threshold = maxFps.interval
 		private var lastDraw = Now - threshold

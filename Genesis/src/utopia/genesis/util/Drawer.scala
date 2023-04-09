@@ -42,6 +42,7 @@ object Drawer
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
+@deprecated("Replaced with a new implementation", "v3.3")
 class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.awt.Color.WHITE),
              val edgePaint: Option[Paint] = Some(java.awt.Color.BLACK))
     extends LinearTransformable[Drawer] with AffineTransformable[Drawer]

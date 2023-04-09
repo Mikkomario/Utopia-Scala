@@ -1,15 +1,15 @@
 package utopia.reflection.container.swing
 
-import java.awt.{Container, Graphics}
-
-import javax.swing.{JComponent, JPanel}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
+import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.container.template.MultiContainer
 import utopia.reflection.util.AwtEventThread
+
+import java.awt.{Container, Graphics}
+import javax.swing.{JComponent, JPanel}
 
 /**
 * Panel is the standard container that holds other components in it (based on JPanel)
@@ -17,7 +17,7 @@ import utopia.reflection.util.AwtEventThread
 * @since 25.2.2019
 **/
 class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[C] with JWrapper with
-	AwtContainerRelated with CustomDrawableWrapper
+	AwtContainerRelated with MutableCustomDrawableWrapper
 {
     // ATTRIBUTES    -------------------
     
@@ -27,7 +27,7 @@ class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[
 	
 	// IMPLEMENTED    ------------------
 	
-	override def drawable: CustomDrawable = panel
+	override def drawable: MutableCustomDrawable = panel
 	
 	override def component: JComponent with Container = panel
 	

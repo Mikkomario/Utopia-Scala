@@ -7,9 +7,9 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
-import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
@@ -336,12 +336,12 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
+		override def draw(drawer: Drawer3, bounds: Bounds) = {
 			lazy val bg = contextBackgroundPointer.value
 			def draw(pointer: View[Option[Bounds]], highlightLevel: Double) =
-				pointer.value.foreach { area => drawer.onlyFill(bg.highlightedBy(highlightLevel))
-					.draw(area + bounds.position) }
+				pointer.value.foreach { area =>
+					drawer.draw(area + bounds.position)(DrawSettings.onlyFill(bg.highlightedBy(highlightLevel)))
+				}
 			
 			// Checks whether currently selected area and the mouse area overlap
 			if (manager.selectedDisplay.exists(LocalMouseListener.currentDisplayUnderCursor.contains))

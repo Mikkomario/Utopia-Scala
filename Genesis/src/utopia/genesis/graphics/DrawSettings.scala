@@ -29,8 +29,16 @@ object DrawSettings
 	  * @param strokeSettings Settings to use when drawing edges
 	  * @return A new settings instance
 	  */
-	def apply(fillColor: Color, strokeSettings: StrokeSettings): DrawSettings =
+	private def _apply(fillColor: Color, strokeSettings: StrokeSettings): DrawSettings =
 		apply(Some(Right(fillColor)), Some(strokeSettings))
+	
+	/**
+	  * @param fillColor Color to use when filling shapes
+	  * @param strokeSettings Settings to use when drawing edges (implicit)
+	  * @return A new settings instance
+	  */
+	def apply(fillColor: Color)(implicit strokeSettings: StrokeSettings): DrawSettings =
+		_apply(fillColor, strokeSettings)
 	
 	/**
 	  * @param fillColor Color to use when filling shapes

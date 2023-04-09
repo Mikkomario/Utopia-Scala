@@ -1,13 +1,13 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
@@ -194,7 +194,7 @@ object Stack
 class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override val margin: StackLength = StackLength.any,
                                      override val cap: StackLength = StackLength.fixedZero, override val layout: StackLayout = Fit)
     extends StackLike[C] with AwtComponentWrapperWrapper with CachingStackable with SwingComponentRelated
-        with AwtContainerRelated with CustomDrawableWrapper
+        with AwtContainerRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES    --------------------
     
@@ -245,12 +245,10 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
         override def drawLevel = DrawLevel.Background
     
-        override def draw(drawer: Drawer, bounds: Bounds) =
+        override def draw(drawer: Drawer3, bounds: Bounds) =
         {
-            if (count > 1)
-            {
-                val baseDrawer = drawer.noEdges
-                val drawers = colors.map(baseDrawer.withFillColor).repeatingIterator()
+            if (count > 1) {
+                val settings = colors.map(DrawSettings.onlyFill).repeatingIterator()
     
                 val b = bounds.size(direction.perpendicular)
                 var lastStart = 0.0
@@ -262,8 +260,8 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
                     val lastSegmentLength = lastComponentBottom - lastStart + margin
         
                     // Draws the previous segment area
-                    drawers.next().draw(Bounds(Point(lastStart, 0, direction) + bounds.position,
-                        Size(lastSegmentLength, b, direction)))
+                    drawer.draw(Bounds(Point(lastStart, 0, direction) + bounds.position,
+                        Size(lastSegmentLength, b, direction)))(settings.next())
         
                     // Prepares for the next segment
                     lastStart = componentPosition - margin
@@ -271,10 +269,11 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
                 }
     
                 // Draws the last segment
-                drawers.next().draw(Bounds.between(Point(lastStart, 0, direction) + bounds.position, bounds.bottomRight))
+                drawer.draw(Bounds.between(Point(lastStart, 0, direction) + bounds.position, bounds.bottomRight))(
+                    settings.next())
             }
             else
-                drawer.noEdges.withFillColor(colors.head).draw(bounds)
+                drawer.draw(bounds)(DrawSettings.onlyFill(colors.head))
         }
     }
 }

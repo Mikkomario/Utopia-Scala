@@ -1,13 +1,14 @@
 package utopia.reflection.component.swing.display
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.text.TextComponent
@@ -15,11 +16,10 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
+import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape._
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import LengthExtensions._
-import utopia.flow.collection.immutable.Pair
 import utopia.reflection.text.Font
 
 object MultiLineTextView
@@ -60,7 +60,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
                         useLowPriorityForScalingSides: Boolean = false,
                         initialAlignment: enumeration.Alignment = enumeration.Alignment.Left,
                         initialTextColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper with AwtContainerRelated
+	extends StackableAwtComponentWrapperWrapper with TextComponent with MutableCustomDrawableWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	------------------------
 	

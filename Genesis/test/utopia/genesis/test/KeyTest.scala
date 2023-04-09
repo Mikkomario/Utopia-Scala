@@ -1,13 +1,13 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.paradigm.enumeration.Axis._
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.util.{DefaultSetup, Drawer}
-import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
-import utopia.genesis.event.KeyTypedEvent
-import utopia.genesis.handling.{Drawable, KeyStateListener, KeyTypedListener}
+import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
+import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
+import utopia.genesis.handling.{Drawable2, KeyStateListener, KeyTypedListener}
+import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
 
 import java.awt.Color
 import java.awt.event.KeyEvent
@@ -48,9 +48,12 @@ object KeyTest extends App
     }
     
     private class View(private val testObj: TestObject, private val gameWorldSize: Size,
-			   private val squareSide: Int) extends Drawable with Handleable
+			   private val squareSide: Int) extends Drawable2 with Handleable
     {
         // ATTRIBUTES    -----------------
+        
+        implicit val ss: StrokeSettings = StrokeSettings(Color.lightGray)
+        private val objDs = DrawSettings(Color.darkGray)
         
         private val gridSquares = Size(gameWorldSize.width.toInt / squareSide, gameWorldSize.height.toInt / squareSide)
         private val gridSize = gridSquares * squareSide
@@ -59,22 +62,19 @@ object KeyTest extends App
         private val squareSize = Size(squareSide, squareSide)
         private val avatarSize = squareSize * 0.8
         
-        def draw(drawer: Drawer) = 
+        def draw(drawer: Drawer3) =
         {
             // Draws the grid first
-            for (x <- 0 to gridSquares.width.toInt)
-            {
-                drawer.draw(Line.ofVector(gridPosition + X(squareSide * x), gridSize.yProjection.toVector))
+            for (x <- 0 to gridSquares.width.toInt) {
+                drawer.draw(Line.ofVector(gridPosition + X(squareSide * x), gridSize.yProjection.toVector))(StrokeSettings.default)
             }
-            for (y <- 0 to gridSquares.height.toInt)
-            {
-                drawer.draw(Line.ofVector(gridPosition + Y(squareSide * y), gridSize.xProjection.toVector))
+            for (y <- 0 to gridSquares.height.toInt) {
+                drawer.draw(Line.ofVector(gridPosition + Y(squareSide * y), gridSize.xProjection.toVector))(StrokeSettings.default)
             }
             
             // Then draws the object
-            drawer.withPaint(Some(Color.LIGHT_GRAY), Some(Color.DARK_GRAY)).draw(
-                    Bounds(gridPosition + testObj.position * squareSide + 
-                    (squareSize - avatarSize) / 2, avatarSize).toRoundedRectangle())
+            drawer.draw(Bounds(gridPosition + testObj.position * squareSide +
+                (squareSize - avatarSize) / 2, avatarSize).toRoundedRectangle())(objDs)
         }
     }
     

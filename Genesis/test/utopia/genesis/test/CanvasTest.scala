@@ -1,14 +1,14 @@
 package utopia.genesis.test
 
-import java.awt.Color
-
 import utopia.flow.test.TestContext._
-import utopia.genesis.handling.Drawable
-import utopia.genesis.handling.immutable.DrawableHandler
-import utopia.genesis.view.{Canvas, MainFrame, RepaintLoop}
-import utopia.genesis.util.Drawer
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, ShapeConvertible, Size}
+import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
+import utopia.genesis.handling.Drawable2
+import utopia.genesis.handling.mutable.DrawableHandler2
+import utopia.genesis.view.{Canvas2, MainFrame, RepaintLoop}
 import utopia.inception.handling.HandlerType
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, ShapeConvertible, Size}
+
+import java.awt.Color
 
 /**
  * This test tests the basic canvas drawing
@@ -17,11 +17,13 @@ import utopia.inception.handling.HandlerType
  */
 object CanvasTest extends App
 {
-    private class TestDrawable(val shape: ShapeConvertible, override val drawDepth: Int) extends Drawable
+    private class TestDrawable(val shape: ShapeConvertible, override val drawDepth: Int) extends Drawable2
     {
+	    private implicit val ds: DrawSettings = StrokeSettings(Color.red)
+	    
 		override def allowsHandlingFrom(handlerType: HandlerType) = true
 	
-		override def draw(drawer: Drawer) = drawer.withEdgePaint(Color.RED).draw(shape)
+		override def draw(drawer: Drawer3) = drawer.draw(shape)
     }
 	
 	val gameWorldSize = Size(800, 600)
@@ -33,9 +35,9 @@ object CanvasTest extends App
 		new TestDrawable(Bounds((gameWorldSize * 0.2).toPoint, gameWorldSize * 0.6), 50)
 	)
 	
-	val handler = DrawableHandler(drawables)
+	val handler = DrawableHandler2(drawables)
 	
-	val canvas = new Canvas(handler, gameWorldSize)
+	val canvas = new Canvas2(handler, gameWorldSize)
 	val frame = new MainFrame(canvas, gameWorldSize, "CanvastTest")
 	
 	val repaintLoop = new RepaintLoop(canvas)

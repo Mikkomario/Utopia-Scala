@@ -4,7 +4,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.{CustomDrawableWrapper, MutableCustomDrawableWrapper}
 import utopia.reflection.component.drawing.view.RoundedBackgroundViewDrawer
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.stack.template.layout.FramingLike
@@ -18,7 +18,7 @@ import utopia.reflection.shape.stack.StackInsets
   * @since 27.9.2020, v1.3
   */
 class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color) extends FramingLike[C]
-	with SwingComponentRelated with AwtContainerRelated with CustomDrawableWrapper
+	with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES   --------------------------
 	

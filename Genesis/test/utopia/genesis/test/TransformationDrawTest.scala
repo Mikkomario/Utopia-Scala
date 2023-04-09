@@ -1,15 +1,16 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.paradigm.color.Color
-import utopia.paradigm.generic.ParadigmDataType
-import utopia.genesis.handling.Drawable
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Matrix2D, Parallelogramic, Point, ShapeConvertible, Size}
-import utopia.paradigm.transform.{AffineTransformation, Transformable}
-import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.genesis.util.{DefaultSetup, Drawer}
+import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
+import utopia.genesis.handling.Drawable2
+import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.angular.Rotation
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d._
+import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.transform.{AffineTransformation, Transformable}
 
 /**
   * Used for testing use of transformations in drawing
@@ -41,9 +42,17 @@ object TransformationDrawTest extends App
 
 private class ShapeDrawer[A <: Transformable[A] with ShapeConvertible](shape: A, origin: Point, position: Point,
 																	   transformation: Matrix2D)
-	extends Drawable with Handleable
+	extends Drawable2 with Handleable
 {
 	// ATTRIBUTES	--------------------------
+	
+	private implicit val ss: StrokeSettings = StrokeSettings.default
+	private val broadSs = StrokeSettings(strokeWidth = 2.0)
+	
+	private val transformedDs = DrawSettings(Color.blue.withAlpha(0.33))
+	private val originDs = DrawSettings(Color.cyan)
+	private val comboDs = DrawSettings(Color.magenta)(broadSs)
+	private val comboOriginDs = DrawSettings(Color.red)(broadSs)
 	
 	private val combinedTransformation = (AffineTransformation.translation(-origin.toVector) * transformation).translated(position)
 	private val transformedShape = shape * combinedTransformation// (shape.translated(-origin) * transformation).translated(position)
@@ -73,15 +82,14 @@ private class ShapeDrawer[A <: Transformable[A] with ShapeConvertible](shape: A,
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def draw(drawer: Drawer) =
-	{
+	override def draw(drawer: Drawer3) = {
 		// Draws the transformed shape and origin
-		drawer.onlyFill(Color.blue.withAlpha(0.33)).draw(transformedShape)
-		drawer.onlyFill(Color.cyan).draw(transformedOrigin)
+		drawer.draw(transformedShape)(transformedDs)
+		drawer.draw(transformedOrigin)(originDs)
 		// Performs the same transformations inside the drawer, then draws
-		(drawer * combinedTransformation).withStroke(2).disposeAfter { d =>
-			d.onlyEdges(Color.magenta).draw(shape)
-			d.onlyEdges(Color.red).draw(Circle(origin, 3))
+		(drawer * combinedTransformation).use { drawer =>
+			drawer.draw(shape)(comboDs)
+			drawer.draw(Circle(origin, 3))(comboOriginDs)
 		}
 	}
 }

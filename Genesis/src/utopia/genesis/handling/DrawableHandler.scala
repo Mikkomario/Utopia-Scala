@@ -2,6 +2,7 @@ package utopia.genesis.handling
 
 import utopia.inception.handling.{Handler, HandlerType}
 
+@deprecated("Replaced with a new implementation", "v3.3")
 case object DrawableHandlerType extends HandlerType
 {
 	/**
@@ -10,6 +11,7 @@ case object DrawableHandlerType extends HandlerType
 	override def supportedClass = classOf[Drawable]
 }
 
+@deprecated("Replaced with a new implementation", "v3.3")
 trait DrawableHandler extends Handler[Drawable] with Drawable
 {
 	/**

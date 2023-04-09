@@ -1,8 +1,8 @@
 package utopia.reflection.component.drawing.template
 
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Size, Vector2D}
-import utopia.genesis.util.Drawer
 import utopia.reflection.shape.Border
 
 import scala.collection.immutable.VectorBuilder
@@ -26,8 +26,7 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
-	{
+	override def draw(drawer: Drawer3, bounds: Bounds) = {
 		// Draws the border (recursively)
 		drawBorder(drawer, bounds, border)
 	}
@@ -35,17 +34,17 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	// OTHER	----------------------
 	
-	private def drawBorder(drawer: Drawer, bounds: Bounds, border: Border): Unit =
-	{
+	private def drawBorder(drawer: Drawer3, bounds: Bounds, border: Border): Unit = {
 		val roundedBounds = bounds.floor
 		
-		if (roundedBounds.width > 0 && roundedBounds.height > 0)
-		{
+		if (roundedBounds.width > 0 && roundedBounds.height > 0) {
 			// Sets the color & draws the borders
 			border.color.foreach { color =>
 				val boundsToDraw = boundsFromInsets(roundedBounds, border.insets)
-				if (boundsToDraw.nonEmpty)
-					drawer.withColor(color, color).disposeAfter { d => boundsToDraw.foreach(d.draw) }
+				if (boundsToDraw.nonEmpty) {
+					implicit val ds: DrawSettings = DrawSettings.onlyFill(color)
+					boundsToDraw.foreach { drawer.draw(_) }
+				}
 			}
 			
 			// Moves to the inner border

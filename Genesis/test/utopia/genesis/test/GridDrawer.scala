@@ -1,20 +1,22 @@
 package utopia.genesis.test
 
-import java.awt.Color
-import utopia.genesis.util.Drawer
-import utopia.genesis.handling.Drawable
-import utopia.paradigm.shape.shape2d.{Line, Size, Vector2D}
-import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
+import utopia.genesis.handling.Drawable2
 import utopia.inception.handling.mutable.Handleable
+import utopia.paradigm.shape.shape2d.{Line, Size, Vector2D}
+
+import java.awt.Color
 
 /**
  * This object simply draws a gird to the center of the game world
  * @author Mikko Hilpinen
  * @since 25.2.2017
  */
-class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable with Handleable
+class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable2 with Handleable
 {
     // ATTRIBUTES    -----------------
+    
+    private implicit val ds: DrawSettings = StrokeSettings(Color.lightGray)
     
     /**
      * How many squares there are on each axis
@@ -32,19 +34,13 @@ class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable with Ha
     
     // IMPLEMENTED METHODS    --------
     
-    def draw(drawer: Drawer) = 
+    def draw(drawer: Drawer3) =
     {
-        drawer.withEdgePaint(Some(Color.LIGHT_GRAY)).disposeAfter
-        {
-            d =>
-                for (x <- 0 to squareAmounts.x.toInt)
-                {
-                    d.draw(Line.ofVector(squarePosition(x, 0).toVector.toPoint, size.toVector.yProjection))
-                }
-                for (y <- 0 to squareAmounts.y.toInt)
-                {
-                    d.draw(Line.ofVector(squarePosition(0, y).toVector.toPoint, size.toVector.xProjection))
-                }
+        for (x <- 0 to squareAmounts.x.toInt) {
+            drawer.draw(Line.ofVector(squarePosition(x, 0).toVector.toPoint, size.toVector.yProjection))
+        }
+        for (y <- 0 to squareAmounts.y.toInt) {
+            drawer.draw(Line.ofVector(squarePosition(0, y).toVector.toPoint, size.toVector.xProjection))
         }
     }
     

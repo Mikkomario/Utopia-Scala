@@ -2,6 +2,7 @@ package utopia.reach.container.multi.stack
 
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.genesis.graphics.Drawer3
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
@@ -118,7 +119,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		override def toString = s"Segment($index)"
 		
-		override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = ()
+		override def paintContent(drawer: Drawer3, drawLevel: DrawLevel, clipZone: Option[Bounds]) = ()
 		
 		override def calculatedStackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
 		

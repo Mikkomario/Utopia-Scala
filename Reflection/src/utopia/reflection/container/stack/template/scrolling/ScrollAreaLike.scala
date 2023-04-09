@@ -1,24 +1,20 @@
 package utopia.reflection.container.stack.template.scrolling
 
-import utopia.flow.time.Now
-
-import java.awt.event.KeyEvent
-import java.time.Instant
-import java.util.concurrent.TimeUnit
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, KeyStatus, MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
-import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.event._
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.enumeration.Axis._
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.paradigm.motion.motion2d.Velocity2D
-import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.genesis.util.Drawer
+import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
+import utopia.paradigm.motion.motion2d.Velocity2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
@@ -28,6 +24,9 @@ import utopia.reflection.shape.ScrollBarBounds
 import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
+import java.awt.event.KeyEvent
+import java.time.Instant
+import java.util.concurrent.TimeUnit
 import scala.collection.immutable.HashMap
 import scala.concurrent.duration.FiniteDuration
 
@@ -45,6 +44,7 @@ object ScrollAreaLike
   * @author Mikko Hilpinen
   * @since 15.5.2019, v1+
   */
+@deprecated("Replaced with a new implementation", "v2.0")
 trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContainerLike[C]
 {
 	// ATTRIBUTES	----------------
@@ -325,11 +325,9 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		scroll(Vector3D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach
-	{
-		axis =>
-			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
-				barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer3) = Axis2D.values.foreach { axis =>
+		if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
+			barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
 	}
 	
 	/**

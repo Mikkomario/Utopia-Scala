@@ -33,11 +33,19 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	  * @return Transformation applied by this context
 	  */
 	def transformation = graphics.transformation
-	
 	/**
 	  * @return Font metrics specified within this context (intended for contexts which have defined a font)
 	  */
 	def fontMetrics = graphics.fontMetrics
+	/**
+	  * @return Area where this drawer clips the drawn contents. I.e. nothing is drawn outside of the clipped area.
+	  */
+	def clipping = graphics.clipping
+	/**
+	  * @return Area where this drawer clips the drawn contents, as a set of bounds.
+	  *         The actual clipping shape may differ.
+	  */
+	def clippingBounds = graphics.clippingBounds
 	
 	/**
 	  * @return A copy of this context without any clipping applied
@@ -81,7 +89,7 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	  * @return A copy of this context where clipping is reduced to the specified bounds.
 	  *         Applies current clipping area bounds (not necessarily shape) as well.
 	  */
-	def reducedToBounds(clippingBounds: Bounds) = mapGraphics { _.reducedToBounds(clippingBounds) }
+	def clippedToBounds(clippingBounds: Bounds) = mapGraphics { _.clippedToBounds(clippingBounds) }
 	
 	/**
 	  * @param alpha An alpha value, between 0 and 1 where 0 means fully transparent and 1 means fully visible.

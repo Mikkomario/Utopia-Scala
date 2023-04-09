@@ -50,7 +50,8 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
       * @param amount Translation to apply
       * @return An affine transformation that only translates instances
       */
-    def translation(amount: Vector2D) = apply(amount, LinearTransformation.identity)
+    def translation(amount: HasDoubleDimensions) =
+        apply(Vector2D.from(amount), LinearTransformation.identity)
 }
 
 /**
@@ -130,7 +131,6 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * back to back</b>, rather it simply sums the values (translation, scaling, rotation, shear) of each transformation
       */
     def +(other: AffineTransformation) = AffineTransformation(translation + other.translation, linear + other.linear)
-    
     /**
       * @param other Another linear transformation
       * @return A subtraction of these transformations. <b>Please note that this isn't the same as applying the

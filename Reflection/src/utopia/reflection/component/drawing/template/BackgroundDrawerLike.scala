@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.template
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 
 /**
   * A template for background custom drawer implementations
@@ -22,13 +22,11 @@ trait BackgroundDrawerLike extends CustomDrawer
 	
 	override def opaque = color.opaque
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
-	{
-		val targetBounds = drawer.clipBounds match
-		{
+	override def draw(drawer: Drawer3, bounds: Bounds) = {
+		val targetBounds = drawer.clippingBounds match {
 			case Some(clipArea) => bounds.overlapWith(clipArea).filter { _.size.isPositive }
 			case None => Some(bounds).filter { _.size.isPositive }
 		}
-		targetBounds.foreach { drawer.onlyFill(color).draw(_) }
+		targetBounds.foreach { drawer.draw(_)(DrawSettings.onlyFill(color)) }
 	}
 }

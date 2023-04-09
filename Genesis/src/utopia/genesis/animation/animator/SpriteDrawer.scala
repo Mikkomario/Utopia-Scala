@@ -1,11 +1,12 @@
 package utopia.genesis.animation.animator
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.animation.TimedAnimation
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.{Image, Strip}
-import utopia.genesis.shape.shape2D.{MutableTransformable, Transformation}
+import utopia.genesis.shape.shape2D.MutableTransformable
+import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.shape.shape2d.Point
-import utopia.genesis.util.Drawer
+import utopia.paradigm.transform.AffineTransformation
 
 import scala.concurrent.duration.Duration
 
@@ -16,7 +17,7 @@ object SpriteDrawer
 	  * @param transformation Initial transformation state (default = identity transformation)
 	  * @return A new sprite drawer
 	  */
-	def apply(sprite: TimedAnimation[Image], transformation: Transformation = Transformation.identity) =
+	def apply(sprite: TimedAnimation[Image], transformation: AffineTransformation = AffineTransformation.identity) =
 		new SpriteDrawer(new PointerWithEvents(sprite), new PointerWithEvents(transformation))
 }
 
@@ -26,7 +27,7 @@ object SpriteDrawer
   * @since 28.3.2020, v2.1
   */
 class SpriteDrawer(val spritePointer: PointerWithEvents[TimedAnimation[Image]],
-				   val transformationPointer: PointerWithEvents[Transformation] = new PointerWithEvents(Transformation.identity))
+				   val transformationPointer: PointerWithEvents[AffineTransformation] = new PointerWithEvents(AffineTransformation.identity))
 	extends Animator[Image] with MutableTransformable
 {
 	// COMPUTED	---------------------------
@@ -44,10 +45,11 @@ class SpriteDrawer(val spritePointer: PointerWithEvents[TimedAnimation[Image]],
 	
 	override protected def apply(progress: Double) = sprite(progress)
 	
-	override protected def draw(drawer: Drawer, item: Image) = item.drawWith(drawer.transformed(transformation))
+	override protected def draw(drawer: Drawer3, item: Image) =
+		item.drawWith2(drawer * transformation)
 	
 	override def transformation = transformationPointer.value
-	override def transformation_=(newTransformation: Transformation) =
+	override def transformation_=(newTransformation: AffineTransformation) =
 		transformationPointer.value = newTransformation
 	
 	
@@ -59,8 +61,7 @@ class SpriteDrawer(val spritePointer: PointerWithEvents[TimedAnimation[Image]],
 	  * @param resetProgress Whether the new animation should be started from the beginning (true) or from the
 	  *                      current animation point (false). Default = true.
 	  */
-	def setSprite(newSprite: TimedAnimation[Image], resetProgress: Boolean = true) =
-	{
+	def setSprite(newSprite: TimedAnimation[Image], resetProgress: Boolean = true) = {
 		sprite = newSprite
 		if (resetProgress)
 			reset()

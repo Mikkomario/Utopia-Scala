@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.template
 
+import utopia.genesis.graphics.Drawer3
 import utopia.paradigm.enumeration.Axis2D
-import utopia.genesis.util.Drawer
 import utopia.reflection.shape.ScrollBarBounds
 
 /**
@@ -17,5 +17,5 @@ trait ScrollBarDrawerLike
 	  * @param barBounds The bounds for the scroll bar & area
 	  * @param barDirection The direction of the scroll bar
 	  */
-	def draw(drawer: Drawer, barBounds: ScrollBarBounds, barDirection: Axis2D): Unit
+	def draw(drawer: Drawer3, barBounds: ScrollBarBounds, barDirection: Axis2D): Unit
 }

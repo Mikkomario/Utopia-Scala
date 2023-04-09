@@ -4,9 +4,9 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.genesis.util.Drawer
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
@@ -203,40 +203,47 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	
 	private object RadioButtonDrawer extends CustomDrawer
 	{
+		// ATTRIBUTES   ------------------------
+		
+		// Draw settings when drawing (filled) circles
+		private val mainDsPointer = colorPointer.lazyMap(DrawSettings.onlyFill)
+		private val bgDsPointer = backgroundColorPointer.lazyMap { DrawSettings.onlyFill(_) }
+		
+		
+		// IMPLEMENTED  ------------------------
+		
 		override def opaque = false
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
+		override def draw(drawer: Drawer3, bounds: Bounds) =
 		{
 			// Calculates dimensions
 			val center = bounds.center.round
 			val maxRadius = bounds.size.minDimension / 2
-			if (maxRadius > 1.0)
-			{
+			if (maxRadius > 1.0) {
 				val buttonRadius = (diameter / 2).round.toDouble min maxRadius
 				
 				// Draws the full (outer) circle first
-				val mainDrawer = drawer.onlyFill(colorPointer.value)
-				mainDrawer.draw(Circle(center, buttonRadius))
+				drawer.draw(Circle(center, buttonRadius))(mainDsPointer.value)
 				
 				// Draws the background over the drawn circle to create an open circle
-				val emptyCircleRadius =
-				{
+				val emptyCircleRadius = {
 					val base = buttonRadius - ringWidth
 					(if (selected) base max 2.0 else base).round.toDouble
 				}
 				if (emptyCircleRadius > 0)
-					drawer.onlyFill(backgroundColorPointer.value).draw(Circle(center, emptyCircleRadius))
+					drawer.draw(Circle(center, emptyCircleRadius))(bgDsPointer.value)
 				
 				// Draws the hover effect, if necessary
 				val hoverColor = hoverColorPointer.value
 				if (hoverColor.alpha > 0.0)
-					drawer.onlyFill(hoverColor).draw(Circle(center, (buttonRadius + hoverExtraRadius) min maxRadius))
+					drawer.draw(Circle(center, (buttonRadius + hoverExtraRadius) min maxRadius))(
+						DrawSettings.onlyFill(hoverColor))
 				
 				// Finally draws the selected center, if necessary
 				if (selected)
-					mainDrawer.draw(Circle(center, (emptyCircleRadius - emptyRingWidth) max 1.0))
+					drawer.draw(Circle(center, (emptyCircleRadius - emptyRingWidth) max 1.0))(mainDsPointer.value)
 			}
 		}
 	}

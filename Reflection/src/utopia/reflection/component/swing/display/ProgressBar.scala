@@ -4,17 +4,17 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.animation.AnimationLike.AnyAnimation
-import utopia.paradigm.animation.Animation
-import utopia.paradigm.color.Color
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.animation.AnimationLike.AnyAnimation
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
-import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.StackSpace
@@ -52,9 +52,12 @@ object ProgressBar
 class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
                   progressPointer: Changing[Double],
                   animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
-	extends StackableWrapper with CustomDrawableWrapper with SwingComponentRelated
+	extends StackableWrapper with MutableCustomDrawableWrapper with SwingComponentRelated
 {
 	// ATTRIBUTES	---------------------
+	
+	private val bgDs = DrawSettings.onlyFill(backgroundColor)
+	private val barDs = DrawSettings.onlyFill(barColor)
 	
 	private val label = StackSpace.drawingWith(ProgressDrawer, _stackSize)
 	
@@ -168,14 +171,12 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
+		override def draw(drawer: Drawer3, bounds: Bounds) = {
 			// Determines the drawn progress
 			val drawnProgress = displayedProgress
 			
 			// Draws background first
-			val barBounds = if (bounds.width > bounds.height) bounds else
-			{
+			val barBounds = if (bounds.width > bounds.height) bounds else {
 				val height = bounds.width
 				val translation = (bounds.height - height) / 2
 				Bounds(bounds.position + Y(translation), bounds.size.withHeight(height))
@@ -184,17 +185,15 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 			val rounded = barBounds.toRoundedRectangle(1)
 			
 			if (drawnProgress < 1)
-				drawer.onlyFill(backgroundColor).draw(rounded)
+				drawer.draw(rounded)(bgDs)
 			
 			// Next draws the progress
-			if (drawnProgress > 0)
-			{
+			if (drawnProgress > 0) {
 				if (drawnProgress == 1)
-					drawer.onlyFill(barColor).draw(rounded)
-				else
-				{
+					drawer.draw(rounded)(barDs)
+				else {
 					val partial = barBounds.mapSize { _.scaledAlong(X(drawnProgress)) }
-					drawer.clippedTo(rounded).onlyFill(barColor).draw(partial)
+					drawer.withMutatedGraphics { _.clip(rounded) }.draw(partial)(barDs)
 				}
 			}
 		}

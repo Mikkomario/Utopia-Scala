@@ -3,24 +3,24 @@ package utopia.reflection.component.swing.input
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.genesis.handling.MouseButtonStateListener
-import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background
-import utopia.reflection.component.template.input.SelectableWithPointers
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.input.SelectableWithPointers
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
@@ -69,7 +69,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 					  val selectionLineHeight: Double = 8.0, val displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  initialChoices: Seq[A] = Vector(), initialTextColor: Color = Color.textBlack)
 	extends StackableAwtComponentWrapperWrapper with SwingComponentRelated
-	with AwtContainerRelated with SelectableWithPointers[Option[A], Seq[A]] with CustomDrawableWrapper
+	with AwtContainerRelated with SelectableWithPointers[Option[A], Seq[A]] with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	-------------------
 	
@@ -240,9 +240,10 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 	// Draws the line under the selected item
 	private object SelectionDrawer extends CustomDrawer
 	{
+		private implicit val ds: DrawSettings = DrawSettings.onlyFill(highlightColor)
+		
 		override def opaque = false
 		override def drawLevel = Background
-		override def draw(drawer: Drawer, bounds: Bounds) =
-			drawer.onlyFill(highlightColor).draw(bounds.bottomSlice(selectionLineHeight))
+		override def draw(drawer: Drawer3, bounds: Bounds) = drawer.draw(bounds.bottomSlice(selectionLineHeight))
 	}
 }

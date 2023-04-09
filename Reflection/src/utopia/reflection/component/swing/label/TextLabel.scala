@@ -1,15 +1,16 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.view.TextViewDrawer
+import utopia.reflection.component.drawing.immutable.TextDrawContext
+import utopia.reflection.component.drawing.view.TextViewDrawer2
+import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.template.text.SingleLineTextComponent
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
@@ -88,16 +89,19 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
 		initialInsets))
 	
+	private val measuredTextPointer = textPointer.mergeWith(stylePointer) { (text, style) =>
+		MeasuredText(text.string, component.getFontMetrics(style.font.toAwt), allowLineBreaks = style.allowLineBreaks)
+	}
+	
 	
 	// INITIAL CODE	------------------
 	
-	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
+	addCustomDrawer(TextViewDrawer2(measuredTextPointer, stylePointer))
 	component.setFont(initialFont.toAwt)
 	// Whenever context or text changes, revalidates this component
 	textPointer.addContinuousAnyChangeListener { revalidate() }
 	stylePointer.addContinuousListener { e =>
-		if (e.newValue.font != e.oldValue.font)
-		{
+		if (e.newValue.font != e.oldValue.font) {
 			component.setFont(e.newValue.font.toAwt)
 			revalidate()
 		}

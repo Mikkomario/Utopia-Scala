@@ -1,17 +1,17 @@
 package utopia.reflection.component.swing.button
 
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.ButtonState
 import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.reflection.text.Font
 
 object ImageAndTextButton
 {
@@ -93,7 +93,7 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 						 textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack,
 						 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
 	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with AwtContainerRelated
-		with CustomDrawableWrapper
+		with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------------
 	
@@ -102,8 +102,7 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	private val imageLabel = new ImageLabel(initialImages.defaultImage)
 	private val textLabel = new TextLabel(initialText, font, textColor,
 		insets.withLeft(StackLength.fixedZero).mapRight { _.expanding }, initialAlignment = textAlignment)
-	private val content =
-	{
+	private val content = {
 		val inside = imageLabel.framed(insets.mapRight { _ / 2 }).rowWith(Vector(textLabel), margin = StackLength.fixedZero)
 		if (borderWidth > 0)
 			inside.framed(StackInsets.symmetric(borderWidth.fixed))

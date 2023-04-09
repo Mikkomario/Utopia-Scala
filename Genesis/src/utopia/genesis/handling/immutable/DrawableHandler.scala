@@ -5,6 +5,7 @@ import utopia.genesis.handling.Drawable
 import utopia.genesis.util.{DepthRange, Drawer}
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
+@deprecated("Replaced with a new implementation", "v3.3")
 object DrawableHandler
 {
 	/**
@@ -40,6 +41,7 @@ object DrawableHandler
   * @param drawDepth The draw depth of this handler
   * @param customizer A function for customizing drawers used by this handler. None if no customization should be done
   */
+@deprecated("Replaced with a new implementation", "v3.3")
 class DrawableHandler(initialElements: Seq[Drawable], drawDepth: Int, val customizer: Option[Drawer => Drawer])
 	extends Handler[Drawable](initialElements.sortWith { _.drawDepth > _.drawDepth }) with handling.DrawableHandler with Handleable
 {

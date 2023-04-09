@@ -1,18 +1,17 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.event.model.ChangeEvent
 import utopia.flow.parse.file.FileExtensions._
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.input.DropDown
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.AnimatedSizeContainer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
 
 import scala.collection.immutable.HashMap
 

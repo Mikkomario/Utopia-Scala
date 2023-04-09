@@ -1,15 +1,11 @@
 package utopia.reflection.component.swing.input
 
-import java.awt.Graphics
-import java.awt.event.{ActionEvent, ActionListener, FocusEvent, FocusListener}
-import javax.swing.JTextField
-import javax.swing.event.{DocumentEvent, DocumentListener}
-import javax.swing.text.{Document, PlainDocument}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
@@ -18,21 +14,26 @@ import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.reflection.color.ColorSet
 import utopia.reflection.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.TextDrawerLike
-import utopia.reflection.component.template.input.InputWithPointer
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.drawing.template.TextDrawerLike2
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.Focusable
+import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.component.template.layout.Alignable
+import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Border
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt}
 import utopia.reflection.util.AwtEventThread
+
+import java.awt.Graphics
+import java.awt.event.{ActionEvent, ActionListener, FocusEvent, FocusListener}
+import javax.swing.JTextField
+import javax.swing.event.{DocumentEvent, DocumentListener}
+import javax.swing.text.{Document, PlainDocument}
 
 object TextField
 {
@@ -253,7 +254,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 				   initialAlignment: Alignment = Alignment.Left,
 				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
 	extends JWrapper with CachingStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
-		with CustomDrawableWrapper with StackLeaf
+		with MutableCustomDrawableWrapper with StackLeaf
 {
 	// ATTRIBUTES	----------------------
 	
@@ -494,38 +495,36 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 		}
 	}
 	
-	private class PromptDrawer extends TextDrawerLike
+	private class PromptDrawer extends TextDrawerLike2
 	{
 		// ATTRIBUTES	------------------------
 		
-		private val _insets = StackInsets.symmetric(insideMargins * 2)
-		
-		override val drawContext = prompt match
-		{
-			case Some(p) => TextDrawContext(p.font, textColor.timesAlpha(0.66), insets = _insets)
-			case None => TextDrawContext(font, textColor)
+		private val measuredPromptData = prompt.map { p =>
+			MeasuredText(p.text.string, component.getFontMetrics(p.font.toAwt)) -> p.font
 		}
+		private val measuredPrompt = measuredPromptData.map { _._1 }
+		override val font = measuredPromptData match {
+			case Some((_, font)) => font
+			case None => TextField.this.font
+		}
+		private val emptyText = MeasuredText("", component.getFontMetrics(font.toAwt))
 		
-		override val drawLevel = Normal
+		override val insets = StackInsets.symmetric(insideMargins * 2)
+		override val color: Color = textColor.timesAlpha(0.66)
 		
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def drawnText =
-		{
-			val line =
-			{
-				if (isDisplayingPrompt)
-					prompt match
-					{
-						case Some(prompt) => prompt.text
-						case None => LocalizedString.empty
-					}
-				else
-					LocalizedString.empty
-			}
-			Left(line)
+		override def text: MeasuredText = {
+			if (isDisplayingPrompt)
+				measuredPrompt.getOrElse(emptyText)
+			else
+				emptyText
 		}
+		
+		override def drawLevel = Normal
+		
+		override def alignment: Alignment = initialAlignment
 	}
 	
 	private class FocusHighlighter(val defaultBackground: Color, val highlightBackground: Color) extends FocusListener

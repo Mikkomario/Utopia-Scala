@@ -1,9 +1,9 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 import utopia.reflection.component.drawing.template.{BorderDrawerLike, DrawLevel}
 import utopia.reflection.event.ButtonState
@@ -34,23 +34,19 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 		Border.raised(borderWidth, c,
 			if (statePointer.value.isPressed) borderColorIntensity * 0.25 else borderColorIntensity)
 	}
-	
-	
-	// COMPUTED	----------------------------------
-	
-	private def color = colorPointer.value
+	private val bgDrawSettingsPointer = colorPointer.lazyMap(DrawSettings.onlyFill)
 	
 	
 	// IMPLEMENTED	------------------------------
 	
-	override def draw(drawer: Drawer, bounds: Bounds) = {
+	override def draw(drawer: Drawer3, bounds: Bounds) = {
 		if (bounds.size.isPositive) {
 			// Draws the background, then the border
-			val backgroundArea = drawer.clipBounds match {
+			val backgroundArea = drawer.clippingBounds match {
 				case Some(clipArea) => bounds.overlapWith(clipArea)
 				case None => Some(bounds)
 			}
-			backgroundArea.foreach { drawer.onlyFill(color).draw(_) }
+			backgroundArea.foreach { drawer.draw(_)(bgDrawSettingsPointer.value) }
 			if (drawsBorder)
 				super.draw(drawer, bounds)
 		}

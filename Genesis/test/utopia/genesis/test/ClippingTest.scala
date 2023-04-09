@@ -1,14 +1,15 @@
 package utopia.genesis.test
 
-import utopia.genesis.util.{DefaultSetup, DepthRange, Drawer}
-import java.awt.Color
-
 import utopia.flow.test.TestContext._
 import utopia.genesis.event.MouseMoveEvent
-import utopia.genesis.handling.{Drawable, MouseMoveListener}
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.handling.{Drawable2, MouseMoveListener}
+import utopia.genesis.util.{DefaultSetup, DepthRange}
+import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.shape.shape2d.{Circle, Point, ShapeConvertible, Size}
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.inception.handling.immutable.Handleable
+
+import java.awt.Color
 
 /**
  * This test tests the drawer's clipping functionality
@@ -17,22 +18,23 @@ import utopia.inception.handling.immutable.Handleable
  */
 object ClippingTest extends App
 {
-    class HiddenShapeDrawer(val shapes: Iterable[ShapeConvertible]) extends Drawable with MouseMoveListener with Handleable
+    class HiddenShapeDrawer(val shapes: Iterable[ShapeConvertible]) extends Drawable2 with MouseMoveListener with Handleable
     {
+        private val bgDs = DrawSettings.onlyFill(Color.white)
+        private val dotDs = DrawSettings.onlyFill(Color.red)
+        
         override val drawDepth = DepthRange.foreground
         
         private val clipRadius = 64
-        private var clip = Circle(Point.origin, clipRadius)
+        private var clip = Circle(Point.origin, clipRadius).toPolygon(8)
         
-        def draw(drawer: Drawer) = 
-        {
-            drawer.withEdgePaint(None).draw(clip)
-            
-            val clipped = drawer.withPaint(Some(Color.RED)).clippedTo(clip)
-            shapes.foreach(clipped.draw)
+        def draw(drawer: Drawer3) = {
+            drawer.draw(clip)(bgDs)
+            val clipped = drawer.withClip(clip)
+            shapes.foreach { clipped.draw(_)(dotDs) }
         }
         
-        def onMouseMove(event: MouseMoveEvent) = clip = Circle(event.mousePosition, clipRadius)
+        def onMouseMove(event: MouseMoveEvent) = clip = Circle(event.mousePosition, clipRadius).toPolygon(8)
     }
 	
 	// Sets up the program

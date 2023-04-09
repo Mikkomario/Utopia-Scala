@@ -1,12 +1,10 @@
 package utopia.conflict.test
 
-import utopia.paradigm.color.Color
-import utopia.genesis.util.Drawer
-import utopia.genesis.event.MouseButtonStateEvent
-import utopia.genesis.event.MouseButton
-import utopia.genesis.event.MouseMoveEvent
+import utopia.genesis.event.{MouseButton, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.graphics.{Drawer3, StrokeSettings}
 import utopia.genesis.handling.mutable.MouseButtonStateListener
-import utopia.genesis.handling.{Drawable, MouseMoveListener}
+import utopia.genesis.handling.{Drawable2, MouseMoveListener}
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Line, Point, Projectable}
 
 /**
@@ -14,10 +12,13 @@ import utopia.paradigm.shape.shape2d.{Line, Point, Projectable}
  * @author Mikko Hilpinen
  * @since 5.8.2017
  */
-class ProjectionDrawer(val target: Projectable) extends Drawable with MouseButtonStateListener
+class ProjectionDrawer(val target: Projectable) extends Drawable2 with MouseButtonStateListener
         with MouseMoveListener
 {
     // ATTRIBUTES    ---------------------
+    
+    private val mouseLineDs = StrokeSettings(Color.gray(0.5))
+    private val projectionDs = StrokeSettings(Color.red)
     
     private var lastClickPosition = Point.origin
     private var mouseLine = Line.zero
@@ -38,10 +39,9 @@ class ProjectionDrawer(val target: Projectable) extends Drawable with MouseButto
     
     // IMPLEMENTED METHODS    ------------
     
-    override def draw(drawer: Drawer) = 
-    {
-        drawer.withEdgeColor(Color.gray(0.5)).draw(mouseLine)
-        drawer.withEdgeColor(Color.red).draw(projection)
+    override def draw(drawer: Drawer3) = {
+        drawer.draw(mouseLine)(mouseLineDs)
+        drawer.draw(projection)(projectionDs)
     }
     
     override def onMouseButtonState(event: MouseButtonStateEvent) = 

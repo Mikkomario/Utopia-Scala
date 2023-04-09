@@ -3,10 +3,10 @@ package utopia.reach.component.input.check
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.genesis.image.Image
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.genesis.util.Drawer
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
@@ -201,17 +201,27 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 	// Used for drawing the interactive hover effect on focus
 	private object HoverDrawer extends CustomDrawer
 	{
+		// ATTRIBUTES   -----------------------
+		
+		// Hover and value affect the drawing
+		private val dsPointer = statePointer.lazyMergeWith(valuePointer) { (state, value) =>
+			DrawSettings.onlyFill((if (value) onHoverColor else offHoverColor).withAlpha(state.hoverAlpha))
+		}
+		private val shapePointer = boundsPointer.lazyMap { bounds =>
+			Circle(bounds.center, bounds.size.minDimension / 2.0)
+		}
+		
+		
+		// IMPLEMENTED  -----------------------
+		
 		override def drawLevel = Background
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
-			// Calculates draw alpha (if any)
-			val alpha = state.hoverAlpha
-			if (alpha > 0)
-				drawer.onlyFill(if (value) onHoverColor else offHoverColor).withAlpha(alpha)
-					.draw(Circle(bounds.center, bounds.size.minDimension / 2.0))
+		override def draw(drawer: Drawer3, bounds: Bounds) = {
+			implicit val ds: DrawSettings = dsPointer.value
+			if (ds.fillColor.exists { _.alpha > 0 })
+				drawer.draw(shapePointer.value)
 		}
 	}
 }

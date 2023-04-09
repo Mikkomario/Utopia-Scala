@@ -1,28 +1,30 @@
 package utopia.reflection.controller.data
 
-import java.awt.event.KeyEvent
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.drawing.mutable.CustomDrawable
+import utopia.paradigm.shape.shape2d.Bounds
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.component.template.layout.AreaOfItems
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack
 
+import java.awt.event.KeyEvent
 import scala.concurrent.duration.Duration
 
 object ContainerSelectionManager
 {
-	private type SelectStack[X <: ComponentLike] = MultiContainer[X] with Stackable with CustomDrawable with AreaOfItems[X]
+	private type SelectStack[X <: ComponentLike] =
+		MultiContainer[X] with Stackable with MutableCustomDrawable with AreaOfItems[X]
 	
 	/**
 	  * Creates a content manager for immutable items that don't represent state of any other object. No two different
@@ -149,7 +151,7 @@ object ContainerSelectionManager
   * @since 5.6.2019, v1+
   */
 class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
-(container: MultiContainer[C] with Stackable with CustomDrawable with AreaOfItems[C], selectionAreaDrawer: CustomDrawer,
+(container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
 	extends ContainerContentManager[A, MultiContainer[C] with Stackable, C](container, contentPointer,
@@ -202,7 +204,7 @@ class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
+		override def draw(drawer: Drawer3, bounds: Bounds) =
 		{
 			// Draws the selected area using another custom drawer
 			selectedDisplay.flatMap(container.areaOf).foreach { area => selectionAreaDrawer.draw(drawer,

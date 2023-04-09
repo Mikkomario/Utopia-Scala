@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.button
 
 import utopia.paradigm.color.Color
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.event.ButtonState
@@ -54,14 +54,13 @@ class FramedImageButton(images: ButtonImageSet, color: Color, borderWidth: Doubl
                         hotKeyChars: Iterable[Char] = Set(),
                         allowImageUpscaling: Boolean = false, isLowPriority: Boolean = false)
 	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper
-		with SwingComponentRelated with CustomDrawableWrapper
+		with SwingComponentRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES   ---------------------------
 	
 	private val label = new ImageLabel(images(state), allowUpscaling = allowImageUpscaling,
 		isLowPriority = isLowPriority)
-	private val content =
-	{
+	private val content = {
 		if (borderWidth > 0)
 			label.framed(StackInsets.symmetric(borderWidth.fixed))
 		else

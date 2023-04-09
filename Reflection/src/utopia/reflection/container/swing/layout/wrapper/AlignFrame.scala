@@ -1,14 +1,13 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.paradigm.enumeration.Direction2D
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.enumeration.{Alignment, Direction2D}
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.container.stack.template.layout.AlignFrameLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Alignment.Center
 
 object AlignFrame
 {
@@ -47,7 +46,8 @@ object AlignFrame
  * @since 3.11.2019, v1+
  */
 class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Alignment)
-	extends AlignFrameLike[C] with SwingComponentRelated with AwtContainerRelated with CustomDrawableWrapper with Alignable
+	extends AlignFrameLike[C] with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
+		with Alignable
 {
 	// ATTRIBUTES	---------------------
 	

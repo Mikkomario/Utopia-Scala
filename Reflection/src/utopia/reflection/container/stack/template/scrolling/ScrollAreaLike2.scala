@@ -1,19 +1,19 @@
 package utopia.reflection.container.stack.template.scrolling
 
-import utopia.flow.time.Now
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event._
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.enumeration.Axis._
-import utopia.paradigm.motion.motion2d.Velocity2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
-import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
+import utopia.paradigm.motion.motion2d.Velocity2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
@@ -338,7 +338,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		scroll(Vector2D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) =
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer3) =
 		Axis2D.values.foreach { axis =>
 			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
 				barBounds.get(axis).foreach { b => barDrawer.draw(drawer, b + position, axis) }

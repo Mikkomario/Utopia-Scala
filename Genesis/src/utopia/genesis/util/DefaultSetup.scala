@@ -3,11 +3,11 @@ package utopia.genesis.util
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateHandler, KeyTypedHandler}
-import utopia.paradigm.shape.shape2d.Size
-import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, GlobalKeyboardEventHandler, GlobalMouseEventHandler, MainFrame}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler2, KeyStateHandler, KeyTypedHandler}
+import utopia.genesis.view.{Canvas2, CanvasMouseEventGenerator2, GlobalKeyboardEventHandler, GlobalMouseEventHandler, MainFrame}
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.Size
 
 import scala.concurrent.ExecutionContext
 
@@ -32,7 +32,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	/**
 	  * Handler for drawable items
 	  */
-	val drawHandler = DrawableHandler()
+	val drawHandler = DrawableHandler2()
 	/**
 	  * Handler for key state events
 	  */
@@ -52,7 +52,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	/**
 	  * The canvas that displays graphics
 	  */
-	val canvas = new Canvas(drawHandler, initialGameWorldSize)
+	val canvas = new Canvas2(drawHandler, initialGameWorldSize)
 	/**
 	  * The frame the canvas is displayed in
 	  */
@@ -60,7 +60,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	
 	// Generators
 	private val actorLoop = new ActorLoop(actorHandler, 15 to maxFPS.fps)
-	private val mouseEventGenerator = new CanvasMouseEventGenerator(canvas)
+	private val mouseEventGenerator = new CanvasMouseEventGenerator2(canvas)
 	
 	
 	// INITIAL CODE	-------------------

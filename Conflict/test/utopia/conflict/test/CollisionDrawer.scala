@@ -1,13 +1,13 @@
 package utopia.conflict.test
 
-import utopia.genesis.util.Drawer
 import utopia.conflict.collision.Collision
 import utopia.conflict.handling.{Collidable, CollisionGroup, CollisionListener}
-import utopia.paradigm.color.Color
-import utopia.genesis.handling.Drawable
-import utopia.paradigm.shape.shape2d.{Circle, Line, Point}
+import utopia.genesis.graphics.{Drawer3, StrokeSettings}
+import utopia.genesis.handling.Drawable2
 import utopia.genesis.util.DepthRange
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Circle, Line, Point}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -17,10 +17,13 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
-class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGroup]] = None) extends Drawable
+class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGroup]] = None) extends Drawable2
     with CollisionListener with Handleable
 {
     // ATTRIBUTES    ---------------------
+    
+    private val pointDrawSettings = StrokeSettings(Color.green)
+    private val mtvDrawSettings = StrokeSettings(Color.red)
     
     private var collisionPoints = Vector[Point]()
     private var mtv = Line.zero
@@ -37,29 +40,22 @@ class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGrou
     
     // IMPLEMENTED METHODS    -----------
     
-    override def draw(drawer: Drawer) = 
-    {
-        val greenDrawer = drawer.withEdgeColor(Color.green)
-        collisionPoints.map { Circle(_, 2) }.foreach(greenDrawer.draw)
-        drawer.withEdgeColor(Color.red).draw(mtv)
+    override def draw(drawer: Drawer3) = {
+        collisionPoints.map { Circle(_, 2) }.foreach { drawer.draw(_)(pointDrawSettings) }
+        drawer.draw(mtv)(mtvDrawSettings)
     }
     
-    override def onCollision(collisions: Vector[(Collidable, Collision)], duration: FiniteDuration) =
-    {
+    override def onCollision(collisions: Vector[(Collidable, Collision)], duration: FiniteDuration) = {
         println(s"Collides with ${collisions.size} instances")
         
         // Only uses the first collision data
         val collision = collisions.find { _._1 != target }.map { _._2 }
-        if (collision.isDefined)
-        {
+        if (collision.isDefined) {
             collisionPoints = collision.get.collisionPoints
             
             if (collisionPoints.isEmpty)
-            {
                 mtv = Line.zero
-            }
-            else
-            {
+            else {
                 val mtvStart: Point = Point.average(collisionPoints)
                 mtv = Line(mtvStart, mtvStart + collision.get.mtv)
             }

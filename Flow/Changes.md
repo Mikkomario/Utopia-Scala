@@ -9,6 +9,7 @@
 ### Bugfixes
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
 - Fixed **Path**`.relativeTo(Path)`
+- Fixed a bug in **Iterable**`.filterBy(Extreme)(...)`
 ### Deprecations
 - Deprecated `.equalsUsing(...)` and `.notEqualsUsing(...)` in favor of `.isSymmetricWith(...)` and `.isAsymmetricWith(...)`
 ### New Features

@@ -1,16 +1,16 @@
 package utopia.reflection.component.swing.button
 
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.context.ButtonContextLike
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
+import utopia.reflection.component.context.ButtonContextLike
+import utopia.reflection.component.drawing.immutable.TextDrawContext
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.text.Font
 
 object TextButton
@@ -91,7 +91,7 @@ class TextButton(initialText: LocalizedString, initialFont: Font, color: Color,
 				 borderWidth: Double = 0.0, initialAlignment: Alignment = Center,
 				 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
 	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with TextComponent
-		with SwingComponentRelated with CustomDrawableWrapper
+		with SwingComponentRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------
 	

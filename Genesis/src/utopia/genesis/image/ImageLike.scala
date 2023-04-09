@@ -146,6 +146,7 @@ trait ImageLike extends HasSize
 	  * @param transformation An additional linear transformation to apply (optional)
 	  * @return Whether this image was fully drawn
 	  */
+	@deprecated("Please use the new implementation instead", "v3.3")
 	def drawWith(drawer: Drawer, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
 	{
 		source.forall { s =>

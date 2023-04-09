@@ -1,11 +1,11 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.angular.{Angle, Rotation}
-import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.enumeration.Axis
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.{Point, Vector2D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
 /**
   * A common trait for mutable items that have a mutating transformation state
@@ -19,11 +19,11 @@ trait MutableTransformable
 	/**
 	  * @return Current transformation of this item
 	  */
-	def transformation: Transformation
+	def transformation: AffineTransformation
 	/**
 	  * @param newTransformation New transformation state for this item
 	  */
-	def transformation_=(newTransformation: Transformation): Unit
+	def transformation_=(newTransformation: AffineTransformation): Unit
 	
 	
 	// COMPUTED	-------------------------
@@ -103,29 +103,29 @@ trait MutableTransformable
 	  * use transformation = ...
 	  * @param appliedTransformation Transformation applied over this instance
 	  */
-	def transform(appliedTransformation: Transformation) = transformation = appliedTransformation(transformation)
+	def transform(appliedTransformation: AffineTransformation) = transformation += appliedTransformation
 	
 	/**
 	  * Translates this instance the specified amount. Please note that the current scaling may affect the applied translation
 	  * @param amount Amount of translation (position change) applied
 	  */
-	def translate(amount: HasDoubleDimensions) = transformation = transformation.translated(amount)
+	def translate(amount: HasDoubleDimensions) = transformation += AffineTransformation.translation(amount)
 	
 	/**
 	  * Rotates this instance the specified amount
 	  * @param amount Amount of rotation applied to this instance
 	  */
-	def rotate(amount: Rotation) = transformation = transformation.rotated(amount)
+	def rotate(amount: Rotation) = transformation += amount
 	
 	/**
 	  * Scales this instance, applied in addition to existing scaling
 	  * @param amount Amount of scaling applied
 	  */
-	def scale(amount: Double) = transformation = transformation.scaled(amount)
+	def scale(amount: Double) = transformation += LinearTransformation.scaling(amount)
 	
 	/**
 	  * Scales this instance, applied in addition to existing scaling
 	  * @param amount Amount of scaling applied (for each axis separately)
 	  */
-	def scale(amount: Vector3D) = transformation = transformation.scaled(amount)
+	def scale(amount: Vector2D) = transformation += LinearTransformation.scaling(amount)
 }

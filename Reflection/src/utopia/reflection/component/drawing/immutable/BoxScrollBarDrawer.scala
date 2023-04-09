@@ -1,8 +1,8 @@
 package utopia.reflection.component.drawing.immutable
 
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.shape.ScrollBarBounds
 
@@ -40,19 +40,17 @@ object BoxScrollBarDrawer
 case class BoxScrollBarDrawer(barColor: Color, backgroundColor: Option[Color] = None, rounded: Boolean = false)
 	extends ScrollBarDrawerLike
 {
-	override def draw(drawer: Drawer, bounds: ScrollBarBounds, barDirection: Axis2D) =
+	private val barDs = DrawSettings.onlyFill(barColor)
+	
+	override def draw(drawer: Drawer3, bounds: ScrollBarBounds, barDirection: Axis2D) =
 	{
-		val clipArea = drawer.clipBounds
-		if (clipArea.forall { _.overlapsWith(bounds.area) })
-		{
+		val clipArea = drawer.clippingBounds
+		if (clipArea.forall { _.overlapsWith(bounds.area) }) {
 			// Fills background and bar
-			drawer.noEdges.disposeAfter { d =>
-				backgroundColor.foreach { d.withFillColor(_).draw(bounds.area) }
-				if (clipArea.forall { _.overlapsWith(bounds.bar) })
-				{
-					val bar = if (rounded) bounds.bar.toRoundedRectangle(1) else bounds.bar.toShape
-					d.withFillColor(barColor).draw(bar)
-				}
+			backgroundColor.foreach { c => drawer.draw(bounds.area)(DrawSettings.onlyFill(c)) }
+			if (clipArea.forall { _.overlapsWith(bounds.bar) }) {
+				val bar = if (rounded) bounds.bar.toRoundedRectangle(1) else bounds.bar.toShape
+				drawer.draw(bar)(barDs)
 			}
 		}
 	}

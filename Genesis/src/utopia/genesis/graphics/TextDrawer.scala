@@ -1,5 +1,6 @@
 package utopia.genesis.graphics
 
+import utopia.flow.operator.ScopeUsable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.TopLeft
@@ -12,7 +13,8 @@ import java.awt.Font
   * @author Mikko Hilpinen
   * @since 29.1.2022, v2.6.3
   */
-class TextDrawer(protected override val graphics: LazyGraphics, color: Color) extends GraphicsContextLike[TextDrawer]
+class TextDrawer(protected override val graphics: LazyGraphics, color: Color)
+	extends GraphicsContextLike[TextDrawer] with ScopeUsable[TextDrawer]
 {
 	// IMPLEMENTED  -----------------------------
 	

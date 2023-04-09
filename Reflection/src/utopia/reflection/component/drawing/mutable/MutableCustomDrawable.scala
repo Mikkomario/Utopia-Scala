@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.mutable
 
+import utopia.genesis.graphics.Drawer3
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}
 
@@ -44,6 +44,6 @@ trait MutableCustomDrawable extends CustomDrawable2
 	  *               (can't be seen through). Default = false.
 	  * @param f A drawing function
 	  */
-	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): Unit =
+	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer3, Bounds) => Unit): Unit =
 		addCustomDrawer(CustomDrawer(drawLevel, opaque)(f))
 }

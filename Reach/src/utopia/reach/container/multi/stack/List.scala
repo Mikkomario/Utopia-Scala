@@ -4,17 +4,17 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
-import utopia.paradigm.enumeration.Direction2D.{Down, Up}
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
@@ -240,24 +240,21 @@ private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
 	
 	override def drawLevel = Normal
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
+	override def draw(drawer: Drawer3, bounds: Bounds) =
 	{
 		def draw(highlightLevel: Double, area: Bounds) =
-			drawer.onlyFill(backgroundPointer.value.highlightedBy(highlightLevel)).draw(area)
+			drawer.draw(area)(DrawSettings.onlyFill(backgroundPointer.value.highlightedBy(highlightLevel)))
 		def drawMouseArea() = mouseOverArea.foreach { draw(if (mousePressed) 0.225 else 0.075, _) }
 		
-		relativeMousePosition match
-		{
+		relativeMousePosition match {
 			case Some(mousePosition) =>
-				selectedArea match
-				{
+				selectedArea match {
 					case Some(selectedArea) =>
 						// Case: Mouse is over the selected area
 						if (selectedArea.contains(mousePosition))
 							draw(if (mousePressed) 2 else defaultSelectionHighlight, selectedArea)
 						// Case: Mouse area and selected area are separate
-						else
-						{
+						else {
 							draw(defaultSelectionHighlight, selectedArea)
 							drawMouseArea()
 						}
@@ -269,21 +266,18 @@ private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
 		}
 	}
 	
-	override def onMouseMove(event: MouseMoveEvent) =
-	{
+	override def onMouseMove(event: MouseMoveEvent) = {
 		stack.foreach { stack =>
 			if (event.isOverArea(stack.bounds))
 				relativeMousePositionPointer.value = Some(event.mousePosition - stack.position)
-			else if (relativeMousePosition.nonEmpty)
-			{
+			else if (relativeMousePosition.nonEmpty) {
 				relativeMousePositionPointer.value = None
 				mousePressed = false
 			}
 		}
 	}
 	
-	override def onMouseButtonState(event: MouseButtonStateEvent) =
-	{
+	override def onMouseButtonState(event: MouseButtonStateEvent) = {
 		if (event.wasReleased)
 			mousePressed = false
 		// else if (stack.exists { s => event.isOverArea(s.bounds) })

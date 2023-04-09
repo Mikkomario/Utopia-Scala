@@ -202,16 +202,27 @@ object CollectionExtensions
 		def filterBy[B, To](extreme: Extreme)(f: iter.A => B)
 		                   (implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
 		{
+			// Iterates over all items in this collection
 			val iterator = iter(coll).iterator
 			if (iterator.hasNext) {
+				// Collects the current best results into 'lastBuilder'
 				val actualOrdering = extreme.ascendingToExtreme(ord)
 				var lastBuilder = bf.newBuilder(coll)
-				var bestValue = f(iterator.next())
+				
+				// Starts by collecting the first item.
+				// Keeps track of the current best map result
+				val firstItem = iterator.next()
+				var bestValue = f(firstItem)
+				lastBuilder += firstItem
+				
 				iterator.foreach { item =>
+					// Compares the map result of the new item to the current best map result
 					val value = f(item)
 					val cmp = actualOrdering.compare(value, bestValue)
+					// Case: As good as the best result => Adds this item to the same collection
 					if (cmp == 0)
 						lastBuilder += item
+					// Case: Better than the best result => Replaces the collected item with a new collection
 					else if (cmp > 0) {
 						lastBuilder = bf.newBuilder(coll)
 						lastBuilder += item

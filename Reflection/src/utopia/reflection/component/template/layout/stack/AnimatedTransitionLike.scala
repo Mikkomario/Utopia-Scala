@@ -1,16 +1,16 @@
 package utopia.reflection.component.template.layout.stack
 
-import java.time.Instant
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.paradigm.animation.{Animation, AnimationLike}
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.Bounds
-import utopia.genesis.util.{Drawer, Fps}
+import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
+import utopia.paradigm.animation.{Animation, AnimationLike}
+import utopia.paradigm.shape.shape2d.Bounds
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.ComponentWrapper
@@ -18,6 +18,7 @@ import utopia.reflection.event.TransitionState
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
 import utopia.reflection.shape.stack.StackSize
 
+import java.time.Instant
 import scala.concurrent.Promise
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -28,8 +29,9 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @author Mikko Hilpinen
   * @since 17.4.2020, v1.2
   */
-trait AnimatedTransitionLike extends Stackable with ComponentWrapper with CustomDrawable
-	with StackLeaf with CustomDrawableWrapper
+// TODO: Should be an abstract class
+trait AnimatedTransitionLike extends Stackable with ComponentWrapper
+	with StackLeaf with MutableCustomDrawableWrapper
 {
 	// ABSTRACT	------------------------------------
 	
@@ -139,10 +141,9 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
+		override def draw(drawer: Drawer3, bounds: Bounds) = {
 			cachedImages.value
-				.foreach { _.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position) }
+				.foreach { _.withSize(bounds.size, preserveShape = false).drawWith2(drawer, bounds.position) }
 		}
 	}
 	

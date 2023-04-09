@@ -1,16 +1,15 @@
 package utopia.reflection.test.swing
 
-import java.awt.event.KeyEvent
-
-import utopia.paradigm.color.Color
 import utopia.genesis.event._
-import utopia.paradigm.generic.ParadigmDataType
-import utopia.genesis.handling.ActorLoop
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
 import utopia.genesis.handling.mutable._
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
-import utopia.genesis.util.{Drawer, Fps}
+import utopia.genesis.handling.{ActorLoop, Drawable2}
+import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.display.ScrollCanvas
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -18,6 +17,8 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.test.TestContext._
+
+import java.awt.event.KeyEvent
 
 /**
   * This is a simple test implementation of scroll view
@@ -30,7 +31,7 @@ object ScrollCanvasTest extends App
 	
 	// Creates the handlers
 	val actorHandler = ActorHandler()
-	val drawHandler = DrawableHandler()
+	val drawHandler = DrawableHandler2()
 	val mouseButtonHandler = MouseButtonStateHandler()
 	val mouseWheelHandler = MouseWheelHandler()
 	val mouseMoveHandler = MouseMoveHandler()
@@ -69,19 +70,18 @@ object ScrollCanvasTest extends App
 	println(StackHierarchyManager.description)
 }
 
-private class TestCircle(val position: Point) extends Drawable with Handleable with MouseButtonStateListener
+private class TestCircle(val position: Point) extends Drawable2 with Handleable with MouseButtonStateListener
 {
 	// ATTRIBUTES	---------------------
+	
+	private implicit val ds: DrawSettings = DrawSettings.onlyFill(Color.yellow)
 	
 	private var circle = Circle(position, 128)
 	
 	
 	// IMPLEMENTED	---------------------
 	
-	override def draw(drawer: Drawer) =
-	{
-		drawer.withFillColor(Color.yellow).noEdges.draw(circle)
-	}
+	override def draw(drawer: Drawer3) = drawer.draw(circle)
 	
 	override def mouseButtonStateEventFilter = Consumable.notConsumedFilter &&
 		MouseButtonStateEvent.leftPressedFilter && MouseEvent.isOverAreaFilter(circle)

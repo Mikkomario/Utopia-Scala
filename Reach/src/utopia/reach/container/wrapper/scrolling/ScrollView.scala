@@ -1,12 +1,12 @@
 package utopia.reach.container.wrapper.scrolling
 
 import utopia.flow.event.listener.ChangeListener
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.{Bounds, Size}
-import utopia.genesis.util.Drawer
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
 import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -226,9 +226,10 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
+	// WET WET (from ScrollArea)
+	override def paintWith(drawer: Drawer3, clipZone: Option[Bounds]) = clipZone match {
 		case Some(clip) =>
-			clip.overlapWith(bounds).foreach { c => super.paintWith(drawer.clippedTo(c), Some(c)) }
-		case None => super.paintWith(drawer.clippedTo(bounds), Some(bounds))
+			clip.overlapWith(bounds).foreach { c => super.paintWith(drawer.clippedToBounds(c), Some(c)) }
+		case None => super.paintWith(drawer.clippedToBounds(bounds), Some(bounds))
 	}
 }

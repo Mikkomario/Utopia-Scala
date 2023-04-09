@@ -1,14 +1,15 @@
 package utopia.genesis.test
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.test.TestContext._
+import utopia.flow.time.TimeExtensions._
+import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
+import utopia.genesis.handling.{Actor, Drawable2}
+import utopia.genesis.util.DefaultSetup
+import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
-import utopia.genesis.handling.{Actor, Drawable}
 import utopia.paradigm.path.{BezierPath, CircularPath, CompoundPath, CubicBezier, Path}
 import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Size}
-import utopia.genesis.util.{DefaultSetup, Drawer}
-import utopia.inception.handling.immutable.Handleable
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -62,49 +63,54 @@ object BezierPathTest extends App
 	setup.start()
 }
 
-private class MovingObject(val path: Path[Point], val color: Color) extends Drawable with Actor with Handleable
+private class MovingObject(val path: Path[Point], val color: Color) extends Drawable2 with Actor with Handleable
 {
 	// ATTRIBUTES	-----------------
+	
+	implicit val ss: StrokeSettings = StrokeSettings.default
+	private implicit val ds: DrawSettings = DrawSettings(color)
 	
 	private var position = path.start
 	private var t = 0.0
 	
-	override def draw(drawer: Drawer) = drawer.withColor(color, Color.black).draw(Circle(position, 16))
+	override def draw(drawer: Drawer3) = drawer.draw(Circle(position, 16))
 	
-	override def act(duration: FiniteDuration) =
-	{
+	override def act(duration: FiniteDuration) = {
 		t = (t + duration.toPreciseSeconds / 5) % 1
 		position = path(t)
 	}
 }
 
-private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawable with Handleable
+private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawable2 with Handleable
 {
 	// ATTRIBUTES	-------------------
+	
+	private val pointDs = StrokeSettings(color)
+	private val pathDs = StrokeSettings(color.withAlpha(0.5))
 	
 	private val lines = points.paired.map { p => Line(p.first, p.second) }
 	
 	
 	// IMPLEMENTED	-------------------
 	
-	override def draw(drawer: Drawer) =
-	{
+	override def draw(drawer: Drawer3) = {
 		// Draws the points first
-		val noFill = drawer.noFill
-		val pointDrawer = noFill.withEdgeColor(color)
-		points.foreach { p => pointDrawer.draw(Circle(p, 4)) }
+		points.foreach { p => drawer.draw(Circle(p, 4))(pointDs) }
 		// Then draws the path
-		val pathDrawer = noFill.withEdgeColor(color.withAlpha(0.5))
-		lines.foreach(pathDrawer.draw)
+		lines.foreach { drawer.draw(_)(pathDs) }
 	}
 }
 
-private class PointDrawer(val p: Point, val color: Color) extends Drawable with Handleable
+private class PointDrawer(val p: Point, val color: Color) extends Drawable2 with Handleable
 {
-	override def draw(drawer: Drawer) = drawer.withEdgeColor(color).noFill.draw(Circle(p, 4))
+	implicit val ds: DrawSettings = StrokeSettings(color)
+	
+	override def draw(drawer: Drawer3) = drawer.draw(Circle(p, 4))
 }
 
-private class CircleDrawer(val circle: Circle, val color: Color) extends Drawable with Handleable
+private class CircleDrawer(val circle: Circle, val color: Color) extends Drawable2 with Handleable
 {
-	override def draw(drawer: Drawer) = drawer.noFill.withEdgeColor(color).draw(circle)
+	implicit val ds: DrawSettings = StrokeSettings(color)
+	
+	override def draw(drawer: Drawer3) = drawer.draw(circle)
 }

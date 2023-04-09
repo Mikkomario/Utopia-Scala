@@ -49,8 +49,7 @@ abstract class Camera2[+H <: DrawableHandler2](makeHandler: (Drawer3 => Drawer3)
     // OTHER METHODS    -------------------
     
     // Transforms and clips the drawer
-    private def customDrawer(drawer: Drawer3) = viewTransformation.inverse match
-    {
+    private def customDrawer(drawer: Drawer3) = viewTransformation.inverse match {
         case Some(inverseView) => (drawer * projectionTransformation).withClip(projectionArea) * inverseView
         case None => (drawer * projectionTransformation).withClip(projectionArea)
     }

@@ -1,25 +1,24 @@
 package utopia.reflection.component.swing.input
 
-import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
+import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.genesis.view.GlobalMouseEventHandler
+import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
-import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
-import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
-import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.path.{ProjectilePath, SegmentedPath}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
-import utopia.genesis.util.Drawer
-import utopia.genesis.view.GlobalMouseEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -31,6 +30,7 @@ import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 
+import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object Slider
@@ -252,7 +252,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
                 leftColor: Color, rightColor: Color, knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
                 stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
-	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with CustomDrawableWrapper
+	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with MutableCustomDrawableWrapper
 		with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES   -------------------------
@@ -320,8 +320,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	}
 	
 	def enabled = state.isEnabled
-	def enabled_=(newState: Boolean) =
-	{
+	def enabled_=(newState: Boolean) = {
 		state = state.copy(isEnabled = newState)
 		if (newState)
 			setHandCursor()
@@ -506,7 +505,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
+		override def draw(drawer: Drawer3, bounds: Bounds) =
 		{
 			val knobRadius = ((targetKnobDiameter min bounds.height) min bounds.width) / 2.0
 			val lineStartX = bounds.leftX + knobRadius
@@ -516,15 +515,17 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			val thresholdX = lineStartX + leftSideWidth
 			// Draws the right side line first
 			val rightLineHeight = (targetKnobDiameter / 5.0 * rightHeightModifier) min (bounds.height * 0.8)
-			drawer.onlyFill(if (enabled) rightColor else rightColor.grayscale)
-				.draw(Bounds(Point(thresholdX, lineY - rightLineHeight / 2.0),
-					Size(lineWidth - leftSideWidth, rightLineHeight)).toRoundedRectangle(1.0))
+			val rightDs = DrawSettings.onlyFill(if (enabled) rightColor else rightColor.grayscale)
+			drawer.draw(Bounds(Point(thresholdX, lineY - rightLineHeight / 2.0),
+				Size(lineWidth - leftSideWidth, rightLineHeight)).toRoundedRectangle(1.0))(rightDs)
 			// Next draws the left line
 			val leftLineHeight = (targetKnobDiameter / 5.0 * leftHeightModifier) min (bounds.height * 0.8)
-			drawer.onlyFill(if (enabled) leftColor else leftColor.grayscale)
-				.draw(Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))
+			val leftDs = DrawSettings.onlyFill(if (enabled) leftColor else leftColor.grayscale)
+			drawer.draw(
+				Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))(leftDs)
 			// Finally draws the knob
-			drawer.onlyFill(currentKnobColor).draw(Circle(Point(thresholdX, lineY), knobRadius))
+			val knobDs = DrawSettings.onlyFill(currentKnobColor)
+			drawer.draw(Circle(Point(thresholdX, lineY), knobRadius))(knobDs)
 		}
 	}
 	

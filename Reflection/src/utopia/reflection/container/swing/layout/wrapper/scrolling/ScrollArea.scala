@@ -5,7 +5,7 @@ import utopia.paradigm.shape.shape2d.Bounds
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.reflection.component.context.ScrollingContextLike
-import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.mutable.{CustomDrawableWrapper, MutableCustomDrawableWrapper}
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
@@ -49,7 +49,7 @@ class ScrollArea[C <: Stackable with AwtComponentRelated](override val content: 
                                                           override val lengthLimits: Map[Axis2D, StackLengthLimit] = HashMap(),
                                                           override val limitsToContentSize: Boolean = false,
                                                           override val scrollBarIsInsideContent: Boolean = false)
-	extends ScrollAreaLike[C] with AwtComponentWrapperWrapper with CustomDrawableWrapper with AwtContainerRelated
+	extends ScrollAreaLike[C] with AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with AwtContainerRelated
 		with SwingComponentRelated
 {
 	// ATTRIBUTES	----------------------

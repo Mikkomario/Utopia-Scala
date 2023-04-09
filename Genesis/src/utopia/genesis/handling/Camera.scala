@@ -8,6 +8,7 @@ import utopia.genesis.util.Drawer
  * Cameras are used for viewing the game world from a different angle
  * (relative view) and projecting that view to a certain shape in the 'absolute' super view.
  */
+@deprecated("Replaced with a new implementation", "v3.3")
 trait Camera[+H <: DrawableHandler]
 {
     // ATTRIBUTES    ------------------------

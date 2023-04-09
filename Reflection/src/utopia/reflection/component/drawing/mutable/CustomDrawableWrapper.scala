@@ -7,6 +7,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
   * @author Mikko Hilpinen
   * @since 29.4.2019, v1+
   */
+@deprecated("Replaced with MutableCustomDrawableWrapper", "v2.0")
 trait CustomDrawableWrapper extends CustomDrawable
 {
 	// ABSTRACT	-----------------
