@@ -1,9 +1,9 @@
 package utopia.conflict.test
 
 import utopia.genesis.event.{MouseButton, MouseButtonStateEvent, MouseMoveEvent}
-import utopia.genesis.graphics.{Drawer3, StrokeSettings}
+import utopia.genesis.graphics.{Drawer, StrokeSettings}
 import utopia.genesis.handling.mutable.MouseButtonStateListener
-import utopia.genesis.handling.{Drawable2, MouseMoveListener}
+import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Line, Point, Projectable}
 
@@ -12,7 +12,7 @@ import utopia.paradigm.shape.shape2d.{Line, Point, Projectable}
  * @author Mikko Hilpinen
  * @since 5.8.2017
  */
-class ProjectionDrawer(val target: Projectable) extends Drawable2 with MouseButtonStateListener
+class ProjectionDrawer(val target: Projectable) extends Drawable with MouseButtonStateListener
         with MouseMoveListener
 {
     // ATTRIBUTES    ---------------------
@@ -39,7 +39,7 @@ class ProjectionDrawer(val target: Projectable) extends Drawable2 with MouseButt
     
     // IMPLEMENTED METHODS    ------------
     
-    override def draw(drawer: Drawer3) = {
+    override def draw(drawer: Drawer) = {
         drawer.draw(mouseLine)(mouseLineDs)
         drawer.draw(projection)(projectionDs)
     }

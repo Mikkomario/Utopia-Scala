@@ -1,11 +1,11 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.graphics.{Drawer3, TextDrawHeight}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler2}
-import utopia.genesis.handling.{ActorLoop, Drawable2}
+import utopia.genesis.graphics.{Drawer, TextDrawHeight}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
+import utopia.genesis.handling.{ActorLoop, Drawable}
 import utopia.genesis.util.Fps
-import utopia.genesis.view.{Canvas2, CanvasMouseEventGenerator2, MainFrame}
+import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, MainFrame}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.enumeration.Alignment.Center
@@ -18,13 +18,13 @@ object CameraTest extends App
 {
 	ParadigmDataType.setup()
 	
-    class GridNumberDrawer(private val grid: GridDrawer) extends Drawable2 with Handleable
+    class GridNumberDrawer(private val grid: GridDrawer) extends Drawable with Handleable
     {
 	    implicit val txh: TextDrawHeight = TextDrawHeight.Standard
 	    
         private val font = new Font("Arial", 0, 14)
         
-        override def draw(drawer: Drawer3) = {
+        override def draw(drawer: Drawer) = {
             // Draws a number on each grid square
             for (x <- 0 until grid.squareAmounts.x.toInt; y <- 0 until grid.squareAmounts.y.toInt) {
 	            drawer.forTextDrawing(font).drawAround((y * grid.squareAmounts.x.toInt + x + 1).toString,
@@ -35,17 +35,17 @@ object CameraTest extends App
 	
 	// Creates handlers
 	val actorHandler = ActorHandler()
-	val drawHandler = DrawableHandler2()
+	val drawHandler = DrawableHandler()
 	
 	// Creates frame
     val worldSize = Size(800, 600)
     
-    val canvas = new Canvas2(drawHandler, worldSize)
+    val canvas = new Canvas(drawHandler, worldSize)
     val frame = new MainFrame(canvas, worldSize, "Camera Test")
     
 	// Sets up generators
     val actorLoop = new ActorLoop(actorHandler, 20 to 120)
-    val mouseEventGen = new CanvasMouseEventGenerator2(canvas)
+    val mouseEventGen = new CanvasMouseEventGenerator(canvas)
     actorHandler += mouseEventGen
     
 	// Creates test objects

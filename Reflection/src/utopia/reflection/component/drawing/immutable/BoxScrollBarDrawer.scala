@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.immutable
 
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
@@ -42,7 +42,7 @@ case class BoxScrollBarDrawer(barColor: Color, backgroundColor: Option[Color] = 
 {
 	private val barDs = DrawSettings.onlyFill(barColor)
 	
-	override def draw(drawer: Drawer3, bounds: ScrollBarBounds, barDirection: Axis2D) =
+	override def draw(drawer: Drawer, bounds: ScrollBarBounds, barDirection: Axis2D) =
 	{
 		val clipArea = drawer.clippingBounds
 		if (clipArea.forall { _.overlapsWith(bounds.area) }) {

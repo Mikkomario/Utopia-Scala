@@ -1,8 +1,8 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.Drawable2
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.Drawable
 import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.angular.Rotation
@@ -42,7 +42,7 @@ object TransformationDrawTest extends App
 
 private class ShapeDrawer[A <: Transformable[A] with ShapeConvertible](shape: A, origin: Point, position: Point,
 																	   transformation: Matrix2D)
-	extends Drawable2 with Handleable
+	extends Drawable with Handleable
 {
 	// ATTRIBUTES	--------------------------
 	
@@ -82,7 +82,7 @@ private class ShapeDrawer[A <: Transformable[A] with ShapeConvertible](shape: A,
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def draw(drawer: Drawer3) = {
+	override def draw(drawer: Drawer) = {
 		// Draws the transformed shape and origin
 		drawer.draw(transformedShape)(transformedDs)
 		drawer.draw(transformedOrigin)(originDs)

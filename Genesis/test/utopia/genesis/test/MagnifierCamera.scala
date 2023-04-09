@@ -1,9 +1,9 @@
 package utopia.genesis.test
 
 import utopia.genesis.event.MouseMoveEvent
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.mutable.DrawableHandler2
-import utopia.genesis.handling.{Camera2, Drawable2, MouseMoveListener}
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.mutable.DrawableHandler
+import utopia.genesis.handling.{Camera, Drawable, MouseMoveListener}
 import utopia.genesis.util.DepthRange
 import utopia.inception.handling.mutable.Handleable
 import utopia.paradigm.shape.shape2d.{Circle, Point}
@@ -15,8 +15,8 @@ import utopia.paradigm.transform.LinearTransformation
  * @since 26.2.2017
  */
 class MagnifierCamera(radius: Double, override val drawDepth: Int = DepthRange.top)
-    extends Camera2[DrawableHandler2](customize => DrawableHandler2(Vector(), drawDepth, Some(customize)))
-        with Drawable2 with MouseMoveListener with Handleable
+    extends Camera[DrawableHandler](customize => DrawableHandler(Vector(), drawDepth, Some(customize)))
+        with Drawable with MouseMoveListener with Handleable
 {
     // ATTRIBUTES    ------------------
     
@@ -38,7 +38,7 @@ class MagnifierCamera(radius: Double, override val drawDepth: Int = DepthRange.t
     // IMPLEMENTED METHODS    --------
     
     // Draws the edges of the projection area
-    override def draw(drawer: Drawer3) = (drawer * projectionTransformation).draw(projectionCircle)
+    override def draw(drawer: Drawer) = (drawer * projectionTransformation).draw(projectionCircle)
     
     // Moves the camera 'lens' to the mouse position
     override def onMouseMove(event: MouseMoveEvent) = {

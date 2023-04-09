@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
@@ -336,7 +336,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) = {
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			lazy val bg = contextBackgroundPointer.value
 			def draw(pointer: View[Option[Bounds]], highlightLevel: Double) =
 				pointer.value.foreach { area =>

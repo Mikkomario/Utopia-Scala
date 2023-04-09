@@ -3,7 +3,7 @@ package utopia.reach.util
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
@@ -61,10 +61,10 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	// IMPLEMENTED	---------------------------------
 	
-	override def paintWith(drawer: Drawer3) = {
+	override def paintWith(drawer: Drawer) = {
 		// Checks whether component size changed. Invalidates buffer if so.
 		checkForSizeChanges()
-		flatten().drawWith2(drawer, component.position)
+		flatten().drawWith(drawer, component.position)
 	}
 	
 	override def paint(region: Option[Bounds], priority: Priority): Unit =
@@ -79,7 +79,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 				case Some(region) => drawer.clippedToBounds(region)
 				case None => drawer
 			}
-			newImage.drawWith2(modifiedDrawer, component.position)
+			newImage.drawWith(modifiedDrawer, component.position)
 		}
 	}
 	
@@ -280,12 +280,12 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		}
 	}
 	
-	private def paintArea(drawer: Drawer3, region: Bounds) =
+	private def paintArea(drawer: Drawer, region: Bounds) =
 	{
 		// First draws the component region to a separate image
 		val buffered = component.regionToImage(region)
 		// Draws the buffered area using the drawer (may also draw the cursor)
-		drawer.clippedToBounds(region).use { d => buffered.drawWith2(d, component.position + region.position) }
+		drawer.clippedToBounds(region).use { d => buffered.drawWith(d, component.position + region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
 		queuedUpdatesPointer.update {
 			case Some(queue) =>
@@ -299,7 +299,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		}
 	}
 	
-	private def paint(f: Drawer3 => Unit) = {
+	private def paint(f: Drawer => Unit) = {
 		// Painting is performed in the AWT event thread
 		AwtEventThread.async {
 			if (disableDoubleBuffering) {
@@ -317,9 +317,9 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	}
 	
 	// Doesn't perform any preparation, as in paint
-	private def draw(f: Drawer3 => Unit) = {
+	private def draw(f: Drawer => Unit) = {
 		// Paints using the component's own graphics instance (which may not be available)
-		Option(jComponent.getGraphics).foreach { g => Drawer3(g.asInstanceOf[Graphics2D]).use(f) }
+		Option(jComponent.getGraphics).foreach { g => Drawer(g.asInstanceOf[Graphics2D]).use(f) }
 		if (syncAfterDraw)
 			Try { Toolkit.getDefaultToolkit.sync() }
 	}

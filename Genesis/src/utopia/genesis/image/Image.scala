@@ -5,9 +5,8 @@ import utopia.flow.operator.{LinearScalable, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.genesis.util.Drawer
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
@@ -124,7 +123,6 @@ object Image
 	  * @tparam U Arbitrary result type
 	  * @return Drawn image
 	  */
-	@deprecated("Please use the new implementation instead", "v3.3")
 	def paint[U](size: Size)(draw: Drawer => U) =
 	{
 		// If some of the dimensions were 0, simply creates an empty image
@@ -133,31 +131,7 @@ object Image
 			// Creates the new buffer image
 			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
 			// Draws on the image
-			Drawer.use(buffer.createGraphics()) { draw(_) }
-			// Wraps the buffer image
-			Image(buffer)
-		}
-		else
-			empty
-	}
-	
-	/**
-	  * Creates a new image by drawing
-	  * @param size Size of the image
-	  * @param draw A function that will draw the image contents. The drawer is clipped to image bounds and
-	  *             (0,0) is at the image top left corner.
-	  * @tparam U Arbitrary result type
-	  * @return Drawn image
-	  */
-	def paint2[U](size: Size)(draw: Drawer3 => U) =
-	{
-		// If some of the dimensions were 0, simply creates an empty image
-		if (size.isPositive)
-		{
-			// Creates the new buffer image
-			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
-			// Draws on the image
-			Drawer3(buffer.createGraphics()).consume(draw)
+			Drawer(buffer.createGraphics()).consume(draw)
 			// Wraps the buffer image
 			Image(buffer)
 		}
@@ -675,8 +649,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 				case Some(buffer) =>
 					// Draws the other image on the buffer
 					// Determines the scaling to apply, if necessary
-					Drawer3(buffer.createGraphics()).consume { d =>
-						(overlayImage / scaling).drawWith2(d.withClip(Bounds(Point.origin, sourceResolution)),
+					Drawer(buffer.createGraphics()).consume { d =>
+						(overlayImage / scaling).drawWith(d.withClip(Bounds(Point.origin, sourceResolution)),
 							sourceResolutionOrigin + overlayPosition)
 					}
 					// Wraps the result
@@ -691,27 +665,11 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *              ((0,0) is at the top left corner if this image).
 	  * @return A copy of this image with the paint operation applied
 	  */
-	@deprecated("Please use the new implementation instead", "v3.3")
-	def paintedOver(paint: Drawer => Unit) = {
+	def paintedOver[U](paint: Drawer => U) = {
 		toAwt match {
 			case Some(buffer) =>
 				// Paints into created buffer
-				Drawer.use(buffer.createGraphics()) { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
-				Image(buffer, scaling, alpha, specifiedOrigin)
-			case None => this
-		}
-	}
-	
-	/**
-	  * @param paint A function for painting over this image. Accepts a drawer that is clipped to this image's area
-	  *              ((0,0) is at the top left corner if this image).
-	  * @return A copy of this image with the paint operation applied
-	  */
-	def paintedOver2[U](paint: Drawer3 => U) = {
-		toAwt match {
-			case Some(buffer) =>
-				// Paints into created buffer
-				Drawer3(buffer.createGraphics())
+				Drawer(buffer.createGraphics())
 					.consume { d => paint(d.withClip(Bounds(Point.origin, sourceResolution))) }
 				Image(buffer, scaling, alpha, specifiedOrigin)
 			case None => this
@@ -737,7 +695,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			// Draws this image to the center of the image
 			val topLeftPosition = (targetSize - size).toPoint / 2
 			val originDrawPosition = topLeftPosition + origin
-			Drawer3(buffer.createGraphics()).consume { drawer => drawWith2(drawer, originDrawPosition) }
+			Drawer(buffer.createGraphics()).consume { drawer => drawWith(drawer, originDrawPosition) }
 			// Wraps the image
 			Image(buffer, origin = if (specifiesOrigin) Some(originDrawPosition) else None)
 		}
@@ -761,8 +719,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 				BufferedImage.TYPE_INT_ARGB)
 			
 			// Draws on the buffer
-			Drawer3(buffer.createGraphics()).consume { d =>
-				drawWith2(d, transformedOrigin - transformedBounds.topLeft, Some(transformation))
+			Drawer(buffer.createGraphics()).consume { d =>
+				drawWith(d, transformedOrigin - transformedBounds.topLeft, Some(transformation))
 			}
 			// Wraps the image
 			Image(buffer, origin = if (specifiesOrigin) Some(transformedOrigin - transformedBounds.topLeft) else None)

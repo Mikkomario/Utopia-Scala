@@ -2,6 +2,8 @@
 
 ## v2.0-alpha-11 (in development)
 ### Breaking Changes
+- **CustomDrawer** reflects changes in Genesis v3.3
+- Replaced **mutable.CustomDrawable** with **MutableCustomDrawable** in multiple places
 - **ContainerContentDisplayer2** now uses **EqualsFunction** and not a normal function when comparing items
 - **Calendar** now uses **WeekDay** instead of **DayOfWeek**
 ### Deprecations

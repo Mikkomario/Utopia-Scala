@@ -180,7 +180,14 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	override def transformedWith(transformation: Matrix2D): LazyGraphics = transformedWith(transformation.to3D)
 	override def transformedWith(transformation: Matrix3D) =
 		new LazyGraphics(Right(this), newTransformation = Some(Lazy.initialized(transformation)),
-			newClipping = _clipping.map { clip => clip.transformedWith(transformation) })
+			// Transforms the existing clipping with the inverse of the applied view transformation
+			// (so that the resulting shape stays the same after applying view transformation)
+			newClipping = _clipping.map { clip =>
+				transformation.inverse match {
+					case Some(inv) => clip.transformedWith(inv)
+					case None => clip
+				}
+			})
 	
 	override def close() = baseCache.current.foreach { _.close() }
 	
@@ -204,6 +211,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	  *                 The area should be within this graphics's transformation context.
 	  * @return A copy of this graphics instance, which is clipped to that area (overwrites any current clipping)
 	  */
+	  // FIXME: Doesn't work
 	def withClip(clipping: => Polygonic): LazyGraphics = withClip(LazyClip(clipping))
 	
 	/**

@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.label
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.{Image, Strip}
@@ -103,7 +103,7 @@ object AnimationLabel
   * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
   */
 class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
-						drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
+                        drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
 	extends Label with Stackable
 {
 	// ATTRIBUTES	-------------------------
@@ -153,7 +153,7 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) =
+		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Determines the draw location and scaling
 			val originalSize = stackSize.optimal

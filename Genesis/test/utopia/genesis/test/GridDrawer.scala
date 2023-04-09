@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.Drawable2
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.Drawable
 import utopia.inception.handling.mutable.Handleable
 import utopia.paradigm.shape.shape2d.{Line, Size, Vector2D}
 
@@ -12,7 +12,7 @@ import java.awt.Color
  * @author Mikko Hilpinen
  * @since 25.2.2017
  */
-class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable2 with Handleable
+class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable with Handleable
 {
     // ATTRIBUTES    -----------------
     
@@ -34,7 +34,7 @@ class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable2 with H
     
     // IMPLEMENTED METHODS    --------
     
-    def draw(drawer: Drawer3) =
+    def draw(drawer: Drawer) =
     {
         for (x <- 0 to squareAmounts.x.toInt) {
             drawer.draw(Line.ofVector(squarePosition(x, 0).toVector.toPoint, size.toVector.yProjection))

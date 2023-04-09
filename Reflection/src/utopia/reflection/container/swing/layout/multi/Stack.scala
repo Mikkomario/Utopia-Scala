@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
@@ -245,7 +245,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
         override def drawLevel = DrawLevel.Background
     
-        override def draw(drawer: Drawer3, bounds: Bounds) =
+        override def draw(drawer: Drawer, bounds: Bounds) =
         {
             if (count > 1) {
                 val settings = colors.map(DrawSettings.onlyFill).repeatingIterator()

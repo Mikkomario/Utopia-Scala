@@ -1,11 +1,11 @@
 package utopia.genesis.handling.immutable
 
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling
 import utopia.genesis.handling.Drawable
-import utopia.genesis.util.{DepthRange, Drawer}
+import utopia.genesis.util.DepthRange
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
-@deprecated("Replaced with a new implementation", "v3.3")
 object DrawableHandler
 {
 	/**
@@ -20,8 +20,10 @@ object DrawableHandler
 	  * @param parent A handleable this handler is dependent from (default = None = handler is independent)
 	  * @return A new handler
 	  */
-	def apply(elements: Seq[Drawable], drawDepth: Int = DepthRange.default, customizer: Option[Drawer => Drawer] = None,
-			  parent: Option[Handleable] = None) = new DrawableHandler(elements, drawDepth, customizer)
+	def apply(elements: Seq[Drawable], drawDepth: Int = DepthRange.default,
+	          customizer: Option[Drawer => Drawer] = None,
+	          parent: Option[Handleable] = None) =
+		new DrawableHandler(elements, drawDepth, customizer)
 	
 	/**
 	  * @param element The drawable element in the handler
@@ -32,7 +34,8 @@ object DrawableHandler
 	/**
 	  * @return A drawable handler with all specified elements
 	  */
-	def apply(first: Drawable, second: Drawable, more: Drawable*): DrawableHandler = apply(Vector(first, second) ++ more)
+	def apply(first: Drawable, second: Drawable, more: Drawable*): DrawableHandler =
+		apply(Vector(first, second) ++ more)
 }
 
 /**
@@ -41,9 +44,9 @@ object DrawableHandler
   * @param drawDepth The draw depth of this handler
   * @param customizer A function for customizing drawers used by this handler. None if no customization should be done
   */
-@deprecated("Replaced with a new implementation", "v3.3")
-class DrawableHandler(initialElements: Seq[Drawable], drawDepth: Int, val customizer: Option[Drawer => Drawer])
-	extends Handler[Drawable](initialElements.sortWith { _.drawDepth > _.drawDepth }) with handling.DrawableHandler with Handleable
+class DrawableHandler(initialElements: Seq[Drawable], drawDepth: Int, customizer: Option[Drawer => Drawer])
+	extends Handler[Drawable](initialElements.sortWith { _.drawDepth > _.drawDepth })
+		with handling.DrawableHandler with Handleable
 {
 	/**
 	  * Draws the drawable instance using a specific graphics object. The graphics transformations
@@ -55,6 +58,6 @@ class DrawableHandler(initialElements: Seq[Drawable], drawDepth: Int, val custom
 		// May use a custom drawer
 		val customDrawer = customizer.map { _(drawer) }
 		handle { _.draw(customDrawer getOrElse drawer) }
-		customDrawer.foreach { _.dispose() }
+		customDrawer.foreach { _.close() }
 	}
 }

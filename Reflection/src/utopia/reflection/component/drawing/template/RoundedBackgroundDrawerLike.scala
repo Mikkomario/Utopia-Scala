@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
 
@@ -28,7 +28,7 @@ trait RoundedBackgroundDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) = {
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		if (bounds.size.isPositive) {
 			implicit val ds: DrawSettings = DrawSettings.onlyFill(color)
 			rounding match {

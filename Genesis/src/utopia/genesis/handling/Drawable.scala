@@ -1,6 +1,7 @@
 package utopia.genesis.handling
 
-import utopia.genesis.util.{DepthRange, Drawer}
+import utopia.genesis.graphics.Drawer
+import utopia.genesis.util.DepthRange
 import utopia.inception.handling.Handleable
 
 /**
@@ -8,13 +9,12 @@ import utopia.inception.handling.Handleable
  * @author Mikko Hilpinen
  * @since 28.12.2016
  */
-@deprecated("Replaced with a new implementation", "v3.3")
 trait Drawable extends Handleable
 {
     /**
       * @return Whether this drawable is visible (allowing drawing)
       */
-    def isVisible = allowsHandlingFrom(DrawableHandlerType)
+    def isVisible = allowsHandlingFrom(DrawableHandlerType2)
     
     /**
      * Draws the drawable instance using a specific graphics object. The graphics transformations

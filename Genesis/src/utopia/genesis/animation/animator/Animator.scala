@@ -1,8 +1,8 @@
 package utopia.genesis.animation.animator
 
 import utopia.flow.view.mutable.caching.ResettableVolatileLazy
-import utopia.genesis.graphics.Drawer3
-import utopia.genesis.handling.Drawable2
+import utopia.genesis.graphics.Drawer
+import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.mutable.Actor
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -13,8 +13,9 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @since 18.8.2019, v2.1+
   * @tparam A Type of animation result that is also drawn
   */
-trait Animator[A] extends Actor with Drawable2
+abstract class Animator[A] extends Actor with Drawable
 {
+	// TODO: Add animation events
 	// ATTRIBUTES	-------------------
 	
 	/**
@@ -46,7 +47,7 @@ trait Animator[A] extends Actor with Drawable2
 	  * @param drawer Drawer used
 	  * @param item Item that should be drawn
 	  */
-	protected def draw(drawer: Drawer3, item: A): Unit
+	protected def draw(drawer: Drawer, item: A): Unit
 	
 	
 	// COMPUTED	------------------------
@@ -100,7 +101,7 @@ trait Animator[A] extends Actor with Drawable2
 		}
 	}
 	
-	override def draw(drawer: Drawer3): Unit = draw(drawer, cached.value)
+	override def draw(drawer: Drawer): Unit = draw(drawer, cached.value)
 	
 	
 	// OTHER	----------------------

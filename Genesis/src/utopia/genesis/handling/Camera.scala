@@ -1,32 +1,24 @@
 package utopia.genesis.handling
 
-import java.awt.Shape
+import utopia.genesis.graphics.Drawer
+import utopia.paradigm.shape.shape2d.Polygonic
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.genesis.util.Drawer
 
 /**
  * Cameras are used for viewing the game world from a different angle
  * (relative view) and projecting that view to a certain shape in the 'absolute' super view.
  */
-@deprecated("Replaced with a new implementation", "v3.3")
-trait Camera[+H <: DrawableHandler]
+abstract class Camera[+H <: DrawableHandler](makeHandler: (Drawer => Drawer) => H)
 {
     // ATTRIBUTES    ------------------------
     
     /**
      * The handler for all the content that may be displayed in the camera's view
      */
-    lazy val drawHandler = makeDrawableHandler(customDrawer)
+    lazy val drawHandler = makeHandler(customDrawer)
     
     
     // ABSTRACT METHODS    ------------------
-    
-    /**
-      * Creates a new drawableHandler with the specified customized drawer
-      * @param customizer A function that produces a custom drawer
-      * @return A new Drawable handler
-      */
-    protected def makeDrawableHandler(customizer: Drawer => Drawer): H
     
     /**
      * This transformation determines the camera's transformation in the 'view world'. For example,
@@ -51,15 +43,14 @@ trait Camera[+H <: DrawableHandler]
      * <br> You can instead move both the projected and viewed area by using the projection- and
      * view transformations respectively.
      */
-    def projectionArea: Shape
+    def projectionArea: Polygonic
     
     
     // OTHER METHODS    -------------------
     
     // Transforms and clips the drawer
-    private def customDrawer(drawer: Drawer) = viewTransformation.inverse match
-    {
-        case Some(inverseView) => (drawer * projectionTransformation).clippedTo(projectionArea) * inverseView
-        case None => (drawer * projectionTransformation).clippedTo(projectionArea)
+    private def customDrawer(drawer: Drawer) = viewTransformation.inverse match {
+        case Some(inverseView) => (drawer * projectionTransformation).withClip(projectionArea) * inverseView
+        case None => (drawer * projectionTransformation).withClip(projectionArea)
     }
 }

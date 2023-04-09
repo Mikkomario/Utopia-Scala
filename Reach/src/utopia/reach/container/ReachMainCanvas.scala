@@ -7,7 +7,6 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -16,7 +15,6 @@ import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapRes
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.focus.ReachFocusManager
 import utopia.reflection.color.ColorShade.Dark
-import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable

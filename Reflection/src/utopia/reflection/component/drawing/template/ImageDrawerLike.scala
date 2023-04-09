@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Bounds
@@ -39,7 +39,7 @@ trait ImageDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) =
+	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		// Calculates the size of the drawn image
 		val defaultSize = image.size + insets.optimal.total
@@ -63,7 +63,7 @@ trait ImageDrawerLike extends CustomDrawer
 			val position = alignment.positionWithInsets(img.size, bounds, insets, fitWithinBounds = false).position
 			// Since 'position' represents the desired top left corner of the drawn image,
 			// has to adjust according to image origin
-			img.drawWith2(drawer, position + image.origin)
+			img.drawWith(drawer, position + image.origin)
 		}
 	}
 }

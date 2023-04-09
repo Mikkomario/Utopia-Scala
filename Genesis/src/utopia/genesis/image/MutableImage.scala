@@ -3,14 +3,13 @@ package utopia.genesis.image
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.AutoClose._
 import utopia.flow.view.mutable.caching.MutableLazy
+import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.image.transform._
+import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
-import utopia.genesis.graphics.Drawer3
-import utopia.genesis.image.transform.{Blur, HueAdjust, ImageTransform, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size, Vector2D}
-import utopia.genesis.util.Drawer
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
@@ -25,8 +24,9 @@ object MutableImage
 	  */
 	def canvas(size: Size, background: Color = Color.transparentBlack) =
 	{
+		implicit val ds: DrawSettings = DrawSettings.onlyFill(background)
 		val source = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
-		Drawer.use(source.createGraphics()) { _.onlyFill(background).draw(Bounds(Point.origin, size)) }
+		Drawer(source.createGraphics()).consume { _.draw(Bounds(Point.origin, size)) }
 		new MutableImage(Some(source))
 	}
 }
@@ -363,8 +363,8 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 				case Some(target) =>
 					// Draws the overlay image on the source directly
 					// Calculates applied scaling
-					Drawer3(target.createGraphics()).consume { d =>
-						(image / scaling).drawWith2(d.withClip(Bounds(Point.origin, sourceResolution)),
+					Drawer(target.createGraphics()).consume { d =>
+						(image / scaling).drawWith(d.withClip(Bounds(Point.origin, sourceResolution)),
 							sourceResolutionOrigin + overlayPosition)
 					}
 				case None =>
@@ -378,15 +378,6 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Applies a paint function over this image
 	  * @param paint A function that will paint over this image. The provided drawer is clipped to this image's area.
 	  */
-	@deprecated("Please use the new implementation instead", "v3.3")
-	def paintOver(paint: Drawer => Unit) = source.foreach { target => Drawer.use(target.createGraphics())(paint)
-		// { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
-	}
-	
-	/**
-	  * Applies a paint function over this image
-	  * @param paint A function that will paint over this image. The provided drawer is clipped to this image's area.
-	  */
-	def paintOver2[U](paint: Drawer3 => U) =
-		source.foreach { target => Drawer3(target.createGraphics()).consume(paint) }
+	def paintOver[U](paint: Drawer => U) =
+		source.foreach { target => Drawer(target.createGraphics()).consume(paint) }
 }

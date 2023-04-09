@@ -1,7 +1,7 @@
 package utopia.reach.container.layered
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
@@ -83,7 +83,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 	}
 	
 	// TODO: Add support for visual effects (with buffering)
-	override def paintWith(drawer: Drawer3, clipZone: Option[Bounds]) =
+	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) =
 	{
 		paintContent(drawer, Background, clipZone)
 		paintContent(drawer, Normal, clipZone)

@@ -3,7 +3,7 @@ package utopia.reach.component.input.check
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
@@ -218,7 +218,7 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) = {
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			implicit val ds: DrawSettings = dsPointer.value
 			if (ds.fillColor.exists { _.alpha > 0 })
 				drawer.draw(shapePointer.value)

@@ -1,7 +1,7 @@
 package utopia.genesis.animation.animator
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.shape.shape2D.MutableTransformable
 import utopia.paradigm.animation.TimedAnimation
@@ -45,8 +45,8 @@ class SpriteDrawer(val spritePointer: PointerWithEvents[TimedAnimation[Image]],
 	
 	override protected def apply(progress: Double) = sprite(progress)
 	
-	override protected def draw(drawer: Drawer3, item: Image) =
-		item.drawWith2(drawer * transformation)
+	override protected def draw(drawer: Drawer, item: Image) =
+		item.drawWith(drawer * transformation)
 	
 	override def transformation = transformationPointer.value
 	override def transformation_=(newTransformation: AffineTransformation) =

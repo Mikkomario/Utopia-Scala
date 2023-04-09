@@ -4,7 +4,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -216,7 +216,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) =
+		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Calculates dimensions
 			val center = bounds.center.round

@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.graphics.{Drawer3, MeasuredText}
+import utopia.genesis.graphics.{Drawer, MeasuredText}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Bounds
@@ -14,7 +14,7 @@ import utopia.reflection.text.Font
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
-trait TextDrawerLike2 extends CustomDrawer
+trait TextDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	---------------------------------
 	
@@ -53,7 +53,7 @@ trait TextDrawerLike2 extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) = {
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		// Calculates draw bounds and possible scaling
 		val textArea = alignment.positionWithInsets(text.size, bounds, insets)
 		// Skips drawing if the text is outside the clipping area

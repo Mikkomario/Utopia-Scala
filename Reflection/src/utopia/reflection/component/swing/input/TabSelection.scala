@@ -4,7 +4,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
@@ -244,6 +244,6 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 		
 		override def opaque = false
 		override def drawLevel = Background
-		override def draw(drawer: Drawer3, bounds: Bounds) = drawer.draw(bounds.bottomSlice(selectionLineHeight))
+		override def draw(drawer: Drawer, bounds: Bounds) = drawer.draw(bounds.bottomSlice(selectionLineHeight))
 	}
 }

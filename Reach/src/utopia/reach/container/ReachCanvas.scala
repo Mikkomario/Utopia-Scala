@@ -6,7 +6,7 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
@@ -25,7 +25,7 @@ import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
 import utopia.reflection.color.ColorShade.Dark
 import utopia.reflection.color.ColorShadeVariant
-import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer}
+import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer}
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.swing.AwtContainerRelated
@@ -82,7 +82,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 						  focusEnabled: Boolean = true)
 						 (implicit exc: ExecutionContext)
 	extends ReachCanvasLike with JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated
-		with CustomDrawable2
+		with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -309,7 +309,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		override def paint(g: Graphics) = paintComponent(g)
 		
 		override def paintComponent(g: Graphics) =
-			currentPainter.foreach { p => Drawer3(g.asInstanceOf[Graphics2D]).use(p.paintWith) }
+			currentPainter.foreach { p => Drawer(g.asInstanceOf[Graphics2D]).use(p.paintWith) }
 		
 		// Never paints children (because won't have any children)
 		override def paintChildren(g: Graphics) = ()

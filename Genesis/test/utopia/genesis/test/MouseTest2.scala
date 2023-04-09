@@ -3,13 +3,13 @@ package utopia.genesis.test
 import utopia.flow.test.TestContext._
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler2}
-import utopia.genesis.handling.{ActorLoop, Drawable2, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
+import utopia.genesis.handling.{ActorLoop, Drawable, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Size}
-import utopia.genesis.view.{Canvas2, CanvasMouseEventGenerator2, MainFrame}
+import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, MainFrame}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
@@ -23,7 +23,7 @@ import utopia.inception.handling.mutable.HandlerRelay
  */
 object MouseTest2 extends App
 {
-    class TestObject(position: Point, radius: Double) extends Drawable2 with
+    class TestObject(position: Point, radius: Double) extends Drawable with
             MouseMoveListener with MouseButtonStateListener with MouseWheelListener with Handleable
 	{
         private val area = Circle(Point.origin, radius)
@@ -33,7 +33,7 @@ object MouseTest2 extends App
         private var isOn = false
         private var transformation = AffineTransformation.translation(position.toVector)
         
-        override def draw(drawer: Drawer3) =
+        override def draw(drawer: Drawer) =
         {
 	        val color = if (isOn) Color.blue else if (mouseOver) Color.cyan else Color.gray(0.5)
 	        (drawer * transformation).draw(area)(DrawSettings.onlyFill(color.withAlpha(0.7)))
@@ -73,11 +73,11 @@ object MouseTest2 extends App
     // Creates the handlers
     val gameWorldSize = Size(800, 600)
     
-	val drawHandler = DrawableHandler2()
+	val drawHandler = DrawableHandler()
 	val actorHandler = ActorHandler()
 	
-	val canvas = new Canvas2(drawHandler, gameWorldSize)
-	val mouseEventGen = new CanvasMouseEventGenerator2(canvas)
+	val canvas = new Canvas(drawHandler, gameWorldSize)
+	val mouseEventGen = new CanvasMouseEventGenerator(canvas)
 	
 	val handlers = HandlerRelay(drawHandler, actorHandler, mouseEventGen.buttonHandler, mouseEventGen.moveHandler,
 		mouseEventGen.wheelHandler)

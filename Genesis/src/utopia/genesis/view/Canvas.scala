@@ -1,24 +1,22 @@
 package utopia.genesis.view
 
+import utopia.flow.parse.AutoClose._
 import utopia.flow.util.logging.Logger
-
-import javax.swing.JPanel
-import utopia.genesis.view.ScalingPolicy.Project
-
-import java.awt.Color
-import java.awt.Graphics
-import java.awt.event.{ComponentAdapter, ComponentEvent}
-import utopia.genesis.view.ScalingPolicy.Crop
-import utopia.genesis.util.{Drawer, Fps}
-import utopia.paradigm.shape.shape2d.Size
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.DrawableHandler
+import utopia.paradigm.shape.shape2d.{Bounds, Size}
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.genesis.util.Fps
+import utopia.genesis.view.ScalingPolicy.{Crop, Project}
 
+import java.awt.{Color, Graphics, Graphics2D}
+import java.awt.event.{ComponentAdapter, ComponentEvent}
+import javax.swing.JPanel
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * A Canvas works like any Swing panel except it's able to draw drawable object contents with a
- * certain framerate. The panel also rescales itself when the size changes to display only the 
+ * certain frame rate. The panel also rescales itself when the size changes to display only the
  * specified game world area.
  * @author Mikko Hilpinen
  * @since 28.12.2016
@@ -27,9 +25,10 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param scalingPolicy How this panel handles scaling
   * @param clearPrevious Whether the results of previous draws should be cleared before the next redraw
  */
-@deprecated("Replaced with a new implementation", "v3.3")
-class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val scalingPolicy: ScalingPolicy = Project,
-             var clearPrevious: Boolean = true) extends JPanel(null)
+class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size,
+             val scalingPolicy: ScalingPolicy = Project,
+             var clearPrevious: Boolean = true)
+    extends JPanel(null)
 {
     // ATTRIBUTES    -----------------
     
@@ -81,23 +80,13 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
     {
         super.paintComponent(g)
 
-        Drawer.use(g)
-        {
-            drawer =>
-                // Clears the previous drawings
-                if (clearPrevious)
-                {
-                    drawer.withCopy
-                    {
-                        d =>
-                            d.graphics.clearRect(0, 0, getWidth, getHeight)
-                            d.graphics.setColor(getBackground)
-                            d.graphics.fillRect(0, 0, getWidth, getHeight)
-                    }
-                }
+        Drawer(g.asInstanceOf[Graphics2D]).consume { drawer =>
+            // Clears the previous drawings
+            if (clearPrevious)
+                drawer.clear(Bounds(0, 0, getWidth, getHeight))
     
-                // Game world drawings are scaled, then drawn
-                drawHandler.draw(drawer.scaled(scaling))
+            // Game world drawings are scaled, then drawn
+            drawHandler.draw(drawer.scaled(scaling))
         }
     }
     

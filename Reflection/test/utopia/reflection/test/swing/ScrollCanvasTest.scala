@@ -1,9 +1,9 @@
 package utopia.reflection.test.swing
 
 import utopia.genesis.event._
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable._
-import utopia.genesis.handling.{ActorLoop, Drawable2}
+import utopia.genesis.handling.{ActorLoop, Drawable}
 import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
@@ -31,7 +31,7 @@ object ScrollCanvasTest extends App
 	
 	// Creates the handlers
 	val actorHandler = ActorHandler()
-	val drawHandler = DrawableHandler2()
+	val drawHandler = DrawableHandler()
 	val mouseButtonHandler = MouseButtonStateHandler()
 	val mouseWheelHandler = MouseWheelHandler()
 	val mouseMoveHandler = MouseMoveHandler()
@@ -70,7 +70,7 @@ object ScrollCanvasTest extends App
 	println(StackHierarchyManager.description)
 }
 
-private class TestCircle(val position: Point) extends Drawable2 with Handleable with MouseButtonStateListener
+private class TestCircle(val position: Point) extends Drawable with Handleable with MouseButtonStateListener
 {
 	// ATTRIBUTES	---------------------
 	
@@ -81,7 +81,7 @@ private class TestCircle(val position: Point) extends Drawable2 with Handleable 
 	
 	// IMPLEMENTED	---------------------
 	
-	override def draw(drawer: Drawer3) = drawer.draw(circle)
+	override def draw(drawer: Drawer) = drawer.draw(circle)
 	
 	override def mouseButtonStateEventFilter = Consumable.notConsumedFilter &&
 		MouseButtonStateEvent.leftPressedFilter && MouseEvent.isOverAreaFilter(circle)

@@ -1,10 +1,10 @@
 package utopia.reach.component.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}
+import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer, DrawLevel}
 import utopia.reflection.shape.stack.StackSize
 
 object CustomDrawReachComponent
@@ -41,7 +41,7 @@ object CustomDrawReachComponent
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
-trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
+trait CustomDrawReachComponent extends ReachComponent with CustomDrawable
 {
 	// IMPLEMENTED	--------------------------
 	
@@ -49,7 +49,7 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 	
 	override def transparent = customDrawers.forall { _.transparent }
 	
-	override def paintContent(drawer: Drawer3, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
+	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
 	{
 		val drawers = customDrawers.filter { _.drawLevel == drawLevel }
 		// Draws with custom drawers

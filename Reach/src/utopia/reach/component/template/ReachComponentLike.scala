@@ -3,7 +3,7 @@ package utopia.reach.component.template
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
@@ -62,7 +62,7 @@ trait ReachComponentLike extends Stackable2
 	  *                  foreground is drawn above child components)
 	  * @param clipZone  Limited drawing area. The drawing should be clipped / limited to that area, if specified.
 	  */
-	def paintContent(drawer: Drawer3, drawLevel: DrawLevel, clipZone: Option[Bounds] = None): Unit
+	def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds] = None): Unit
 	
 	
 	// COMPUTED	------------------------
@@ -115,7 +115,7 @@ trait ReachComponentLike extends Stackable2
 	def toImage = {
 		// Places the drawer so that after applying component position, drawer will draw to (0,0)
 		if (size.isPositive)
-			Image.paint2(size) { d => paintWith(d.translated(-position)) }
+			Image.paint(size) { d => paintWith(d.translated(-position)) }
 		else
 			Image.empty
 	}
@@ -217,7 +217,7 @@ trait ReachComponentLike extends Stackable2
 	  *                 The clip zone coordinate system matches that of the drawer (0,0) is at the top-left corner of
 	  *                 this component's parent.
 	  */
-	def paintWith(drawer: Drawer3, clipZone: Option[Bounds] = None): Unit =
+	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit =
 	{
 		// Calculates new clipping zone and drawer origin
 		val childClipZone = clipZone.map { _ - position }
@@ -258,7 +258,7 @@ trait ReachComponentLike extends Stackable2
 			// Places the drawer so that the top left corner of the region will be drawn to (0,0)
 			region.overlapWith(Bounds(Point.origin, size)) match {
 				case Some(actualRegion) =>
-					Image.paint2(actualRegion.size) { d =>
+					Image.paint(actualRegion.size) { d =>
 						paintWith(d.translated(-position - region.position), Some(region))
 					}
 				case None => Image.empty

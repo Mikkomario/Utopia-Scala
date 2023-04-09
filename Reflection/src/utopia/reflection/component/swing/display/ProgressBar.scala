@@ -4,7 +4,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.inception.handling.immutable.Handleable
@@ -171,7 +171,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) = {
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			// Determines the drawn progress
 			val drawnProgress = displayedProgress
 			

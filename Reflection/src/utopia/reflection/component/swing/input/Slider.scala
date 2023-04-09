@@ -7,7 +7,7 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.GlobalMouseEventHandler
@@ -505,7 +505,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) =
+		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			val knobRadius = ((targetKnobDiameter min bounds.height) min bounds.width) / 2.0
 			val lineStartX = bounds.leftX + knobRadius

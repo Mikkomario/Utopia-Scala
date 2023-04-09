@@ -1,10 +1,10 @@
 package utopia.genesis.handling.mutable
 
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling
-import utopia.genesis.util.{DepthRange, Drawer}
+import utopia.genesis.util.DepthRange
 import utopia.inception.handling.mutable.DeepHandler
 
-@deprecated("Replaced with a new implementation", "v3.3")
 object DrawableHandler
 {
 	/**
@@ -14,7 +14,7 @@ object DrawableHandler
 	  * @return A new handler
 	  */
 	def apply(elements: IterableOnce[handling.Drawable] = Vector(), drawDepth: Int = DepthRange.default,
-			  customizer: Option[Drawer => Drawer] = None) = new DrawableHandler(elements, drawDepth, customizer)
+	          customizer: Option[Drawer => Drawer] = None) = new DrawableHandler(elements, drawDepth, customizer)
 	
 	/**
 	  * @param element A drawable element
@@ -25,7 +25,8 @@ object DrawableHandler
 	/**
 	  * @return A new handler with all specified drawables
 	  */
-	def apply(first: handling.Drawable, second: handling.Drawable, more: handling.Drawable*): DrawableHandler = apply(Vector(first, second) ++ more)
+	def apply(first: handling.Drawable, second: handling.Drawable, more: handling.Drawable*): DrawableHandler =
+		apply(Vector(first, second) ++ more)
 }
 
 /**
@@ -34,9 +35,8 @@ object DrawableHandler
   * @param drawDepth The drawing depth of this handler
   * @param customizer A function for customizing drawers used by this handler. None means that no customizing is done
   */
-@deprecated("Replaced with a new implementation", "v3.3")
 class DrawableHandler(initialElements: IterableOnce[handling.Drawable], override val drawDepth: Int,
-					  val customizer: Option[Drawer => Drawer])
+                      customizer: Option[Drawer => Drawer])
 	extends DeepHandler[handling.Drawable](initialElements) with handling.DrawableHandler
 {
 	/**
@@ -54,23 +54,20 @@ class DrawableHandler(initialElements: IterableOnce[handling.Drawable], override
 		var lastDepth = Int.MaxValue
 		var sortDepth = false
 		
-		handle
-		{
-			drawable =>
-				drawable.draw(customDrawer getOrElse drawer)
-				if (!sortDepth)
-				{
-					if (drawable.drawDepth > lastDepth)
-						sortDepth = true
-					else
-						lastDepth = drawable.drawDepth
-				}
+		handle { drawable =>
+			drawable.draw(customDrawer getOrElse drawer)
+			if (!sortDepth) {
+				if (drawable.drawDepth > lastDepth)
+					sortDepth = true
+				else
+					lastDepth = drawable.drawDepth
+			}
 		}
 		
 		if (sortDepth)
 			sortWith { _.drawDepth > _.drawDepth }
 		
 		// Clears the customised graphics context, if applicable
-		customDrawer.foreach { _.dispose() }
+		customDrawer.foreach { _.close() }
 	}
 }

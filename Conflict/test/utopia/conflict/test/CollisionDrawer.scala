@@ -2,8 +2,8 @@ package utopia.conflict.test
 
 import utopia.conflict.collision.Collision
 import utopia.conflict.handling.{Collidable, CollisionGroup, CollisionListener}
-import utopia.genesis.graphics.{Drawer3, StrokeSettings}
-import utopia.genesis.handling.Drawable2
+import utopia.genesis.graphics.{Drawer, StrokeSettings}
+import utopia.genesis.handling.Drawable
 import utopia.genesis.util.DepthRange
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
@@ -17,7 +17,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
-class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGroup]] = None) extends Drawable2
+class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGroup]] = None) extends Drawable
     with CollisionListener with Handleable
 {
     // ATTRIBUTES    ---------------------
@@ -40,7 +40,7 @@ class CollisionDrawer(target: Collidable, listenGroups: Option[Set[CollisionGrou
     
     // IMPLEMENTED METHODS    -----------
     
-    override def draw(drawer: Drawer3) = {
+    override def draw(drawer: Drawer) = {
         collisionPoints.map { Circle(_, 2) }.foreach { drawer.draw(_)(pointDrawSettings) }
         drawer.draw(mtv)(mtvDrawSettings)
     }

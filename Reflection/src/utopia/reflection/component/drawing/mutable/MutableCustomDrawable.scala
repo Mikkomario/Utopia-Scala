@@ -1,16 +1,16 @@
 package utopia.reflection.component.drawing.mutable
 
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}
+import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer, DrawLevel}
 
 /**
   * This trait is extended by components that allow custom drawing
   * @author Mikko Hilpinen
   * @since 29.4.2019, v1+
   */
-trait MutableCustomDrawable extends CustomDrawable2
+trait MutableCustomDrawable extends CustomDrawable
 {
 	// ABSTRACT	----------------
 	
@@ -44,6 +44,6 @@ trait MutableCustomDrawable extends CustomDrawable2
 	  *               (can't be seen through). Default = false.
 	  * @param f A drawing function
 	  */
-	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer3, Bounds) => Unit): Unit =
+	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): Unit =
 		addCustomDrawer(CustomDrawer(drawLevel, opaque)(f))
 }

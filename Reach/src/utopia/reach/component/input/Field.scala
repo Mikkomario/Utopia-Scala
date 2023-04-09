@@ -27,7 +27,7 @@ import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer2}
+import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
@@ -531,7 +531,7 @@ class Field[C <: ReachComponentLike with Focusable]
 				// Only draws the name while it is not displayed elsewhere
 				val namePromptPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { (name, isSeparate) =>
 					if (isSeparate) emptyText else measureText(name) }
-				val namePromptDrawer = TextViewDrawer2(namePromptPointer, promptStylePointer)
+				val namePromptDrawer = TextViewDrawer(namePromptPointer, promptStylePointer)
 				
 				// May also display another prompt while the field has focus and is empty / starting with the prompt
 				// (not blocked by name or text)
@@ -539,7 +539,7 @@ class Field[C <: ReachComponentLike with Focusable]
 					val promptContentPointer = promptPointer.map { measureText(_, allowLineBreaks = true) }
 					val displayedPromptPointer = promptContentPointer.mergeWith(_focusPointer) { (prompt, focus) =>
 						if (focus) prompt else emptyText }
-					TextViewDrawer2(displayedPromptPointer, promptStylePointer)
+					TextViewDrawer(displayedPromptPointer, promptStylePointer)
 				}
 				
 				val wrappedField = makeField(FieldCreationContext(factories.next().parentHierarchy, FocusTracker,
@@ -563,7 +563,7 @@ class Field[C <: ReachComponentLike with Focusable]
 			val promptDrawer = promptPointer.notFixedWhere { _.isEmpty }.map { promptPointer =>
 				val promptStylePointer = textStylePointer.map { _.mapColor { _.timesAlpha(0.66) } }
 				val displayedPromptPointer = promptPointer.map { measureText(_, allowLineBreaks = true) }
-				TextViewDrawer2(displayedPromptPointer, promptStylePointer)
+				TextViewDrawer(displayedPromptPointer, promptStylePointer)
 			}
 			Open { hierarchy =>
 				val field = makeField(FieldCreationContext(hierarchy, FocusTracker, textStylePointer,

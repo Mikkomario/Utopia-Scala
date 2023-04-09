@@ -7,7 +7,7 @@ import utopia.paradigm.animation.transform.AnimatedTransform
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-trait AnimatorWithTransform[Origin, Reflection] extends Animator[Reflection]
+abstract class AnimatorWithTransform[Origin, Reflection] extends Animator[Reflection]
 {
 	// ABSTRACT	----------------------
 	

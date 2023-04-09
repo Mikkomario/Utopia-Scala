@@ -11,7 +11,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.TextViewDrawer2
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.template.display.PoolWithPointer
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
@@ -232,7 +232,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) =>
 		measure(displayFunction(content), style)
 	}
-	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer2(textPointer, stylePointer)
+	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer(textPointer, stylePointer)
 	
 	
 	// INITIAL CODE	-------------------------------------

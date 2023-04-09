@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.drawing.template.DrawLevel.Background
@@ -39,7 +39,7 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 	
 	// IMPLEMENTED	------------------------------
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) = {
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		if (bounds.size.isPositive) {
 			// Draws the background, then the border
 			val backgroundArea = drawer.clippingBounds match {

@@ -1,18 +1,14 @@
 package utopia.genesis.image
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-
-import java.awt.image.BufferedImage
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
-import utopia.genesis.graphics.Drawer3
-import utopia.genesis.util.Drawer
+import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.{Bounds, HasSize, Matrix2D, Point, Size, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.paradigm.transform.JavaAffineTransformConvertible
+
+import java.awt.image.BufferedImage
 
 /**
   * A common trait for image implementations
@@ -146,61 +142,7 @@ trait ImageLike extends HasSize
 	  * @param transformation An additional linear transformation to apply (optional)
 	  * @return Whether this image was fully drawn
 	  */
-	@deprecated("Please use the new implementation instead", "v3.3")
 	def drawWith(drawer: Drawer, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
-	{
-		source.forall { s =>
-			// Uses transformations in following order:
-			// 1) Translates so that image origin is at (0,0)
-			// 2) Performs scaling
-			// 3) Performs additional transformation
-			// 4) Positions correctly
-			val baseTransform = specifiedOrigin match
-			{
-				case Some(origin) =>
-					val originTransform = Matrix3D.translation(-origin)
-					Right(if (scaling.isIdentity) originTransform else originTransform.scaled(scaling))
-				case None => Left(if (scaling.isIdentity) None else Some(Matrix2D.scaling(scaling)))
-			}
-			val transformed = transformation match
-			{
-				case Some(t) => baseTransform.mapBoth {
-					case Some(b) => Some(b * t)
-					case None => Some(t)
-				} { _ * t }
-				case None => baseTransform
-			}
-			val finalTransform =
-			{
-				if (position.isZero)
-					transformed.mapToSingle[JavaAffineTransformConvertible] { m => m.getOrElse(Matrix2D.identity) } { m => m }
-				else
-					transformed.mapToSingle {
-						case Some(t) => t.translated(position)
-						case None => Matrix3D.translation(position)
-					} { _.translated(position) }
-			}
-			
-			// Performs the actual drawing
-			val transformedDrawer =
-			{
-				if (alpha == 1)
-					drawer.transformed(finalTransform)
-				else
-					drawer.withAlpha(alpha).transformed(finalTransform)
-			}
-			transformedDrawer.drawImage(s)
-		}
-	}
-	
-	/**
-	  * Draws this image using a specific drawer
-	  * @param drawer A drawer
-	  * @param position The position where this image's origin is drawn (default = (0, 0))
-	  * @param transformation An additional linear transformation to apply (optional)
-	  * @return Whether this image was fully drawn
-	  */
-	def drawWith2(drawer: Drawer3, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
 	{
 		source.forall { s =>
 			// Uses transformations in following order:

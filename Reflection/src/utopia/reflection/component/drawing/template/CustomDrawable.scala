@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
 
 /**
@@ -8,7 +8,7 @@ import utopia.paradigm.shape.shape2d.Bounds
   * @author Mikko Hilpinen
   * @since 29.4.2019, v1
   */
-trait CustomDrawable2
+trait CustomDrawable
 {
 	// ABSTRACT	----------------
 	
@@ -33,7 +33,7 @@ trait CustomDrawable2
 	  * @param level Target draw level
 	  * @param drawer A drawer that will do the actual drawing
 	  */
-	def customDraw(level: DrawLevel, drawer: Drawer3) = {
+	def customDraw(level: DrawLevel, drawer: Drawer) = {
 		val b = drawBounds
 		customDrawers.filter { _.drawLevel == level }.foreach { _.draw(drawer, b) }
 	}

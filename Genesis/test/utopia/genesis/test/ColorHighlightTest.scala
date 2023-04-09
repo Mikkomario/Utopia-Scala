@@ -1,10 +1,10 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
-import utopia.genesis.handling.{ActorLoop, Drawable2}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler2}
-import utopia.genesis.view.{Canvas2, CanvasMouseEventGenerator2, MainFrame}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.handling.{ActorLoop, Drawable}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
+import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, MainFrame}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
@@ -37,12 +37,12 @@ object ColorHighlightTest extends App
 		Color.blue.withSaturation(0.5), Color.blue.withSaturation(0.5).withLuminosity(0.8)
 	)
 	
-	class ColorDrawer(color: Color, pos: Dimensions[Double]) extends Drawable2
+	class ColorDrawer(color: Color, pos: Dimensions[Double]) extends Drawable
 	{
 		private implicit val drawSettings: DrawSettings = DrawSettings.onlyFill(color)
 		private val shape = Bounds(Point(unit, unit) * pos, unitSize)
 		
-		override def draw(drawer: Drawer3) = drawer.draw(shape)
+		override def draw(drawer: Drawer) = drawer.draw(shape)
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = true
 	}
@@ -52,11 +52,11 @@ object ColorHighlightTest extends App
 	// Creates the handlers
 	val gameWorldSize = Size((highlightCount * 2 + 1) * unit, unit * startColors.size)
 	
-	val drawHandler = DrawableHandler2()
+	val drawHandler = DrawableHandler()
 	val actorHandler = ActorHandler()
 	
-	val canvas = new Canvas2(drawHandler, gameWorldSize)
-	val mouseEventGen = new CanvasMouseEventGenerator2(canvas)
+	val canvas = new Canvas(drawHandler, gameWorldSize)
+	val mouseEventGen = new CanvasMouseEventGenerator(canvas)
 	
 	val handlers = HandlerRelay(drawHandler, actorHandler, mouseEventGen.buttonHandler, mouseEventGen.moveHandler,
 		mouseEventGen.wheelHandler)

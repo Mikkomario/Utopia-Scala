@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.component.context.BaseContextLike
@@ -112,9 +112,9 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) = {
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			// Draws the image with prepared settings
-			scaledImage.drawWith2(drawer, bounds.position + relativeImagePosition)
+			scaledImage.drawWith(drawer, bounds.position + relativeImagePosition)
 		}
 	}
 }

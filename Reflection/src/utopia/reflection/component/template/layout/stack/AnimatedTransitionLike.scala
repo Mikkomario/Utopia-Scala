@@ -2,7 +2,7 @@ package utopia.reflection.component.template.layout.stack
 
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
@@ -141,9 +141,9 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) = {
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			cachedImages.value
-				.foreach { _.withSize(bounds.size, preserveShape = false).drawWith2(drawer, bounds.position) }
+				.foreach { _.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position) }
 		}
 	}
 	

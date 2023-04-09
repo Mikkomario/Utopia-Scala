@@ -1,26 +1,13 @@
 package utopia.genesis.graphics
 
-import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
-import utopia.paradigm.shape.shape3d.Matrix3D
-
 /**
-  * Provides read access to graphics related settings
+  * Provides a read-only access to a graphics instance. Intended for transformation and font metric reading.
   * @author Mikko Hilpinen
-  * @since 15.5.2021, v2.5.1
+  * @since 30.1.2022, v2.6.3
   */
-@deprecated("Replaced with GraphicsContext2", "v3.2.1")
-trait GraphicsContext
-	extends LinearTransformable[GraphicsContext] with AffineTransformable[GraphicsContext]
+class GraphicsContext(protected override val graphics: LazyGraphics) extends GraphicsContextLike[GraphicsContext]
 {
-	/**
-	  * @return Transformation applied by this context
-	  */
-	def transformation: Matrix3D
+	override def self = this
 	
-	/**
-	  * Closes the currently open graphics resource from this level and below
-	  */
-	def closeCurrent(): Unit
-	
-	// TODO: Add font render context access
+	override protected def withGraphics(newGraphics: LazyGraphics) = new GraphicsContext(graphics)
 }

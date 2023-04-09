@@ -4,7 +4,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
 import utopia.inception.handling.HandlerType
@@ -198,7 +198,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) =
+		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			val x = state
 			

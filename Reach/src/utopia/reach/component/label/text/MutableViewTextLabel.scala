@@ -9,7 +9,7 @@ import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
-import utopia.reflection.component.drawing.view.TextViewDrawer2
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.template.display.RefreshableWithPointer
 import utopia.reflection.component.template.text.{MutableStyleTextComponent, TextComponent2}
 import utopia.reflection.localization.DisplayFunction
@@ -219,7 +219,7 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 		else
 			revalidateAndRepaint()
 	}
-	addCustomDrawer(TextViewDrawer2(textPointer, stylePointer))
+	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
 	
 	
 	// IMPLEMENTED	----------------------------------

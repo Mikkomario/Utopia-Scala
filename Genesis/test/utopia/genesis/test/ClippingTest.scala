@@ -2,8 +2,8 @@ package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
 import utopia.genesis.event.MouseMoveEvent
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
-import utopia.genesis.handling.{Drawable2, MouseMoveListener}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.genesis.util.{DefaultSetup, DepthRange}
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.shape.shape2d.{Circle, Point, ShapeConvertible, Size}
@@ -18,7 +18,7 @@ import java.awt.Color
  */
 object ClippingTest extends App
 {
-    class HiddenShapeDrawer(val shapes: Iterable[ShapeConvertible]) extends Drawable2 with MouseMoveListener with Handleable
+    class HiddenShapeDrawer(val shapes: Iterable[ShapeConvertible]) extends Drawable with MouseMoveListener with Handleable
     {
         private val bgDs = DrawSettings.onlyFill(Color.white)
         private val dotDs = DrawSettings.onlyFill(Color.red)
@@ -28,7 +28,7 @@ object ClippingTest extends App
         private val clipRadius = 64
         private var clip = Circle(Point.origin, clipRadius).toPolygon(8)
         
-        def draw(drawer: Drawer3) = {
+        def draw(drawer: Drawer) = {
             drawer.draw(clip)(bgDs)
             val clipped = drawer.withClip(clip)
             shapes.foreach { clipped.draw(_)(dotDs) }

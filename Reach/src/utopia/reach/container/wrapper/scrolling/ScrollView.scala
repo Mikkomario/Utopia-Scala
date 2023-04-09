@@ -1,7 +1,7 @@
 package utopia.reach.container.wrapper.scrolling
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
@@ -227,7 +227,7 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	// IMPLEMENTED	----------------------------
 	
 	// WET WET (from ScrollArea)
-	override def paintWith(drawer: Drawer3, clipZone: Option[Bounds]) = clipZone match {
+	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
 		case Some(clip) =>
 			clip.overlapWith(bounds).foreach { c => super.paintWith(drawer.clippedToBounds(c), Some(c)) }
 		case None => super.paintWith(drawer.clippedToBounds(bounds), Some(bounds))

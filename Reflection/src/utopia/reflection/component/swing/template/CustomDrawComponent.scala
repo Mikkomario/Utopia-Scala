@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.template
 
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
@@ -30,7 +30,7 @@ trait CustomDrawComponent extends MutableCustomDrawable
 	  */
 	def customPaintComponent(g: Graphics, superPaintComponent: Graphics => Unit) = {
 		val graphics = g.asInstanceOf[Graphics2D]
-		Drawer3(graphics).use { drawer =>
+		Drawer(graphics).use { drawer =>
 			customDraw(Background, drawer)
 			superPaintComponent(graphics)
 			customDraw(Normal, drawer)
@@ -44,7 +44,7 @@ trait CustomDrawComponent extends MutableCustomDrawable
 	  */
 	def customPaintChildren(g: Graphics, superPaintChildren: Graphics => Unit) = {
 		superPaintChildren(g)
-		Drawer3(g.asInstanceOf[Graphics2D]).use { customDraw(Foreground, _) }
+		Drawer(g.asInstanceOf[Graphics2D]).use { customDraw(Foreground, _) }
 	}
 	
 	/**

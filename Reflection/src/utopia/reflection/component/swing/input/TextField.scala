@@ -16,7 +16,7 @@ import utopia.reflection.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.TextDrawerLike2
+import utopia.reflection.component.drawing.template.TextDrawerLike
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.input.InputWithPointer
@@ -495,7 +495,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 		}
 	}
 	
-	private class PromptDrawer extends TextDrawerLike2
+	private class PromptDrawer extends TextDrawerLike
 	{
 		// ATTRIBUTES	------------------------
 		

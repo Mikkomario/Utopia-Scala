@@ -1,6 +1,6 @@
 package utopia.reach.util
 
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.util.Priority.Normal
 import utopia.reflection.color.ColorShadeVariant
@@ -18,7 +18,7 @@ trait PaintManager
 	  * Paints the managed region using the specified drawer
 	  * @param drawer A drawer to use
 	  */
-	def paintWith(drawer: Drawer3): Unit
+	def paintWith(drawer: Drawer): Unit
 	
 	/**
 	  * Paints (a portion of) the managed region. Doesn't require and a buffer or state update, unless that's necessary

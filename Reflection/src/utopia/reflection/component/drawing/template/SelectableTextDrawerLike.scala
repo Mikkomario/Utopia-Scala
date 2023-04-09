@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.flow.view.mutable.Pointer
-import utopia.genesis.graphics.{DrawSettings, Drawer3, MeasuredText}
+import utopia.genesis.graphics.{DrawSettings, Drawer, MeasuredText}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.paradigm.transform.AffineTransformation
@@ -98,7 +98,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) =
+	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		val (normalDrawTargets, highlightedTargets) = drawTargets
 		if (normalDrawTargets.exists { _._1.nonEmpty } || highlightedTargets.nonEmpty) {

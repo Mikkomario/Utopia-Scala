@@ -7,7 +7,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.view.TextViewDrawer2
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.template.text.SingleLineTextComponent
 import utopia.reflection.localization.LocalizedString
@@ -96,7 +96,7 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	
 	// INITIAL CODE	------------------
 	
-	addCustomDrawer(TextViewDrawer2(measuredTextPointer, stylePointer))
+	addCustomDrawer(TextViewDrawer(measuredTextPointer, stylePointer))
 	component.setFont(initialFont.toAwt)
 	// Whenever context or text changes, revalidates this component
 	textPointer.addContinuousAnyChangeListener { revalidate() }

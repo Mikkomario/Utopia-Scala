@@ -1,8 +1,8 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.graphics.Drawer3
-import utopia.genesis.handling.Drawable2
+import utopia.genesis.graphics.Drawer
+import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
 import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
@@ -56,11 +56,11 @@ object ImageTest extends App
 	setup.start()
 }
 
-private class ImageDrawer(val image: Image, position: Point) extends Drawable2 with Handleable
+private class ImageDrawer(val image: Image, position: Point) extends Drawable with Handleable
 {
-	override def draw(drawer: Drawer3) =
+	override def draw(drawer: Drawer) =
 	{
-		image.drawWith2(drawer, position/*, Some(Matrix2D.quarterRotationCounterClockwise)*/)
+		image.drawWith(drawer, position/*, Some(Matrix2D.quarterRotationCounterClockwise)*/)
 		// drawer.onlyFill(Color.red).draw(Circle(position, 3))
 	}
 }

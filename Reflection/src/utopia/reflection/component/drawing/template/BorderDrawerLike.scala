@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Size, Vector2D}
 import utopia.reflection.shape.Border
@@ -26,7 +26,7 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) = {
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		// Draws the border (recursively)
 		drawBorder(drawer, bounds, border)
 	}
@@ -34,7 +34,7 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	// OTHER	----------------------
 	
-	private def drawBorder(drawer: Drawer3, bounds: Bounds, border: Border): Unit = {
+	private def drawBorder(drawer: Drawer, bounds: Bounds, border: Border): Unit = {
 		val roundedBounds = bounds.floor
 		
 		if (roundedBounds.width > 0 && roundedBounds.height > 0) {

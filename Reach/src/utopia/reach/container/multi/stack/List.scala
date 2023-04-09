@@ -8,7 +8,7 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
@@ -240,7 +240,7 @@ private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
 	
 	override def drawLevel = Normal
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) =
+	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		def draw(highlightLevel: Double, area: Bounds) =
 			drawer.draw(area)(DrawSettings.onlyFill(backgroundPointer.value.highlightedBy(highlightLevel)))

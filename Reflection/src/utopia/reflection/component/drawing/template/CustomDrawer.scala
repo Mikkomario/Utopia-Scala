@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 
@@ -14,13 +14,13 @@ object CustomDrawer
 	  * @param f A function
 	  * @return A new custom drawer that calls that function
 	  */
-	def apply(level: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer3, Bounds) => Unit): CustomDrawer =
+	def apply(level: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): CustomDrawer =
 		new FunctionalCustomDrawer(level, opaque)(f)
 	
 	private class FunctionalCustomDrawer(override val drawLevel: DrawLevel, override val opaque: Boolean)
-	                                    (f: (Drawer3, Bounds) => Unit) extends CustomDrawer
+	                                    (f: (Drawer, Bounds) => Unit) extends CustomDrawer
 	{
-		override def draw(drawer: Drawer3, bounds: Bounds) = f(drawer, bounds)
+		override def draw(drawer: Drawer, bounds: Bounds) = f(drawer, bounds)
 	}
 }
 
@@ -49,7 +49,7 @@ trait CustomDrawer
 	  * @param drawer A drawer used for the drawing (origin located at parent component origin)
 	  * @param bounds Draw area bounds
 	  */
-	def draw(drawer: Drawer3, bounds: Bounds): Unit
+	def draw(drawer: Drawer, bounds: Bounds): Unit
 	
 	
 	// COMPUTED ------------------------

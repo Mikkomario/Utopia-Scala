@@ -3,8 +3,8 @@ package utopia.genesis.test
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.test.TestContext._
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.{Actor, Drawable2}
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.{Actor, Drawable}
 import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
@@ -63,7 +63,7 @@ object BezierPathTest extends App
 	setup.start()
 }
 
-private class MovingObject(val path: Path[Point], val color: Color) extends Drawable2 with Actor with Handleable
+private class MovingObject(val path: Path[Point], val color: Color) extends Drawable with Actor with Handleable
 {
 	// ATTRIBUTES	-----------------
 	
@@ -73,7 +73,7 @@ private class MovingObject(val path: Path[Point], val color: Color) extends Draw
 	private var position = path.start
 	private var t = 0.0
 	
-	override def draw(drawer: Drawer3) = drawer.draw(Circle(position, 16))
+	override def draw(drawer: Drawer) = drawer.draw(Circle(position, 16))
 	
 	override def act(duration: FiniteDuration) = {
 		t = (t + duration.toPreciseSeconds / 5) % 1
@@ -81,7 +81,7 @@ private class MovingObject(val path: Path[Point], val color: Color) extends Draw
 	}
 }
 
-private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawable2 with Handleable
+private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawable with Handleable
 {
 	// ATTRIBUTES	-------------------
 	
@@ -93,7 +93,7 @@ private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawa
 	
 	// IMPLEMENTED	-------------------
 	
-	override def draw(drawer: Drawer3) = {
+	override def draw(drawer: Drawer) = {
 		// Draws the points first
 		points.foreach { p => drawer.draw(Circle(p, 4))(pointDs) }
 		// Then draws the path
@@ -101,16 +101,16 @@ private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawa
 	}
 }
 
-private class PointDrawer(val p: Point, val color: Color) extends Drawable2 with Handleable
+private class PointDrawer(val p: Point, val color: Color) extends Drawable with Handleable
 {
 	implicit val ds: DrawSettings = StrokeSettings(color)
 	
-	override def draw(drawer: Drawer3) = drawer.draw(Circle(p, 4))
+	override def draw(drawer: Drawer) = drawer.draw(Circle(p, 4))
 }
 
-private class CircleDrawer(val circle: Circle, val color: Color) extends Drawable2 with Handleable
+private class CircleDrawer(val circle: Circle, val color: Color) extends Drawable with Handleable
 {
 	implicit val ds: DrawSettings = StrokeSettings(color)
 	
-	override def draw(drawer: Drawer3) = drawer.draw(circle)
+	override def draw(drawer: Drawer) = drawer.draw(circle)
 }

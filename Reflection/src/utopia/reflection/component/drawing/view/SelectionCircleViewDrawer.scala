@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.view.immutable.View
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Circle}
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -23,7 +23,7 @@ case class SelectionCircleViewDrawer(hoverColor: Color, selectedColor: Color, se
 	
 	override def drawLevel = Background
 	
-	override def draw(drawer: Drawer3, bounds: Bounds) = {
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		// Only draws circle on hover or selection
 		val selectionStatus = selectionPointer.value
 		val state = statePointer.value

@@ -5,7 +5,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike2}
+import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike}
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
@@ -14,9 +14,9 @@ import utopia.reflection.text.Font
   * @author Mikko Hilpinen
   * @since 7.4.2023, v2.0
   */
-class MutableTextDrawer2(initialText: MeasuredText, initialContext: TextDrawContext,
-                         initialDrawLevel: DrawLevel = Normal)
-	extends TextDrawerLike2
+class MutableTextDrawer(initialText: MeasuredText, initialContext: TextDrawContext,
+                        initialDrawLevel: DrawLevel = Normal)
+	extends TextDrawerLike
 {
 	// ATTRIBUTES   ----------------------
 	

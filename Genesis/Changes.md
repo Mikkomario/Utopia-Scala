@@ -1,6 +1,11 @@
 # Utopia Genesis - List of Changes
 
-## v3.2.1 (in development)
+## v3.3 (in development)
+### Breaking Changes
+- Rewrote **Drawer**
+  - This change will require a lot of refactoring
+- **MutableTransformable** now uses **AffineTransformation** instead of **Transformation**
+- **Animator** is now an abstract class
 ### New Features
 - Added mouse drag -tracking. See **MouseDragListener** and **GlobalMouseEventHandler**
 ### New Methods

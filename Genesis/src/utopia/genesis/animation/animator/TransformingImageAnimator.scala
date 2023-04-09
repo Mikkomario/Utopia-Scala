@@ -1,8 +1,8 @@
 package utopia.genesis.animation.animator
 
-import utopia.genesis.graphics.Drawer3
-import utopia.genesis.image.Image
 import utopia.paradigm.animation.{Animation, TimedAnimation}
+import utopia.genesis.graphics.Drawer
+import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape3d.Matrix3D
 
 object TransformingImageAnimator
@@ -11,7 +11,7 @@ object TransformingImageAnimator
 	
 	/**
 	  * Creates a new animator that is based on a static image
-	  * @param image          A static image
+	  * @param image A static image
 	  * @param transformation Transformation animation applied
 	  * @return A new animator
 	  */
@@ -20,7 +20,7 @@ object TransformingImageAnimator
 	
 	/**
 	  * Creates a new animator that is based on a strip. The strip is completed in the same time as the transformation.
-	  * @param strip          A strip
+	  * @param strip A strip
 	  * @param transformation Transformation animation applied
 	  * @return A new animator
 	  */
@@ -50,7 +50,7 @@ object TransformingImageAnimator
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-trait TransformingImageAnimator extends Animator[(Image, Matrix3D)]
+abstract class TransformingImageAnimator extends Animator[(Image, Matrix3D)]
 {
 	// ABSTRACT	---------------------------
 	
@@ -72,5 +72,6 @@ trait TransformingImageAnimator extends Animator[(Image, Matrix3D)]
 	override protected def apply(progress: Double) =
 		image(progress) -> transformationAnimation(progress)
 	
-	override protected def draw(drawer: Drawer3, item: (Image, Matrix3D)) = item._1.drawWith2(drawer * item._2)
+	override protected def draw(drawer: Drawer, item: (Image, Matrix3D)) =
+		item._1.drawWith(drawer * item._2)
 }

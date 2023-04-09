@@ -11,9 +11,9 @@ import utopia.genesis.graphics.MeasuredText
   * @author Mikko Hilpinen
   * @since 17.10.2020, v2
   */
-case class TextViewDrawer2(textPointer: View[MeasuredText], stylePointer: View[TextDrawContext],
-                           override val drawLevel: DrawLevel = Normal)
-	extends utopia.reflection.component.drawing.template.TextDrawerLike2
+case class TextViewDrawer(textPointer: View[MeasuredText], stylePointer: View[TextDrawContext],
+                          override val drawLevel: DrawLevel = Normal)
+	extends utopia.reflection.component.drawing.template.TextDrawerLike
 {
 	// IMPLEMENTED	----------------------------
 	

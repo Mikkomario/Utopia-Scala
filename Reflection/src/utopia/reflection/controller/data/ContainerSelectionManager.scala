@@ -4,7 +4,7 @@ import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.inception.handling.immutable.Handleable
@@ -204,7 +204,7 @@ class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 		
 		override def opaque = false
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) =
+		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Draws the selected area using another custom drawer
 			selectedDisplay.flatMap(container.areaOf).foreach { area => selectionAreaDrawer.draw(drawer,

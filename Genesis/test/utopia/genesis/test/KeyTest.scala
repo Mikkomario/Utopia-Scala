@@ -2,8 +2,8 @@ package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.{Drawable2, KeyStateListener, KeyTypedListener}
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.{Drawable, KeyStateListener, KeyTypedListener}
 import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis._
@@ -48,7 +48,7 @@ object KeyTest extends App
     }
     
     private class View(private val testObj: TestObject, private val gameWorldSize: Size,
-			   private val squareSide: Int) extends Drawable2 with Handleable
+			   private val squareSide: Int) extends Drawable with Handleable
     {
         // ATTRIBUTES    -----------------
         
@@ -62,7 +62,7 @@ object KeyTest extends App
         private val squareSize = Size(squareSide, squareSide)
         private val avatarSize = squareSize * 0.8
         
-        def draw(drawer: Drawer3) =
+        def draw(drawer: Drawer) =
         {
             // Draws the grid first
             for (x <- 0 to gridSquares.width.toInt) {

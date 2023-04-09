@@ -1,11 +1,11 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.{ActorLoop, Drawable2}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler2}
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
+import utopia.genesis.handling.{ActorLoop, Drawable}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.genesis.image.Image
-import utopia.genesis.view.{Canvas2, CanvasMouseEventGenerator2, MainFrame}
+import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, MainFrame}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
@@ -23,16 +23,16 @@ object DrawImageTest extends App
 	// TEST ----------------------------
 	
 	implicit val ds: DrawSettings = DrawSettings.onlyFill(Color.green)
-	val ds2 = DrawSettings(Color.yellow, StrokeSettings(Color.red, 3))
+	val ds2 = DrawSettings(Color.yellow)(StrokeSettings(Color.red, 3))
 	
 	// Creates the handlers
 	val gameWorldSize = Size(800, 800)
 	
-	val drawHandler = DrawableHandler2()
+	val drawHandler = DrawableHandler()
 	val actorHandler = ActorHandler()
 	
-	val canvas = new Canvas2(drawHandler, gameWorldSize)
-	val mouseEventGen = new CanvasMouseEventGenerator2(canvas)
+	val canvas = new Canvas(drawHandler, gameWorldSize)
+	val mouseEventGen = new CanvasMouseEventGenerator(canvas)
 	
 	val handlers = HandlerRelay(drawHandler, actorHandler, mouseEventGen.buttonHandler, mouseEventGen.moveHandler,
 		mouseEventGen.wheelHandler)
@@ -67,19 +67,19 @@ object DrawImageTest extends App
 	
 	// NESTED   -------------------------
 	
-	class ImageDrawer(topLeft: Point, f: Drawer3 => Unit, overlay: Option[Drawer3 => Unit] = None) extends Drawable2
+	class ImageDrawer(topLeft: Point, f: Drawer => Unit, overlay: Option[Drawer => Unit] = None) extends Drawable
 	{
 		val image = {
-			val base = Image.paint2(Size(400, 400))(f)
+			val base = Image.paint(Size(400, 400))(f)
 			overlay match {
-				case Some(f) => base.paintedOver2(f)
+				case Some(f) => base.paintedOver(f)
 				case None => base
 			}
 		}
 		
-		override def draw(drawer: Drawer3): Unit = {
+		override def draw(drawer: Drawer): Unit = {
 			drawer.translated(topLeft).use { drawer =>
-				image.drawWith2(drawer, Point(400, 0))
+				image.drawWith(drawer, Point(400, 0))
 				f(drawer)
 			}
 		}

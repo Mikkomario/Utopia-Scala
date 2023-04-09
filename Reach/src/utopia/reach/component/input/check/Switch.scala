@@ -4,7 +4,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.graphics.{DrawSettings, Drawer3}
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -208,7 +208,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer3, bounds: Bounds) = {
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			if (bounds.size.isPositive) {
 				val actualDrawer = if (enabled) drawer else drawer.withAlpha(0.66)
 				

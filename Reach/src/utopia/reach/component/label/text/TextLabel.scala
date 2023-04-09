@@ -7,7 +7,7 @@ import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer2}
+import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.LocalizedString
@@ -138,7 +138,7 @@ class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: Loca
 	
 	override val measuredText = measure(text)
 	override val customDrawers = additionalDrawers.toVector :+
-		TextDrawer2(measuredText, drawContext.font, drawContext.insets, drawContext.color, drawContext.alignment)
+		TextDrawer(measuredText, drawContext.font, drawContext.insets, drawContext.color, drawContext.alignment)
 	
 	
 	// IMPLEMENTED	-----------------------------

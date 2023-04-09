@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event._
-import utopia.genesis.graphics.Drawer3
+import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.view.GlobalMouseEventHandler
@@ -325,7 +325,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		scroll(Vector3D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer3) = Axis2D.values.foreach { axis =>
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach { axis =>
 		if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
 			barBounds.get(axis).foreach { barDrawer.draw(drawer, _, axis) }
 	}
