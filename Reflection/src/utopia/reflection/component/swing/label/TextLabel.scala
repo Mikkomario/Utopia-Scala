@@ -70,11 +70,11 @@ object TextLabel
   * @param initialTextColor Color used in this label's text
   * @param initialInsets The insets placed around the text initially (default = 0 on each side)
   * @param initialAlignment Alignment used for positioning the text within this label
-  * @param allowTextShrink Whether this text label always presents the whole text (default = true)
+  * @param hasMinWidth Whether this text label always presents the whole text (default = true)
   */
 class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColor: Color = Color.textBlack,
 				initialInsets: StackInsets = StackInsets.any, initialAlignment: Alignment = Alignment.Left,
-				override val allowTextShrink: Boolean = true)
+				hasMinWidth: Boolean = true)
 	extends Label with MutableTextComponent with CachingReflectionStackable with StackLeaf
 {
 	// ATTRIBUTES	------------------
@@ -117,11 +117,13 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * @return The current drawing context used
 	  */
-	def drawContext = stylePointer.value
-	def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
+	def textDrawContext = stylePointer.value
+	def textDrawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	
 	// IMPLEMENTED	------------------
+	
+	override def allowTextShrink: Boolean = !hasMinWidth
 	
 	override def measuredText: MeasuredText = measuredTextPointer.value
 	

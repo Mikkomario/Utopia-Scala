@@ -12,7 +12,7 @@ import utopia.genesis.graphics.MeasuredText
   * @author Mikko Hilpinen
   * @since 10.12.2019, v1
   */
-trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
+trait TextComponent2 extends ComponentLike2 with HasTextDrawContext with StackSizeCalculating
 {
 	// ABSTRACT	--------------------------
 	
@@ -20,11 +20,6 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  * @return The text currently presented in this component
 	  */
 	def measuredText: MeasuredText
-	
-	/**
-	  * @return Context for drawing the text within this component
-	  */
-	def drawContext: TextDrawContext
 	
 	/**
 	  * @return Whether this component allows its text to shrink below the standard (desired / specified) size.
@@ -36,29 +31,9 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	// COMPUTED	--------------------------
 	
 	/**
-	  * @return The insets around the text in this component
-	  */
-	def insets = drawContext.insets
-	
-	/**
-	  * @return This component's text alignment
-	  */
-	def alignment = drawContext.alignment
-	
-	/**
-	  * @return The font used in this component
-	  */
-	def font = drawContext.font
-	
-	/**
 	  * @return Font metrics used in this component (with the current font)
 	  */
 	def fontMetrics = fontMetricsWith(font)
-	
-	/**
-	  * @return The color of the text in this component
-	  */
-	def textColor = drawContext.color
 	
 	
 	// IMPLEMENTED	-----------------------
@@ -76,7 +51,7 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  * @param style Style to use when measuring text (default = current component style)
 	  * @return A measured copy of that text within this component
 	  */
-	def measure(text: LocalizedString, style: TextDrawContext = drawContext) = {
+	def measure(text: LocalizedString, style: TextDrawContext = textDrawContext) = {
 		MeasuredText(text.string, fontMetricsWith(style.font),
 			betweenLinesAdjustment = style.betweenLinesMargin, allowLineBreaks = style.allowLineBreaks)
 	}
@@ -87,7 +62,7 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  */
 	def calculatedStackSizeWith(text: MeasuredText) = {
 		// Adds margins to base text size.
-		val insets = this.insets
+		val insets = this.textInsets
 		val textSize = text.size
 		
 		if (allowTextShrink)

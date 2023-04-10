@@ -5,6 +5,7 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
@@ -109,17 +110,15 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 				None
 		}
 		addHierarchyListener { isLinked =>
-			if (isLinked)
-			{
-				triggerKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
-				hotKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
+			if (isLinked) {
+				triggerKeyListener.foreach { GlobalKeyboardEventHandler += _ }
+				hotKeyListener.foreach { GlobalKeyboardEventHandler += _ }
 				enableFocusHandling()
 				parentCanvas.cursorManager.foreach { _ += this }
 			}
-			else
-			{
-				triggerKeyListener.foreach(parentHierarchy.top.removeListener)
-				hotKeyListener.foreach(parentHierarchy.top.removeListener)
+			else {
+				triggerKeyListener.foreach { GlobalKeyboardEventHandler -= _ }
+				hotKeyListener.foreach { GlobalKeyboardEventHandler -= _ }
 				disableFocusHandling()
 				parentCanvas.cursorManager.foreach { _ -= this }
 			}

@@ -138,8 +138,8 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	override def text = textPointer.value
 	override def text_=(newText: LocalizedString) = textPointer.value = newText
 	
-	override def drawContext = stylePointer.value
-	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
+	override def textDrawContext = stylePointer.value
+	override def textDrawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	override def updateLayout() = ()
 }

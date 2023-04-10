@@ -1,19 +1,17 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.async.process.LoopingProcess
-
-import java.awt.event.KeyEvent
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
-import utopia.paradigm.color.Color
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
-import utopia.paradigm.enumeration.Axis._
+import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.paradigm.angular.Rotation
-import utopia.genesis.view.GlobalMouseEventHandler
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
@@ -26,11 +24,13 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.stack.{StackInsets, StackLengthLimit}
+import utopia.reflection.shape.stack.StackInsets
+import utopia.reflection.shape.stack.modifier.MaxOptimalLengthModifier
+import utopia.reflection.test.TestContext._
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.test.TestContext._
 
+import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
@@ -74,12 +74,13 @@ object ScrollViewTest extends App
 	contentManager.enableMouseHandling(false)
 	private val contentUpdateLoop = new ContentUpdateLoop(contentManager)
 	
-	stack.addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_RIGHT) { _ => contentManager.updateSingle(2) })
+	GlobalKeyboardEventHandler += KeyStateListener.onKeyPressed(KeyEvent.VK_RIGHT) { _ => contentManager.updateSingle(2) }
 	
 	// Creates the scroll view
 	val barDrawer = BoxScrollBarDrawer(Color.black.withAlpha(0.55), Color.red)
-	val scrollView = new ScrollView(stack, Y, actorHandler, barDrawer,
-		lengthLimit = StackLengthLimit(min = 128, maxOptimal =  Some(480)))
+	val scrollView = new ScrollView(stack, Y, actorHandler, barDrawer)
+	scrollView.addHeightConstraint(l => l.copy(newMin = 128))
+	scrollView.addHeightConstraint(MaxOptimalLengthModifier(480))
 	
 	// Creates the frame and displays it
 	val actionLoop = new ActorLoop(actorHandler)

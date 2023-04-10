@@ -35,4 +35,6 @@ trait SingleStackContainer[C <: ReflectionStackable] extends SingleContainer2[C]
 			revalidate()
 		}
 	}
+	
+	override def children = components
 }

@@ -5,6 +5,7 @@ import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{ActorLoop, Drawable}
 import utopia.genesis.util.Fps
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
@@ -50,7 +51,7 @@ object ScrollCanvasTest extends App
 	
 	// Adds mouse wheel handling (zoom)
 	private val zoomer = new Zoomer(canvas)
-	canvas.addKeyStateListener(zoomer)
+	GlobalKeyboardEventHandler += zoomer
 	mouseWheelHandler += zoomer
 	
 	// Creates the frame and displays it

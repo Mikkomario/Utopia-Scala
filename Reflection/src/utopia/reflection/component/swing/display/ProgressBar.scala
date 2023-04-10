@@ -19,7 +19,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
-import utopia.reflection.component.template.layout.stack.StackableWrapper
+import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 
@@ -52,7 +52,7 @@ object ProgressBar
 class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
                   progressPointer: Changing[Double],
                   animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
-	extends StackableWrapper with MutableCustomDrawableWrapper with SwingComponentRelated
+	extends ReflectionStackableWrapper with MutableCustomDrawableWrapper with SwingComponentRelated
 {
 	// ATTRIBUTES	---------------------
 	

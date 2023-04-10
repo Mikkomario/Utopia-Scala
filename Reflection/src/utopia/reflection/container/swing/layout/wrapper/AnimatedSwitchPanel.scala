@@ -48,16 +48,11 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 {
 	// ATTRIBUTES	---------------------
 	
-	private val panel = new SwitchPanel[AwtStackable]()
-	
 	private var currentContent = initialContent
 	private var targetContent = initialContent
+	
+	private val panel = new SwitchPanel[AwtStackable](currentContent)
 	private val currentTransition = Volatile(Future.successful(currentContent))
-	
-	
-	// INITIAL CODE	---------------------
-	
-	panel.set(currentContent)
 	
 	
 	// COMPUTED	-------------------------

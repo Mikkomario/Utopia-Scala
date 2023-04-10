@@ -21,7 +21,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.input.InteractionWithPointer
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
@@ -61,7 +61,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 			 initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[Boolean]
-		with Stackable
+		with ReflectionStackable
 {
 	// ATTRIBUTES	-----------------
 	
@@ -143,7 +143,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			{
 				actorHandler -= SwitchDrawer2
 				valuePointer.removeListener(StatusChangeListener)
-				removeListener(ClickHandler)
+				removeMouseListener(ClickHandler)
 			}
 			fireStackHierarchyChangeEvent(newAttachmentStatus)
 		}

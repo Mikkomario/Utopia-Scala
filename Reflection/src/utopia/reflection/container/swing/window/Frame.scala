@@ -5,7 +5,7 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtComponentWrapperWrapper}
-import utopia.reflection.component.template.layout.stack.{StackLeaf, Stackable}
+import utopia.reflection.component.template.layout.stack.{ReflectionStackable, StackLeaf}
 import utopia.reflection.container.swing.window.WindowResizePolicy.{Program, User}
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.localization.LocalizedString
@@ -44,7 +44,7 @@ object Frame
       * @param borderless Whether borderless windowed mode should be used (default = false)
       * @return A new windowed frame
       */
-    def windowed[C <: Stackable with AwtContainerRelated](content: C, title: LocalizedString  = LocalizedString.empty,
+    def windowed[C <: ReflectionStackable with AwtContainerRelated](content: C, title: LocalizedString  = LocalizedString.empty,
                                                           resizePolicy: WindowResizePolicy = WindowResizePolicy.User,
                                                           screenBorderMargin: Double = 0.0,
                                                           icon: Image = ComponentCreationDefaults.windowIcon,
@@ -61,7 +61,7 @@ object Frame
       * @param showToolBar Whether tool bar (bottom) should be displayed (default = true)
       * @return A new full screen frame
       */
-    def fullScreen[C <: Stackable with AwtContainerRelated](content: C, title: LocalizedString  = LocalizedString.empty,
+    def fullScreen[C <: ReflectionStackable with AwtContainerRelated](content: C, title: LocalizedString  = LocalizedString.empty,
                                                             icon: Image = ComponentCreationDefaults.windowIcon,
                                                             showToolBar: Boolean = true) =
         new Frame(content, title, WindowResizePolicy.Program, icon = icon, getAnchor = _.topLeft, borderless = true,
@@ -72,13 +72,13 @@ object Frame
      * @param title Title for the frame (default = empty)
      * @return A new frame
      */
-    def invisible(title: LocalizedString = LocalizedString.empty): Frame[Stackable with AwtContainerRelated] =
+    def invisible(title: LocalizedString = LocalizedString.empty): Frame[ReflectionStackable with AwtContainerRelated] =
         new Frame(new ZeroSizePanel, title, Program, borderless = true)
     
     
     // NESTED   --------------------------------
     
-    private class ZeroSizePanel extends AwtComponentWrapperWrapper with Stackable with StackLeaf with AwtContainerRelated
+    private class ZeroSizePanel extends AwtComponentWrapperWrapper with ReflectionStackable with StackLeaf with AwtContainerRelated
     {
         // ATTRIBUTES   ------------------------
         
@@ -106,15 +106,15 @@ object Frame
 * @author Mikko Hilpinen
 * @since 26.3.2019
 **/
-class Frame[C <: Stackable with AwtContainerRelated](override val content: C,
-                                                     override val title: LocalizedString = LocalizedString.empty,
-                                                     startResizePolicy: WindowResizePolicy = User,
-                                                     override val screenBorderMargin: Double = 0.0,
-                                                     icon: Image = ComponentCreationDefaults.windowIcon,
-                                                     getAnchor: Bounds => Point = _.center,
-                                                     val borderless: Boolean = false,
-                                                     startFullScreen: Boolean = false,
-                                                     startWithToolBar: Boolean = true)
+class Frame[C <: ReflectionStackable with AwtContainerRelated](override val content: C,
+                                                               override val title: LocalizedString = LocalizedString.empty,
+                                                               startResizePolicy: WindowResizePolicy = User,
+                                                               override val screenBorderMargin: Double = 0.0,
+                                                               icon: Image = ComponentCreationDefaults.windowIcon,
+                                                               getAnchor: Bounds => Point = _.center,
+                                                               val borderless: Boolean = false,
+                                                               startFullScreen: Boolean = false,
+                                                               startWithToolBar: Boolean = true)
     extends Window[C]
 {
     // ATTRIBUTES    -------------------
@@ -156,7 +156,7 @@ class Frame[C <: Stackable with AwtContainerRelated](override val content: C,
             updateWindowBounds(true)
         }
     }
-     
+    
     def showsToolBar: Boolean = _showsToolBar
     def showsToolBar_=(newStatus: Boolean) = {
         if (_showsToolBar != newStatus) {

@@ -14,4 +14,6 @@ trait ReflectionScrollAreaLike[C <: ReflectionStackable]
 	// IMPLEMENTED	----------------
 	
 	override def components = Vector(content)
+	
+	override def children = components
 }

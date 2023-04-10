@@ -64,7 +64,7 @@ class Framing[C <: ReflectionStackable with AwtComponentRelated](initialComponen
 	
 	// INITIAL CODE	--------------------
 	
-	set(initialComponent)
+	panel += initialComponent
 	// Each time Framing size changes, changes content size too
 	addResizeListener(updateLayout())
 	

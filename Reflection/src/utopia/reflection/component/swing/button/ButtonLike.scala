@@ -1,14 +1,16 @@
 package utopia.reflection.component.swing.button
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-
-import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.{ComponentLike, Focusable}
+import utopia.reflection.component.template.Focusable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.ButtonState
+
+import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 
 object ButtonLike
 {
@@ -20,7 +22,7 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 25.4.2019, v1+
   */
-trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
+trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focusable
 {
 	import ButtonLike._
 	
@@ -112,9 +114,18 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 		addMouseButtonListener(ButtonMouseListener)
 		
 		// Adds key listening
-		addKeyStateListener(ButtonKeyListener)
-		if (hotKeys.nonEmpty || hotKeyChars.nonEmpty)
-			addKeyStateListener(new HotKeyListener(hotKeys, hotKeyChars))
+		lazy val hotKeyListener = new HotKeyListener(hotKeys, hotKeyChars)
+		addStackHierarchyChangeListener(attached => {
+			if (attached) {
+				GlobalKeyboardEventHandler += ButtonKeyListener
+				if (hotKeys.nonEmpty || hotKeyChars.nonEmpty)
+					GlobalKeyboardEventHandler += hotKeyListener
+			}
+			else {
+				GlobalKeyboardEventHandler -= ButtonKeyListener
+				GlobalKeyboardEventHandler -= hotKeyListener
+			}
+		}, callIfAttached = true)
 		
 		// Adds focus listening
 		component.addFocusListener(new ButtonFocusListener())

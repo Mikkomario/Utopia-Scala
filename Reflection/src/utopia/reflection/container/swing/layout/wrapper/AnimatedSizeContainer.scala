@@ -30,11 +30,7 @@ object AnimatedSizeContainer
 	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler,
 								 transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 								 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
-	{
-		val container = new AnimatedSizeContainer[C](actorHandler, transitionDuration, maxRefreshRate)
-		container.set(component)
-		container
-	}
+		new AnimatedSizeContainer[C](actorHandler, component, transitionDuration, maxRefreshRate)
 	
 	/**
 	  * Creates a new animated size container with contextual information
@@ -53,12 +49,14 @@ object AnimatedSizeContainer
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
+class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initialContent: C,
 											   transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 											   maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 	extends SingleStackContainer[C] with AwtComponentWrapperWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	--------------------
+	
+	private var _content = initialContent
 	
 	private val panel = new Panel[C]
 	private val curve = ProjectilePath()
@@ -73,6 +71,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
 	
 	// INITIAL CODE	--------------------
 	
+	panel += initialContent
 	addResizeListener { _ => updateLayout() }
 	
 	
@@ -97,14 +96,14 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
 	
 	override def component = panel.component
 	
-	override def children = super[SingleStackContainer].children
+	override def children = components
 	
 	override protected def wrapped = panel
 	
 	override def updateLayout() =
 	{
 		// Content is set to fill this container
-		content.foreach { c => c.size = size }
+		content.size = size
 		// panel.repaint()
 	}
 	
@@ -116,7 +115,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
 			val progress = curve(timePassed / transitionDuration)
 			targetSize * progress + startSize * (1 - progress)
 		}
-		else if (isEmpty)
+		else if (components.isEmpty)
 			StackSize.any
 		else
 			targetSize
@@ -125,35 +124,29 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
 	override def resetCachedSize() =
 	{
 		// When stack size is reset while a transition is NOT in process, may start one
-		if (!transitioning)
-		{
+		if (!transitioning) {
 			// Only starts animation if content stack size really changed
-			content.foreach { c => newTarget(c.stackSize) }
+			newTarget(content.stackSize)
 		}
 		// These events are ignored while transition is in progress, because this method is being called repeatedly
 	}
 	
 	override val stackId = hashCode()
 	
-	override protected def add(component: C, index: Int) =
-	{
+	override protected def _set(content: C): Unit = {
+		panel -= _content
+		_content = content
 		// Transitions only when already connected to the stack hierarchy
-		if (isAttachedToMainHierarchy)
-		{
+		if (isAttachedToMainHierarchy) {
 			targetSize = StackSize.any(size)
-			newTarget(component.stackSize)
+			newTarget(content.stackSize)
 		}
 		else
-			targetSize = component.stackSize
-		panel.insert(component, index)
+			targetSize = content.stackSize
+		panel.insert(content, 0)
 	}
 	
-	override protected def remove(component: C) =
-	{
-		panel -= component
-		transitioning = false
-		targetSize = StackSize.any
-	}
+	override protected def content: C = _content
 	
 	override def components = panel.components
 	

@@ -11,13 +11,12 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.reflection.component.template.text.TextComponent
+import utopia.reflection.component.template.text.HasMutableTextDrawContext
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape._
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
@@ -60,26 +59,24 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
                         useLowPriorityForScalingSides: Boolean = false,
                         initialAlignment: enumeration.Alignment = enumeration.Alignment.Left,
                         initialTextColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with TextComponent with MutableCustomDrawableWrapper with AwtContainerRelated
+	extends StackableAwtComponentWrapperWrapper with MutableCustomDrawableWrapper with AwtContainerRelated
+		with HasMutableTextDrawContext
 {
 	// ATTRIBUTES	------------------------
 	
 	private var _drawContext = TextDrawContext(initialFont, initialTextColor, initialAlignment, initialInsets)
-	private var _text = initialText
+	private var _text = LocalizedString.empty
 	private var _lineSplitThreshold = initialLineSplitThreshold
 	
-	private val panel = new SwitchPanel[AlignFrame[Stack[TextLabel]]]
+	private val panel = new SwitchPanel[AlignFrame[Stack[TextLabel]]](makeNewContent())
 	
 	
 	// INITIAL CODE	------------------------
 	
 	component.setFont(initialFont.toAwt)
-	
-	// Sets initial content
-	panel.set(makeNewContent())
-	
 	if (useLowPriorityForScalingSides)
 		panel.addConstraint(new LowPriorityLengthConstraint)
+	text = initialText
 	
 	
 	// COMPUTED	----------------------------
@@ -88,8 +85,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	  * @return Maximum length of a multiple word line (in pixels)
 	  */
 	def lineSplitThreshold = _lineSplitThreshold
-	def lineSplitThreshold_=(newThreshold: Double) =
-	{
+	def lineSplitThreshold_=(newThreshold: Double) = {
 		_lineSplitThreshold = newThreshold
 		resetContent()
 	}
@@ -99,16 +95,13 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	override def component = wrapped.component
 	
-	override def drawContext = _drawContext
-	
-	override def drawContext_=(newContext: TextDrawContext) =
-	{
-		if (newContext != _drawContext)
-		{
+	def textDrawContext = _drawContext
+	def textDrawContext_=(newContext: TextDrawContext) = {
+		if (newContext != _drawContext) {
 			component.setFont(newContext.font.toAwt)
 			// Updates the colors of each line label
 			if (newContext.color != _drawContext.color)
-				panel.content.foreach { _.content.foreach { _.components.foreach { _.textColor = newContext.color } } }
+				panel.content.content.components.foreach { _.textColor = newContext.color }
 			
 			_drawContext = newContext
 			resetContent()
@@ -119,13 +112,10 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	override protected def wrapped = panel
 	
-	override def text = _text
-	def text_=(newText: LocalizedString) =
-	{
-		if (_text != newText)
-		{
-			if (_text.string != newText.string)
-			{
+	def text = _text
+	def text_=(newText: LocalizedString) = {
+		if (_text != newText) {
+			if (_text.string != newText.string) {
 				_text = newText
 				resetContent()
 			}
@@ -139,14 +129,11 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	private def resetContent() = panel.set(makeNewContent())
 	
-	private def makeNewContent() =
-	{
-		val stack =
-		{
+	private def makeNewContent() = {
+		val stack = {
 			if (text.string.isEmpty)
-				Stack.column[TextLabel](cap = insets.vertical / 2)
-			else
-			{
+				Stack.column[TextLabel](cap = textInsets.vertical / 2)
+			else {
 				// Splits the text whenever target width is exeeded. The resulting lines determine the size constraints
 				val lines = text.lines.flatMap { s => split(s.string) }
 				// val maxLineWidth = lines.flatMap { textWidth(_) }.max
@@ -155,21 +142,20 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 				val language = text.languageCode
 				val lineComponents = lines.map { line =>
 					new TextLabel(LocalizedString(LocalString(line, language), None), font, textColor,
-						insets.onlyHorizontal, alignment.onlyHorizontal)
+						textInsets.onlyHorizontal, alignment.onlyHorizontal)
 				}
 				
 				// Places the lines in a stack
 				// Stack layout depends from current alignment (horizontal)
 				val stackLayout = alignment.horizontal.toStackLayout
 				
-				Stack.columnWithItems(lineComponents, betweenLinesMargin, insets.vertical / 2, stackLayout)
+				Stack.columnWithItems(lineComponents, betweenLinesMargin, textInsets.vertical / 2, stackLayout)
 			}
 		}
 		stack.aligned(alignment)
 	}
 	
-	private def split(text: String) =
-	{
+	private def split(text: String) = {
 		val threshold = _lineSplitThreshold
 		
 		var lineSplitIndices = Vector[Int]()
@@ -181,7 +167,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 			// Checks whether threshold was exeeded
 			// (Cannot split twice at the same point, however)
 			if (lastCursorIndex != currentLineStartIndex &&
-				textWidth(text.substring(currentLineStartIndex, cursorIndex)).exists { _ > threshold })
+				textWidthWith(font, text.substring(currentLineStartIndex, cursorIndex)) > threshold)
 			{
 				lineSplitIndices :+= lastCursorIndex
 				currentLineStartIndex = lastCursorIndex

@@ -176,10 +176,10 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	// Updates the item display whenever value changes
 	valuePointer.addContinuousListener { _.newValue match {
 		case Some(selected) =>
-			textLabel.drawContext = valueSelectedContext
+			textLabel.textDrawContext = valueSelectedContext
 			textLabel.text = displayFunction(selected)
 		case None =>
-			textLabel.drawContext = noValueContext
+			textLabel.textDrawContext = noValueContext
 			textLabel.text = selectionPrompt.text
 	} }
 	

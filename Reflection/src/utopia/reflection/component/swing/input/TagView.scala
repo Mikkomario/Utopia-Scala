@@ -156,7 +156,7 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 		
 		private val (label, view) = parentContext.forCustomColorButtons(initialColor).use { implicit context =>
 			val label = ItemLabel.contextual(initialText)
-			label.insets = label.insets.onlyVertical / 2
+			label.textInsets = label.textInsets.onlyVertical / 2
 			val content = removeIcon.map { icon =>
 				Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
 					s += ImageButton.contextual(icon.inButton, isLowPriority = true) { -=(label.content) }

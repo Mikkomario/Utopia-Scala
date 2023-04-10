@@ -73,6 +73,12 @@ trait ReflectionStackLike[C <: ReflectionStackable]
         super.insert(component, index)
     }
     
+    override def insertMany(components: IterableOnce[C], index: Int) = {
+        val newComps = Vector.from(components)
+        _components = _components.take(index) ++ newComps.map { new StackItem[C](_) } ++ _components.drop(index)
+        super.insertMany(newComps, index)
+    }
+    
     override def addBack(component: C, index: Int): Unit = add(component, index)
     override def addBack(components: IterableOnce[C], index: Int): Unit = add(components, index)
     

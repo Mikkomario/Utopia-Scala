@@ -59,14 +59,14 @@ class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Align
 	
 	// INITIAL CODE	--------------------
 	
-	set(initialComponent)
+	panel += initialComponent
 	// Updates content layout each time size changes
 	addResizeListener(updateLayout())
 	
 	
 	// IMPLEMENTED	---------------------
 	
-	override protected def content: C = _content
+	override def content: C = _content
 	
 	override def alignment = _alignment
 	// Alignment is mutable but component layout must be revalidated each time alignment changes

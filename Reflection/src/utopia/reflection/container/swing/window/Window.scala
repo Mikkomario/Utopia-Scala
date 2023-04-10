@@ -3,23 +3,23 @@ package utopia.reflection.container.swing.window
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
+import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.mutable.{ActorHandler, KeyStateHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.layout.stack.{Constrainable, Stackable}
+import utopia.reflection.component.template.layout.stack.{Constrainable, ReflectionStackable}
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.text.Font
 import utopia.reflection.util.AwtEventThread
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
@@ -54,7 +54,7 @@ object Window
 	  * @tparam C Type of content placed within this window
 	  * @return A new window
 	  */
-	def apply[C <: Stackable with AwtContainerRelated](content: C, parent: Option[java.awt.Window] = None,
+	def apply[C <: ReflectionStackable with AwtContainerRelated](content: C, parent: Option[java.awt.Window] = None,
 	                                                   title: LocalizedString = LocalizedString.empty,
 	                                                   resizePolicy: WindowResizePolicy = User,
 	                                                   screenBorderMargin: Double = 0.0,
@@ -75,8 +75,8 @@ object Window
   * @since 25.3.2019
   **/
 // TODO: Component revalidation should be delayed while this window is invisible
-abstract class Window[+Content <: Stackable with AwtComponentRelated]
-	extends Stackable with AwtContainerRelated with Constrainable
+abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
+	extends ReflectionStackable with AwtContainerRelated with Constrainable
 {
 	// ATTRIBUTES   ----------------
 	
@@ -92,6 +92,8 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	private var closed = false
 	
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	
+	private val keyStateHandler = KeyStateHandler()
 	
 	
 	// ABSTRACT    -----------------
@@ -195,6 +197,8 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	
 	override def resetCachedSize() = cachedStackSize.reset()
 	
+	override def fontMetricsWith(font: Font): FontMetricsWrapper = content.fontMetricsWith(font)
+	
 	override def visible_=(isVisible: Boolean) = component.setVisible(isVisible)
 	
 	// Size and position are not cached since the user may resize and move this Window at will, breaking the cached size / position logic
@@ -238,26 +242,28 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	
 	override def isTransparent = content.isTransparent
 	
-	override def fontMetrics = content.fontMetrics
-	
 	override def mouseButtonHandler = content.mouseButtonHandler
 	override def mouseMoveHandler = content.mouseMoveHandler
 	override def mouseWheelHandler = content.mouseWheelHandler
-	override def keyStateHandler = content.keyStateHandler
-	override def keyTypedHandler = content.keyTypedHandler
+	// override def keyStateHandler = content.keyStateHandler
+	// override def keyTypedHandler = content.keyTypedHandler
 	
 	
 	// OTHER    --------------------
 	
 	/**
+	  * ADds a new listener to be informed of keyboard events while this window is open
+	  * @param listener A listener to inform
+	  */
+	def addKeyStateListener(listener: KeyStateListener) = keyStateHandler += listener
+	
+	/**
 	  * Displays this window, making it visible
 	  */
-	def display(gainFocus: Boolean = true) =
-	{
+	def display(gainFocus: Boolean = true) = {
 		if (gainFocus)
 			visible = true
-		else
-		{
+		else {
 			component.setFocusableWindowState(false)
 			visible = true
 			component.setFocusableWindowState(true)
@@ -267,8 +273,7 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	/**
 	  * Setups up basic functionality in window. Should be called after this window has been filled with content and packed.
 	  */
-	protected def setup() =
-	{
+	protected def setup() = {
 		// Sets transparent background if content doesn't have a background itself
 		// (only works in certain conditions. Doesn't work if this window is decorated)
 		if (content.isTransparent)
@@ -310,15 +315,13 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
 			
 			// Starts key listening
-			val keyStatusListener = new KeyStatusListener()
-			GlobalKeyboardEventHandler += keyStatusListener
+			GlobalKeyboardEventHandler += keyStateHandler
 			
 			// Quits event listening once this window finally closes
-			uponCloseAction.setOne(() =>
-			{
+			uponCloseAction.setOne(() => {
 				actorHandler -= mouseEventGenerator
 				mouseEventGenerator.kill()
-				GlobalKeyboardEventHandler -= keyStatusListener
+				GlobalKeyboardEventHandler -= keyStateHandler
 				GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
 			})
 		}
@@ -330,7 +333,7 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	  * @param moreButtons More buttons for this window
 	  */
 	def registerButtons(defaultButton: ButtonLike, moreButtons: ButtonLike*) =
-		addKeyStateListener(DefaultButtonHandler(defaultButton, moreButtons: _*) { isFocusedWindow })
+		keyStateHandler += DefaultButtonHandler(defaultButton, moreButtons: _*) { isFocusedWindow }
 	
 	/**
 	  * Sets the icon to this window
@@ -366,7 +369,7 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 	/**
 	  * Makes it so that this window will close one escape is pressed
 	  */
-	def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ => close() })
+	def setToCloseOnEsc() = keyStateHandler += KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ => close() }
 	
 	/**
 	  * Makes this window become invisible whenever it loses focus
@@ -529,45 +532,6 @@ abstract class Window[+Content <: Stackable with AwtComponentRelated]
 			
 			// Removes this window from the stack hierarchy (may preserve a portion of the content by detaching it first)
 			detachFromMainStackHierarchy()
-		}
-	}
-	
-	private class KeyStatusListener extends KeyStateListener with KeyTypedListener with Handleable
-	{
-		// ATTRIBUTES   ------------------------
-		
-		private var keyStatus = KeyStatus.empty
-		
-		
-		// IMPLEMENTED  ------------------------
-		
-		// Listens to key state events primarily when this window has focus but will deliver key released events
-		// even when this window is not in focus, provided that these events would alter the simulated key state
-		// inside this window
-		override def onKeyState(event: KeyStateEvent) =
-		{
-			if (isFocusedWindow)
-			{
-				keyStatus = event.keyStatus
-				content.distributeKeyStateEvent(event)
-			}
-			else
-			{
-				val newStatus = event.keyStatus && keyStatus
-				if (newStatus != keyStatus)
-				{
-					keyStatus = newStatus
-					if (event.isReleased)
-						content.distributeKeyStateEvent(event.copy(keyStatus = newStatus))
-				}
-			}
-		}
-		
-		// Only distributes key typed events when this window has focus
-		override def onKeyTyped(event: KeyTypedEvent) =
-		{
-			if (isFocusedWindow)
-				content.distributeKeyTypedEvent(event)
 		}
 	}
 }

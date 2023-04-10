@@ -189,9 +189,9 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	override def text = wrapped.text
 	override def text_=(newText: LocalizedString) = wrapped.text = newText
 	
-	override def drawContext_=(newContext: TextDrawContext) = wrapped.drawContext = newContext
+	override def textDrawContext_=(newContext: TextDrawContext) = wrapped.textDrawContext = newContext
 	
-	override def drawContext = wrapped.drawContext
+	override def textDrawContext = wrapped.textDrawContext
 	
 	override def repaint() = super[MutableCustomDrawableWrapper].repaint()
 	

@@ -226,8 +226,8 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	
 	override def measuredText = textPointer.value
 	
-	override def drawContext = stylePointer.value
-	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
+	override def textDrawContext = stylePointer.value
+	override def textDrawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	override def updateLayout() = ()
 }

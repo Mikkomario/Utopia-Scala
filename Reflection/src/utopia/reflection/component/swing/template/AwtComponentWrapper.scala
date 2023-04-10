@@ -30,7 +30,7 @@ object AwtComponentWrapper
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-abstract class AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelated
+trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelated
 {
     // ATTRIBUTES    ----------------------
     
@@ -239,7 +239,9 @@ private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtC
     
     override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
     
-    override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
+    override def visible_=(isVisible: Boolean) = super[CachingReflectionStackable].visible_=(isVisible)
     
     override def updateLayout() = update()
+    
+    override def children = super[CachingReflectionStackable].children
 }

@@ -6,7 +6,7 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
 import utopia.reflection.container.swing.Panel
@@ -88,7 +88,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	
 	// NESTED	---------------------------------
 	
-	private class SegmentContainer(val wrappedComponent: AwtStackable) extends AwtComponentWrapperWrapper with Stackable
+	private class SegmentContainer(val wrappedComponent: AwtStackable)
+		extends AwtComponentWrapperWrapper with ReflectionStackable
 	{
 		// ATTRIBUTES	-------------------------
 		

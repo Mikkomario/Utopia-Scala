@@ -4,7 +4,8 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
-import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.text.EditableTextLabel
@@ -109,7 +110,7 @@ object ReachComponentTest extends App
 	println(s"Canvas stack size: ${ canvas.stackSize }")
 	println(s"Label bounds: ${ label.bounds }")
 	
-	frame.addKeyTypedListener { event: KeyTypedEvent => label.text += event.typedChar.toString }
+	GlobalKeyboardEventHandler += KeyTypedListener { event: KeyTypedEvent => label.text += event.typedChar.toString }
 	frame.addKeyStateListener(KeyStateListener(KeyStateEvent.keyFilter(KeyEvent.VK_BACK_SPACE)) { _ =>
 		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped
 	})

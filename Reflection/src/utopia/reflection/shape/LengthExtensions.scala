@@ -6,7 +6,7 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.{Alignment, Axis2D, LinearAlignment}
 import utopia.paradigm.measurement.{Distance, Ppi}
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
-import utopia.reflection.container.stack.{StackLayout, Stacker}
+import utopia.reflection.container.stack.{StackLayout, Stacker2}
 import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible, StackLength, StackSize}
 
 /**
@@ -402,7 +402,8 @@ object LengthExtensions
 							// Case: Decreased margins
 							else
 							{
-								val usedEndMargin = Stacker.adjustLengths(Vector(targetEndMargin, targetStartMargin), emptyLength).head
+								val usedEndMargin = Stacker2.adjustLengths(
+									Vector(targetEndMargin, targetStartMargin), emptyLength).head
 								emptyLength - usedEndMargin
 							}
 						}
@@ -417,7 +418,8 @@ object LengthExtensions
 							// Case: Decreased margins
 							else
 							{
-								val usedStartMargin = Stacker.adjustLengths(Vector(targetStartMargin, targetEndMargin), emptyLength).head
+								val usedStartMargin = Stacker2.adjustLengths(
+									Vector(targetStartMargin, targetEndMargin), emptyLength).head
 								usedStartMargin
 							}
 						}

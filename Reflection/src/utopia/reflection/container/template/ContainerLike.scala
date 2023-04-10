@@ -17,27 +17,7 @@ trait ContainerLike[+C <: ReflectionComponentLike] extends ReflectionComponentLi
 	def components: Vector[C]
 	
 	
-	// COMPUTED    ----------------
-	
-	/**
-	  * The number of items in this container
-	  */
-	def count = components.size
-	
-	/**
-	  * Whether this container is currently empty
-	  */
-	def isEmpty = components.isEmpty
-	
-	/**
-	  * @return Whether this container holds some components
-	  */
-	def nonEmpty = !isEmpty
-	
-	
 	// IMPLEMENTED	----------------
 	
 	override def toString = s"${getClass.getSimpleName}(${ components.mkString(", ") })"
-	
-	override def children: Seq[ReflectionComponentLike] = components
 }

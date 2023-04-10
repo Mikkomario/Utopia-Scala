@@ -3,6 +3,7 @@ package utopia.reflection.component.swing.label
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.color.ComponentColor
@@ -11,7 +12,7 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.component.template.text.TextComponent
+import utopia.reflection.component.template.text.MutableStyleTextComponent
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
@@ -99,7 +100,7 @@ object ItemLabel
 class ItemLabel[A](override val contentPointer: PointerWithEvents[A], val displayFunction: DisplayFunction[A], initialFont: Font,
 				   initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
 				   initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
-	extends StackableAwtComponentWrapperWrapper with TextComponent with SwingComponentRelated
+	extends StackableAwtComponentWrapperWrapper with MutableStyleTextComponent with SwingComponentRelated
 		with MutableCustomDrawableWrapper with RefreshableWithPointer[A]
 {
 	// ATTRIBUTES	--------------------
@@ -116,19 +117,23 @@ class ItemLabel[A](override val contentPointer: PointerWithEvents[A], val displa
 	
 	// IMPLEMENTED	--------------------
 	
+	override def allowTextShrink: Boolean = label.allowTextShrink
+	
 	override def component = label.component
 	
 	override protected def wrapped = label
 	
-	override def drawContext = label.drawContext
+	override def textDrawContext = label.textDrawContext
 	
-	override def drawContext_=(newContext: TextDrawContext) = label.drawContext = newContext
+	override def textDrawContext_=(newContext: TextDrawContext) = label.textDrawContext = newContext
 	
 	override def drawable = label
 	
 	override def toString = s"Label($text)"
 	
-	override def text = label.text
+	override def measuredText: MeasuredText = label.measuredText
+	
+	def text = label.text
 	
 	
 	// OTHER	------------------------

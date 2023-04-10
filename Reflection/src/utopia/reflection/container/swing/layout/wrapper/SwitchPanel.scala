@@ -36,12 +36,13 @@ class SwitchPanel[C <: ReflectionStackable with AwtComponentRelated](initialCont
 	
 	// INITIAL CODE	-------------------
 	
+	panel += initialContent
 	addResizeListener(updateLayout())
 	
 	
 	// IMPLEMENTED	-------------------
 	
-	override protected def content: C = _content
+	override def content: C = _content
 	
 	override def children = components
 	

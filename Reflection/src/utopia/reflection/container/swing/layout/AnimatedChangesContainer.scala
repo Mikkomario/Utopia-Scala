@@ -47,8 +47,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
  maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate, fadingIsEnabled: Boolean = true)
 (implicit exc: ExecutionContext)
-	extends WrappingContainer[C, AnimatedVisibility[C]] with ReflectionStackableWrapper
-		with MutableMultiContainer2[C, AnimatedVisibility[C]]
+	extends WrappingContainer[C, AnimatedVisibility[C]] with ReflectionStackableWrapper with MutableMultiContainer2[C, C]
 {
 	// ATTRIBUTES	-----------------------------
 	
@@ -56,6 +55,8 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	
 	
 	// IMPLEMENTED	-----------------------------
+	
+	override def children = components
 	
 	override protected def unwrap(wrapper: AnimatedVisibility[C]) = wrapper.display
 	
@@ -75,18 +76,10 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	override protected def add(components: IterableOnce[C], index: Int): Unit =
 		Vector.from(components).reverseIterator.foreach { add(_, index) }
 	
-	override protected def remove(component: AnimatedVisibility[C]): Unit =
-		wrappersList.lastIndexWhereOption { _._1 == component }.foreach { index =>
-			removeWrapper(component, index)
-		}
+	override protected def remove(components: IterableOnce[C]): Unit = components.iterator.foreach(remove)
 	
-	override protected def remove(components: IterableOnce[AnimatedVisibility[C]]): Unit =
-		components.iterator.foreach(remove)
-	
-	override def addBack(component: AnimatedVisibility[C], index: Int): Unit = add(component.display, index)
-	
-	override def addBack(components: IterableOnce[AnimatedVisibility[C]], index: Int): Unit =
-		Vector.from(components).reverseIterator.foreach { addBack(_, index) }
+	override def addBack(component: C, index: Int): Unit = add(component, index)
+	override def addBack(components: IterableOnce[C], index: Int): Unit = add(components, index)
 	
 	override protected def removeWrapper(wrapper: AnimatedVisibility[C], index: Int) =
 	{

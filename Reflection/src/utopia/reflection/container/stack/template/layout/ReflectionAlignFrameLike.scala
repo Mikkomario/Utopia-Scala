@@ -28,7 +28,7 @@ trait ReflectionAlignFrameLike[C <: ReflectionStackable]
 	
 	override protected def wrapped = container
 	
-	override protected def updateVisibility(visible: Boolean) = super[CachingStackable].visible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[CachingReflectionStackable].visible_=(visible)
 	
 	override def components = container.components
 }

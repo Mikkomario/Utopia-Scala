@@ -8,7 +8,7 @@ import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
-import utopia.reflection.container.stack.template.layout.CollectionViewLike
+import utopia.reflection.container.stack.template.layout.ReflectionCollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.stack.StackLength
@@ -50,7 +50,7 @@ class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowA
 												animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 											   maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 												useFadingInAnimations: Boolean = true)(implicit exc: ExecutionContext)
-	extends CollectionViewLike[C, AnimatedStack[C], AnimatedStack[AnimatedStack[C]]] with StackableAwtComponentWrapperWrapper
+	extends ReflectionCollectionViewLike[C, AnimatedStack[C], AnimatedStack[AnimatedStack[C]]] with StackableAwtComponentWrapperWrapper
 		with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	-----------------------

@@ -7,15 +7,16 @@ import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.component.template.layout.AreaOfItems
-import utopia.reflection.component.template.layout.stack.Stackable
-import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
+import utopia.reflection.container.template.mutable.MutableMultiContainer2
 import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack
 
 import java.awt.event.KeyEvent
@@ -23,8 +24,8 @@ import scala.concurrent.duration.Duration
 
 object ContainerSelectionManager
 {
-	private type SelectStack[X <: ComponentLike] =
-		MultiContainer[X] with Stackable with MutableCustomDrawable with AreaOfItems[X]
+	private type SelectStack[X <: ReflectionComponentLike] =
+		MutableMultiContainer2[X, X] with ReflectionStackable with MutableCustomDrawable with AreaOfItems[X]
 	
 	/**
 	  * Creates a content manager for immutable items that don't represent state of any other object. No two different
@@ -38,7 +39,7 @@ object ContainerSelectionManager
 	  * @tparam Display Type of display component
 	  * @return New content manager
 	  */
-	def forStatelessItemsPointer[A, Display <: Stackable with Refreshable[A]]
+	def forStatelessItemsPointer[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]],
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, equalsCheck)(makeDisplay)
@@ -55,7 +56,7 @@ object ContainerSelectionManager
 	  * @tparam Display Type of display component
 	  * @return New content manager
 	  */
-	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
+	def forStatelessItems[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer,
@@ -76,7 +77,7 @@ object ContainerSelectionManager
 	  * @tparam Display Type of display component
 	  * @return New content manager
 	  */
-	def forImmutableStatesPointer[A, Display <: Stackable with Refreshable[A]]
+	def forImmutableStatesPointer[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
@@ -97,7 +98,7 @@ object ContainerSelectionManager
 	  * @tparam Display Type of display component
 	  * @return New content manager
 	  */
-	def forImmutableStates[A, Display <: Stackable with Refreshable[A]]
+	def forImmutableStates[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(sameItemCheck)(makeDisplay)
@@ -117,7 +118,7 @@ object ContainerSelectionManager
 	  * @tparam Display Type of display component
 	  * @return New content manager
 	  */
-	def forMutableItemsPointer[A, Display <: Stackable with Refreshable[A]]
+	def forMutableItemsPointer[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
@@ -138,7 +139,7 @@ object ContainerSelectionManager
 	  * @tparam Display Type of display component
 	  * @return New content manager
 	  */
-	def forMutableItems[A, Display <: Stackable with Refreshable[A]]
+	def forMutableItems[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(
@@ -150,11 +151,11 @@ object ContainerSelectionManager
   * @author Mikko Hilpinen
   * @since 5.6.2019, v1+
   */
-class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
+class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 (container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
-	extends ContainerContentManager[A, MultiContainer[C] with Stackable, C](container, contentPointer,
+	extends ContainerContentManager[A, MutableMultiContainer2[C, C] with ReflectionStackable, C](container, contentPointer,
 		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
 {
 	// INITIAL CODE	--------------------
@@ -191,7 +192,12 @@ class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 	{
 		val listener = new SelectionKeyListener(nextKeyCode, prevKeyCode, initialScrollDelay, scrollDelayModifier,
 			minScrollDelay, listenEnabledCondition)(amount => moveSelection(amount))
-		container.addKeyStateListener(listener)
+		container.addStackHierarchyChangeListener(attached => {
+			if (attached)
+				GlobalKeyboardEventHandler += listener
+			else
+				GlobalKeyboardEventHandler -= listener
+		}, callIfAttached = true)
 		actorHandler += listener
 	}
 	

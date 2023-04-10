@@ -35,7 +35,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color)
 	
 	// INITIAL CODE --------------------------
 	
-	set(initialComponent)
+	panel += initialComponent
 	// Each time Framing size changes, changes content size too
 	addResizeListener(updateLayout())
 	// Adds rounded background drawing

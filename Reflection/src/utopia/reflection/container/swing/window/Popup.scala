@@ -1,27 +1,26 @@
 package utopia.reflection.container.swing.window
 
 import utopia.flow.time.Now
-
-import java.awt.event.{WindowEvent, WindowFocusListener}
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
-import utopia.reflection.localization.LocalString._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.shape.shape2d.{Point, Size}
+import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.Mortal
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.TopLeft
+import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.ReflectionComponentLike
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.{Never, WhenAnyKeyPressed, WhenClickedOutside, WhenEscPressed, WhenFocusLost}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Alignment.TopLeft
+import utopia.reflection.localization.LocalString._
 
+import java.awt.event.{WindowEvent, WindowFocusListener}
 import scala.concurrent.ExecutionContext
 
 /**
@@ -46,12 +45,13 @@ object Popup
 	  * @tparam C Type of displayed item
 	  * @return Newly created and pop-up window
 	  */
-	def apply[C <: AwtContainerRelated with Stackable](context: ComponentLike with AwtComponentRelated, content: C,
-													   actorHandler: ActorHandler,
-													   autoCloseLogic: PopupAutoCloseLogic = Never,
-													   resizeAlignment: Alignment = TopLeft)
-													  (getTopLeft: (Size, Size) => Point)
-													  (implicit exc: ExecutionContext) =
+	def apply[C <: AwtContainerRelated with ReflectionStackable](context: ReflectionComponentLike with AwtComponentRelated,
+	                                                             content: C,
+	                                                             actorHandler: ActorHandler,
+	                                                             autoCloseLogic: PopupAutoCloseLogic = Never,
+	                                                             resizeAlignment: Alignment = TopLeft)
+	                                                            (getTopLeft: (Size, Size) => Point)
+	                                                            (implicit exc: ExecutionContext) =
 	{
 		// If context isn't in a window (which it should), has to use a Frame instead of a dialog
 		val owner = context.parentWindow

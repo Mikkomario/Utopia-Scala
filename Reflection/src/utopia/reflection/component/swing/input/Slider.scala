@@ -10,7 +10,7 @@ import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent,
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
-import utopia.genesis.view.GlobalMouseEventHandler
+import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
@@ -292,13 +292,15 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	addMouseButtonListener(MousePressListener)
 	addMouseMoveListener(MouseOverListener)
 	addStackHierarchyChangeListener { isAttached =>
-		if (isAttached)
+		if (isAttached) {
 			GlobalMouseEventHandler += GlobalMouseDragListener
-		else
+			GlobalKeyboardEventHandler += KeyPressListener
+		}
+		else {
 			GlobalMouseEventHandler -= GlobalMouseDragListener
+			GlobalKeyboardEventHandler -= KeyPressListener
+		}
 	}
-	
-	addKeyStateListener(KeyPressListener)
 	
 	
 	// COMPUTED -----------------------------

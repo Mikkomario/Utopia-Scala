@@ -255,7 +255,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	
 	override def measuredText = textPointer.value
 	
-	override def drawContext = stylePointer.value
+	override def textDrawContext = stylePointer.value
 	
 	override def updateLayout() = ()
 }

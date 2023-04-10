@@ -34,7 +34,7 @@ object AnimatedLabelTest extends App
 	val content = label.framed(margins.medium.any, colorScheme.gray.light)
 
 	// Starts test
-	val frame = Frame.windowed(content, "Animated Transition Test", Program)
+	val frame = Frame.windowed(content, "Animated Label Test", Program)
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
 }

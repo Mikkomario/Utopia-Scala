@@ -2,6 +2,8 @@ package utopia.reach.test
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
+import utopia.genesis.handling.KeyTypedListener
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
@@ -47,7 +49,7 @@ object MutableReachStackTest extends App
 	
 	// Updates content in background
 	var lastIndex = 3
-	frame.addKeyTypedListener { event: KeyTypedEvent =>
+	GlobalKeyboardEventHandler += KeyTypedListener { event: KeyTypedEvent =>
 		if (event.typedChar.isDigit) {
 			val newIndex = event.typedChar.asDigit
 			if (newIndex >= lastIndex)

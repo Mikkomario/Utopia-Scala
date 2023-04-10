@@ -27,9 +27,9 @@ trait ReflectionFramingLike[C <: ReflectionStackable] extends FramingLike2[C] wi
 	
 	override protected def wrapped = container
 	
-	override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
+	override def visible_=(isVisible: Boolean) = super[CachingReflectionStackable].visible_=(isVisible)
 	
-	override protected def updateVisibility(visible: Boolean) = super[ComponentWrapper].visible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[ReflectionComponentWrapper].visible_=(visible)
 	
 	override def components = container.components
 }

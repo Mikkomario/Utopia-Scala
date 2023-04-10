@@ -209,6 +209,8 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     // IMPLEMENTED    -------------------
     
+    override def children = components
+    
     override def drawable = panel
     
     override def component = panel.component
@@ -217,7 +219,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     override protected def updateVisibility(visible: Boolean) = panel.visible = visible
     
-    override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
+    override def visible_=(isVisible: Boolean) = super[CachingReflectionStackable].visible_=(isVisible)
     
     protected def add(component: C, index: Int) = panel.insert(component, index)
     

@@ -34,7 +34,7 @@ trait StackableAwtComponentWrapper extends AwtComponentWrapper with CachingRefle
 	
 	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapper].visible_=(visible)
 	
-	override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
+	override def visible_=(isVisible: Boolean) = super[CachingReflectionStackable].visible_=(isVisible)
 	
 	
 	// OTHER	---------------------

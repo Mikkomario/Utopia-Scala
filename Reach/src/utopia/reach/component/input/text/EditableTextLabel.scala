@@ -306,7 +306,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 			if (event.isDown)
 			{
 				// Inserts a line-break on enter (if enabled)
-				if (drawContext.allowLineBreaks && event.index == KeyEvent.VK_ENTER)
+				if (textDrawContext.allowLineBreaks && event.index == KeyEvent.VK_ENTER)
 					insertToCaret("\n")
 				// Removes a character on backspace / delete
 				else if (event.index == KeyEvent.VK_BACK_SPACE)

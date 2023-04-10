@@ -3,15 +3,17 @@ package utopia.reflection.component.swing.animation
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.mutable.async.Volatile
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.context.AnimationContextLike
+import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
-import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
+import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.{AwtEventThread, ComponentCreationDefaults}
 
 import scala.concurrent.duration.FiniteDuration
@@ -52,7 +54,8 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 {
 	// ATTRIBUTES	---------------------
 	
-	private val panel = new SwitchPanel[AwtStackable]
+	private lazy val empty = new EmptyLabel().withStackSize(StackSize.fixedZero)
+	private val panel = new SwitchPanel[AwtStackable](if (initialState == Visible) display else empty)
 	
 	private var targetState = initialState match
 	{
@@ -66,13 +69,6 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 		case static: Visibility => Future.successful(static)
 		case transition: VisibilityChange => startTransition(transition.targetState)
 	})
-	
-	
-	// INITIAL CODE	---------------------
-	
-	// If initially completely shown, sets panel content accordingly.
-	if (initialState == Visible)
-		panel.set(display)
 	
 	
 	// COMPUTED	-------------------------
@@ -152,7 +148,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 			if (newState.isVisible)
 				panel.set(display)
 			else
-				panel.clear()
+				panel.set(empty)
 		}
 	}
 	
@@ -175,7 +171,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 					if (target.isVisible)
 						panel.set(display)
 					else
-						panel.clear()
+						panel.set(empty)
 					
 					Future.successful(target)
 				}

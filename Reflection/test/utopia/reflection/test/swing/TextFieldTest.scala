@@ -56,7 +56,7 @@ object TextFieldTest extends App
 				TabSelection.contextual(initialChoices = Vector("Goods", "for", "Purchase"))
 			}
 			tab.selectOne("Goods")
-			tab.valuePointer.addContinuousListener { s => println(s.newValue.getOrElse("No item") + " selected") }
+			tab.valuePointer.addContinuousListener { s => println(s"${ s.newValue.getOrElse("No item") } selected") }
 			
 			mainStack += tab
 			// Adds the main interaction area

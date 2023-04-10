@@ -2,6 +2,7 @@ package utopia.reflection.test.swing
 
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.image.Image
+import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.input.DropDown
 import utopia.reflection.component.swing.label.TextLabel
@@ -9,7 +10,6 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.AnimatedSizeContainer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 
@@ -52,7 +52,8 @@ object DropDownTest2 extends App
 			stack += AnimatedSizeContainer(characterSelect, actorHandler)
 		}
 	}
-	val content = stack.framed(margins.medium.any, backgroundColor)
+	stack.background = Color.magenta
+	val content = stack//.framed(margins.medium.any, backgroundColor)
 	
 	// Starts test
 	val frame = Frame.windowed(content, "Collection View Test", Program)

@@ -13,7 +13,7 @@ import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.ComponentWrapper
+import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.event.TransitionState
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
 import utopia.reflection.shape.stack.StackSize
@@ -30,7 +30,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @since 17.4.2020, v1.2
   */
 // TODO: Should be an abstract class
-trait AnimatedTransitionLike extends Stackable with ComponentWrapper
+trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponentWrapper
 	with StackLeaf with MutableCustomDrawableWrapper
 {
 	// ABSTRACT	------------------------------------

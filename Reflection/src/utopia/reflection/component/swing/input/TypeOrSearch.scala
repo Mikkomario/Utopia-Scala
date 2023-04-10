@@ -21,6 +21,7 @@ import utopia.reflection.localization.{LocalizedString, Localizer}
 import utopia.reflection.shape.stack.{StackLength, StackLengthLimit}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.stack.modifier.FixedOptimalLengthModifier
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -123,12 +124,8 @@ class TypeOrSearch
 	private val view =
 	{
 		val upperPart = Stack.rowWithItems(Vector(textField, addButton), StackLength.fixedZero)
-		val scrollLengthLimit = optimalSelectionAreaLength match
-		{
-			case Some(optimal) => StackLengthLimit(minOptimal = Some(optimal), maxOptimal = Some(optimal))
-			case None => StackLengthLimit.noLimit
-		}
-		val lowerPart = ScrollView.contextual(optionsStack, lengthLimits = scrollLengthLimit)
+		val lowerPart = ScrollView.contextual(optionsStack)
+		optimalSelectionAreaLength.foreach { opt => lowerPart.addHeightConstraint(FixedOptimalLengthModifier(opt)) }
 		Stack.columnWithItems(Vector(upperPart, lowerPart), StackLength.fixedZero)
 	}
 	

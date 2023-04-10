@@ -1,15 +1,15 @@
 package utopia.reflection.util
 
-import java.awt.Frame
-import java.awt.image.BufferedImage
-
-import javax.swing.CellRendererPane
-import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.Area
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.Stackable2
+
+import java.awt.Frame
+import java.awt.image.BufferedImage
+import javax.swing.CellRendererPane
 
 /**
   * Used for drawing components as images
@@ -35,7 +35,7 @@ object ComponentToImage
 			else
 				component match
 				{
-					case c: Stackable => c.stackSize.optimal
+					case c: Stackable2 => c.stackSize.optimal
 					case _ => componentSize
 				}
 		}
@@ -82,7 +82,7 @@ object ComponentToImage
 				// Resizes the component and updates its contents if necessary
 				component match
 				{
-					case c: Stackable =>
+					case c: Stackable2 =>
 						c.size = imageSize
 						c.updateLayout()
 					case _ => ()
@@ -94,7 +94,7 @@ object ComponentToImage
 				cellRenderedPanel.remove(component.component)
 				component match
 				{
-					case c: Stackable => c.bounds = boundsBefore
+					case c: Stackable2 => c.bounds = boundsBefore
 					case _ => component.component.setBounds(boundsBefore.toAwt)
 				}
 				testFrame.dispose()

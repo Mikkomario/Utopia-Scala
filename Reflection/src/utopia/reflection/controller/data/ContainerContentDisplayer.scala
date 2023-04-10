@@ -2,17 +2,17 @@ package utopia.reflection.controller.data
 
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.template.eventful.Changing
-import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
+import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 object ContainerContentDisplayer
 {
 	/**
 	 * Container that holds multiple items and is stackable
 	 */
-	private type MultiStack[X <: ComponentLike] = MultiContainer[X] with Stackable
+	private type MultiStack[X <: ReflectionComponentLike] = MutableMultiContainer2[X, X] with ReflectionStackable
 	
 	/**
 	 * Short version of typical pointer used in these methods
@@ -30,7 +30,7 @@ object ContainerContentDisplayer
 	 * @tparam Display Type of display component
 	 * @return New content displayer
 	 */
-	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
+	def forStatelessItems[A, Display <: ReflectionStackable with Refreshable[A]]
 		(container: MultiStack[Display], contentPointer: P[A],
 		 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerContentDisplayer[A, MultiStack[Display], Display, P[A]](
@@ -50,7 +50,7 @@ object ContainerContentDisplayer
 	 * @tparam Display Type of display component
 	 * @return New content displayer
 	 */
-	def forImmutableStates[A, Display <: Stackable with Refreshable[A]]
+	def forImmutableStates[A, Display <: ReflectionStackable with Refreshable[A]]
 		(container: MultiStack[Display], contentPointer: P[A])(
 			sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerContentDisplayer[A, MultiStack[Display], Display, P[A]](container, contentPointer, sameItemCheck,
@@ -70,7 +70,7 @@ object ContainerContentDisplayer
 	 * @tparam Display Type of display component
 	 * @return New content displayer
 	 */
-	def forMutableItems[A, Display <: Stackable with Refreshable[A]]
+	def forMutableItems[A, Display <: ReflectionStackable with Refreshable[A]]
 		(container: MultiStack[Display], contentPointer: P[A])(
 			sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerContentDisplayer[A, MultiStack[Display], Display, P[A]](container, contentPointer, sameItemCheck,
@@ -94,8 +94,8 @@ object ContainerContentDisplayer
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
-class ContainerContentDisplayer[A, Container <: MultiContainer[Display] with Stackable,
-	Display <: Stackable with Refreshable[A], +P <: Changing[Vector[A]]]
+class ContainerContentDisplayer[A, Container <: MutableMultiContainer2[Display, Display] with ReflectionStackable,
+	Display <: ReflectionStackable with Refreshable[A], +P <: Changing[Vector[A]]]
 (protected val container: Container, override val contentPointer: P,
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => Display) extends ContentDisplayer[A, Display, P]
@@ -118,7 +118,7 @@ class ContainerContentDisplayer[A, Container <: MultiContainer[Display] with Sta
 	
 	override protected def itemsAreEqual(a: A, b: A) = equalsCheck.map { _(a, b) }.getOrElse(sameItemCheck(a, b))
 	
-	override def displays = container.components
+	override def displays = Vector.from(container.components)
 	
 	override protected def addDisplaysFor(values: Vector[A], index: Int) = container.insertMany(values.map(makeItem), index)
 	

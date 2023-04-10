@@ -101,6 +101,8 @@ class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Ax
 {
 	// IMPLEMENTED	-------------------------
 	
+	override def children = components
+	
 	override def component = container.component
 	
 	override def drawable = container

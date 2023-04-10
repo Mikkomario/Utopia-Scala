@@ -1,19 +1,18 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.generic.model.mutable.DataType
-
-import java.awt.Color
 import utopia.genesis.event.{MouseEvent, MouseMoveEvent}
-import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
-import utopia.paradigm.shape.shape2d.Size
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.Label
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.test.TestContext._
+
+import java.awt.Color
 
 /**
   * This app tests mouse listening in components
@@ -22,8 +21,6 @@ import utopia.reflection.test.TestContext._
   */
 object MouseTest extends App
 {
-	
-	
 	private class MouseEnterExitListener(val area: Area) extends MouseMoveListener with Handleable
 	{
 		override val mouseMoveEventFilter = e => {

@@ -18,7 +18,7 @@ import utopia.paradigm.transform.AffineTransformation
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackSize
@@ -104,7 +104,7 @@ object AnimationLabel
   */
 class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
                         drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
-	extends Label with Stackable
+	extends Label with ReflectionStackable
 {
 	// ATTRIBUTES	-------------------------
 	

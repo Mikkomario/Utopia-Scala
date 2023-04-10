@@ -10,6 +10,7 @@ import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Alignment
@@ -27,7 +28,7 @@ import utopia.reflection.color.ColorShade.Dark
 import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer}
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
@@ -81,7 +82,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 						  disableDoubleBufferingDuringDraw: Boolean = true, syncAfterDraw: Boolean = true,
 						  focusEnabled: Boolean = true)
 						 (implicit exc: ExecutionContext)
-	extends ReachCanvasLike with JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated
+	extends ReachCanvasLike with JWrapper with ReflectionStackable with AwtContainerRelated with SwingComponentRelated
 		with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------
@@ -116,13 +117,15 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		if (event.newValue) {
 			layoutUpdateQueue.clear()
 			updateWholeLayout(size)
+			// Listens to tabulator key events for manual focus handling
+			if (focusEnabled)
+				GlobalKeyboardEventHandler += FocusKeyListener
 		}
+		else
+			GlobalKeyboardEventHandler -= FocusKeyListener
 		fireStackHierarchyChangeEvent(event.newValue)
 	}
 	
-	// Listens to tabulator key events for manual focus handling
-	if (focusEnabled)
-		addKeyStateListener(FocusKeyListener)
 	// Listens to mouse events for manual cursor drawing
 	cursorPainter.foreach(addMouseMoveListener)
 	

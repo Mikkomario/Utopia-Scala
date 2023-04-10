@@ -133,7 +133,7 @@ abstract class AbstractSelectableTextLabel
 	
 	override def measuredText = measuredTextPointer.value
 	
-	override def drawContext = stylePointer.value
+	override def textDrawContext = stylePointer.value
 	
 	override def allowsFocusEnter = selectable
 	

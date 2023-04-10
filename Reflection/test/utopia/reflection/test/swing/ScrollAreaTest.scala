@@ -1,16 +1,13 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-
-import java.awt.event.KeyEvent
-import java.util.concurrent.TimeUnit
-import utopia.paradigm.color.Color
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.angular.Rotation
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -19,11 +16,15 @@ import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.stack.{StackInsets, StackLengthLimit}
+import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackInsets
+import utopia.reflection.shape.stack.modifier.MaxOptimalLengthModifier
+import utopia.reflection.test.TestContext._
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.test.TestContext._
+
+import java.awt.event.KeyEvent
+import java.util.concurrent.TimeUnit
 
 /**
   * This is a simple test implementation of scroll Area
@@ -58,9 +59,8 @@ object ScrollAreaTest extends App
 	// Creates the scroll area
 	val barDrawer = BoxScrollBarDrawer.roundedBarOnly(Color.black.withAlpha(0.55))
 	val scrollArea = new ScrollArea(stack, actorHandler, barDrawer, 16, 64,
-		friction = LinearAcceleration(2000)(TimeUnit.SECONDS),
-		lengthLimits = StackLengthLimit.sizeLimit(maxOptimal = Some(Size.square(480))),
-		scrollBarIsInsideContent = true)
+		friction = LinearAcceleration(2000)(TimeUnit.SECONDS), scrollBarIsInsideContent = true)
+	scrollArea addConstraint MaxOptimalLengthModifier(480).symmetric
 
 	// Creates the frame and displays it
 	val actionLoop = new ActorLoop(actorHandler)
@@ -69,7 +69,7 @@ object ScrollAreaTest extends App
 	frame.setToExitOnClose()
 
 	// Adds additional action on END key
-	scrollArea.addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_END) { _ => scrollArea.scrollToBottom() })
+	GlobalKeyboardEventHandler += KeyStateListener.onKeyPressed(KeyEvent.VK_END) { _ => scrollArea.scrollToBottom() }
 
 	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()

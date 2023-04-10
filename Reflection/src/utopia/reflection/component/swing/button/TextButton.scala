@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.button
 
+import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
@@ -8,7 +9,7 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.text.TextComponent
+import utopia.reflection.component.template.text.MutableTextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
@@ -90,7 +91,7 @@ class TextButton(initialText: LocalizedString, initialFont: Font, color: Color,
 				 initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
 				 borderWidth: Double = 0.0, initialAlignment: Alignment = Center,
 				 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with TextComponent
+	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with MutableTextComponent
 		with SwingComponentRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------
@@ -106,13 +107,17 @@ class TextButton(initialText: LocalizedString, initialFont: Font, color: Color,
 	
 	// IMPLEMENTED	------------------
 	
-	override def insets = super.insets - borderWidth
+	override def measuredText: MeasuredText = label.measuredText
 	
-	override def insets_=(newInsets: StackInsets) = super.insets_=(newInsets + borderWidth)
+	override def allowTextShrink: Boolean = label.allowTextShrink
 	
-	override def drawContext = label.drawContext
+	override def textInsets = super.textInsets - borderWidth
 	
-	override def drawContext_=(newContext: TextDrawContext) = label.drawContext = newContext
+	override def textInsets_=(newInsets: StackInsets) = super.textInsets_=(newInsets + borderWidth)
+	
+	override def textDrawContext = label.textDrawContext
+	
+	override def textDrawContext_=(newContext: TextDrawContext) = label.textDrawContext = newContext
 	
 	override def component = label.component
 	

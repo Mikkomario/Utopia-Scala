@@ -125,20 +125,20 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
   * @since 4.10.2020, v0.1
   * @param parentHierarchy This component's parent hierarchy
   * @param text Text displayed on this label
-  * @param drawContext Styling settings for text drawing and layout
+  * @param textDrawContext Styling settings for text drawing and layout
   * @param additionalDrawers Additional custom drawing (default = empty)
   * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
   */
 class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: LocalizedString,
-				override val drawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
-				override val allowTextShrink: Boolean = false)
+                override val textDrawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
+                override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2
 {
 	// ATTRIBUTES	-----------------------------
 	
 	override val measuredText = measure(text)
 	override val customDrawers = additionalDrawers.toVector :+
-		TextDrawer(measuredText, drawContext.font, drawContext.insets, drawContext.color, drawContext.alignment)
+		TextDrawer(measuredText, textDrawContext.font, textDrawContext.insets, textDrawContext.color, textDrawContext.alignment)
 	
 	
 	// IMPLEMENTED	-----------------------------

@@ -7,6 +7,7 @@ import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType, MouseButtonStateListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.HandlerType
@@ -178,7 +179,12 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		displaysManager.enableKeyHandling(actorHandler, listenEnabledCondition = Some(() => mainDisplay.isInFocus ||
 			visiblePopup.exists { _.visible }))
 		
-		addKeyStateListener(ShowPopupKeyListener)
+		addStackHierarchyChangeListener(attached => {
+			if (attached)
+				GlobalKeyboardEventHandler += ShowPopupKeyListener
+			else
+				GlobalKeyboardEventHandler -= ShowPopupKeyListener
+		}, callIfAttached = true)
 		addMouseButtonListener(ShowPopupKeyListener)
 	}
 	

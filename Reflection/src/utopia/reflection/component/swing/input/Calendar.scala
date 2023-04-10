@@ -16,7 +16,7 @@ import utopia.reflection.component.swing.button.{ButtonImageSet, CustomDrawableB
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, StackableAwtComponentWrapperWrapper}
 import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionGroup}
-import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
@@ -122,8 +122,8 @@ object Calendar
   */
 class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDropDownWrapper[Year], forwardIcon: ButtonImageSet,
                backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
-               val insideCalendarMargin: StackSize, makeDayNameLabel: WeekDay => AwtComponentRelated with Stackable,
-               private val makeDateButton: Int => AwtComponentRelated with Stackable with InteractionWithPointer[Boolean])
+               val insideCalendarMargin: StackSize, makeDayNameLabel: WeekDay => AwtComponentRelated with ReflectionStackable,
+               private val makeDateButton: Int => AwtComponentRelated with ReflectionStackable with InteractionWithPointer[Boolean])
               (implicit weekDays: WeekDays)
 	extends StackableAwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[LocalDate]
 {

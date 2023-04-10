@@ -8,7 +8,7 @@ import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
+import utopia.reflection.container.swing.layout.multi.{AnimatedCollectionView, CollectionView}
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
@@ -41,6 +41,7 @@ object CollectionViewTest extends App
 	Loop.regularly(1.seconds) {
 		val label = new EmptyLabel
 		label.background = Rgb(random.nextDouble(), random.nextDouble(), random.nextDouble())
+		println("\nAdding a new label")
 		collection += label.withStackSize(StackSize.any(Size(16 + random.nextInt(97), 64)))
 	}
 }

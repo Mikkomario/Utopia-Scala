@@ -1,20 +1,21 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.Color
+import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.image.Image
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.LinearAlignment.{Close, Far}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.component.template.text.TextComponent
+import utopia.reflection.component.template.text.MutableStyleTextComponent
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.LinearAlignment.{Close, Far}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
@@ -66,7 +67,7 @@ object ImageAndTextLabel
   * @param imageInsets Insets used in image display (default = any insets)
   * @param alignment Alignment used for placing the items + text alignment (default = left)
   * @param initialTextColor Text color used initially (default = black)
-  * @param textHasMinWidth Whether text should always be fully displayed (default = true)
+  * @param hasMinWidth Whether text should always be fully displayed (default = true)
   * @param allowImageUpscaling Whether image should be allowed to scale up (default = false)
   * @param itemToImageFunction Function used for selecting proper image for each item
   */
@@ -74,14 +75,15 @@ class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], in
 						   displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 						   textInsets: StackInsets = StackInsets.any, imageInsets: StackInsets = StackInsets.any,
 						   alignment: Alignment = Alignment.Left,
-						   initialTextColor: Color = Color.textBlack, textHasMinWidth: Boolean = true,
+						   initialTextColor: Color = Color.textBlack, hasMinWidth: Boolean = true,
 						   allowImageUpscaling: Boolean = false)(itemToImageFunction: A => Image)
-	extends StackableAwtComponentWrapperWrapper with RefreshableWithPointer[A] with TextComponent with SwingComponentRelated
+	extends StackableAwtComponentWrapperWrapper with RefreshableWithPointer[A]
+		with MutableStyleTextComponent with SwingComponentRelated
 {
 	// ATTRIBUTES	-------------------------
 	
 	private val textLabel = new ItemLabel[A](contentPointer, displayFunction, initialFont, initialTextColor,
-		textInsets, alignment, textHasMinWidth)
+		textInsets, alignment, hasMinWidth)
 	private val imageLabel = new ImageLabel(itemToImageFunction(contentPointer.value), allowUpscaling = allowImageUpscaling)
 	
 	private val view = {
@@ -120,13 +122,17 @@ class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], in
 	
 	// IMPLEMENTED	-------------------------
 	
+	override def allowTextShrink: Boolean = textLabel.allowTextShrink
+	
+	override def measuredText: MeasuredText = textLabel.measuredText
+	
 	override def component = view.component
 	
 	def text = textLabel.text
 	
-	override def drawContext = textLabel.drawContext
+	override def textDrawContext = textLabel.textDrawContext
 	
-	override def drawContext_=(newContext: TextDrawContext) = textLabel.drawContext = newContext
+	override def textDrawContext_=(newContext: TextDrawContext) = textLabel.textDrawContext = newContext
 	
 	override protected def wrapped = view
 	

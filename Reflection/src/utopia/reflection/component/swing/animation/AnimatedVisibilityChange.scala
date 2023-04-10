@@ -1,14 +1,14 @@
 package utopia.reflection.component.swing.animation
 
+import utopia.genesis.util.Fps
 import utopia.paradigm.animation.Animation
+import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.path.ProjectilePath
 import utopia.paradigm.shape.shape2d.Size
-import utopia.paradigm.enumeration.Axis2D
-import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
-import utopia.reflection.component.template.layout.stack.{AnimatedTransitionLike, Stackable}
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper}
+import utopia.reflection.component.template.layout.stack.{AnimatedTransitionLike, ReflectionStackable}
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange
@@ -32,8 +32,8 @@ object AnimatedVisibilityChange
 	  * @param context Component creation context (implicit)
 	  * @return A new animated transition
 	  */
-	def contextual(original: AwtComponentRelated with Stackable, transitionAxis: Option[Axis2D] = None,
-				   transition: VisibilityChange = Appearing, finalSize: Option[Size] = None)
+	def contextual(original: AwtComponentRelated with ReflectionStackable, transitionAxis: Option[Axis2D] = None,
+	               transition: VisibilityChange = Appearing, finalSize: Option[Size] = None)
 				  (implicit context: AnimationContextLike) =
 	{
 		new AnimatedVisibilityChange(original, transitionAxis, transition, context.animationDuration,
@@ -58,7 +58,7 @@ object AnimatedVisibilityChange
   *                       (default = 120 frames/times per second)
   * @param useFading Whether fading (alpha change) should be used during the transition (default = true)
   */
-class AnimatedVisibilityChange(original: AwtComponentRelated with Stackable, transitionAxis: Option[Axis2D] = None,
+class AnimatedVisibilityChange(original: AwtComponentRelated with ReflectionStackable, transitionAxis: Option[Axis2D] = None,
 							   transition: VisibilityChange = Appearing,
 							   override val duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 							   finalSize: Option[Size] = None,

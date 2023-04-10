@@ -1,7 +1,8 @@
 package utopia.reflection.container.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.ReflectionComponentLike
+import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 /**
   * This container holds its tracked components inside wrappers that may contain one or more components
@@ -10,7 +11,7 @@ import utopia.reflection.component.template.ComponentLike
   * @tparam C Type of component held within this container
   * @tparam Wrap Type of component wrapper
   */
-trait MappingContainer[C <: ComponentLike, Wrap] extends Container[C]
+trait MappingContainer[C <: ReflectionComponentLike, Wrap] extends MutableMultiContainer2[C, C]
 {
 	// ABSTRACT	------------------------
 	
@@ -112,8 +113,7 @@ trait MappingContainer[C <: ComponentLike, Wrap] extends Container[C]
 		}
 	}
 	
-	override protected def remove(component: C) =
-	{
+	override protected def remove(component: C) = {
 		// Finds the wrapper that holds the specified component and then removes it from it
 		wrappers.find { componentsOf(_).iterator.exists { _ == component } }.foreach { removeComponentFromWrapper(component, _) }
 	}

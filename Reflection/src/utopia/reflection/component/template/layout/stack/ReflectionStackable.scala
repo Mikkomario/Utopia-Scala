@@ -20,10 +20,10 @@ import utopia.reflection.util.ComponentCreationDefaults
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
 
-object Stackable
+object ReflectionStackable
 {
 	// AwtComponent stackables can be stacked & framed easily
-	implicit class AwtStackable[S <: ReflectionStackable with AwtComponentRelated](val s: S) extends AnyVal
+	implicit class ReflectionAwtStackable[S <: ReflectionStackable with AwtComponentRelated](val s: S) extends AnyVal
 	{
 		/**
 		  * Creates a stack with this item along with some others
