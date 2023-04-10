@@ -44,7 +44,6 @@ object ScrollAreaLike
   * @author Mikko Hilpinen
   * @since 15.5.2019, v1+
   */
-@deprecated("Replaced with a new implementation", "v2.0")
 trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContainerLike[C]
 {
 	// ATTRIBUTES	----------------

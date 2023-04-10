@@ -11,7 +11,6 @@ import scala.collection.immutable.HashMap
   * @author Mikko Hilpinen
   * @since 30.4.2019, v1+
   */
-@deprecated("Replaced with a new implementation", "v2.0")
 trait ScrollViewLike[C <: Stackable] extends ScrollAreaLike[C]
 {
 	// ABSTRACT	--------------------
