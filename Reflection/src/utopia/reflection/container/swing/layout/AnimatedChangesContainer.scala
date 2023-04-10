@@ -1,16 +1,17 @@
 package utopia.reflection.container.swing.layout
 
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.VolatileList
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.animation.AnimatedVisibility
-import utopia.reflection.component.template.layout.stack.StackableWrapper
+import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 import utopia.reflection.container.stack.template.MultiStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.container.template.{MultiContainer, WrappingContainer}
+import utopia.reflection.container.template.WrappingContainer
+import utopia.reflection.container.template.mutable.MutableMultiContainer2
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.util.ComponentCreationDefaults
 
@@ -46,7 +47,8 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
  maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate, fadingIsEnabled: Boolean = true)
 (implicit exc: ExecutionContext)
-	extends WrappingContainer[C, AnimatedVisibility[C]] with StackableWrapper with MultiContainer[C]
+	extends WrappingContainer[C, AnimatedVisibility[C]] with ReflectionStackableWrapper
+		with MutableMultiContainer2[C, AnimatedVisibility[C]]
 {
 	// ATTRIBUTES	-----------------------------
 	
@@ -59,8 +61,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	
 	override protected def wrapped = container
 	
-	override protected def wrappers =
-	{
+	override protected def wrappers = {
 		wrappersList.value.filterNot { _._2 }.map { _._1 }
 		/*
 		val notIncluded = waitingRemoval
@@ -71,6 +72,22 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 			wrappersInContainer.filterNot(notIncluded.contains).map { w => w -> w.display }*/
 	}
 	
+	override protected def add(components: IterableOnce[C], index: Int): Unit =
+		Vector.from(components).reverseIterator.foreach { add(_, index) }
+	
+	override protected def remove(component: AnimatedVisibility[C]): Unit =
+		wrappersList.lastIndexWhereOption { _._1 == component }.foreach { index =>
+			removeWrapper(component, index)
+		}
+	
+	override protected def remove(components: IterableOnce[AnimatedVisibility[C]]): Unit =
+		components.iterator.foreach(remove)
+	
+	override def addBack(component: AnimatedVisibility[C], index: Int): Unit = add(component.display, index)
+	
+	override def addBack(components: IterableOnce[AnimatedVisibility[C]], index: Int): Unit =
+		Vector.from(components).reverseIterator.foreach { addBack(_, index) }
+	
 	override protected def removeWrapper(wrapper: AnimatedVisibility[C], index: Int) =
 	{
 		// Marks the wrapper as ready for removal
@@ -78,8 +95,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 		// Also starts the hiding process
 		(wrapper.isShown = false).foreach { newState =>
 			// If someone made the wrapper visible again, will not remove it
-			if (newState.isNotVisible)
-			{
+			if (newState.isNotVisible) {
 				// Removes the wrapper from the container once animation has finished
 				wrappersList.update { old =>
 					container -= wrapper

@@ -5,6 +5,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.genesis.util.Fps
+import utopia.paradigm.shape.shape2d.Size
 
 /**
   * A container for mutable globals that are used as default values in component creation. This object shouldn't be

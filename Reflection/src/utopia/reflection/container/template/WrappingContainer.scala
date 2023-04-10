@@ -1,14 +1,14 @@
 package utopia.reflection.container.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.ReflectionComponentLike
 
 /**
   * This container holds its managed components within wrappers that hold exactly one component each.
   * @author Mikko Hilpinen
   * @since 20.4.2020, v1.2
   */
-trait WrappingContainer[C <: ComponentLike, Wrap] extends Container[C]
+trait WrappingContainer[C <: ReflectionComponentLike, Wrap] extends Container[C]
 {
 	// ABSTRACT	------------------------------
 	
@@ -32,11 +32,11 @@ trait WrappingContainer[C <: ComponentLike, Wrap] extends Container[C]
 	
 	// IMPLEMENTED	----------------------------
 	
-	override protected def remove(component: C) =
-	{
+	override protected def remove(component: C) = {
 		val wrappers = this.wrappers
 		wrappers.indexWhereOption { unwrap(_) == component }.foreach { index => removeWrapper(wrappers(index), index) }
 	}
+	
 	
 	override def components = wrappers.map(unwrap)
 }

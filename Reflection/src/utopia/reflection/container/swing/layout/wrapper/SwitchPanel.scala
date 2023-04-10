@@ -3,11 +3,10 @@ package utopia.reflection.container.swing.layout.wrapper
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.stack.StackSize
 
 object SwitchPanel
 {
@@ -17,12 +16,7 @@ object SwitchPanel
 	  * @tparam C Type of switch panel content
 	  * @return A new panel
 	  */
-	def apply[C <: AwtStackable](initialContent: C) =
-	{
-		val container = new SwitchPanel[C]
-		container.set(initialContent)
-		container
-	}
+	def apply[C <: AwtStackable](initialContent: C) = new SwitchPanel[C](initialContent)
 }
 
 /**
@@ -30,13 +24,14 @@ object SwitchPanel
   * @author Mikko Hilpinen
   * @since 27.4.2019, v1+
   */
-class SwitchPanel[C <: Stackable with AwtComponentRelated] extends SingleStackContainer[C]
-	with AwtComponentWrapperWrapper with SwingComponentRelated with AwtContainerRelated with CachingStackable
-	with MutableCustomDrawableWrapper
+class SwitchPanel[C <: ReflectionStackable with AwtComponentRelated](initialContent: C)
+	extends SingleStackContainer[C] with AwtComponentWrapperWrapper with SwingComponentRelated
+		with AwtContainerRelated with CachingReflectionStackable with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	-------------------
 	
 	private val panel = new Panel[C]()
+	private var _content = initialContent
 	
 	
 	// INITIAL CODE	-------------------
@@ -46,7 +41,9 @@ class SwitchPanel[C <: Stackable with AwtComponentRelated] extends SingleStackCo
 	
 	// IMPLEMENTED	-------------------
 	
-	override def children = super[SingleStackContainer].children
+	override protected def content: C = _content
+	
+	override def children = components
 	
 	override def drawable = panel
 	
@@ -56,20 +53,21 @@ class SwitchPanel[C <: Stackable with AwtComponentRelated] extends SingleStackCo
 	
 	override def component = panel.component
 	
+	override protected def _set(content: C): Unit = {
+		panel -= _content
+		_content = content
+		panel.insert(content, 0)
+	}
+	
 	// Content size matches that of this panel
-	override def updateLayout() =
-	{
-		content.foreach { _.size = this.size }
+	override def updateLayout() = {
+		content.size = this.size
 		repaint()
 	}
 	
-	override def calculatedStackSize = content.map { _.stackSize } getOrElse StackSize.any
+	override def calculatedStackSize = content.stackSize
 	
 	override def components = panel.components
-	
-	override protected def add(component: C, index: Int) = panel.insert(component, index)
-	
-	override protected def remove(component: C) = panel -= component
 	
 	override def background_=(color: Color) = super[AwtComponentWrapperWrapper].background_=(color)
 }

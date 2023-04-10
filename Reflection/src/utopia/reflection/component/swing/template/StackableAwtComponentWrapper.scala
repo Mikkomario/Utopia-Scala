@@ -1,9 +1,9 @@
 package utopia.reflection.component.swing.template
 
-import java.awt.Component
-
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
 import utopia.reflection.shape.stack.StackSize
+
+import java.awt.Component
 
 object StackableAwtComponentWrapper
 {
@@ -28,7 +28,7 @@ object StackableAwtComponentWrapper
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-trait StackableAwtComponentWrapper extends AwtComponentWrapper with CachingStackable
+trait StackableAwtComponentWrapper extends AwtComponentWrapper with CachingReflectionStackable
 {
 	// IMPLEMENTED	-----------------
 	

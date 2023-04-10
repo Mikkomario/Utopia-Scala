@@ -15,8 +15,7 @@ trait MultiStackContainer[C <: ReflectionStackable] extends MutableMultiContaine
 {
 	// IMPLEMENTED	---------------------
 	
-	override def insert(component: C, index: Int) =
-	{
+	override def insert(component: C, index: Int) = {
 		// Adds the component, but also registers it to stack hierarchy manager
 		addWithoutRevalidating(component, index)
 		
@@ -24,8 +23,7 @@ trait MultiStackContainer[C <: ReflectionStackable] extends MutableMultiContaine
 		revalidate()
 	}
 	
-	override def -=(component: C) =
-	{
+	override def -=(component: C) = {
 		// Removes the component, but also unregisters it from stack hierarchy manager
 		removeWithoutRevalidating(component)
 		

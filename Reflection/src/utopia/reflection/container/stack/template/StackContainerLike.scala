@@ -24,10 +24,8 @@ trait StackContainerLike[C <: ReflectionStackable] extends ContainerLike[C] with
 	
 	override def isAttachedToMainHierarchy = _isAttachedToMainHierarchy
 	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-	{
-		if (_isAttachedToMainHierarchy != newAttachmentStatus)
-		{
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
+		if (_isAttachedToMainHierarchy != newAttachmentStatus) {
 			_isAttachedToMainHierarchy = newAttachmentStatus
 			fireStackHierarchyChangeEvent(newAttachmentStatus)
 			// When connected to stack hierarchy, connects the children as well

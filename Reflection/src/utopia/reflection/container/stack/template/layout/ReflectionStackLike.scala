@@ -3,10 +3,10 @@ package utopia.reflection.container.stack.template.layout
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper, StackSizeCalculating}
 import utopia.reflection.component.template.layout.{Area, AreaOfItems}
-import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper, StackSizeCalculating, Stackable, StackableWrapper}
 import utopia.reflection.container.stack.template.MultiStackContainer
-import utopia.reflection.container.stack.{StackLayout, Stacker}
+import utopia.reflection.container.stack.{StackLayout, Stacker2}
 import utopia.reflection.shape.stack.StackLength
 
 /**
@@ -73,18 +73,24 @@ trait ReflectionStackLike[C <: ReflectionStackable]
         super.insert(component, index)
     }
     
+    override def addBack(component: C, index: Int): Unit = add(component, index)
+    override def addBack(components: IterableOnce[C], index: Int): Unit = add(components, index)
+    
+    override protected def add(components: IterableOnce[C], index: Int): Unit =
+        Vector.from(components).reverseIterator.foreach { add(_, index) }
+    override protected def remove(components: IterableOnce[C]): Unit = components.iterator.foreach(remove)
+    
     override def -=(component: C) = {
         _components = _components.filterNot { _.source == component }
         super.-=(component)
     }
     
-    def calculatedStackSize = Stacker.calculateStackSize(
+    def calculatedStackSize = Stacker2.calculateStackSize(
         _components.filter { _.visible }.map { _.stackSize }, direction, margin, cap, layout)
     
-    def updateLayout() =
-    {
+    def updateLayout() = {
         // Positions the components using a stacker
-        Stacker(_components, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
+        Stacker2(_components, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
             
         // Finally applies the changes
         _components.view.filter { _.visible }.foreach { _.updateBounds() }

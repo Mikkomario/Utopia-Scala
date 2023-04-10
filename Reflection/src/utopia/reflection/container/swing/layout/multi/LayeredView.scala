@@ -5,7 +5,7 @@ import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, Mutab
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.swing.template.{AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.Alignable
-import utopia.reflection.component.template.layout.stack.CachingStackable
+import utopia.reflection.component.template.layout.stack.CachingReflectionStackable
 import utopia.reflection.container.stack.template.StackContainerLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.AlignFrame
@@ -18,7 +18,7 @@ import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
  */
 class LayeredView[Background <: AwtStackable with MutableCustomDrawable, Foreground <: AwtStackable with MutableCustomDrawable]
 (background: Background, foreground: Foreground, initialAlignment: Alignment)
-	extends AwtComponentWrapperWrapper with CachingStackable with SwingComponentRelated with AwtContainerRelated
+	extends AwtComponentWrapperWrapper with CachingReflectionStackable with SwingComponentRelated with AwtContainerRelated
 		with MutableCustomDrawableWrapper with Alignable with StackContainerLike[AwtStackable]
 {
 	// ATTRIBUTES	---------------------

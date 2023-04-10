@@ -1,26 +1,26 @@
 package utopia.reflection.component.swing.input
 
-import java.awt.event.{ActionEvent, ActionListener}
-import javax.swing.plaf.basic.ComboPopup
-import javax.swing.{JComboBox, JList, ListCellRenderer}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.template.input.SelectableWithPointers
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.Focusable
+import utopia.reflection.component.template.input.SelectableWithPointers
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.Border
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 import utopia.reflection.util.AwtEventThread
+
+import java.awt.event.{ActionEvent, ActionListener}
+import javax.swing.plaf.basic.ComboPopup
+import javax.swing.{JComboBox, JList, ListCellRenderer}
 
 object JDropDownWrapper
 {
@@ -68,7 +68,8 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 						  selectedBackground: Color, textColor: Color = Color.textBlack,
 						  val displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialContent: Vector[A] = Vector(),
 						  val maximumOptimalWidth: Option[Int] = None)
-	extends SelectableWithPointers[Option[A], Vector[A]] with JWrapper with CachingStackable with Focusable with StackLeaf
+	extends SelectableWithPointers[Option[A], Vector[A]] with JWrapper with CachingReflectionStackable
+		with Focusable with StackLeaf
 {
 	// ATTRIBUTES	-------------------
 	
@@ -93,8 +94,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	
 	{
 		val popup = field.getUI.getAccessibleChild(field, 0)
-		popup match
-		{
+		popup match {
 			case p: ComboPopup =>
 				val jlist = p.getList
 				// jlist.setFixedCellHeight(h + margins.height.optimal * 2)
@@ -103,7 +103,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 				jlist.setForeground(textColor.toAwt)
 				jlist.setBackground(backgroundColor.toAwt)
 				jlist.setSelectionForeground(textColor.toAwt)
-				textHeight.foreach { jlist.setFixedCellHeight }
+				jlist.setFixedCellHeight(textHeightWith(font))
 			case _ =>
 		}
 	}
@@ -145,23 +145,18 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	
 	override def component = field
 	
-	override def calculatedStackSize =
-	{
+	override def calculatedStackSize = {
 		// If this drop down contains fields, they may affect the width
-		fontMetrics.map
-		{
-			metrics =>
-				val maxTextWidth = (selectText +: displayValues).map { s => metrics.stringWidth(s.string) }.max
-				val textW = insets.horizontal + maxTextWidth
-				val textH = insets.vertical + metrics.getHeight
-				
-				// May limit text width optimal (also adds width for drop down icon)
-				val finalW = (maximumOptimalWidth.map { max => if (textW.optimal > max) textW.withOptimal(max) else
-					textW } getOrElse textW) + 24
-				
-				StackSize(finalW, textH)
-				
-		} getOrElse (220.any x 32.any)
+		val metrics = fontMetricsWith(font)
+		val maxTextWidth = (selectText +: displayValues).map { s => metrics.widthOf(s.string) }.max
+		val textW = insets.horizontal + maxTextWidth
+		val textH = insets.vertical + metrics.lineHeight
+		
+		// May limit text width optimal (also adds width for drop down icon)
+		val finalW = (maximumOptimalWidth.map { max => if (textW.optimal > max) textW.withOptimal(max) else
+			textW } getOrElse textW) + 24
+		
+		StackSize(finalW, textH)
 	}
 	
 	override def updateLayout() = component.revalidate()

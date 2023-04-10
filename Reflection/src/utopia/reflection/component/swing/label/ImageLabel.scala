@@ -8,7 +8,7 @@ import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
 import utopia.reflection.shape.stack.StackSize
 
 object ImageLabel
@@ -37,7 +37,7 @@ object ImageLabel
   */
 class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpscaling: Boolean = false,
 				 isLowPriority: Boolean = false)
-	extends Label with CachingStackable with RefreshableWithPointer[Image] with StackLeaf
+	extends Label with CachingReflectionStackable with RefreshableWithPointer[Image] with StackLeaf
 {
 	// ATTRIBUTES	-----------------
 	

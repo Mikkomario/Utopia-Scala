@@ -21,10 +21,9 @@ import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.component.template.layout.Alignable
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Border
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt}
 import utopia.reflection.util.AwtEventThread
@@ -253,7 +252,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
 				   initialAlignment: Alignment = Alignment.Left,
 				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
-	extends JWrapper with CachingStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
+	extends JWrapper with CachingReflectionStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
 		with MutableCustomDrawableWrapper with StackLeaf
 {
 	// ATTRIBUTES	----------------------
@@ -353,9 +352,8 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	
 	override def component: JTextField = field
 	
-	override def calculatedStackSize =
-	{
-		val h = textHeight.map { insideMargins.height * 2 + _ } getOrElse 32.any
+	override def calculatedStackSize = {
+		val h = insideMargins.height * 2 + textHeightWith(font)
 		StackSize(targetWidth, h)
 	}
 	
@@ -375,8 +373,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	  * Aligns this field to the left and adds margin
 	  * @param margin The amount of margin
 	  */
-	def alignLeft(margin: Double): Unit =
-	{
+	def alignLeft(margin: Double): Unit = {
 		alignLeft()
 		if (margin > 0)
 			setBorder(defaultBorder + Border(Insets.left(margin), None))

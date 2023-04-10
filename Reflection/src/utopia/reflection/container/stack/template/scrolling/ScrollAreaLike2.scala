@@ -389,15 +389,13 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		
 		// Listens to mouse and keyboard events when attached to the main stack hierarchy
 		addHierarchyListener { isAttached =>
-			if (isAttached)
-			{
+			if (isAttached) {
 				addMouseButtonListener(listener)
 				addMouseMoveListener(listener)
 				addMouseWheelListener(listener)
 				GlobalMouseEventHandler += listener.MouseReleaseListener
 			}
-			else
-			{
+			else {
 				removeMouseListener(listener)
 				GlobalMouseEventHandler -= listener.MouseReleaseListener
 			}

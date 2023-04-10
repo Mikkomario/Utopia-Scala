@@ -5,7 +5,7 @@ package utopia.reflection.component.template.layout.stack
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-abstract class CachingReflectionStackable extends CachingStackable2 with ReflectionStackable
+trait CachingReflectionStackable extends CachingStackable2 with ReflectionStackable
 {
 	// ATTRIBUTES	-----------------
 	

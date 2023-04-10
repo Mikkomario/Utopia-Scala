@@ -32,23 +32,8 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  */
 	def allowTextShrink: Boolean
 	
-	/*
-	/**
-	  * Measures specified text in this context
-	  * @param text Text to measure
-	  * @return Measured text
-	  */
-	def measure(text: LocalizedString): MeasuredText
-	*/
 	
 	// COMPUTED	--------------------------
-	
-	/*
-	/**
-	  * @return Text displayed in this component
-	  */
-	def text = measuredText.text
-	 */
 	
 	/**
 	  * @return The insets around the text in this component
@@ -100,8 +85,7 @@ trait TextComponent2 extends ComponentLike2 with StackSizeCalculating
 	  * @param text Pre-measured text
 	  * @return Calculated stack size of this component when containing specified text
 	  */
-	def calculatedStackSizeWith(text: MeasuredText) =
-	{
+	def calculatedStackSizeWith(text: MeasuredText) = {
 		// Adds margins to base text size.
 		val insets = this.insets
 		val textSize = text.size

@@ -8,6 +8,7 @@ import utopia.reflection.shape.stack.{StackLength, StackSize}
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
+@deprecated("Replaced with a new version", "v2.0")
 trait SingleLineTextComponent extends TextComponent with StackSizeCalculating
 {
 	// ABSTRACT	--------------------------

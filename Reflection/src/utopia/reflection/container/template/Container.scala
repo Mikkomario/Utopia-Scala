@@ -1,13 +1,13 @@
 package utopia.reflection.container.template
 
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.ReflectionComponentLike
 
 /**
 * Common trait for mutable component containers / hierarchies
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
-trait Container[C <: ComponentLike] extends ContainerLike[C]
+trait Container[C <: ReflectionComponentLike] extends ContainerLike[C]
 {
     // ABSTRACT    ----------------
     

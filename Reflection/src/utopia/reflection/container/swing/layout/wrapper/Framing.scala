@@ -7,8 +7,8 @@ import utopia.reflection.component.drawing.immutable.RoundedBackgroundDrawer
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
-import utopia.reflection.component.template.layout.stack.Stackable
-import utopia.reflection.container.stack.template.layout.FramingLike
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
+import utopia.reflection.container.stack.template.layout.ReflectionFramingLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.shape.stack.{StackInsets, StackSize}
@@ -53,12 +53,13 @@ object Framing
   * @author Mikko Hilpinen
   * @since 26.4.2019, v1+
   */
-class Framing[C <: Stackable with AwtComponentRelated](initialComponent: C, val insets: StackInsets) extends
-	FramingLike[C] with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
+class Framing[C <: ReflectionStackable with AwtComponentRelated](initialComponent: C, val insets: StackInsets)
+	extends ReflectionFramingLike[C] with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	--------------------
 	
 	private val panel = new Panel[C]()
+	private var _content = initialComponent
 	
 	
 	// INITIAL CODE	--------------------
@@ -70,15 +71,19 @@ class Framing[C <: Stackable with AwtComponentRelated](initialComponent: C, val 
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def content: C = _content
+	
 	override def drawable = panel
 	
 	override protected def container = panel
 	
 	override def component = panel.component
 	
-	override protected def add(component: C, index: Int) = panel.insert(component, index)
-	
-	override protected def remove(component: C) = panel -= component
+	override protected def _set(content: C): Unit = {
+		panel -= _content
+		_content = content
+		panel.insert(content, 0)
+	}
 	
 	
 	// OTHER	------------------------
@@ -87,10 +92,8 @@ class Framing[C <: Stackable with AwtComponentRelated](initialComponent: C, val 
 	  * Adds rounded background drawing to this framing
 	  * @param color Color to use when drawing the background
 	  */
-	def addRoundedBackgroundDrawing(color: Color) =
-	{
-		insets.lengths.map { _.optimal }.filter { _ > 0.0 }.minOption match
-		{
+	def addRoundedBackgroundDrawing(color: Color) = {
+		insets.lengths.map { _.optimal }.filter { _ > 0.0 }.minOption match {
 			case Some(minSide) => addCustomDrawer(RoundedBackgroundDrawer.withRadius(color, minSide, Normal))
 			case None => addCustomDrawer(RoundedBackgroundDrawer.withFactor(color, 0.25, Normal))
 		}

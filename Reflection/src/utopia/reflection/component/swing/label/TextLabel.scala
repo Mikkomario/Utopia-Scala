@@ -8,8 +8,8 @@ import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.view.TextViewDrawer
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
-import utopia.reflection.component.template.text.SingleLineTextComponent
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.text.MutableTextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
@@ -70,12 +70,12 @@ object TextLabel
   * @param initialTextColor Color used in this label's text
   * @param initialInsets The insets placed around the text initially (default = 0 on each side)
   * @param initialAlignment Alignment used for positioning the text within this label
-  * @param hasMinWidth Whether this text label always presents the whole text (default = true)
+  * @param allowTextShrink Whether this text label always presents the whole text (default = true)
   */
 class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColor: Color = Color.textBlack,
 				initialInsets: StackInsets = StackInsets.any, initialAlignment: Alignment = Alignment.Left,
-				override val hasMinWidth: Boolean = true)
-	extends Label with SingleLineTextComponent with CachingStackable with StackLeaf
+				override val allowTextShrink: Boolean = true)
+	extends Label with MutableTextComponent with CachingReflectionStackable with StackLeaf
 {
 	// ATTRIBUTES	------------------
 	
@@ -122,6 +122,8 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	
 	
 	// IMPLEMENTED	------------------
+	
+	override def measuredText: MeasuredText = measuredTextPointer.value
 	
 	override protected def updateVisibility(visible: Boolean) = super[Label].visible_=(visible)
 	

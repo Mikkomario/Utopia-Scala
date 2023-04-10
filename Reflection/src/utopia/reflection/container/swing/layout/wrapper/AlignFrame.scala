@@ -5,7 +5,7 @@ import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.Alignable
-import utopia.reflection.container.stack.template.layout.AlignFrameLike
+import utopia.reflection.container.stack.template.layout.ReflectionAlignFrameLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 
@@ -17,7 +17,7 @@ object AlignFrame
 	  * @tparam C Type of frame content
 	  * @return A new frame
 	  */
-	def centered[C <: AwtStackable](content: C, useLowPriorityLengths: Boolean = false) = new AlignFrame(content, Center)
+	def centered[C <: AwtStackable](content: C) = new AlignFrame(content, Center)
 	
 	/**
 	  * Creates a frame that places content to a specified side
@@ -46,11 +46,12 @@ object AlignFrame
  * @since 3.11.2019, v1+
  */
 class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Alignment)
-	extends AlignFrameLike[C] with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
-		with Alignable
+	extends ReflectionAlignFrameLike[C] with SwingComponentRelated with AwtContainerRelated
+		with MutableCustomDrawableWrapper with Alignable
 {
 	// ATTRIBUTES	---------------------
 	
+	private var _content = initialComponent
 	private var _alignment = initialAlignment
 	
 	private val panel = new Panel[C]
@@ -65,10 +66,11 @@ class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Align
 	
 	// IMPLEMENTED	---------------------
 	
+	override protected def content: C = _content
+	
 	override def alignment = _alignment
 	// Alignment is mutable but component layout must be revalidated each time alignment changes
-	def alignment_=(newAlignment: Alignment) =
-	{
+	def alignment_=(newAlignment: Alignment) = {
 		if (_alignment != newAlignment)
 		{
 			_alignment = newAlignment
@@ -82,9 +84,11 @@ class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Align
 	
 	override def drawable = panel
 	
-	override protected def add(component: C, index: Int) = panel.insert(component, index)
-	
-	override protected def remove(component: C) = panel -= component
+	override protected def _set(content: C): Unit = {
+		panel -= _content
+		_content = content
+		panel.insert(content, 0)
+	}
 	
 	override def align(alignment: Alignment) = this.alignment = alignment
 }

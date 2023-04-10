@@ -11,7 +11,7 @@ import utopia.paradigm.enumeration.Alignment.Center
   * @author Mikko Hilpinen
   * @since 17.12.2019, v1
   */
-trait AlignFrameLike2[+C <: Stackable2] extends SingleContainer2[C] with CachingStackable2
+trait AlignFrameLike2[+C <: Stackable2] extends CachingStackable2 with SingleContainer2[C]
 {
 	// ABSTRACT	----------------------
 	

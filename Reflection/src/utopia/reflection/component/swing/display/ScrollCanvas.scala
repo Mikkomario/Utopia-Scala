@@ -17,11 +17,12 @@ import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.swing.template._
-import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
+import utopia.reflection.component.template.ReflectionComponentLike
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, StackLeaf}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
-import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
+import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.shape.stack.modifier.MaxOptimalSizeModifier
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
@@ -75,14 +76,14 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
                    scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
                    scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
                    scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
-                   scrollBarIsInsideContent: Boolean = false) extends StackableAwtComponentWrapperWrapper
+                   scrollBarIsInsideContent: Boolean = false)
+	extends StackableAwtComponentWrapperWrapper
 {
 	// ATTRIBUTES	------------------------
 	
 	private val canvas = new Canvas()
 	private val scrollArea = new ScrollArea(canvas, actorHandler, scrollBarDrawer, scrollBarWidth, scrollPerWheelClick,
-		scrollFriction, StackLengthLimit.sizeLimit(maxOptimal = maxOptimalSize), limitsToContentSize = true,
-		scrollBarIsInsideContent)
+		scrollFriction, limitsToContentSize = true, scrollBarIsInsideContent)
 	
 	private val started = new VolatileFlag()
 	
@@ -91,6 +92,8 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	
 	
 	// INITIAL CODE	------------------------
+	
+	maxOptimalSize.foreach { s => scrollArea.addConstraint(MaxOptimalSizeModifier(s)) }
 	
 	{
 		// Adds mouse event handling
@@ -126,7 +129,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	
 	// IMPLEMENTED	------------------------
 	
-	override protected def wrapped: Stackable with AwtComponentRelated = scrollArea
+	override protected def wrapped: ReflectionStackable with AwtComponentRelated = scrollArea
 	
 	
 	// OTHER	----------------------------
@@ -187,12 +190,12 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		}
 	}
 	
-	private class Canvas extends AwtComponentWrapperWrapper with SwingComponentRelated with CachingStackable
+	private class Canvas extends AwtComponentWrapperWrapper with SwingComponentRelated with CachingReflectionStackable
 		with MutableCustomDrawableWrapper with StackLeaf
 	{
 		// ATTRIBUTES	--------------------
 		
-		private val panel = new Panel[ComponentLike with AwtComponentRelated]()
+		private val panel = new Panel[ReflectionComponentLike with AwtComponentRelated]()
 		
 		
 		// INITIAL CODE	--------------------

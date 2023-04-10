@@ -9,10 +9,11 @@ import utopia.reflection.shape.stack.modifier.StackSizeModifier
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-abstract class CachingStackable2 extends Stackable2 with Constrainable
+trait CachingStackable2 extends Stackable2 with Constrainable
 {
 	// ATTRIBUTES	-----------------
 	
+	// TODO: Make these abstract, also
 	private var _constraints = Vector[StackSizeModifier]()
 	private val cachedStackSize = ResettableLazy[StackSize] { calculatedStackSizeWithConstraints }
 	
