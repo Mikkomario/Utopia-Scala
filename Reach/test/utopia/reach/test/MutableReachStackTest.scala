@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.firmament.controller.data.ContainerContentDisplayer2
+import utopia.firmament.controller.data.ContainerContentDisplayer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.KeyTypedListener
@@ -35,7 +35,7 @@ object MutableReachStackTest extends App
 	// Adds stack content management
 	val bg = colorScheme.primary.light
 	val dataPointer = new PointerWithEvents[Vector[Int]](Vector(1, 2, 3))
-	ContainerContentDisplayer2.forStatelessItems(stack, dataPointer) { i =>
+	ContainerContentDisplayer.forStatelessItems(stack, dataPointer) { i =>
 		Open.withContext(MutableViewTextLabel,
 			baseContext.against(bg).forTextComponents.withTextAlignment(Alignment.Center)) { f =>
 			f.withBackground(i, Secondary)

@@ -8,6 +8,7 @@ import utopia.firmament.component.display.Refreshable
 import utopia.firmament.controller.data.ContentDisplayer
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 
+@deprecated("Replaced with a new version in Firmament", "v2.0")
 object ContainerContentDisplayer
 {
 	/**
@@ -95,6 +96,7 @@ object ContainerContentDisplayer
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
+@deprecated("Replaced with a new version in Firmament", "v2.0")
 class ContainerContentDisplayer[A, Container <: MutableMultiContainer[Display, Display] with ReflectionStackable,
 	Display <: ReflectionStackable with Refreshable[A], +P <: Changing[Vector[A]]]
 (protected val container: Container, override val contentPointer: P,

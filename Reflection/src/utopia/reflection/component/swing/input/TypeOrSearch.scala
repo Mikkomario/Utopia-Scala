@@ -152,7 +152,7 @@ class TypeOrSearch
 		}
 	}
 	
-	manager.enableKeyHandling(parentContext.actorHandler, listenEnabledCondition = Some(() => textField.isInFocus))
+	manager.enableKeyHandling(parentContext.actorHandler, listenEnabledCondition = textField.isInFocus)
 	manager.enableMouseHandling(consumeEvents = false)
 	
 	

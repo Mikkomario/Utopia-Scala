@@ -31,7 +31,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   */
 // TODO: Should be an abstract class
 trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponentWrapper
-	with StackLeaf with MutableCustomDrawableWrapper
+	with ReflectionStackLeaf with MutableCustomDrawableWrapper
 {
 	// ABSTRACT	------------------------------------
 	
@@ -97,7 +97,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	
 	// IMPLEMENTED	--------------------------------
 	
-	override def children = super[StackLeaf].children
+	override def children = super[ReflectionStackLeaf].children
 	
 	override def updateLayout() = ()
 	

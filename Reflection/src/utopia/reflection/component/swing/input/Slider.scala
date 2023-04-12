@@ -27,7 +27,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.reflection.shape.stack.StackLength
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
@@ -252,7 +252,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
                 leftColor: Color, rightColor: Color, knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
                 stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
-	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with MutableCustomDrawableWrapper
+	extends AwtComponentWrapperWrapper with ReflectionStackLeaf with Focusable with MutableCustomDrawableWrapper
 		with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES   -------------------------

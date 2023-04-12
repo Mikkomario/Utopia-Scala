@@ -94,8 +94,8 @@ class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Comp
  override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => W)
-	extends ContainerContentDisplayer2[A, W, Display, PA](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)
-		with SelectionManager2[A, Option[A], Display, PA]
+	extends ContainerContentDisplayer[A, W, Display, PA](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)
+		with SelectionManager[A, Option[A], Display, PA]
 {
 	// ATTRIBUTES	----------------------------
 	

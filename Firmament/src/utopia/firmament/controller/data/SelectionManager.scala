@@ -15,7 +15,7 @@ import utopia.flow.view.template.eventful.Changing
   * @tparam C Type of display component
   * @tparam PA Type of pointer that contains the displayed content
   */
-trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
+trait SelectionManager[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 	extends ContentDisplayer[A, C, PA] with SelectionWithPointers[S, PointerWithEvents[S], Vector[A], PA]
 		with InteractionWithPointer[S]
 {
@@ -83,7 +83,6 @@ trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 	  * Moves selection one step forward
 	  */
 	def selectNext() = moveSelection(1)
-	
 	/**
 	  * Moves selection one step backwards
 	  */
@@ -93,18 +92,15 @@ trait SelectionManager2[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 	  * Selects another display
 	  * @param display A display to select
 	  */
-	def selectDisplay(display: C) =
-	{
+	def selectDisplay(display: C) = {
 		if (selectedDisplay.forall { _ != display })
 			value = itemInSelection(display.content, value)
 	}
-	
 	/**
 	  * Selects the specified display only
 	  * @param display A display to select
 	  */
-	def selectOnlyDisplay(display: C) =
-	{
+	def selectOnlyDisplay(display: C) = {
 		if (selectedDisplay.size != 1 || selectedDisplay.forall { _ != display })
 			value = itemToSelection(display.content)
 	}

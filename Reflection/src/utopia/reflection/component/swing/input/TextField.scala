@@ -23,7 +23,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.Alignable
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Prompt
@@ -253,7 +253,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 				   initialAlignment: Alignment = Alignment.Left,
 				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
 	extends JWrapper with CachingReflectionStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
-		with MutableCustomDrawableWrapper with StackLeaf
+		with MutableCustomDrawableWrapper with ReflectionStackLeaf
 {
 	// ATTRIBUTES	----------------------
 	

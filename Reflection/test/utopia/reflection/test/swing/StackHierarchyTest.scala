@@ -8,7 +8,7 @@ import javax.swing.JLabel
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.template.{JStackableWrapper, JWrapper}
-import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
@@ -25,7 +25,7 @@ object StackHierarchyTest extends App
 {
 	
 
-	private class ChangingWrapper extends JStackableWrapper with StackLeaf
+	private class ChangingWrapper extends JStackableWrapper with ReflectionStackLeaf
 	{
 		// ATTRIBUTES   -----------------
 

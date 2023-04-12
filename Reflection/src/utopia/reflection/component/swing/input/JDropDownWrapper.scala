@@ -13,7 +13,7 @@ import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
@@ -69,7 +69,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 						  val displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialContent: Vector[A] = Vector(),
 						  val maximumOptimalWidth: Option[Int] = None)
 	extends SelectableWithPointers[Option[A], Vector[A]] with JWrapper with CachingReflectionStackable
-		with Focusable with StackLeaf
+		with Focusable with ReflectionStackLeaf
 {
 	// ATTRIBUTES	-------------------
 	

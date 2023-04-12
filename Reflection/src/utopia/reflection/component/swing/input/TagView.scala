@@ -1,18 +1,18 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.display.{Refreshable, RefreshableWithPointer}
+import utopia.firmament.context.{AnimationContext, TextContext}
+import utopia.firmament.controller.data.ContainerContentDisplayer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.firmament.component.display.{Refreshable, RefreshableWithPointer}
-import utopia.firmament.context.{AnimationContext, TextContext}
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.layout.multi.{CollectionView, Stack}
 import utopia.reflection.container.swing.layout.wrapper.TagFraming
-import utopia.reflection.controller.data.ContainerContentDisplayer
 
 import scala.concurrent.ExecutionContext
 

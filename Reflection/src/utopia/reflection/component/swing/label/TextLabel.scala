@@ -9,7 +9,7 @@ import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
 
@@ -74,7 +74,7 @@ object TextLabel
 class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColor: Color = Color.textBlack,
 				initialInsets: StackInsets = StackInsets.any, initialAlignment: Alignment = Alignment.Left,
 				hasMinWidth: Boolean = true)
-	extends Label with MutableTextComponent with CachingReflectionStackable with StackLeaf
+	extends Label with MutableTextComponent with CachingReflectionStackable with ReflectionStackLeaf
 {
 	// ATTRIBUTES	------------------
 	

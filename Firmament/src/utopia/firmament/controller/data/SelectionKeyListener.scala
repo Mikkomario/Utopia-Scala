@@ -13,7 +13,7 @@ import utopia.paradigm.enumeration.Axis2D
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-object SelectionKeyListener2
+object SelectionKeyListener
 {
 	/**
 	  * Creates a new vertically moving selection key listener. Remember to add it to both an <b>ActorHandler</b> and
@@ -30,7 +30,7 @@ object SelectionKeyListener2
 	  */
 	def vertical(listenEnabledCondition: => Boolean = true, initialScrollDelay: Duration = 0.4.seconds,
 				 scrollDelayModifier: Double = 0.8, minScrollDelay: Duration = 0.05.seconds)
-				(moveSelection: Int => Unit) = new SelectionKeyListener2(KeyEvent.VK_DOWN, KeyEvent.VK_UP,
+				(moveSelection: Int => Unit) = new SelectionKeyListener(KeyEvent.VK_DOWN, KeyEvent.VK_UP,
 		listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
 	
 	/**
@@ -48,7 +48,7 @@ object SelectionKeyListener2
 	  */
 	def horizontal(listenEnabledCondition: => Boolean = true, initialScrollDelay: Duration = 0.4.seconds,
 				   scrollDelayModifier: Double = 0.8, minScrollDelay: Duration = 0.05.seconds)
-				  (moveSelection: Int => Unit) = new SelectionKeyListener2(KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+				  (moveSelection: Int => Unit) = new SelectionKeyListener(KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 		listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
 	
 	/**
@@ -91,11 +91,11 @@ object SelectionKeyListener2
   * @param minScrollDelay Minimum delay between each selection move (default = 0.05 seconds)
   * @param moveSelection A function for moving selection by specified amount
   */
-class SelectionKeyListener2(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int = KeyEvent.VK_UP,
-							listenEnabledCondition: => Boolean = true,
-							initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
-							minScrollDelay: Duration = 0.05.seconds)
-						   (moveSelection: Int => Unit)
+class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int = KeyEvent.VK_UP,
+                           listenEnabledCondition: => Boolean = true,
+                           initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
+                           minScrollDelay: Duration = 0.05.seconds)
+                          (moveSelection: Int => Unit)
 	extends KeyStateListener with Actor with Handleable
 {
 	// ATTRIBUTES	-----------------------------

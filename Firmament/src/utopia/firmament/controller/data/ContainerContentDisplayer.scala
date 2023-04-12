@@ -7,7 +7,7 @@ import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
-object ContainerContentDisplayer2
+object ContainerContentDisplayer
 {
 	/**
 	  * Short version of typical pointer used in these methods
@@ -33,7 +33,7 @@ object ContainerContentDisplayer2
 	                                             contentPointer: P[A],
 	                                             equalsCheck: EqualsFunction[A] = EqualsFunction.default)
 												(makeDisplay: A => W) =
-		new ContainerContentDisplayer2[A, W, Display, P[A]](container, contentPointer, equalsCheck)(makeDisplay)
+		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content displayer for immutable items that represent a state of some other object
@@ -52,7 +52,7 @@ object ContainerContentDisplayer2
 	def forImmutableStates[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A])
 												 (sameItemCheck: EqualsFunction[A])
 												 (makeDisplay: A => W) =
-		new ContainerContentDisplayer2[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
+		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
 	
 	/**
@@ -72,7 +72,7 @@ object ContainerContentDisplayer2
 	def forMutableItems[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A])
 											  (sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])
 											  (makeDisplay: A => W) =
-		new ContainerContentDisplayer2[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
+		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
 }
 
@@ -93,7 +93,7 @@ object ContainerContentDisplayer2
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
-class ContainerContentDisplayer2[A, -W, Display <: Refreshable[A] with Component, +P <: Changing[Vector[A]]]
+class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component, +P <: Changing[Vector[A]]]
 (protected val container: MutableMultiContainer[W, Display], override val contentPointer: P,
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => W)

@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.window.{Dialog, Frame}
 import utopia.firmament.localization.LocalString._
@@ -19,7 +19,7 @@ import utopia.reflection.test.TestContext._
 object DialogTest extends App
 {
 	private class ContentPanel(override val stackSize: StackSize)
-		extends Panel[ReflectionComponentLike with AwtComponentRelated] with StackLeaf
+		extends Panel[ReflectionComponentLike with AwtComponentRelated] with ReflectionStackLeaf
 	{
 		background = Color.white
 

@@ -24,7 +24,7 @@ import utopia.inception.handling.immutable.Handleable
   * @param minScrollDelay Minimum delay between each selection move (default = 0.05 seconds)
   * @param moveSelection A function for moving selection by specified amount
   */
-// TODO: Deprecate this class and replace with SelectionKeyListener2
+@deprecated("Replaced with a new version in Firmament", "v2.0")
 class SelectionKeyListener(val nextKeyCode: Int = KeyEvent.VK_DOWN, val prevKeyCode: Int = KeyEvent.VK_UP,
 						   val initialScrollDelay: Duration = 0.4.seconds, val scrollDelayModifier: Double = 0.8,
 						   val minScrollDelay: Duration = 0.05.seconds,

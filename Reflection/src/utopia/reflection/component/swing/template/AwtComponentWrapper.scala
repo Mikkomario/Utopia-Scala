@@ -9,7 +9,7 @@ import utopia.genesis.handling.mutable._
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Point, Size}
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
 import utopia.reflection.shape.stack.StackSize
@@ -234,7 +234,7 @@ private class SimpleAwtComponentWrapper(val component: java.awt.Component, overr
     extends AwtComponentWrapper
 
 private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtComponentWrapper, getSize: () => StackSize, update: () => Unit)
-    extends CachingReflectionStackable with AwtComponentWrapperWrapper with StackLeaf
+    extends CachingReflectionStackable with AwtComponentWrapperWrapper with ReflectionStackLeaf
 {
     // IMPLEMENTED  ---------------------
     

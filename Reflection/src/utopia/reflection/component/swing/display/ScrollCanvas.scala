@@ -18,7 +18,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.swing.template._
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.shape.stack.StackSize
@@ -190,7 +190,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	}
 	
 	private class Canvas extends AwtComponentWrapperWrapper with SwingComponentRelated with CachingReflectionStackable
-		with MutableCustomDrawableWrapper with StackLeaf
+		with MutableCustomDrawableWrapper with ReflectionStackLeaf
 	{
 		// ATTRIBUTES	--------------------
 		

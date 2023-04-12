@@ -1,6 +1,11 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.2.1 (in development)
+### New Features
+- New color features were moved over from **Reflection** and rewritten. 
+  - This includes **ColorScheme**, **ColorLevel** and **ColorRole**
+### Other Changes
+- **Alignment** now extends **Dimensional**
 
 ## v1.2 - 02.02.2023
 This update reflects in style the **Flow** v2.0 update. Multiple classes and concepts have been rewritten 

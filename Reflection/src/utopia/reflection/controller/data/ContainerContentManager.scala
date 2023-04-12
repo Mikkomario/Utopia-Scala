@@ -8,6 +8,7 @@ import utopia.firmament.component.display.Refreshable
 import utopia.firmament.controller.data.ContentManager
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 
+@deprecated("Please use ContainerContentDisplayer instead", "v2.0")
 object ContainerContentManager
 {
 	/**
@@ -127,7 +128,7 @@ object ContainerContentManager
 }
 
 /**
-  * This content manager handles content changes for a StackableMultiContainer
+  * This content manager handles container content changes
   * @author Mikko Hilpinen
   * @since 5.6.2019, v1
   * @tparam A The type of content displayed in the container
@@ -142,6 +143,7 @@ object ContainerContentManager
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
+@deprecated("Please use ContainerContentDisplayer instead", "v2.0")
 class ContainerContentManager[A, Container <: MutableMultiContainer[Display, Display] with ReflectionStackable, Display <: ReflectionStackable with Refreshable[A]]
 (container: Container, contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)

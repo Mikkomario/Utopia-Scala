@@ -1,13 +1,25 @@
 # Utopia Reflection - List of Changes
 
-## v2.0-alpha-11 (in development)
+## v2.0 (in development)
 ### Breaking Changes
+- Moved a number of classes to **Firmament**. This includes:
+  - Generic component traits
+  - Component creation context classes
+  - Stacking support
+  - Localization tools
+  - Most custom drawing
+  - Icon support
+  - Some of the container content management classes
+- Moved color classes to **Paradigm**
+- Many generic component classes now have the "Reflection" prefix in their name in order to distinguish 
+  them from their **Firmament** counterparts
 - **CustomDrawer** reflects changes in Genesis v3.3
 - Replaced **mutable.CustomDrawable** with **MutableCustomDrawable** in multiple places
-- **ContainerContentDisplayer2** now uses **EqualsFunction** and not a normal function when comparing items
+- **ContainerContentDisplayer** now uses **EqualsFunction** and not a normal function when comparing items
 - **Calendar** now uses **WeekDay** instead of **DayOfWeek**
 ### Deprecations
 - Deprecated **ManagedField** in favor of **InputField** (in **Reach**)
+- Old versions of some of the moved classes were kept but deprecated
 ### New Methods
 - **CursorSet** (type)
   - Added `.loadIcons(...)` for easier setup

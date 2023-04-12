@@ -13,7 +13,7 @@ import utopia.firmament.controller.data.ContentManager
   * @author Mikko Hilpinen
   * @since 22.5.2019, v1+
   */
-// TODO: Create a new version which doesn't require a mutable pool (extends ContentDisplayer and SelectionWithPointers)
+@deprecated("Replaced with a new version in Firmament", "v2.0")
 trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with SelectableWithPointers[Option[A], Vector[A]]
 {
 	// ATTRIBUTES	-------------------

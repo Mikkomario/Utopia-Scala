@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.template
 
 import javax.swing.JComponent
-import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.reflection.shape.stack.StackSize
 
 object JStackableWrapper
@@ -30,7 +30,7 @@ object JStackableWrapper
 trait JStackableWrapper extends StackableAwtComponentWrapper with JWrapper
 
 private class JStackWrapper(val component: JComponent, val getSize: () => StackSize, val update: () => Unit)
-    extends JStackableWrapper with StackLeaf
+    extends JStackableWrapper with ReflectionStackLeaf
 {
     def calculatedStackSize = getSize()
     

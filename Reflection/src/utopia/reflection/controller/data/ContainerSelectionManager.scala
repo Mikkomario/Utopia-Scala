@@ -2,6 +2,9 @@ package utopia.reflection.controller.data
 
 import utopia.firmament.component.AreaOfItems
 import utopia.firmament.component.container.many.MutableMultiContainer
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.controller.data.{ContainerContentDisplayer, ContentManager, SelectionKeyListener, SelectionManager}
+import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -14,8 +17,6 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.firmament.component.display.Refreshable
-import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack
 
@@ -155,19 +156,35 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 (container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
-	extends ContainerContentManager[A, MutableMultiContainer[C, C] with ReflectionStackable, C](container, contentPointer,
-		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
+	extends ContainerContentDisplayer[A, C, C, PointerWithEvents[Vector[A]]](container, contentPointer,
+		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, Option[A], C, PointerWithEvents[Vector[A]]]
+		with ContentManager[A, C]
 {
+	// ATTRIBUTES   --------------------
+	
+	override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty()
+	
+	// Updates the display value every time content is updated, because the display may change or be not found anymore
+	override lazy val selectedDisplayPointer =
+		valuePointer.mergeWith(contentPointer) { (selected, _) => selected.flatMap(displayFor) }
+	
+	
 	// INITIAL CODE	--------------------
 	
 	container.addCustomDrawer(SelectionDrawer)
+	selectedDisplayPointer.addContinuousAnyChangeListener { container.repaint() }
 	
 	
 	// IMPLEMENTED	--------------------
 	
+	override protected def itemToSelection(item: A): Option[A] = Some(item)
+	
+	override protected def itemInSelection(item: A, selection: Option[A]): Option[A] = Some(item)
+	
+	/*
 	override protected def updateSelectionDisplay(oldSelected: Option[C], newSelected: Option[C]) =
 		container.repaint()
-	
+	*/
 	override protected def finalizeRefresh() = {
 		super.finalizeRefresh()
 		container.repaint()
@@ -188,10 +205,10 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 	def enableKeyHandling(actorHandler: ActorHandler, nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int = KeyEvent.VK_UP,
 						  initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
 						  minScrollDelay: Duration = 0.05.seconds,
-						  listenEnabledCondition: Option[() => Boolean] = None) =
+						  listenEnabledCondition: => Boolean = true) =
 	{
-		val listener = new SelectionKeyListener(nextKeyCode, prevKeyCode, initialScrollDelay, scrollDelayModifier,
-			minScrollDelay, listenEnabledCondition)(amount => moveSelection(amount))
+		val listener = new SelectionKeyListener(nextKeyCode, prevKeyCode, listenEnabledCondition,
+			initialScrollDelay, scrollDelayModifier, minScrollDelay)(amount => moveSelection(amount))
 		container.addStackHierarchyChangeListener(attached => {
 			if (attached)
 				GlobalKeyboardEventHandler += listener
@@ -227,7 +244,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
 			val nearest = container.itemNearestTo(event.mousePosition - container.position)
-			nearest.foreach(handleMouseClick)
+			nearest.foreach(selectDisplay)
 			
 			if (consumeEvents && nearest.isDefined)
 				Some(ConsumeEvent("Stack selection change"))

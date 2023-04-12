@@ -3,7 +3,7 @@ package utopia.reach.component.input.selection
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectionWithPointers
 import utopia.firmament.context.ColorContext
-import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener2}
+import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener}
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
@@ -160,7 +160,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		case None => Fixed(None)
 	} }
 	
-	private val keyListener = SelectionKeyListener2
+	private val keyListener = SelectionKeyListener
 		.along(direction, hasFocus || alternativeKeyCondition)(manager.moveSelection)
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
 		Bounds.aroundOption(e.values.flatten).foreach { area => repaintArea(area.enlarged(direction(margin.optimal)), High) }
