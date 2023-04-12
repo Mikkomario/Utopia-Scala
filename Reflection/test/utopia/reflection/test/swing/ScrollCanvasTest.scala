@@ -11,12 +11,12 @@ import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
-import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
+import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.display.ScrollCanvas
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.test.TestContext._
 
 import java.awt.event.KeyEvent

@@ -1,16 +1,17 @@
 package utopia.reflection.component.context
 
+import utopia.firmament.model.Margins
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
 import utopia.reflection.color.ColorScheme
-import utopia.reflection.shape.Margins
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.text.Font
 
 /**
   * A trait common for basic component context implementations
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
+@deprecated("Moved to Firmament", "v2.0")
 trait BaseContextLike
 {
 	// ABSTRACT	-------------------------

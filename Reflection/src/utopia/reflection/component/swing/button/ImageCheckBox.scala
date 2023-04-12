@@ -1,11 +1,12 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.model.GuiElementStatus
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.input.InteractionWithPointer
-import utopia.reflection.event.ButtonState
 
 /**
   * Used for switching a value on or off
@@ -57,7 +58,7 @@ class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys
 	
 	override def drawable = label
 	
-	override protected def updateStyleForState(newState: ButtonState) = {
+	override protected def updateStyleForState(newState: GuiElementStatus) = {
 		if (isOn)
 			label.image = onImages(newState)
 		else

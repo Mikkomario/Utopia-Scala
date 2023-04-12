@@ -1,33 +1,38 @@
 package utopia.reach.component.factory
 
-import utopia.reflection.component.context.TextContext
-import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.text.Font
+import utopia.firmament.context.{TextContext, TextContextWrapper}
 
 object ContextualComponentFactory
 {
 	// EXTENSIONS	------------------------
 	
-	implicit class TextContextComponentFactory[N <: TextContext, T >: TextContext, Repr[N2 <: T]]
-	(val f: ContextualComponentFactory[N, T, Repr]) extends AnyVal
+	/*
+	implicit class BaseContextComponentFactory[N <: BaseContext, Repr[_]]
+	(val f: ContextualComponentFactory[N, _ >: BaseContext, Repr])
+		extends AnyVal with BaseContextWrapper[Repr[_ >: N], Repr[_ >: N]]
 	{
-		/**
-		  * @param alignment New text alignment
-		  * @return A copy of this factory that uses specified text alignment
-		  */
-		def withAlignment(alignment: Alignment) = f.mapContext { _.withTextAlignment(alignment) }
+		override def self: Repr[N] = f.withContext(f.context)
 		
-		/**
-		  * @param font New text font
-		  * @return A copy of this factory that uses the specified text font
-		  */
-		def withFont(font: Font) = f.mapContext { _.withFont(font) }
+		override def wrapped = f.context
 		
-		/**
-		  * @param scaling A font scaling factor (1 keeps the font as is)
-		  * @return A copy of this factory with font scaled by specified amount
-		  */
-		def withScaledFont(scaling: Double) = f.mapContext { _.mapFont { _ * scaling } }
+		override def withBase(baseContext: BaseContext) = f.withContext(baseContext)
+		override def against(background: Color): Repr[N] = f.mapContext { _.against(background) }
+		
+		override def *(mod: Double): Repr[N] = f.mapContext { _ * mod }
+	}
+	 */
+	
+	implicit class TextContextComponentFactory[Repr[_]]
+	(val f: ContextualComponentFactory[_ <: TextContext, _ >: TextContext, Repr])
+		extends TextContextWrapper[Repr[TextContext]]
+	{
+		override def self: Repr[TextContext] = f.withContext(f.context)
+		
+		override def wrapped: TextContext = f.context
+		
+		override def withTextBase(base: TextContext): Repr[TextContext] = f.withContext(base)
+		
+		override def *(mod: Double): Repr[TextContext] = f.mapContext { _ * mod }
 	}
 }
 

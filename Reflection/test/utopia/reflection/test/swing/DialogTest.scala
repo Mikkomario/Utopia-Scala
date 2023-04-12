@@ -6,8 +6,8 @@ import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.StackLeaf
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.window.{Dialog, Frame}
-import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.test.TestContext._
 

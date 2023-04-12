@@ -1,7 +1,7 @@
 package utopia.reflection.container.stack.template
 
+import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 import scala.collection.immutable.VectorBuilder
 
@@ -11,7 +11,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 15.4.2019, v0.1+
   */
-trait MultiStackContainer[C <: ReflectionStackable] extends MutableMultiContainer2[C, C] with StackContainerLike[C]
+trait MultiStackContainer[C <: ReflectionStackable] extends MutableMultiContainer[C, C] with StackContainerLike[C]
 {
 	// IMPLEMENTED	---------------------
 	

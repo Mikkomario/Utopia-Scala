@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.label
 
-import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
+import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.swing.EmptyJComponent
 import utopia.reflection.component.swing.template.JWrapper
 

@@ -1,5 +1,6 @@
 package utopia.reach.component.wrapper
 
+import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
@@ -12,11 +13,10 @@ import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
-import utopia.reflection.component.context.BaseContextLike
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
+import StackLayout.Fit
+import utopia.firmament.context.BaseContext
 import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
 
 import scala.language.implicitConversions
@@ -259,7 +259,7 @@ object OpenComponent
 		  */
 		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-			   (implicit context: BaseContextLike, canvas: ReachCanvas) =
+			   (implicit context: BaseContext, canvas: ReachCanvas) =
 			Open.withContext(Stack, context) { sf =>
 				val stack = sf(c, direction, layout, cap, customDrawers, areRelated)
 				stack.parent -> stack.result
@@ -280,7 +280,7 @@ object OpenComponent
 		  */
 		def row(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-				 (implicit context: BaseContextLike, canvas: ReachCanvas) =
+				 (implicit context: BaseContext, canvas: ReachCanvas) =
 			stack(X, layout, cap, customDrawers, areRelated)
 		
 		/**
@@ -298,7 +298,7 @@ object OpenComponent
 		  */
 		def column(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-			   (implicit context: BaseContextLike, canvas: ReachCanvas) =
+			   (implicit context: BaseContext, canvas: ReachCanvas) =
 			stack(Y, layout, cap, customDrawers, areRelated)
 	}
 }

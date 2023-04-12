@@ -13,6 +13,8 @@ import utopia.genesis.image.Image
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.color.ColorShade
+import utopia.paradigm.color.ColorShade.Dark
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
@@ -24,8 +26,6 @@ import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
-import utopia.reflection.color.ColorShade.Dark
-import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer}
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -347,7 +347,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		private var lastMousePosition = Point.origin
 		private var lastCursorImage: Option[Image] = None
 		
-		private val shadeCalculatorFuture = painterPromise.map[Bounds => ColorShadeVariant] { painter =>
+		private val shadeCalculatorFuture = painterPromise.map[Bounds => ColorShade] { painter =>
 			area => painter.averageShadeOf(area)
 		}
 		

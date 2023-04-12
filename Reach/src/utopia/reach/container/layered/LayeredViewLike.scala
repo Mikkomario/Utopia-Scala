@@ -1,14 +1,14 @@
 package utopia.reach.container.layered
 
+import utopia.firmament.component.container.many.MultiContainer
+import utopia.firmament.component.stack.StackSizeCalculating
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
-import utopia.reflection.component.template.layout.stack.StackSizeCalculating
-import utopia.reflection.container.template.MultiContainer2
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackSize
 
 /**
@@ -16,7 +16,7 @@ import utopia.reflection.shape.stack.StackSize
   * @author Mikko Hilpinen
   * @since 18.4.2021, v1.0
   */
-trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with MultiContainer2[C]
+trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with MultiContainer[C]
 	with StackSizeCalculating
 {
 	// ABSTRACT -----------------------------

@@ -1,21 +1,20 @@
 package utopia.reflection.component.swing.label
 
+import utopia.firmament.component.display.PoolWithPointer
+import utopia.firmament.component.text.MutableStyleTextComponent
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.display.PoolWithPointer
-import utopia.reflection.component.template.text.MutableStyleTextComponent
-import utopia.reflection.localization.DisplayFunction
+import utopia.firmament.localization.DisplayFunction
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
 object ViewLabel
 {
@@ -46,7 +45,7 @@ object ViewLabel
 	  * @return A new label
 	  */
 	def contextual[A](pointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-					 (implicit context: TextContextLike) =
+					 (implicit context: TextContext) =
 	{
 		new ViewLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
 			context.textAlignment, !context.allowTextShrink)
@@ -61,11 +60,11 @@ object ViewLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithBackground[A](color: ComponentColor, pointer: Changing[A],
+	def contextualWithBackground[A](color: Color, pointer: Changing[A],
 	                                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-								   (implicit context: BackgroundSensitive[TextContextLike]) =
+								   (implicit context: TextContext) =
 	{
-		val label = contextual(pointer, displayFunction)(context.inContextWithBackground(color))
+		val label = contextual(pointer, displayFunction)(context.against(color))
 		label.background = color
 		label
 	}

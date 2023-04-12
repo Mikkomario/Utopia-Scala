@@ -1,5 +1,8 @@
 package utopia.reach.container.multi.stack
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -13,6 +16,7 @@ import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, Mous
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -22,12 +26,8 @@ import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
@@ -42,17 +42,17 @@ case class ListRowContent(components: IterableOnce[ReachComponentLike], context:
   * @author Mikko Hilpinen
   * @since 12.12.2020, v0.1
   */
-object List extends ContextInsertableComponentFactoryFactory[ColorContextLike, ListFactory, ContextualListFactory]
+object List extends ContextInsertableComponentFactoryFactory[ColorContext, ListFactory, ContextualListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ListFactory(hierarchy)
 }
 
 class ListFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualListFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualListFactory]
 {
 	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualListFactory(this, context)
 	
 	/**
@@ -70,7 +70,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of additional result created
 	  * @return A new list (wrap result)
 	  */
-	def apply[R](group: SegmentGroup, contextBackgroundPointer: Changing[ComponentColor],
+	def apply[R](group: SegmentGroup, contextBackgroundPointer: Changing[Color],
 	             insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
 	             columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
 	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
@@ -142,10 +142,10 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualListFactory[+N <: ColorContextLike](factory: ListFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualListFactory]
+case class ContextualListFactory[+N <: ColorContext](factory: ListFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualListFactory]
 {
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -163,8 +163,8 @@ case class ContextualListFactory[+N <: ColorContextLike](factory: ListFactory, c
 	def apply[R](group: SegmentGroup, insideRowLayout: StackLayout = Fit, edgeMargins: StackSize = StackSize.fixedZero,
 				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
-		factory(group, Fixed(context.containerBackground), insideRowLayout, context.defaultStackMargin,
-			context.relatedItemsStackMargin, edgeMargins, customDrawers, focusListeners)(fill)
+		factory(group, Fixed(context.background), insideRowLayout, context.stackMargin,
+			context.smallStackMargin, edgeMargins, customDrawers, focusListeners)(fill)
 }
 
 private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPressedPointer: Pointer[Boolean], maxIndex: Int,
@@ -207,7 +207,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 }
 
 private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
-                       backgroundPointer: View[ComponentColor],
+                       backgroundPointer: View[Color],
                        selectedComponentPointer: Changing[Option[ReachComponentLike]],
                        keyPressedPointer: View[Boolean])
 	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener with Handleable

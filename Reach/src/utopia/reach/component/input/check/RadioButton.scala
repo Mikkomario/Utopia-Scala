@@ -1,10 +1,15 @@
 package utopia.reach.component.input.check
 
+import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -13,27 +18,22 @@ import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.High
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
-import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.util.ComponentCreationDefaults
 
 object RadioButton
-	extends ContextInsertableComponentFactoryFactory[ColorContextLike, RadioButtonFactory, ContextualRadioButtonFactory]
+	extends ContextInsertableComponentFactoryFactory[ColorContext, RadioButtonFactory, ContextualRadioButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonFactory(hierarchy)
 }
 
 class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualRadioButtonFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualRadioButtonFactory(this, context)
 	
 	
@@ -56,7 +56,7 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 	 * @return A new radio button
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
-	             backgroundColorPointer: Changing[ComponentColor], diameter: Double,
+	             backgroundColorPointer: Changing[Color], diameter: Double,
 	             hoverExtraRadius: Double, ringWidth: Double = 1.0, selectedColorRole: ColorRole = ColorRole.Secondary,
 	             enabledPointer: Changing[Boolean] = AlwaysTrue,
 	             customDrawers: Vector[CustomDrawer] = Vector(),
@@ -66,17 +66,17 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 			focusListeners)
 }
 
-case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioButtonFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualRadioButtonFactory]
+case class ContextualRadioButtonFactory[+N <: ColorContext](factory: RadioButtonFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLICIT ------------------------------
 	
-	private implicit def colorScheme: ColorScheme = context.colorScheme
+	private implicit def colorScheme: ColorScheme = context.colors
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -98,7 +98,7 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
 	             selectedColorRole: ColorRole = ColorRole.Secondary,
 	             enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             backgroundColorPointer: Changing[ComponentColor] = Fixed(context.containerBackground),
+	             backgroundColorPointer: Changing[Color] = Fixed(context.background),
 	             sizeModifier: Double = ComponentCreationDefaults.radioButtonScalingFactor,
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector()) =
@@ -118,7 +118,7 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
  * @since 30.1.2021, v0.1
  */
 class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
-                     representing: A, backgroundColorPointer: Changing[ComponentColor],
+                     representing: A, backgroundColorPointer: Changing[Color],
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
                      selectedColorRole: ColorRole = Secondary, enabledPointer: Changing[Boolean] = AlwaysTrue,
                      additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -128,12 +128,12 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 {
 	// ATTRIBUTES   ---------------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
+	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	override val statePointer = {
 		if (enabledPointer.isAlwaysTrue)
 			baseStatePointer.view
 		else
-			baseStatePointer.mergeWith(enabledPointer) { (base, enabled) => base.copy(isEnabled = enabled) }
+			baseStatePointer.mergeWith(enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	}
 	
 	/**
@@ -156,10 +156,9 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 			// While disabled or unselected, uses either black or white, with certain opacity
 			// Otherwise uses the selection color
 			if (isSelected && isEnabled)
-				colorScheme(selectedColorRole).forBackground(background, Minimum.defaultMinimumContrast).background
-			else
-			{
-				val base = background.defaultTextColor
+				colorScheme(selectedColorRole).against(background, minimumContrast = Minimum.defaultMinimumContrast)
+			else {
+				val base = background.shade.defaultTextColor
 				if (isEnabled) base.withAlpha(0.72) else base.withAlpha(0.5)
 			}
 		}
@@ -207,7 +206,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 		
 		// Draw settings when drawing (filled) circles
 		private val mainDsPointer = colorPointer.lazyMap(DrawSettings.onlyFill)
-		private val bgDsPointer = backgroundColorPointer.lazyMap { DrawSettings.onlyFill(_) }
+		private val bgDsPointer = backgroundColorPointer.lazyMap(DrawSettings.onlyFill)
 		
 		
 		// IMPLEMENTED  ------------------------

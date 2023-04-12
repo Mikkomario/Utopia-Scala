@@ -1,5 +1,7 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.stack.Constrainable
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -7,20 +9,19 @@ import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.{ActorHandler, KeyStateHandler}
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.layout.stack.{Constrainable, ReflectionStackable}
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
-import utopia.reflection.text.Font
-import utopia.reflection.util.AwtEventThread
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 import scala.concurrent.{ExecutionContext, Promise}

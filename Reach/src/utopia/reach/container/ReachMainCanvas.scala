@@ -14,10 +14,8 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult}
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.focus.ReachFocusManager
-import utopia.reflection.color.ColorShade.Dark
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic

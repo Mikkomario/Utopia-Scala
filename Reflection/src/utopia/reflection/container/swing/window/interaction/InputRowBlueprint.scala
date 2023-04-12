@@ -2,7 +2,7 @@ package utopia.reflection.container.swing.window.interaction
 
 import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 /**
   * Used for creating rows in dialogs with input fields

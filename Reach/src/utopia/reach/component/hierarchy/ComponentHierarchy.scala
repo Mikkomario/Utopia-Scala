@@ -2,12 +2,12 @@ package utopia.reach.component.hierarchy
 
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.FontMetricsWrapper
+import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 import utopia.reach.util.Priority
 import utopia.reach.util.Priority.Normal
-import utopia.reflection.text.Font
 
 import scala.annotation.tailrec
 

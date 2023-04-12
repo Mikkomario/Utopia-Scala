@@ -1,5 +1,6 @@
 package utopia.reflection.component.template
 
+import utopia.firmament.component.HasMutableBounds
 import java.awt.FontMetrics
 
 import utopia.paradigm.color.Color
@@ -8,7 +9,6 @@ import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.inception.handling.Handleable
-import utopia.reflection.component.template.layout.Area
 import utopia.reflection.event.ResizeListener
 
 /**
@@ -17,7 +17,7 @@ import utopia.reflection.event.ResizeListener
 * @since 25.2.2019
 **/
 @deprecated("Replaced with a new version", "v2.0")
-trait ComponentLike extends Area
+trait ComponentLike extends HasMutableBounds
 {
     // ABSTRACT    ------------------------
     

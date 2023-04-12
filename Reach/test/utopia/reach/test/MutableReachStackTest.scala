@@ -1,5 +1,6 @@
 package utopia.reach.test
 
+import utopia.firmament.controller.data.ContainerContentDisplayer2
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.KeyTypedListener
@@ -8,13 +9,12 @@ import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.MutableStack
-import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.controller.data.ContainerContentDisplayer2
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.Secondary
 
 /**
   * Tests mutable Reach stack implementation and the new version of container content displayer
@@ -37,7 +37,7 @@ object MutableReachStackTest extends App
 	val dataPointer = new PointerWithEvents[Vector[Int]](Vector(1, 2, 3))
 	ContainerContentDisplayer2.forStatelessItems(stack, dataPointer) { i =>
 		Open.withContext(MutableViewTextLabel,
-			baseContext.inContextWithBackground(bg).forTextComponents.withTextAlignment(Alignment.Center)) { f =>
+			baseContext.against(bg).forTextComponents.withTextAlignment(Alignment.Center)) { f =>
 			f.withBackground(i, Secondary)
 		}(canvas)
 	}

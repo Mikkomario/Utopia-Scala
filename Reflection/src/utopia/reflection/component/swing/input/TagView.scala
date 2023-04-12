@@ -1,19 +1,18 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reflection.color.{ColorRole, ColorSet}
-import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.reflection.component.template.display.{Refreshable, RefreshableWithPointer}
-import utopia.reflection.container.stack.StackLayout.Center
+import utopia.firmament.component.display.{Refreshable, RefreshableWithPointer}
+import utopia.firmament.context.{AnimationContext, TextContext}
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.layout.multi.{CollectionView, Stack}
 import utopia.reflection.container.swing.layout.wrapper.TagFraming
 import utopia.reflection.controller.data.ContainerContentDisplayer
-import utopia.reflection.image.SingleColorIcon
 
 import scala.concurrent.ExecutionContext
 
@@ -32,7 +31,7 @@ object TagView
 	def withPointer(rowSplitThreshold: Double,
 	          contentPointer: PointerWithEvents[Vector[(String, Color)]] = new PointerWithEvents(Vector()),
 		      removeIcon: Option[SingleColorIcon] = None)
-	         (implicit context: TextContext, animationContext: AnimationContextLike, exc: ExecutionContext) =
+	         (implicit context: TextContext, animationContext: AnimationContext, exc: ExecutionContext) =
 		new TagView(context, rowSplitThreshold, removeIcon, contentPointer)
 	
 	/**
@@ -47,7 +46,7 @@ object TagView
 	  */
 	def apply(rowSplitThreshold: Double, initialTags: Vector[(String, Color)] = Vector(),
 	          removeIcon: Option[SingleColorIcon] = None)
-	         (implicit context: TextContext, animationContext: AnimationContextLike, exc: ExecutionContext) =
+	         (implicit context: TextContext, animationContext: AnimationContext, exc: ExecutionContext) =
 		withPointer(rowSplitThreshold, new PointerWithEvents(initialTags), removeIcon)
 	
 	/**
@@ -62,7 +61,7 @@ object TagView
 	  */
 	def withPointerWithRemovalEnabled(rowSplitThreshold: Double, removeIcon: SingleColorIcon,
 	                                  contentPointer: PointerWithEvents[Vector[(String, Color)]] = new PointerWithEvents(Vector()))
-	                                 (implicit context: TextContext, animationContext: AnimationContextLike,
+	                                 (implicit context: TextContext, animationContext: AnimationContext,
 	                                  exc: ExecutionContext) =
 		withPointer(rowSplitThreshold, contentPointer, Some(removeIcon))
 	
@@ -78,7 +77,7 @@ object TagView
 	  */
 	def withRemovalEnabled(rowSplitThreshold: Double, removeIcon: SingleColorIcon,
 	                       initialTags: Vector[(String, Color)] = Vector())
-	                      (implicit context: TextContext, animationContext: AnimationContextLike, exc: ExecutionContext) =
+	                      (implicit context: TextContext, animationContext: AnimationContext, exc: ExecutionContext) =
 		withPointerWithRemovalEnabled(rowSplitThreshold, removeIcon, new PointerWithEvents(initialTags))
 }
 
@@ -95,7 +94,7 @@ object TagView
   */
 class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon: Option[SingleColorIcon] = None,
               override val contentPointer: PointerWithEvents[Vector[(String, Color)]] = new PointerWithEvents(Vector()))
-             (implicit animationContext: AnimationContextLike, exc: ExecutionContext)
+             (implicit animationContext: AnimationContext, exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with RefreshableWithPointer[Vector[(String, Color)]]
 {
 	// ATTRIBUTES   ----------------------------
@@ -119,14 +118,12 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 	  * @param color Background color for the new tag
 	  */
 	def add(tagName: String, color: Color) = this += tagName -> color
-	
 	/**
 	  * Adds a new tag to this view
 	  * @param tagName Name of the new tag
 	  * @param color Background color for the new tag (multiple options, best of which is selected)
 	  */
-	def add(tagName: String, color: ColorSet): Unit = add(tagName, color.forBackground(parentContext.containerBackground))
-	
+	def add(tagName: String, color: ColorSet): Unit = add(tagName, color.against(parentContext.background))
 	/**
 	  * Adds a new tag to this view
 	  * @param tagName Name of the new tag
@@ -139,7 +136,6 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 	  * @param tag Tag text + color
 	  */
 	def +=(tag: (String, Color)) = content :+= tag
-	
 	/**
 	  * Removes a tag from this view
 	  * @param tagName Name of the tag to remove
@@ -154,12 +150,12 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 	{
 		// ATTRIBUTES   ------------------------
 		
-		private val (label, view) = parentContext.forCustomColorButtons(initialColor).use { implicit context =>
+		private val (label, view) = (parentContext/initialColor).use { implicit context =>
 			val label = ItemLabel.contextual(initialText)
 			label.textInsets = label.textInsets.onlyVertical / 2
 			val content = removeIcon.map { icon =>
 				Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
-					s += ImageButton.contextual(icon.inButton, isLowPriority = true) { -=(label.content) }
+					s += ImageButton.contextual(icon.inButton.contextual, isLowPriority = true) { -=(label.content) }
 					s += label
 				}
 			}.getOrElse(label)

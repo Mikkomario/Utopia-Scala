@@ -1,9 +1,9 @@
 package utopia.reflection.container.stack.template.layout
 
+import utopia.firmament.component.container.many.{CollectionViewLike, MutableMultiContainer}
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper}
 import utopia.reflection.container.template.MappingContainer
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 /**
  * A common trait for containers that place their contents inside separate "collections"
@@ -14,9 +14,9 @@ import utopia.reflection.container.template.mutable.MutableMultiContainer2
   * @tparam Collection Type of collections that combine multiple components
   * @tparam Container Type of container that holds the collections
  */
-trait ReflectionCollectionViewLike[C <: ReflectionComponentLike, Collection <: MutableMultiContainer2[C, C],
-	Container <: MutableMultiContainer2[Collection, Collection] with ReflectionStackable]
-	extends CollectionViewLike2[C, Collection, Container] with MappingContainer[C, Collection]
+trait ReflectionCollectionViewLike[C <: ReflectionComponentLike, Collection <: MutableMultiContainer[C, C],
+	Container <: MutableMultiContainer[Collection, Collection] with ReflectionStackable]
+	extends CollectionViewLike[C, Collection, Container] with MappingContainer[C, Collection]
 		with ReflectionStackableWrapper
 {
 	// IMPLEMENTED	-----------------------
@@ -87,6 +87,6 @@ trait ReflectionCollectionViewLike[C <: ReflectionComponentLike, Collection <: M
 	
 	// OTHER	---------------------------
 	
-	private def capacityUsedIn(collection: MutableMultiContainer2[C, C]) =
+	private def capacityUsedIn(collection: MutableMultiContainer[C, C]) =
 		collection.components.map(spaceOf).sum + (collection.components.size - 1) * betweenComponentsSpace
 }

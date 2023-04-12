@@ -1,23 +1,23 @@
 package utopia.reach.test
 
+import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.selection.{ContextualSelectionListFactory, SelectionList}
+import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reflection.component.context.TextContext
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -44,9 +44,9 @@ object SelectionListTest extends App
 				stackF.build(Mixed).column() { factories =>
 					val scroll = factories(ScrollView).build(Framing)(maxOptimalLength = Some(224)) { framingF =>
 						val framingBg = colorScheme.primary.light
-						baseContext.inContextWithBackground(framingBg).forTextComponents.expandingToRight.use { implicit c =>
+						baseContext.against(framingBg).forTextComponents.withTextExpandingToRight.use { implicit c =>
 							framingF.withContext(c).build(SelectionList)
-								.apply(margins.small.any, customDrawers = Vector(BackgroundDrawer(framingBg))) { listF: ContextualSelectionListFactory[TextContext] =>
+								.apply(margins.small.any, customDrawers = Vector(BackgroundDrawer(framingBg))) { listF =>
 									listF.apply(contentPointer, valuePointer, alternativeKeyCondition = true) { (hierarchy, item: Int) =>
 										val label = MutableViewTextLabel(hierarchy).withContext(c)
 											.apply(item, DisplayFunction.interpolating("Label %s"))
@@ -56,8 +56,7 @@ object SelectionListTest extends App
 								}
 						}
 					}
-					val button = factories.withContext(
-						baseContext.inContextWithBackground(mainBg).forTextComponents.forPrimaryColorButtons)(TextButton)
+					val button = factories.withContext(baseContext.against(mainBg).forTextComponents/Primary)(TextButton)
 						.apply("Button") { println("Button Pressed") }
 					
 					Vector(scroll.parent, button)

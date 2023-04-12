@@ -1,6 +1,11 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.paradigm.color.ColorShade
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
@@ -9,11 +14,7 @@ import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.swing.button.ButtonImageSet
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
 object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]
@@ -93,7 +94,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	  */
 	val alignmentPointer = new PointerWithEvents[Alignment](initialAlignment)
 	
-	private val _statePointer = new PointerWithEvents(ButtonState.default)
+	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
 	/**
 	  * A pointer to this button's currently displayed image
 	  */
@@ -102,7 +103,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	  * A pointer to the current overall shade of this button (based on the focused-image)
 	  */
 	val shadePointer = imagesPointer.lazyMap { images =>
-		ColorShadeVariant.forLuminosity(images.focusImage.pixels.averageLuminosity) }
+		ColorShade.forLuminosity(images.focusImage.pixels.averageLuminosity) }
 	
 	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Vector()
@@ -145,7 +146,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
+	override def enabled_=(newState: Boolean) = _statePointer.update { _ + (Disabled -> !newState) }
 	
 	override def statePointer = _statePointer
 	

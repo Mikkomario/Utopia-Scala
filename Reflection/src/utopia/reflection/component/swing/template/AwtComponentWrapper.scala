@@ -1,19 +1,20 @@
 package utopia.reflection.component.swing.template
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.Component
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.mutable._
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, StackLeaf}
-import utopia.reflection.component.template.{ComponentLike2, ReflectionComponentLike}
+import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.text.Font
-import utopia.reflection.util.{AwtEventThread, ComponentToImage}
+import utopia.reflection.util.ComponentToImage
 
-import java.awt.Component
 import java.awt.event.MouseEvent
 
 object AwtComponentWrapper
@@ -22,7 +23,8 @@ object AwtComponentWrapper
      * Wraps a component
      */
     // TODO: Consider wrapping the whole hierarchy
-    def apply(component: Component): AwtComponentWrapper = new SimpleAwtComponentWrapper(component, Vector())
+    def apply(component: java.awt.Component): AwtComponentWrapper =
+        new SimpleAwtComponentWrapper(component, Vector())
 }
 
 /**
@@ -185,7 +187,7 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
     // This iterator is used for iterating through parent components (bottom to top)
     private class ParentsIterator extends Iterator[AwtComponentWrapper]
     {
-        var nextParent = parent
+        private var nextParent = parent
         
         def hasNext = nextParent.isDefined
         
@@ -228,7 +230,8 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
     }
 }
 
-private class SimpleAwtComponentWrapper(val component: Component, override val children: Seq[ComponentLike2]) extends AwtComponentWrapper
+private class SimpleAwtComponentWrapper(val component: java.awt.Component, override val children: Seq[Component])
+    extends AwtComponentWrapper
 
 private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtComponentWrapper, getSize: () => StackSize, update: () => Unit)
     extends CachingReflectionStackable with AwtComponentWrapperWrapper with StackLeaf

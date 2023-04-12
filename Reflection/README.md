@@ -59,7 +59,7 @@ Automatic container content management
 - utopia.reflection.shape.**LengthExtensions**
     - Allows you to generate **StackLength** instances simply by writing 4.upscaling, 
       2.downscaling, 8.upTo(10) etc.
-- utopia.reflection.localization.**LocalString**
+- utopia.firmament.localization.**LocalString**
     - Allows one to skip localization for specific strings by calling .noLanguageLocalizationSkipped,
       .local etc. on a string.
 

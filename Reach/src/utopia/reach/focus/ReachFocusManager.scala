@@ -8,7 +8,7 @@ import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
-import utopia.reflection.util.AwtComponentExtensions._
+import utopia.firmament.awt.AwtComponentExtensions._
 
 import java.awt.event.{FocusEvent, WindowAdapter, WindowEvent}
 import scala.collection.immutable.HashMap

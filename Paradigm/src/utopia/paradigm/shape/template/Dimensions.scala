@@ -92,6 +92,16 @@ object Dimensions
 			case s: IndexedSeq[A] => apply(s)
 			case o => apply(IndexedSeq.from(o))
 		}
+		
+		
+		// OTHER    ----------------------------
+		
+		/**
+		  * @param axis Axis that will contain the assigned value
+		  * @param value Value to assign to the specified axis
+		  * @return A set of dimensions with 0-1 non-zero values
+		  */
+		def apply(axis: Axis, value: A): Dimensions[A] = apply(Vector.fill(axis.index)(zero) :+ value)
 	}
 }
 

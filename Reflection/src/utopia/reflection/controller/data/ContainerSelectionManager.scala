@@ -1,5 +1,7 @@
 package utopia.reflection.controller.data
 
+import utopia.firmament.component.AreaOfItems
+import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -10,13 +12,11 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.component.template.layout.AreaOfItems
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack
 
 import java.awt.event.KeyEvent
@@ -25,7 +25,7 @@ import scala.concurrent.duration.Duration
 object ContainerSelectionManager
 {
 	private type SelectStack[X <: ReflectionComponentLike] =
-		MutableMultiContainer2[X, X] with ReflectionStackable with MutableCustomDrawable with AreaOfItems[X]
+		MutableMultiContainer[X, X] with ReflectionStackable with MutableCustomDrawable with AreaOfItems[X]
 	
 	/**
 	  * Creates a content manager for immutable items that don't represent state of any other object. No two different
@@ -155,7 +155,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 (container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
-	extends ContainerContentManager[A, MutableMultiContainer2[C, C] with ReflectionStackable, C](container, contentPointer,
+	extends ContainerContentManager[A, MutableMultiContainer[C, C] with ReflectionStackable, C](container, contentPointer,
 		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
 {
 	// INITIAL CODE	--------------------

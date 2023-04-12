@@ -1,18 +1,17 @@
 package utopia.reflection.component.swing.label
 
+import utopia.firmament.component.text.MutableTextComponent
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.view.TextViewDrawer
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.graphics.MeasuredText
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
-import utopia.reflection.component.template.text.MutableTextComponent
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
 object TextLabel
 {
@@ -37,7 +36,7 @@ object TextLabel
 	  * @return A new label
 	  */
 	def contextual(text: LocalizedString = LocalizedString.empty, isHint: Boolean = false)
-				  (implicit context: TextContextLike) =
+				  (implicit context: TextContext) =
 	{
 		val label = new TextLabel(text, context.font, if (isHint) context.hintTextColor else context.textColor,
 			context.textInsets, context.textAlignment, !context.allowTextShrink)
@@ -52,10 +51,10 @@ object TextLabel
 	  * @param context Component creation context (implicit)
 	  * @return A new label
 	  */
-	def contextualWithBackground(backgroundColor: ComponentColor, text: LocalizedString = LocalizedString.empty,
-								 isHint: Boolean = false)(implicit context: BackgroundSensitive[TextContextLike]) =
+	def contextualWithBackground(backgroundColor: Color, text: LocalizedString = LocalizedString.empty,
+								 isHint: Boolean = false)(implicit context: TextContext) =
 	{
-		val label = contextual(text, isHint)(context.inContextWithBackground(backgroundColor))
+		val label = contextual(text, isHint)(context.against(backgroundColor))
 		label.background = backgroundColor
 		label
 	}

@@ -4,6 +4,7 @@ import utopia.flow.operator.ScopeUsable
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 
+@deprecated("Deprecated for removal", "v2.0")
 object ButtonContext
 {
 	/**
@@ -41,6 +42,7 @@ object ButtonContext
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
+@deprecated("Deprecated for removal", "v2.0")
 case class ButtonContext(base: TextContext, buttonColorOverride: Option[ComponentColor] = None,
 						 borderWidthOverride: Option[Double] = None)
 	extends ButtonContextLike with TextContextWrapper with BackgroundSensitive[ButtonContext] with ScopeUsable[ButtonContext]

@@ -1,9 +1,9 @@
 package utopia.reflection.component.swing.template
 
+import utopia.firmament.model.Border
 import java.awt.event.ActionEvent
 
 import javax.swing.{AbstractAction, JComponent, KeyStroke}
-import utopia.reflection.shape.Border
 
 /**
   * These items are related to a swing component

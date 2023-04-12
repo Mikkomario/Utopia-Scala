@@ -1,7 +1,15 @@
 package utopia.reach.component.button.text
 
+import utopia.firmament.component.text.MutableTextComponent
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -10,29 +18,21 @@ import utopia.reach.component.label.text.MutableTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
-import utopia.reflection.component.template.text.MutableTextComponent
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object MutableTextButton extends ContextInsertableComponentFactoryFactory[ButtonContextLike, MutableTextButtonFactory,
+object MutableTextButton extends ContextInsertableComponentFactoryFactory[TextContext, MutableTextButtonFactory,
 	ContextualMutableTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableTextButtonFactory(hierarchy)
 }
 
 class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ButtonContextLike, ContextualMutableTextButtonFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext[N <: ButtonContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualMutableTextButtonFactory(this, context)
 	
 	
@@ -90,13 +90,13 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualMutableTextButtonFactory[+N <: ButtonContextLike](buttonFactory: MutableTextButtonFactory,
-																	   context: N)
-	extends ContextualComponentFactory[N, ButtonContextLike, ContextualMutableTextButtonFactory]
+case class ContextualMutableTextButtonFactory[+N <: TextContext](buttonFactory: MutableTextButtonFactory,
+                                                                 context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N2 <: ButtonContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -109,9 +109,9 @@ case class ContextualMutableTextButtonFactory[+N <: ButtonContextLike](buttonFac
 	  * @return A new button
 	  */
 	def withoutAction(text: LocalizedString = LocalizedString.empty, hotKeys: Set[HotKey] = Set()) =
-		buttonFactory.withoutAction(text, context.font, context.buttonColor, context.textColor,
-			context.textAlignment, context.textInsets, context.borderWidth, context.betweenLinesMargin.optimal, hotKeys,
-			context.allowLineBreaks, context.allowTextShrink)
+		buttonFactory.withoutAction(text, context.font, context.background, context.textColor,
+			context.textAlignment, context.textInsets, context.buttonBorderWidth, context.betweenLinesMargin.optimal,
+			hotKeys, context.allowLineBreaks, context.allowTextShrink)
 	
 	/**
 	  * Creates a new button
@@ -142,7 +142,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val _statePointer = new PointerWithEvents(ButtonState.default)
+	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialFont, initialTextColor,
 		initialAlignment, initialTextInsets, initialBetweenLinesMargin, allowLineBreaks, allowTextShrink)
@@ -178,7 +178,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	override def measuredText = wrapped.measuredText
 	
-	override def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
+	override def enabled_=(newState: Boolean) = _statePointer.update { _ + (Disabled -> !enabled) }
 	
 	override protected def drawable = wrapped
 	

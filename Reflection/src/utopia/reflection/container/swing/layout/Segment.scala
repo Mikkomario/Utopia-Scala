@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.layout
 
+import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.enumeration.Axis.Y
@@ -7,8 +8,8 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
-import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
+import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
+import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.event.StackHierarchyListener

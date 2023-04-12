@@ -1,5 +1,9 @@
 package utopia.reach.component.input.check
 
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
@@ -11,7 +15,8 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -19,20 +24,14 @@ import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.VeryHigh
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.input.InteractionWithPointer
-import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.{StackLength, StackSize}
-import utopia.reflection.util.ComponentCreationDefaults
 
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.FiniteDuration
 
-object Switch extends ContextInsertableComponentFactoryFactory[ColorContextLike, SwitchFactory, ContextualSwitchFactory]
+object Switch extends ContextInsertableComponentFactoryFactory[ColorContext, SwitchFactory, ContextualSwitchFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	
@@ -45,11 +44,11 @@ object Switch extends ContextInsertableComponentFactoryFactory[ColorContextLike,
 }
 
 class SwitchFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualSwitchFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualSwitchFactory(this, context)
 	
 	
@@ -79,12 +78,12 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 			valuePointer, enabledPointer, animationDuration, customDrawers, focusListeners)
 }
 
-case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualSwitchFactory]
+case class ContextualSwitchFactory[N <: ColorContext](factory: SwitchFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: ColorContext](newContext: N2) = copy(context = newContext)
 	
 	
 	// OTHER	-------------------------------------
@@ -101,7 +100,7 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
 	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
 	          enabledPointer: Changing[Boolean] = AlwaysTrue, colorRole: ColorRole = Secondary,
 	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
-			 (implicit animationContext: AnimationContextLike) =
+			 (implicit animationContext: AnimationContext) =
 	{
 		val knobR = context.margins.medium * 0.75
 		val xOffset = (knobR * 0.1) min 1.0
@@ -128,10 +127,10 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
+	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
 	override val statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
-		state.copy(isEnabled = enabled) }
+		state + (Disabled -> !enabled) }
 	
 	// The "bar" is exactly two knobs wide and 70% knob high
 	// The width and height are then extended on both sides by extra hover radius, which is not included in the

@@ -1,14 +1,14 @@
 package utopia.reflection.container.swing.window.interaction
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.enumeration.StackLayout.Leading
 import utopia.genesis.util.Screen
-import utopia.reflection.component.context.{ButtonContextLike, TextContextLike}
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.label.ImageLabel
-import utopia.reflection.container.stack.StackLayout.Leading
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 /**
  * A very simple dialog used for displaying a message to the user
@@ -22,24 +22,24 @@ import utopia.reflection.localization.LocalizedString
  * @param buttonIcon Icon in dialog close button (optional)
  * @param icon Icon next to dialog message (optional)
  */
-class MessageWindow(override val standardContext: TextContextLike, buttonContext: ButtonContextLike,
+class MessageWindow(override val standardContext: TextContext, buttonContext: TextContext,
                     override val title: LocalizedString, message: LocalizedString, buttonText: LocalizedString,
                     buttonIcon: Option[SingleColorIcon] = None, icon: Option[SingleColorIcon] = None)
 	extends InteractionWindow[Unit]
 {
 	override protected def buttonContext(buttonColor: ButtonColor, hasIcon: Boolean) = buttonContext
 	
-	override protected def buttonBlueprints = Vector(new DialogButtonBlueprint[Unit](buttonText, buttonIcon,
-		Fixed(buttonContext.buttonColor))({ () => Some(()) -> true }))
+	override protected def buttonBlueprints =
+		Vector(new DialogButtonBlueprint[Unit](buttonText, buttonIcon,
+			Fixed(buttonContext.background))({ () => Some(()) -> true }))
 	
 	override protected def dialogContent =
 	{
-		implicit val context: TextContextLike = standardContext
+		implicit val context: TextContext = standardContext
 		val messageView = MultiLineTextView.contextual(message, Screen.width / 3)
-		icon match
-		{
+		icon match {
 			case Some(icon) => Stack.buildRowWithContext(layout = Leading) { s =>
-				s += ImageLabel.contextual(icon.singleColorImage)
+				s += ImageLabel.contextual(icon)
 				s += messageView
 			}
 			case None => messageView

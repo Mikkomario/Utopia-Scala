@@ -1,5 +1,6 @@
 package utopia.genesis.event
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.inception.util.Filter
@@ -18,13 +19,20 @@ object MouseMoveEvent
       * @param getArea A function for calculating the target area. Will be called each time an event needs to be filtered
      */
     def enterAreaFilter(getArea: => Area2D): Filter[MouseMoveEvent] = e => e.enteredArea(getArea)
-    
     /**
      * Creates an event filter that only accepts mouse events originating from the mouse exiting the
      * specified area
       * @param getArea A function for calculating the target area. Will be called each time an event needs to be filtered.
      */
     def exitedAreaFilter(getArea: => Area2D): Filter[MouseMoveEvent] = e => e.exitedArea(getArea)
+    /**
+      * @param area The followed area (call-by-name)
+      * @return A filter that only accepts events where the mouse entered or exited the specified area
+      */
+    def enteredOrExitedAreaFilter(area: => Area2D): Filter[MouseMoveEvent] = { e =>
+        val a = area
+        Pair(e.mousePosition, e.previousMousePosition).isAsymmetricBy { a.contains(_) }
+    }
     
     /**
      * Creates an event filter that only accepts events where the mouse cursor moved with enough

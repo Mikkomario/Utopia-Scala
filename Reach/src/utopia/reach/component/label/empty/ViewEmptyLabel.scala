@@ -1,30 +1,29 @@
 package utopia.reach.component.label.empty
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade}
-import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.BackgroundViewDrawer
 import utopia.reflection.shape.stack.StackSize
 
-object ViewEmptyLabel extends ContextInsertableComponentFactoryFactory[ColorContextLike, ViewEmptyLabelFactory,
+object ViewEmptyLabel extends ContextInsertableComponentFactoryFactory[ColorContext, ViewEmptyLabelFactory,
 	ContextualViewEmptyLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewEmptyLabelFactory(hierarchy)
 }
 
 class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualViewEmptyLabelFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualViewEmptyLabelFactory]
 {
 	// IMPLEMENTED  ------------------------------
 	
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualViewEmptyLabelFactory(this, context)
 	
 	
@@ -72,8 +71,8 @@ class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualViewEmptyLabelFactory[+N <: ColorContextLike](factory: ViewEmptyLabelFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualViewEmptyLabelFactory]
+case class ContextualViewEmptyLabelFactory[+N <: ColorContext](factory: ViewEmptyLabelFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualViewEmptyLabelFactory]
 {
 	// COMPUTED -----------------------------------
 	
@@ -85,7 +84,7 @@ case class ContextualViewEmptyLabelFactory[+N <: ColorContextLike](factory: View
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -99,8 +98,8 @@ case class ContextualViewEmptyLabelFactory[+N <: ColorContextLike](factory: View
 	 * @return A new label
 	 */
 	def withBackgroundForRole(rolePointer: Changing[ColorRole], stackSizePointer: Changing[StackSize],
-	                          preferredShade: ColorShade = Standard) =
-		factory.withBackground(rolePointer.map { context.color(_, preferredShade) }, stackSizePointer)
+	                          preferredShade: ColorLevel = Standard) =
+		factory.withBackground(rolePointer.map { context.color.preferring(preferredShade)(_) }, stackSizePointer)
 }
 
 /**

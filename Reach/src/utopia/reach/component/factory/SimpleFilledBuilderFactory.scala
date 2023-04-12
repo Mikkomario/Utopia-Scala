@@ -1,8 +1,8 @@
 package utopia.reach.component.factory
 
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLike}
+import utopia.firmament.context.{BaseContextLike, ColorContext}
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
 
 /**
@@ -11,10 +11,11 @@ import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.C
   * @author Mikko Hilpinen
   * @since 9.12.2020, v0.1
   */
-trait SimpleFilledBuilderFactory[+Builder[NC, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]]
+// FIXME: These functions are not available (type inference fails)
+trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]]
 {
 	protected def makeBuilder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(background: ComponentColor, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]): Builder[NC, F]
+	(background: Color, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]): Builder[NC, F]
 	
 	/**
 	  * Creates a new container builder that paints its background with specified color
@@ -26,9 +27,9 @@ trait SimpleFilledBuilderFactory[+Builder[NC, +F[X <: NC] <: ContextualComponent
 	  * @return A new container builder
 	  */
 	def buildFilledWithContext[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NC], background: ComponentColor,
+	(context: BaseContextLike[_, NC], background: Color,
 	 contentFactory: ContextualBuilderContentFactory[NC, F]) =
-		makeBuilder[NC, F](background, context.inContextWithBackground(background), contentFactory)
+		makeBuilder[NC, F](background, context.against(background), contentFactory)
 	
 	/**
 	  * Creates a new container builder that paints its background with specified color. Also uses a context mutator.
@@ -42,9 +43,9 @@ trait SimpleFilledBuilderFactory[+Builder[NC, +F[X <: NC] <: ContextualComponent
 	  * @return A new container builder
 	  */
 	def buildFilledWithMappedContext[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NT], background: ComponentColor,
+	(context: BaseContextLike[_, NT], background: Color,
 	 contentFactory: ContextualBuilderContentFactory[NC, F])(mapContext: NT => NC) =
-		makeBuilder[NC, F](background, mapContext(context.inContextWithBackground(background)), contentFactory)
+		makeBuilder[NC, F](background, mapContext(context.against(background)), contentFactory)
 	
 	/**
 	  * Creates a new container builder that fills the container area with a background color
@@ -57,9 +58,9 @@ trait SimpleFilledBuilderFactory[+Builder[NC, +F[X <: NC] <: ContextualComponent
 	  * @return A new container builder
 	  */
 	def buildFilledWithContextForRole[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NC] with ColorContextLike, role: ColorRole,
-	 contentFactory: ContextualBuilderContentFactory[NC, F], preferredShade: ColorShade = Standard) =
-		buildFilledWithContext[NC, F](context, context.color(role, preferredShade), contentFactory)
+	(context: BaseContextLike[_, NC] with ColorContext, role: ColorRole,
+	 contentFactory: ContextualBuilderContentFactory[NC, F], preferredShade: ColorLevel = Standard) =
+		buildFilledWithContext[NC, F](context, context.color.preferring(preferredShade)(role), contentFactory)
 	
 	/**
 	  * Creates a new container builder that paints its background with specified color. Also uses a context mutator.
@@ -74,9 +75,9 @@ trait SimpleFilledBuilderFactory[+Builder[NC, +F[X <: NC] <: ContextualComponent
 	  * @return A new container builder
 	  */
 	def buildFilledWithMappedContextForRole[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NT] with ColorContextLike, role: ColorRole,
-	 contentFactory: ContextualBuilderContentFactory[NC, F], preferredShade: ColorShade = Standard)
+	(context: BaseContextLike[_, NT] with ColorContext, role: ColorRole,
+	 contentFactory: ContextualBuilderContentFactory[NC, F], preferredShade: ColorLevel = Standard)
 	(mapContext: NT => NC) =
-		buildFilledWithMappedContext[NT, NC, F](context, context.color(role, preferredShade),
+		buildFilledWithMappedContext[NT, NC, F](context, context.color.preferring(preferredShade)(role),
 			contentFactory)(mapContext)
 }

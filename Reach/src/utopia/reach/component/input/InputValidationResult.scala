@@ -1,8 +1,7 @@
 package utopia.reach.component.input
 
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Error
-import utopia.reflection.localization.LocalizedString
+import utopia.paradigm.color.ColorRole
+import utopia.firmament.localization.LocalizedString
 
 import scala.language.implicitConversions
 
@@ -75,7 +74,7 @@ object InputValidationResult
 	  */
 	case class Failure(message: LocalizedString) extends InputValidationResult
 	{
-		override def highlighting = Some(Error)
+		override def highlighting = Some(ColorRole.Failure)
 	}
 	/**
 	  * A warning result

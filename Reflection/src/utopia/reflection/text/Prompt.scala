@@ -1,17 +1,19 @@
 package utopia.reflection.text
 
-import scala.language.implicitConversions
+import utopia.firmament.context.TextContext
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
+
+import scala.language.implicitConversions
 
 object Prompt
 {
 	// IMPLICIT	----------------------------
 	
-	implicit def wrapLocalizedString(text: LocalizedString)(implicit context: TextContextLike): Prompt = contextual(text)
+	implicit def wrapLocalizedString(text: LocalizedString)(implicit context: TextContext): Prompt = contextual(text)
 	
-	implicit def autoLocalizeWithContext(raw: String)(implicit context: TextContextLike,
+	implicit def autoLocalizeWithContext(raw: String)(implicit context: TextContext,
 													  autoLocalize: String => LocalizedString): Prompt = wrapLocalizedString(raw)
 	
 	
@@ -23,7 +25,7 @@ object Prompt
 	  * @param context Component creation context (implicit)
 	  * @return A new prompt
 	  */
-	def contextual(text: LocalizedString)(implicit context: TextContextLike) =
+	def contextual(text: LocalizedString)(implicit context: TextContext) =
 		Prompt(text, context.promptFont, context.hintTextColor)
 }
 

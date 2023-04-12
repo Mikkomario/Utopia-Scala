@@ -1,5 +1,12 @@
 package utopia.reach.component.input.selection
 
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.component.input.SelectionWithPointers
+import utopia.firmament.context.ColorContext
+import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener2}
+import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.immutable.View
@@ -13,6 +20,7 @@ import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateLis
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
@@ -27,28 +35,20 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reach.util.Priority.High
-import utopia.reflection.color.{ColorShadeVariant, ComponentColor}
-import utopia.reflection.component.context.ColorContextLike
-import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.component.template.input.SelectionWithPointers
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener2}
 import utopia.reflection.shape.stack.StackLength
 
-object SelectionList extends ContextInsertableComponentFactoryFactory[ColorContextLike, SelectionListFactory,
+object SelectionList extends ContextInsertableComponentFactoryFactory[ColorContext, SelectionListFactory,
 	ContextualSelectionListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new SelectionListFactory(hierarchy)
 }
 
 class SelectionListFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualSelectionListFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualSelectionListFactory]
 {
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualSelectionListFactory(this, context)
 	
 	/**
@@ -75,7 +75,7 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new list
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(actorHandler: ActorHandler, contextBackgroundPointer: View[ComponentColor], contentPointer: P,
+	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), direction: Axis2D = Y,
 	 layout: StackLayout = Fit, margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
 	 highlightModifier: Double = 1.0, sameItemCheck: Option[EqualsFunction[A]] = None,
@@ -86,10 +86,10 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 			alternativeKeyCondition)(makeDisplay)
 }
 
-case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: SelectionListFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualSelectionListFactory]
+case class ContextualSelectionListFactory[+N <: ColorContext](factory: SelectionListFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualSelectionListFactory]
 {
-	override def withContext[N2 <: ColorContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: ColorContext](newContext: N2) = copy(context = newContext)
 	
 	/**
 	  * Creates a new list
@@ -110,11 +110,11 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-	 direction: Axis2D = Y, layout: StackLayout = Fit, margin: StackLength = context.defaultStackMargin,
+	 direction: Axis2D = Y, layout: StackLayout = Fit, margin: StackLength = context.stackMargin,
 	 cap: StackLength = StackLength.fixedZero,  highlightModifier: Double = 1.0,
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
-		factory(context.actorHandler, Fixed(context.containerBackground), contentPointer, valuePointer, direction,
+		factory(context.actorHandler, Fixed(context.background), contentPointer, valuePointer, direction,
 			layout, margin, cap, highlightModifier, sameItemCheck, alternativeKeyCondition)(makeDisplay)
 }
 
@@ -124,7 +124,7 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
   * @since 19.12.2020, v0.1
   */
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
-(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[ComponentColor],
+(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: PointerWithEvents[Option[A]], direction: Axis2D,
  layout: StackLayout, margin: StackLength, cap: StackLength, highlightModifier: Double,
  sameItemCheck: Option[EqualsFunction[A]], alternativeKeyCondition: => Boolean)
@@ -247,7 +247,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	override def cursorBounds = boundsInsideTop
 	
 	override def cursorToImage(cursor: Cursor, position: Point) =
-		cursor(ColorShadeVariant.forLuminosity(contextBackgroundPointer.value.luminosity))
+		cursor(ColorShade.forLuminosity(contextBackgroundPointer.value.luminosity))
 	
 	
 	// NESTED	------------------------------------

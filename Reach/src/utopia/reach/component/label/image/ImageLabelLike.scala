@@ -1,9 +1,9 @@
 package utopia.reach.component.label.image
 
+import utopia.firmament.component.stack.CachingStackable
 import utopia.genesis.image.Image
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reflection.component.drawing.template.CustomDrawable
-import utopia.reflection.component.template.layout.stack.CachingStackable2
 import utopia.reflection.shape.stack.{StackInsets, StackSize}
 
 /**
@@ -11,7 +11,7 @@ import utopia.reflection.shape.stack.{StackInsets, StackSize}
   * @author Mikko Hilpinen
   * @since 27.10.2020, v0.1
   */
-trait ImageLabelLike extends ReachComponentLike with CustomDrawable with CachingStackable2
+trait ImageLabelLike extends ReachComponentLike with CustomDrawable with CachingStackable
 {
 	// ABSTRACT	----------------------------
 	

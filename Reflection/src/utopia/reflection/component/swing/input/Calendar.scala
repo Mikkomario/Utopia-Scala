@@ -1,29 +1,31 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.image.ButtonImageSet
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{WeekDay, WeekDays}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.Size
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.reflection.component.drawing.view.SelectionCircleViewDrawer
+import utopia.firmament.drawing.view.SelectionCircleViewDrawer
 import utopia.reflection.component.swing.StackSpace
-import utopia.reflection.component.swing.button.{ButtonImageSet, CustomDrawableButtonLike, ImageButton}
+import utopia.reflection.component.swing.button.{CustomDrawableButtonLike, ImageButton}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, StackableAwtComponentWrapperWrapper}
-import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionGroup}
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.controller.data.SelectionGroup
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.stack.StackLayout.Center
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
-import utopia.reflection.localization.DisplayFunction
+import utopia.firmament.localization.DisplayFunction
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.Font
 
 import java.time._
 import scala.collection.immutable.HashMap

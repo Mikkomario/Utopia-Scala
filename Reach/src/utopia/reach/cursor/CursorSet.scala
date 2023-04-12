@@ -1,10 +1,10 @@
 package utopia.reach.cursor
 
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.cursor.CursorType.Default
-import utopia.reflection.image.SingleColorIcon
 
 import java.nio.file.Path
 import scala.util.{Failure, Success}

@@ -18,7 +18,7 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.{Never, WhenAnyKeyPressed, WhenClickedOutside, WhenEscPressed, WhenFocusLost}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.LocalString._
+import utopia.firmament.localization.LocalString._
 
 import java.awt.event.{WindowEvent, WindowFocusListener}
 import scala.concurrent.ExecutionContext

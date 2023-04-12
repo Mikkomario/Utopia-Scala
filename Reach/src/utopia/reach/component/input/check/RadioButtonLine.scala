@@ -1,5 +1,6 @@
 package utopia.reach.component.input.check
 
+import utopia.firmament.context.TextContext
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
@@ -13,37 +14,36 @@ import utopia.reach.component.template.CursorDefining
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.color.{ColorRole, ComponentColor}
-import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.paradigm.color.{Color, ColorRole}
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.firmament.localization.LocalizedString
 
 /**
  * Used for constructing radio buttons with labels
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
-object RadioButtonLine extends ContextInsertableComponentFactoryFactory[TextContextLike, RadioButtonLineFactory,
+object RadioButtonLine extends ContextInsertableComponentFactoryFactory[TextContext, RadioButtonLineFactory,
 	ContextualRadioButtonLineFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonLineFactory(hierarchy)
 }
 
 class RadioButtonLineFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualRadioButtonLineFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualRadioButtonLineFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualRadioButtonLineFactory(parentHierarchy, context)
 }
 
-case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualRadioButtonLineFactory]
+case class ContextualRadioButtonLineFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualRadioButtonLineFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -66,7 +66,7 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A, labelText: LocalizedString,
 	             selectedColorRole: ColorRole = Secondary, enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             backgroundColorPointer: Changing[ComponentColor] = Fixed(context.containerBackground),
+	             backgroundColorPointer: Changing[Color] = Fixed(context.background),
 	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 	{
 		Stack(parentHierarchy).withContext(context).build(Mixed)
@@ -75,7 +75,7 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 					enabledPointer, backgroundColorPointer, focusListeners = focusListeners)
 				// Text color may vary
 				val textColorPointer = backgroundColorPointer.mergeWith(enabledPointer) { (background, enabled) =>
-					if (enabled) background.defaultTextColor else background.textColorStandard.hintTextColor
+					if (enabled) background.shade.defaultTextColor else background.shade.defaultHintTextColor
 				}
 				val label = factories(ViewTextLabel).withoutContext.forText(Fixed(labelText),
 					textColorPointer.map { color => context.textDrawContext.copy(color = color) })

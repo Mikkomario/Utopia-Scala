@@ -12,7 +12,8 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.{Gray, Primary, Secondary}
 
 /**
   * Tests SearchFromField
@@ -27,10 +28,10 @@ object SearchFromFieldTest extends App
 
 	val searchImage = Image.readFrom("test-images/arrow-back-48dp.png").map { _.withColorOverlay(Color.white) }
 
-	val background = colorScheme.gray
+	val background = colorScheme(Gray)
 	val standardWidth = 320.any
-	val content = baseContext.inContextWithBackground(background).use { bc =>
-		val field = bc.forTextComponents.forPrimaryColorButtons.use { implicit fieldC =>
+	val content = baseContext.against(background).use { bc =>
+		val field = bc.forTextComponents.withBackground(Primary).use { implicit fieldC =>
 			SearchFrom.contextualWithTextOnly[String]("Search for string", standardWidth,
 				searchIcon = searchImage.toOption) { p => SearchFrom.noResultsLabel("No results for '%s'", p) }
 		}
@@ -39,7 +40,7 @@ object SearchFromFieldTest extends App
 			"Keijupuisto", "Ääkkösiä", "Pulppura", "Potentiaalinen koneisto")
 		field.valuePointer.addContinuousListener { println(_) }
 
-		val button = bc.forTextComponents.withTextAlignment(Center).forSecondaryColorButtons.use { implicit btnC =>
+		val button = bc.forTextComponents.withTextAlignment(Center).withBackground(Secondary).use { implicit btnC =>
 			TextButton.contextual("OK") { println(field.value) }
 		}
 

@@ -18,7 +18,6 @@ sealed trait ColorContrastStandard extends SelfComparable[ColorContrastStandard]
 	  * @return The minimum contrast ratio that is normally used
 	  */
 	def defaultMinimumContrast: Double
-	
 	/**
 	  * @return The minimum contrast ratio that is allowed for large text
 	  */
@@ -32,8 +31,7 @@ sealed trait ColorContrastStandard extends SelfComparable[ColorContrastStandard]
 	  * @param fontIsBold Whether the font is bold
 	  * @return The minimum color contrast requirement in this standard for text with those settings
 	  */
-	def minimumContrastForText(fontSize: Distance, fontIsBold: Boolean = false) =
-	{
+	def minimumContrastForText(fontSize: Distance, fontIsBold: Boolean = false) = {
 		if (fontSize >= (if (fontIsBold) largeTextThresholdBold else largeTextThreshold))
 			largeTextMinimumContrast
 		else
@@ -47,8 +45,7 @@ sealed trait ColorContrastStandard extends SelfComparable[ColorContrastStandard]
 	  * @param fontIsBold Whether the used font is bold (default = false)
 	  * @return Whether the text meets this standard
 	  */
-	def test(contrast: Double, fontSize: Distance, fontIsBold: Boolean = false) =
-	{
+	def test(contrast: Double, fontSize: Distance, fontIsBold: Boolean = false) = {
 		// Checks whether text meets higher requirements
 		if (contrast >= defaultMinimumContrast)
 			true
@@ -77,8 +74,14 @@ object ColorContrastStandard
 {
 	// ATTRIBUTES	-------------------------
 	
-	private val largeTextThreshold = Distance.ofInches(18 / 72.0)
-	private val largeTextThresholdBold = Distance.ofInches(14 / 72.0)
+	/**
+	  * The threshold for text that is considered large when it is bold
+	  */
+	val largeTextThreshold = Distance.ofInches(18 / 72.0)
+	/**
+	  * The threshold for text that is considered large when it is not bold
+	  */
+	val largeTextThresholdBold = Distance.ofInches(14 / 72.0)
 	
 	/**
 	  * All registered color contrast standards from more to less strict (enhanced & minimum)

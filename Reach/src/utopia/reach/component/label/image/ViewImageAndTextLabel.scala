@@ -1,12 +1,17 @@
 package utopia.reach.component.label.image
 
+import utopia.firmament.component.stack.ConstrainableWrapper
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
@@ -14,29 +19,23 @@ import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.util.Priority.Low
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade}
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.BackgroundViewDrawer
-import utopia.reflection.component.template.layout.stack.ConstrainableWrapper
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.DisplayFunction
+import utopia.firmament.drawing.view.BackgroundViewDrawer
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.firmament.localization.DisplayFunction
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
 
-object ViewImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike,
+object ViewImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
 	ViewImageAndTextLabelFactory, ContextualViewImageAndTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewImageAndTextLabelFactory(hierarchy)
 }
 
 class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualViewImageAndTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualViewImageAndTextLabelFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualViewImageAndTextLabelFactory(this, context)
 	
 	/**
@@ -77,12 +76,12 @@ class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
 }
 
-case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory: ViewImageAndTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualViewImageAndTextLabelFactory]
+case class ContextualViewImageAndTextLabelFactory[+N <: TextContext](factory: ViewImageAndTextLabelFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualViewImageAndTextLabelFactory]
 {
-	implicit def c: TextContextLike = context
+	implicit def c: TextContext = context
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -159,7 +158,7 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
 	                forceEqualBreadth: Boolean = false) =
-		apply(itemPointer, iconPointer.map { _.singleColorImage }, imageInsets, displayFunction, customDrawers,
+		apply(itemPointer, iconPointer.map { _.contextual }, imageInsets, displayFunction, customDrawers,
 			useLowPriorityImageSize, forceEqualBreadth)
 	
 	/**
@@ -177,14 +176,14 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @return A new label
 	  */
 	def withColouredIcon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	                        rolePointer: Changing[ColorRole], preferredShade: ColorShade = Standard,
+	                        rolePointer: Changing[ColorRole], preferredShade: ColorLevel = Standard,
 	                        imageInsets: StackInsets = StackInsets.any,
 	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                        customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
 	                        forceEqualBreadth: Boolean = false) =
-		apply(itemPointer, iconPointer.mergeWith(rolePointer) { (icon, role) =>
-			icon.asImageWithColor(context.color(role, preferredShade)) }, imageInsets, displayFunction, customDrawers,
-			useLowPriorityImageSize, forceEqualBreadth)
+		apply(itemPointer,
+			iconPointer.mergeWith(rolePointer) { (icon, role) =>icon(role, preferredShade) }, imageInsets,
+			displayFunction, customDrawers, useLowPriorityImageSize, forceEqualBreadth)
 	
 	/**
 	  * Creates a new label which displays both image and text
@@ -203,17 +202,17 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 	  * @return A new label
 	  */
 	def withIconAndChangingBackground[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	                                     rolePointer: Changing[ColorRole], preferredShade: ColorShade = Standard,
+	                                     rolePointer: Changing[ColorRole], preferredShade: ColorLevel = Standard,
 	                                     imageInsets: StackInsets = StackInsets.any,
 	                                     displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                                     customDrawers: Vector[CustomDrawer] = Vector(),
 	                                     useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
 	{
-		val backgroundPointer = rolePointer.map { context.color(_, preferredShade) }
+		val backgroundPointer = rolePointer.map { context.color.preferring(preferredShade)(_) }
 		val backgroundDrawer = BackgroundViewDrawer(backgroundPointer.map { c => c })
-		val imagePointer = iconPointer.mergeWith(backgroundPointer) { _.singleColorImageAgainst(_) }
+		val imagePointer = iconPointer.mergeWith(backgroundPointer) { _.against(_) }
 		val label = withChangingStyle(itemPointer, imagePointer,
-			textColorPointer = backgroundPointer.map { _.defaultTextColor }, imageInsetsPointer = Fixed(imageInsets),
+			textColorPointer = backgroundPointer.map { _.shade.defaultTextColor }, imageInsetsPointer = Fixed(imageInsets),
 			displayFunction = displayFunction, customDrawers = backgroundDrawer +: customDrawers,
 			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)
 		// Repaints this component whenever background color changes

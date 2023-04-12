@@ -1,13 +1,13 @@
 package utopia.reach.container.multi.stack
 
+import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
+import StackLayout.Fit
 
 object SegmentGroup
 {

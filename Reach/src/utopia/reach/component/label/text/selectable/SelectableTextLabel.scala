@@ -1,35 +1,33 @@
 package utopia.reach.component.label.text.selectable
 
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.color.ColorShade.Light
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.Duration
 
-object SelectableTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike,
+object SelectableTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
 	SelectableTextLabelFactory, ContextualSelectableTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new SelectableTextLabelFactory(hierarchy)
 }
 
 class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualSelectableTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualSelectableTextLabelFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualSelectableTextLabelFactory(this, context)
 	
 	/**
@@ -129,10 +127,10 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 			focusListeners, allowLineBreaks, allowTextShrink)
 }
 
-case class ContextualSelectableTextLabelFactory[+N <: TextContextLike](factory: SelectableTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualSelectableTextLabelFactory]
+case class ContextualSelectableTextLabelFactory[+N <: TextContext](factory: SelectableTextLabelFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualSelectableTextLabelFactory]
 {
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -147,11 +145,10 @@ case class ContextualSelectableTextLabelFactory[+N <: TextContextLike](factory: 
 	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 	          customDrawers: Vector[CustomDrawer], focusListeners: Seq[FocusListener]) =
 	{
-		val selectionBackground = context.color(Secondary, Light)
-		val caretColor = context.colorScheme.secondary.bestAgainst(
-			Vector(context.containerBackground, selectionBackground))
+		val selectionBackground = context.color.light.secondary
+		val caretColor = context.color.differentFrom(Secondary, selectionBackground)
 		factory(context.actorHandler, textPointer, Fixed(TextDrawContext.contextual(context)),
-			Fixed(selectionBackground.defaultTextColor), Fixed(Some(selectionBackground)), Fixed(caretColor),
+			Fixed(selectionBackground.shade.defaultTextColor), Fixed(Some(selectionBackground)), Fixed(caretColor),
 			(context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, customDrawers, focusListeners,
 			context.allowTextShrink)
 	}

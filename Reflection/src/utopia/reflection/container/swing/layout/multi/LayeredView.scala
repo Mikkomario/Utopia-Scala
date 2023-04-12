@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.layout.multi
 
+import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.swing.template.{AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.Alignable

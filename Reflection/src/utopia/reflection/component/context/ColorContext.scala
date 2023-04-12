@@ -3,7 +3,7 @@ package utopia.reflection.component.context
 import utopia.flow.operator.ScopeUsable
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorScheme, ColorSet, ColorShade, ComponentColor}
-import utopia.reflection.localization.Localizer
+import utopia.firmament.localization.Localizer
 
 /**
   * This is a more specific instance of base context that also includes information about surrounding container's
@@ -11,6 +11,7 @@ import utopia.reflection.localization.Localizer
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
+@deprecated("Moved to Firmament", "v2.0")
 case class ColorContext(base: BaseContextLike, containerBackground: ComponentColor,
 						colorSchemeOverride: Option[ColorScheme] = None)
 	extends ColorContextLike with BaseContextWrapper with BackgroundSensitive[ColorContext] with ScopeUsable[ColorContext]

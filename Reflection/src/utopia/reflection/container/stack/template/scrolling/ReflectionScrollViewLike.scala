@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack.template.scrolling
 
+import utopia.firmament.component.container.single.ScrollViewLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 
 /**
@@ -7,7 +8,7 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackable
   * @author Mikko Hilpinen
   * @since 30.4.2019, v1+
   */
-trait ReflectionScrollViewLike[C <: ReflectionStackable] extends ScrollViewLike2[C] with ReflectionScrollAreaLike[C]
+trait ReflectionScrollViewLike[C <: ReflectionStackable] extends ScrollViewLike[C] with ReflectionScrollAreaLike[C]
 {
 	override def children = components
 }

@@ -1,19 +1,18 @@
 package utopia.reflection.container.swing.layout
 
+import utopia.firmament.component.container.many.MutableMultiContainer
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 import utopia.reflection.container.stack.template.MultiStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.template.WrappingContainer
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 import utopia.reflection.event.Visibility.{Invisible, Visible}
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -32,7 +31,7 @@ object AnimatedChangesContainer
 	  */
 	def contextual[C <: AwtStackable](container: MultiStackContainer[AnimatedVisibility[C]],
 									  transitionAxis: Option[Axis2D] = None)
-	                                 (implicit context: AnimationContextLike, exc: ExecutionContext) =
+	                                 (implicit context: AnimationContext, exc: ExecutionContext) =
 		new AnimatedChangesContainer[C, MultiStackContainer[AnimatedVisibility[C]]](container, context.actorHandler,
 			transitionAxis, context.animationDuration, context.maxAnimationRefreshRate, context.useFadingInAnimations)
 }
@@ -47,7 +46,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
  maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate, fadingIsEnabled: Boolean = true)
 (implicit exc: ExecutionContext)
-	extends WrappingContainer[C, AnimatedVisibility[C]] with ReflectionStackableWrapper with MutableMultiContainer2[C, C]
+	extends WrappingContainer[C, AnimatedVisibility[C]] with ReflectionStackableWrapper with MutableMultiContainer[C, C]
 {
 	// ATTRIBUTES	-----------------------------
 	

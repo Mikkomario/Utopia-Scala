@@ -12,10 +12,10 @@ import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollArea
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.util.SingleFrameSetup
 
 import java.awt.event.KeyEvent
@@ -44,7 +44,7 @@ object ReachScrollAreaTest extends App
 		implicit val c: ReachCanvas = canvasHierarchy.top
 		Framing(canvasHierarchy).withContext(baseContext).build(ScrollArea)
 			.apply(margins.large.any, Vector(BackgroundDrawer(bg))) { scrollF =>
-				scrollF.mapContext { _.inContextWithBackground(bg) }.build(Stack)
+				scrollF.mapContext { _.against(bg) }.build(Stack)
 					.apply(maxOptimalSize = Some(Size(320, 320))) { rowF =>
 						rowF.build(Stack).row() { colF =>
 							val blocks = Vector.fill(5) {

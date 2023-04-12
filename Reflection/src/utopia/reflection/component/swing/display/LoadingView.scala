@@ -1,18 +1,18 @@
 package utopia.reflection.component.swing.display
 
+import utopia.firmament.context.{AnimationContext, TextContext}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Direction2D.Up
-import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.reflection.container.stack.StackLayout.Center
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.paradigm.enumeration.Alignment.BottomLeft
-import utopia.reflection.shape.LengthExtensions.LengthNumber
+import utopia.firmament.model.stack.LengthExtensions.LengthNumber
 import utopia.reflection.shape.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
 import utopia.reflection.util.ProgressState
 
@@ -30,7 +30,7 @@ object LoadingView
 	  * @return A new loading view
 	  */
 	def apply(loadingLabel: AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double)
-			 (implicit context: TextContext, animationContext: AnimationContextLike) =
+			 (implicit context: TextContext, animationContext: AnimationContext) =
 		new LoadingView(loadingLabel, progressPointer, defaultWidth, context)
 }
 
@@ -40,7 +40,7 @@ object LoadingView
   * @since 30.8.2020, v1.2.1
   */
 class LoadingView(loadingLabel: AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
-                  context: TextContext)(implicit animationContext: AnimationContextLike)
+                  context: TextContext)(implicit animationContext: AnimationContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	---------------------------
@@ -49,17 +49,17 @@ class LoadingView(loadingLabel: AwtStackable, progressPointer: Changing[Progress
 		ProgressBar.contextual(defaultWidth.any.expanding x c.margins.medium.downTo(c.margins.small),
 			progressPointer.map { _.progress })
 	}
-	private val statusLabel = context.expandingToRight.withTextAlignment(BottomLeft).expandingTo(Up).use { implicit c =>
-		val label = TextLabel.contextual(progressPointer.value.description)
-		label.addWidthConstraint(new NoShrinkingLengthModifier(defaultWidth.any.expanding) && ExpandingLengthModifier)
-		label
-	}
+	private val statusLabel = context.withTextExpandingToRight.withTextAlignment(BottomLeft).withTextExpandingTo(Up)
+		.use { implicit c =>
+			val label = TextLabel.contextual(progressPointer.value.description)
+			label.addWidthConstraint(new NoShrinkingLengthModifier(defaultWidth.any.expanding) && ExpandingLengthModifier)
+			label
+		}
 	private lazy val progressListener = ChangeListener
 		.continuous { e: ChangeEvent[ProgressState] => statusLabel.text = e.newValue.description }
 	
 	// The view consists of an animated label on the left, followed by a description and a progress bar combination
-	private val view =
-	{
+	private val view = {
 		context.use { implicit c =>
 			Stack.buildRowWithContext(layout = Center) { s =>
 				s += loadingLabel
@@ -67,7 +67,7 @@ class LoadingView(loadingLabel: AwtStackable, progressPointer: Changing[Progress
 					col += statusLabel
 					col += progressBar
 				}
-			}.framed(c.margins.medium.upscaling.square, c.containerBackground)
+			}.framed(c.margins.medium.upscaling.square, c.background)
 		}
 	}
 	

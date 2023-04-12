@@ -1,13 +1,13 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.Color
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.event.ButtonState
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.StackInsets
 
 object FramedImageButton
@@ -22,9 +22,9 @@ object FramedImageButton
 	  * @return A new button
 	  */
 	def contextualWithoutAction(icon: SingleColorIcon, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	                            isLowPriority: Boolean = false)(implicit context: ButtonContextLike) =
-		new FramedImageButton(icon.inButton, context.buttonColor, context.borderWidth, hotKeys, hotKeyChars,
-			context.allowImageUpscaling, isLowPriority)
+	                            isLowPriority: Boolean = false)(implicit context: ColorContext) =
+		new FramedImageButton(icon.inButton.contextual, context.background, context.buttonBorderWidth, hotKeys,
+			hotKeyChars, context.allowImageUpscaling, isLowPriority)
 	
 	/**
 	  * Creates a new button utilizing contextual information
@@ -37,7 +37,7 @@ object FramedImageButton
 	  * @return A new button
 	  */
 	def contextual[U](icon: SingleColorIcon, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	               isLowPriority: Boolean = false)(action: => U)(implicit context: ButtonContextLike) =
+	               isLowPriority: Boolean = false)(action: => U)(implicit context: ColorContext) =
 	{
 		val button = contextualWithoutAction(icon, hotKeys, hotKeyChars, isLowPriority)
 		button.registerAction { () => action }
@@ -81,8 +81,7 @@ class FramedImageButton(images: ButtonImageSet, color: Color, borderWidth: Doubl
 	
 	override def drawable = content
 	
-	override protected def updateStyleForState(newState: ButtonState) =
-	{
+	override protected def updateStyleForState(newState: GuiElementStatus) = {
 		super.updateStyleForState(newState)
 		label.image = images(newState)
 	}

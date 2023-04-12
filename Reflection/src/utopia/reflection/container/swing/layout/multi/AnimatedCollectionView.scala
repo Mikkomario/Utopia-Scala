@@ -1,18 +1,17 @@
 package utopia.reflection.container.swing.layout.multi
 
+import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.template.layout.ReflectionCollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -33,8 +32,8 @@ object AnimatedCollectionView
 	  */
 	def contextual[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshold: Double,
 									  insideRowLayout: StackLayout = Fit, forceEqualRowLength: Boolean = false)
-									 (implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
-		new AnimatedCollectionView[C](ac.actorHandler, rowAxis, initialRowSplitThreshold, bc.defaultStackMargin,
+									 (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
+		new AnimatedCollectionView[C](ac.actorHandler, rowAxis, initialRowSplitThreshold, bc.stackMargin,
 			insideRowLayout, forceEqualRowLength, ac.animationDuration, ac.maxAnimationRefreshRate,
 			ac.useFadingInAnimations)
 }

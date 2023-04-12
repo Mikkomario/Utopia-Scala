@@ -3,6 +3,7 @@ package utopia.reflection.test.swing
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Gray
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.input.DropDown
 import utopia.reflection.component.swing.label.TextLabel
@@ -33,8 +34,7 @@ object DropDownTest2 extends App
 	val ddIcon = Image.readOrEmpty("Reflection/test-images/arrow-back-48dp.png")
 	
 	val backgroundColor = colorScheme.primary
-	val stack = baseContext.inContextWithBackground(backgroundColor).forTextComponents.forGrayFields
-		.withBorderWidth(1).use { implicit context =>
+	val stack = (baseContext.against(backgroundColor).forTextComponents/Gray).use { implicit context =>
 		val categorySelect = DropDown.contextualWithTextOnly[String](
 			TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Class")
 		val characterSelect = DropDown.contextualWithTextOnly[String](

@@ -1,12 +1,16 @@
 package utopia.reach.component.input
 
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.image.Image
-import utopia.paradigm.color.Color
+import utopia.genesis.text.Font
+import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
@@ -22,20 +26,13 @@ import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
-import utopia.reflection.color.ColorRole.{Error, Secondary}
-import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
-import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Border
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.{Failure, Secondary}
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentCreationDefaults
 
 /**
   * A set of context variables provided when creating field contents
@@ -47,7 +44,7 @@ import utopia.reflection.util.ComponentCreationDefaults
   */
 case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListener: FocusChangeListener,
                                 textStylePointer: Changing[TextDrawContext], promptDrawers: Vector[CustomDrawer],
-                                backgroundPointer: Changing[ComponentColor])
+                                backgroundPointer: Changing[Color])
 
 /**
   * A set of context variables provided when creating an additional right side label
@@ -56,9 +53,9 @@ case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListen
   * @param backgroundPointer Pointer to contextual background color
   * @tparam C Type of field contents
   */
-case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: Changing[ComponentColor])
+case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: Changing[Color])
 
-object Field extends ContextInsertableComponentFactoryFactory[TextContextLike, FieldFactory, ContextualFieldFactory]
+object Field extends ContextInsertableComponentFactoryFactory[TextContext, FieldFactory, ContextualFieldFactory]
 {
 	// ATTRIBUTES	--------------------------
 	
@@ -74,9 +71,9 @@ object Field extends ContextInsertableComponentFactoryFactory[TextContextLike, F
 }
 
 class FieldFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualFieldFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualFieldFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualFieldFactory(this, context)
 	
 	/**
@@ -110,7 +107,7 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply[C <: ReachComponentLike with Focusable]
 	(colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
-	 contextBackgroundPointer: Changing[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+	 contextBackgroundPointer: Changing[Color], font: Font, alignment: Alignment = Alignment.Left,
 	 textInsets: StackInsets = StackInsets.any,
 	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
@@ -158,7 +155,7 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def withoutExtraLabel[C <: ReachComponentLike with Focusable]
 	(colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
-	 contextBackgroundPointer: Changing[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+	 contextBackgroundPointer: Changing[Color], font: Font, alignment: Alignment = Alignment.Left,
 	 textInsets: StackInsets = StackInsets.any,
 	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
@@ -177,10 +174,10 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 			hintScaleFactor, fillBackground)(makeField) { _ => None }
 }
 
-case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualFieldFactory]
+case class ContextualFieldFactory[+N <: TextContext](factory: FieldFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualFieldFactory]
 {
-	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	
 	/**
 	  * Creates a new field
@@ -224,7 +221,7 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
 		val focusBorderWidth = (context.margins.verySmall / 2) max 3
 		val defaultBorderWidth = focusBorderWidth / 3
 		
-		factory[C](context.colorScheme, isEmptyPointer, Fixed(context.containerBackground), context.font,
+		factory[C](context.colors, isEmptyPointer, Fixed(context.background), context.font,
 			context.textAlignment, context.textInsets, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, leftIconPointer, rightIconPointer, iconOutsideMargins, highlightStylePointer,
 			focusColorRole, defaultBorderWidth, focusBorderWidth, hintScaleFactor, fillBackground) {
@@ -278,7 +275,7 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
   */
 class Field[C <: ReachComponentLike with Focusable]
 (parentHierarchy: ComponentHierarchy, colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
- contextBackgroundPointer: Changing[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+ contextBackgroundPointer: Changing[Color], font: Font, alignment: Alignment = Alignment.Left,
  textInsets: StackInsets = StackInsets.any, fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
  promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
  hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
@@ -318,8 +315,8 @@ class Field[C <: ReachComponentLike with Focusable]
 	
 	// A pointer to whether this field currently highlights an error
 	private val errorStatePointer = errorMessagePointer.map { _.nonEmpty }
-	private val externalHighlightStatePointer = highlightStylePointer.mergeWith(errorStatePointer) { (custom, isError) =>
-		if (isError) Some(Error) else custom }
+	private val externalHighlightStatePointer: Changing[Option[ColorRole]] = highlightStylePointer
+		.mergeWith(errorStatePointer) { (custom, isError) => if (isError) Some(ColorRole.Failure) else custom }
 	private val highlightStatePointer = _focusPointer.mergeWith(externalHighlightStatePointer) { (focus, custom) =>
 		custom.orElse { if (focus) Some(focusColorRole) else None }
 	}
@@ -338,10 +335,10 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	private val highlightColorPointer = highlightStatePointer
 		.mergeWith(innerBackgroundPointer) { (state, background) =>
-			state.map { s => colorScheme(s).forBackground(background) }
+			state.map { s => colorScheme(s).against(background) }
 		}
 	
-	private val editTextColorPointer = innerBackgroundPointer.map { _.defaultTextColor }
+	private val editTextColorPointer = innerBackgroundPointer.map { _.shade.defaultTextColor }
 	private val contentColorPointer: Changing[Color] = highlightColorPointer
 		.mergeWith(editTextColorPointer) { (highlight, default) =>
 			highlight match {
@@ -353,12 +350,12 @@ class Field[C <: ReachComponentLike with Focusable]
 	// The actual display color is adjusted based on context background
 	private lazy val hintColorPointer = contextBackgroundPointer
 		.mergeWith(errorStatePointer, highlightStatePointer) { (background, isError, highlight) =>
-			val colorRole = if (isError) Some(Error) else highlight
+			val colorRole = if (isError) Some(Failure) else highlight
 			colorRole match {
 				// Case: Highlighting applied
-				case Some(colorRole) => colorScheme(colorRole).forBackground(background): Color
+				case Some(colorRole) => colorScheme(colorRole).against(background): Color
 				// Case: Default hint color
-				case None => background.textColorStandard.hintTextColor
+				case None => background.shade.defaultHintTextColor
 			}
 		}
 	
@@ -480,9 +477,8 @@ class Field[C <: ReachComponentLike with Focusable]
 	                               noMarginSide: Direction2D) =
 	{
 		ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { (icon, bg) =>
-			icon match
-			{
-				case Some(icon) => icon.singleColorImageAgainst(bg)
+			icon match {
+				case Some(icon) => icon.against(bg)
 				case None => Image.empty
 			}
 		}, iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
@@ -494,10 +490,10 @@ class Field[C <: ReachComponentLike with Focusable]
 	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
 	{
 		if (contextBackgroundPointer.isChanging)
-			ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.singleColorImageAgainst),
+			ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.against),
 				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 		else
-			ImageLabel(hierarchy).apply(icon.singleColorImageAgainst(contextBackgroundPointer.value),
+			ImageLabel(hierarchy).apply(icon.against(contextBackgroundPointer.value),
 				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 	}
 	

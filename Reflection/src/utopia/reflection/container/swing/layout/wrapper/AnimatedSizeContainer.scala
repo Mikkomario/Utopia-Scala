@@ -1,18 +1,17 @@
 package utopia.reflection.container.swing.layout.wrapper
 
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.path.ProjectilePath
 import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.context.AnimationContextLike
+import utopia.paradigm.path.ProjectilePath
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -39,7 +38,7 @@ object AnimatedSizeContainer
 	  * @tparam C Type of component being wrapped
 	  * @return A new animated changes container
 	  */
-	def contextual[C <: AwtStackable](component: C)(implicit context: AnimationContextLike) =
+	def contextual[C <: AwtStackable](component: C)(implicit context: AnimationContext) =
 		apply(component, context.actorHandler, context.animationDuration, context.maxAnimationRefreshRate)
 }
 

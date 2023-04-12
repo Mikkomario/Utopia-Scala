@@ -1,14 +1,14 @@
 package utopia.reflection.container.stack.template
 
+import utopia.firmament.component.container.single.SingleContainer
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.template.SingleContainer2
 
 /**
   * This single item container holds a stackable component
   * @author Mikko Hilpinen
   * @since 21.4.2019, v1+
   */
-trait SingleStackContainer[C <: ReflectionStackable] extends SingleContainer2[C] with StackContainerLike[C]
+trait SingleStackContainer[C <: ReflectionStackable] extends SingleContainer[C] with StackContainerLike[C]
 {
 	/**
 	  * Specifies the contents of this container.

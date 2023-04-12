@@ -9,6 +9,7 @@ import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
   * @author Mikko Hilpinen
   * @since 28.4.2020, v1.2
   */
+@deprecated("Moved to Firmament", "v2.0")
 trait ScrollingContextLike
 {
 	/**

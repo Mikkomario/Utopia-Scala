@@ -3,8 +3,8 @@ package utopia.reflection.container.template.window
 import scala.language.implicitConversions
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.reflection.component.template.input.Input
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.component.input.Input
+import utopia.firmament.localization.LocalizedString
 
 @deprecated("Replaced with InputField in Reach", "v2.0")
 object ManagedField

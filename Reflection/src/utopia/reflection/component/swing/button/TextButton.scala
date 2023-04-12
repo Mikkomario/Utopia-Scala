@@ -1,18 +1,18 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.component.text.MutableTextComponent
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.TextDrawContext
 import utopia.genesis.graphics.MeasuredText
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.text.MutableTextComponent
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
 object TextButton
 {
@@ -49,10 +49,10 @@ object TextButton
 	  * @return A new button
 	  */
 	def contextualWithoutAction(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	                           (implicit context: ButtonContextLike): TextButton =
+	                           (implicit context: TextContext): TextButton =
 	{
-		new TextButton(text, context.font, context.buttonColor, context.textColor, context.textInsets,
-			context.borderWidth, context.textAlignment, hotKeys, hotKeyChars)
+		new TextButton(text, context.font, context.background, context.textColor, context.textInsets,
+			context.buttonBorderWidth, context.textAlignment, hotKeys, hotKeyChars)
 	}
 	
 	/**
@@ -65,7 +65,7 @@ object TextButton
 	  * @return The new button
 	  */
 	def contextual(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	              (action: => Unit)(implicit context: ButtonContextLike): TextButton =
+	              (action: => Unit)(implicit context: TextContext): TextButton =
 	{
 		val button = contextualWithoutAction(text, hotKeys, hotKeyChars)
 		button.registerAction(() => action)

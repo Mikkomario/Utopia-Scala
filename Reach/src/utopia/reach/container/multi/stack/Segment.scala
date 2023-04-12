@@ -1,5 +1,6 @@
 package utopia.reach.container.multi.stack
 
+import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.Drawer
@@ -10,8 +11,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
+import StackLayout.{Fit, Leading}
 import utopia.reflection.shape.stack.StackLength
 
 /**

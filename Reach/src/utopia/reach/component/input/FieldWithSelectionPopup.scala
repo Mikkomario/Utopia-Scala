@@ -1,5 +1,7 @@
 package utopia.reach.component.input
 
+import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.async.process.Delay
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.operator.Sign.{Negative, Positive}
@@ -9,7 +11,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag}
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.paradigm.enumeration.Axis.Y
@@ -26,41 +28,37 @@ import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.CachingViewSwapper
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.{ScrollingContextLike, TextContextLike}
-import utopia.reflection.component.drawing.view.BackgroundViewDrawer
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.component.template.input.SelectionWithPointers
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.drawing.view.BackgroundViewDrawer
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.component.input.SelectionWithPointers
+import utopia.firmament.model.enumeration.StackLayout
+import StackLayout.Fit
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment.BottomLeft
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.util.ComponentCreationDefaults
 
 import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent}
 import scala.concurrent.ExecutionContext
 
-object FieldWithSelectionPopup extends ContextInsertableComponentFactoryFactory[TextContextLike,
+object FieldWithSelectionPopup extends ContextInsertableComponentFactoryFactory[TextContext,
 	FieldWithSelectionPopupFactory, ContextualFieldWithSelectionPopupFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new FieldWithSelectionPopupFactory(hierarchy)
 }
 
 class FieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualFieldWithSelectionPopupFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualFieldWithSelectionPopupFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualFieldWithSelectionPopupFactory(parentHierarchy, context)
 }
 
-case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](parentHierarchy: ComponentHierarchy,
+case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy,
 																		   context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualFieldWithSelectionPopupFactory]
+	extends ContextualComponentFactory[N, TextContext, ContextualFieldWithSelectionPopupFactory]
 {
-	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
@@ -108,7 +106,7 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
 	                             (makeDisplay: (ComponentHierarchy, A) => D)
 	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
-	                             (implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext) =
+	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext) =
 		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
@@ -145,7 +143,7 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
   * @tparam P Type of content pointer used
   */
 class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
-	+P <: Changing[Vector[A]], +N <: TextContextLike]
+	+P <: Changing[Vector[A]], +N <: TextContext]
 (parentHierarchy: ComponentHierarchy, context: N, isEmptyPointer: Changing[Boolean], override val contentPointer: P,
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
  rightExpandIcon: Option[SingleColorIcon] = None, rightCollapseIcon: Option[SingleColorIcon] = None,
@@ -161,7 +159,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 (makeField: (FieldCreationContext, N) => C)
 (makeDisplay: (ComponentHierarchy, A) => D)
 (makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]])
-(implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext)
+(implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
 {
@@ -217,7 +215,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 			// Creates the pop-up content in open form first
 			val openList = Open { hierarchy =>
 				val list = SelectionList(hierarchy).apply(context.actorHandler, field.innerBackgroundPointer, contentPointer,
-					valuePointer, Y, listLayout, context.defaultStackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
+					valuePointer, Y, listLayout, context.stackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
 				// When mouse is released inside the pop-up closes it
 				list.addMouseButtonListener(closePopUpListener)
 				list

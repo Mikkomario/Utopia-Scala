@@ -1,34 +1,33 @@
 package utopia.reach.component.label.image
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.collection.immutable.Pair
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorLevel.Standard
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
 import utopia.reach.container.multi.stack.Stack
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade}
-import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
 
-object ImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, ImageAndTextLabelFactory,
+object ImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, ImageAndTextLabelFactory,
 	ContextualImageAndTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextLabelFactory(hierarchy)
 }
 
 class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualImageAndTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualImageAndTextLabelFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualImageAndTextLabelFactory(this, context)
 	
 	/**
@@ -62,12 +61,12 @@ class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			useLowPriorityImageSize, forceEqualBreadth)
 }
 
-case class ContextualImageAndTextLabelFactory[+N <: TextContextLike](factory: ImageAndTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualImageAndTextLabelFactory]
+case class ContextualImageAndTextLabelFactory[+N <: TextContext](factory: ImageAndTextLabelFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualImageAndTextLabelFactory]
 {
-	private implicit def c: TextContextLike = context
+	private implicit def c: TextContext = context
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -102,7 +101,7 @@ case class ContextualImageAndTextLabelFactory[+N <: TextContextLike](factory: Im
 	def withIcon(icon: SingleColorIcon, text: LocalizedString, imageInsets: StackInsets = StackInsets.any,
 				 customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
 				 forceEqualBreadth: Boolean = false) =
-		apply(icon.singleColorImage, text, imageInsets, customDrawers, useLowPriorityImageSize, forceEqualBreadth)
+		apply(icon.contextual, text, imageInsets, customDrawers, useLowPriorityImageSize, forceEqualBreadth)
 	
 	/**
 	  * Creates a new label that contains both an image and text
@@ -118,11 +117,10 @@ case class ContextualImageAndTextLabelFactory[+N <: TextContextLike](factory: Im
 	  * @return A new label
 	  */
 	def withColouredIcon(icon: SingleColorIcon, text: LocalizedString, role: ColorRole,
-						 preferredShade: ColorShade = Standard, imageInsets: StackInsets = StackInsets.any,
-						 customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
-						 forceEqualBreadth: Boolean = false) =
-		apply(icon.asImageWithColor(context.color(role, preferredShade)), text, imageInsets, customDrawers,
-			useLowPriorityImageSize, forceEqualBreadth)
+	                     preferredShade: ColorLevel = Standard, imageInsets: StackInsets = StackInsets.any,
+	                     customDrawers: Vector[CustomDrawer] = Vector(), useLowPriorityImageSize: Boolean = false,
+	                     forceEqualBreadth: Boolean = false) =
+		apply(icon(role, preferredShade), text, imageInsets, customDrawers, useLowPriorityImageSize, forceEqualBreadth)
 }
 
 /**

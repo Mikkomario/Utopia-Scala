@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -13,18 +14,16 @@ import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.reflection.color.TextColorStandard.{Dark, Light}
-import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
-import utopia.reflection.component.template.input.InteractionWithPointer
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.{StackLength, StackSize}
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -40,14 +39,13 @@ object Switch
 	  * @return A new switch
 	  */
 	def contextual(width: StackLength, initialState: Boolean = false)
-				  (implicit context: ColorContextLike, animationContext: AnimationContextLike) =
+				  (implicit context: ColorContext, animationContext: AnimationContext) =
 	{
-		val knobColor = context.containerBackground.textColorStandard match
-		{
-			case Light => Color.white
-			case Dark => Color.black
+		val knobColor = context.background.shade match {
+			case Light => Color.black
+			case Dark => Color.white
 		}
-		new Switch(animationContext.actorHandler, width, context.secondaryColor, knobColor,
+		new Switch(animationContext.actorHandler, width, context.color.secondary, knobColor,
 			animationContext.animationDuration, initialState)
 	}
 }

@@ -206,6 +206,9 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	// Relative luminance is lazily cached
 	override lazy val relativeLuminance = super.relativeLuminance
 	
+	// Shade is cached, also
+	override lazy val shade = super.shade
+	
 	
 	// COMPUTED	--------------------------
 	

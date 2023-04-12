@@ -1,21 +1,21 @@
 package utopia.reach.component.label.text
 
-import utopia.paradigm.color.Color
+import utopia.firmament.model.TextDrawContext
+import utopia.genesis.text.Font
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, TextDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.template.text.TextComponent2
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.component.text.TextComponent
+import utopia.firmament.context.TextContext
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object TextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, TextLabelFactory,
+object TextLabel extends ContextInsertableComponentFactoryFactory[TextContext, TextLabelFactory,
 	ContextualTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = TextLabelFactory(hierarchy)
@@ -26,11 +26,11 @@ object TextLabel extends ContextInsertableComponentFactoryFactory[TextContextLik
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[C2 <: TextContextLike](context: C2) =
+	override def withContext[C2 <: TextContext](context: C2) =
 		ContextualTextLabelFactory(this, context)
 	
 	
@@ -57,50 +57,13 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
 			betweenLinesMargin, allowLineBreaks), customDrawers, allowTextShrink)
 }
 
-object ContextualTextLabelFactory
-{
-	// EXTENSIONS	-----------------------------
-	
-	implicit class ColorChangingStaticTextLabelFactory[N <: TextContextLike with BackgroundSensitive[TextContextLike]]
-	(val f: ContextualTextLabelFactory[N]) extends AnyVal
-	{
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param text Text displayed on this label
-		  * @param background Label background color
-		  * @param additionalDrawers Additional custom drawing (default = empty)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
-		  * @return A new label
-		  */
-		def withCustomBackground(text: LocalizedString, background: ComponentColor,
-								 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
-		{
-			f.mapContext { _.inContextWithBackground(background) }(text,
-				BackgroundDrawer(background) +: additionalDrawers, isHint)
-		}
-		
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param text Text displayed on this label
-		  * @param role Label background color role
-		  * @param preferredShade Preferred color shade (default = standard)
-		  * @param additionalDrawers Additional custom drawing (default = empty)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
-		  * @return A new label
-		  */
-		def withBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorShade = Standard,
-						   additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
-			withCustomBackground(text, f.context.color(role, preferredShade), additionalDrawers, isHint)
-	}
-}
-
-case class ContextualTextLabelFactory[+N <: TextContextLike]
+case class ContextualTextLabelFactory[+N <: TextContext]
 (factory: TextLabelFactory, override val context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualTextLabelFactory]
+	extends ContextualComponentFactory[N, TextContext, ContextualTextLabelFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext[C2 <: TextContextLike](newContext: C2) =
+	override def withContext[C2 <: TextContext](newContext: C2) =
 		ContextualTextLabelFactory(factory, newContext)
 	
 	
@@ -109,14 +72,40 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
 	/**
 	  * Creates a new text label utilizing contextual information
 	  * @param text Text displayed on this label
-	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param customDrawers Additional custom drawing (default = empty)
 	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @return A new label
 	  */
-	def apply(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+	def apply(text: LocalizedString, customDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
 		factory(text, context.font, if (isHint) context.hintTextColor else context.textColor,
-			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, additionalDrawers,
+			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, customDrawers,
 			context.allowLineBreaks, context.allowTextShrink)
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param text              Text displayed on this label
+	  * @param background        Label background color
+	  * @param customDrawers Additional custom drawing (default = empty)
+	  * @param isHint            Whether this label should be considered a hint (affects text color)
+	  * @return A new label
+	  */
+	def withCustomBackground(text: LocalizedString, background: Color,
+	                         customDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+		mapContext { _.against(background) }(text,
+			BackgroundDrawer(background) +: customDrawers, isHint)
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param text              Text displayed on this label
+	  * @param role              Label background color role
+	  * @param preferredShade    Preferred color shade (default = standard)
+	  * @param customDrawers Additional custom drawing (default = empty)
+	  * @param isHint            Whether this label should be considered a hint (affects text color)
+	  * @return A new label
+	  */
+	def withBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorLevel = Standard,
+	                   customDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+		withCustomBackground(text, context.color.preferring(preferredShade)(role), customDrawers, isHint)
 }
 
 /**
@@ -132,7 +121,7 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
 class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: LocalizedString,
                 override val textDrawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
                 override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with TextComponent2
+	extends CustomDrawReachComponent with TextComponent
 {
 	// ATTRIBUTES	-----------------------------
 	

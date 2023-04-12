@@ -8,6 +8,7 @@ import utopia.reflection.component.context.ColorContextLike
 
 import scala.language.implicitConversions
 
+@deprecated("Moved to Paradigm", "v2.0")
 object ColorSet
 {
 	// IMPLICIT	--------------------------
@@ -49,6 +50,7 @@ object ColorSet
   * @param light A lighter version of color
   * @param dark a darker version of color
   */
+@deprecated("Moved to Paradigm", "v2.0")
 case class ColorSet(default: ComponentColor, light: ComponentColor, dark: ComponentColor)
 {
 	import ColorSet.defaultMinimumContrast

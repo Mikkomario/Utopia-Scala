@@ -1,6 +1,12 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -8,28 +14,21 @@ import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
-import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.swing.button.ButtonImageSet
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.reflection.image.SingleColorIcon
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
-object ImageButton extends ContextInsertableComponentFactoryFactory[ColorContextLike, ImageButtonFactory,
+object ImageButton extends ContextInsertableComponentFactoryFactory[ColorContext, ImageButtonFactory,
 	ContextualImageButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageButtonFactory(hierarchy)
 }
 
 class ImageButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualImageButtonFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualImageButtonFactory]
 {
 	// IMPLEMENTED	---------------------------
 	
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualImageButtonFactory(this, context)
 	
 	
@@ -57,17 +56,17 @@ class ImageButtonFactory(parentHierarchy: ComponentHierarchy)
 			additionalFocusListeners, allowUpscaling, useLowPrioritySize)(action)
 }
 
-case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageButtonFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualImageButtonFactory]
+case class ContextualImageButtonFactory[+N <: ColorContext](factory: ImageButtonFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualImageButtonFactory]
 {
 	// IMPLICIT	-----------------------------
 	
-	private implicit def c: ColorContextLike = context
+	private implicit def c: ColorContext = context
 	
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -89,7 +88,7 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 				(action: => Unit) =
-		factory(icon.asIndividualButton, insets, alignment, hotKeys, additionalDrawers,
+		factory(icon.asButton.contextual, insets, alignment, hotKeys, additionalDrawers,
 			additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 	
 	/**
@@ -106,12 +105,12 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def withColouredIcon(icon: SingleColorIcon, role: ColorRole, preferredShade: ColorShade = Standard,
+	def withColouredIcon(icon: SingleColorIcon, role: ColorRole, preferredShade: ColorLevel = Standard,
 	                     insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 	                     hotKeys: Set[HotKey] = Set(), customDrawers: Vector[CustomDrawer] = Vector(),
 	                     additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 						(action: => Unit) =
-		factory(icon.asIndividualButtonWithColor(context.color(role, preferredShade)), insets, alignment, hotKeys,
+		factory(icon.asButton(context.color.preferring(preferredShade)(role)), insets, alignment, hotKeys,
 			customDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 }
 
@@ -129,7 +128,7 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val _statePointer = new PointerWithEvents(ButtonState.default)
+	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
 	override protected val wrapped = ViewImageLabel(parentHierarchy).withStaticLayout(
 		_statePointer.map { state => images(state) }, insets, alignment, additionalDrawers, allowUpscaling,
@@ -141,7 +140,7 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 	/**
 	  * The overall shade of this button (calculated based on the focused-state)
 	  */
-	lazy val shade = ColorShadeVariant.forLuminosity(images.focusImage.pixels.averageLuminosity)
+	lazy val shade = ColorShade.forLuminosity(images.focusImage.pixels.averageLuminosity)
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -155,5 +154,5 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 	
 	override protected def trigger() = action
 	
-	override def cursorToImage(cursor: Cursor, position: Point) = cursor(shade.opposite)
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(shade)
 }

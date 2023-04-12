@@ -1,5 +1,6 @@
 package utopia.reach.test
 
+import utopia.firmament.context.TextContext
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
@@ -9,13 +10,12 @@ import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
-import utopia.reflection.component.context.TextContext
-import utopia.reflection.container.stack.StackLayout.Trailing
+import utopia.firmament.model.enumeration.StackLayout.Trailing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup

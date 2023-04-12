@@ -7,28 +7,29 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
+import utopia.genesis.text.Font
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
+import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.component.template.display.Refreshable
+import utopia.firmament.component.display.Refreshable
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.shape.stack.modifier.MaxOptimalLengthModifier
 import utopia.reflection.test.TestContext._
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
+import utopia.genesis.text.FontStyle.Plain
+import utopia.paradigm.enumeration.Alignment.Center
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
@@ -54,7 +55,7 @@ object ScrollViewTest extends App
 		val label = new ItemLabel(new PointerWithEvents(number), displayFunction, basicFont,
 			initialInsets = StackInsets.symmetric(16.any, 4.fixed))
 		label.background = Color.yellow
-		label.alignCenter()
+		label.alignment = Center
 		
 		label
 	}

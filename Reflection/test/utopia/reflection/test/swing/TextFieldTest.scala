@@ -1,20 +1,22 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.model.enumeration.StackLayout.Leading
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.{Gray, Secondary}
+import utopia.paradigm.color.ColorShade.Light
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.input.{TabSelection, TextField}
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.stack.StackLayout.Leading
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.container.swing.window.{Frame, Popup}
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
 
 /**
   * This is a simple test implementation of text fields with content filtering
@@ -33,9 +35,9 @@ object TextFieldTest extends App
 	def showPopup(origin: AwtStackable, message: String) =
 	{
 		val popupBG = colorScheme.primary.light
-		baseContext.inContextWithBackground(popupBG).use { context =>
+		baseContext.against(popupBG).use { context =>
 			// Creates pop-up content
-			val okButton = context.forTextComponents.withTextAlignment(Center).forSecondaryColorButtons
+			val okButton = context.forTextComponents.withTextAlignment(Center).withBackground(Secondary)
 				.use { implicit btnC => TextButton.contextualWithoutAction("OK") }
 			val popUpContent = Stack.buildRowWithContext() { row =>
 				row += context.forTextComponents.use { implicit txC => TextLabel.contextual(message) }
@@ -49,7 +51,7 @@ object TextFieldTest extends App
 	}
 	
 	val contentBG = colorScheme.primary
-	val content = baseContext.inContextWithBackground(contentBG).use { context =>
+	val content = baseContext.against(contentBG).use { context =>
 		Stack.buildColumnWithContext() { mainStack =>
 			// Creates the category tab
 			val tab = context.forTextComponents.withTextAlignment(Center).use { implicit tabC =>
@@ -63,9 +65,9 @@ object TextFieldTest extends App
 			mainStack += Stack.buildRowWithContext() { row =>
 				// Creates the fields
 				val (productField, amountField, priceField) = context.forTextComponents
-					.withPromptFont(context.defaultFont * 0.8).forGrayFields
+					.withPromptFont(context.font * 0.8).withBackground(Gray, Light)
 					.use { implicit fieldC =>
-						println(s"Field context bg = ${ fieldC.containerBackground }, field BG = ${ fieldC.buttonColor }, text color = ${ fieldC.textColor }")
+						println(s"Field context bg = ${ fieldC.background }, field BG = ${ fieldC.background }, text color = ${ fieldC.textColor }")
 						val productField = TextField.contextualForStrings(standardWidth, prompt = "Describe product")
 						val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = "1-999 Too long a prompt")
 						val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = "€")
@@ -73,7 +75,7 @@ object TextFieldTest extends App
 					}
 				
 				// Pairs the fields with matching labels
-				context.forTextComponents.withTextAlignment(Alignment.BottomLeft).withoutInsets.use { implicit labelC =>
+				context.forTextComponents.withTextAlignment(Alignment.BottomLeft).withoutTextInsets.use { implicit labelC =>
 					val productLabel = TextLabel.contextual("Product")
 					val amountLabel = TextLabel.contextual("Amount")
 					val priceLabel = TextLabel.contextual("Price")
@@ -108,7 +110,7 @@ object TextFieldTest extends App
 				
 			}(context)
 		}(context)
-	}.framed(margins.medium.downscaling, contentBG).framed(margins.medium.any, colorScheme.gray)
+	}.framed(margins.medium.downscaling, contentBG).framed(margins.medium.any, colorScheme(Gray))
 	
 	// Displays the frame
 	new SingleFrameSetup(actorHandler, Frame.windowed(content, "TextLabel Stack Test", User)).start()

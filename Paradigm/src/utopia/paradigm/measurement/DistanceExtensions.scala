@@ -40,5 +40,12 @@ object DistanceExtensions
 		 * @return This amount of feet
 		 */
 		def feet(implicit n: Numeric[A]) = Distance.ofFeet(double)
+		
+		/**
+		  * @param n Implicit numeric interface
+		  * @param ppi Pixels per inch in this context
+		  * @return This length in pixels (converted to a distance)
+		  */
+		def pixels(implicit n: Numeric[A], ppi: Ppi) = ppi.pixelLength * double
 	}
 }

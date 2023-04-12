@@ -1,16 +1,16 @@
 package utopia.reach.component.template
 
+import utopia.firmament.component.stack.CachingStackable
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.template.layout.stack.CachingStackable2
 
 /**
   * A common trait for <b>non-wrapping</b> reach components that handle the actual component implementation
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
-abstract class ReachComponent extends ReachComponentLike with CachingStackable2
+abstract class ReachComponent extends ReachComponentLike with CachingStackable
 {
 	// ATTRIBUTES	-----------------------
 	

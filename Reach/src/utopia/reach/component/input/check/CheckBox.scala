@@ -1,11 +1,18 @@
 package utopia.reach.component.input.check
 
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.context.ColorContext
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -13,19 +20,12 @@ import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.color.{ColorRole, ColorShadeVariant}
-import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background
-import utopia.reflection.component.template.input.InteractionWithPointer
-import utopia.reflection.event.ButtonState
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.shape.LengthExtensions._
 
 // TODO: Also add a component for text box + label
 object CheckBox
-	extends ContextInsertableComponentFactoryFactory[ColorContextLike, CheckBoxFactory, ContextualCheckBoxFactory]
+	extends ContextInsertableComponentFactoryFactory[ColorContext, CheckBoxFactory, ContextualCheckBoxFactory]
 {
 	// IMPLEMENTED	-------------------------
 	
@@ -46,9 +46,9 @@ object CheckBox
 }
 
 class CheckBoxFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualCheckBoxFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualCheckBoxFactory]
 {
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualCheckBoxFactory(this, context)
 	
 	/**
@@ -72,12 +72,12 @@ class CheckBoxFactory(parentHierarchy: ComponentHierarchy)
 			enabledPointer, customDrawers, focusListeners)
 }
 
-case class ContextualCheckBoxFactory[+N <: ColorContextLike](factory: CheckBoxFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualCheckBoxFactory]
+case class ContextualCheckBoxFactory[+N <: ColorContext](factory: CheckBoxFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualCheckBoxFactory]
 {
-	private implicit val c: ColorContextLike = context
+	private implicit val c: ColorContext = context
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -97,15 +97,15 @@ case class ContextualCheckBoxFactory[+N <: ColorContextLike](factory: CheckBoxFa
 	          focusListeners: Seq[FocusListener] = Vector(), selectionColorRole: ColorRole = Secondary) =
 	{
 		val selectedColor = context.color(selectionColorRole)
-		factory(onIcon.asImageWithColor(selectedColor), offIcon.singleColorImage, selectedColor,
-			context.containerBackground.defaultTextColor.withAlpha(1.0),
+		factory(onIcon(selectedColor), offIcon.contextual, selectedColor,
+			context.textColor.withAlpha(1.0),
 			context.margins.medium.round.toDouble, valuePointer, enabledPointer, customDrawers, focusListeners)
 	}
 }
 
 class FullCheckBoxFactoryFactory(onIcon: SingleColorIcon, offIcon: SingleColorIcon,
 								 selectionColorRole: ColorRole = Secondary)
-	extends ContextInsertableComponentFactoryFactory[ColorContextLike, FullCheckBoxFactory, FullContextualCheckBoxFactory]
+	extends ContextInsertableComponentFactoryFactory[ColorContext, FullCheckBoxFactory, FullContextualCheckBoxFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new FullCheckBoxFactory(new CheckBoxFactory(hierarchy), onIcon,
 		offIcon, selectionColorRole)
@@ -113,22 +113,22 @@ class FullCheckBoxFactoryFactory(onIcon: SingleColorIcon, offIcon: SingleColorIc
 
 class FullCheckBoxFactory(factory: CheckBoxFactory, onIcon: SingleColorIcon, offIcon: SingleColorIcon,
 						  selectionColorRole: ColorRole = Secondary)
-	extends ContextInsertableComponentFactory[ColorContextLike, FullContextualCheckBoxFactory]
+	extends ContextInsertableComponentFactory[ColorContext, FullContextualCheckBoxFactory]
 {
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		FullContextualCheckBoxFactory(factory.withContext(context), onIcon, offIcon, selectionColorRole)
 }
 
-case class FullContextualCheckBoxFactory[+N <: ColorContextLike](factory: ContextualCheckBoxFactory[N],
+case class FullContextualCheckBoxFactory[+N <: ColorContext](factory: ContextualCheckBoxFactory[N],
 																 onIcon: SingleColorIcon, offIcon: SingleColorIcon,
 																 selectionColorRole: ColorRole = Secondary)
-	extends ContextualComponentFactory[N, ColorContextLike, FullContextualCheckBoxFactory]
+	extends ContextualComponentFactory[N, ColorContext, FullContextualCheckBoxFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
 	override def context = factory.context
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(factory = factory.withContext(newContext))
 	
 	
@@ -165,9 +165,9 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 {
 	// ATTRIBUTES	---------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
+	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer.mergeWith(enabledPointer) { (base, enabled) =>
-		base.copy(isEnabled = enabled) }
+		base + (Disabled -> !enabled) }
 	
 	private val baseImagePointer = valuePointer.map { if (_) onImage else offImage }
 	/**
@@ -193,7 +193,7 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 	override protected def trigger() = valuePointer.update { !_ }
 	
 	override def cursorToImage(cursor: Cursor, position: Point) =
-		cursor(ColorShadeVariant.forLuminosity(baseImagePointer.value.pixels.averageLuminosity).opposite)
+		cursor(ColorShade.forLuminosity(baseImagePointer.value.pixels.averageLuminosity).opposite)
 	
 	
 	// NESTED	------------------------------
@@ -207,7 +207,7 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 		private val dsPointer = statePointer.lazyMergeWith(valuePointer) { (state, value) =>
 			DrawSettings.onlyFill((if (value) onHoverColor else offHoverColor).withAlpha(state.hoverAlpha))
 		}
-		private val shapePointer = boundsPointer.lazyMap { bounds =>
+		private lazy val shapePointer = boundsPointer.lazyMap { bounds =>
 			Circle(bounds.center, bounds.size.minDimension / 2.0)
 		}
 		

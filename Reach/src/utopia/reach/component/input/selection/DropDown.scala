@@ -1,5 +1,7 @@
 package utopia.reach.component.input.selection
 
+import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
@@ -17,17 +19,14 @@ import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.cursor.CursorType.Interactive
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.color.{ColorRole, ColorShadeVariant}
-import utopia.reflection.component.context.{ScrollingContextLike, TextContextLike}
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.model.enumeration.StackLayout
+import StackLayout.Fit
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.{ColorRole, ColorShade}
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 
@@ -36,23 +35,23 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 23.12.2020, v0.1
   */
-object DropDown extends ContextInsertableComponentFactoryFactory[TextContextLike, DropDownFactory,
+object DropDown extends ContextInsertableComponentFactoryFactory[TextContext, DropDownFactory,
 	ContextualDropDownFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new DropDownFactory(hierarchy)
 }
 
 class DropDownFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualDropDownFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualDropDownFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualDropDownFactory(parentHierarchy, context)
 }
 
-case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualDropDownFactory]
+case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualDropDownFactory]
 {
-	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	
 	// TODO: Add enabled pointer parameter
 	
@@ -97,7 +96,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	 focusColorRole: ColorRole = Secondary, sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeDisplay: (ComponentHierarchy, A) => C)
-	(implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext) =
+	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
 		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty }
@@ -130,7 +129,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 		// Adds mouse interaction to the field
 		field.addMouseButtonListener(new FieldFocusMouseListener(field))
 		CursorDefining.defineCursorFor(field, View(Interactive), field.field.innerBackgroundPointer.lazyMap { c =>
-			ColorShadeVariant.forLuminosity(c.luminosity) })
+			ColorShade.forLuminosity(c.luminosity) })
 		field
 	}
 	
@@ -167,7 +166,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
 	 sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	(implicit scrollingContext: ScrollingContextLike, exc: ExecutionContext) =
+	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext) =
 	{
 		val mainDisplayFunction = DisplayFunction.wrap[Option[A]] {
 			case Some(item) => displayFunction(item)

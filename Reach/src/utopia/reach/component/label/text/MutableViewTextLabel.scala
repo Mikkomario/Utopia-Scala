@@ -1,34 +1,34 @@
 package utopia.reach.component.label.text
 
+import utopia.firmament.component.display.RefreshableWithPointer
+import utopia.firmament.component.text.{MutableStyleTextComponent, TextComponent}
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.view.TextViewDrawer
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.Color
+import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
-import utopia.reflection.component.drawing.view.TextViewDrawer
-import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.component.template.text.{MutableStyleTextComponent, TextComponent2}
-import utopia.reflection.localization.DisplayFunction
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.localization.DisplayFunction
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object MutableViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike,
+object MutableViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
 	MutableViewTextLabelFactory, ContextualMutableViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableViewTextLabelFactory(hierarchy)
 }
 
 class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualMutableViewTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualMutableViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualMutableViewTextLabelFactory(this, context)
 	
 	
@@ -76,83 +76,13 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
-object ContextualMutableViewTextLabelFactory
-{
-	// EXTENSIONS	-----------------------------
-	
-	implicit class ColorChangingMutableViewTextLabelFactory[N <: TextContextLike with BackgroundSensitive[TextContextLike]]
-	(val f: ContextualMutableViewTextLabelFactory[N]) extends AnyVal
-	{
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param contentPointer Pointer that is reflected on this label
-		  * @param background Label background color
-		  * @param displayFunction Function used when converting content to text (default = toString)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
-		  * @return A new label
-		  */
-		def forPointerWithCustomBackground[A](contentPointer: PointerWithEvents[A], background: ComponentColor,
-											  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-											  isHint: Boolean = false) =
-		{
-			
-			val label = f.mapContext { _.inContextWithBackground(background) }.forPointer(contentPointer,
-				displayFunction, isHint)
-			label.addCustomDrawer(BackgroundDrawer(background))
-			label
-		}
-		
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param contentPointer Pointer that is reflected on this label
-		  * @param role Label background color role
-		  * @param preferredShade Preferred color shade (default = standard)
-		  * @param displayFunction Function used when converting content to text (default = toString)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
-		  * @return A new label
-		  */
-		def forPointerWithBackground[A](contentPointer: PointerWithEvents[A], role: ColorRole,
-										displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-										preferredShade: ColorShade = Standard, isHint: Boolean = false) =
-			forPointerWithCustomBackground(contentPointer, f.context.color(role, preferredShade), displayFunction,
-				isHint)
-		
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param initialContent Content initially displayed on this label
-		  * @param background Label background color
-		  * @param displayFunction Function used when converting content to text (default = toString)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
-		  * @return A new label
-		  */
-		def withCustomBackground[A](initialContent: A, background: ComponentColor,
-									displayFunction: DisplayFunction[A] = DisplayFunction.raw, isHint: Boolean = false) =
-			forPointerWithCustomBackground(new PointerWithEvents[A](initialContent), background, displayFunction, isHint)
-		
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param initialContent Initially displayed content on this label
-		  * @param role Label background color role
-		  * @param preferredShade Preferred color shade (default = standard)
-		  * @param displayFunction Function used when converting content to text (default = toString)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
-		  * @return A new label
-		  */
-		def withBackground[A](initialContent: A, role: ColorRole,
-							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							  preferredShade: ColorShade = Standard, isHint: Boolean = false) =
-			forPointerWithBackground(new PointerWithEvents(initialContent), role, displayFunction, preferredShade,
-				isHint)
-	}
-}
-
-case class ContextualMutableViewTextLabelFactory[+N <: TextContextLike](labelFactory: MutableViewTextLabelFactory,
+case class ContextualMutableViewTextLabelFactory[+N <: TextContext](labelFactory: MutableViewTextLabelFactory,
 																		context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualMutableViewTextLabelFactory]
+	extends ContextualComponentFactory[N, TextContext, ContextualMutableViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	
 	
 	// OTHER	--------------------------------------
@@ -181,6 +111,66 @@ case class ContextualMutableViewTextLabelFactory[+N <: TextContextLike](labelFac
 	  */
 	def apply[A](initialValue: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw, isHint: Boolean = false) =
 		forPointer(new PointerWithEvents[A](initialValue), displayFunction, isHint)
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param contentPointer  Pointer that is reflected on this label
+	  * @param background      Label background color
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHint          Whether this label should be considered a hint (affects text color)
+	  * @return A new label
+	  */
+	def forPointerWithCustomBackground[A](contentPointer: PointerWithEvents[A], background: Color,
+	                                      displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                                      isHint: Boolean = false) =
+	{
+		
+		val label = mapContext { _.against(background) }.forPointer(contentPointer, displayFunction, isHint)
+		label.addCustomDrawer(BackgroundDrawer(background))
+		label
+	}
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param contentPointer  Pointer that is reflected on this label
+	  * @param role            Label background color role
+	  * @param preferredShade  Preferred color shade (default = standard)
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHint          Whether this label should be considered a hint (affects text color)
+	  * @return A new label
+	  */
+	def forPointerWithBackground[A](contentPointer: PointerWithEvents[A], role: ColorRole,
+	                                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                                preferredShade: ColorLevel = Standard, isHint: Boolean = false) =
+		forPointerWithCustomBackground(contentPointer, context.color.preferring(preferredShade)(role),
+			displayFunction, isHint)
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param initialContent  Content initially displayed on this label
+	  * @param background      Label background color
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHint          Whether this label should be considered a hint (affects text color)
+	  * @return A new label
+	  */
+	def withCustomBackground[A](initialContent: A, background: Color,
+	                            displayFunction: DisplayFunction[A] = DisplayFunction.raw, isHint: Boolean = false) =
+		forPointerWithCustomBackground(new PointerWithEvents[A](initialContent), background, displayFunction, isHint)
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param initialContent  Initially displayed content on this label
+	  * @param role            Label background color role
+	  * @param preferredShade  Preferred color shade (default = standard)
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHint          Whether this label should be considered a hint (affects text color)
+	  * @return A new label
+	  */
+	def withBackground[A](initialContent: A, role: ColorRole,
+	                      displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                      preferredShade: ColorLevel = Standard, isHint: Boolean = false) =
+		forPointerWithBackground(new PointerWithEvents(initialContent), role, displayFunction, preferredShade,
+			isHint)
 }
 
 /**
@@ -193,7 +183,7 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 							  initialDrawContext: TextDrawContext,
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							  override val allowTextShrink: Boolean = false)
-	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with TextComponent2
+	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with TextComponent
 		with RefreshableWithPointer[A]
 {
 	// ATTRIBUTES	----------------------------------

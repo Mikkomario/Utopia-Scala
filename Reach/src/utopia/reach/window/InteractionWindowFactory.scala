@@ -1,10 +1,14 @@
 package utopia.reach.window
 
+import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.{HotKey, WindowButtonBlueprint}
 import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.Pointer
+import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.image.ImageAndTextButton
@@ -15,14 +19,9 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.cursor.CursorSet
-import utopia.reflection.color.ColorRole
-import utopia.reflection.component.context.{ButtonContextLike, ColorContext}
 import utopia.reflection.container.swing.window.Window
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.template.window.WindowButtonBlueprint
-import utopia.reflection.event.HotKey
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackLength
 
 import java.awt.event.KeyEvent
@@ -56,7 +55,7 @@ trait InteractionWindowFactory[A]
 	  * @param hasIcon Whether the button uses an icon
 	  * @return Context used when creating the button
 	  */
-	protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean): ButtonContextLike
+	protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean): TextContext
 	
 	/**
 	  * Creates new content for a new dialog
@@ -123,7 +122,7 @@ trait InteractionWindowFactory[A]
 		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.
 		//  Alternatively room should be allowed for a header component separately
 		val (content, buttons) = ReachCanvas(cursors) { hierarchy =>
-			Framing(hierarchy).buildFilledWithContext(context, context.containerBackground, Stack)
+			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
 				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>
 					stackF.build(Mixed).column() { factories =>
 						// Creates the main content and determines the button blueprints
@@ -135,7 +134,7 @@ trait InteractionWindowFactory[A]
 						
 						// Places the main content and the buttons in a vertical stack
 						val factoriesWithoutContext = factories.withoutContext
-						val defaultButtonMargin = context.defaultStackMargin.optimal
+						val defaultButtonMargin = context.stackMargin.optimal
 						val rowsBuilder = new VectorBuilder[ReachComponentLike]()
 						val buttonsBuilder = new VectorBuilder[ButtonLike]()
 						
@@ -256,7 +255,7 @@ trait InteractionWindowFactory[A]
 	private def actualize(factories: Mixed, blueprint: WindowButtonBlueprint[A], resultPromise: Promise[A],
 	                      defaultActionEnabled: => Boolean) =
 	{
-		implicit val context: ButtonContextLike = buttonContext(blueprint.role, blueprint.icon.isDefined)
+		implicit val context: TextContext = buttonContext(blueprint.role, blueprint.icon.isDefined)
 		val enterHotkey = {
 			if (blueprint.isDefault)
 				Some(HotKey.conditionalKeyWithIndex(KeyEvent.VK_ENTER)(defaultActionEnabled))

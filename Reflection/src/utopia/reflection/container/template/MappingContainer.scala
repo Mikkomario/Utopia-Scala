@@ -1,8 +1,8 @@
 package utopia.reflection.container.template
 
+import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.flow.collection.CollectionExtensions._
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 /**
   * This container holds its tracked components inside wrappers that may contain one or more components
@@ -11,7 +11,7 @@ import utopia.reflection.container.template.mutable.MutableMultiContainer2
   * @tparam C Type of component held within this container
   * @tparam Wrap Type of component wrapper
   */
-trait MappingContainer[C <: ReflectionComponentLike, Wrap] extends MutableMultiContainer2[C, C]
+trait MappingContainer[C <: ReflectionComponentLike, Wrap] extends MutableMultiContainer[C, C]
 {
 	// ABSTRACT	------------------------
 	

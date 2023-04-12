@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.BottomRight
 

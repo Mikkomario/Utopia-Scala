@@ -5,6 +5,7 @@ package utopia.reflection.color
   * @author Mikko Hilpinen
   * @since 18.8.2020, v1.2
   */
+@deprecated("Moved to Paradigm as ColorLevel", "v2.0")
 sealed trait ColorShade
 {
 	/**
@@ -15,6 +16,7 @@ sealed trait ColorShade
 	def nextTowards(shade: ColorShadeVariant): ColorShade
 }
 
+@deprecated("Moved to Paradigm as ColorShade", "v2.0")
 sealed trait ColorShadeVariant extends ColorShade
 {
 	/**
@@ -23,11 +25,13 @@ sealed trait ColorShadeVariant extends ColorShade
 	def opposite: ColorShadeVariant
 }
 
+@deprecated("Moved to Paradigm as ColorLevel", "v2.0")
 object ColorShade
 {
 	/**
 	  * Standard middle color shade / the default color shade
 	  */
+	@deprecated("Moved to Paradigm", "v2.0")
 	case object Standard extends ColorShade
 	{
 		override def nextTowards(shade: ColorShadeVariant) = shade
@@ -36,6 +40,7 @@ object ColorShade
 	/**
 	  * Lighter color shade / variant
 	  */
+	@deprecated("Moved to Paradigm", "v2.0")
 	case object Light extends ColorShadeVariant
 	{
 		override def opposite = Dark
@@ -50,6 +55,7 @@ object ColorShade
 	/**
 	  * Darker color shade / variant
 	  */
+	@deprecated("Moved to Paradigm", "v2.0")
 	case object Dark extends ColorShadeVariant
 	{
 		override def opposite = Light
@@ -62,6 +68,7 @@ object ColorShade
 	}
 }
 
+@deprecated("Moved to Paradigm as ColorShade", "v2.0")
 object ColorShadeVariant
 {
 	import ColorShade._

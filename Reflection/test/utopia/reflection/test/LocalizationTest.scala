@@ -1,7 +1,7 @@
 package utopia.reflection.test
 
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.reflection.localization.{LocalString, LocalizedString, Localizer}
+import utopia.firmament.localization.{LocalString, LocalizedString, Localizer}
 
 import scala.collection.immutable.HashMap
 

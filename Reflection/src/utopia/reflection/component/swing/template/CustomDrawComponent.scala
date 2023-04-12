@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.template
 
+import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.genesis.graphics.Drawer
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 

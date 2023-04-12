@@ -1,18 +1,18 @@
 package utopia.reflection.container.swing.layout.multi
 
+import utopia.firmament.context.BaseContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.context.BaseContextLike
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.ReflectionStackLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.shape.stack.StackLength
@@ -152,8 +152,8 @@ object Stack
       * @return A new stack
       */
     def buildWithContext(direction: Axis2D, cap: StackLength = defaultCap, layout: StackLayout = Fit,
-                         isRelated: Boolean = false)(b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContextLike) =
-        build(direction, if (isRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, layout)(b)
+                         isRelated: Boolean = false)(b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContext) =
+        build(direction, if (isRelated) context.smallStackMargin else context.stackMargin, cap, layout)(b)
     
     /**
       * Creates a horizontal stack by adding contents through a builder. Uses component creation context.
@@ -165,7 +165,7 @@ object Stack
       * @return A new stack
       */
     def buildRowWithContext(cap: StackLength = defaultCap, layout: StackLayout = Fit, isRelated: Boolean = false)
-                           (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContextLike) =
+                           (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContext) =
         buildWithContext(X, cap, layout, isRelated)(b)
     
     /**
@@ -178,7 +178,7 @@ object Stack
       * @return A new stack
       */
     def buildColumnWithContext(cap: StackLength = defaultCap, layout: StackLayout = Fit, isRelated: Boolean = false)
-                              (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContextLike) =
+                              (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContext) =
         buildWithContext(Y, cap, layout, isRelated)(b)
 }
 

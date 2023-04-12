@@ -1,18 +1,18 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.context.BaseContext
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
 import utopia.paradigm.angular.Rotation
-import utopia.reflection.component.context.BaseContext
 import utopia.reflection.component.swing.label.AnimationLabel
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 
 /**
   * Tests animated label

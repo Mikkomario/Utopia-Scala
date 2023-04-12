@@ -3,25 +3,26 @@ package utopia.reflection.test.swing
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
+import utopia.genesis.text.Font
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
+import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.shape.stack.modifier.MaxOptimalLengthModifier
 import utopia.reflection.test.TestContext._
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
+import utopia.genesis.text.FontStyle.Plain
+import utopia.paradigm.enumeration.Alignment
 
 import java.awt.event.KeyEvent
 import java.util.concurrent.TimeUnit
@@ -45,7 +46,7 @@ object ScrollAreaTest extends App
 	}
 	val allLabels = labels.flatten
 	allLabels.foreach { _.background = Color.yellow }
-	allLabels.foreach { _.alignCenter() }
+	allLabels.foreach { _.alignment = Alignment.Center }
 
 	// Creates the columns
 	val columns = labels.map { l => Stack.columnWithItems(l, 8.fixed, 4.fixed) }

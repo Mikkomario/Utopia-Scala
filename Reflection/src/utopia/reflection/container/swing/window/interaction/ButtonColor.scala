@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
-import utopia.reflection.component.context.TextContextLike
+import utopia.firmament.context.ColorContext
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 /**
   * A common trait for color definitions for standard dialog buttons
@@ -15,7 +15,7 @@ trait ButtonColor
 	  * @param context Context where the button is being created
 	  * @return Button color used on that background
 	  */
-	def toColor(implicit context: TextContextLike): ComponentColor
+	def toColor(implicit context: ColorContext): Color
 }
 
 object ButtonColor
@@ -49,9 +49,9 @@ object ButtonColor
 	  * @param role Target color / button role
 	  * @param preferredShade Preferred shade of that color (default = standard/default shade)
 	  */
-	case class Role(role: ColorRole, preferredShade: ColorShade = Standard) extends ButtonColor
+	case class Role(role: ColorRole, preferredShade: ColorLevel = Standard) extends ButtonColor
 	{
-		override def toColor(implicit context: TextContextLike) = context.color(role, preferredShade)
+		override def toColor(implicit context: ColorContext) = context.color.preferring(preferredShade)(role)
 	}
 	
 	/**
@@ -59,9 +59,9 @@ object ButtonColor
 	  * of the resulting button's background.
 	  * @param color Color to use
 	  */
-	case class Fixed(color: ComponentColor) extends ButtonColor
+	case class Fixed(color: Color) extends ButtonColor
 	{
-		override def toColor(implicit context: TextContextLike) = color
+		override def toColor(implicit context: ColorContext) = color
 	}
 	
 	/**
@@ -71,6 +71,6 @@ object ButtonColor
 	  */
 	case class CustomSet(colorSet: ColorSet) extends ButtonColor
 	{
-		override def toColor(implicit context: TextContextLike) = colorSet.forBackground(context.containerBackground)
+		override def toColor(implicit context: ColorContext) = colorSet.against(context.background)
 	}
 }

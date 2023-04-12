@@ -14,11 +14,11 @@ import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.ViewStack
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
-import utopia.reflection.container.stack.StackLayout.Center
+import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.SingleFrameSetup
 

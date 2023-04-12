@@ -1,15 +1,15 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.model.Border
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.reflection.component.drawing.immutable.BorderDrawer
+import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.paradigm.enumeration.Alignment.Center
-import utopia.reflection.shape.Border
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
 
 /**
   * Tests component to image drawing
@@ -25,7 +25,7 @@ object ComponentImagesTest extends App
 	import TestContext._
 
 	val backgroundColor = colorScheme.primary.light
-	val imageLabel = baseContext.inContextWithBackground(backgroundColor).forTextComponents.withTextAlignment(Center)
+	val imageLabel = baseContext.against(backgroundColor).forTextComponents.withTextAlignment(Center)
 		.use { implicit txc =>
 			// Creates the image to draw
 			val originComponent = TextLabel.contextual("This is to be drawn as an image")

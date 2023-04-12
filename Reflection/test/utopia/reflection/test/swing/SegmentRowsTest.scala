@@ -10,7 +10,8 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.Primary
 
 /**
   * A test implementation of segmentation using Segment and SegmentGroup classes
@@ -24,16 +25,17 @@ object SegmentRowsTest extends App
 	import TestContext._
 
 	// Creates the labels
-	val backgroundContext = baseContext.inContextWithBackground(colorScheme.primary.light)
-	val labels = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).expandingHorizontally.use { implicit c =>
-		Vector("Here are some labels", "just for you", "once", "again!").map {
-			TextLabel.contextualWithBackground(colorScheme.secondary.forBackground(c.containerBackground), _)
+	val backgroundContext = baseContext.against(colorScheme.primary.light)
+	val labels = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).withHorizontallyExpandingText
+		.use { implicit c =>
+			Vector("Here are some labels", "just for you", "once", "again!").map {
+				TextLabel.contextualWithBackground(c.color.secondary, _)
+			}
 		}
-	}
 
 	// Creates buttons as well
 	val (button1, button2) = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).mapFont { _ * 1.2 }
-		.expandingHorizontally.forPrimaryColorButtons
+		.withHorizontallyExpandingText.withBackground(Primary)
 		.use { implicit c =>
 			val button1 = TextButton.contextual("Yeah!") { labels(1).text += "!" }
 			val button2 = TextButton.contextual("For Sure!") { labels.last.text += "!" }
@@ -53,7 +55,7 @@ object SegmentRowsTest extends App
 		}
 	}
 
-	val frame = Frame.windowed(stack.framed(margins.medium.downscaling, backgroundContext.containerBackground),
+	val frame = Frame.windowed(stack.framed(margins.medium.downscaling, backgroundContext.background),
 		"Segment Test", Program)
 	frame.setToCloseOnEsc()
 

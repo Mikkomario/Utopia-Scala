@@ -1,5 +1,7 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
@@ -8,7 +10,6 @@ import utopia.inception.handling.HandlerType
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.event.ButtonState
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 
@@ -32,14 +33,14 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	  * Updates this button's style to match the new state
 	  * @param newState New button state
 	  */
-	protected def updateStyleForState(newState: ButtonState): Unit
+	protected def updateStyleForState(newState: GuiElementStatus): Unit
 	
 	
 	// ATTRIBUTES	------------------
 	
 	private var actions = Vector[() => Unit]()
 	
-	private val _statePointer = new PointerWithEvents[ButtonState](ButtonState.default)
+	private val _statePointer = new PointerWithEvents[GuiElementStatus](GuiElementStatus.identity)
 	
 	
 	// COMPUTED	----------------------
@@ -53,9 +54,8 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	  * @return Whether this button is currently enabled
 	  */
 	def enabled = component.isEnabled
-	def enabled_=(newEnabled: Boolean) =
-	{
-		state = state.copy(isEnabled = newEnabled)
+	def enabled_=(newEnabled: Boolean) = {
+		state -= Disabled
 		component.setEnabled(newEnabled)
 	}
 	
@@ -73,22 +73,33 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	  * @return This button's current state
 	  */
 	def state = _statePointer.value
-	private def state_=(newState: ButtonState) =
-	{
-		_statePointer.value = newState
-		updateStyleForState(newState)
+	private def state_=(newState: GuiElementStatus) = {
+		if (statePointer.value != newState) {
+			_statePointer.value = newState
+			updateStyleForState(newState)
+		}
 	}
 	
-	private def down = state.isPressed
-	private def down_=(newState: Boolean) = if (down != newState) state = state.copy(isPressed = newState)
+	private def down = state is Activated
+	private def down_=(newState: Boolean) = {
+		if (newState)
+			state += Activated
+		else
+			state -= Activated
+	}
 	
 	
 	// IMPLEMENTED	------------------
 	
 	override def requestFocusInWindow() = component.requestFocusInWindow()
 	
-	override def isInFocus = state.isInFocus
-	private def updateFocus(newFocusState: Boolean) = if (isInFocus != newFocusState) state = state.copy(isInFocus = newFocusState)
+	override def isInFocus = state is Focused
+	private def updateFocus(newFocusState: Boolean) = {
+		if (newFocusState)
+			state += Focused
+		else
+			state -= Focused
+	}
 	
 	
 	// OTHER	----------------------
@@ -203,12 +214,9 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 			MouseMoveEvent.exitedAreaFilter(bounds)
 		
 		// On left mouse within bounds, brightens color and remembers, on release, returns
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
-			if (down)
-			{
-				if (event.wasReleased)
-				{
+		override def onMouseButtonState(event: MouseButtonStateEvent) = {
+			if (down) {
+				if (event.wasReleased) {
 					trigger()
 					down = false
 					Some(ConsumeEvent("Button released"))
@@ -216,8 +224,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 				else
 					None
 			}
-			else if (event.isOverArea(bounds))
-			{
+			else if (event.isOverArea(bounds)) {
 				down = true
 				Some(ConsumeEvent("Button pressed"))
 			}
@@ -226,12 +233,11 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		}
 		
 		// When mouse enters, brightens, when mouse leaves, returns
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
+		override def onMouseMove(event: MouseMoveEvent) = {
 			if (event.isOverArea(bounds))
-				state = state.copy(isMouseOver = true)
+				state += Hover
 			else
-				state = state.copy(isMouseOver = false)
+				state -= Hover
 		}
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled

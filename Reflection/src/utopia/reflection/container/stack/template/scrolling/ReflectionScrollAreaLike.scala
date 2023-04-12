@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack.template.scrolling
 
+import utopia.firmament.component.container.single.ScrollAreaLike
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
 import utopia.reflection.container.stack.template.StackContainerLike
 
@@ -9,7 +10,7 @@ import utopia.reflection.container.stack.template.StackContainerLike
   * @since 15.5.2019, v1+
   */
 trait ReflectionScrollAreaLike[C <: ReflectionStackable]
-	extends ScrollAreaLike2[C] with CachingReflectionStackable with StackContainerLike[C]
+	extends ScrollAreaLike[C] with CachingReflectionStackable with StackContainerLike[C]
 {
 	// IMPLEMENTED	----------------
 	

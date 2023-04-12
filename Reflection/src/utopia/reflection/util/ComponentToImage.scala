@@ -1,11 +1,12 @@
 package utopia.reflection.util
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.HasMutableBounds
+import utopia.firmament.component.stack.Stackable
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.layout.Area
-import utopia.reflection.component.template.layout.stack.Stackable2
 
 import java.awt.Frame
 import java.awt.image.BufferedImage
@@ -24,7 +25,7 @@ object ComponentToImage
 	  * @param component Component to draw
 	  * @return An image of this component's paint result.
 	  */
-	def apply(component: AwtComponentRelated with Area): Image =
+	def apply(component: AwtComponentRelated with HasMutableBounds): Image =
 	{
 		// Tries to avoid using 0x0 size by backing up with component preferred size, if available
 		val componentSize = component.size
@@ -35,7 +36,7 @@ object ComponentToImage
 			else
 				component match
 				{
-					case c: Stackable2 => c.stackSize.optimal
+					case c: Stackable => c.stackSize.optimal
 					case _ => componentSize
 				}
 		}
@@ -64,7 +65,7 @@ object ComponentToImage
 	  * @param imageSize Size of the resulting image
 	  * @return An image of this component's paint result
 	  */
-	def apply(component: AwtComponentRelated with Area, imageSize: Size) =
+	def apply(component: AwtComponentRelated with HasMutableBounds, imageSize: Size) =
 	{
 		// Prepares the image
 		if (imageSize.isPositive)
@@ -82,7 +83,7 @@ object ComponentToImage
 				// Resizes the component and updates its contents if necessary
 				component match
 				{
-					case c: Stackable2 =>
+					case c: Stackable =>
 						c.size = imageSize
 						c.updateLayout()
 					case _ => ()
@@ -94,7 +95,7 @@ object ComponentToImage
 				cellRenderedPanel.remove(component.component)
 				component match
 				{
-					case c: Stackable2 => c.bounds = boundsBefore
+					case c: Stackable => c.bounds = boundsBefore
 					case _ => component.component.setBounds(boundsBefore.toAwt)
 				}
 				testFrame.dispose()

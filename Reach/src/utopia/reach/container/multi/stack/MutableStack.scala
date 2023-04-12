@@ -1,5 +1,6 @@
 package utopia.reach.container.multi.stack
 
+import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -8,25 +9,23 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reflection.component.context.BaseContextLike
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.stack.template.layout.StackLike2
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
+import StackLayout.Fit
+import utopia.firmament.component.container.many.{MutableMultiContainer, StackLike}
+import utopia.firmament.context.BaseContext
 import utopia.reflection.shape.stack.StackLength
 
-object MutableStack extends ContextInsertableComponentFactoryFactory[BaseContextLike, MutableStackFactory,
+object MutableStack extends ContextInsertableComponentFactoryFactory[BaseContext, MutableStackFactory,
 	ContextualMutableStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableStackFactory(hierarchy)
 }
 
 class MutableStackFactory(hierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[BaseContextLike, ContextualMutableStackFactory]
+	extends ContextInsertableComponentFactory[BaseContext, ContextualMutableStackFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	
-	override def withContext[N <: BaseContextLike](context: N) =
+	override def withContext[N <: BaseContext](context: N) =
 		ContextualMutableStackFactory(hierarchy, context)
 	
 	
@@ -73,12 +72,12 @@ class MutableStackFactory(hierarchy: ComponentHierarchy)
 		apply[C](Y, layout, margin, cap)
 }
 
-case class ContextualMutableStackFactory[+N <: BaseContextLike](hierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, BaseContextLike, ContextualMutableStackFactory]
+case class ContextualMutableStackFactory[+N <: BaseContext](hierarchy: ComponentHierarchy, context: N)
+	extends ContextualComponentFactory[N, BaseContext, ContextualMutableStackFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext[C2 <: BaseContextLike](newContext: C2) =
+	override def withContext[C2 <: BaseContext](newContext: C2) =
 		copy(context = newContext)
 	
 	
@@ -98,7 +97,7 @@ case class ContextualMutableStackFactory[+N <: BaseContextLike](hierarchy: Compo
 	def apply[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
 									   cap: StackLength = StackLength.fixedZero, areRelated: Boolean = false) =
 		new MutableStack[C](hierarchy, direction, layout,
-			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap)
+			if (areRelated) context.smallStackMargin else context.stackMargin, cap)
 	
 	/**
 	  * Creates a new stack with no margin between items
@@ -150,7 +149,7 @@ case class ContextualMutableStackFactory[+N <: BaseContextLike](hierarchy: Compo
 class MutableStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
 											initialDirection: Axis2D, initialLayout: StackLayout,
 											initialMargin: StackLength, initialCap: StackLength)
-	extends MutableCustomDrawReachComponent with StackLike2[C] with MutableMultiContainer2[OpenComponent[C, _], C]
+	extends MutableCustomDrawReachComponent with StackLike[C] with MutableMultiContainer[OpenComponent[C, _], C]
 {
 	// ATTRIBUTES	------------------------
 	

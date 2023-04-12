@@ -5,12 +5,13 @@ import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.input.{JDropDownWrapper, TextField}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.localization.LocalString
+import utopia.firmament.localization.LocalString
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.Gray
 
 /**
   * Tests text display with multiple lines
@@ -25,14 +26,14 @@ object MultiLineTextViewTest extends App
 
 	val background = colorScheme.primary.light
 	val standardWidth = StackLength(240, 360, 540)
-	val content = baseContext.inContextWithBackground(background).forTextComponents.use { bc =>
+	val content = baseContext.against(background).forTextComponents.use { bc =>
 		// Displays text view at the top
-		val textView = bc.withoutInsets.use { implicit c =>
+		val textView = bc.withoutTextInsets.use { implicit c =>
 			MultiLineTextView.contextual("Please type in some text and then press enter",
 				standardWidth.optimal, useLowPriorityForScalingSides = true)
 		}
 		// Creates controls to bottom
-		val bottomRow = bc.forGrayFields.use { implicit fieldContext =>
+		val bottomRow = (bc/Gray).use { implicit fieldContext =>
 			// Creates text input
 			val textInput = TextField.contextualForStrings(standardWidth, prompt = "Type your own text and press enter")
 			textInput.addEnterListener { s => textView.text = (s: LocalString).localizationSkipped }

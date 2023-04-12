@@ -53,7 +53,7 @@ trait TextMeasurementContext
 		else
 		{
 			val maxWidth = lines.map(lineWidthOf).max
-			val totalMargin = if (numberOfLines > 1) (numberOfLines - 1) * marginBetweenLines else 0.0
+			val totalMargin = (numberOfLines - 1) * marginBetweenLines
 			val totalHeight = numberOfLines * lineHeight + totalMargin
 			Size(maxWidth, totalHeight)
 		}
@@ -88,7 +88,7 @@ trait TextMeasurementContext
 			val lineHeight = this.lineHeight
 			val lineWidths = lines.map(lineWidthOf)
 			val totalWidth = lineWidths.max
-			val totalMargin = if (numberOfLines > 1) (numberOfLines - 1) * marginBetweenLines else 0.0
+			val totalMargin = (numberOfLines - 1) * marginBetweenLines
 			val totalHeight = numberOfLines * lineHeight + totalMargin
 			
 			// Determines relative bounds for individual lines

@@ -1,17 +1,18 @@
 package utopia.reflection.component.context
 
+import utopia.firmament.model.TextDrawContext
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.localization.Localizer
+import utopia.firmament.localization.Localizer
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
 
 /**
   * A common trait for text context implementations
   * @author Mikko
   * @since 27.4.2020, v
   */
+@deprecated("Moved to Firmament", "v2.0")
 trait TextContextLike extends ColorContextLike
 {
 	// ABSTRACT	--------------------------

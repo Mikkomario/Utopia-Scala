@@ -1,23 +1,24 @@
 package utopia.reach.test
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
 import utopia.reach.component.label.text.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}
 import utopia.reach.component.wrapper.ComponentCreationResult
-import utopia.reach.container.multi.stack.{SegmentGroup, Stack}
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.{SegmentGroup, Stack}
 import utopia.reach.container.wrapper.Framing
-import utopia.reflection.component.context.{ColorContext, TextContext}
-import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenClickedOutside
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
-import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.util.SingleFrameSetup
 
 /**
   * A test case for switches
@@ -28,8 +29,8 @@ object ReachSwitchTest extends App
 {
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
-	import utopia.reflection.test.TestContext._
 	import TestCursors._
+	import utopia.reflection.test.TestContext._
 	
 	val (canvas, enabledSwitch) = ReachCanvas(cursors) { hierarchy =>
 		/*Framing(hierarchy).withContext(baseContext).buildFilled(colorScheme.gray, Stack).apply(margins.medium.any) { colF =>

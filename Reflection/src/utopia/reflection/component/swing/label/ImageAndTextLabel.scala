@@ -1,23 +1,23 @@
 package utopia.reflection.component.swing.label
 
+import utopia.firmament.component.display.RefreshableWithPointer
+import utopia.firmament.component.text.MutableStyleTextComponent
+import utopia.firmament.context.TextContext
+import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far}
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.component.template.text.MutableStyleTextComponent
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.reflection.localization.DisplayFunction
+import utopia.firmament.localization.DisplayFunction
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
 
 object ImageAndTextLabel
 {
@@ -33,7 +33,7 @@ object ImageAndTextLabel
 	  */
 	def contextualWithPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 								 imageInsets: Option[StackInsets] = None)
-								(itemToImage: A => Image)(implicit context: TextContextLike) =
+								(itemToImage: A => Image)(implicit context: TextContext) =
 	{
 		new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.textInsets,
 			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, !context.allowTextShrink,
@@ -52,7 +52,7 @@ object ImageAndTextLabel
 	  */
 	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
-					 (implicit context: TextContextLike) =
+					 (implicit context: TextContext) =
 		contextualWithPointer(new PointerWithEvents(item), displayFunction, imageInsets)(itemToImage)
 }
 

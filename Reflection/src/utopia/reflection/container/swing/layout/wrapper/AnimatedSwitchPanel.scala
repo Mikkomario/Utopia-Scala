@@ -1,19 +1,19 @@
 package utopia.reflection.container.swing.layout.wrapper
 
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.paradigm.animation.Animation
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.paradigm.path.SPath
 import utopia.genesis.util.Fps
-import utopia.reflection.component.context.AnimationContextLike
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.path.SPath
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.AnimatedTransitionLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.{ComponentCreationDefaults, ComponentToImage}
+import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +30,7 @@ object AnimatedSwitchPanel
 	  * @tparam C Type of switched component
 	  * @return A new animated switch panel
 	  */
-	def contextual[C <: AwtStackable](initialContent: C)(implicit exc: ExecutionContext, context: AnimationContextLike) =
+	def contextual[C <: AwtStackable](initialContent: C)(implicit exc: ExecutionContext, context: AnimationContext) =
 		new AnimatedSwitchPanel[C](initialContent, context.actorHandler,
 			context.animationDuration, context.maxAnimationRefreshRate)
 }

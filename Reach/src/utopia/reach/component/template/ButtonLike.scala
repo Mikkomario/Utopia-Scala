@@ -1,6 +1,8 @@
 package utopia.reach.component.template
 
-import java.awt.event.KeyEvent
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
@@ -11,7 +13,8 @@ import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
-import utopia.reflection.event.{ButtonState, HotKey}
+
+import java.awt.event.KeyEvent
 
 object ButtonLike
 {
@@ -33,7 +36,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	/**
 	  * @return The current state of this button
 	  */
-	def statePointer: Changing[ButtonState]
+	def statePointer: Changing[GuiElementStatus]
 	
 	/**
 	  * Triggers the actions associated with this button
@@ -51,17 +54,15 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	/**
 	  * @return Whether this button is currently enabled
 	  */
-	def enabled = state.isEnabled
-	
+	def enabled = state isNot Disabled
 	/**
 	  * @return Whether The mouse is currently over this button
 	  */
-	def isMouseOver = state.isMouseOver
-	
+	def isMouseOver = state is Hover
 	/**
 	  * @return Whether this button is currently being pressed down
 	  */
-	def isPressed = state.isPressed
+	def isPressed = state is Activated
 	
 	
 	// IMPLEMENTED	--------------------------
@@ -79,7 +80,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	/**
 	  * @return Whether this button currently has focus
 	  */
-	override def hasFocus = state.isInFocus
+	override def hasFocus = state is Focused
 	
 	
 	// OTHER	------------------------------
@@ -91,23 +92,15 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	  * @param hotKeys Keys used for triggering this button even while it doesn't have focus (default = empty)
 	  * @param triggerKeys Keys used for triggering this button while it has focus (default = space & enter)
 	  */
-	protected def setup(statePointer: Pointer[ButtonState], hotKeys: Set[HotKey] = Set(),
+	protected def setup(statePointer: Pointer[GuiElementStatus], hotKeys: Set[HotKey] = Set(),
 	                    triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys) =
 	{
 		// When connected to the main hierarchy, enables focus management and key listening
-		val triggerKeyListener =
-		{
-			if (triggerKeys.nonEmpty)
-				Some(new ButtonKeyListener(statePointer, triggerKeys.map(HotKey.keyWithIndex)))
-			else
-				None
+		val triggerKeyListener = NotEmpty(triggerKeys).map { keys =>
+			new ButtonKeyListener(statePointer, keys.map(HotKey.keyWithIndex))
 		}
-		val hotKeyListener =
-		{
-			if (hotKeys.nonEmpty)
-				Some(new ButtonKeyListener(statePointer, hotKeys, requiresFocus = false))
-			else
-				None
+		val hotKeyListener = NotEmpty(hotKeys).map { keys =>
+			new ButtonKeyListener(statePointer, keys, requiresFocus = false)
 		}
 		addHierarchyListener { isLinked =>
 			if (isLinked) {
@@ -140,13 +133,18 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	  * A listener used for updating this button's focus state
 	  * @param statePointer A pointer for updating this button's state
 	  */
-	protected class ButtonDefaultFocusListener(statePointer: Pointer[ButtonState]) extends FocusChangeListener
+	protected class ButtonDefaultFocusListener(statePointer: Pointer[GuiElementStatus]) extends FocusChangeListener
 	{
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
-			statePointer.update { _.copy(isInFocus = event.hasFocus) }
+			statePointer.update { state =>
+				if (event.hasFocus)
+					state + Focused
+				else
+					state - Focused
+			}
 	}
 	
-	private class ButtonKeyListener(statePointer: Pointer[ButtonState], hotKeys: Set[HotKey],
+	private class ButtonKeyListener(statePointer: Pointer[GuiElementStatus], hotKeys: Set[HotKey],
 	                                requiresFocus: Boolean = true)
 		extends KeyStateListener
 	{
@@ -168,8 +166,13 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		
 		// COMPUTED	-------------------------------
 		
-		def down = statePointer.value.isPressed
-		def down_=(newState: Boolean) = statePointer.update { _.copy(isPressed = newState) }
+		def down = statePointer.value is Activated
+		def down_=(newState: Boolean) = statePointer.update { state =>
+			if (newState)
+				state + Activated
+			else
+				state - Activated
+		}
 		
 		
 		// IMPLEMENTED	---------------------------
@@ -188,7 +191,8 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled && (!requiresFocus || hasFocus)
 	}
 	
-	private class ButtonMouseListener(statePointer: Pointer[ButtonState]) extends MouseButtonStateListener
+	// TODO: Remove test prints
+	private class ButtonMouseListener(statePointer: Pointer[GuiElementStatus]) extends MouseButtonStateListener
 		with MouseMoveListener
 	{
 		// ATTRIBUTES	----------------------------
@@ -197,25 +201,21 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.buttonFilter(MouseButton.Left)
 		
 		// Listens to mouse enters & exits
-		override val mouseMoveEventFilter = MouseMoveEvent.enterAreaFilter(bounds) ||
-			MouseMoveEvent.exitedAreaFilter(bounds)
+		override val mouseMoveEventFilter = MouseMoveEvent.enteredOrExitedAreaFilter(bounds)
 		
 		
 		// COMPUTED	-------------------------------
 		
-		def down = statePointer.value.isPressed
-		def down_=(newState: Boolean) = statePointer.update { _.copy(isPressed = newState) }
+		def down = statePointer.value is Activated
+		def down_=(newState: Boolean) = statePointer.update { _ + (Activated -> newState) }
 		
 		
 		// IMPLEMENTED	----------------------------
 		
 		// On left mouse within bounds, brightens color, gains focus and remembers, on release, returns
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
-			if (down)
-			{
-				if (event.wasReleased)
-				{
+		override def onMouseButtonState(event: MouseButtonStateEvent) = {
+			if (down) {
+				if (event.wasReleased) {
 					trigger()
 					down = false
 					Some(ConsumeEvent("Button released"))
@@ -223,8 +223,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 				else
 					None
 			}
-			else if (event.wasPressed && event.isOverArea(bounds))
-			{
+			else if (event.wasPressed && event.isOverArea(bounds)) {
 				down = true
 				if (!hasFocus)
 					requestFocus()
@@ -235,12 +234,11 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		}
 		
 		// When mouse enters, brightens, when mouse leaves, returns
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
+		override def onMouseMove(event: MouseMoveEvent) = {
 			if (event.isOverArea(bounds))
-				statePointer.update { _.copy(isMouseOver = true) }
+				statePointer.update { _ + Hover }
 			else
-				statePointer.update { _.copy(isMouseOver = false) }
+				statePointer.update { _ - Hover }
 		}
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled

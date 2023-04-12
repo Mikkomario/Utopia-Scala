@@ -1,15 +1,15 @@
 package utopia.reach.util
 
+import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
+import utopia.paradigm.color.ColorShade
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reflection.color.ColorShadeVariant
-import utopia.reflection.util.AwtEventThread
 
 import java.awt.{Graphics2D, Toolkit}
 import javax.swing.RepaintManager
@@ -171,7 +171,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	// Updates the buffer and processes data from the image
 	override def averageShadeOf(area: Bounds) =
-		ColorShadeVariant.forLuminosity(flatten().averageRelativeLuminanceOf(area))
+		ColorShade.forLuminosity(flatten().averageRelativeLuminanceOf(area))
 	
 	
 	// OTHER	-------------------------------------

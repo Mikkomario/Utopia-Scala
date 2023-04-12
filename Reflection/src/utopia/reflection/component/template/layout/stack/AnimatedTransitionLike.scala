@@ -1,5 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.Drawer
@@ -10,7 +11,6 @@ import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.animation.{Animation, AnimationLike}
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.ReflectionComponentWrapper

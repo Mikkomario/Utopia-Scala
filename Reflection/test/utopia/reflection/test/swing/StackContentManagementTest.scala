@@ -11,7 +11,8 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.Gray
 
 /**
   * Tests stack content management
@@ -27,8 +28,8 @@ object StackContentManagementTest extends App
 	// Creates the main content
 	val stack = Stack.column[ItemLabel[Int]]()
 	
-	val background = colorScheme.gray
-	val manager = baseContext.inContextWithBackground(background).forTextComponents.use { implicit txc =>
+	val background = colorScheme(Gray)
+	val manager = baseContext.against(background).forTextComponents.use { implicit txc =>
 		ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
 			println(s"Creating a new label ($i)")
 			val label = ItemLabel.contextual(i)

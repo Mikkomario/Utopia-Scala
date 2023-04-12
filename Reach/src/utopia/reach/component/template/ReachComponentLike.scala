@@ -1,11 +1,13 @@
 package utopia.reach.component.template
 
+import utopia.firmament.component.stack.Stackable
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -13,17 +15,15 @@ import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.util.Priority
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
-import utopia.reflection.component.template.layout.stack.Stackable2
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
-import utopia.reflection.text.Font
 
 /**
   * A common trait for "Reach" (no-swing) style components
   * @author Mikko Hilpinen
   * @since 3.10.2020, v0.1
   */
-trait ReachComponentLike extends Stackable2
+trait ReachComponentLike extends Stackable
 {
 	// ABSTRACT	------------------------
 	

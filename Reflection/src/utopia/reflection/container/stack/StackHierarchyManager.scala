@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack
 
+import utopia.firmament.awt.AwtEventThread
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.collection.immutable.GraphEdge
 import utopia.flow.collection.mutable.{GraphNode, VolatileList}
@@ -7,7 +8,6 @@ import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.util.AwtEventThread
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable

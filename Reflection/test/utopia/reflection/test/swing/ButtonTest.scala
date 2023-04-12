@@ -1,5 +1,6 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.image.ButtonImageSet
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 
 import java.nio.file.Paths
@@ -7,19 +8,19 @@ import utopia.paradigm.color.Color
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.Size
-import utopia.reflection.component.swing.button.{ButtonImageSet, ImageAndTextButton, ImageButton, TextButton}
+import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton, TextButton}
 import utopia.reflection.component.swing.display.ProgressBar
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.stack.StackLayout.Fit
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{Localizer, NoLocalization}
+import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.shape.LengthExtensions._
+import utopia.genesis.text.FontStyle.Plain
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.test.TestContext._
 
 /**

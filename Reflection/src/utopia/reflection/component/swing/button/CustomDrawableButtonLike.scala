@@ -1,10 +1,10 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.drawing.mutable.MutableCustomDrawable
+import utopia.firmament.model.GuiElementStatus
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.event.ButtonState
 
 /**
   * Extended by button implementations that wish to represent their state by using a button state drawer
@@ -15,7 +15,7 @@ trait CustomDrawableButtonLike extends ButtonLike with MutableCustomDrawable
 {
 	// IMPLEMENTED	----------------------
 	
-	override protected def updateStyleForState(newState: ButtonState) = repaint()
+	override protected def updateStyleForState(newState: GuiElementStatus) = repaint()
 	
 	
 	// OTHER	--------------------------

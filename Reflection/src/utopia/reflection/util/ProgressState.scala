@@ -1,6 +1,6 @@
 package utopia.reflection.util
 
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 object ProgressState
 {

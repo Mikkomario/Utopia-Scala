@@ -11,7 +11,7 @@ import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponent
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.template.input.{InputWithPointer, InteractionWithPointer}
+import utopia.firmament.component.input.{InputWithPointer, InteractionWithPointer}
 
 object CachingViewSwapper extends ContextInsertableComponentFactoryFactory[Any, CachingViewSwapperFactory,
 	ContextualCachingViewSwapperFactory]

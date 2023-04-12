@@ -1,6 +1,7 @@
 package utopia.reflection.container.template.mutable
 
-import utopia.reflection.component.template.ComponentLike2
+import utopia.firmament.component.Component
+import utopia.firmament.component.container.many.MutableMultiContainer
 
 /**
   * A Reflection implementation of the mutable multi-container trait.
@@ -8,7 +9,7 @@ import utopia.reflection.component.template.ComponentLike2
   * @author Mikko Hilpinen
   * @since 10.4.2023, v2.0
   */
-trait ReflectionMultiContainer[C <: ComponentLike2] extends MutableMultiContainer2[C, C]
+trait ReflectionMultiContainer[C <: Component] extends MutableMultiContainer[C, C]
 {
 	override protected def add(components: IterableOnce[C], index: Int): Unit =
 		Vector.from(components).reverseIterator.foreach { add(_, index) }

@@ -7,19 +7,19 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.stack.StackLayout.Leading
+import utopia.firmament.model.enumeration.StackLayout.Leading
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.shape.LengthExtensions._
+import utopia.genesis.text.FontStyle.Plain
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.test.TestContext._
 
 /**

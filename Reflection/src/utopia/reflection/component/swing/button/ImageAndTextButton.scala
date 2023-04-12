@@ -1,17 +1,18 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.event.ButtonState
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
 
 object ImageAndTextButton
 {
@@ -50,9 +51,9 @@ object ImageAndTextButton
 	  * @return A new button
 	  */
 	def contextualWithoutAction(images: ButtonImageSet, text: LocalizedString, hotKeys: Set[Int] = Set(),
-	                            hotKeyChars: Iterable[Char] = Set())(implicit context: ButtonContextLike) =
-		new ImageAndTextButton(images, text, context.font, context.buttonColor, context.textInsets,
-			context.borderWidth, context.textAlignment, context.textColor, hotKeys, hotKeyChars)
+	                            hotKeyChars: Iterable[Char] = Set())(implicit context: TextContext) =
+		new ImageAndTextButton(images, text, context.font, context.background, context.textInsets,
+			context.buttonBorderWidth, context.textAlignment, context.textColor, hotKeys, hotKeyChars)
 	
 	/**
 	  * Creates a new button using contextual information
@@ -65,7 +66,7 @@ object ImageAndTextButton
 	  * @return A new button
 	  */
 	def contextual(images: ButtonImageSet, text: LocalizedString, hotKeys: Set[Int] = Set(),
-	               hotKeyChars: Iterable[Char] = Set())(action: => Unit)(implicit context: ButtonContextLike) =
+	               hotKeyChars: Iterable[Char] = Set())(action: => Unit)(implicit context: TextContext) =
 	{
 		val button = contextualWithoutAction(images, text, hotKeys, hotKeyChars)
 		button.registerAction { () => action }
@@ -143,8 +144,7 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	
 	override protected def wrapped = content
 	
-	override protected def updateStyleForState(newState: ButtonState) =
-	{
+	override protected def updateStyleForState(newState: GuiElementStatus) = {
 		super.updateStyleForState(newState)
 		imageLabel.image = _images(newState)
 	}

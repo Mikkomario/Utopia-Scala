@@ -1,5 +1,11 @@
 package utopia.reach.test
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.image.SingleColorIconCache
+import utopia.firmament.model
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.{RowGroup, RowGroups}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
@@ -10,6 +16,8 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.util.ScreenExtensions._
+import utopia.paradigm.color.ColorRole
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.DistanceExtensions._
@@ -25,15 +33,8 @@ import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.ColorContext
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.template.window.{RowGroup, RowGroups, WindowButtonBlueprint}
-import utopia.reflection.image.SingleColorIconCache
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalizedString
 
 /**
   * Tests input window creation
@@ -61,16 +62,13 @@ object InputWindowTest extends App
 		
 		override protected lazy val closeIcon = icons("close.png")
 		
-		override protected lazy val standardContext = baseContext.inContextWithBackground(colorScheme.primary)
-		
-		override protected lazy val fieldCreationContext =
-			baseContext.inContextWithBackground(colorScheme.primary.light)
+		override protected lazy val standardContext = baseContext.against(colorScheme.primary)
+		override protected lazy val fieldCreationContext = baseContext.against(colorScheme.primary.light)
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override protected def warningPopupContext =
-			baseContext.inContextWithBackground(colorScheme.error).forTextComponents
+		override protected def warningPopupContext = baseContext.against(colorScheme.failure).forTextComponents
 		
 		override protected def inputTemplate =
 		{
@@ -114,7 +112,7 @@ object InputWindowTest extends App
 		}
 		
 		override protected def makeFieldNameAndFieldContext(base: ColorContext) =
-			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.noLineBreaksAllowed
+			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.singleLine
 		
 		override protected def buildLayout(factories: ContextualMixed[ColorContext],
 		                                   content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
@@ -125,17 +123,17 @@ object InputWindowTest extends App
 			// Frames content
 			if (content.size == 1)
 				factories(Framing).withoutContext(content.head, framingMargin,
-					Vector(BackgroundDrawer(fieldCreationContext.containerBackground)))
+					Vector(BackgroundDrawer(fieldCreationContext.background)))
 			// If there are many, wraps them in a stack also
 			else if (content.forall { _.result.isAlwaysTrue })
 				factories(Stack).build(Framing).column() { framingF =>
 					content.map { c => framingF.withoutContext(c, framingMargin,
-						Vector(BackgroundDrawer(fieldCreationContext.containerBackground))) }
+						Vector(BackgroundDrawer(fieldCreationContext.background))) }
 				}
 			else
 				factories(ViewStack).build(Framing).withFixedStyle() { factories =>
 					content.map { c => factories.next().withoutContext(c, framingMargin,
-						Vector(BackgroundDrawer(fieldCreationContext.containerBackground))).parentAndResult }
+						Vector(BackgroundDrawer(fieldCreationContext.background))).parentAndResult }
 				}
 		}
 		
@@ -143,7 +141,7 @@ object InputWindowTest extends App
 											  input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
 											  warn: (String, LocalizedString) => Unit) =
 		{
-			val okButton = WindowButtonBlueprint[Model]("OK", role = Secondary, isDefault = true) { promise =>
+			val okButton = model.WindowButtonBlueprint[Model]("OK", role = Secondary, isDefault = true) { promise =>
 				input.toOption.foreach(promise.trySuccess)
 			}
 			Vector(okButton) -> AlwaysTrue
@@ -157,12 +155,12 @@ object InputWindowTest extends App
 		{
 			if (hasIcon)
 				standardContext.forTextComponents.withTextAlignment(Alignment.Left)
-					.mapInsets { _.mapLeft { _ * 0.5 }.mapRight { _ * 1.5 }.expandingToRight }
-					.forButtons(buttonColor)
+					.mapTextInsets { _.mapLeft { _ * 0.5 }.mapRight { _ * 1.5 }.expandingToRight }
+					.withBackground(buttonColor)
 			else
 				standardContext.forTextComponents.withTextAlignment(Alignment.Center)
-					.mapInsets { _.mapHorizontal { _ * 1.5 } }
-					.forButtons(buttonColor)
+					.mapTextInsets { _.mapHorizontal { _ * 1.5 } }
+					.withBackground(buttonColor)
 		}
 		
 		override protected def defaultResult = Model.empty

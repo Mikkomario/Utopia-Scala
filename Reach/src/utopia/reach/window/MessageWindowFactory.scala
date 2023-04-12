@@ -1,10 +1,11 @@
 package utopia.reach.window
+
+import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.model.WindowButtonBlueprint
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.label.text.TextLabel
-import utopia.reflection.component.context.{ColorContext, TextContext}
-import utopia.reflection.container.template.window.WindowButtonBlueprint
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 /**
   * A common trait for window factories that produce interactive message or question windows.

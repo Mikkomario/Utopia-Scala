@@ -1,13 +1,13 @@
 package utopia.reflection.component.swing.label
 
+import utopia.firmament.component.display.RefreshableWithPointer
+import utopia.firmament.context.BaseContext
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.display.RefreshableWithPointer
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
 import utopia.reflection.shape.stack.StackSize
 
@@ -22,7 +22,7 @@ object ImageLabel
 	  * @return A new label
 	  */
 	def contextual(image: Image, alwaysFillsArea: Boolean = true, isLowPriority: Boolean = false)
-				  (implicit context: BaseContextLike) =
+				  (implicit context: BaseContext) =
 		new ImageLabel(image, alwaysFillsArea, context.allowImageUpscaling, isLowPriority)
 }
 

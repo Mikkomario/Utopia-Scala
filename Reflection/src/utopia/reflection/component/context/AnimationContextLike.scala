@@ -10,6 +10,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 28.4.2020, v1.2
   */
+@deprecated("Deprecated for removal", "v2.0")
 trait AnimationContextLike
 {
 	/**

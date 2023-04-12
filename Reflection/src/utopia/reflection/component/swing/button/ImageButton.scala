@@ -1,9 +1,10 @@
 package utopia.reflection.component.swing.button
 
-import utopia.reflection.component.context.BaseContextLike
+import utopia.firmament.context.BaseContext
+import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.model.GuiElementStatus
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.event.ButtonState
 
 object ImageButton
 {
@@ -35,7 +36,7 @@ object ImageButton
 	 * @return A new button
 	 */
 	def contextualWithoutAction(images: ButtonImageSet, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	                            isLowPriority: Boolean = false)(implicit context: BaseContextLike) =
+	                            isLowPriority: Boolean = false)(implicit context: BaseContext) =
 		new ImageButton(images, hotKeys, hotKeyChars, context.allowImageUpscaling, isLowPriority)
 	
 	/**
@@ -49,7 +50,7 @@ object ImageButton
 	  * @return A new button
 	  */
 	def contextual(images: ButtonImageSet, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	               isLowPriority: Boolean = false)(action: => Unit)(implicit context: BaseContextLike) =
+	               isLowPriority: Boolean = false)(action: => Unit)(implicit context: BaseContext) =
 	{
 		val button = contextualWithoutAction(images, hotKeys, hotKeyChars, isLowPriority)
 		button.registerAction { () => action }
@@ -91,8 +92,7 @@ class ImageButton(val images: ButtonImageSet, hotKeys: Set[Int] = Set(), hotKeyC
 	
 	override protected def wrapped = label
 	
-	override protected def updateStyleForState(newState: ButtonState) =
-	{
+	override protected def updateStyleForState(newState: GuiElementStatus) = {
 		val newImage = images(newState)
 		label.image = newImage
 	}

@@ -4,7 +4,7 @@ import utopia.genesis.image.Image
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.reflection.component.drawing.immutable.ImageDrawer
+import utopia.firmament.drawing.immutable.ImageDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets

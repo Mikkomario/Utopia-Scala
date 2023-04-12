@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack.template.layout
 
+import utopia.firmament.component.container.single.AlignFrameLike
 import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
 import utopia.reflection.container.stack.template.SingleStackContainer
@@ -11,7 +12,7 @@ import utopia.reflection.container.template.Container
   * @since 17.12.2019, v1+
   */
 trait ReflectionAlignFrameLike[C <: ReflectionStackable]
-	extends AlignFrameLike2[C] with CachingReflectionStackable with SingleStackContainer[C]
+	extends AlignFrameLike[C] with CachingReflectionStackable with SingleStackContainer[C]
 		with ReflectionComponentWrapper
 {
 	// ABSTRACT	----------------------

@@ -1,24 +1,24 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.image.ButtonImageSet
 import utopia.flow.time.WeekDays
 import utopia.flow.time.WeekDays.MondayToSunday
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reflection.component.swing.input.{Calendar, JDropDownWrapper}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.test.TestContext._
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
+import utopia.genesis.text.FontStyle.Plain
 
 import java.nio.file.Paths
 import java.time.{Month, Year}

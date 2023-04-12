@@ -1,32 +1,32 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.model.Border
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
-import utopia.paradigm.color.Color
+import utopia.genesis.text.Font
+import utopia.paradigm.color.{Color, ColorSet}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
-import utopia.reflection.color.ColorSet
-import utopia.reflection.color.ColorShade.{Dark, Light}
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.TextDrawerLike
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.input.InputWithPointer
+import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Border
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.{Font, Prompt}
-import utopia.reflection.util.AwtEventThread
+import utopia.reflection.text.Prompt
 
 import java.awt.Graphics
 import java.awt.event.{ActionEvent, ActionListener, FocusEvent, FocusListener}
@@ -145,15 +145,15 @@ object TextField
 					  prompt: LocalizedString = LocalizedString.empty, document: Document = new PlainDocument(),
 					  resultFilter: Option[Regex] = None)
 					 (mapResult: Option[String] => A)
-					 (implicit context: ButtonContextLike) =
+					 (implicit context: TextContext) =
 	{
 		val field = new TextField(targetWidth, context.textInsets.total / 2, context.font, document,
 			initialText, prompt.notEmpty.map { Prompt(_, context.promptFont, context.hintTextColor) }, context.textColor,
 			context.textAlignment, resultFilter)(mapResult)
-		field.background = context.buttonColor
-		field.setSelectionHighlight(if (context.colorScheme.secondary.contains(context.buttonColor))
-			context.colorScheme.primary else context.colorScheme.secondary)
-		field.addFocusHighlight(context.buttonColorHighlighted)
+		field.background = context.background
+		field.setSelectionHighlight(if (context.colors.secondary.contains(context.background))
+			context.colors.primary else context.colors.secondary)
+		field.addFocusHighlight(context.background.highlighted)
 		field
 	}
 	
@@ -170,7 +170,7 @@ object TextField
 	def contextualForStrings(targetWidth: StackLength, initialText: String = "",
 							 prompt: LocalizedString = LocalizedString.empty, document: Document = new PlainDocument(),
 							 resultFilter: Option[Regex] = None)
-							(implicit context: ButtonContextLike) =
+							(implicit context: TextContext) =
 		contextual(targetWidth, initialText, prompt, document, resultFilter) { _.getOrElse("") }
 	
 	/**
@@ -183,7 +183,7 @@ object TextField
 	  */
 	def contextualForPositiveInts(targetWidth: StackLength, initialValue: Option[Int] = None,
 	                              prompt: LocalizedString = LocalizedString.empty)
-								 (implicit context: ButtonContextLike) =
+								 (implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.digit, 10), Some(Regex.numericPositive)) { _.flatMap { _.int } }
 	
@@ -197,7 +197,7 @@ object TextField
 	  */
 	def contextualForInts(targetWidth: StackLength, initialValue: Option[Int] = None,
 	                      prompt: LocalizedString = LocalizedString.empty)
-						 (implicit context: ButtonContextLike) =
+						 (implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.numericParts, 11), Some(Regex.numeric)) { _.flatMap { _.int } }
 	
@@ -211,7 +211,7 @@ object TextField
 	  */
 	def contextualForPositiveDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
 									 prompt: LocalizedString = LocalizedString.empty)
-									(implicit context: ButtonContextLike) =
+									(implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.decimalPositiveParts, 24), Some(Regex.decimalPositive)) { _.flatMap { _.double } }
 	
@@ -225,7 +225,7 @@ object TextField
 	  */
 	def contextualForDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
 	                         prompt: LocalizedString = LocalizedString.empty)
-							(implicit context: ButtonContextLike) =
+							(implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.decimalParts, 24), Some(Regex.decimal)) { _.flatMap { _.double } }
 }
@@ -408,11 +408,11 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	{
 		val bg = background
 		val preferredSelectionShade = if (bg.luminosity >= 0.5) Light else Dark
-		val selectionColor = color.forBackgroundPreferring(bg, preferredSelectionShade)
-		val caretColor = color.bestAgainst(Vector(bg, selectionColor))
+		val selectionColor = color.against(bg, preferredSelectionShade)
+		val caretColor = color.againstMany(Vector(bg, selectionColor))
 		
 		field.setSelectionColor(selectionColor.toAwt)
-		field.setSelectedTextColor(selectionColor.textColorStandard.defaultTextColor.toAwt)
+		field.setSelectedTextColor(selectionColor.shade.defaultTextColor.toAwt)
 		field.setCaretColor(caretColor.toAwt)
 	}
 	

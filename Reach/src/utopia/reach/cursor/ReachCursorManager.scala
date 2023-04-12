@@ -1,18 +1,18 @@
 package utopia.reach.cursor
 
-import utopia.flow.collection.immutable.caching.cache.TryCache
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.Now
+import utopia.flow.collection.immutable.caching.cache.TryCache
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
+import utopia.paradigm.color.ColorShade
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.color.ColorShadeVariant
 import utopia.reach.component.template.CursorDefining
 
 import java.awt.Toolkit
 import java.awt.image.BufferedImage
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
+
 /*
 object ReachCursorManager
 {
@@ -76,7 +76,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 	  * @param shadeOf A function for calculating the overall shade of the targeted area
 	  * @return Cursor to use over that position. Failure if the cursor couldn't be created.
 	  */
-	def cursorAt(position: Point)(shadeOf: Bounds => ColorShadeVariant) =
+	def cursorAt(position: Point)(shadeOf: Bounds => ColorShade) =
 		cursorCache(cursorImageAt(position)(shadeOf))
 	
 	/**
@@ -84,7 +84,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 	  * @param shadeOf A function for calculating the overall shade of the targeted area
 	  * @return Cursor image to use over that position
 	  */
-	def cursorImageAt(position: Point)(shadeOf: Bounds => ColorShadeVariant) =
+	def cursorImageAt(position: Point)(shadeOf: Bounds => ColorShade) =
 	{
 		// Checks whether any of the registered components is controlling the specified position
 		cursorComponents.findMap { c =>

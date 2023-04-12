@@ -1,22 +1,21 @@
 package utopia.reflection.container.swing.layout.multi
 
+import utopia.firmament.component.AreaOfItems
+import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.template.SwingComponentRelated
-import utopia.reflection.component.template.layout.AreaOfItems
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.AnimatedChangesContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -38,11 +37,11 @@ object AnimatedStack
 	  */
 	def contextual[C <: AwtStackable](direction: Axis2D, items: Vector[C] = Vector(), layout: StackLayout = Fit,
 									  cap: StackLength = StackLength.fixedZero,
-									  itemsAreRelated: Boolean = false)(implicit ac: AnimationContextLike,
-																		bc: BaseContextLike, exc: ExecutionContext) =
+									  itemsAreRelated: Boolean = false)
+	                                 (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
 	{
 		val stack = new AnimatedStack[C](ac.actorHandler, direction,
-			if (itemsAreRelated) bc.relatedItemsStackMargin else bc.defaultStackMargin, cap, layout,
+			if (itemsAreRelated) bc.smallStackMargin else bc.stackMargin, cap, layout,
 			ac.animationDuration, ac.maxAnimationRefreshRate, ac.useFadingInAnimations)
 		stack ++= items
 		stack
@@ -62,7 +61,7 @@ object AnimatedStack
 	  */
 	def contextualColumn[C <: AwtStackable](items: Vector[C] = Vector(), layout: StackLayout = Fit,
 											cap: StackLength = StackLength.fixedZero, itemsAreRelated: Boolean = false)
-										   (implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
+										   (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
 		contextual(Y, items, layout, cap, itemsAreRelated)
 	
 	/**
@@ -79,7 +78,7 @@ object AnimatedStack
 	  */
 	def contextualRow[C <: AwtStackable](items: Vector[C] = Vector(), layout: StackLayout = Fit,
 	                                     cap: StackLength = StackLength.fixedZero, itemsAreRelated: Boolean = false)
-	                                    (implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
+	                                    (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
 		contextual(X, items, layout, cap, itemsAreRelated)
 }
 

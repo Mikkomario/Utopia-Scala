@@ -1,22 +1,22 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.input.SelectableWithPointers
+import utopia.firmament.context.TextContext
+import utopia.firmament.model.Border
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.input.SelectableWithPointers
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, StackLeaf}
-import utopia.reflection.localization.LocalString._
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.Border
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.Font
-import utopia.reflection.util.AwtEventThread
 
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.plaf.basic.ComboPopup
@@ -36,15 +36,15 @@ object JDropDownWrapper
 	  */
 	def contextual[A](selectText: LocalizedString, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  initialChoices: Vector[A] = Vector(), maximumOptimalWidth: Option[Int] = None)
-					 (implicit context: ButtonContextLike) =
+					 (implicit context: TextContext) =
 	{
-		val background = context.buttonColor
-		val highlighted = context.buttonColorHighlighted
+		val background = context.background
+		val highlighted = background.highlighted
 		
 		val dropDown = new JDropDownWrapper[A](context.textInsets, selectText, context.font, background,
 			highlighted, context.textColor, displayFunction, initialChoices, maximumOptimalWidth)
-		if (context.borderWidth > 0)
-			dropDown.setBorder(Border.symmetric(context.borderWidth, context.textColor))
+		if (context.buttonBorderWidth > 0)
+			dropDown.setBorder(Border.symmetric(context.buttonBorderWidth, context.textColor))
 		dropDown
 	}
 }

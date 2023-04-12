@@ -5,12 +5,12 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.input.selection.RadioButtonGroup
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 
 /**
   * Tests radio button creation
@@ -28,7 +28,7 @@ object ReachRadioButtonsTest extends App
 	val mainBg = colorScheme.gray.default
 	
 	val canvas = ReachCanvas(cursors) { hierarchy =>
-		Framing(hierarchy).withContext(baseContext.inContextWithBackground(mainBg).forTextComponents)
+		Framing(hierarchy).withContext(baseContext.against(mainBg).forTextComponents)
 			.build(RadioButtonGroup)
 			.apply(margins.medium.any, customDrawers = Vector(BackgroundDrawer(mainBg))) { buttonsF =>
 				buttonsF(Vector[(Int, LocalizedString)](1 -> "First", 2 -> "Second", 3 -> "Third Option"),

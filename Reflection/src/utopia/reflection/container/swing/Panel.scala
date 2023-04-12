@@ -1,13 +1,13 @@
 package utopia.reflection.container.swing
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.container.many.MutableMultiContainer
+import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.container.template.Container
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
-import utopia.reflection.util.AwtEventThread
 
 import java.awt.Graphics
 import javax.swing.{JComponent, JPanel}
@@ -17,7 +17,7 @@ import javax.swing.{JComponent, JPanel}
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-class Panel[C <: ReflectionComponentLike with AwtComponentRelated] extends MutableMultiContainer2[C, C] with JWrapper with
+class Panel[C <: ReflectionComponentLike with AwtComponentRelated] extends MutableMultiContainer[C, C] with JWrapper with
 	AwtContainerRelated with MutableCustomDrawableWrapper with Container[C]
 {
     // ATTRIBUTES    -------------------

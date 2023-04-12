@@ -1,5 +1,6 @@
 package utopia.reach.test
 
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
@@ -15,10 +16,8 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.image
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -37,7 +36,7 @@ object DropDownTest extends App
 	val arrowImage = Image.readFrom("Reflection/test-images/arrow-back-48dp.png")
 	arrowImage.failure.foreach { _.printStackTrace() }
 	val expandIcon = arrowImage.map { i => new SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationCounterClockwise)) }
-	val shrinkIcon = arrowImage.map { i => new image.SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
+	val shrinkIcon = arrowImage.map { i => new SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	

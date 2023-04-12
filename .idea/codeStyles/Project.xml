@@ -11,6 +11,7 @@
       <option name="TYPE_ANNOTATION_PUBLIC_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_PROTECTED_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_UNIT_TYPE" value="false" />
+      <option name="TYPE_ANNOTATION_EXCLUDE_MEMBER_OF_PRIVATE_CLASS" value="true" />
       <option name="SD_BLANK_LINE_BEFORE_TAGS" value="false" />
       <option name="SD_KEEP_BLANK_LINES_BETWEEN_TAGS" value="true" />
     </ScalaCodeStyleSettings>

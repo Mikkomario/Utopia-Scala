@@ -1,18 +1,19 @@
 package utopia.reflection.controller.data
 
+import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.component.template.display.Refreshable
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.controller.data.ContentDisplayer
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 object ContainerContentDisplayer
 {
 	/**
 	 * Container that holds multiple items and is stackable
 	 */
-	private type MultiStack[X <: ReflectionComponentLike] = MutableMultiContainer2[X, X] with ReflectionStackable
+	private type MultiStack[X <: ReflectionComponentLike] = MutableMultiContainer[X, X] with ReflectionStackable
 	
 	/**
 	 * Short version of typical pointer used in these methods
@@ -94,7 +95,7 @@ object ContainerContentDisplayer
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
-class ContainerContentDisplayer[A, Container <: MutableMultiContainer2[Display, Display] with ReflectionStackable,
+class ContainerContentDisplayer[A, Container <: MutableMultiContainer[Display, Display] with ReflectionStackable,
 	Display <: ReflectionStackable with Refreshable[A], +P <: Changing[Vector[A]]]
 (protected val container: Container, override val contentPointer: P,
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)

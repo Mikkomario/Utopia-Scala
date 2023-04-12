@@ -1,4 +1,8 @@
 package utopia.reach.window
+
+import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.{HotKey, RowGroup, RowGroups, WindowButtonBlueprint}
 import utopia.flow.async.process.Delay
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.TimeExtensions._
@@ -18,15 +22,11 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.focus.FocusRequestable
-import utopia.reflection.component.context.{ColorContext, TextContext}
-import utopia.reflection.container.stack.StackLayout.{Center, Fit, Leading, Trailing}
+import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Window
-import utopia.reflection.container.template.window.{RowGroup, RowGroups, WindowButtonBlueprint}
-import utopia.reflection.event.HotKey
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.LengthExtensions._
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
@@ -52,7 +52,6 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @return Component creation context used as the base when creating input fields and their labels
 	  */
 	protected def fieldCreationContext: ColorContext
-	
 	/**
 	  * @return Component creation context used in the warning pop-up. Determines pop-up background also.
 	  */
@@ -189,7 +188,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val window = field.createPopup(popupContext.actorHandler, margin = popupContext.margins.small,
 			autoCloseLogic = PopupAutoCloseLogic.WhenAnyKeyPressed) { hierarchy =>
 			// The pop-up contains a close button and the warning text
-			Framing(hierarchy).buildFilledWithContext(popupContext, popupContext.containerBackground, Stack)
+			Framing(hierarchy).buildFilledWithContext(popupContext, popupContext.background, Stack)
 				.apply(popupContext.margins.small.any) { stackF: ContextualStackFactory[TextContext] =>
 					stackF.build(Mixed).row(Center) { factories =>
 						Vector(
@@ -353,7 +352,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		{
 			val base = factories.withContext(context.nameContext)(TextLabel)
 			if (expandLabel)
-				base.mapContext { _.expandingHorizontally }
+				base.mapContext { _.withHorizontallyExpandingText }
 			else
 				base
 		}

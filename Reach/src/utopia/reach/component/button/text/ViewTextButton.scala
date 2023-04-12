@@ -1,9 +1,16 @@
 package utopia.reach.component.button.text
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -11,30 +18,22 @@ import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{ButtonContextLike, TextContextLike}
-import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object ViewTextButton extends ContextInsertableComponentFactoryFactory[TextContextLike, ViewTextButtonFactory,
+object ViewTextButton extends ContextInsertableComponentFactoryFactory[TextContext, ViewTextButtonFactory,
 	ContextualViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
 }
 
 class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualViewTextButtonFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualViewTextButtonFactory(this, context)
 	
 	
@@ -63,7 +62,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[ComponentColor],
+	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[Color],
 	             enabledPointer: Changing[Boolean] = AlwaysTrue,
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 	             alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
@@ -96,7 +95,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action The action performed when this button is pressed
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, font: Font, colorPointer: Changing[ComponentColor],
+	def withStaticText(text: LocalizedString, font: Font, colorPointer: Changing[Color],
 	                   enabledPointer: Changing[Boolean] = AlwaysTrue, borderWidth: Double = 0.0,
 	                   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 	                   betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
@@ -110,7 +109,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 
 object ContextualViewTextButtonFactory
 {
-	implicit class ButtonContextualViewTextButtonFactory[N <: ButtonContextLike]
+	implicit class ButtonContextualViewTextButtonFactory[N <: TextContext]
 	(val factory: ContextualViewTextButtonFactory[N]) extends AnyVal
 	{
 		/**
@@ -133,8 +132,8 @@ object ContextualViewTextButtonFactory
 		             additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		{
 			val context = factory.context
-			factory.factory[A](contentPointer, context.font, Fixed(context.buttonColor), enabledPointer,
-				displayFunction, context.borderWidth, context.textAlignment, context.textInsets,
+			factory.factory[A](contentPointer, context.font, Fixed(context.background), enabledPointer,
+				displayFunction, context.buttonBorderWidth, context.textAlignment, context.textInsets,
 				context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
 				additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
 		}
@@ -159,12 +158,12 @@ object ContextualViewTextButtonFactory
 	}
 }
 
-case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewTextButtonFactory, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualViewTextButtonFactory]
+case class ContextualViewTextButtonFactory[+N <: TextContext](factory: ViewTextButtonFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -186,7 +185,7 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def withChangingColor[A](contentPointer: Changing[A], colorPointer: Changing[ComponentColor],
+	def withChangingColor[A](contentPointer: Changing[A], colorPointer: Changing[Color],
 	                         enabledPointer: Changing[Boolean] = AlwaysTrue,
 	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                         borderWidth: Double = context.margins.verySmall, hotKeys: Set[HotKey] = Set(),
@@ -217,10 +216,10 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	def withChangingRole[A](contentPointer: Changing[A], rolePointer: Changing[ColorRole],
 	                        enabledPointer: Changing[Boolean] = AlwaysTrue,
 	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	                        preferredShade: ColorShade = Standard, borderWidth: Double = context.margins.verySmall,
+	                        preferredShade: ColorLevel = Standard, borderWidth: Double = context.margins.verySmall,
 	                        hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 	                        additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
-		withChangingColor[A](contentPointer, rolePointer.map { role => context.color(role, preferredShade) },
+		withChangingColor[A](contentPointer, rolePointer.map { role => context.color.preferring(preferredShade)(role) },
 			enabledPointer, displayFunction, borderWidth, hotKeys, additionalDrawers,
 			additionalFocusListeners)(action)
 }
@@ -231,7 +230,7 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
   * @since 26.10.2020, v0.1
   */
 class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A], font: Font,
-                        colorPointer: Changing[ComponentColor],
+                        colorPointer: Changing[Color],
                         enabledPointer: Changing[Boolean] = AlwaysTrue,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
                         alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
@@ -243,12 +242,12 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
+	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	private val _statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
-		state.copy(isEnabled = enabled) }
+		state + (Disabled -> !enabled) }
 	private val actualTextInsets = if (borderWidth > 0) textInsets + borderWidth else textInsets
 	private val stylePointer = colorPointer.mergeWith(enabledPointer) { (color, enabled) =>
-		TextDrawContext(font, if (enabled) color.defaultTextColor else color.textColorStandard.hintTextColor,
+		TextDrawContext(font, if (enabled) color.shade.defaultTextColor else color.shade.defaultHintTextColor,
 			alignment, actualTextInsets, betweenLinesMargin, allowLineBreaks)
 	}
 	

@@ -6,7 +6,7 @@ import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.shape.stack.{StackLength, StackSize}
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 
 /**
   * This test creates a simple stack and sees whether the components are positioned properly

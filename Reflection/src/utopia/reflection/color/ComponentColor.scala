@@ -4,6 +4,7 @@ import scala.language.implicitConversions
 import utopia.paradigm.color.Color
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 
+@deprecated("Replaced with Color", "v2.0")
 object ComponentColor
 {
 	// IMPLICIT 	--------------------------
@@ -39,6 +40,7 @@ object ComponentColor
  * @since 15.1.2020, v1
  * @param background The background color for target components
  */
+@deprecated("Replaced with Color", "v2.0")
 case class ComponentColor(background: Color)
 {
 	// ATTRIBUTES	--------------------------

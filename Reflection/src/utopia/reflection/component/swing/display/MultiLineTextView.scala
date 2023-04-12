@@ -1,25 +1,25 @@
 package utopia.reflection.component.swing.display
 
+import utopia.firmament.component.text.HasMutableTextDrawContext
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.reflection.component.template.text.HasMutableTextDrawContext
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
-import utopia.reflection.localization.{LocalString, LocalizedString}
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.{LocalString, LocalizedString}
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.Font
 
 object MultiLineTextView
 {
@@ -32,7 +32,7 @@ object MultiLineTextView
 	  * @return A new multi line text view
 	  */
 	def contextual(text: LocalizedString, lineSplitThreshold: Double, useLowPriorityForScalingSides: Boolean = false,
-	               isHint: Boolean = false)(implicit context: TextContextLike) =
+	               isHint: Boolean = false)(implicit context: TextContext) =
 		new MultiLineTextView(text, if (isHint) context.promptFont else context.font, lineSplitThreshold,
 		context.textInsets, context.betweenLinesMargin, useLowPriorityForScalingSides,
 		context.textAlignment, if (isHint) context.hintTextColor else context.textColor)

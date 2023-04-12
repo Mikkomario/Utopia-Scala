@@ -1,17 +1,16 @@
 package utopia.reach.container.wrapper
 
+import utopia.firmament.component.container.single.AlignFrameLike
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
 import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.container.stack.template.layout.AlignFrameLike2
-import utopia.paradigm.enumeration.Alignment
 
 object AlignFrame extends ContextInsertableComponentFactoryFactory[Any, AlignFrameFactory, ContextualAlignFrameFactory]
 {
@@ -31,7 +30,7 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 		new AlignFrameBuilder[FF](this, contentFactory)
 	
 	protected def makeBuilder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-		(background: ComponentColor, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
+		(background: Color, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
 		new ContextualFilledAlignFrameBuilder[NC, F](this, background, contentContext, contentFactory)
 	
 	
@@ -156,4 +155,4 @@ class ContextualFilledAlignFrameBuilder[NC, +F[X <: NC] <: ContextualComponentFa
  */
 class AlignFrame(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
                  override val alignment: Alignment, override val customDrawers: Vector[CustomDrawer] = Vector())
-	extends CustomDrawReachComponent with AlignFrameLike2[ReachComponentLike]
+	extends CustomDrawReachComponent with AlignFrameLike[ReachComponentLike]

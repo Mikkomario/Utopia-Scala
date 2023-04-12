@@ -1,5 +1,7 @@
 package utopia.reflection.component.swing.display
 
+import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.async.VolatileFlag
@@ -13,15 +15,12 @@ import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -36,12 +35,10 @@ object ProgressBar
 	  * @param animationContext Component creation context for animations (implicit)
 	  * @return A new progress bar
 	  */
-	def contextual(stackSize: StackSize, progressPointer: Changing[Double])(implicit context: ColorContextLike,
-	                                                                        animationContext: AnimationContextLike) =
-		new ProgressBar(animationContext.actorHandler, stackSize,
-			context.colorScheme.gray.forBackground(context.containerBackground),
-			context.colorScheme.secondary.forBackground(context.containerBackground), progressPointer,
-			animationContext.animationDuration)
+	def contextual(stackSize: StackSize, progressPointer: Changing[Double])(implicit context: ColorContext,
+	                                                                        animationContext: AnimationContext) =
+		new ProgressBar(animationContext.actorHandler, stackSize, context.color.gray, context.color.secondary,
+			progressPointer, animationContext.animationDuration)
 }
 
 /**

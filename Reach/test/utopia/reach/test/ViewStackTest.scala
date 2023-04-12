@@ -11,8 +11,8 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.localization.LocalString._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.localization.LocalString._
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -32,12 +32,13 @@ object ViewStackTest extends App
 	val canvas = ReachCanvas(cursors) { hierarchy =>
 		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.primary.light, ViewStack)
 			.apply(margins.medium.any.square) { stackF =>
-				stackF.mapContext { _.forTextComponents.expandingToRight }.build(TextLabel).withFixedStyle(X) { labelFactories =>
-					(1 to 9).map { i =>
-						labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->
-							numberPointer.map { _ >= i }
-					}.toVector
-				}
+				stackF.mapContext { _.forTextComponents.withTextExpandingToRight }.build(TextLabel)
+					.withFixedStyle(X) { labelFactories =>
+						(1 to 9).map { i =>
+							labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->
+								numberPointer.map { _ >= i }
+						}.toVector
+					}
 			}
 	}.parent
 	

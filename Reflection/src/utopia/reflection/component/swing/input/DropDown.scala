@@ -1,29 +1,30 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.context.TextContext
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.paradigm.shape.shape2d.Insets
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, BorderDrawer, TextDrawContext}
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.{ImageLabel, ItemLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape._
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.{Font, Prompt}
+import utopia.reflection.text.Prompt
 
 import scala.concurrent.ExecutionContext
 
@@ -59,17 +60,17 @@ object DropDown
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplayFunction: A => C)
-	(implicit context: ButtonContextLike, exc: ExecutionContext) =
+	(implicit context: TextContext, exc: ExecutionContext) =
 	{
 		// Determines background and focus colors
-		val backgroundColor = context.buttonColor
-		val highlightColor = context.buttonColorHighlighted
+		val backgroundColor = context.background
+		val highlightColor = backgroundColor.highlighted
 		
 		val dd = new DropDown[A, C](context.actorHandler, noResultsView, icon,
 			BackgroundDrawer(highlightColor, Normal), highlightColor, selectionPromptText,
 			context.font, context.textColor, displayFunction, context.textAlignment, context.textInsets,
 			context.textInsets.mapVertical { _.withLowPriority }, context.textColor,
-			context.borderWidth, context.relatedItemsStackMargin, displayStackLayout, contentPointer, valuePointer,
+			context.buttonBorderWidth, context.smallStackMargin, displayStackLayout, contentPointer, valuePointer,
 			!context.allowTextShrink, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
 			contentIsStateless)(makeDisplayFunction)
 		dd.background = backgroundColor
@@ -102,7 +103,7 @@ object DropDown
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
-	(implicit context: ButtonContextLike, exc: ExecutionContext) =
+	(implicit context: TextContext, exc: ExecutionContext) =
 	{
 		def makeDisplay(item: A) = ItemLabel.contextual(item, displayFunction)
 		contextual(noResultsView, icon, selectionPromptText, displayFunction, Fit, contentPointer,

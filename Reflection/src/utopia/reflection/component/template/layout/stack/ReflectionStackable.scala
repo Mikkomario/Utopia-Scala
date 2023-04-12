@@ -1,21 +1,22 @@
 package utopia.reflection.component.template.layout.stack
 
+import utopia.firmament.component.stack.Stackable
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D}
-import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
+import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
@@ -181,7 +182,7 @@ object ReflectionStackable
 		  * @param context Component creation context (implicit)
 		  * @return A copy of this component wrapped in a container that animates size changes
 		  */
-		def withAnimatedSize(implicit context: AnimationContextLike) =
+		def withAnimatedSize(implicit context: AnimationContext) =
 			AnimatedSizeContainer.contextual(s)
 		
 		/**
@@ -202,7 +203,7 @@ object ReflectionStackable
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-trait ReflectionStackable extends Stackable2 with ReflectionComponentLike
+trait ReflectionStackable extends Stackable with ReflectionComponentLike
 {
 	// ABSTRACT	---------------------
 	

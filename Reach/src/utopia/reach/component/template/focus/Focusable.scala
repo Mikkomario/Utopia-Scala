@@ -115,8 +115,7 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  * Connects this component to the focus manager while linked to the main component hierarchy. Detaches from
 	  * the focus manager while not linked.
 	  */
-	protected def enableFocusHandlingWhileLinked() =
-	{
+	protected def enableFocusHandlingWhileLinked() = {
 		// Updates registration based on link status
 		addHierarchyListener { isLinked =>
 			if (isLinked)

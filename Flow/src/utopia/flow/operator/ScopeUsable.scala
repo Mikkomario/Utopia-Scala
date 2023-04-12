@@ -5,7 +5,7 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 1.8.2022, v1.16
   */
-trait ScopeUsable[+Repr]
+trait ScopeUsable[+Repr] extends Any
 {
 	// ABSTRACT	----------------------------
 	

@@ -4,19 +4,20 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reflection.component.swing.input.Switch
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
+import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.shape.LengthExtensions._
+import utopia.genesis.text.FontStyle.Plain
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.enumeration.Direction2D
 import utopia.reflection.test.TestContext._
 
 /**
@@ -34,7 +35,7 @@ object SwitchTest extends App
 		TextLabel(s, basicFont,
 			insets = StackInsets.symmetric(8.any, 0.any))
 	}
-	labels.foreach { l => l.alignRight() }
+	labels.foreach { l => l.alignTo(Direction2D.Right) }
 
 	// Creates the switches
 	val actorHandler = ActorHandler()

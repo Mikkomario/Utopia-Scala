@@ -1,5 +1,7 @@
 package utopia.reach.component.input.text
 
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.generic.casting.ValueConversions._
@@ -9,7 +11,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
@@ -23,41 +25,37 @@ import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.template.focus.{FocusableWithState, MutableFocusableWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.template.input.InputWithPointer
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalString._
-import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localizer}
+import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.model.TextDrawContext
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.Duration
 
-object TextField extends ContextInsertableComponentFactoryFactory[TextContextLike,
+object TextField extends ContextInsertableComponentFactoryFactory[TextContext,
 	TextFieldFactory, ContextualTextFieldFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new TextFieldFactory(hierarchy)
 }
 
 class TextFieldFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualTextFieldFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualTextFieldFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualTextFieldFactory(parentHierarchy, context)
 }
 
-case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualTextFieldFactory]
+case class ContextualTextFieldFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualTextFieldFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	
 	private lazy val fontMetrics = parentHierarchy.fontMetricsWith(context.font)
 	
-	private implicit val c: TextContextLike = context
+	private implicit val c: TextContext = context
 	
 	
 	// IMPLICIT	------------------------------------
@@ -69,7 +67,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 	
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	
 	
 	// OTHER	------------------------------------
@@ -296,8 +294,8 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 		val maxString = maxValue.toString
 		val extraCharsString = String.valueOf(Vector.fill(extraMaxLength)('0'))
 		val maxLength = (minString.length max maxString.length) + extraMaxLength
-		val minStringWidth = widthOf(minString + extraCharsString)
-		val maxStringWidth = widthOf(maxString + extraCharsString)
+		val minStringWidth = widthOf(s"$minString$extraCharsString")
+		val maxStringWidth = widthOf(s"$maxString$extraCharsString")
 		val defaultWidth = StackLength(minStringWidth min maxStringWidth, minStringWidth max maxStringWidth)
 		
 		// May display min / max values as hints
@@ -375,7 +373,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
                    resultFilter: Option[Regex] = None, val maxLength: Option[Int] = None,
                    inputValidation: Option[A => InputValidationResult] = None, fillBackground: Boolean = true,
                    showCharacterCount: Boolean = false, lineBreaksEnabled: Boolean = false)
-				  (parseResult: Option[String] => A)(implicit context: TextContextLike)
+				  (parseResult: Option[String] => A)(implicit context: TextContext)
 	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with MutableFocusableWrapper
 		with FocusableWithState
 {
@@ -407,9 +405,10 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 			val hintTextPointer = validationResultPointer.mergeWith(hintPointer) { (validation, hint) =>
 				validation.message.nonEmptyOrElse(hint)
 			}
-			val colorPointer = validationResultPointer.mergeWith(highlightStylePointer) { (validation, default) =>
-				validation.highlighting.orElse(default)
-			}
+			val colorPointer: Changing[Option[ColorRole]] = validationResultPointer
+				.mergeWith(highlightStylePointer) { (validation, default) =>
+					validation.highlighting.orElse(default)
+				}
 			hintTextPointer -> colorPointer
 		// Case: Input validation is not used => Uses the pointers specified earlier
 		case None => hintPointer -> highlightStylePointer
@@ -433,16 +432,16 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		
 		val stylePointer = fc.textStylePointer.map { _.expandingHorizontally.withAllowLineBreaks(lineBreaksEnabled) }
 		val selectedBackgroundPointer = fc.backgroundPointer.mergeWith(selectionStylePointer) { (bg, c) =>
-			tc.colorScheme(c).forBackgroundPreferringLight(bg) }
-		val selectedTextColorPointer = selectedBackgroundPointer.map { _.defaultTextColor }
+			tc.colors(c).againstPreferringLight(bg) }
+		val selectedTextColorPointer = selectedBackgroundPointer.map { _.shade.defaultTextColor }
 		val caretColorPointer = fc.backgroundPointer.mergeWith(selectedBackgroundPointer, selectionStylePointer) { (mainBg, selectedBg, selectionStyle) =>
-			val palet = tc.colorScheme(selectionStyle)
+			val palet = tc.colors(selectionStyle)
 			val minimumContrast = Minimum.defaultMinimumContrast
 			// Attempts to find a color that works against both backgrounds (standard & selected)
-			val defaultOption = palet.bestAgainst(Vector(mainBg, selectedBg), minimumContrast)
+			val defaultOption = palet.againstMany(Vector(mainBg, selectedBg), minimumContrast = minimumContrast)
 			// However, if the default doesn't have enough contrast against the main background, finds an alternative
 			if (defaultOption.contrastAgainst(mainBg) < minimumContrast)
-				palet.forBackground(mainBg, minimumContrast): Color
+				palet.against(mainBg, minimumContrast = minimumContrast): Color
 			else
 				defaultOption: Color
 		}
@@ -461,7 +460,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 			maxLength.map { maxLength =>
 				implicit val localizer: Localizer = tc.localizer
 				val countStylePointer = fc.backgroundPointer.map { background =>
-					TextDrawContext(fc.font, background.textColorStandard.hintTextColor, Alignment.Right,
+					TextDrawContext(fc.font, background.shade.defaultHintTextColor, Alignment.Right,
 						tc.textInsets * hintScaleFactor)
 				}
 				val textLengthPointer = textContentPointer.map { _.length }

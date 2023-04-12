@@ -1,8 +1,16 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
+import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.text.Font
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -10,28 +18,20 @@ import utopia.reach.component.label.image.ViewImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
-import utopia.reflection.component.swing.button.ButtonImageSet
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object ViewImageAndTextButton extends ContextInsertableComponentFactoryFactory[ButtonContextLike,
+object ViewImageAndTextButton extends ContextInsertableComponentFactoryFactory[TextContext,
 	ViewImageAndTextButtonFactory, ContextualViewImageAndTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewImageAndTextButtonFactory(hierarchy)
 }
 
 class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ButtonContextLike, ContextualViewImageAndTextButtonFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualViewImageAndTextButtonFactory]
 {
-	override def withContext[N <: ButtonContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualViewImageAndTextButtonFactory(this, context)
 	
 	/**
@@ -62,7 +62,7 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
-	             colorPointer: Changing[ComponentColor], fontPointer: Changing[Font],
+	             colorPointer: Changing[Color], fontPointer: Changing[Font],
 	             enabledPointer: Changing[Boolean] = AlwaysTrue,
 	             imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
 	             textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
@@ -104,7 +104,7 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def withStaticText(text: LocalizedString, imagesPointer: Changing[ButtonImageSet],
-	                   colorPointer: Changing[ComponentColor], fontPointer: Changing[Font],
+	                   colorPointer: Changing[Color], fontPointer: Changing[Font],
 	                   enabledPointer: Changing[Boolean] = AlwaysTrue,
 	                   imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
 	                   textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
@@ -121,13 +121,13 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 			forceEqualBreadth) { _ => action }
 }
 
-case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](factory: ViewImageAndTextButtonFactory,
+case class ContextualViewImageAndTextButtonFactory[+N <: TextContext](factory: ViewImageAndTextButtonFactory,
 																			context: N )
-	extends ContextualComponentFactory[N, ButtonContextLike, ContextualViewImageAndTextButtonFactory]
+	extends ContextualComponentFactory[N, TextContext, ContextualViewImageAndTextButtonFactory]
 {
-	private implicit def c: ButtonContextLike = context
+	private implicit def c: TextContext = context
 	
-	override def withContext[N2 <: ButtonContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -152,7 +152,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withChangingStyle[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
-	                         colorPointer: Changing[ComponentColor] = Fixed(context.buttonColor),
+	                         colorPointer: Changing[Color] = Fixed(context.background),
 	                         fontPointer: Changing[Font] = Fixed(context.font),
 	                         enabledPointer: Changing[Boolean] = AlwaysTrue,
 	                         imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
@@ -164,7 +164,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	                         useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
 							(action: A => Unit) =
 		factory[A](contentPointer, imagesPointer, colorPointer, fontPointer, enabledPointer, imageInsetsPointer,
-			textInsetsPointer, commonInsetsPointer, context.borderWidth, context.textAlignment, displayFunction,
+			textInsetsPointer, commonInsetsPointer, context.buttonBorderWidth, context.textAlignment, displayFunction,
 			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers, additionalFocusListeners,
 			context.allowLineBreaks, context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize,
 			forceEqualBreadth)(action)
@@ -218,7 +218,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	                additionalDrawers: Vector[CustomDrawer] = Vector(),
 	                additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 	                forceEqualBreadth: Boolean = false)(action: A => Unit) =
-		apply[A](contentPointer, iconPointer.map { _.inButton }, enabledPointer, displayFunction, hotKeys,
+		apply[A](contentPointer, iconPointer.map { _.inButton.contextual }, enabledPointer, displayFunction, hotKeys,
 			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize,
 			forceEqualBreadth)(action)
 	
@@ -264,7 +264,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	                          additionalFocusListeners: Seq[FocusListener] = Vector(),
 	                          useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
 							 (action: => Unit) =
-		withStaticText(text, Fixed(icon.inButton), enabledPointer, hotKeys, additionalDrawers,
+		withStaticText(text, Fixed(icon.inButton.contextual), enabledPointer, hotKeys, additionalDrawers,
 			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
 }
 
@@ -274,7 +274,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
   * @since 10.11.2020, v0.1
   */
 class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A],
-                                imagesPointer: Changing[ButtonImageSet], colorPointer: Changing[ComponentColor],
+                                imagesPointer: Changing[ButtonImageSet], colorPointer: Changing[Color],
                                 fontPointer: Changing[Font],
                                 enabledPointer: Changing[Boolean] = AlwaysTrue,
                                 imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
@@ -292,14 +292,13 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
-	override val statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
-		state.copy(isEnabled = enabled) }
+	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	override val statePointer = baseStatePointer
+		.mergeWith(enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	override val focusId = hashCode()
 	
-	override protected val wrapped =
-	{
+	override protected val wrapped = {
 		val actualImageInsetsPointer = imageInsetsPointer.mergeWith(commonInsetsPointer) { (imageInsets, commonInsets) =>
 			imageInsets + commonInsets.withoutSides(alignment.opposite.directions) + borderWidth
 		}
@@ -307,7 +306,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 			textInsets + commonInsets.withoutSides(alignment.directions) + borderWidth
 		}
 		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
-		val textColorPointer = colorPointer.map { _.defaultTextColor }
+		val textColorPointer = colorPointer.map { _.shade.defaultTextColor }
 		new ViewImageAndTextLabel[A](parentHierarchy, contentPointer, imagePointer, fontPointer, textColorPointer,
 			actualImageInsetsPointer, actualTextInsetsPointer, alignment, displayFunction, betweenLinesMargin,
 			ButtonBackgroundViewDrawer(colorPointer.map { c => c }, statePointer, borderWidth) +: additionalDrawers,

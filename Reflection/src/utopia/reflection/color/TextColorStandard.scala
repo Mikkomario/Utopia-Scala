@@ -7,6 +7,7 @@ import utopia.paradigm.color.Color
  * @author Mikko Hilpinen
  * @since 15.1.2020, v1
  */
+@deprecated("Replaced with ColorShade in Paradigm", "v2.0")
 trait TextColorStandard
 {
 	/**
@@ -20,11 +21,13 @@ trait TextColorStandard
 	def hintTextColor: Color = defaultTextColor.timesAlpha(0.625)
 }
 
+@deprecated("Replaced with ColorShade in Paradigm", "v2.0")
 object TextColorStandard
 {
 	/**
 	 * Standard used when text needs to be dark (displayed on light background)
 	 */
+	@deprecated("Replaced with ColorShade.Light in Paradigm", "v2.0")
 	case object Dark extends TextColorStandard
 	{
 		override def defaultTextColor = Color.textBlack
@@ -33,6 +36,7 @@ object TextColorStandard
 	/**
 	 * Standard used when text needs to be light (displayed on dark background)
 	 */
+	@deprecated("Replaced with ColorShade.Dark in Paradigm", "v2.0")
 	case object Light extends TextColorStandard
 	{
 		override def defaultTextColor = Color.textWhite

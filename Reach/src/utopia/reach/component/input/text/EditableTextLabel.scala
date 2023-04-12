@@ -1,5 +1,8 @@
 package utopia.reach.component.input.text
 
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.drawing.mutable.MutableCustomDrawable
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -10,19 +13,15 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, KeyTypedHandlerType, KeyTypedListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.ColorShade.Light
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.AbstractSelectableTextLabel
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.color.ColorShade.Light
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.localization.LocalString._
-import utopia.reflection.util.ComponentCreationDefaults
+import utopia.firmament.localization.LocalString._
 
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
@@ -30,18 +29,18 @@ import java.awt.event.KeyEvent
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-object EditableTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, EditableTextLabelFactory,
+object EditableTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, EditableTextLabelFactory,
 	ContextualEditableTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new EditableTextLabelFactory(hierarchy)
 }
 
 class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualEditableTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualEditableTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualEditableTextLabelFactory(this, context)
 	
 	
@@ -80,10 +79,10 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowTextShrink)
 }
 
-case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: EditableTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualEditableTextLabelFactory]
+case class ContextualEditableTextLabelFactory[+N <: TextContext](factory: EditableTextLabelFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualEditableTextLabelFactory]
 {
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -103,11 +102,10 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 	          allowSelectionWhileDisabled: Boolean = true) =
 	{
-		val selectionBackground = context.color(Secondary, Light)
-		val caretColor = context.colorScheme.secondary.bestAgainst(
-			Vector(context.containerBackground, selectionBackground))
+		val selectionBackground = context.color.preferring(Light)(Secondary)
+		val caretColor = context.colors.secondary.againstMany(Vector(context.background, selectionBackground))
 		factory(context.actorHandler, Fixed(TextDrawContext.contextual(context)),
-			Fixed(selectionBackground.defaultTextColor), Fixed(Some(selectionBackground)),
+			Fixed(selectionBackground.shade.defaultTextColor), Fixed(Some(selectionBackground)),
 			Fixed(caretColor), (context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowTextShrink)
 	}
@@ -220,7 +218,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 				val replaceStartCharIndex = measuredText.caretIndexToCharacterIndex(selection.start)
 				val replaceEndCharIndex = measuredText.caretIndexToCharacterIndex(selection.end)
 				clearSelection()
-				textPointer.update { old => old.take(replaceStartCharIndex) + replaceText + old.drop(replaceEndCharIndex) }
+				textPointer.update { old => s"${ old.take(replaceStartCharIndex) }$replaceText${ old.drop(replaceEndCharIndex) }" }
 				caretIndex = selection.start + replaceText.length
 			case None =>
 				// May insert only part of the text, due to length limits
@@ -233,7 +231,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 				{
 					val (before, after) = textPointer.value.splitAt(caretIndex)
 					
-					textPointer.value = before + textToInsert + after
+					textPointer.value = s"$before$textToInsert$after"
 					// Moves the caret to the end of the inserted string
 					caretIndexPointer.update { _ + textToInsert.length }
 				}
@@ -255,7 +253,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 		if (index >= 0)
 			textPointer.update { old =>
 				if (index < old.length)
-					old.take(index) + old.drop(index + 1)
+					s"${ old.take(index) }${ old.drop(index + 1) }"
 				else
 					old
 			}
@@ -268,7 +266,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 			val replaceStartCharIndex = measuredText.caretIndexToCharacterIndex(selection.start)
 			val replaceEndCharIndex = selection.end min _text.length
 			clearSelection()
-			textPointer.update { old => old.take(replaceStartCharIndex) + old.drop(replaceEndCharIndex) }
+			textPointer.update { old => s"${ old.take(replaceStartCharIndex) }${ old.drop(replaceEndCharIndex) }" }
 		}
 	}
 	

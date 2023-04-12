@@ -1,49 +1,48 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.input.SelectableWithPointers
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.MouseButtonStateListener
+import utopia.genesis.text.Font
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.input.SelectableWithPointers
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
 
 import scala.collection.immutable.HashMap
 
 object TabSelection
 {
-	def contextual[A](displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialChoices: Seq[A] = Vector())
-								(implicit context: TextContextLike) =
+	def contextual[A](displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialChoices: Seq[A] = Vector(),
+	                  background: Option[Color] = None)
+	                 (implicit context: TextContext) =
 	{
-		val (background, isOpaque) = context match
-		{
-			case bc: ButtonContextLike => bc.buttonColor -> true
-			case _ => context.containerBackground -> false
+		val (bg, isOpaque, fieldContext) = background match {
+			case Some(bg) => (bg, true, context.against(bg))
+			case _ => (context.background, false, context)
 		}
 		
 		val yMargin = context.textInsets.vertical
-		val field = new TabSelection[A](context.font, context.colorScheme.secondary.forBackground(background),
-			context.textInsets.horizontal.optimal, yMargin, context.margins.small, displayFunction, initialChoices,
-			context.textColor)
+		val field = new TabSelection[A](fieldContext.font, fieldContext.color.secondary,
+			fieldContext.textInsets.horizontal.optimal, yMargin, fieldContext.margins.small, displayFunction,
+			initialChoices, fieldContext.textColor)
 		if (isOpaque)
-			field.background = background
+			field.background = bg
 		field
 	}
 	
@@ -55,9 +54,9 @@ object TabSelection
 	  * @tparam A Type of selected item
 	  * @return A new tab selection
 	  */
-	def contextualWithBackground[A](background: ComponentColor, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	def contextualWithBackground[A](background: Color, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 									initialChoices: Seq[A] = Vector())(implicit context: TextContext) =
-		contextual(displayFunction, initialChoices)(context.forCustomColorButtons(background))
+		contextual(displayFunction, initialChoices, Some(background))
 }
 
 /**
@@ -107,10 +106,8 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 	  * Changes component text color
 	  * @param newColor New text color to be used in this component
 	  */
-	def textColor_=(newColor: Color) =
-	{
-		if (_textColor != newColor)
-		{
+	def textColor_=(newColor: Color) = {
+		if (_textColor != newColor) {
 			_textColor = newColor
 			labels.values.foreach { _.textColor = newColor }
 		}

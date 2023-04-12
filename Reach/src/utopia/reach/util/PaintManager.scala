@@ -1,9 +1,9 @@
 package utopia.reach.util
 
 import utopia.genesis.graphics.Drawer
+import utopia.paradigm.color.ColorShade
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.util.Priority.Normal
-import utopia.reflection.color.ColorShadeVariant
 
 /**
   * A common trait for classes which manage and optimize component painting
@@ -51,7 +51,7 @@ trait PaintManager
 	  * @param area A sub-region of the painted / managed region
 	  * @return The average shade (dark or light) of the targeted area
 	  */
-	def averageShadeOf(area: Bounds): ColorShadeVariant
+	def averageShadeOf(area: Bounds): ColorShade
 	
 	
 	// OTHER	-------------------------------

@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.layout.wrapper
 
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.container.stack.template.layout.ReflectionAlignFrameLike

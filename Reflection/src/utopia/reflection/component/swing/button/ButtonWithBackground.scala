@@ -1,11 +1,10 @@
 package utopia.reflection.component.swing.button
 
+import utopia.firmament.drawing.mutable.MutableCustomDrawable
+import utopia.firmament.drawing.view.BorderViewDrawer
+import utopia.firmament.model.{Border, GuiElementStatus}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
-import utopia.reflection.component.drawing.view.BorderViewDrawer
-import utopia.reflection.event.ButtonState
-import utopia.reflection.shape.Border
 
 /**
   * An abstract implementation common to buttons that have a solid background and a border
@@ -21,8 +20,7 @@ abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends B
 	
 	// IMPLEMENTED  ------------------
 	
-	override protected def updateStyleForState(newState: ButtonState) =
-	{
+	override protected def updateStyleForState(newState: GuiElementStatus) = {
 		val newColor = newState.modify(color)
 		background = newColor
 		borderPointer.value = makeBorder(newColor)

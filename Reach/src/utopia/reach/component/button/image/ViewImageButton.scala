@@ -1,8 +1,15 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -10,28 +17,21 @@ import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
-import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.swing.button.ButtonImageSet
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.reflection.image.SingleColorIcon
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
-object ViewImageButton extends ContextInsertableComponentFactoryFactory[ColorContextLike, ViewImageButtonFactory,
+object ViewImageButton extends ContextInsertableComponentFactoryFactory[ColorContext, ViewImageButtonFactory,
 	ContextualViewImageButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewImageButtonFactory(hierarchy)
 }
 
 class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContextLike, ContextualViewImageButtonFactory]
+	extends ContextInsertableComponentFactory[ColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	---------------------------
 	
-	override def withContext[N <: ColorContextLike](context: N) =
+	override def withContext[N <: ColorContext](context: N) =
 		ContextualViewImageButtonFactory(this, context)
 	
 	
@@ -61,17 +61,17 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 			additionalDrawers, additionalFocusListeners, allowUpscaling, useLowPrioritySize)(action)
 }
 
-case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: ViewImageButtonFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContextLike, ContextualViewImageButtonFactory]
+case class ContextualViewImageButtonFactory[+N <: ColorContext](factory: ViewImageButtonFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLICIT	-----------------------------
 	
-	private implicit def c: ColorContextLike = context
+	private implicit def c: ColorContext = context
 	
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -95,7 +95,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	             hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 	             additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 				(action: => Unit) =
-		factory(iconPointer.map { _.asIndividualButton }, enabledPointer, insets, alignment, hotKeys,
+		factory(iconPointer.map { _.asButton.contextual }, enabledPointer, insets, alignment, hotKeys,
 			additionalDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 	
 	/**
@@ -115,14 +115,14 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  */
 	def withColouredIcon(iconPointer: Changing[SingleColorIcon], rolePointer: Changing[ColorRole],
 	                     enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                     preferredShade: ColorShade = Standard, insets: StackInsets = StackInsets.zero,
+	                     preferredShade: ColorLevel = Standard, insets: StackInsets = StackInsets.zero,
 	                     alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
 	                     additionalDrawers: Vector[CustomDrawer] = Vector(),
 	                     additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 						(action: => Unit) =
 	{
-		val colorPointer = rolePointer.map { context.color(_, preferredShade) }
-		val imagesPointer = iconPointer.mergeWith(colorPointer) { _.asIndividualButtonWithColor(_) }
+		val colorPointer = rolePointer.map { context.color.preferring(preferredShade)(_) }
+		val imagesPointer = iconPointer.mergeWith(colorPointer) { _.asButton(_) }
 		factory(imagesPointer, enabledPointer, insets, alignment, hotKeys, additionalDrawers,
 			additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 	}
@@ -143,10 +143,10 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
+	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
-	override val statePointer = baseStatePointer.mergeWith(enabledPointer) { (base, enabled) =>
-		base.copy(isEnabled = enabled) }
+	override val statePointer = baseStatePointer
+		.mergeWith(enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	override protected val wrapped = ViewImageLabel(parentHierarchy).withStaticLayout(
 		statePointer.mergeWith(imagesPointer) { (state, images) => images(state) }, insets, alignment,
 		additionalDrawers, allowUpscaling, useLowPrioritySize)
@@ -157,7 +157,7 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	  * A pointer to this button's current overall shade (based on the focused-state)
 	  */
 	val shadePointer = imagesPointer.lazyMap { images =>
-		ColorShadeVariant.forLuminosity(images.focusImage.pixels.averageLuminosity) }
+		ColorShade.forLuminosity(images.focusImage.pixels.averageLuminosity) }
 	
 	
 	// INITIAL CODE	-----------------------------

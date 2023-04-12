@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing
 
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.layout.stack.StackLeaf

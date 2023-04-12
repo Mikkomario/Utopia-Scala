@@ -8,7 +8,8 @@ import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -27,20 +28,20 @@ object ReachWithinReflectionTest extends App
 	val background = colorScheme.gray.light
 	
 	val canvas = ReachCanvas(cursors) { hierarchy =>
-		TextField(hierarchy).withContext(baseContext.inContextWithBackground(background).forTextComponents)
+		TextField(hierarchy).withContext(baseContext.against(background).forTextComponents)
 			.forString(320.any, fieldNamePointer = Fixed("Test Field"))
 	}
 	
-	val button = baseContext.inContextWithBackground(background).forTextComponents.forSecondaryColorButtons.use { implicit c =>
+	val button = baseContext.against(background).forTextComponents.withBackground(Secondary).use { implicit c =>
 		TextButton.contextual("OK") { canvas.child.clear() }
 	}
 	println(button.component.isFocusable)
 	
-	val mainContent = baseContext.inContextWithBackground(background).use { implicit c =>
+	val mainContent = baseContext.against(background).use { implicit c =>
 		Stack.buildRowWithContext() { s =>
 			s += canvas.parent
 			s += button
-		}.framed(margins.medium.any, c.containerBackground)
+		}.framed(margins.medium.any, c.background)
 	}
 	
 	val frame = Frame.windowed(mainContent, "Reach Reflection Test", Program)

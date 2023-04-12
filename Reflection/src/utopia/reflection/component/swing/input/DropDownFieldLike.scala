@@ -13,12 +13,12 @@ import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.template.input.SelectableWithPointers
+import utopia.firmament.component.input.SelectableWithPointers
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.model.enumeration.StackLayout
+import StackLayout.Fit
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel

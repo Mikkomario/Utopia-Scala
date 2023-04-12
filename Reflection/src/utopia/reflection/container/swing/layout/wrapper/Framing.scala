@@ -1,10 +1,9 @@
 package utopia.reflection.container.swing.layout.wrapper
 
+import utopia.firmament.context.BaseContextLike
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.color.Color
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.BackgroundSensitive
-import utopia.reflection.component.drawing.immutable.RoundedBackgroundDrawer
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.immutable.RoundedBackgroundDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -37,10 +36,10 @@ object Framing
 	  * @tparam Context1 Type of context outside this frame
 	  * @return A frame with background color and contents
 	  */
-	def fill[C <: AwtStackable, Context2, Context1 <: BackgroundSensitive[Context2]]
-	(insets: StackInsets, color: ComponentColor)(f: Context2 => C)(implicit context: Context1) =
+	def fill[C <: AwtStackable, Context2, Context1 <: BaseContextLike[_, Context2]]
+	(insets: StackInsets, color: Color)(f: Context2 => C)(implicit context: Context1) =
 	{
-		val newContext = context.inContextWithBackground(color)
+		val newContext = context.against(color)
 		val newComponent = f(newContext)
 		val framing = new Framing[C](newComponent, insets)
 		framing.background = color

@@ -1,25 +1,25 @@
 package utopia.reflection.container.swing.window.interaction
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.RowGroups
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.{Focusable, ReflectionComponentLike}
-import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenAnyKeyPressed
-import utopia.reflection.container.template.window.RowGroups
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.localization.LocalizedString
 
 import scala.concurrent.ExecutionContext
 
@@ -55,13 +55,13 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	/**
 	  * @return Component creation context for the field name labels.
 	  */
-	protected def fieldLabelContext: TextContextLike
+	protected def fieldLabelContext: TextContext
 	
 	/**
 	  * @return Component creation context for the missing or invalid value pop-up,
 	  *         includes the pop-up background color and text layout.
 	  */
-	protected def popupContext: TextContextLike
+	protected def popupContext: TextContext
 	
 	/**
 	  * @return Execution context for asynchronous tasks
@@ -115,12 +115,12 @@ trait InputWindow[+A] extends InteractionWindow[A]
 					// Creates the notification pop-up
 					val popup =
 					{
-						implicit val context: TextContextLike = popupContext
-						val dismissButton = ImageButton.contextualWithoutAction(closeIcon.asIndividualButton)
+						implicit val context: TextContext = popupContext
+						val dismissButton = ImageButton.contextualWithoutAction(closeIcon.asButton.contextual)
 						val popupContent = Stack.buildRowWithContext(layout = Center) { row =>
 							row += dismissButton
 							row += TextLabel.contextual(message)
-						}.framed(popupContext.margins.medium.any, popupContext.containerBackground)
+						}.framed(popupContext.margins.medium.any, popupContext.background)
 						val popup = Popup(component, popupContent, popupContext.actorHandler,
 							WhenAnyKeyPressed, Alignment.Left) { (cSize, pSize) =>
 							Point(cSize.width + popupContext.margins.medium, -(pSize.height - cSize.height) / 2) }
@@ -141,7 +141,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	
 	override protected def dialogContent =
 	{
-		implicit val context: TextContextLike = fieldLabelContext
+		implicit val context: TextContext = fieldLabelContext
 		
 		// Uses one segmented group for each row group group
 		val rows = fields.map { groups =>

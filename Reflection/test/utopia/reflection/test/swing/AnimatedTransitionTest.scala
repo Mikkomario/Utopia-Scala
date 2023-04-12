@@ -1,20 +1,19 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.model.Border
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process
-import utopia.flow.async.process.Delay
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.enumeration.Axis.Y
-import utopia.reflection.component.drawing.immutable.BorderDrawer
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.Border
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
 
 /**
   * Tests AnimatedTransition class
@@ -29,12 +28,12 @@ object AnimatedTransitionTest extends App
 	
 	import TestContext._
 	
-	val transitionWrapper = baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents
+	val transitionWrapper = baseContext.against(colorScheme.primary.light).forTextComponents
 		.withTextAlignment(Alignment.Center)
 		.use { implicit txc =>
 			// Creates the component to display
 			val originComponent = TextLabel.contextual("I'm Animated :)")
-			originComponent.addCustomDrawer(BorderDrawer(Border.square(2, txc.secondaryColor)))
+			originComponent.addCustomDrawer(BorderDrawer(Border.square(2, txc.color.secondary)))
 			originComponent.addResizeListener { e => println(s"Component size changed: $e") }
 			
 			// Creates the transition components

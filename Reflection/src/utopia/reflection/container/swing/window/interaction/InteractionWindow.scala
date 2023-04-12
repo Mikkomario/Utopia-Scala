@@ -1,20 +1,20 @@
 package utopia.reflection.container.swing.window.interaction
 
+import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.AsyncExtensions.RichFuture
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.CollectionExtensions._
-import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
+import utopia.flow.collection.mutable.VolatileList
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.LinearAlignment
+import utopia.paradigm.enumeration.LinearAlignment.Close
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{ImageAndTextButton, TextButton}
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.LinearAlignment
-import utopia.paradigm.enumeration.Axis.X
-import utopia.paradigm.enumeration.LinearAlignment.Close
-import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
@@ -37,14 +37,14 @@ trait InteractionWindow[+A]
 	/**
 	  * @return Context used when creating the dialog. Provided container background specifies the dialog background color.
 	  */
-	protected def standardContext: ColorContextLike
+	protected def standardContext: ColorContext
 	
 	/**
 	  * @param buttonColor The desired button color
 	  * @param hasIcon Whether the button uses an icon
 	  * @return Context used when creating the button
 	  */
-	protected def buttonContext(buttonColor: ButtonColor, hasIcon: Boolean): ButtonContextLike
+	protected def buttonContext(buttonColor: ButtonColor, hasIcon: Boolean): TextContext
 	
 	/**
 	  * Buttons that are displayed on this dialog. The first button is used as the default.
@@ -121,27 +121,27 @@ trait InteractionWindow[+A]
 		
 		// Creates the buttons based on button info
 		val actualizedButtons = buttonBlueprints.map { buttonData =>
-			implicit val btnC: ButtonContextLike = buttonContext(buttonData.color, buttonData.icon.isDefined)
+			implicit val btnC: TextContext = buttonContext(buttonData.color, buttonData.icon.isDefined)
 			val button = buttonData.icon match
 			{
-				case Some(icon) => ImageAndTextButton.contextualWithoutAction(icon.inButton, buttonData.text)
+				case Some(icon) => ImageAndTextButton.contextualWithoutAction(icon.inButton.contextual, buttonData.text)
 				case None => TextButton.contextualWithoutAction(buttonData.text)
 			}
 			buttonData -> button
 		}
 		// Places content in a stack
 		val content = {
-			implicit val baseC: ColorContextLike = context
+			implicit val baseC: ColorContext = context
 			Stack.buildColumnWithContext() { mainStack =>
 				// Some of the buttons may be placed before the dialog content, some after
 				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Close }
 				if (topButtons.nonEmpty)
-					mainStack += buttonRow(topButtons, context.defaultStackMargin.optimal)
+					mainStack += buttonRow(topButtons, context.stackMargin.optimal)
 				mainStack += dialogContent
 				if (bottomButtons.nonEmpty)
-					mainStack += buttonRow(bottomButtons, context.defaultStackMargin.optimal)
+					mainStack += buttonRow(bottomButtons, context.stackMargin.optimal)
 			}
-		}.framed(context.margins.medium.downscaling, context.containerBackground)
+		}.framed(context.margins.medium.downscaling, context.background)
 		
 		// Creates and sets up the dialog
 		val window = parentWindow match

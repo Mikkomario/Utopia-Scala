@@ -1,23 +1,22 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.context.TextContext
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.context.{ButtonContextLike, TextContextLike}
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, ImageDrawer}
+import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, ImageDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.{ItemLabel, ViewLabel}
 import utopia.reflection.component.swing.template.SwingComponentRelated
-import utopia.reflection.component.template.display.Refreshable
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 import scala.concurrent.ExecutionContext
@@ -52,12 +51,12 @@ object SearchFrom
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
-	(implicit context: TextContextLike, exc: ExecutionContext) =
+	(implicit context: TextContext, exc: ExecutionContext) =
 	{
 		val backgroundColor = searchField.background
-		val highlightColor = (backgroundColor: ComponentColor).highlighted
+		val highlightColor = backgroundColor.highlighted
 		val field = new SearchFrom[A, C](searchField, noResultsView, context.actorHandler,
-			BackgroundDrawer(highlightColor, Normal), context.relatedItemsStackMargin, displayStackLayout, searchIcon,
+			BackgroundDrawer(highlightColor, Normal), context.smallStackMargin, displayStackLayout, searchIcon,
 			context.textInsets, contentPointer, selectedValuePointer, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
 			contentIsStateless)(makeDisplay)(itemToSearchString)
 		field.background = backgroundColor
@@ -94,7 +93,7 @@ object SearchFrom
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeNoResultsView: Changing[String] => AwtStackable)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
-	(implicit context: ButtonContextLike, exc: ExecutionContext) =
+	(implicit context: TextContext, exc: ExecutionContext) =
 	{
 		val searchField = TextField.contextualForStrings(standardWidth, prompt = selectionPrompt)
 		wrapFieldWithContext(searchField, makeNoResultsView(searchField.valuePointer), displayStackLayout, searchIcon,
@@ -131,7 +130,7 @@ object SearchFrom
 								  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
 								  contentIsStateless: Boolean = true)
 								 (makeNoResultsView: Changing[String] => AwtStackable)
-								 (implicit context: ButtonContextLike, exc: ExecutionContext) =
+								 (implicit context: TextContext, exc: ExecutionContext) =
 	{
 		def makeField(item: A) = ItemLabel.contextual(item, displayFunction)
 		def itemToSearchString(item: A) = displayFunction(item).string
@@ -151,7 +150,7 @@ object SearchFrom
 	  * @return New label that adjusts itself based on changes in the search filter
 	  */
 	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[String])
-					  (implicit context: TextContextLike) =
+					  (implicit context: TextContext) =
 		ViewLabel.contextual(searchStringPointer,
 			new DisplayFunction[String](s => noResultsText.interpolated(Vector(s))))
 }

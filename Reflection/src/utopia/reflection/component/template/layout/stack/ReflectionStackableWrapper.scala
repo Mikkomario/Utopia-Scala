@@ -1,5 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
+import utopia.firmament.component.stack.StackableWrapper
 import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.event.StackHierarchyListener
 
@@ -8,7 +9,7 @@ import utopia.reflection.event.StackHierarchyListener
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-trait ReflectionStackableWrapper extends StackableWrapper2 with ReflectionStackable with ReflectionComponentWrapper
+trait ReflectionStackableWrapper extends StackableWrapper with ReflectionStackable with ReflectionComponentWrapper
 {
 	// ABSTRACT	---------------------
 	

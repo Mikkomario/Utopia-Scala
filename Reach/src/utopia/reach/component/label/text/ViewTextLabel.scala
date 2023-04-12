@@ -2,25 +2,25 @@ package utopia.reach.component.label.text
 
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
+import utopia.genesis.text.Font
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.TextViewDrawer
-import utopia.reflection.component.template.display.PoolWithPointer
-import utopia.reflection.component.template.text.TextComponent2
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.drawing.view.TextViewDrawer
+import utopia.firmament.component.display.PoolWithPointer
+import utopia.firmament.model.TextDrawContext
+import utopia.firmament.component.text.TextComponent
+import utopia.firmament.context.TextContext
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.util.Priority
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, ViewTextLabelFactory,
+object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, ViewTextLabelFactory,
 	ContextualViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextLabelFactory(hierarchy)
@@ -31,11 +31,11 @@ object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContex
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualViewTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualViewTextLabelFactory(this, context)
 	
 	
@@ -116,56 +116,9 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			betweenLinesMargin, additionalDrawers, allowLineBreaks, allowTextShrink)
 }
 
-object ContextualViewTextLabelFactory
-{
-	// EXTENSIONS	-----------------------------
-	
-	implicit class ColorChangingViewTextLabelFactory[N <: TextContextLike with BackgroundSensitive[TextContextLike]]
-	(val f: ContextualViewTextLabelFactory[N]) extends AnyVal
-	{
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param contentPointer Pointer that is reflected on this label
-		  * @param background Label background color
-		  * @param displayFunction Function used when converting content to text (default = toString)
-		  * @param isHintPointer A pointer that that contains true when this label should be considered a hint
-		  *                      (drawn with lesser opacity). Default = always false.
-		  * @param customDrawers Additional custom drawing (default = empty)
-		  * @return A new label
-		  */
-		def withCustomBackground[A](contentPointer: Changing[A], background: ComponentColor,
-		                            displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-		                            isHintPointer: Changing[Boolean] = AlwaysFalse,
-		                            customDrawers: Seq[CustomDrawer] = Vector()) =
-		{
-			f.mapContext { _.inContextWithBackground(background) }(contentPointer, displayFunction, isHintPointer,
-				BackgroundDrawer(background) +: customDrawers)
-		}
-		
-		/**
-		  * Creates a new text label with solid background utilizing contextual information
-		  * @param contentPointer Pointer that is reflected on this label
-		  * @param role Label background color role
-		  * @param preferredShade Preferred color shade (default = standard)
-		  * @param displayFunction Function used when converting content to text (default = toString)
-		  * @param isHintPointer A pointer that that contains true when this label should be considered a hint
-		  *                      (drawn with lesser opacity). Default = always false.
-		  * @param customDrawers Additional custom drawing (default = empty)
-		  * @return A new label
-		  */
-		def withBackground[A](contentPointer: Changing[A], role: ColorRole,
-		                      displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-		                      preferredShade: ColorShade = Standard,
-		                      isHintPointer: Changing[Boolean] = AlwaysFalse,
-		                      customDrawers: Seq[CustomDrawer] = Vector()) =
-			withCustomBackground(contentPointer, f.context.color(role, preferredShade), displayFunction,
-				isHintPointer, customDrawers)
-	}
-}
-
-case class ContextualViewTextLabelFactory[+N <: TextContextLike]
+case class ContextualViewTextLabelFactory[+N <: TextContext]
 (factory: ViewTextLabelFactory, override val context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualViewTextLabelFactory]
+	extends ContextualComponentFactory[N, TextContext, ContextualViewTextLabelFactory]
 {
 	// COMPUTED ---------------------------------
 	
@@ -177,7 +130,7 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		ContextualViewTextLabelFactory(factory, newContext)
 	
 	
@@ -211,6 +164,44 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	def forText(contentPointer: Changing[LocalizedString], isHintPointer: Changing[Boolean] = AlwaysFalse,
 	            customDrawers: Seq[CustomDrawer] = Vector()) =
 		apply[LocalizedString](contentPointer, DisplayFunction.identity, isHintPointer, customDrawers)
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param contentPointer  Pointer that is reflected on this label
+	  * @param background      Label background color
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHintPointer   A pointer that that contains true when this label should be considered a hint
+	  *                        (drawn with lesser opacity). Default = always false.
+	  * @param customDrawers   Additional custom drawing (default = empty)
+	  * @return A new label
+	  */
+	def withCustomBackground[A](contentPointer: Changing[A], background: Color,
+	                            displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                            isHintPointer: Changing[Boolean] = AlwaysFalse,
+	                            customDrawers: Seq[CustomDrawer] = Vector()) =
+	{
+		mapContext { _.against(background) }(contentPointer, displayFunction, isHintPointer,
+			BackgroundDrawer(background) +: customDrawers)
+	}
+	
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param contentPointer  Pointer that is reflected on this label
+	  * @param role            Label background color role
+	  * @param preferredShade  Preferred color shade (default = standard)
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHintPointer   A pointer that that contains true when this label should be considered a hint
+	  *                        (drawn with lesser opacity). Default = always false.
+	  * @param customDrawers   Additional custom drawing (default = empty)
+	  * @return A new label
+	  */
+	def withBackground[A](contentPointer: Changing[A], role: ColorRole,
+	                      displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                      preferredShade: ColorLevel = Standard,
+	                      isHintPointer: Changing[Boolean] = AlwaysFalse,
+	                      customDrawers: Seq[CustomDrawer] = Vector()) =
+		withCustomBackground(contentPointer, context.color.preferring(preferredShade)(role), displayFunction,
+			isHintPointer, customDrawers)
 }
 
 /**
@@ -222,7 +213,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
                         stylePointer: Changing[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
                         additionalDrawers: Seq[CustomDrawer] = Vector(),
                         override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with TextComponent2 with PoolWithPointer[A, Changing[A]]
+	extends CustomDrawReachComponent with TextComponent with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
 	

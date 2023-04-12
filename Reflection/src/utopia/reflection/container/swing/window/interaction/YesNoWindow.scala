@@ -1,10 +1,10 @@
 package utopia.reflection.container.swing.window.interaction
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
 import utopia.genesis.util.Screen
-import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
 import utopia.reflection.component.swing.display.MultiLineTextView
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.{LocalizedString, Localizer}
+import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 
@@ -26,7 +26,8 @@ object YesNoWindow
 	{
 		val buttonTextAlign = if (icons.isEmpty) Center else Alignment.Left
 		new YesNoWindow(textContext, title, question, icons, colors, defaultResult)({ (color, _) =>
-			textContext.withTextAlignment(buttonTextAlign).forButtons(color) })
+			textContext.withTextAlignment(buttonTextAlign)/color.toColor(textContext)
+		})
 	}
 }
 
@@ -44,12 +45,12 @@ object YesNoWindow
   *                         whether the button shall have an icon.
   */
 // TODO: Could utilize UncertainBoolean
-class YesNoWindow(override val standardContext: TextContextLike, override val title: LocalizedString,
+class YesNoWindow(override val standardContext: TextContext, override val title: LocalizedString,
                   val question: LocalizedString, icons: Map[Boolean, SingleColorIcon] = Map(),
                   colors: Map[Boolean, ButtonColor] = Map(), override val defaultResult: Boolean = false)
-                 (getButtonContext: (ButtonColor, Boolean) => ButtonContextLike) extends InteractionWindow[Boolean]
+                 (getButtonContext: (ButtonColor, Boolean) => TextContext) extends InteractionWindow[Boolean]
 {
-	private implicit val context: TextContextLike = standardContext
+	private implicit val context: TextContext = standardContext
 	private implicit val languageCode: String = "en"
 	private implicit val localizer: Localizer = standardContext.localizer
 	

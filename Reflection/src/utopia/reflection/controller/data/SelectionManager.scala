@@ -4,8 +4,9 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.reflection.component.template.input.SelectableWithPointers
-import utopia.reflection.component.template.display.Refreshable
+import utopia.firmament.component.input.SelectableWithPointers
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.controller.data.ContentManager
 
 /**
   * This manager handles displayed content AND selection

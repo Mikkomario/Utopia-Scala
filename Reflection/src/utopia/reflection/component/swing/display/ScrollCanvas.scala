@@ -1,5 +1,7 @@
 package utopia.reflection.component.swing.display
 
+import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
@@ -12,8 +14,6 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.context.ScrollingContextLike
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.swing.template._
@@ -23,7 +23,6 @@ import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.shape.stack.modifier.MaxOptimalSizeModifier
-import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 
@@ -42,7 +41,7 @@ object ScrollCanvas
 	  */
 	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler, contentMouseButtonHandler: MouseButtonStateHandler,
 	               contentMouseMoveHandler: MouseMoveHandler, contentMouseWheelHandler: MouseWheelHandler,
-	               maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContextLike) =
+	               maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContext) =
 	{
 		new ScrollCanvas(originalWorldSize, drawHandler, context.actorHandler, contentMouseButtonHandler,
 			contentMouseMoveHandler, contentMouseWheelHandler, maxOptimalSize, context.scrollBarDrawer,

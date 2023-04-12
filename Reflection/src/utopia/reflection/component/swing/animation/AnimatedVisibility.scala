@@ -1,11 +1,12 @@
 package utopia.reflection.component.swing.animation
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.mutable.async.Volatile
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.swing.AwtContainerRelated
@@ -14,7 +15,6 @@ import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.{AwtEventThread, ComponentCreationDefaults}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,7 +33,7 @@ object AnimatedVisibility
 	  */
 	def contextual[C <: AwtStackable](display: C, transitionAxis: Option[Axis2D] = None,
 									  initialState: VisibilityState = Invisible)
-	                                 (implicit context: AnimationContextLike, exc: ExecutionContext) =
+	                                 (implicit context: AnimationContext, exc: ExecutionContext) =
 		new AnimatedVisibility[C](display, context.actorHandler, transitionAxis, initialState, context.animationDuration,
 			context.maxAnimationRefreshRate, context.useFadingInAnimations)
 }

@@ -4,6 +4,7 @@ import utopia.paradigm.color.Rgb
 import utopia.reflection.color.ColorRole.{Error, Gray, Info, Primary, Secondary, Success, Tertiary, Warning}
 import utopia.reflection.color.ColorScheme.{defaultError, defaultSuccess, defaultWarning}
 
+@deprecated("Moved to Paradigm", "v2.0")
 object ColorScheme
 {
 	// ATTRIBUTES	-----------------------------
@@ -11,8 +12,7 @@ object ColorScheme
 	/**
 	  * Default shade of gray to use in light themed uis
 	  */
-	// FIXME: Dark == default
-	val defaultLightGray = ColorSet(Rgb.grayWithValue(225), Rgb.grayWithValue(245), Rgb.grayWithValue(225))
+	val defaultLightGray = ColorSet(Rgb.grayWithValue(225), Rgb.grayWithValue(245), Rgb.grayWithValue(200))
 	/**
 	  * Default shade of gray to use in dark themed uis
 	  */
@@ -73,6 +73,7 @@ object ColorScheme
   * @param additional Additional colors used [Color role -> Color set]
   *                   (default = only error, warning and success colors specified)
   */
+@deprecated("Moved to Paradigm", "v2.0")
 case class ColorScheme(primary: ColorSet, gray: ColorSet = ColorScheme.defaultLightGray,
 					   additional: Map[AdditionalColorRole, ColorSet] =
 					   Map(Error -> defaultError, Success -> defaultSuccess, Warning -> defaultWarning))

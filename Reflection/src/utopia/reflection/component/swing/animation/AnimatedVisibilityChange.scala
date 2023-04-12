@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.animation
 
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.genesis.util.Fps
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.enumeration.Axis2D
@@ -14,7 +15,7 @@ import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.{ComponentCreationDefaults, ComponentToImage}
+import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -34,7 +35,7 @@ object AnimatedVisibilityChange
 	  */
 	def contextual(original: AwtComponentRelated with ReflectionStackable, transitionAxis: Option[Axis2D] = None,
 	               transition: VisibilityChange = Appearing, finalSize: Option[Size] = None)
-				  (implicit context: AnimationContextLike) =
+				  (implicit context: AnimationContext) =
 	{
 		new AnimatedVisibilityChange(original, transitionAxis, transition, context.animationDuration,
 			finalSize, context.maxAnimationRefreshRate, context.useFadingInAnimations)

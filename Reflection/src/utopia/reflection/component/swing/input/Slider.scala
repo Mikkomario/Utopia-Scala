@@ -1,5 +1,10 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.Sign
@@ -17,18 +22,13 @@ import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.path.{ProjectilePath, SegmentedPath}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
-import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.component.template.layout.stack.StackLeaf
-import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.util.ComponentCreationDefaults
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -57,7 +57,7 @@ object Slider
 	                  knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
 	                  stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
 	                  leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
-	                 (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                 (implicit context: BaseContext, animationContext: AnimationContext) =
 	{
 		val slider = new Slider(range, context.margins.large, targetWidth, leftColor, rightColor, knobColor,
 			colorVariationIntensity, stickyPoints, arrowMovement, leftHeightModifier, rightHeightModifier,
@@ -84,7 +84,7 @@ object Slider
 	def contextualSingleColor[A](range: AnyAnimation[A], targetWidth: StackLength, color: Color,
 	                             colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                             arrowMovement: Double = 0.1, initialValue: Double = 0.0)
-	                            (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                            (implicit context: BaseContext, animationContext: AnimationContext) =
 		contextual(range, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
 			colorVariationIntensity, stickyPoints, arrowMovement, 1.5, initialValue = initialValue)
 	
@@ -106,7 +106,7 @@ object Slider
 	def contextualDualColor[A](range: AnyAnimation[A], targetWidth: StackLength, lessColor: Color, moreColor: Color,
 	                           colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                           arrowMovement: Double = 0.1, initialValue: Double = 0.0)
-	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                          (implicit context: BaseContext, animationContext: AnimationContext) =
 		contextual(range, targetWidth, moreColor, lessColor, dualColorAnimation(lessColor, moreColor),
 			colorVariationIntensity, stickyPoints, arrowMovement, 1.25, 1.25,
 			initialValue = initialValue)
@@ -128,7 +128,7 @@ object Slider
 	def contextualSingleColorKnot[A](range: AnyAnimation[A], targetWidth: StackLength, color: Color,
 	                                 colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                                 arrowMovement: Double = 0.1, initialValue: Double = 0.0)
-	                                (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                                (implicit context: BaseContext, animationContext: AnimationContext) =
 	{
 		val backgroundColor = color.timesAlpha(0.38)
 		contextual(range, targetWidth, backgroundColor, backgroundColor, Animation.fixed(color),
@@ -155,7 +155,7 @@ object Slider
 	def contextualSelection[A](options: Seq[A], targetWidth: StackLength, leftColor: Color,
 	                           rightColor: Color, knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
 	                           leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0)
-	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                          (implicit context: BaseContext, animationContext: AnimationContext) =
 	{
 		val range = SegmentedPath(options)
 		contextual(range, targetWidth, leftColor, rightColor, knobColor, colorVariationIntensity,
@@ -179,7 +179,7 @@ object Slider
 	@throws[IllegalArgumentException]
 	def contextualSingleColorSelection[A](options: Seq[A], targetWidth: StackLength, color: Color,
 	                                      colorVariationIntensity: Double = 1.0)
-	                                     (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                                     (implicit context: BaseContext, animationContext: AnimationContext) =
 		contextualSelection(options, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
 			colorVariationIntensity, 1.5)
 	
@@ -200,7 +200,7 @@ object Slider
 	@throws[IllegalArgumentException]
 	def contextualDualColorSelection[A](options: Seq[A], targetWidth: StackLength, lessColor: Color,
 	                           moreColor: Color, colorVariationIntensity: Double = 1.0)
-	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                          (implicit context: BaseContext, animationContext: AnimationContext) =
 		contextualSelection(options, targetWidth, moreColor, lessColor, dualColorAnimation(lessColor, moreColor),
 			colorVariationIntensity, 1.25, 1.25)
 	
@@ -220,7 +220,7 @@ object Slider
 	@throws[IllegalArgumentException]
 	def contextualSingleColorKnotSelection[A](options: Seq[A], targetWidth: StackLength, color: Color,
 	                                          colorVariationIntensity: Double = 1.0)
-	                                         (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	                                         (implicit context: BaseContext, animationContext: AnimationContext) =
 	{
 		val backgroundColor = color.timesAlpha(0.38)
 		contextualSelection(options, targetWidth, backgroundColor, backgroundColor, Animation.fixed(color),
@@ -275,7 +275,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	private val defaultRepainter = ChangeListener.continuousOnAnyChange { repaint() }
 	private var animator: Option[Animator] = None
 	
-	private var _state = ButtonState.default
+	private var _state = GuiElementStatus.identity
 	
 	
 	// INITIAL CODE -------------------------
@@ -312,37 +312,37 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	}
 	
 	def state = _state
-	private def state_=(newState: ButtonState) =
-	{
-		if (_state != newState)
-		{
+	private def state_=(newState: GuiElementStatus) = {
+		if (_state != newState) {
 			_state = newState
 			repaint()
 		}
 	}
 	
-	def enabled = state.isEnabled
+	def enabled = state isNot Disabled
 	def enabled_=(newState: Boolean) = {
-		state = state.copy(isEnabled = newState)
-		if (newState)
+		if (newState) {
+			state -= Disabled
 			setHandCursor()
-		else
+		}
+		else {
+			state += Disabled
 			setArrowCursor()
+		}
 	}
 	
-	def pressed = state.isPressed
-	private def pressed_=(newStatus: Boolean) = state = state.copy(isPressed = newStatus)
+	def pressed = state is Activated
+	private def pressed_=(newStatus: Boolean) = {
+		if (newStatus)
+			state += Activated
+		else
+			state -= Activated
+	}
 	def notPressed = !pressed
-	
-	private def colorChangeIterations =
-	{
-		val base = if (pressed) 2 else if (state.isMouseOver) 1 else 0
-		if (state.isInFocus) base + 1 else base
-	}
 	
 	private def currentKnobColor = {
 		val base = knobColor(doubleValue)
-		val changes = colorChangeIterations
+		val changes = state.intensity
 		val changed = if (changes > 0) base.highlightedBy(changes) else base
 		if (enabled)
 			changed
@@ -400,7 +400,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	  * Enables smooth animations in this component
 	  * @param context Component animation context (implicit)
 	  */
-	def enableAnimations()(implicit context: AnimationContextLike): Unit =
+	def enableAnimations()(implicit context: AnimationContext): Unit =
 		enableAnimations(context.actorHandler, animationDuration = context.animationDuration)
 	
 	/**
@@ -550,13 +550,12 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	private object MouseOverListener extends MouseMoveListener
 	{
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
+		override def onMouseMove(event: MouseMoveEvent) = {
 			val b = bounds
 			if (event.enteredArea(b))
-				state = state.copy(isMouseOver = true)
+				state += Hover
 			else if (event.exitedArea(b))
-				state = state.copy(isMouseOver = false)
+				state -= Hover
 		}
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
@@ -602,8 +601,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	private object ComponentFocusListener extends FocusListener
 	{
-		override def focusGained(e: FocusEvent) = state = state.copy(isInFocus = true)
-		
-		override def focusLost(e: FocusEvent) = state = state.copy(isInFocus = false)
+		override def focusGained(e: FocusEvent) = state += Focused
+		override def focusLost(e: FocusEvent) = state -= Focused
 	}
 }

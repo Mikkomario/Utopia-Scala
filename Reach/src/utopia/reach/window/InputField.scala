@@ -3,8 +3,8 @@ package utopia.reach.window
 import utopia.flow.generic.model.immutable.Value
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.focus.FocusRequestable
-import utopia.reflection.component.template.input.Input
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.component.input.Input
+import utopia.firmament.localization.LocalizedString
 
 import scala.language.implicitConversions
 

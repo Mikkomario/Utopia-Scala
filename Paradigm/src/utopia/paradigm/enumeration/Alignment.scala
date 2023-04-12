@@ -1,12 +1,11 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
 
 import javax.swing.SwingConstants
 import scala.collection.immutable.HashMap
@@ -16,18 +15,9 @@ import scala.collection.immutable.HashMap
   * @author Mikko Hilpinen
   * @since Genesis 22.4.2019
   */
-sealed trait Alignment extends HasDimensions[LinearAlignment]
+sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 {
 	// ABSTRACT	----------------
-	
-	/**
-	  * @return The horizontal component of this alignment (where the positive direction is right)
-	  */
-	def horizontal: LinearAlignment
-	/**
-	  * @return The vertical component of this alignment (where the positive direction is down)
-	  */
-	def vertical: LinearAlignment
 	
 	/**
 	  * @return The opposite for this alignment, if there is one
@@ -41,6 +31,15 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	
 	
 	// COMPUTED	----------------
+	
+	/**
+	  * @return The horizontal component of this alignment (where the positive direction is right)
+	  */
+	def horizontal: LinearAlignment = x
+	/**
+	  * @return The vertical component of this alignment (where the positive direction is down)
+	  */
+	def vertical: LinearAlignment = y
 	
 	/**
 	  * @return Whether this alignment moves items to the top
@@ -126,11 +125,9 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	
 	// IMPLEMENTED  ------------
 	
-	override def dimensions =
-		Dimensions[LinearAlignment](Middle)(Pair(horizontal, vertical))
+	override def self: Alignment = this
 	
-	override def x = horizontal
-	override def y = vertical
+	override def withDimensions(newDimensions: Dimensions[LinearAlignment]): Alignment = Alignment(newDimensions)
 	
 	
 	// OTHER	----------------
@@ -243,8 +240,149 @@ sealed trait Alignment extends HasDimensions[LinearAlignment]
 	}
 }
 
-object Alignment
+object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 {
+	// ATTRIBUTES	--------------------
+	
+	/**
+	  * All possible values for Alignment
+	  */
+	val values = Vector(Left, Right, Top, Bottom, Center, TopLeft, TopRight, BottomLeft, BottomRight)
+	
+	/**
+	  * All horizontally supported values
+	  */
+	val horizontal = Vector(Left, Center, Right)
+	/**
+	  * All vertically supported values
+	  */
+	val vertical = Vector(Top, Center, Bottom)
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def zeroDimension = Middle
+	
+	override def apply(dimensions: Dimensions[LinearAlignment]): Alignment = _apply(dimensions.x, dimensions.y)
+	
+	override def from(other: HasDimensions[LinearAlignment]): Alignment = other match {
+		case a: Alignment => a
+		case _ => _apply(other.x, other.y)
+	}
+	
+	/**
+	  * @param horizontal A horizontal alignment component
+	  * @param vertical   A vertical alignment component
+	  * @return An alignment combined from those two components
+	  */
+	override def apply(horizontal: LinearAlignment, vertical: LinearAlignment) = _apply(horizontal, vertical)
+	
+	
+	// OTHER	-----------------------
+	
+	/**
+	  * @param linear A (horizontal) linear alignment
+	  * @return An alignment matching that linear alignment (no vertical component)
+	  */
+	def horizontal(linear: LinearAlignment) = linear match {
+		case Close => Alignment.Left
+		case Middle => Center
+		case Far => Alignment.Right
+	}
+	/**
+	  * @param linear A (vertical) linear alignment
+	  * @return An alignment matching that linear alignment (no horizontal component)
+	  */
+	def vertical(linear: LinearAlignment) = linear match {
+		case Close => Top
+		case Middle => Center
+		case Far => Bottom
+	}
+	
+	/**
+	  * @param direction Target direction
+	  * @return An alignment that places items to that direction
+	  */
+	def forDirection(direction: Direction2D) = direction match {
+		case Direction2D.Up => Top
+		case Direction2D.Down => Bottom
+		case Direction2D.Right => Right
+		case Direction2D.Left => Left
+	}
+	
+	/**
+	  * @param alignment Searched swing alignment
+	  * @return A horizontal alignment matching the specified swing alignment. None if no alignment matched.
+	  */
+	def forHorizontalSwingAlignment(alignment: Int): Option[Alignment] =
+		horizontal.find { _.swingComponents.get(X).contains(alignment) }
+	/**
+	  * @param alignment Searched swing alignment
+	  * @return A vertical alignment matching the specified swing alignment. None if no alignment matched.
+	  */
+	def forVerticalSwingAlignment(alignment: Int): Option[Alignment] =
+		vertical.find { _.swingComponents.get(Y).contains(alignment) }
+	
+	/**
+	  * @param alignment Swing constant for alignment
+	  * @return An alignment matchin the swing constant. None if no alignment matches the constant.
+	  */
+	def forSwingAlignment(alignment: Int): Option[Alignment] =
+		forHorizontalSwingAlignment(alignment) orElse forVerticalSwingAlignment(alignment)
+	/**
+	  * Finds an alignment that matches the specified swing alignment combo
+	  * @param horizontal Horizontal swing alignment component
+	  * @param vertical Vertical swing alignment component
+	  * @return A matching alignment
+	  */
+	def forSwingAlignments(horizontal: Int, vertical: Int): Alignment = {
+		val hMatch = forHorizontalSwingAlignment(horizontal).getOrElse(Center)
+		val vMatch = forVerticalSwingAlignment(vertical).getOrElse(Center)
+		
+		vMatch match
+		{
+			case Top =>
+				hMatch match
+				{
+					case Left => TopLeft
+					case Right => TopRight
+					case _ => Top
+				}
+			case Bottom =>
+				hMatch match
+				{
+					case Left => BottomLeft
+					case Right => BottomRight
+					case _ => Bottom
+				}
+			case _ => hMatch
+		}
+	}
+	
+	private def _apply(horizontal: LinearAlignment, vertical: LinearAlignment): Alignment = horizontal match {
+		case Close =>
+			vertical match {
+				case Close => TopLeft
+				case Middle => Left
+				case Far => BottomLeft
+			}
+		case Middle =>
+			vertical match {
+				case Close => Top
+				case Middle => Center
+				case Far => Bottom
+			}
+		case Far =>
+			vertical match {
+				case Close => TopRight
+				case Middle => Right
+				case Far => BottomRight
+			}
+	}
+	
+	
+	// NESTED   ---------------------------------
+	
 	/**
 	  * Common trait for alignments that only represent a single direction
 	  */
@@ -256,7 +394,6 @@ object Alignment
 		  * @return The direction matching this alignment
 		  */
 		def direction: Direction
-		
 		/**
 		  * @return The main component of this alignment
 		  */
@@ -269,7 +406,6 @@ object Alignment
 		  * @return Axis used by this alignment
 		  */
 		def axis = direction.axis
-		
 		/**
 		  * @return The directional sign of this alignment
 		  */
@@ -290,8 +426,7 @@ object Alignment
 	{
 		// IMPLEMENTED	-------------------
 		
-		override def horizontal = linear
-		override def vertical = Middle
+		override lazy val dimensions: Dimensions[LinearAlignment] = Dimensions[LinearAlignment](Middle)(linear, Middle)
 		
 		override def horizontalDirection = Some(direction)
 		override def verticalDirection = None
@@ -304,8 +439,7 @@ object Alignment
 	{
 		// IMPLEMENTED	-------------------
 		
-		override def horizontal = Middle
-		override def vertical = linear
+		override lazy val dimensions: Dimensions[LinearAlignment] = Dimensions[LinearAlignment](Middle)(Middle, linear)
 		
 		override def horizontalDirection = None
 		override def verticalDirection = Some(direction)
@@ -376,10 +510,9 @@ object Alignment
 	  */
 	case object Center extends Alignment
 	{
-		override def toString = "Center"
+		override lazy val dimensions: Dimensions[LinearAlignment] = Dimensions(Middle).zero2D
 		
-		override def horizontal = Middle
-		override def vertical = Middle
+		override def toString = "Center"
 		
 		override def opposite = this
 		
@@ -387,32 +520,33 @@ object Alignment
 			HashMap(X -> SwingConstants.CENTER, Y -> SwingConstants.CENTER)
 		
 		override def directions = Vector[Direction2D]()
+		
 		override def horizontalDirection = None
 		override def verticalDirection = None
 	}
 	
 	case object TopLeft extends Alignment
 	{
-		override def toString = "Top Left"
+		override lazy val dimensions = Dimensions[LinearAlignment](Middle)(Close, Close)
 		
-		override def horizontal = Close
-		override def vertical = Close
+		override def toString = "Top Left"
 		
 		override def opposite = BottomRight
 		
 		override def swingComponents = HashMap(X -> SwingConstants.CENTER, Y -> SwingConstants.TOP)
 		
 		override def directions = Vector(Direction2D.Up, Direction2D.Left)
+		
 		override def horizontalDirection = Some(Direction2D.Left)
+		
 		override def verticalDirection = Some(Direction2D.Up)
 	}
 	
 	case object TopRight extends Alignment
 	{
-		override def toString = "Top Right"
+		override lazy val dimensions = Dimensions[LinearAlignment](Middle)(Far, Close)
 		
-		override def horizontal = Far
-		override def vertical = Close
+		override def toString = "Top Right"
 		
 		override def opposite = BottomLeft
 		
@@ -420,16 +554,17 @@ object Alignment
 			HashMap(X -> SwingConstants.TRAILING, Y -> SwingConstants.TOP)
 		
 		override def directions = Vector(Direction2D.Up, Direction2D.Right)
+		
 		override def horizontalDirection = Some(Direction2D.Right)
+		
 		override def verticalDirection = Some(Direction2D.Up)
 	}
 	
 	case object BottomLeft extends Alignment
 	{
-		override def toString = "Bottom Left"
+		override lazy val dimensions = Dimensions[LinearAlignment](Middle)(Close, Far)
 		
-		override def horizontal = Close
-		override def vertical = Far
+		override def toString = "Bottom Left"
 		
 		override def opposite = TopRight
 		
@@ -437,16 +572,17 @@ object Alignment
 			HashMap(X -> SwingConstants.LEADING, Y -> SwingConstants.BOTTOM)
 		
 		override def directions = Vector(Direction2D.Down, Direction2D.Left)
+		
 		override def horizontalDirection = Some(Direction2D.Left)
+		
 		override def verticalDirection = Some(Direction2D.Down)
 	}
 	
 	case object BottomRight extends Alignment
 	{
-		override def toString = "Bottom Right"
+		override lazy val dimensions = Dimensions[LinearAlignment](Middle)(Far, Far)
 		
-		override def horizontal = Far
-		override def vertical = Far
+		override def toString = "Bottom Right"
 		
 		override def opposite = TopLeft
 		
@@ -454,133 +590,9 @@ object Alignment
 			HashMap(X -> SwingConstants.TRAILING, Y -> SwingConstants.BOTTOM)
 		
 		override def directions = Vector(Direction2D.Down, Direction2D.Right)
-		override def horizontalDirection = Some(Direction2D.Right)
-		override def verticalDirection = Some(Direction2D.Down)
-	}
-	
-	
-	// ATTRIBUTES	--------------------
-	
-	/**
-	  * All possible values for Alignment
-	  */
-	val values = Vector(Left, Right, Top, Bottom, Center, TopLeft, TopRight, BottomLeft, BottomRight)
-	
-	/**
-	  * All horizontally supported values
-	  */
-	val horizontal = Vector(Left, Center, Right)
-	/**
-	  * All vertically supported values
-	  */
-	val vertical = Vector(Top, Center, Bottom)
-	
-	
-	// OTHER	-----------------------
-	
-	/**
-	  * @param linear A (horizontal) linear alignment
-	  * @return An alignment matching that linear alignment (no vertical component)
-	  */
-	def horizontal(linear: LinearAlignment) = linear match {
-		case Close => Alignment.Left
-		case Middle => Center
-		case Far => Alignment.Right
-	}
-	/**
-	  * @param linear A (vertical) linear alignment
-	  * @return An alignment matching that linear alignment (no horizontal component)
-	  */
-	def vertical(linear: LinearAlignment) = linear match {
-		case Close => Top
-		case Middle => Center
-		case Far => Bottom
-	}
-	/**
-	  * @param horizontal A horizontal alignment component
-	  * @param vertical A vertical alignment component
-	  * @return An alignment combined from those two components
-	  */
-	def apply(horizontal: LinearAlignment, vertical: LinearAlignment) = horizontal match {
-		case Close =>
-			vertical match {
-				case Close => TopLeft
-				case Middle => Left
-				case Far => BottomLeft
-			}
-		case Middle =>
-			vertical match {
-				case Close => Top
-				case Middle => Center
-				case Far => Bottom
-			}
-		case Far =>
-			vertical match {
-				case Close => TopRight
-				case Middle => Right
-				case Far => BottomRight
-			}
-	}
-	
-	/**
-	  * @param direction Target direction
-	  * @return An alignment that places items to that direction
-	  */
-	def forDirection(direction: Direction2D) = direction match
-	{
-		case Direction2D.Up => Top
-		case Direction2D.Down => Bottom
-		case Direction2D.Right => Right
-		case Direction2D.Left => Left
-	}
-	
-	/**
-	  * @param alignment Searched swing alignment
-	  * @return A horizontal alignment matching the specified swing alignment. None if no alignment matched.
-	  */
-	def forHorizontalSwingAlignment(alignment: Int): Option[Alignment] =
-		horizontal.find { _.swingComponents.get(X).contains(alignment) }
-	/**
-	  * @param alignment Searched swing alignment
-	  * @return A vertical alignment matching the specified swing alignment. None if no alignment matched.
-	  */
-	def forVerticalSwingAlignment(alignment: Int): Option[Alignment] =
-		vertical.find { _.swingComponents.get(Y).contains(alignment) }
-	
-	/**
-	  * @param alignment Swing constant for alignment
-	  * @return An alignment matchin the swing constant. None if no alignment matches the constant.
-	  */
-	def forSwingAlignment(alignment: Int): Option[Alignment] =
-		forHorizontalSwingAlignment(alignment) orElse forVerticalSwingAlignment(alignment)
-	/**
-	  * Finds an alignment that matches the specified swing alignment combo
-	  * @param horizontal Horizontal swing alignment component
-	  * @param vertical Vertical swing alignment component
-	  * @return A matching alignment
-	  */
-	def forSwingAlignments(horizontal: Int, vertical: Int): Alignment =
-	{
-		val hMatch = forHorizontalSwingAlignment(horizontal).getOrElse(Center)
-		val vMatch = forVerticalSwingAlignment(vertical).getOrElse(Center)
 		
-		vMatch match
-		{
-			case Top =>
-				hMatch match
-				{
-					case Left => TopLeft
-					case Right => TopRight
-					case _ => Top
-				}
-			case Bottom =>
-				hMatch match
-				{
-					case Left => BottomLeft
-					case Right => BottomRight
-					case _ => Bottom
-				}
-			case _ => hMatch
-		}
+		override def horizontalDirection = Some(Direction2D.Right)
+		
+		override def verticalDirection = Some(Direction2D.Down)
 	}
 }

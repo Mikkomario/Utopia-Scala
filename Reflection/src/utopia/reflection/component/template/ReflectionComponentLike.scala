@@ -1,5 +1,6 @@
 package utopia.reflection.component.template
 
+import utopia.firmament.component.Component
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.event.ResizeListener
@@ -9,7 +10,7 @@ import utopia.reflection.event.ResizeListener
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-trait ReflectionComponentLike extends ComponentLike2
+trait ReflectionComponentLike extends Component
 {
     // ABSTRACT    ------------------------
     

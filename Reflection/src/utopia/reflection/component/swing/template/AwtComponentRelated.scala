@@ -3,8 +3,8 @@ package utopia.reflection.component.swing.template
 import java.awt.Cursor
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 
-import utopia.reflection.util.AwtComponentExtensions._
-import utopia.reflection.util.AwtEventThread
+import utopia.firmament.awt.AwtComponentExtensions._
+import utopia.firmament.awt.AwtEventThread
 
 /**
   * This trait is extended by classes that have a related awt component

@@ -7,6 +7,7 @@ import utopia.reflection.color.ComponentColor
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
+@deprecated("Deprecated for removal", "v2.0")
 trait ButtonContextLike extends TextContextLike
 {
 	// ABSTRACT	----------------------------

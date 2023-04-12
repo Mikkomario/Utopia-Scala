@@ -1,5 +1,9 @@
 package utopia.reach.container.multi.stack
 
+import utopia.firmament.component.container.many.StackLike
+import utopia.firmament.context.BaseContext
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -13,21 +17,17 @@ import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponent
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
-import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
-import utopia.reflection.container.stack.template.layout.StackLike2
 import utopia.reflection.shape.stack.StackLength
 
-object ViewStack extends ContextInsertableComponentFactoryFactory[BaseContextLike, ViewStackFactory,
+object ViewStack extends ContextInsertableComponentFactoryFactory[BaseContext, ViewStackFactory,
 	ContextualViewStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewStackFactory(hierarchy)
 }
 
 case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[BaseContextLike, ContextualViewStackFactory]
+	extends ContextInsertableComponentFactory[BaseContext, ContextualViewStackFactory]
 {
 	// COMPUTED	----------------------------------
 	
@@ -36,7 +36,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	
 	// IMPLEMENTED	------------------------------
 	
-	override def withContext[N <: BaseContextLike](context: N) =
+	override def withContext[N <: BaseContext](context: N) =
 		ContextualViewStackFactory(this, context)
 	
 	
@@ -138,8 +138,8 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 		segmented(group, content, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)
 }
 
-case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewStackFactory, context: N)
-	extends ContextualComponentFactory[N, BaseContextLike, ContextualViewStackFactory]
+case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackFactory, context: N)
+	extends ContextualComponentFactory[N, BaseContext, ContextualViewStackFactory]
 {
 	// COMPUTED	------------------------------------
 	
@@ -153,7 +153,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N2 <: BaseContextLike](newContext: N2) =
+	override def withContext[N2 <: BaseContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -183,7 +183,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
 	                                   directionPointer: Changing[Axis2D] = Fixed(Y),
 	                                   layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                                   marginPointer: Changing[StackLength] = Fixed(context.defaultStackMargin),
+	                                   marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
 	                                   capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	                                   customDrawers: Vector[CustomDrawer] = Vector()) =
 		stackFactory[C](content, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
@@ -207,7 +207,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	                                                   customDrawers: Vector[CustomDrawer] = Vector(),
 	                                                   areRelated: Boolean = false) =
 		stackFactory[C](content, directionPointer, Fixed(layout),
-			Fixed(if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin),
+			Fixed(if (areRelated) context.smallStackMargin else context.stackMargin),
 			Fixed(cap), customDrawers)
 	
 	/**
@@ -262,7 +262,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  */
 	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 	              layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	              marginPointer: Changing[StackLength] = Fixed(context.defaultStackMargin),
+	              marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
 	              capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	              customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
@@ -290,7 +290,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	                            layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 	                            customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
 		stackFactory.segmentedWithFixedStyle(group, content, layout,
-			if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin, cap, customDrawers)
+			if (areRelated) context.stackMargin else context.smallStackMargin, cap, customDrawers)
 }
 
 class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentFactoryFactory[F])
@@ -400,7 +400,7 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 		segmented(group, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)(fill)
 }
 
-class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 (stackFactory: ContextualViewStackFactory[N], contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 {
 	// IMPLICIT	---------------------------------
@@ -435,7 +435,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 	  */
 	def apply[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D] = Fixed(Y),
 	                                      layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                                      marginPointer: Changing[StackLength] = Fixed(context.defaultStackMargin),
+	                                      marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
 	                                      capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	                                      customDrawers: Vector[CustomDrawer] = Vector())
 									  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
@@ -467,7 +467,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 	                                                      areRelated: Boolean = false)
 													  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
 		apply[C, R](directionPointer, Fixed(layout),
-			Fixed(if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin),
+			Fixed(if (areRelated) context.stackMargin else context.smallStackMargin),
 			Fixed(cap), customDrawers)(fill)
 	
 	/**
@@ -509,7 +509,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 	  * @return A new stack
 	  */
 	def segmented[R](group: SegmentGroup, layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                 marginPointer: Changing[StackLength] = Fixed(context.defaultStackMargin),
+	                 marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
 	                 capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	                 customDrawers: Vector[CustomDrawer] = Vector())
 					(fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
@@ -540,7 +540,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 								   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 								  (fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
 		segmented(group, Fixed(layout),
-			Fixed(if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin),
+			Fixed(if (areRelated) context.stackMargin else context.smallStackMargin),
 			Fixed(cap), customDrawers)(fill)
 }
 
@@ -556,7 +556,7 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
                                          marginPointer: Changing[StackLength] = Fixed(StackLength.any),
                                          capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
                                          override val customDrawers: Vector[CustomDrawer] = Vector())
-	extends CustomDrawReachComponent with StackLike2[C]
+	extends CustomDrawReachComponent with StackLike[C]
 {
 	// ATTRIBUTES	-------------------------------
 	

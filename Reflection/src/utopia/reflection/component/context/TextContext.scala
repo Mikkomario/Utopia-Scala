@@ -1,6 +1,7 @@
 package utopia.reflection.component.context
 
 import utopia.flow.operator.ScopeUsable
+import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.ColorContrastStandard
@@ -8,17 +9,17 @@ import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
-import utopia.reflection.localization.{Localizer, NoLocalization}
+import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.Font
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 
 /**
   * This class specifies a context for components that display text
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
+@deprecated("Moved to Firmament", "v2.0")
 case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization,
                        textAlignment: Alignment = Alignment.Left, fontOverride: Option[Font] = None,
                        promptFontOverride: Option[Font] = None, textColorOverride: Option[Color] = None,
@@ -152,7 +153,7 @@ case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization
 	  */
 	def withTextColorFrom(textColorSet: ColorSet, requiredLegibility: ColorContrastStandard = Enhanced) =
 	{
-		val minimumContrast = requiredLegibility.minimumContrastForText(font.size, font.isBold)
+		val minimumContrast = requiredLegibility.minimumContrastForText(font.sizeOnScreen, font.isBold)
 		textColorSet.forBackground(containerBackground, minimumContrast)
 	}
 	
@@ -169,13 +170,6 @@ case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization
 	  */
 	def forButtons(role: ColorRole, preferredShade: ColorShade = Standard) =
 		ButtonContext.forRole(this, role, preferredShade)
-	
-	/**
-	  * @param color Button color
-	  * @return A copy of this context that can be used for creating buttons of desired color
-	  */
-	def forButtons(color: ButtonColor) = ButtonContext.forCustomColorButtons(this,
-		color.toColor(this))
 	
 	/**
 	  * @param color Button color

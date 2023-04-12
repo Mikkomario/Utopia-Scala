@@ -1,17 +1,16 @@
 package utopia.reflection.container.swing.layout.wrapper.scrolling
 
+import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.Size
-import utopia.reflection.component.context.ScrollingContextLike
-import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.template.scrolling.ReflectionScrollAreaLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.util.ComponentCreationDefaults
 
 object ScrollArea
 {
@@ -24,7 +23,7 @@ object ScrollArea
 	  * @return A new scroll area
 	  */
 	def contextual[C <: ReflectionStackable with AwtComponentRelated](content: C, limitsToContentSize: Boolean = false)
-	                                                                 (implicit context: ScrollingContextLike) =
+	                                                                 (implicit context: ScrollingContext) =
 	{
 		new ScrollArea[C](content, context.actorHandler, context.scrollBarDrawer, context.scrollBarWidth,
 			context.scrollPerWheelClick, context.scrollFriction, limitsToContentSize,

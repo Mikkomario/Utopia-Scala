@@ -1,15 +1,15 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.context.{AnimationContext, TextContext}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
-import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.util.ProgressState
 
 import java.time.Instant
@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
                     title: LocalizedString = LocalizedString.empty)
-				   (implicit context: TextContext, animationContext: AnimationContextLike)
+				   (implicit context: TextContext, animationContext: AnimationContext)
 {
 	// ATTRIBUTES	--------------------------
 	

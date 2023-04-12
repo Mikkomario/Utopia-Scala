@@ -1,20 +1,21 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
 import utopia.flow.async.process.Loop
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
-import utopia.reflection.color.ColorRole.Primary
-import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.swing.input.{TagView, TypeOrSearch}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.test.TestContext
-import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
-import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.util.SingleFrameSetup
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.color.ColorRole.{Gray, Primary}
 
 import scala.concurrent.Future
 
@@ -33,7 +34,7 @@ object TypeOrSearchTest extends App
 	val addIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/add.png").get)
 	val closeIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/close.png").get * 0.8)
 	
-	implicit val context: TextContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents
+	implicit val context: TextContext = baseContext.against(colorScheme(Gray).light).forTextComponents
 	
 	/* TODO: Add following features
 		- Submit on enter
@@ -61,7 +62,7 @@ object TypeOrSearchTest extends App
 	val content = Stack.buildColumnWithContext() { s =>
 		s += search
 		s += tags
-	}.framed(margins.medium.any, context.containerBackground)
+	}.framed(margins.medium.any, context.background)
 	val frame = Frame.windowed(content, "Type or Search Test", Program)
 	
 	new SingleFrameSetup(actorHandler, frame).start()

@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.flow.async.process
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.image.Image
@@ -8,9 +9,8 @@ import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtCompo
 import utopia.reflection.component.template.layout.stack.{ReflectionStackable, StackLeaf}
 import utopia.reflection.container.swing.window.WindowResizePolicy.{Program, User}
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.ComponentCreationDefaults
 
 import javax.swing.JFrame
 import scala.concurrent.ExecutionContext

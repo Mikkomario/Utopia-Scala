@@ -1,11 +1,13 @@
 package utopia.reflection.component.template.layout.stack
 
+import utopia.firmament.component.stack.CachingStackable
+
 /**
   * This stackable caches the calculated stack size
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-trait CachingReflectionStackable extends CachingStackable2 with ReflectionStackable
+trait CachingReflectionStackable extends CachingStackable with ReflectionStackable
 {
 	// ATTRIBUTES	-----------------
 	

@@ -1,5 +1,7 @@
 package utopia.reach.component.label.text.selectable
 
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
@@ -22,11 +24,9 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.VeryHigh
-import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
-import utopia.reflection.component.template.text.TextComponent2
-import utopia.reflection.localization.LocalizedString
-import utopia.reflection.util.ComponentCreationDefaults
+import utopia.firmament.drawing.view.SelectableTextViewDrawer
+import utopia.firmament.component.text.TextComponent
+import utopia.firmament.localization.LocalizedString
 
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, StringSelection, Transferable}
@@ -49,7 +49,7 @@ abstract class AbstractSelectableTextLabel
  caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
  override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with TextComponent2 with Focusable with CursorDefining
+	extends CustomDrawReachComponent with TextComponent with Focusable with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
 	

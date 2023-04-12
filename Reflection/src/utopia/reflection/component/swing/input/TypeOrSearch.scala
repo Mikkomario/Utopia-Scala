@@ -1,30 +1,30 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.display.{PoolWithPointer, Refreshable}
+import utopia.firmament.context.{AnimationContext, ScrollingContext, TextContext}
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.reflection.color.ColorRole.{Gray, Secondary}
-import utopia.reflection.color.ColorShade
-import utopia.reflection.color.ColorShade.Light
-import utopia.reflection.component.context.{AnimationContextLike, ScrollingContextLike, TextContext}
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.paradigm.color.ColorLevel
+import utopia.paradigm.color.ColorRole.{Gray, Primary}
+import utopia.paradigm.color.ColorShade.Light
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.swing.button.{FramedImageButton, ImageAndTextButton, ImageButton, TextButton}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
-import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.{LocalizedString, Localizer}
-import utopia.reflection.shape.stack.{StackLength, StackLengthLimit}
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.localization.LocalString._
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.localization.{LocalizedString, Localizer}
+import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.shape.stack.modifier.FixedOptimalLengthModifier
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
 
 object TypeOrSearch
 {
@@ -52,13 +52,14 @@ object TypeOrSearch
 	def apply(optimalTextFieldWidth: Double, addButtonText: LocalizedString = LocalizedString.empty,
 	          addButtonIcon: Option[SingleColorIcon] = None, selectButtonText: LocalizedString = LocalizedString.empty,
 	          selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
-	          textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorShade = Light,
+	          textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
 	          searchDelay: Duration = Duration.Zero)
 	         (optionsForInput: String => Future[Seq[String]])
-	         (implicit context: TextContext, scrollingContext: ScrollingContextLike,
-	          animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger) = new TypeOrSearch(context,
-		optimalTextFieldWidth, addButtonText, addButtonIcon, selectButtonText, selectButtonIcon,
-		optimalSelectionAreaLength, textFieldPrompt, preferredTextFieldShade, searchDelay)(optionsForInput)
+	         (implicit context: TextContext, scrollingContext: ScrollingContext,
+	          animationContext: AnimationContext, exc: ExecutionContext, logger: Logger) =
+		new TypeOrSearch(context, optimalTextFieldWidth, addButtonText, addButtonIcon, selectButtonText,
+			selectButtonIcon, optimalSelectionAreaLength, textFieldPrompt, preferredTextFieldShade,
+			searchDelay)(optionsForInput)
 }
 
 /**
@@ -83,10 +84,10 @@ class TypeOrSearch
 (parentContext: TextContext, optimalTextFieldWidth: Double, addButtonText: LocalizedString = LocalizedString.empty,
  addButtonIcon: Option[SingleColorIcon] = None, selectButtonText: LocalizedString = LocalizedString.empty,
  selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
- textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorShade = Light,
+ textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
  searchDelay: Duration = Duration.Zero)
 (optionsForInput: String => Future[Seq[String]])
-(implicit scrollingContext: ScrollingContextLike, animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger)
+(implicit scrollingContext: ScrollingContext, animationContext: AnimationContext, exc: ExecutionContext, logger: Logger)
 	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], Changing[Vector[String]]]
 {
 	// ATTRIBUTES   ----------------------------
@@ -96,19 +97,17 @@ class TypeOrSearch
 	private implicit val languageCode: String = "en"
 	private implicit val localizer: Localizer = parentContext.localizer
 	// private val margin = parentContext.relatedItemsStackMargin
-	private val selectionColor = parentContext.color(Secondary, Light)
-	private val itemButtonColor = parentContext.colorScheme.secondary.bestAgainst(
-		Vector(parentContext.containerBackground, selectionColor))
+	private val selectionColor = parentContext.color.light.secondary
+	private val itemButtonColor = parentContext.colors.secondary
+		.againstMany(Vector(parentContext.background, selectionColor))
 	
 	private val textField = TextField.contextualForStrings(optimalTextFieldWidth.any.expanding,
-		prompt = textFieldPrompt)(parentContext.forButtons(Gray, preferredTextFieldShade))
-	private val addButton = parentContext.forPrimaryColorButtons.use { implicit c =>
-		val button = addButtonIcon match
-		{
+		prompt = textFieldPrompt)(parentContext/(Gray -> preferredTextFieldShade))
+	private val addButton = (parentContext/Primary).use { implicit c =>
+		val button = addButtonIcon match {
 			case Some(icon) =>
-				addButtonText.notEmpty match
-				{
-					case Some(text) => ImageAndTextButton.contextualWithoutAction(icon.inButton, text)
+				addButtonText.notEmpty match {
+					case Some(text) => ImageAndTextButton.contextualWithoutAction(icon.inButton.contextual, text)
 					case None => FramedImageButton.contextualWithoutAction(icon, isLowPriority = true)
 				}
 			case None => TextButton.contextualWithoutAction(
@@ -117,7 +116,8 @@ class TypeOrSearch
 		button.registerAction { () => onAddButtonPressed() }
 		button
 	}
-	private val optionsStack = parentContext.use { implicit c => AnimatedStack.contextualColumn[Display](itemsAreRelated = true) }
+	private val optionsStack = parentContext
+		.use { implicit c => AnimatedStack.contextualColumn[Display](itemsAreRelated = true) }
 	// Stack.column[Display](parentContext.relatedItemsStackMargin, margin)
 	private val manager = ContainerSelectionManager.forStatelessItems[String, Display](optionsStack,
 		BackgroundDrawer(selectionColor)) { new Display(_) }
@@ -175,25 +175,21 @@ class TypeOrSearch
 	  */
 	def --=(words: Set[String]) = selectedItemsPointer.update { _.filterNot(words.contains) }
 	
-	private def makeSelectionButton(currentItem: => String) = parentContext.forCustomColorButtons(itemButtonColor)
-		.use { implicit c =>
-			selectButtonIcon match
-			{
-				case Some(icon) =>
-					selectButtonText.notEmpty match
-					{
-						case Some(text) => ImageAndTextButton.contextual(icon.inButton, text) {
-							onItemSelected(currentItem) }
-						case None => ImageButton.contextual(icon.asIndividualButton, isLowPriority = true) {
-							onItemSelected(currentItem) }(parentContext)
-					}
-				case None => TextButton.contextual(selectButtonText.notEmpty
-					.getOrElse { "Add".autoLocalized }) { onItemSelected(currentItem) }
-			}
+	private def makeSelectionButton(currentItem: => String) = (parentContext/itemButtonColor).use { implicit c =>
+		selectButtonIcon match {
+			case Some(icon) =>
+				selectButtonText.notEmpty match {
+					case Some(text) => ImageAndTextButton.contextual(icon.inButton.contextual, text) {
+						onItemSelected(currentItem) }
+					case None => ImageButton.contextual(icon.asButton.contextual, isLowPriority = true) {
+						onItemSelected(currentItem) }(parentContext)
+				}
+			case None => TextButton.contextual(selectButtonText.notEmpty
+				.getOrElse { "Add".autoLocalized }) { onItemSelected(currentItem) }
 		}
+	}
 	
-	private def onItemSelected(item: String) =
-	{
+	private def onItemSelected(item: String) = {
 		// Updates selected items pointer
 		selectedItemsPointer.update { old =>
 			if (old.contains(item))
@@ -223,7 +219,7 @@ class TypeOrSearch
 	{
 		// ATTRIBUTES   ------------------------
 		
-		private val label = ItemLabel.contextual(initialItem)(parentContext.expandingToRight)
+		private val label = ItemLabel.contextual(initialItem)(parentContext.withTextExpandingToRight)
 		private val view = Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
 			s += label
 			s += makeSelectionButton(content)

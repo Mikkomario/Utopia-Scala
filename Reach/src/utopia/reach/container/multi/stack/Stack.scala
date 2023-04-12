@@ -1,30 +1,28 @@
 package utopia.reach.container.multi.stack
 
+import utopia.firmament.component.container.many.StackLike
+import utopia.firmament.context.BaseContext
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Sign.Positive
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
-import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.{Center, Fit, Leading, Trailing}
-import utopia.reflection.container.stack.template.layout.StackLike2
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.shape.stack.StackLength
 
-object Stack extends ContextInsertableComponentFactoryFactory[BaseContextLike, StackFactory, ContextualStackFactory]
+object Stack extends ContextInsertableComponentFactoryFactory[BaseContext, StackFactory, ContextualStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
 }
 
 case class StackFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[BaseContextLike, ContextualStackFactory]
+	extends ContextInsertableComponentFactory[BaseContext, ContextualStackFactory]
 {
 	// COMPUTED	--------------------------------
 	
@@ -41,7 +39,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[N <: BaseContextLike](context: N) =
+	override def withContext[N <: BaseContext](context: N) =
 		ContextualStackFactory(this, context)
 	
 	
@@ -160,12 +158,12 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFactory, context: N)
-	extends ContextualComponentFactory[N, BaseContextLike, ContextualStackFactory]
+case class ContextualStackFactory[N <: BaseContext](stackFactory: StackFactory, context: N)
+	extends ContextualComponentFactory[N, BaseContext, ContextualStackFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[C2 <: BaseContextLike](newContext: C2) =
+	override def withContext[C2 <: BaseContext](newContext: C2) =
 		copy(context = newContext)
 	
 	
@@ -200,7 +198,7 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 										  cap: StackLength = StackLength.fixedZero,
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
 		stackFactory(content, direction, layout,
-			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers)
+			if (areRelated) context.smallStackMargin else context.stackMargin, cap, customDrawers)
 	
 	/**
 	  * Creates a new stack of items
@@ -292,7 +290,7 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 					 cap: StackLength = StackLength.fixedZero, customDrawers: Vector[CustomDrawer] = Vector(),
 					 areRelated: Boolean = false) =
 		stackFactory.segmented(group, content, layout,
-			if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin, cap, customDrawers)
+			if (areRelated) context.stackMargin else context.smallStackMargin, cap, customDrawers)
 	
 	/**
 	  * Creates a new stack that contains two items
@@ -316,7 +314,7 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 											customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
 											forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
 		stackFactory.forPair(content, alignment,
-			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers,
+			if (areRelated) context.smallStackMargin else context.stackMargin, cap, customDrawers,
 			forceFitLayout)
 }
 
@@ -402,7 +400,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 	}
 }
 
-class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 (stackFactory: ContextualStackFactory[N], contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 {
 	private implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
@@ -572,7 +570,7 @@ class Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHier
 									 override val components: Vector[C], override val direction: Axis2D,
 									 override val layout: StackLayout, override val margin: StackLength,
 									 override val cap: StackLength, override val customDrawers: Vector[CustomDrawer])
-	extends CustomDrawReachComponent with StackLike2[C]
+	extends CustomDrawReachComponent with StackLike[C]
 {
 	override def children = components
 }

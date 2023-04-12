@@ -1,6 +1,7 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.enumeration.RgbChannel.{Blue, Green, Red}
 
@@ -33,12 +34,10 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @return The red component of this color [0, 1]
 	  */
 	def red = ratio(Red)
-	
 	/**
 	  * @return The green component of this color [0, 1]
 	  */
 	def green = ratio(Green)
-	
 	/**
 	  * @return The blue component of this color [0, 1]
 	  */
@@ -48,12 +47,10 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @return The red value of this color [0, 255]
 	  */
 	def redValue = value(Red)
-	
 	/**
 	  * @return The green value of this color [0, 255]
 	  */
 	def greenValue = value(Green)
-	
 	/**
 	  * @return The blue value of this color [0, 255]
 	  */
@@ -73,7 +70,6 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @return The top ratio of this color's channels [0, 1]
 	  */
 	def maxRatio = ratios.values.max
-	
 	/**
 	  * @return The minimum ratio of this color's channels [0, 1]
 	  */
@@ -93,6 +89,16 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 			val gammaAdjusted = if (ratio <= 0.03928) ratio / 12.92 else math.pow((ratio + 0.055) / 1.055, 2.4)
 			gammaAdjusted * multiplier
 		}.sum // The returned luminance is the sum of the individual channel values (with multipliers applied)
+	}
+	
+	/**
+	  * @return The shade of this color, whether this color is more dark or more white
+	  */
+	def shade: ColorShade = {
+		// Picks the text color with greater contrast against the background color
+		val whiteContrast = contrastAgainst(Color.white)
+		val blackContrast = contrastAgainst(Color.black)
+		if (blackContrast >= whiteContrast) Light else Dark
 	}
 	
 	

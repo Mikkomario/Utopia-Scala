@@ -9,6 +9,7 @@ import utopia.reflection.color.{ColorRole, ColorScheme, ColorShade, ComponentCol
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
+@deprecated("Moved to Firmament", "v2.0")
 trait ColorContextLike extends BaseContextLike
 {
 	// ABSTRACT	------------------------

@@ -1,12 +1,10 @@
 package utopia.reach.cursor
 
-import utopia.paradigm.color.Color
+import utopia.firmament.image.SingleColorIcon
 import utopia.genesis.image.Image
+import utopia.paradigm.color.ColorShade.{Dark, Light}
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.color.ColorShade.{Dark, Light}
-import utopia.reflection.color.{ColorShadeVariant, TextColorStandard}
-import utopia.reflection.color.ComponentColor.autoGenerateFromConvertible
-import utopia.reflection.image.SingleColorIcon
 
 object Cursor
 {
@@ -35,7 +33,7 @@ object Cursor
 		
 		override def proposing(color: Color) = image
 		
-		override def apply(shade: => ColorShadeVariant) = image
+		override def apply(shade: => ColorShade) = image
 	}
 	
 	private case class SingleColorCursor(icon: SingleColorIcon) extends Cursor
@@ -44,15 +42,10 @@ object Cursor
 		
 		override def defaultBounds = icon.original.bounds
 		
-		override def over(color: Color) = color.textColorStandard match
-		{
-			case TextColorStandard.Light => icon.white
-			case TextColorStandard.Dark => icon.black
-		}
+		override def over(color: Color) = icon.against(color)
+		override def proposing(color: Color) = icon(color)
 		
-		override def proposing(color: Color) = icon.asImageWithColor(color)
-		
-		override def apply(shade: => ColorShadeVariant) = icon.withShade(shade)
+		override def apply(shade: => ColorShade) = icon(shade)
 	}
 }
 
@@ -87,7 +80,7 @@ trait Cursor
 	  * @param shade Targeted color shade for the cursor (call by name)
 	  * @return An image that best applies to the specified shade
 	  */
-	def apply(shade: => ColorShadeVariant): Image
+	def apply(shade: => ColorShade): Image
 	
 	
 	// COMPUTED	--------------------------------
@@ -96,7 +89,6 @@ trait Cursor
 	  * @return A lighter version of this cursor suitable against dark backgrounds
 	  */
 	def light = apply(Light)
-	
 	/**
 	  * @return A darker version of this cursor suitable against light backgrounds
 	  */
@@ -109,5 +101,5 @@ trait Cursor
 	  * @param shade Shade of the underlying surface / component
 	  * @return A cursor image that looks best against the specified shade
 	  */
-	def over(shade: => ColorShadeVariant) = apply(shade.opposite)
+	def over(shade: => ColorShade) = apply(shade.opposite)
 }

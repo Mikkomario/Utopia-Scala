@@ -1,11 +1,11 @@
 package utopia.reflection.component.context
 
+import utopia.firmament.model.Margins
 import utopia.flow.operator.ScopeUsable
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
 import utopia.reflection.color.{ColorScheme, ComponentColor}
-import utopia.reflection.shape.Margins
-import utopia.reflection.text.Font
-import utopia.reflection.shape.LengthExtensions._
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.shape.stack.StackLength
 
 /**
@@ -18,6 +18,7 @@ import utopia.reflection.shape.stack.StackLength
   * @param margins Sizes of various types of margins
   * @param allowImageUpscaling Whether images should be allowed to scale above their original resolution (default = false)
   */
+@deprecated("Moved to Firmament", "v2.0")
 case class BaseContext(actorHandler: ActorHandler, defaultFont: Font, defaultColorScheme: ColorScheme, margins: Margins,
 					   allowImageUpscaling: Boolean = false, stackMarginOverride: Option[StackLength] = None)
 	extends BaseContextLike with BackgroundSensitive[ColorContext] with ScopeUsable[BaseContext]

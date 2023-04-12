@@ -1,9 +1,15 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
+import utopia.genesis.text.Font
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -11,26 +17,20 @@ import utopia.reach.component.label.image.ImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
-import utopia.reflection.event.{ButtonState, HotKey}
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
 
-object ImageAndTextButton extends ContextInsertableComponentFactoryFactory[ButtonContextLike,
+object ImageAndTextButton extends ContextInsertableComponentFactoryFactory[TextContext,
 	ImageAndTextButtonFactory, ContextualImageAndTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextButtonFactory(hierarchy)
 }
 
 class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ButtonContextLike, ContextualImageAndTextButtonFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualImageAndTextButtonFactory]
 {
-	override def withContext[N <: ButtonContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualImageAndTextButtonFactory(this, context)
 	
 	/**
@@ -72,12 +72,12 @@ class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 			forceEqualBreadth)(action)
 }
 
-case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory: ImageAndTextButtonFactory, context: N)
-	extends ContextualComponentFactory[N, ButtonContextLike, ContextualImageAndTextButtonFactory]
+case class ContextualImageAndTextButtonFactory[+N <: TextContext](factory: ImageAndTextButtonFactory, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualImageAndTextButtonFactory]
 {
-	private implicit def c: ButtonContextLike = context
+	private implicit def c: TextContext = context
 	
-	override def withContext[N2 <: ButtonContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -98,8 +98,8 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 			  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 			  additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 			  forceEqualBreadth: Boolean = false)(action: => Unit) =
-		factory(image, text, context.buttonColor, context.font, context.textColor, context.textAlignment, imageInsets,
-			context.textInsets / 2, context.textInsets / 2, context.borderWidth, context.betweenLinesMargin.optimal,
+		factory(image, text, context.background, context.font, context.textColor, context.textAlignment, imageInsets,
+			context.textInsets / 2, context.textInsets / 2, context.buttonBorderWidth, context.betweenLinesMargin.optimal,
 			hotKeys, additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
 			context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)(action)
 	
@@ -121,7 +121,7 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 				 forceEqualBreadth: Boolean = false)(action: => Unit) =
-		apply(icon.singleColorImage, text, imageInsets, hotKeys, additionalDrawers,
+		apply(icon.contextual, text, imageInsets, hotKeys, additionalDrawers,
 			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
 }
 
@@ -143,7 +143,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val _statePointer = new PointerWithEvents(ButtonState.default)
+	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	override val focusId = hashCode()

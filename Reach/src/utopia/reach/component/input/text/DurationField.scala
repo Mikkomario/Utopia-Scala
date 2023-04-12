@@ -1,11 +1,16 @@
 package utopia.reach.component.input.text
 
+import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.context.TextContext
+import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.flow.async.process
-import utopia.flow.async.process.Delay
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
+import utopia.paradigm.color.ColorRole
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -14,20 +19,14 @@ import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.focus.ManyFocusableWrapper
-import utopia.reflection.color.ColorRole
-import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.template.input.InputWithPointer
-import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.localization.{LocalizedString, Localizer}
+import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-object DurationField extends ContextInsertableComponentFactoryFactory[TextContextLike, DurationFieldFactory,
+object DurationField extends ContextInsertableComponentFactoryFactory[TextContext, DurationFieldFactory,
 	ContextualDurationFieldFactory]
 {
 	private val focusTransferDelay = 0.05.seconds
@@ -36,20 +35,20 @@ object DurationField extends ContextInsertableComponentFactoryFactory[TextContex
 }
 
 class DurationFieldFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualDurationFieldFactory]
+	extends ContextInsertableComponentFactory[TextContext, ContextualDurationFieldFactory]
 {
-	override def withContext[N <: TextContextLike](context: N) =
+	override def withContext[N <: TextContext](context: N) =
 		ContextualDurationFieldFactory(parentHierarchy, context)
 }
 
-case class ContextualDurationFieldFactory[+N <: TextContextLike](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualDurationFieldFactory]
+case class ContextualDurationFieldFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
+	extends ContextualComponentFactory[N, TextContext, ContextualDurationFieldFactory]
 {
-	private implicit def c: TextContextLike = context
+	private implicit def c: TextContext = context
 	private implicit def localizer: Localizer = context.localizer
 	private implicit val languageCode: String = "en"
 	
-	override def withContext[N2 <: TextContextLike](newContext: N2) =
+	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -97,7 +96,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
                     selectionStylePointer: Changing[ColorRole] = Fixed(Secondary),
                     focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
                     captureSeconds: Boolean = false, showLabels: Boolean = false)
-				   (implicit context: TextContextLike, exc: ExecutionContext)
+				   (implicit context: TextContext, exc: ExecutionContext)
 	extends ReachComponentWrapper with InputWithPointer[Duration, Changing[Duration]] with ManyFocusableWrapper
 {
 	// ATTRIBUTES	-------------------------------
@@ -113,7 +112,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 	
 	// The input fields are placed in a horizontal stack and separated with ":"
 	private val (_wrapped, (fields, _valuePointer)) = Stack(parentHierarchy).contextual.build(Mixed)
-		.withMargin(if (separatorText.isEmpty) context.relatedItemsStackMargin else StackLength.fixedZero, X,
+		.withMargin(if (separatorText.isEmpty) context.smallStackMargin else StackLength.fixedZero, X,
 			Center, customDrawers = customDrawers) { factories =>
 			// Creates the input fields
 			val maxHours = maxValue.toHours

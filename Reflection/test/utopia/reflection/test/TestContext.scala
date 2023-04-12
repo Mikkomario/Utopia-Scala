@@ -1,16 +1,16 @@
 package utopia.reflection.test
 
+import utopia.firmament.context.{AnimationContext, BaseContext, ScrollingContext}
+import utopia.firmament.model.Margins
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
 import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.reflection.color.{ColorScheme, ColorSet}
-import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
-import utopia.reflection.localization.{Localizer, NoLocalization}
-import utopia.reflection.shape.Margins
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
+import utopia.genesis.text.FontStyle.Plain
+import utopia.paradigm.color.{ColorScheme, ColorSet}
+import utopia.firmament.localization.{Localizer, NoLocalization}
 
 import scala.concurrent.ExecutionContext
 
@@ -24,11 +24,13 @@ object TestContext
 	ParadigmDataType.setup()
 	
 	val actorHandler = ActorHandler()
-	val colorScheme = ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
-		ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get)
+	val colorScheme = ColorScheme.default ++
+		ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
+			ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get)
 	val font = Font("Arial", 12, Plain, 2)
 	val margins = Margins(12)
 	
+	implicit val localizer: Localizer = NoLocalization
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colorScheme, margins)
 	
 	implicit val logger: Logger = SysErrLogger
@@ -38,5 +40,5 @@ object TestContext
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)
 	
 	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
+	
 }

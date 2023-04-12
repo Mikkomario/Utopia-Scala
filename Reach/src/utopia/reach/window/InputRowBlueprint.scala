@@ -1,13 +1,13 @@
 package utopia.reach.window
 
+import utopia.firmament.context.TextContext
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.{Alignment, HorizontalDirection}
 import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reflection.component.context.TextContext
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 object InputRowBlueprint
 {

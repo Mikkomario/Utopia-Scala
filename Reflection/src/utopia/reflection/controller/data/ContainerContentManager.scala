@@ -1,18 +1,19 @@
 package utopia.reflection.controller.data
 
+import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.component.template.display.Refreshable
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.controller.data.ContentManager
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.template.mutable.MutableMultiContainer2
 
 object ContainerContentManager
 {
 	/**
 	  * Container that holds multiple items and is stackable
 	  */
-	private type MultiStack[X <: ReflectionComponentLike] = MutableMultiContainer2[X, X] with ReflectionStackable
+	private type MultiStack[X <: ReflectionComponentLike] = MutableMultiContainer[X, X] with ReflectionStackable
 	
 	/**
 	  * Creates a content manager for immutable items that don't represent state of any other object. No two different
@@ -141,7 +142,7 @@ object ContainerContentManager
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
-class ContainerContentManager[A, Container <: MutableMultiContainer2[Display, Display] with ReflectionStackable, Display <: ReflectionStackable with Refreshable[A]]
+class ContainerContentManager[A, Container <: MutableMultiContainer[Display, Display] with ReflectionStackable, Display <: ReflectionStackable with Refreshable[A]]
 (container: Container, contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => Display)

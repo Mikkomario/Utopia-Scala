@@ -2,9 +2,9 @@ package utopia.reach.component.template
 
 import utopia.flow.view.immutable.View
 import utopia.genesis.image.Image
+import utopia.paradigm.color.ColorShade
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.cursor.{Cursor, CursorType}
-import utopia.reflection.color.ColorShadeVariant
 
 object CursorDefining
 {
@@ -21,7 +21,7 @@ object CursorDefining
 	 *                       None if no customization function should be used.
 	  */
 	def defineCursorFor(component: ReachComponentLike, cursorTypePointer: View[CursorType],
-	                    shadePointer: View[ColorShadeVariant],
+	                    shadePointer: View[ColorShade],
 	                    customization: Option[(Cursor, Point) => Option[Image]] = None) =
 	{
 		// Only works if cursor management is enabled in canvas
@@ -42,14 +42,14 @@ object CursorDefining
 	  * @param cursorType type of cursor to use
 	  * @param shade shade to expect the component to be (light or dark)
 	  */
-	def defineCursorFor(component: ReachComponentLike, cursorType: CursorType, shade: ColorShadeVariant): Unit =
+	def defineCursorFor(component: ReachComponentLike, cursorType: CursorType, shade: ColorShade): Unit =
 		defineCursorFor(component, View.fixed(cursorType), View.fixed(shade))
 	
 	
 	// NESTED	--------------------------------
 	
 	private class CursorDefiningWrapper(wrapped: ReachComponentLike, cursorTypePointer: View[CursorType],
-	                                    shadePointer: View[ColorShadeVariant],
+	                                    shadePointer: View[ColorShade],
 	                                    customization: Option[(Cursor, Point) => Option[Image]] = None)
 		extends CursorDefining
 	{

@@ -1,8 +1,9 @@
 package utopia.reflection.text
 
+import utopia.firmament.context.TextContext
+import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 sealed trait RichText
 {
@@ -20,9 +21,9 @@ object RichTextElement
 	  * @return New rich text instance
 	  */
 	def contextual(text: LocalizedString, hasBackground: Boolean = false, isHint: Boolean = false)
-	              (implicit context: TextContextLike) =
+	              (implicit context: TextContext) =
 	{
-		val background = if (hasBackground) Some(context.containerBackground.background) else None
+		val background = if (hasBackground) Some(context.background) else None
 		if (isHint)
 			apply(text, context.promptFont, context.hintTextColor, background)
 		else

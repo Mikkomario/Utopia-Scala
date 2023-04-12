@@ -4,7 +4,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.LocalizedString
+import utopia.firmament.localization.LocalizedString
 
 import javax.swing.JDialog
 

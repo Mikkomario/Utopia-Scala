@@ -1,12 +1,14 @@
 package utopia.reflection.container.stack.template.layout
 
+import utopia.firmament.component.{AreaOfItems, HasMutableBounds}
+import utopia.firmament.component.stack.StackSizeCalculating
+import utopia.firmament.controller.Stacker
+import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper, StackSizeCalculating}
-import utopia.reflection.component.template.layout.{Area, AreaOfItems}
+import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper}
 import utopia.reflection.container.stack.template.MultiStackContainer
-import utopia.reflection.container.stack.{StackLayout, Stacker2}
 import utopia.reflection.shape.stack.StackLength
 
 /**
@@ -91,12 +93,12 @@ trait ReflectionStackLike[C <: ReflectionStackable]
         super.-=(component)
     }
     
-    def calculatedStackSize = Stacker2.calculateStackSize(
+    def calculatedStackSize = Stacker.calculateStackSize(
         _components.filter { _.visible }.map { _.stackSize }, direction, margin, cap, layout)
     
     def updateLayout() = {
         // Positions the components using a stacker
-        Stacker2(_components, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
+        Stacker(_components, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
             
         // Finally applies the changes
         _components.view.filter { _.visible }.foreach { _.updateBounds() }
@@ -171,7 +173,7 @@ trait ReflectionStackLike[C <: ReflectionStackable]
     def dropLast(amount: Int) = _components dropRight amount map { _.source } foreach { -= }
 }
 
-private class StackItem[C <: ReflectionStackable](val source: C) extends Area with ReflectionStackableWrapper
+private class StackItem[C <: ReflectionStackable](val source: C) extends HasMutableBounds with ReflectionStackableWrapper
 {
     // ATTRIBUTES    -------------------
     

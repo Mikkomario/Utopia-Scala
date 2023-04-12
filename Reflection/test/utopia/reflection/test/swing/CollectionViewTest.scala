@@ -1,5 +1,6 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.color.{Color, Rgb}
@@ -8,14 +9,13 @@ import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.container.swing.layout.multi.{AnimatedCollectionView, CollectionView}
+import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.shape.LengthExtensions._
 
 import scala.util.Random
 

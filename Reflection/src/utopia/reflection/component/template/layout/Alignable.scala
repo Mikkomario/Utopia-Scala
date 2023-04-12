@@ -4,7 +4,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.{Bottom, Center, Left, Right, Top}
 
 /**
-  * Alignable elements can be aligned
+  * Alignable elements can be aligned, but which don't necessarily expose their alignment state
   * @author Mikko Hilpinen
   * @since 22.4.2019, v1+
   */
