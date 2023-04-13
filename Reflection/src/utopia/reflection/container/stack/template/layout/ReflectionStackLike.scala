@@ -9,7 +9,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper}
 import utopia.reflection.container.stack.template.MultiStackContainer
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
 * A stack holds multiple stackable components in a stack-like manner either horizontally or vertically

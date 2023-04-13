@@ -4,7 +4,7 @@ import utopia.firmament.component.stack.CachingStackable
 import utopia.genesis.image.Image
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reflection.component.drawing.template.CustomDrawable
-import utopia.reflection.shape.stack.{StackInsets, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackSize}
 
 /**
   * A common trait for image label implementations

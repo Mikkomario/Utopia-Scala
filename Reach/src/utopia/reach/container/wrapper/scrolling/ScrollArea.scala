@@ -17,7 +17,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
-import utopia.reflection.shape.stack.modifier.MaxOptimalSizeModifier
+import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
 
 object ScrollArea extends ContextInsertableComponentFactoryFactory[Any, ScrollAreaFactory, ContextualScrollAreaFactory]
 {

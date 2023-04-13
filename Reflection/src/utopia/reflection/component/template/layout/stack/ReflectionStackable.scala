@@ -16,7 +16,7 @@ import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}

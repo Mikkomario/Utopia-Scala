@@ -1,7 +1,7 @@
-package utopia.reflection.shape.stack.modifier
+package utopia.firmament.model.stack.modifier
 
 import utopia.flow.collection.immutable.Pair
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * A stack length modifier that attempts to keep the length divisible by a certain value.

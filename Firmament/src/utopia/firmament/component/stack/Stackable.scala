@@ -1,7 +1,7 @@
 package utopia.firmament.component.stack
 
 import utopia.firmament.component.Component
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 /**
 * This trait is inherited by component classes that can be placed in stacks (component hierarchies with auto-layout)
@@ -36,7 +36,6 @@ trait Stackable extends Component
 	  * @return Optimal width for this component
 	  */
 	def optimalWidth = stackSize.width.optimal
-	
 	/**
 	  * @return Optimal height for this component
 	  */
@@ -46,7 +45,6 @@ trait Stackable extends Component
 	  * @return Whether this component is now larger than its maximum size
 	  */
 	def isOverSized = stackSize.maxWidth.exists { _ < width } || stackSize.maxHeight.exists { _ < height }
-	
 	/**
 	  * @return Whether this component is now smaller than its minimum size
 	  */
@@ -59,7 +57,6 @@ trait Stackable extends Component
 	 * Sets the size of this component to optimal (by stack size)
 	 */
 	def setToOptimalSize() = size = stackSize.optimal
-	
 	/**
 	 * Sets the size of this component to minimum (by stack size)
 	 */

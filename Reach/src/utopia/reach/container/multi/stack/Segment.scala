@@ -12,7 +12,7 @@ import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reflection.component.drawing.template.DrawLevel
 import StackLayout.{Fit, Leading}
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths

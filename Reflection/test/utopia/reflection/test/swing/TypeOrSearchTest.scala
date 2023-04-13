@@ -11,7 +11,7 @@ import utopia.genesis.image.Image
 import utopia.reflection.component.swing.input.{TagView, TypeOrSearch}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.firmament.model.stack.LengthExtensions._

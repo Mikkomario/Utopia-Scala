@@ -15,10 +15,10 @@ import utopia.reflection.component.swing.display.ProgressBar
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 import utopia.genesis.text.FontStyle.Plain
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.test.TestContext._

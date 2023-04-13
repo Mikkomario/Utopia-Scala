@@ -17,7 +17,7 @@ import utopia.reach.container.multi.stack.{SegmentGroup, Stack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenClickedOutside
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.util.SingleFrameSetup
 
 /**

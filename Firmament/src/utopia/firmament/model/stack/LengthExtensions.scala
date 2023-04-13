@@ -8,8 +8,8 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.{Alignment, Axis2D, LinearAlignment}
 import utopia.paradigm.measurement.{Distance, Ppi}
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
-import utopia.reflection.shape.stack
-import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible, StackLength, StackSize}
+import utopia.firmament.model.stack
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength, StackSize}
 
 /**
   * These extensions allow easier creation of stack lengths & stack sizes

@@ -34,7 +34,7 @@ import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 import java.awt.event.KeyEvent
 import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}

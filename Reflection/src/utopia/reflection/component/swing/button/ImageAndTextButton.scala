@@ -12,7 +12,7 @@ import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object ImageAndTextButton
 {

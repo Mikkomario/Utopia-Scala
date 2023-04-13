@@ -17,7 +17,7 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object TextButton extends ContextInsertableComponentFactoryFactory[TextContext, TextButtonFactory,
 	ContextualTextButtonFactory]

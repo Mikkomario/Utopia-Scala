@@ -19,7 +19,7 @@ import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object MutableTextButton extends ContextInsertableComponentFactoryFactory[TextContext, MutableTextButtonFactory,
 	ContextualMutableTextButtonFactory]

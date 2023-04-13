@@ -25,7 +25,7 @@ import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Prompt
 
 import java.awt.Graphics

@@ -14,7 +14,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.firmament.localization.DisplayFunction
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object ViewLabel
 {

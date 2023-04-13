@@ -11,7 +11,7 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
 import utopia.reflection.container.stack.template.layout.ReflectionCollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

@@ -12,11 +12,11 @@ import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.firmament.model.enumeration.StackLayout.Trailing
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

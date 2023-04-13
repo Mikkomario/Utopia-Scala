@@ -18,7 +18,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.util.Priority
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, ViewTextLabelFactory,
 	ContextualViewTextLabelFactory]

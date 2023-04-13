@@ -862,7 +862,6 @@ object CollectionExtensions
 		def hasEqualSizeWith(other: Iterable[_]) = t.sizeCompare(other) == 0
 		
 		/**
-		  * Alias for [[hasEqualContentWith]].
 		  * Tests whether these two collections are equal when using the specified equals function.
 		  * The size, order and contents must match.
 		  * @param other Another collection
@@ -870,16 +869,7 @@ object CollectionExtensions
 		  * @tparam B Type of items in the other collection
 		  * @return Whether these collections are equal
 		  */
-		def ~==[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) = hasEqualContentWith(other)
-		/**
-		  * Tests whether these two collections are equal when using the specified equals function.
-		  * The size, order and contents must match.
-		  * @param other Another collection
-		  * @param eq    An equals function to use
-		  * @tparam B Type of items in the other collection
-		  * @return Whether these collections are equal
-		  */
-		def hasEqualContentWith[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) =
+		def ~==[B >: A](other: Iterable[B])(implicit eq: EqualsFunction[B]) =
 			hasSize.of(other) && t.iterator.zip(other.iterator).forall { case (a, b) => eq(a, b) }
 		
 		/**

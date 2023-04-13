@@ -17,9 +17,9 @@ import utopia.reach.container.multi.stack.ViewStack
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 import utopia.reflection.util.SingleFrameSetup
 
 import java.awt.event.KeyEvent

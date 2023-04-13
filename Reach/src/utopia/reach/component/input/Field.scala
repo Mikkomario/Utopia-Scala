@@ -32,7 +32,7 @@ import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.ColorRole.{Failure, Secondary}
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 /**
   * A set of context variables provided when creating field contents

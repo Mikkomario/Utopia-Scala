@@ -1,8 +1,8 @@
 package utopia.firmament.component.stack
 
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.StackSize
+import utopia.firmament.model.stack.modifier.StackSizeModifier
 
 /**
   * This stackable caches the calculated stack size

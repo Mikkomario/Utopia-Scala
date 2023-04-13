@@ -14,7 +14,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object MutableTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, MutableTextLabelFactory,
 	ContextualMutableTextLabelFactory]

@@ -10,7 +10,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 object ViewEmptyLabel extends ContextInsertableComponentFactoryFactory[ColorContext, ViewEmptyLabelFactory,
 	ContextualViewEmptyLabelFactory]

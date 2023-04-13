@@ -4,7 +4,7 @@ import utopia.firmament.model.Margins
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
 import utopia.reflection.color.ColorScheme
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * A trait common for basic component context implementations

@@ -13,7 +13,7 @@ import utopia.reflection.component.swing.input.{TabSelection, TextField}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup

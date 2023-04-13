@@ -1,6 +1,6 @@
 package utopia.firmament.component.stack
 
-import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.modifier.StackSizeModifier
 
 /**
   * Common trait for wrappers that wrap a constrainable instance

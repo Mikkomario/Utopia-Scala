@@ -7,7 +7,7 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

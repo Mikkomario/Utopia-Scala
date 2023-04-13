@@ -8,8 +8,8 @@ import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.StackLength
 import utopia.reflection.test.TestContext._
 
 /**

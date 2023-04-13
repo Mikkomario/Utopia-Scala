@@ -7,7 +7,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.localization.LocalString
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.firmament.model.stack.LengthExtensions._

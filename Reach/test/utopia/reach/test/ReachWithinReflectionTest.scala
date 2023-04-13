@@ -7,7 +7,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reflection.util.SingleFrameSetup

@@ -14,7 +14,7 @@ import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponent
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 object Stack extends ContextInsertableComponentFactoryFactory[BaseContext, StackFactory, ContextualStackFactory]
 {

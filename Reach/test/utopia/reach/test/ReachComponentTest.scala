@@ -20,10 +20,10 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusListener
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Frame, Window}
 import utopia.firmament.localization.LocalString._
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

@@ -24,7 +24,7 @@ import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.firmament.localization.DisplayFunction
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object ViewImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
 	ViewImageAndTextLabelFactory, ContextualViewImageAndTextLabelFactory]

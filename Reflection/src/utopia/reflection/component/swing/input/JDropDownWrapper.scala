@@ -16,7 +16,7 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.plaf.basic.ComboPopup

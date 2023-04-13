@@ -20,7 +20,7 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object ViewTextButton extends ContextInsertableComponentFactoryFactory[TextContext, ViewTextButtonFactory,
 	ContextualViewTextButtonFactory]

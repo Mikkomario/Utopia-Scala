@@ -1,8 +1,8 @@
-package utopia.reflection.shape.stack
+package utopia.firmament.model.stack
 
 import utopia.flow.operator.EqualsBy
 import utopia.flow.collection.CollectionExtensions._
-import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
+import utopia.firmament.model.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 
 object StackLength
 {

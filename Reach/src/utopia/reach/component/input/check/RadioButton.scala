@@ -20,7 +20,7 @@ import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.High
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 object RadioButton
 	extends ContextInsertableComponentFactoryFactory[ColorContext, RadioButtonFactory, ContextualRadioButtonFactory]

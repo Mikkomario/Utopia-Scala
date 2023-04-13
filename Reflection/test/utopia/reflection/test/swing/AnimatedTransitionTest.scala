@@ -11,7 +11,7 @@ import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

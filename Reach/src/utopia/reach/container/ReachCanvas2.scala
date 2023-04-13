@@ -11,7 +11,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.util.{Priority, RealTimeReachPaintManager}
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}

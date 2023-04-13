@@ -5,7 +5,7 @@ import utopia.reflection.component.drawing.template
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 /**
   * An immutable implementation of the image drawer

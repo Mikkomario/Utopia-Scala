@@ -9,7 +9,7 @@ import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.Label
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.reflection.test.TestContext._
 
 import java.awt.Color

@@ -25,7 +25,7 @@ import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.firmament.localization.DisplayFunction
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 import java.time._
 import scala.collection.immutable.HashMap

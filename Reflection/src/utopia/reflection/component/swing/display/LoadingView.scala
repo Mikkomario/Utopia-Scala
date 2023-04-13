@@ -13,7 +13,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.paradigm.enumeration.Alignment.BottomLeft
 import utopia.firmament.model.stack.LengthExtensions.LengthNumber
-import utopia.reflection.shape.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
+import utopia.firmament.model.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
 import utopia.reflection.util.ProgressState
 
 import scala.concurrent.ExecutionContext

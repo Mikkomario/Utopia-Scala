@@ -6,7 +6,7 @@ import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading, Trailing}
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import scala.collection.immutable.VectorBuilder
 import scala.math.Ordering.Double.TotalOrdering

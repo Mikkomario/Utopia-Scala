@@ -16,6 +16,7 @@
 - Custom file conflict resolutions can now be used in standard file move and copy operations
 - The first day of the week may be configured using **WeekDays**
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
+- Added **IndirectPointer** and `Flag.wrap(...)`
 - **FileLogger** now supports time-based log entry grouping
 ### New Methods
 - **Iterable** (**CollectionExtensions**)

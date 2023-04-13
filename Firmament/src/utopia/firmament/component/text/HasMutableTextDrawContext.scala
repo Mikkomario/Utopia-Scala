@@ -5,7 +5,7 @@ import utopia.firmament.model.TextDrawContext
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 /**
   * Common trait for components that allow changes to be made on their text drawing context

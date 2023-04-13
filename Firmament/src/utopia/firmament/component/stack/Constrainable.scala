@@ -2,7 +2,7 @@ package utopia.firmament.component.stack
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.shape.stack.modifier.{StackLengthModifier, StackSizeModifier}
+import utopia.firmament.model.stack.modifier.{StackLengthModifier, StackSizeModifier}
 
 /**
   * A common trait for stackable instances that can apply stack size constraints
@@ -28,7 +28,8 @@ trait Constrainable extends StackSizeCalculating
 	/**
 	  * @return This component's calculated stack size after constraints have been applied
 	  */
-	def calculatedStackSizeWithConstraints = constraints.foldLeft(calculatedStackSize) { (size, mod) => mod(size) }
+	def calculatedStackSizeWithConstraints =
+		constraints.foldLeft(calculatedStackSize) { (size, mod) => mod(size) }
 	
 	
 	// OTHER	-----------------------
@@ -38,20 +39,17 @@ trait Constrainable extends StackSizeCalculating
 	  * @param constraint Constraint to add
 	  */
 	def addConstraint(constraint: StackSizeModifier) = constraints :+= constraint
-	
 	/**
 	  * Adds a new stack length constraint for specific axis
 	  * @param axis Targeted axis
 	  * @param constraint Stack length constraint to add
 	  */
 	def addConstraintOver(axis: Axis2D)(constraint: StackLengthModifier) = addConstraint(constraint.over(axis))
-	
 	/**
 	  * Adds a new constraint over stack size width
 	  * @param constraint Constraint to add
 	  */
 	def addWidthConstraint(constraint: StackLengthModifier) = addConstraintOver(X)(constraint)
-	
 	/**
 	  * Adds a new constraint over stack size height
 	  * @param constraint Constraint to add

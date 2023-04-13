@@ -12,7 +12,7 @@ import utopia.reach.component.wrapper.OpenComponent
 import StackLayout.Fit
 import utopia.firmament.component.container.many.{MutableMultiContainer, StackLike}
 import utopia.firmament.context.BaseContext
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 object MutableStack extends ContextInsertableComponentFactoryFactory[BaseContext, MutableStackFactory,
 	ContextualMutableStackFactory]

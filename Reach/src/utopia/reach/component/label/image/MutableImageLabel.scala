@@ -7,7 +7,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 import utopia.firmament.drawing.view.ImageViewDrawer
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactory]
 {

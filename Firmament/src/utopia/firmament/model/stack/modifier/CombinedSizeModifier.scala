@@ -1,6 +1,6 @@
-package utopia.reflection.shape.stack.modifier
+package utopia.firmament.model.stack.modifier
 
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 /**
   * This stack size modifier applies two modifiers consecutively

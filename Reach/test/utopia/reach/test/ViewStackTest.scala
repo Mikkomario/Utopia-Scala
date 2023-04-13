@@ -10,7 +10,7 @@ import utopia.reach.container.multi.stack.ViewStack
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.localization.LocalString._
 import utopia.reflection.util.SingleFrameSetup

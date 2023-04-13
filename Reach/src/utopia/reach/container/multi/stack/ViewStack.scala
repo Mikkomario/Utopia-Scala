@@ -18,7 +18,7 @@ import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreation
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 object ViewStack extends ContextInsertableComponentFactoryFactory[BaseContext, ViewStackFactory,
 	ContextualViewStackFactory]

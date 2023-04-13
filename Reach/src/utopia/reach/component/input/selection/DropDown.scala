@@ -26,7 +26,7 @@ import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.{ColorRole, ColorShade}
 import utopia.paradigm.color.ColorRole.Secondary
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 

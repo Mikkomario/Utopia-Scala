@@ -20,9 +20,9 @@ import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackF
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.cursor.CursorSet
 import utopia.reflection.container.swing.window.Window
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder

@@ -7,7 +7,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.paradigm.transform.AffineTransformation
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 /**
   * This custom drawer draws text over a component. This is a common trait for both mutable and immutable implementations.

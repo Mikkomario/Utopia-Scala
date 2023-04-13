@@ -28,7 +28,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 

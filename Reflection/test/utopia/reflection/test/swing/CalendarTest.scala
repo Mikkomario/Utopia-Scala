@@ -13,10 +13,10 @@ import utopia.reflection.component.swing.input.{Calendar, JDropDownWrapper}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.reflection.test.TestContext._
 import utopia.genesis.text.FontStyle.Plain
 

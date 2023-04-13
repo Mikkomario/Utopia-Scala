@@ -3,7 +3,7 @@ package utopia.firmament.context
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object TextContext
 {

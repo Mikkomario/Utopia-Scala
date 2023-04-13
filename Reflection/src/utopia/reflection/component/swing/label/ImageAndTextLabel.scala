@@ -17,7 +17,7 @@ import utopia.paradigm.enumeration.LinearAlignment.{Close, Far}
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.firmament.localization.DisplayFunction
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object ImageAndTextLabel
 {

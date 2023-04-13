@@ -4,7 +4,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 @deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 object SegmentedGroup

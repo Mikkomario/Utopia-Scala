@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.immutable.eventful.FlagView
-import utopia.flow.view.template.eventful.{AbstractChanging, FlagLike}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, FlagLike}
 
 object Flag
 {
@@ -12,6 +12,15 @@ object Flag
 	  * @return A new flag
 	  */
 	def apply(): Flag = new _Flag()
+	
+	/**
+	  * Wraps a flag view, adding a mutable interface to it
+	  * @param view A view that provides the state of this flag
+	  * @param set A function for setting this flag.
+	  *            Returns whether the state was altered.
+	  * @return A new flag that wraps the specified view and uses the specified function to alter state.
+	  */
+	def wrap(view: Changing[Boolean])(set: => Boolean): Flag = new IndirectFlag(view, () => set)
 	
 	
 	// NESTED   ------------------------
@@ -67,6 +76,17 @@ object Flag
 			else
 				false
 		}
+	}
+	
+	private class IndirectFlag(override protected val wrapped: Changing[Boolean], indirectSet: () => Boolean)
+		extends Flag with ChangingWrapper[Boolean]
+	{
+		override lazy val view: FlagLike = wrapped match {
+			case f: FlagLike => f
+			case o => o
+		}
+		
+		override def set(): Boolean = indirectSet()
 	}
 }
 

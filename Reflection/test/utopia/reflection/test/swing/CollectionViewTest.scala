@@ -12,8 +12,8 @@ import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.firmament.model.stack.StackSize
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

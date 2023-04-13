@@ -1,6 +1,6 @@
-package utopia.reflection.shape.stack.modifier
+package utopia.firmament.model.stack.modifier
 
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * Places a maximum limit on the optimal stack length

@@ -21,8 +21,8 @@ import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
-import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.shape.stack.modifier.MaxOptimalSizeModifier
+import utopia.firmament.model.stack.StackSize
+import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
 
 import scala.concurrent.ExecutionContext
 

@@ -7,7 +7,7 @@ import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.LinearAlignment.Middle
 import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D, LinearAlignment}
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 /**
   * A common trait for text context implementations

@@ -14,7 +14,7 @@ import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollArea
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.util.SingleFrameSetup
 

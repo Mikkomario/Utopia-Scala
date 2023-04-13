@@ -1,5 +1,6 @@
 package utopia.paradigm.enumeration
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{RichComparable, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.shape.shape1d.Vector1D
@@ -101,7 +102,7 @@ object Axis2D
     /**
      * All possible values of this trait
      */
-    val values: Vector[Axis2D] = Vector(Axis.X, Axis.Y)
+    val values: Pair[Axis2D] = Pair(Axis.X, Axis.Y)
 }
 
 object Axis

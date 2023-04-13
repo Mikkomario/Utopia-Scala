@@ -21,3 +21,16 @@ object KeyStateHandler
   */
 class KeyStateHandler(initialElements: IterableOnce[handling.KeyStateListener])
 	extends DeepHandler[handling.KeyStateListener](initialElements) with handling.KeyStateHandler
+{
+	// ATTRIBUTES   ----------------------
+	
+	/**
+	  * Filter applied to incoming keyboard state events (mutable)
+	  */
+	var filter = super.keyStateEventFilter
+	
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def keyStateEventFilter = filter
+}

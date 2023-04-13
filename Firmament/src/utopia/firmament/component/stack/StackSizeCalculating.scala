@@ -1,6 +1,6 @@
 package utopia.firmament.component.stack
 
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 /**
   * These items are able to calculate their stack size

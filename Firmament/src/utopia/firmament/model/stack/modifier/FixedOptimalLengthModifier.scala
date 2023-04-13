@@ -1,6 +1,6 @@
-package utopia.reflection.shape.stack.modifier
+package utopia.firmament.model.stack.modifier
 
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * Fixes the optimal length of the targeted item to a specific value

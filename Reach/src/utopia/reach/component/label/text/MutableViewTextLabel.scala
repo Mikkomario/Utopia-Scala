@@ -15,7 +15,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.localization.DisplayFunction
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object MutableViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
 	MutableViewTextLabelFactory, ContextualMutableViewTextLabelFactory]

@@ -1,4 +1,4 @@
-package utopia.reflection.shape.stack
+package utopia.firmament.model.stack
 
 /**
   * Enumeration trait for various priority settings for dynamic lengths (Eg. StackLength)

@@ -22,8 +22,8 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.stack.modifier.StackSizeModifier
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Prompt
 
 import scala.concurrent.ExecutionContext

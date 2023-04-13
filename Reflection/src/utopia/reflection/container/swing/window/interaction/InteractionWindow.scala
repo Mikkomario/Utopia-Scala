@@ -12,10 +12,10 @@ import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{ImageAndTextButton, TextButton}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 

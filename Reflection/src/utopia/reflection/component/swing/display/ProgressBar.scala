@@ -20,7 +20,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

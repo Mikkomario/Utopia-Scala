@@ -12,7 +12,7 @@ import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object TextButton
 {

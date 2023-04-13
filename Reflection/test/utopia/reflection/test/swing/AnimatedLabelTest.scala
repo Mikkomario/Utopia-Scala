@@ -9,7 +9,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.angular.Rotation
 import utopia.reflection.component.swing.label.AnimationLabel
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 import utopia.firmament.model.stack.LengthExtensions._

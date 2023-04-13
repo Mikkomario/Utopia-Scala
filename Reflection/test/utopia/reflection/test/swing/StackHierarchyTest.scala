@@ -12,8 +12,8 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.reflection.test.TestContext._
 
 /**

@@ -8,7 +8,7 @@ import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 object EmptyLabel
 	extends ContextInsertableComponentFactoryFactory[ColorContext, EmptyLabelFactory, ContextualEmptyLabelFactory]

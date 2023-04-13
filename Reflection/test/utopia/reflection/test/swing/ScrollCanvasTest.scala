@@ -15,7 +15,7 @@ import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.display.ScrollCanvas
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.test.TestContext._
 

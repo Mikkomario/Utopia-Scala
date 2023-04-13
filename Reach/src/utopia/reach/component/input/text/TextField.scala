@@ -30,8 +30,8 @@ import utopia.firmament.model.TextDrawContext
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
-import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
+import utopia.firmament.model.stack.StackLength
+import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 
 import scala.concurrent.duration.Duration
 

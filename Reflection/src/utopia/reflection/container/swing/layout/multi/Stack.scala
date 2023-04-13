@@ -15,7 +15,7 @@ import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtCompo
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
 import utopia.reflection.container.stack.template.layout.ReflectionStackLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import scala.collection.immutable.VectorBuilder
 

@@ -21,7 +21,7 @@ import utopia.reach.container.multi.stack.Stack
 import utopia.reach.focus.ManyFocusableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.localization.{LocalizedString, Localizer}
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration

@@ -3,8 +3,9 @@ package utopia.reflection.container.swing.window
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.WindowResizePolicy
 
 import javax.swing.JDialog
 

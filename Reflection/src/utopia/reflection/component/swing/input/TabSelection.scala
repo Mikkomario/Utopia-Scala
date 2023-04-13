@@ -22,7 +22,7 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 import scala.collection.immutable.HashMap
 

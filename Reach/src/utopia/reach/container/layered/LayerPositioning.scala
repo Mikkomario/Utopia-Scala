@@ -6,7 +6,7 @@ import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.template.ReachComponentLike
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 /**
   * An enumeration for different ways to place layers in a layered view

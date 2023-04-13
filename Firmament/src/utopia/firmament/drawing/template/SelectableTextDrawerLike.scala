@@ -7,7 +7,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.paradigm.transform.AffineTransformation
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 /**
   * Common trait for custom drawers that draw interactive text over a component

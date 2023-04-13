@@ -7,7 +7,7 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup

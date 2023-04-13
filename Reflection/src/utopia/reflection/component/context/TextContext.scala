@@ -11,7 +11,7 @@ import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.firmament.model.stack.LengthExtensions._
 
 /**

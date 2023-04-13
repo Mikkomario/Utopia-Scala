@@ -8,7 +8,7 @@ import utopia.paradigm.color.{Color, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.firmament.localization.Localizer
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 object BaseContext
 {

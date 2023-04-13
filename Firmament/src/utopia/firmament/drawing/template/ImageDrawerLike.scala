@@ -5,7 +5,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 /**
   * A common trait for image drawer implementations

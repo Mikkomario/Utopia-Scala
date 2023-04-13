@@ -17,7 +17,7 @@ import utopia.reflection.component.swing.label.{ItemLabel, ViewLabel}
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 import scala.concurrent.ExecutionContext
 

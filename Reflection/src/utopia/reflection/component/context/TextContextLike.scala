@@ -5,7 +5,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.firmament.localization.Localizer
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 /**
   * A common trait for text context implementations

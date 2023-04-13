@@ -1,6 +1,6 @@
-package utopia.reflection.shape.stack.modifier
+package utopia.firmament.model.stack.modifier
 
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 
 /**
   * Makes all stack sizes as symmetric as possible

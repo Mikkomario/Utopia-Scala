@@ -5,7 +5,7 @@ import utopia.paradigm.color.Color
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 object MutableCustomDrawReachComponent
 {

@@ -9,7 +9,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 /**
   * A template trait for containers which hold multiple overlaid layers of components

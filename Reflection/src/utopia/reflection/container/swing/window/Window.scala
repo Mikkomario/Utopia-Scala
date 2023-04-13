@@ -18,10 +18,11 @@ import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.firmament.model.enumeration.WindowResizePolicy
+import utopia.firmament.model.stack.modifier.StackSizeModifier
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 import scala.concurrent.{ExecutionContext, Promise}

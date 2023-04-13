@@ -13,8 +13,8 @@ import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.StackInsets
 import utopia.genesis.text.FontStyle.Plain
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.enumeration.Direction2D

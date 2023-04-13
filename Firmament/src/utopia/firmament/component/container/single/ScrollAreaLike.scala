@@ -19,7 +19,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 import java.awt.event.KeyEvent
 import java.time.Instant

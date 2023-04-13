@@ -1,12 +1,13 @@
-package utopia.reflection.shape.stack
+package utopia.firmament.model.stack
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Combinable.SelfCombinable
 import utopia.flow.operator.{EqualsBy, LinearScalable}
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Insets, Size}
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
-import utopia.reflection.shape.stack.LengthPriority.Low
+import utopia.firmament.model.stack.LengthPriority.Low
 
 object StackSize extends DimensionsWrapperFactory[StackLength, StackSize]
 {
@@ -144,10 +145,15 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       */
     def optimal = Size(dimensions.map { _.optimal })
     /**
+      * @return Maximum dimensions of this stack size.
+      *         Contains 0-2 items, based on which maximums have been defined.
+      */
+    def maxDimensions =
+        Pair(maxWidth, maxHeight).flatMergeWith(Axis2D.values) { (dim, axis) => dim.map { axis(_) } }
+    /**
       * @return Maximum size. None if not specified
       */
-    def max = 
-    {
+    def max = {
         if (dimensions.forall { _.max.isDefined })
             Some(Size(dimensions.map { _.max.get }))
         else

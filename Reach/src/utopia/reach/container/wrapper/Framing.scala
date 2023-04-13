@@ -11,7 +11,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible}
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 
 object Framing extends ContextInsertableComponentFactoryFactory[Any, FramingFactory, ContextualFramingFactory]
 {

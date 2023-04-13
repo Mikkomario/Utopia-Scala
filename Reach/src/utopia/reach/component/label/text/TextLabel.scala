@@ -13,7 +13,7 @@ import utopia.firmament.context.TextContext
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object TextLabel extends ContextInsertableComponentFactoryFactory[TextContext, TextLabelFactory,
 	ContextualTextLabelFactory]

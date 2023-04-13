@@ -13,7 +13,7 @@ import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths

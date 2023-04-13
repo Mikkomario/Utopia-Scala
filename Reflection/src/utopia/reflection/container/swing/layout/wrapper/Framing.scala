@@ -10,7 +10,7 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.template.layout.ReflectionFramingLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.stack.{StackInsets, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackSize}
 
 object Framing
 {

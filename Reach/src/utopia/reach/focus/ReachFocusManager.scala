@@ -411,7 +411,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 			windowOwnerships.get(component.focusId).exists { owned => windowsFrom(event).contains(owned) }
 		
 		private def windowsFrom(event: FocusEvent) = Option(event.getOppositeComponent) match {
-			case Some(component) => component.parentWindows.toVector
+			case Some(component) => component.parentWindowsIterator.toVector
 			case None => Vector()
 		}
 	}

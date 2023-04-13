@@ -10,7 +10,7 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.AnimatedSizeContainer
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

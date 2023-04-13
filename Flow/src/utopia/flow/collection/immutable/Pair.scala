@@ -183,10 +183,6 @@ case class Pair[+A](first: A, second: A)
 	 * @return A tuple based on this pair
 	 */
 	def toTuple = first -> second
-	/**
-	 * @return A map with the same contents with this pair (first item linked with Negative, second with Positive)
-	 */
-	def toMap: Map[End, A] = Map(First -> first, Last -> second)
 	
 	/**
 	  * @return Whether the two values in this pair are equal

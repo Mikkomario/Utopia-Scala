@@ -20,8 +20,8 @@ import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{LocalizedString, Localizer}
-import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.shape.stack.modifier.FixedOptimalLengthModifier
+import utopia.firmament.model.stack.StackLength
+import utopia.firmament.model.stack.modifier.FixedOptimalLengthModifier
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}

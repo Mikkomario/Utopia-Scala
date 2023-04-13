@@ -28,7 +28,7 @@ import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import scala.concurrent.duration.{Duration, FiniteDuration}

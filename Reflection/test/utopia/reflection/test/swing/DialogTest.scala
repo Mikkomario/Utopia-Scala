@@ -8,7 +8,7 @@ import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.window.{Dialog, Frame}
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 import utopia.reflection.test.TestContext._
 
 /**

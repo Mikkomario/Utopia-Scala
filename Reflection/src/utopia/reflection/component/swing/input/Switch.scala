@@ -23,7 +23,7 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import scala.concurrent.duration.FiniteDuration
 

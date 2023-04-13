@@ -1,4 +1,4 @@
-package utopia.reflection.shape.stack
+package utopia.firmament.model.stack
 
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D

@@ -17,7 +17,7 @@ import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import StackLayout.Fit
 import utopia.firmament.context.BaseContext
-import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
+import utopia.firmament.model.stack.{StackInsetsConvertible, StackLength}
 
 import scala.language.implicitConversions
 

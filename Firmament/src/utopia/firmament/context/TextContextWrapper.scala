@@ -1,7 +1,7 @@
 package utopia.firmament.context
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 /**
   * A common trait for contexts that wrap a text context

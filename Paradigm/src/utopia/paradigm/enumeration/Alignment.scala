@@ -83,7 +83,7 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	/**
 	  * @return Directions this alignment will try to move contents
 	  */
-	def directions: Vector[Direction2D] = Axis2D.values.flatMap { axis => apply(axis).direction.map { axis(_) } }
+	def directions = Axis2D.values.flatMap { axis => apply(axis).direction.map { axis(_) } }
 	
 	/**
 	  * @return The direction this alignment will move the items horizontally. None if this alignment doesn't

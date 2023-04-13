@@ -8,7 +8,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.localization.LocalizedString
 import utopia.reflection.util.ProgressState
 

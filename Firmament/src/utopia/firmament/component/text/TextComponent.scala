@@ -5,7 +5,7 @@ import utopia.firmament.component.stack.StackSizeCalculating
 import utopia.firmament.model.TextDrawContext
 import utopia.genesis.graphics.MeasuredText
 import utopia.firmament.localization.LocalizedString
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 /**
   * Common trait for components that present text

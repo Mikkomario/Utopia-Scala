@@ -14,7 +14,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}

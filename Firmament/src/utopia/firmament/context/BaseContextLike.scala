@@ -8,7 +8,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
 import utopia.firmament.localization.Localizer
-import utopia.reflection.shape.stack.{LengthPriority, StackLength}
+import utopia.firmament.model.stack.{LengthPriority, StackLength}
 
 /**
   * A trait common for basic component context implementations

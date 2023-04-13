@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.template
 
 import javax.swing.JComponent
 import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 object JStackableWrapper
 {

@@ -26,7 +26,7 @@ import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.VeryHigh
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.FiniteDuration

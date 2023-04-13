@@ -18,8 +18,8 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
 import utopia.firmament.localization.{LocalString, LocalizedString}
-import utopia.reflection.shape.stack.modifier.StackSizeModifier
-import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 object MultiLineTextView
 {

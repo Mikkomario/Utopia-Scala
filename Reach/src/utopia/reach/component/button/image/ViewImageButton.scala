@@ -18,7 +18,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object ViewImageButton extends ContextInsertableComponentFactoryFactory[ColorContext, ViewImageButtonFactory,
 	ContextualViewImageButtonFactory]

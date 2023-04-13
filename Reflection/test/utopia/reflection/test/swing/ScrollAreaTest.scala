@@ -15,11 +15,11 @@ import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.shape.stack.modifier.MaxOptimalLengthModifier
+import utopia.firmament.model.stack.StackInsets
+import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.reflection.test.TestContext._
 import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.enumeration.Alignment

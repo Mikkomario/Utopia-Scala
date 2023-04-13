@@ -4,7 +4,7 @@ import utopia.firmament.component.stack.{CachingStackable, Stackable}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 /**
   * Framings are wrappers that present a component with scaling 'frames', like a painting
@@ -26,16 +26,14 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 	override def updateLayout() =
 	{
 		// Repositions and resizes content
-		val layout = Axis2D.values.map
-		{
-			axis =>
-				// Calculates lengths
-				val (contentLength, topLeftMarginLength) = lengthsFor(axis)
-				// Margin cannot go below 0
-				if (topLeftMarginLength < 0)
-					axis -> (0.0, lengthAlong(axis))
-				else
-					axis -> (topLeftMarginLength, contentLength)
+		val layout = Axis2D.values.map { axis =>
+			// Calculates lengths
+			val (contentLength, topLeftMarginLength) = lengthsFor(axis)
+			// Margin cannot go below 0
+			if (topLeftMarginLength < 0)
+				axis -> (0.0, lengthAlong(axis))
+			else
+				axis -> (topLeftMarginLength, contentLength)
 		}.toMap
 		
 		val position = Point(layout(X)._1, layout(Y)._1)

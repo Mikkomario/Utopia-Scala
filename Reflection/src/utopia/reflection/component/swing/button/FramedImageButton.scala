@@ -8,7 +8,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 object FramedImageButton
 {

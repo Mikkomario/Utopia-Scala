@@ -4,7 +4,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorScheme
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.firmament.localization.Localizer
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * A common traits for wrappers around the base context

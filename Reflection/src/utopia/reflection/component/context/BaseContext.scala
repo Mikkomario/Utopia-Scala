@@ -6,7 +6,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
 import utopia.reflection.color.{ColorScheme, ComponentColor}
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 /**
   * This component context specifies information that is shared within the whole program (not component specific)

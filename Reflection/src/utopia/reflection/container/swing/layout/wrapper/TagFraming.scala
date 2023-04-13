@@ -10,7 +10,7 @@ import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.stack.template.layout.ReflectionFramingLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.stack.StackInsets
+import utopia.firmament.model.stack.StackInsets
 
 /**
   * Used for wrapping a component and for drawing a rounded "tag" background on it

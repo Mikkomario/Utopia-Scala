@@ -12,7 +12,7 @@ import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 import utopia.reflection.util.ComponentToImage
 
 import java.awt.event.MouseEvent

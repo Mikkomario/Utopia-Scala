@@ -36,7 +36,7 @@ import StackLayout.Fit
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment.BottomLeft
-import utopia.reflection.shape.stack.StackLength
+import utopia.firmament.model.stack.StackLength
 
 import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent}
 import scala.concurrent.ExecutionContext

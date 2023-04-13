@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.template
 
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
-import utopia.reflection.shape.stack.StackSize
+import utopia.firmament.model.stack.StackSize
 
 import java.awt.Component
 
