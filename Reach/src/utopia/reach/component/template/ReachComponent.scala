@@ -15,8 +15,8 @@ abstract class ReachComponent extends ReachComponentLike with CachingStackable
 	// ATTRIBUTES	-----------------------
 	
 	override val boundsPointer = new PointerWithEvents(Bounds.zero)
-	override val positionPointer = boundsPointer.map {_.position}
-	override val sizePointer = boundsPointer.map {_.size}
+	override lazy val positionPointer = boundsPointer.map {_.position}
+	override lazy val sizePointer = boundsPointer.map {_.size}
 	
 	override lazy val mouseButtonHandler = MouseButtonStateHandler()
 	override lazy val mouseMoveHandler = MouseMoveHandler()
@@ -26,8 +26,6 @@ abstract class ReachComponent extends ReachComponentLike with CachingStackable
 	// IMPLEMENTED	-----------------------
 	
 	override def position_=(p: Point) = boundsPointer.update { _.withPosition(p) }
-	
 	override def size_=(s: Size) = boundsPointer.update { _.withSize(s) }
-	
 	override def bounds_=(b: Bounds) = boundsPointer.value = b
 }

@@ -7,8 +7,7 @@ import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default
 import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.firmament.model.enumeration.StackLayout.Trailing
 import utopia.reflection.container.swing.window.Frame
@@ -17,6 +16,7 @@ import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
+import utopia.reach.container.multi.Stack
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 
@@ -31,9 +31,9 @@ object ReachTextFieldTest extends App
 	
 	import TestContext._
 	import TestCursors._
-	
+	/*
 	// Creates text fields (+ result views)
-	val canvas = ReachCanvas(cursors) { hierarchy =>
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
 		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.gray, Stack).apply(margins.medium.any.square) { stack =>
 			stack.build(Stack).column() { r =>
 				val rows = r.mapContext { _.forTextComponents }
@@ -74,4 +74,6 @@ object ReachTextFieldTest extends App
 	val frame = Frame.windowed(canvas, "Reach Test", Program, getAnchor = canvas.anchorPosition(_))
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

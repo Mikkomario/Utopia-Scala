@@ -1,5 +1,6 @@
 package utopia.reach.window
 
+import utopia.firmament.component.Window
 import utopia.firmament.context.{ColorContext, TextContext}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.{HotKey, RowGroup, RowGroups, WindowButtonBlueprint}
@@ -18,15 +19,14 @@ import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.focus.FocusRequestable
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
-import utopia.reflection.container.swing.window.Window
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.reach.container.multi.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
@@ -106,7 +106,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	override protected def createContent(factories: ContextualMixed[ColorContext]) =
 	{
-		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
+		implicit val canvas: ReachCanvas2 = factories.parentHierarchy.top
 		val (template, dialogContext) = inputTemplate
 		val context = fieldCreationContext
 		val (nameContext, fieldContext) = makeFieldNameAndFieldContext(context)
@@ -183,7 +183,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up
-		val windowPromise = Promise[Window[_]]()
+		val windowPromise = Promise[Window]()
 		
 		val window = field.createPopup(popupContext.actorHandler, margin = popupContext.margins.small,
 			autoCloseLogic = PopupAutoCloseLogic.WhenAnyKeyPressed) { hierarchy =>

@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.input.selection.RadioButtonGroup
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
@@ -26,8 +26,8 @@ object ReachRadioButtonsTest extends App
 	import utopia.reflection.test.TestContext._
 	
 	val mainBg = colorScheme.gray.default
-	
-	val canvas = ReachCanvas(cursors) { hierarchy =>
+	/*
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
 		Framing(hierarchy).withContext(baseContext.against(mainBg).forTextComponents)
 			.build(RadioButtonGroup)
 			.apply(margins.medium.any, customDrawers = Vector(BackgroundDrawer(mainBg))) { buttonsF =>
@@ -39,4 +39,6 @@ object ReachRadioButtonsTest extends App
 	val frame = Frame.windowed(canvas.parent, "Reach Test", Program)
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

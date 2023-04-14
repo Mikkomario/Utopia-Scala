@@ -1,8 +1,9 @@
-package utopia.reach.container.multi.stack
+package utopia.reach.container.multi
 
 import utopia.firmament.context.ColorContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -24,11 +25,10 @@ import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 
@@ -50,7 +50,7 @@ object List extends ContextInsertableComponentFactoryFactory[ColorContext, ListF
 class ListFactory(parentHierarchy: ComponentHierarchy)
 	extends ContextInsertableComponentFactory[ColorContext, ContextualListFactory]
 {
-	private implicit val canvas: ReachCanvas = parentHierarchy.top
+	private implicit val canvas: ReachCanvas2 = parentHierarchy.top
 	
 	override def withContext[N <: ColorContext](context: N) =
 		ContextualListFactory(this, context)

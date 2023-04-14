@@ -6,13 +6,13 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.container.multi.stack.ViewStack
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.localization.LocalString._
+import utopia.reach.container.multi.ViewStack
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -28,8 +28,8 @@ object ViewStackTest extends App
 	import TestCursors._
 	
 	val numberPointer = new PointerWithEvents[Int](1)
-	
-	val canvas = ReachCanvas(cursors) { hierarchy =>
+	/*
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
 		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.primary.light, ViewStack)
 			.apply(margins.medium.any.square) { stackF =>
 				stackF.mapContext { _.forTextComponents.withTextExpandingToRight }.build(TextLabel)
@@ -48,4 +48,6 @@ object ViewStackTest extends App
 	
 	// Updates the number within a background loop
 	Loop.regularly(1.seconds, waitFirst = true) { numberPointer.update { i => if (i >= 9) 1 else i + 1 } }
+	
+	 */
 }

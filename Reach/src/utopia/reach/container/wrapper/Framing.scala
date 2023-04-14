@@ -7,7 +7,7 @@ import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -136,7 +136,7 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 class ContextualFramingBuilder[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 (factory: FramingFactory, context: N, contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 {
-	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
 	/**
 	  * Builds a framing with content
@@ -162,7 +162,7 @@ class ContextualFilledFramingBuilder[N, +F[X <: N] <: ContextualComponentFactory
 {
 	// IMPLICIT	-------------------------------
 	
-	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
 	
 	// OTHER	-------------------------------

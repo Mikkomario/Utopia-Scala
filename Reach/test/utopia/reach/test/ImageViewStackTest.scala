@@ -12,14 +12,14 @@ import utopia.paradigm.shape.shape2d.Size
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.ViewStack
+import utopia.reach.container.ReachCanvas2
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
+import utopia.reach.container.multi.ViewStack
 import utopia.reflection.util.SingleFrameSetup
 
 import java.awt.event.KeyEvent
@@ -43,8 +43,8 @@ object ImageViewStackTest extends App
 	val pointer1 = new PointerWithEvents(false)
 	val pointer2 = new PointerWithEvents(false)
 	val pointer3 = new PointerWithEvents(false)
-	
-	val canvas = ReachCanvas(cursors) { hierarchy =>
+	/*
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
 		ViewStack(hierarchy).builder(Mixed)
 			.withFixedStyle(X, Center, margins.verySmall.downscaling.withLowPriority,
 				customDrawers = Vector(BackgroundDrawer(Color.magenta))) { factories =>
@@ -76,4 +76,6 @@ object ImageViewStackTest extends App
 	val frame = Frame.windowed(canvas.parent, "Reach Test", Program)
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

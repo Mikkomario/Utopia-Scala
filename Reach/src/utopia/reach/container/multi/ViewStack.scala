@@ -1,9 +1,10 @@
-package utopia.reach.container.multi.stack
+package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -16,9 +17,8 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.firmament.model.stack.StackLength
 
 object ViewStack extends ContextInsertableComponentFactoryFactory[BaseContext, ViewStackFactory,
 	ContextualViewStackFactory]
@@ -31,7 +31,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 {
 	// COMPUTED	----------------------------------
 	
-	private implicit def canvas: ReachCanvas = parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = parentHierarchy.top
 	
 	
 	// IMPLEMENTED	------------------------------
@@ -143,7 +143,7 @@ case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackF
 {
 	// COMPUTED	------------------------------------
 	
-	private implicit def canvas: ReachCanvas = stackFactory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = stackFactory.parentHierarchy.top
 	
 	/**
 	  * @return A version of this factory which doesn't utilize component creation context
@@ -297,7 +297,7 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 {
 	// IMPLICIT	---------------------------------
 	
-	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
 	
 	// OTHER	---------------------------------
@@ -405,7 +405,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualCompo
 {
 	// IMPLICIT	---------------------------------
 	
-	implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
+	implicit def canvas: ReachCanvas2 = stackFactory.stackFactory.parentHierarchy.top
 	
 	
 	// COMPUTED	---------------------------------

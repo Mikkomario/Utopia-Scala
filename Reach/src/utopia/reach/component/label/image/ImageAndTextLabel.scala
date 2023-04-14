@@ -12,11 +12,11 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
-import utopia.reach.container.multi.stack.Stack
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.reach.container.multi.Stack
 
 object ImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, ImageAndTextLabelFactory,
 	ContextualImageAndTextLabelFactory]

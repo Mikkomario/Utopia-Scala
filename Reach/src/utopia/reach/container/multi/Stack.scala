@@ -1,20 +1,20 @@
-package utopia.reach.container.multi.stack
+package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.firmament.model.stack.StackLength
 
 object Stack extends ContextInsertableComponentFactoryFactory[BaseContext, StackFactory, ContextualStackFactory]
 {
@@ -26,7 +26,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 {
 	// COMPUTED	--------------------------------
 	
-	private implicit def canvas: ReachCanvas = parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = parentHierarchy.top
 	
 	/**
 	  * Creates a new stack builder
@@ -322,7 +322,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 {
 	// IMPLICIT	----------------------------
 	
-	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
 	
 	// OTHER	-----------------------------
@@ -403,7 +403,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 (stackFactory: ContextualStackFactory[N], contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 {
-	private implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas2 = stackFactory.stackFactory.parentHierarchy.top
 	
 	private def context = stackFactory.context
 	

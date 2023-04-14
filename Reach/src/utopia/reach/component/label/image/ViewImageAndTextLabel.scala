@@ -17,7 +17,6 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.multi.stack.Stack
 import utopia.reach.util.Priority.Low
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
@@ -25,6 +24,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.firmament.localization.DisplayFunction
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.reach.container.multi.Stack
 
 object ViewImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
 	ViewImageAndTextLabelFactory, ContextualViewImageAndTextLabelFactory]

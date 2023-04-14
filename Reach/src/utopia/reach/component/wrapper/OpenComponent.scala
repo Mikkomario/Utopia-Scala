@@ -10,14 +10,14 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertabl
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import StackLayout.Fit
 import utopia.firmament.context.BaseContext
 import utopia.firmament.model.stack.{StackInsetsConvertible, StackLength}
+import utopia.reach.container.multi.Stack
 
 import scala.language.implicitConversions
 
@@ -31,7 +31,7 @@ object Open
 	  * @tparam R Type of additional creation result
 	  * @return A new open component
 	  */
-	def apply[C, R](creation: ComponentHierarchy => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas) =
+	def apply[C, R](creation: ComponentHierarchy => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas2) =
 	{
 		// Creates the hierarchy block first
 		val hierarchy = new SeedHierarchyBlock(canvas)
@@ -54,7 +54,7 @@ object Open
 	  *         additional creation result.
 	  */
 	def many[C <: ReachComponentLike, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
-					  (implicit canvas: ReachCanvas) =
+					  (implicit canvas: ReachCanvas2) =
 	{
 		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
 		// Collects all created component hierarchies
@@ -94,7 +94,7 @@ object Open
 	  * @return A new open component
 	  */
 	def using[F, C, R](factory: ComponentFactoryFactory[F])(creation: F => ComponentCreationResult[C, R])
-					  (implicit canvas: ReachCanvas) =
+					  (implicit canvas: ReachCanvas2) =
 		apply { hierarchy => creation(factory(hierarchy)) }
 	
 	/**
@@ -114,7 +114,7 @@ object Open
 	  */
 	def manyUsing[F, C <: ReachComponentLike, CR, R](factory: ComponentFactoryFactory[F])
 							  (creation: Iterator[F] => CreationsResult[C, CR, R])
-							  (implicit canvas: ReachCanvas) =
+							  (implicit canvas: ReachCanvas2) =
 		many[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
 	
 	/**
@@ -132,7 +132,7 @@ object Open
 	// FIXME: This method doesn't work without specifying all generic parameter types
 	def withContext[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
-	(creation: F[N] => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas) =
+	(creation: F[N] => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas2) =
 	{
 		apply { hierarchy =>
 			creation(factory.withContext(hierarchy, context))
@@ -159,7 +159,7 @@ object Open
 	def manyWithContext[C <: ReachComponentLike, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
 	(creation: Iterator[F[N]] => CreationsResult[C, CR, R])
-	(implicit canvas: ReachCanvas) =
+	(implicit canvas: ReachCanvas2) =
 		many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	
 	/**
@@ -176,7 +176,7 @@ object Open
 	  */
 	def contextual[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])(creation: F[N] => ComponentCreationResult[C, R])
-	(implicit canvas: ReachCanvas, context: N) =
+	(implicit canvas: ReachCanvas2, context: N) =
 		withContext(factory, context)(creation)
 	
 	/**
@@ -199,7 +199,7 @@ object Open
 	def contextualMany[C <: ReachComponentLike, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 	(creation: Iterator[F[N]] => CreationsResult[C, CR, R])
-	(implicit canvas: ReachCanvas, context: N) =
+	(implicit canvas: ReachCanvas2, context: N) =
 		manyWithContext(factory, context)(creation)
 }
 
@@ -259,7 +259,7 @@ object OpenComponent
 		  */
 		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-			   (implicit context: BaseContext, canvas: ReachCanvas) =
+			   (implicit context: BaseContext, canvas: ReachCanvas2) =
 			Open.withContext(Stack, context) { sf =>
 				val stack = sf(c, direction, layout, cap, customDrawers, areRelated)
 				stack.parent -> stack.result
@@ -280,7 +280,7 @@ object OpenComponent
 		  */
 		def row(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-				 (implicit context: BaseContext, canvas: ReachCanvas) =
+				 (implicit context: BaseContext, canvas: ReachCanvas2) =
 			stack(X, layout, cap, customDrawers, areRelated)
 		
 		/**
@@ -298,7 +298,7 @@ object OpenComponent
 		  */
 		def column(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-			   (implicit context: BaseContext, canvas: ReachCanvas) =
+			   (implicit context: BaseContext, canvas: ReachCanvas2) =
 			stack(Y, layout, cap, customDrawers, areRelated)
 	}
 }

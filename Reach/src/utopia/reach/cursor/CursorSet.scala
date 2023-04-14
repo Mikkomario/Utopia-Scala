@@ -2,6 +2,7 @@ package utopia.reach.cursor
 
 import utopia.firmament.image.SingleColorIcon
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.Combinable
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.cursor.CursorType.Default
@@ -50,6 +51,7 @@ object CursorSet
   * @since 11.11.2020, v0.1
   */
 case class CursorSet(cursors: Map[CursorType, Cursor], default: Cursor)
+	extends Combinable[(CursorType, Cursor), CursorSet]
 {
 	// ATTRIBUTES	--------------------------
 	
@@ -67,20 +69,29 @@ case class CursorSet(cursors: Map[CursorType, Cursor], default: Cursor)
 	def all = cursors.values.toSet + default
 	
 	
+	// IMPLEMENTED  --------------------------
+	
+	override def +(other: (CursorType, Cursor)): CursorSet = copy(cursors = cursors + other)
+	
+	
 	// OTHER	------------------------------
 	
 	/**
 	  * @param cursorType Targeted cursor type
 	  * @return Cursor image that best represents the specified cursor type
 	  */
-	def apply(cursorType: CursorType) = cursors.get(cursorType) match
-	{
+	def apply(cursorType: CursorType) = cursors.get(cursorType) match {
 		case Some(cursor) => cursor
 		case None => cursorType.backup.flatMap { _apply(_, Set(cursorType)) }.getOrElse(default)
 	}
 	
-	private def _apply(cursorType: CursorType, testedTypes: Set[CursorType]): Option[Cursor] =
-	{
+	/**
+	  * @param cursor A cursor type to remove from this set
+	  * @return A copy of this set without that cursor
+	  */
+	def -(cursor: CursorType) = copy(cursors = cursors - cursor)
+	
+	private def _apply(cursorType: CursorType, testedTypes: Set[CursorType]): Option[Cursor] = {
 		if (testedTypes.contains(cursorType))
 			None
 		else if (cursors.contains(cursorType))

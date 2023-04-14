@@ -12,12 +12,12 @@ import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.label.text.MutableViewTextLabel
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.reach.container.multi.Stack
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -37,8 +37,8 @@ object SelectionListTest extends App
 	val valuePointer = new PointerWithEvents[Option[Int]](Some(2))
 	
 	val mainBg = colorScheme.gray.default
-	
-	val canvas = ReachCanvas(cursors) { hierarchy =>
+	/*
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
 		Framing(hierarchy).withContext(baseContext).build(Stack)
 			.apply(margins.medium.any, customDrawers = Vector(BackgroundDrawer(mainBg))) { stackF =>
 				stackF.build(Mixed).column() { factories =>
@@ -75,4 +75,6 @@ object SelectionListTest extends App
 	val frame = Frame.windowed(canvas.parent, "Reach Test", Program)
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

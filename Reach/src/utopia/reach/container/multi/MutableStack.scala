@@ -1,6 +1,10 @@
-package utopia.reach.container.multi.stack
+package utopia.reach.container.multi
 
+import utopia.firmament.component.container.many.{MutableMultiContainer, StackLike}
+import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -9,10 +13,6 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import StackLayout.Fit
-import utopia.firmament.component.container.many.{MutableMultiContainer, StackLike}
-import utopia.firmament.context.BaseContext
-import utopia.firmament.model.stack.StackLength
 
 object MutableStack extends ContextInsertableComponentFactoryFactory[BaseContext, MutableStackFactory,
 	ContextualMutableStackFactory]

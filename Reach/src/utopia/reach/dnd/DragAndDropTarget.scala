@@ -1,8 +1,7 @@
 package utopia.reach.dnd
 
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, HasSize, Point}
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.container.ReachCanvas
 
 object DragAndDropTarget
 {
@@ -27,7 +26,7 @@ object DragAndDropTarget
 	  * @tparam U Arbitrary function return type
 	  * @return A new drag-and-drop target
 	  */
-	def anywhereInCanvas[U](canvas: ReachCanvas)(f: DragAndDropEvent => U): DragAndDropTarget =
+	def anywhereInCanvas[U](canvas: HasSize)(f: DragAndDropEvent => U): DragAndDropTarget =
 		new _DragAndDropTarget(Bounds(Point.origin, canvas.size), f)
 	
 	

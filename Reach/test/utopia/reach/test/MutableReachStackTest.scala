@@ -7,14 +7,14 @@ import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.MutableStack
+import utopia.reach.container.ReachCanvas2
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.util.SingleFrameSetup
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.ColorRole.Secondary
+import utopia.reach.container.multi.MutableStack
 
 /**
   * Tests mutable Reach stack implementation and the new version of container content displayer
@@ -25,9 +25,9 @@ object MutableReachStackTest extends App
 {
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
-	
+	/*
 	// Creates content stack
-	val (canvas, stack) = ReachCanvas(cursors) { canvasHierarchy =>
+	val (canvas, stack) = ReachCanvas2(cursors) { canvasHierarchy =>
 		MutableStack(canvasHierarchy).column[MutableViewTextLabel[Int]](margin = margins.small.any,
 			cap = margins.medium.any)
 	}.toTuple
@@ -59,4 +59,6 @@ object MutableReachStackTest extends App
 			lastIndex = newIndex
 		}
 	}
+	
+	 */
 }

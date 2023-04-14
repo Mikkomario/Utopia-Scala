@@ -11,13 +11,13 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.multi.stack.Stack
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.reach.container.multi.Stack
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -40,8 +40,9 @@ object DropDownTest extends App
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
-	val canvas = ReachCanvas(cursors) { hierarchy =>
-		implicit val canvas: ReachCanvas = hierarchy.top
+	/*
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
+		implicit val canvas: ReachCanvas2 = hierarchy.top
 		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.gray.light, Stack)
 			.apply(margins.medium.any.square) { stackF =>
 				stackF.mapContext { _.forTextComponents }.build(DropDown).column(areRelated = true) { ddF =>
@@ -77,4 +78,6 @@ object DropDownTest extends App
 	val frame = Frame.windowed(canvas, "Reach Test", Program)
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

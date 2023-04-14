@@ -40,8 +40,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 		// Applies the image with proper os-supported measurements and applied alpha value. Will not crop the image.
 		val osCursorSize = Try { Size.of(Toolkit.getDefaultToolkit.getBestCursorSize(
 			image.width.round.toInt, image.height.round.toInt)) }
-		val correctedImage = osCursorSize match
-		{
+		val correctedImage = osCursorSize match {
 			case Success(targetSize) => image.fittingWithin(targetSize).paintedToCanvas(targetSize)
 			case Failure(_) =>
 				if (image.alpha >= 1)
@@ -49,8 +48,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 				else
 					image.mapEachPixel { _.timesAlpha(image.alpha) }
 		}
-		correctedImage.toAwt match
-		{
+		correctedImage.toAwt match {
 			case Some(awtImage) =>
 				// Converts the source image to a new cursor
 				Try {

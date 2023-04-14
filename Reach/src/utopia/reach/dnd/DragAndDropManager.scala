@@ -7,7 +7,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.{ReachCanvas, ReachCanvas2}
 import utopia.reach.dnd.DragAndDropEvent._
 
 import java.awt.dnd._
@@ -15,14 +15,30 @@ import java.io.File
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
+object DragAndDropManager
+{
+	/**
+	  * @param canvas A Reach canvas for which the drag-and-drop process is managed
+	  * @param log    Implicit logging implementation
+	  * @return A new drag-and-drop manager that supervises the specified canvas
+	  */
+	def apply(canvas: ReachCanvas)(implicit log: Logger) = new DragAndDropManager(canvas.component)
+	/**
+	  * @param canvas A Reach canvas for which the drag-and-drop process is managed
+	  * @param log    Implicit logging implementation
+	  * @return A new drag-and-drop manager that supervises the specified canvas
+	  */
+	def apply(canvas: => ReachCanvas2)(implicit log: Logger) = new DragAndDropManager(canvas.component)
+}
+
 /**
   * A drag-and-drop process manager that supervises a single ReachCanvas instance, and a set of drag-and-drop targets
   * @author Mikko Hilpinen
   * @since 19.2.2023, v0.5.1
-  * @param canvas A Reach canvas for which the drag-and-drop process is managed
+  * @param component The component for which the drag-and-drop process is managed
   * @param log Implicit logging implementation
   */
-class DragAndDropManager(canvas: => ReachCanvas)(implicit log: Logger)
+class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -37,7 +53,7 @@ class DragAndDropManager(canvas: => ReachCanvas)(implicit log: Logger)
 	// While there are drop targets registered, listens to drag-and-drop events
 	targetsPointer.addListener { e =>
 		if (e.newValue.nonEmpty) {
-			Try { new DropTarget(canvas.component, DnDListener) }
+			Try { new DropTarget(component, DnDListener) }
 				.failure.foreach { log(_, "Failed to start drag-and-drop managing") }
 			DetachmentChoice.detach
 		}

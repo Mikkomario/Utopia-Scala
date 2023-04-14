@@ -17,11 +17,11 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.text.DurationField.focusTransferDelay
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.container.multi.stack.Stack
 import utopia.reach.focus.ManyFocusableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
+import utopia.reach.container.multi.Stack
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration

@@ -8,14 +8,14 @@ import utopia.paradigm.angular.Angle
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.multi.stack.Stack
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollArea
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.reach.container.multi.Stack
 import utopia.reflection.util.SingleFrameSetup
 
 import java.awt.event.KeyEvent
@@ -39,9 +39,9 @@ object ReachScrollAreaTest extends App
 	
 	val isAltSizeFlag = ResettableFlag()
 	val activeSizePointer = isAltSizeFlag.map { if (_) altBlockSize else blockSize }
-	
-	val canvas: ReachCanvas = ReachCanvas(cursors) { canvasHierarchy =>
-		implicit val c: ReachCanvas = canvasHierarchy.top
+	/*
+	val canvas: ReachCanvas2 = ReachCanvas2(cursors) { canvasHierarchy =>
+		implicit val c: ReachCanvas2 = canvasHierarchy.top
 		Framing(canvasHierarchy).withContext(baseContext).build(ScrollArea)
 			.apply(margins.large.any, Vector(BackgroundDrawer(bg))) { scrollF =>
 				scrollF.mapContext { _.against(bg) }.build(Stack)
@@ -72,4 +72,6 @@ object ReachScrollAreaTest extends App
 	val frame = Frame.windowed(canvas, "Reach Test")
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

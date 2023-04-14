@@ -15,7 +15,6 @@ object Cursor
 	  * @return A cursor that will always use the specified image
 	  */
 	def apply(image: Image): Cursor = StaticImageCursor(image)
-	
 	/**
 	  * @param icon A cursor icon (should use only a single color)
 	  * @return A cursor that uses the specified icon with additional colouring

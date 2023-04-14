@@ -5,7 +5,7 @@ import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.{ReachCanvas, ReachCanvas2}
 import utopia.reach.util.Priority
 import utopia.reach.util.Priority.Normal
 
@@ -25,7 +25,7 @@ trait ComponentHierarchy
 	  * @return The next "block" in this hierarchy (either Left: Canvas at the top or
 	  *         Right: an intermediate block + a component associated with that block)
 	  */
-	def parent: Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)]
+	def parent: Either[ReachCanvas2, (ComponentHierarchy, ReachComponentLike)]
 	
 	/**
 	  * @return A pointer that shows whether this hierarchy is currently active / linked to the top window. Should
@@ -44,8 +44,7 @@ trait ComponentHierarchy
 	/**
 	  * @return The canvas at the top of this hierarchy
 	  */
-	def top: ReachCanvas = parent match
-	{
+	def top: ReachCanvas2 = parent match {
 		case Left(canvas) => canvas
 		case Right((block, _)) => block.top
 	}

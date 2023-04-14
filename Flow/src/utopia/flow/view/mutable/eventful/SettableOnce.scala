@@ -52,6 +52,13 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 	  */
 	def isEmpty = !isCompleted
 	
+	/**
+	  * @return The value set to this pointer
+	  * @throws IllegalStateException If this pointer hasn't been set
+	  */
+	@throws[IllegalStateException]("No value has been set yet")
+	def get = value.getOrElse { throw new IllegalStateException("Called get before the value was set") }
+	
 	
 	// IMPLEMENTED  -------------------------
 	

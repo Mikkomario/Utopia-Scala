@@ -258,6 +258,13 @@ case class Pair[+A](first: A, second: A)
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
 	
+	override def foreach[U](f: A => U) = {
+		f(first)
+		f(second)
+	}
+	override def forall(p: A => Boolean) = p(first) && p(second)
+	override def exists(p: A => Boolean) = p(first) || p(second)
+	override def tail = Vector(second)
 	override def contains[B >: A](item: B) = first == item || second == item
 	
 	override def map[B](f: A => B) = Pair(f(first), f(second))

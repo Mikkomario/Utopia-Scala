@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.input.text.TextField
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
@@ -26,8 +26,8 @@ object ReachWithinReflectionTest extends App
 	import TestCursors._
 	
 	val background = colorScheme.gray.light
-	
-	val canvas = ReachCanvas(cursors) { hierarchy =>
+	/*
+	val canvas = ReachCanvas2(cursors) { hierarchy =>
 		TextField(hierarchy).withContext(baseContext.against(background).forTextComponents)
 			.forString(320.any, fieldNamePointer = Fixed("Test Field"))
 	}
@@ -47,4 +47,6 @@ object ReachWithinReflectionTest extends App
 	val frame = Frame.windowed(mainContent, "Reach Reflection Test", Program)
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

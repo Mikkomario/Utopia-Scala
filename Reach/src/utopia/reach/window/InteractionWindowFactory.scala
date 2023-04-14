@@ -1,5 +1,6 @@
 package utopia.reach.window
 
+import utopia.firmament.component.Window
 import utopia.firmament.context.{ColorContext, TextContext}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{HotKey, WindowButtonBlueprint}
@@ -15,14 +16,13 @@ import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackFactory}
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.cursor.CursorSet
-import utopia.reflection.container.swing.window.Window
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.StackLength
+import utopia.reach.container.multi.{ContextualStackFactory, Stack, StackFactory}
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
@@ -107,9 +107,11 @@ trait InteractionWindowFactory[A]
 	  * @return 1: The window that was just opened, and
 	  *         2: a future of the closing of the window, with a selected result (or default if none was selected)
 	  */
+	// FIXME: Rewrite this using ReachWindow
 	def display(parentWindow: Option[java.awt.Window] = None,
-	            cursors: Option[CursorSet] = None): (Window[ReachCanvas], Future[A]) =
+	            cursors: Option[CursorSet] = None): (Window, Future[A]) =
 	{
+		/*
 		implicit val exc: ExecutionContext = executionContext
 		val context = standardContext
 		
@@ -121,7 +123,7 @@ trait InteractionWindowFactory[A]
 		// Creates the main content stack with 1-3 rows (based on button layouts)
 		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.
 		//  Alternatively room should be allowed for a header component separately
-		val (content, buttons) = ReachCanvas(cursors) { hierarchy =>
+		val (content, buttons) = ReachCanvas2(cursors) { hierarchy =>
 			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
 				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>
 					stackF.build(Mixed).column() { factories =>
@@ -178,6 +180,8 @@ trait InteractionWindowFactory[A]
 		window.closeFuture.onComplete { _ => if (!resultPromise.isCompleted) resultPromise.trySuccess(defaultResult) }
 		
 		window -> resultFuture
+		 */
+		???
 	}
 	
 	private def buttonRow(factories: Mixed, buttons: Vector[WindowButtonBlueprint[A]],

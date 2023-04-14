@@ -1,6 +1,8 @@
-package utopia.reach.container.multi.stack
+package utopia.reach.container.multi
 
 import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.Drawer
@@ -11,8 +13,6 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reflection.component.drawing.template.DrawLevel
-import StackLayout.{Fit, Leading}
-import utopia.firmament.model.stack.StackLength
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths

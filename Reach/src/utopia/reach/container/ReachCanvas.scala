@@ -30,7 +30,7 @@ import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawe
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.container.swing.window.Popup
+import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
 import utopia.reflection.event.StackHierarchyListener
@@ -63,11 +63,14 @@ object ReachCanvas
 										 (content: ComponentHierarchy => ComponentCreationResult[C, R])
 										 (implicit exc: ExecutionContext) =
 	{
+		/* FIXME: Convert into ReflectionReachCanvas
 		val contentPromise = Promise[ReachComponentLike]()
-		val canvas = new ReachCanvas(contentPromise.future, cursors)
+		val canvas = new ReachCanvas2(contentPromise.future, cursors)
 		val newContent = content(canvas.HierarchyConnection)
 		contentPromise.success(newContent.component)
 		newContent in canvas
+		 */
+		???
 	}
 }
 
@@ -107,7 +110,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	/**
 	 * The drag and drop -manager used by this canvas
 	 */
-	lazy val dragAndDropManager = new DragAndDropManager(this)(SysErrLogger)
+	lazy val dragAndDropManager = DragAndDropManager(this)(SysErrLogger)
 	
 	
 	// INITIAL CODE	---------------------------
@@ -261,8 +264,9 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	def createPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, over: Bounds,
 											  alignment: Alignment = Alignment.Right, margin: Double = 0.0,
 											  autoCloseLogic: PopupAutoCloseLogic = Never)
-											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]): ComponentWrapResult[Window[_], C, R] =
 	{
+		/*
 		val newCanvas = ReachCanvas(cursors)(makeContent)
 		// FIXME: Normal paint operations don't work while isTransparent = true, but partially transparent windows
 		//  don't work when it is false. Avoid this by creating a new pop-up system
@@ -278,6 +282,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			}
 		}
 		ComponentWrapResult(popup, newCanvas.child, newCanvas.result)
+		 */
+		???
 	}
 	
 	
@@ -285,7 +291,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	private object HierarchyConnection extends ComponentHierarchy
 	{
-		override def parent = Left(ReachCanvas.this)
+		// FIXME: This implementation has to be removed
+		override def parent = Left(???/*ReachCanvas.this*/)
 		
 		override def linkPointer = attachmentPointer
 		

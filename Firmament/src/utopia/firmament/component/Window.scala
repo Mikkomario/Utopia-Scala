@@ -189,7 +189,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * @return The AWT window wrapped by this window
 	  */
-	protected val component = wrapped.either
+	val component = wrapped.either
 	
 	// Caches screen size
 	private lazy val screenSize = Screen.actualSize
@@ -347,12 +347,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	_positionPointer.value = Point.of(component.getLocation)
 	_sizePointer.value = Size.of(component.getSize)
 	
-	// TODO: Consider doing this upon window opening and not initially
-	optimizeBounds(dictateSize = true)
-	if (isNotFullScreen)
-		position = ((screenSize - size) / 2.0).toPoint
-	updateLayout()
-	
 	// Registers to update the state when the wrapped window updates
 	component.addComponentListener(WindowComponentStateListener)
 	
@@ -404,6 +398,15 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			mouseEventGenerator.kill()
 			keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
 			GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
+		}
+		
+		// Also, sets correct position and size
+		AwtEventThread.async {
+			optimizeBounds(dictateSize = true)
+			if (isNotFullScreen)
+				centerOnParent()
+				// position = ((screenSize - size) / 2.0).toPoint
+			updateLayout()
 		}
 	}
 	
@@ -473,11 +476,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	def visible_=(visible: Boolean) = {
 		// Won't allow visibility changes after this window has closed
-		if (hasClosed)
+		if (hasClosed || this.visible == visible)
 			false
 		else {
 			val oldState = this.visible
-			component.setVisible(visible)
+			AwtEventThread.async { component.setVisible(visible) }
 			oldState != visible
 		}
 	}
@@ -583,13 +586,30 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	override def position = _positionPointer.value
 	// TODO: Test if the pointer gets updated (i.e. componentMoved gets called)
 	// TODO: Check whether the insets need to be applied over component position
-	override def position_=(newPosition: Point) = component.setLocation(newPosition.toAwtPoint)
+	override def position_=(newPosition: Point) = {
+		if (newPosition != position) {
+			println(s"Program sets position to $newPosition")
+			AwtEventThread.async { component.setLocation(newPosition.toAwtPoint) }
+		}
+	}
 	
 	override def size = _sizePointer.value
-	override def size_=(newSize: Size) = component.setSize(newSize.toDimension)
+	override def size_=(newSize: Size) = {
+		if (newSize != size) {
+			println(s"Program sets size to $newSize")
+			val dims = newSize.toDimension
+			AwtEventThread.async {
+				component.setPreferredSize(dims)
+				component.setSize(dims)
+			}
+		}
+	}
 	
 	override def bounds: Bounds = _boundsPointer.value
-	override def bounds_=(b: Bounds): Unit = component.setBounds(b.toAwt)
+	override def bounds_=(b: Bounds): Unit = {
+		if (b != bounds)
+			AwtEventThread.async { component.setBounds(b.toAwt) }
+	}
 	
 	override def children: Vector[Component] = Vector(content)
 	
@@ -641,9 +661,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			false
 		// Case: Focus style altered => Makes visible with altered focus style
 		else {
-			component.setFocusableWindowState(gainFocus)
-			visible = true
-			component.setFocusableWindowState(isFocusable)
+			AwtEventThread.async {
+				component.setFocusableWindowState(gainFocus)
+				visible = true
+				component.setFocusableWindowState(isFocusable)
+			}
 			true
 		}
 	}
@@ -662,7 +684,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * Closes (disposes) this window
 	  */
-	def close() = component.dispose()
+	def close() = AwtEventThread.async { component.dispose() }
 	
 	/**
 	  * Makes it so that this window will close once the escape key is pressed
@@ -700,6 +722,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  *                    Default = dictate if allowed by this window's resize logic.
 	  */
 	def optimizeBounds(dictateSize: Boolean = resizeLogic.allowsProgramResize) = {
+		println("Optimizing window bounds")
 		// Case: Full screen => Sets optimal size and moves to top-left
 		if (isFullScreen)
 			bounds = Bounds(if (respectScreenInsets) screenInsets.toPoint else Point.origin, stackSize.optimal)
@@ -710,24 +733,37 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			// Updates the size of this window
 			size = {
 				// Case: Dictates size => Sets directly to optimal size
-				if (dictateSize)
+				if (dictateSize) {
+					println("Dictating size")
 					stackSize.optimal
+				}
 				// Case: Only optimizes =>
 				// Checks whether the current size follows the limits placed by the stack size and modifies if necessary
 				else
 					size.mergeWith(stackSize) { (current, limit) =>
 						// Checks min
-						if (current < limit.min)
+						if (current < limit.min) {
+							println(s"Sets to minimum length ${limit.min}")
 							limit.min
-						else
+						} else
 							limit.max match {
 								// Checks max
-								case Some(max) => if (current > max) max else current
-								case None => current
+								case Some(max) =>
+									if (current > max) {
+										println(s"Sets to limit max $max")
+										max
+									} else {
+										println("Preserves current size")
+										current
+									}
+								case None =>
+									println("Preserves current size")
+									current
 							}
 					}
 			}
 			val newAnchor = absoluteAnchorPosition
+			println(s"Old anchor was $oldAnchor, new is $newAnchor")
 			
 			// Moves this window so that the anchors overlap.
 			// Makes sure screen borders are respected, also.
@@ -761,10 +797,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	private def centerOn(component: java.awt.Component) = {
 		if (isNotFullScreen)
-			this.component.setLocationRelativeTo(component)
+			AwtEventThread.async { this.component.setLocationRelativeTo(component) }
 	}
 	
 	// Ensures that this window is kept within the screen area
+	// FIXME: This is broken
 	private def positionWithinScreen(proposed: Point) = {
 		// Priority 3: Full screen size
 		val screenBounds = Bounds(Point.origin, screenSize)
@@ -831,6 +868,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		override def windowLostFocus(e: WindowEvent) = _focusedFlag.reset()
 		
 		override def windowClosed(e: WindowEvent) = _closedFlag.set()
-		// override def windowClosing(e: WindowEvent) = handleClosing()
+		override def windowClosing(e: WindowEvent) = close()
 	}
 }

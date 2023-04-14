@@ -12,12 +12,12 @@ import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
 import utopia.reach.component.label.text.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}
 import utopia.reach.component.wrapper.ComponentCreationResult
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.{SegmentGroup, Stack}
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenClickedOutside
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.reach.container.multi.{SegmentGroup, Stack}
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -31,8 +31,8 @@ object ReachSwitchTest extends App
 	
 	import TestCursors._
 	import utopia.reflection.test.TestContext._
-	
-	val (canvas, enabledSwitch) = ReachCanvas(cursors) { hierarchy =>
+	/*
+	val (canvas, enabledSwitch) = ReachCanvas2(cursors) { hierarchy =>
 		/*Framing(hierarchy).withContext(baseContext).buildFilled(colorScheme.gray, Stack).apply(margins.medium.any) { colF =>
 		
 		}*/
@@ -89,4 +89,6 @@ object ReachSwitchTest extends App
 	val frame = Frame.windowed(canvas, "Reach Test", Program, getAnchor = canvas.anchorPosition(_))
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	 */
 }

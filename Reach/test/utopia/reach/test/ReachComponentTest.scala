@@ -16,14 +16,14 @@ import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.text.EditableTextLabel
 import utopia.reach.component.label.text.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
-import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack}
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusListener
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Frame, Window}
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.StackLength
+import utopia.reach.container.multi.{ContextualStackFactory, Stack}
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 
@@ -42,7 +42,7 @@ object ReachComponentTest extends App
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	def focusReporter(componentName: String) = FocusListener { event => println(s"$componentName: $event") }
-	
+	/*
 	val windowPointer = Pointer[Option[Window[_]]](None)
 	val result = ReachCanvas(cursors) { canvasHierarchy =>
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargins(StackLength.fixedZero))
@@ -114,4 +114,6 @@ object ReachComponentTest extends App
 	frame.addKeyStateListener(KeyStateListener(KeyStateEvent.keyFilter(KeyEvent.VK_BACK_SPACE)) { _ =>
 		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped
 	})
+	
+	 */
 }

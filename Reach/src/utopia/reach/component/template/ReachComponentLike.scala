@@ -1,5 +1,6 @@
 package utopia.reach.component.template
 
+import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.view.immutable.caching.PreInitializedLazy
@@ -11,7 +12,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult}
 import utopia.reach.util.Priority
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
@@ -156,8 +157,7 @@ trait ReachComponentLike extends Stackable
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated
 	  */
-	def revalidate() =
-	{
+	def revalidate() = {
 		// Resets the cached stack size of this and upper components
 		resetCachedSize()
 		parentHierarchy.revalidate(Vector(this))
@@ -168,8 +168,7 @@ trait ReachComponentLike extends Stackable
 	  * @param f A function called when/if the layout has completed. This function will not get called at all if
 	  *          this component is not connected to the main stack hierarchy
 	  */
-	def revalidateAndThen(f: => Unit) =
-	{
+	def revalidateAndThen(f: => Unit) = {
 		resetCachedSize()
 		parentHierarchy.revalidateAndThen(Vector(this))(f)
 	}
@@ -289,10 +288,11 @@ trait ReachComponentLike extends Stackable
 	  * @return A component wrapping result that contains the pop-up, the created component inside the canvas and
 	  *         the additional result returned by 'makeContent'
 	  */
+	// FIXME: This function needs to be rewritten
 	def createPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, alignment: Alignment = Alignment.Right,
 											  margin: Double = 0.0, autoCloseLogic: PopupAutoCloseLogic = Never)
-											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
-		parentCanvas.createPopup(actorHandler, boundsInsideTop, alignment, margin, autoCloseLogic)(makeContent)
+											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]): ComponentWrapResult[Window, C, R] = ???
+		// parentCanvas.createPopup(actorHandler, boundsInsideTop, alignment, margin, autoCloseLogic)(makeContent)
 	
 	// Expects the clip zone to be completely inside this component's bounds
 	private def coversAllOf(clipZone: Bounds): Boolean =

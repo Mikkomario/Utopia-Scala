@@ -28,13 +28,13 @@ import utopia.reach.component.input.selection.RadioButtonGroup
 import utopia.reach.component.input.text.{DurationField, TextField}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.firmament.localization.LocalizedString
+import utopia.reach.container.multi.{Stack, ViewStack}
 
 /**
   * Tests input window creation

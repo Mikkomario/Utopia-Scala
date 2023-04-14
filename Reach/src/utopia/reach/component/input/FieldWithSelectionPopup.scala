@@ -26,7 +26,7 @@ import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWra
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.container.ReachCanvas
+import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.component.display.Refreshable
@@ -211,7 +211,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	private val lazyPopup = ResettableLazy {
 		// Automatically hides the pop-up when it loses focus
 		val popup = field.createOwnedPopup(context.actorHandler, BottomLeft) { hierarchy =>
-			implicit val canvas: ReachCanvas = hierarchy.top
+			implicit val canvas: ReachCanvas2 = hierarchy.top
 			// Creates the pop-up content in open form first
 			val openList = Open { hierarchy =>
 				val list = SelectionList(hierarchy).apply(context.actorHandler, field.innerBackgroundPointer, contentPointer,
@@ -242,8 +242,10 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				.withResult(openList.component)
 		}.parent
 		popup.component.addComponentListener(PopupVisibilityTracker)
+		/* FIXME: Add these back
 		popup.setToHideWhenNotInFocus()
 		popup.addKeyStateListener(PopupKeyListener)
+		 */
 		popup
 	}
 	

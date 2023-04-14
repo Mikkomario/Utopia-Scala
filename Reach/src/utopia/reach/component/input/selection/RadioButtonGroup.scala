@@ -13,7 +13,6 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.check.RadioButtonLine
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.container.multi.stack.Stack
 import utopia.reach.focus.ManyFocusableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.firmament.component.display.Pool
@@ -22,6 +21,7 @@ import utopia.firmament.context.TextContext
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.firmament.localization.LocalizedString
+import utopia.reach.container.multi.Stack
 
 object RadioButtonGroup extends ContextInsertableComponentFactoryFactory[TextContext, RadioButtonGroupFactory,
 	ContextualRadioButtonGroupFactory]
