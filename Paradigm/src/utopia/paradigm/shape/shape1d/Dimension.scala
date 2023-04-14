@@ -1,6 +1,8 @@
 package utopia.paradigm.shape.shape1d
 
+import utopia.flow.operator.EqualsBy
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
 
@@ -9,18 +11,31 @@ object Dimension
 	// OTHER    --------------------
 	
 	/**
-	  * @param axis An axis
+	  * @param axis  An axis
 	  * @param value Value to assign for the specified axis
-	  * @param zero A value that represents zero
+	  * @param zero  A value that represents zero (called lazily)
 	  * @tparam A Type of wrapped value
 	  * @return A new dimension
 	  */
-	def apply[A](axis: Axis, value: A, zero: A): Dimension[A] = _Dimension(value, zero, axis)
+	def apply[A](axis: Axis, value: A, zero: => A): Dimension[A] = apply(axis, value, Lazy(zero))
+	/**
+	  * @param axis An axis
+	  * @param value Value to assign for the specified axis
+	  * @param zero A value that represents zero (lazy)
+	  * @tparam A Type of wrapped value
+	  * @return A new dimension
+	  */
+	def apply[A](axis: Axis, value: A, zero: Lazy[A]): Dimension[A] = new _Dimension(value, zero, axis)
 	
 	
 	// NESTED   --------------------
 	
-	private case class _Dimension[+A](value: A, zeroValue: A, axis: Axis) extends Dimension[A]
+	private class _Dimension[+A](override val value: A, lazyZero: Lazy[A], override val axis: Axis)
+		extends Dimension[A] with EqualsBy
+	{
+		override def zeroValue: A = lazyZero.value
+		override protected def equalsProperties: Iterable[Any] = Vector(lazyZero.value, value, axis)
+	}
 }
 
 /**

@@ -120,8 +120,7 @@ object AwtEventThread
 	  * @tparam A Operation result type
 	  * @return Operation results
 	  */
-	def blocking[A](operation: => A) =
-	{
+	def blocking[A](operation: => A) = {
 		if (SwingUtilities.isEventDispatchThread)
 			operation
 		else

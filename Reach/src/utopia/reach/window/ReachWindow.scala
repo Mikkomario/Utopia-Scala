@@ -129,12 +129,17 @@ object ReachWindow
 	
 	private def revalidate(window: Window, canvas: Stackable) = {
 		// Resets cached stack sizes in order to make sure the sizes are set correctly
+		// TODO: Avoid unnecessary updateLayout() calls
 		canvas.resetCachedSize()
 		window.resetCachedSize()
-		AwtEventThread.async {
+		val windowSizeChanged = AwtEventThread.blocking {
 			// Optimizes window bounds based on up-to-date sizes
 			window.optimizeBounds()
-			// Updates the component layout form top to bottom
+		}
+		// Updates the component layout form top to bottom (only for visible windows)
+		//      The update is skipped if the window size was altered,
+		//      because Window size changes automatically trigger layout updates
+		if (!windowSizeChanged && window.isFullyVisible) {
 			window.updateLayout()
 			canvas.updateLayout()
 		}

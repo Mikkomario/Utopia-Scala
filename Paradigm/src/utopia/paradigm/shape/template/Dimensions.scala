@@ -3,8 +3,9 @@ package utopia.paradigm.shape.template
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.{Axis, Axis2D}
-import utopia.flow.operator.{CanBeZero, EqualsFunction}
+import utopia.flow.operator.{CanBeZero, EqualsBy, EqualsFunction}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.shape.shape1d.Dimension
 
@@ -51,12 +52,14 @@ object Dimensions
 	
 	/**
 	  * A factory used for converting dimension sequences into a set of dimensions
-	  * @param zero Zero dimension value
+	  * @param zeroValue Zero dimension value (lazily called)
 	  * @tparam A Type of dimension values applied
 	  */
-	class DimensionsFactory[A](zero: A) extends DimensionalFactory[A, Dimensions[A]]
+	class DimensionsFactory[A](zeroValue: => A) extends DimensionalFactory[A, Dimensions[A]]
 	{
 		// ATTRIBUTES   -------------------------
+		
+		private val lazyZero = Lazy { zeroValue }
 		
 		/**
 		  * An empty set of dimensions (0 length)
@@ -76,11 +79,19 @@ object Dimensions
 		lazy val zero3D = apply(Vector.fill(3)(zero))
 		
 		
+		// COMPUTED ------------------------------
+		
+		/**
+		  * @return The zero value used by this factory
+		  */
+		def zero = lazyZero.value
+		
+		
 		// IMPLEMENTED ---------------------------
 		
-		override def newBuilder = new DimensionsBuilder[A](zero)
+		override def newBuilder = new DimensionsBuilder[A](lazyZero)
 		
-		override def apply(values: IndexedSeq[A]) = Dimensions(zero, values)
+		override def apply(values: IndexedSeq[A]) = new Dimensions(lazyZero, values)
 		override def apply(values: Map[Axis, A]): Dimensions[A] = {
 			if (values.isEmpty)
 				empty
@@ -101,7 +112,12 @@ object Dimensions
 		  * @param value Value to assign to the specified axis
 		  * @return A set of dimensions with 0-1 non-zero values
 		  */
-		def apply(axis: Axis, value: A): Dimensions[A] = apply(Vector.fill(axis.index)(zero) :+ value)
+		def apply(axis: Axis, value: A): Dimensions[A] = {
+			if (axis.index == 0)
+				new Dimensions[A](lazyZero, Vector(value))
+			else
+				apply(Vector.fill(axis.index)(zero) :+ value)
+		}
 	}
 }
 
@@ -110,11 +126,16 @@ object Dimensions
   * @author Mikko Hilpinen
   * @since 5.11.2022, v1.2
   */
-case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
+class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, Dimensions[A]]
-		with HasDimensions[A] with CanBeZero[Dimensions[A]]
+		with HasDimensions[A] with CanBeZero[Dimensions[A]] with EqualsBy
 {
 	// COMPUTED ------------------------------
+	
+	/**
+	  * @return A value that represents a dimension with the value of zero
+	  */
+	def zeroValue = lazyZeroValue.value
 	
 	/**
 	  * @return A 2D copy of these dimensions. Will only contain the X and Y values.
@@ -169,23 +190,25 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @return Components of these dimensions
 	  */
 	override def components: IndexedSeq[Dimension[A]] =
-		zipWithAxis.map { case (v, axis) => Dimension(axis, v, zeroValue) }
+		zipWithAxis.map { case (v, axis) => Dimension(axis, v, lazyZeroValue) }
 	
 	override def length = values.length
 	
-	override def empty = copy(values = Vector())
+	override def empty = withDimensions(Vector())
+	
+	override protected def equalsProperties: Iterable[Any] = zeroValue +: values
 	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
-		copy(values = Vector.from(coll))
+		withDimensions(Vector.from(coll))
 	
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Dimensions[A]] =
-		new DimensionsBuilder[A](zeroValue)
+		new DimensionsBuilder[A](lazyZeroValue)
 	
 	override def toVector = values.toVector
 	
 	override def toString() = s"[${values.mkString(", ")}]"
 	
-	override def slice(from: Int, until: Int) = copy(values = values.slice(from, until))
+	override def slice(from: Int, until: Int) = withDimensions(values.slice(from, until))
 	
 	override def apply(i: Int) = {
 		if (i < 0 || i >= length)
@@ -194,12 +217,12 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 			values(i)
 	}
 	
-	override def map[B](f: A => B) = Dimensions(f(zeroValue), values.map(f))
+	override def map[B](f: A => B) = new Dimensions(lazyZeroValue.map(f), values.map(f))
 	
-	override def zero: Dimensions[A] = copy[A](values = Vector.fill[A](length)(zeroValue))
+	override def zero: Dimensions[A] = withDimensions[A](Vector.fill[A](length)(zeroValue))
 	override def isZero = values.forall { _ == zeroValue }
 	
-	override def padTo[B >: A](len: Int, elem: B) = copy(values = super.padTo(len, elem))
+	override def padTo[B >: A](len: Int, elem: B) = withDimensions(super.padTo(len, elem))
 	
 	/**
 	  * @param axis Targeted axis
@@ -237,9 +260,9 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 		if (this.length == length)
 			this
 		else if (this.length < length)
-			copy(values = values.padTo(length, zeroValue))
+			withDimensions(values.padTo(length, zeroValue))
 		else
-			copy(values = values.take(length))
+			withDimensions(values.take(length))
 	}
 	def padTo(length: Int): Dimensions[A] = padTo(length, zeroValue)
 	
@@ -257,7 +280,8 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @return A combination of these dimensions, where each value is a tuple
 	  */
 	def zip[B](other: Dimensions[B]) =
-		Dimensions((zeroValue, other.zeroValue), values.iterator.zipPad(other.values.iterator, zeroValue, other.zeroValue).toVector)
+		new Dimensions(Lazy { (zeroValue, other.zeroValue) },
+			values.iterator.zipPad(other.values.iterator, zeroValue, other.zeroValue).toVector)
 	/**
 	  * Combines these dimensions with other dimensions
 	  * @param other Other set of dimensions
@@ -265,8 +289,9 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @return A combination of these dimensions, where each value is a [[Pair]]
 	  */
 	def pairWith[B >: A](other: Dimensions[B]) =
-		Dimensions(Pair(zeroValue, other.zeroValue),
-			values.iterator.zipPad(other.iterator, zeroValue, other.zeroValue).map { case (a, b) => Pair(a, b) }.toVector)
+		new Dimensions(Lazy { Pair(zeroValue, other.zeroValue) },
+			values.iterator.zipPad(other.iterator, zeroValue, other.zeroValue)
+				.map { case (a, b) => Pair(a, b) }.toVector)
 	/**
 	  * Combines these dimensions with other dimensions
 	  * @param other Other set of dimensions
@@ -277,22 +302,22 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  */
 	def mergeWith[B, C >: A](other: HasDimensions[B])(merge: (A, B) => C) = {
 		val d2 = other.dimensions
-		Dimensions(zeroValue, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
+		new Dimensions(lazyZeroValue, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
 			.map { case (a, b) => merge(a, b) }.toVector)
 	}
 	
 	/**
 	  * Combines these dimensions with other dimensions
 	  * @param other Other set of dimensions
-	  * @param zero A zero value to use in the new set of dimensions
+	  * @param zero A zero value to use in the new set of dimensions (lazily called)
 	  * @param merge A merging function to combine the two values
 	  * @tparam B Type of values in other dimensions
 	  * @tparam C Type of merge result
 	  * @return A set of dimensions consisting of merge results
 	  */
-	def mergeWith[B, C](other: HasDimensions[B], zero: C)(merge: (A, B) => C) = {
+	def mergeWith[B, C](other: HasDimensions[B], zero: => C)(merge: (A, B) => C) = {
 		val d2 = other.dimensions
-		Dimensions(zero, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
+		new Dimensions(Lazy { zero }, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
 			.map { case (a, b) => merge(a, b) }.toVector)
 	}
 	
@@ -321,9 +346,9 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  */
 	def withDimension[B >: A](axis: Axis, dimension: B) = {
 		if (axis.index < length)
-			copy(values = (values.take(axis.index) :+ dimension) ++ values.drop(axis.index + 1))
+			withDimensions((values.take(axis.index) :+ dimension) ++ values.drop(axis.index + 1))
 		else
-			copy(values = values.padTo(axis.index, zeroValue) :+ dimension)
+			withDimensions(values.padTo(axis.index, zeroValue) :+ dimension)
 	}
 	/**
 	  * Replaces this item's x-dimension
@@ -347,19 +372,26 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  */
 	def withZ[B >: A](z: B) = withDimension(Z, z)
 	/**
+	  * Creates a new set of dimensions that uses the same zero value
+	  * @param dimensions New dimensions
+	  * @tparam B Type of new dimensions
+	  * @return A new set of dimensions with the same zero value
+	  */
+	def withDimensions[B >: A](dimensions: IndexedSeq[B]) = new Dimensions[B](lazyZeroValue, dimensions)
+	/**
 	  * Replaces 0-n dimensions in this set
 	  * @param dimensions Dimensions to assign (axis -> dimension)
 	  * @tparam B Type of new dimensions
 	  * @return A copy of these dimensions with those assignments applied
 	  */
-	def withDimensions[B >: A](dimensions: Map[Axis, B]) = {
+	def withDimensions[B >: A](dimensions: Map[Axis, B]): Dimensions[B] = {
 		dimensions.keysIterator.maxByOption { _.index } match {
 			case Some(maxAxis) =>
 				val overlap = zipWithAxis.map { case (v, axis) => dimensions.getOrElse(axis, v) }
 				if (maxAxis.index < length)
-					copy(values = overlap)
+					withDimensions(overlap)
 				else
-					copy(values = overlap ++ Axis.values.drop(length).map { a => dimensions.getOrElse(a, zeroValue) })
+					withDimensions(overlap ++ Axis.values.drop(length).map { a => dimensions.getOrElse(a, zeroValue) })
 			case None => this
 		}
 	}
@@ -372,7 +404,7 @@ case class Dimensions[+A](zeroValue: A, values: IndexedSeq[A])
 	  * @return A modified copy of these dimensions.
 	  */
 	def mapWithAxes[B >: A](f: (A, Axis) => B) =
-		Dimensions(zeroValue, zipWithAxis.map { case (d, a) => f(d, a) })
+		new Dimensions(lazyZeroValue, zipWithAxis.map { case (d, a) => f(d, a) })
 	/**
 	  * Alters the value of a single dimension in this set
 	  * @param axis Targeted axis

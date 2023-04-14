@@ -153,12 +153,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
     /**
       * @return Maximum size. None if not specified
       */
-    def max = {
-        if (dimensions.forall { _.max.isDefined })
-            Some(Size(dimensions.map { _.max.get }))
-        else
-            None
-    }
+    def max = maxWidth.flatMap { w => maxHeight.map { h => Size(w, h) } }
     
     /**
       * @return The minimum width of this stack size

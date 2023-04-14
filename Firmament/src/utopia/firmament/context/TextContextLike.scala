@@ -162,13 +162,13 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	def manyLines = withAllowLineBreaks(true)
 	
 	/**
-	  * @return Copy of this context that doesn't allow image upscaling
+	  * @return Context copy that allows shrinking text
 	  */
-	def withUpscalingImages = withAllowImageUpscaling(true)
+	def withShrinkingText = if (allowTextShrink) self else withAllowTextShrink(true)
 	/**
-	  * @return Copy of this context that allows image upscaling
+	  * @return Context copy that doesn't allow shrinking text
 	  */
-	def withoutUpscalingImages = withAllowImageUpscaling(false)
+	def withoutShrinkingText = if (allowTextShrink) withAllowTextShrink(false) else self
 	
 	
 	// IMPLEMENTED  ----------------------

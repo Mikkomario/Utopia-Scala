@@ -1,6 +1,11 @@
 # Utopia Paradigm - List of Changes
 
-## v1.2.1 (in development)
+## v1.3 (in development)
+### Breaking Changes
+- **Dimensions**`.zeroValue` is now calculated lazily. This causes some breaking changes:
+  1. **Dimensions** is no longer a case class
+  2. **Dimensions** first constructor parameter is different
+  3. **DimensionsBuilder** constructor parameter is different
 ### New Features
 - New color features were moved over from **Reflection** and rewritten. 
   - This includes **ColorScheme**, **ColorLevel** and **ColorRole**

@@ -14,6 +14,7 @@ import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.{Flag, IndirectPointer, PointerWithEvents, ResettableFlag}
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.FontMetricsWrapper
@@ -210,6 +211,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	// Stores position and size in pointers, which are only updated on window events
 	private val _positionPointer = new PointerWithEvents(Point.origin)
 	private val _sizePointer = new PointerWithEvents(Size.zero)
+	
+	// Stores calculated anchor, which is used in repositioning after size changes
+	// This pointer is cleared after the anchor has been resolved / actuated
+	private val pendingAnchor = VolatileOption[Point]()
 	
 	/**
 	  * A flag that contains true whenever this window is fully visible
@@ -410,6 +415,20 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		}
 	}
 	
+	// Whenever this window becomes visible, updates content layout
+	// (layout updates are skipped while this window is not visible)
+	fullyVisibleFlag.addListener { e =>
+		if (hasClosed)
+			DetachmentChoice.detach
+		else {
+			if (e.newValue) {
+				updateLayout()
+				content.updateLayout()
+			}
+			DetachmentChoice.continue
+		}
+	}
+	
 	
 	// COMPUTED    ----------------
 	
@@ -584,19 +603,16 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	// IMPLEMENTED    --------------
 	
 	override def position = _positionPointer.value
-	// TODO: Test if the pointer gets updated (i.e. componentMoved gets called)
-	// TODO: Check whether the insets need to be applied over component position
 	override def position_=(newPosition: Point) = {
-		if (newPosition != position) {
-			println(s"Program sets position to $newPosition")
+		if (newPosition != position)
 			AwtEventThread.async { component.setLocation(newPosition.toAwtPoint) }
-		}
 	}
 	
 	override def size = _sizePointer.value
 	override def size_=(newSize: Size) = {
 		if (newSize != size) {
-			println(s"Program sets size to $newSize")
+			// Remembers the anchor position for repositioning
+			pendingAnchor.setOne(absoluteAnchorPosition)
 			val dims = newSize.toDimension
 			AwtEventThread.async {
 				component.setPreferredSize(dims)
@@ -720,54 +736,59 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  *                    Full screen windows always dictate their size.
 	  *
 	  *                    Default = dictate if allowed by this window's resize logic.
+	  *
+	  * @return Whether the size of this window changes as a result of this function.
+	  *         The result might not be immediate (it is performed on the AWT event thread)
 	  */
 	def optimizeBounds(dictateSize: Boolean = resizeLogic.allowsProgramResize) = {
-		println("Optimizing window bounds")
+		val sizeAtStart = size
 		// Case: Full screen => Sets optimal size and moves to top-left
-		if (isFullScreen)
-			bounds = Bounds(if (respectScreenInsets) screenInsets.toPoint else Point.origin, stackSize.optimal)
+		if (isFullScreen) {
+			val newBounds = Bounds(if (respectScreenInsets) screenInsets.toPoint else Point.origin, stackSize.optimal)
+				.round
+			// Prevents the user from making this window too small
+			if (resizeLogic.allowsUserResize)
+				component.setMinimumSize(stackSize.min.toDimension)
+			bounds = newBounds
+			sizeAtStart != newBounds.size
+		}
 		// Case: Windowed mode => Either dictates the new size or just makes sure its within limits
 		else {
-			// Remembers the anchor position in order to reposition this window
-			val oldAnchor = absoluteAnchorPosition
 			// Updates the size of this window
-			size = {
+			val newSize = {
 				// Case: Dictates size => Sets directly to optimal size
-				if (dictateSize) {
-					println("Dictating size")
+				if (dictateSize)
 					stackSize.optimal
-				}
 				// Case: Only optimizes =>
 				// Checks whether the current size follows the limits placed by the stack size and modifies if necessary
 				else
 					size.mergeWith(stackSize) { (current, limit) =>
 						// Checks min
-						if (current < limit.min) {
-							println(s"Sets to minimum length ${limit.min}")
+						if (current < limit.min)
 							limit.min
-						} else
+						else
 							limit.max match {
 								// Checks max
 								case Some(max) =>
-									if (current > max) {
-										println(s"Sets to limit max $max")
+									if (current > max)
 										max
-									} else {
-										println("Preserves current size")
+									else
 										current
-									}
-								case None =>
-									println("Preserves current size")
-									current
+								case None => current
 							}
 					}
 			}
-			val newAnchor = absoluteAnchorPosition
-			println(s"Old anchor was $oldAnchor, new is $newAnchor")
-			
-			// Moves this window so that the anchors overlap.
-			// Makes sure screen borders are respected, also.
-			positionWithinScreen(position - (newAnchor - oldAnchor))
+			// Prevents the user from resizing too much
+			if (resizeLogic.allowsUserResize) {
+				component.setMinimumSize(stackSize.min.toDimension)
+				val maxDimension = stackSize.max match {
+					case Some(max) => max.toDimension
+					case None => null
+				}
+				component.setMaximumSize(maxDimension)
+			}
+			size = newSize
+			sizeAtStart != newSize
 		}
 	}
 	
@@ -801,7 +822,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	}
 	
 	// Ensures that this window is kept within the screen area
-	// FIXME: This is broken
 	private def positionWithinScreen(proposed: Point) = {
 		// Priority 3: Full screen size
 		val screenBounds = Bounds(Point.origin, screenSize)
@@ -813,7 +833,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Ensures that the bounds of this window fit within one of these priorities
 		bounds = Bounds.fromFunction2D { axis =>
 			val optimalArea = remainingArea(axis)
-			val proposedArea = NumericSpan(proposed(axis), size(axis))
+			val proposedStart = proposed(axis)
+			val proposedArea = NumericSpan(proposedStart, proposedStart + size(axis))
 			// Case: The proposed layout doesn't fit priority 1 => Moves to priority 2
 			if (proposedArea.length > optimalArea.length) {
 				insetsReducedScreenBounds.map { _(axis) }.filter { _.length >= proposedArea.length } match {
@@ -849,9 +870,18 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		override def componentResized(e: ComponentEvent) = {
 			val newSize = Size.of(component.getSize)
 			_sizePointer.value = newSize
-			// TODO: Skip content update if invisible
-			updateLayout()
-			content.updateLayout()
+			// Updates content layout (only while visible)
+			if (isFullyVisible) {
+				updateLayout()
+				content.updateLayout()
+			}
+			// Repositions based on anchoring, if queued
+			pendingAnchor.pop().foreach { anchor =>
+				val newAnchor = absoluteAnchorPosition
+				// Moves this window so that the anchors overlap.
+				// Makes sure screen borders are respected, also.
+				positionWithinScreen(position - (newAnchor - anchor))
+			}
 		}
 	}
 	private object WindowStateListener extends WindowAdapter

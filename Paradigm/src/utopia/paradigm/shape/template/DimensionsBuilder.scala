@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.template
 
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.enumeration.Axis
 
@@ -11,7 +12,7 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 5.11.2022, v1.2
   */
-class DimensionsBuilder[A](zero: A) extends DimensionalBuilder[A, Dimensions[A]]
+class DimensionsBuilder[A](zero: Lazy[A]) extends DimensionalBuilder[A, Dimensions[A]]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -31,10 +32,10 @@ class DimensionsBuilder[A](zero: A) extends DimensionalBuilder[A, Dimensions[A]]
 			case Some(assignments) =>
 				val iter = linearBuilder.result().iterator
 				Axis.values.take(assignments.keysIterator.map { _.index }.max + 1)
-					.map { a => assignments.getOrElse(a, iter.nextOption().getOrElse(zero)) } ++ iter
+					.map { a => assignments.getOrElse(a, iter.nextOption().getOrElse(zero.value)) } ++ iter
 			case None => linearBuilder.result()
 		}
-		Dimensions(zero, values)
+		new Dimensions[A](zero, values)
 	}
 	
 	override def addOne(elem: A) = {

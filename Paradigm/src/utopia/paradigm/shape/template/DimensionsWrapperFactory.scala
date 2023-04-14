@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.template
 
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis
 
 /**
@@ -29,7 +30,8 @@ trait DimensionsWrapperFactory[D, +To] extends FromDimensionsFactory[D, To] with
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def newBuilder = new DimensionsBuilder[D](zeroDimension).mapResult(apply)
+	override def newBuilder =
+		new DimensionsBuilder[D](Lazy.initialized(zeroDimension)).mapResult(apply)
 	
 	override def apply(values: IndexedSeq[D]): To = values match {
 		case d: Dimensions[D] => apply(d)

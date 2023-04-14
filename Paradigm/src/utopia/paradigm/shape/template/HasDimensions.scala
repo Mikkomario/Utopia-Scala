@@ -80,7 +80,7 @@ trait HasDimensions[+A]
 	  * @param axis Targeted axis
 	  * @return This item's dimension along that axis
 	  */
-	def along(axis: Axis) = Dimension(axis, apply(axis), dimensions.zeroValue)
+	def along(axis: Axis) = Dimension(axis, apply(axis), dimensions.lazyZeroValue)
 	
 	/**
 	  * @param other Another item with dimensions

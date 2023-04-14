@@ -169,6 +169,14 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  */
 	def withoutImageUpscaling =
 		if (allowImageUpscaling) withAllowImageUpscaling(false) else self
+	/**
+	  * @return Copy of this context that doesn't allow image upscaling
+	  */
+	def withUpscalingImages = withAllowImageUpscaling(true)
+	/**
+	  * @return Copy of this context that allows image upscaling
+	  */
+	def withoutUpscalingImages = withAllowImageUpscaling(false)
 	
 	/**
 	  * @return A copy of this context where everything is 25% larger

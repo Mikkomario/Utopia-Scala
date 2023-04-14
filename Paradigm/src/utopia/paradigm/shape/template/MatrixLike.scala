@@ -144,6 +144,6 @@ trait MatrixLike[V <: DoubleVectorLike[V], +Repr] extends Dimensional[V, Repr] w
 	  * @return A mapped copy of this matrix
 	  */
 	def mapWithIndices(f: (Double, Int, Int) => Double) =
-		withDimensions(dimensions.copy(values = columns.zipWithIndex.map { case (column, columnIndex) =>
+		withDimensions(dimensions.withDimensions(columns.zipWithIndex.map { case (column, columnIndex) =>
 			column.mapWithIndex { (v, rowIndex) => f(v, columnIndex, rowIndex) } }))
 }
