@@ -196,9 +196,7 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	  * @return The top left coordinate of the area when positioned according to this alignment
 	  */
 	def position(area: Size, within: Bounds) =
-		Point(dimensions.zipWithAxis.map { case (alignment, axis) =>
-			within.position(axis) + alignment.position(area(axis), within.size(axis))
-		})
+		Bounds.fromFunction2D { axis => apply(axis).position(area(axis), within(axis)) }
 	/**
 	  * Positions a 2D area within another 2D area. Won't check whether the area would fit within the boundaries.
 	  * @param area Area to position
@@ -207,10 +205,7 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	  *         relative to the containment area top left position.
 	  */
 	def position(area: Size, within: Size): Point =
-		Point(dimensions.zipWithAxis.map { case (alignment, axis) =>
-			alignment.position(area(axis), within(axis))
-		})
-	
+		Point.fromFunction2D { axis => apply(axis).position(area(axis), within(axis)) }
 	/**
 	  * Positions a 2D area within a set of 2D boundaries. Downscales the area if it wouldn't otherwise fit into the
 	  * target boundaries.
@@ -220,7 +215,7 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	  *                      (default = true)
 	  * @return Positioned and possible scaled copy of the specified area
 	  */
-	def positionToFit(area: Size, within: Bounds, preserveShape: Boolean = true) = {
+	def fit(area: Size, within: Bounds, preserveShape: Boolean = true) = {
 		// Fits the area within boundaries
 		val fittedArea = {
 			if (preserveShape) {
@@ -236,7 +231,116 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 			}
 		}
 		// Positions the area, returns as boundaries
-		Bounds(position(fittedArea, within), fittedArea)
+		position(fittedArea, within)
+	}
+	@deprecated("Renamed to .fit(...)", "v1.3")
+	def positionToFit(area: Size, within: Bounds, preserveShape: Boolean = true) = fit(area, within, preserveShape)
+	/**
+	  * Positions an area relative to another area so that the relationship between the two resulting areas will
+	  * match this alignment.
+	  * E.g. When called for Left, will place the resulting area left to the 'to' area.
+	  *
+	  * For bi-directional alignments such as TopRight, will place the resulting area so that the two areas won't
+	  * share any edges (i.e. are placed diagonally).
+	  *
+	  * @param area An area to place
+	  * @param to The area the 'area' will be placed next to
+	  * @param margin Margin to place between the two areas
+	  *
+	  * @return An area with the specified size 'area' that lies next to 'to'
+	  *         (when called for Center, the resulting area will lie over the center of 'to')
+	  */
+	def positionRelativeTo(area: Size, to: Bounds, margin: Double = 0.0) = Bounds.fromFunction2D { axis =>
+		apply(axis).positionRelativeTo(area(axis), to(axis), margin)
+	}
+	/**
+	  * Positions an area relative to another area so that the relationship between the two resulting areas will
+	  * match this alignment, but also fit within the specified set of bounds.
+	  * Will not alter the size of the specified area, however. If the specified area is too large to fit, it will
+	  * completely cover the 'within' area and expand to outside as well.
+	  *
+	  * @param area The area to position
+	  * @param to The area relative to which the 'area' is positioned
+	  * @param within The area within which the resulting area must reside (as much as possible)
+	  * @param margin Margin placed between 'area' and 'to', when there is enough space.
+	  *               Ignored for Center alignment.
+	  *               Default = 0 = no margin
+	  * @param swapToFit Whether this alignment may be swapped to its opposite in case that would yield better results.
+	  *                  Better in this case means less shifting in order to fulfill the 'within' requirement.
+	  *                  This means less overlap between the two resulting areas.
+	  *                  This parameter has no meaning when called for Center.
+	  *                  Default = false
+	  *
+	  * @return An area that lies within 'within' as much as possible and is located relative to 'to',
+	  *         according to this alignment.
+	  */
+	def positionRelativeToWithin(area: Size, to: Bounds, within: Bounds, margin: Double = 0.0,
+	                             swapToFit: Boolean = false) =
+	{
+		// Moves first without considering the 'within' limits
+		val primary = positionRelativeTo(area, to, margin)
+		// Case: Fits by default => Returns
+		if (within.contains(primary))
+			primary
+		// Case: Doesn't fit and swapping is enabled => Attempts swapping to the opposite alignment
+		else if (swapToFit) {
+			val secondary = opposite.positionRelativeTo(area, to, margin)
+			// Case: Swapped fits => Returns that
+			if (within.contains(secondary))
+				secondary
+			// Case: Neither of the modes fit => Returns the one that has less overlap (shifted)
+			else {
+				val better = Vector(primary, secondary).minBy { area =>
+					area.overlapWith(within) match {
+						case Some(overlap) => overlap.area
+						case None => 0.0
+					}
+				}
+				better.shiftedInto(within)
+			}
+		}
+		// Case: Swapping is not enabled => Shifts the area so that it will lie within the target area
+		else
+			primary.shiftedInto(within)
+	}
+	/**
+	  * Positions an area relative to another area so that the relationship between the two resulting areas will
+	  * match this alignment, but also fit within the specified set of bounds.
+	  * If the specified area doesn't fit the specified 'within' bounds, the resulting area will be smaller than
+	  * the specified area. I.e. the resulting area will never expand outside the 'within' area.
+	  *
+	  * @param area      The area to position
+	  * @param to        The area relative to which the 'area' is positioned
+	  * @param within    The area within which the resulting area will reside
+	  * @param margin    Margin placed between 'area' and 'to', when there is enough space.
+	  *                  Ignored for Center alignment.
+	  *                  Default = 0 = no margin
+	  * @param swapToFit Whether this alignment may be swapped to its opposite in case that would yield better results.
+	  *                  Better in this case means less shifting in order to fulfill the 'within' requirement.
+	  *                  This means less overlap between the two resulting areas.
+	  *                  This parameter has no meaning when called for Center.
+	  *                  Default = false.
+	  * @param preserveShape Whether the shape (x/y ratio) of the specified 'area' should match that of the resulting
+	  *                      area. Setting this to false may give you more space to deal with, but the shape may be
+	  *                      different.
+	  *                      Default = true = shape is preserved.
+	  *
+	  * @return An area that lies within 'within' and is located relative to 'to', according to this alignment.
+	  */
+	def fitRelativeToWithin(area: Size, to: Bounds, within: Bounds, margin: Double = 0.0, swapToFit: Boolean = false,
+	                        preserveShape: Boolean = true) =
+	{
+		// Case: The specified area fits within 'within' => Positions it
+		if (area.forAllDimensionsWith(within) { _ <= _.length })
+			positionRelativeToWithin(area, to, within, margin, swapToFit)
+		// Case: The resulting area will cover the whole 'within' => Skips the positioning
+		else if (!preserveShape && area.forAllDimensionsWith(within) { _ >= _.length })
+			within
+		// Case: The specified area is too large and has to be downscaled => Positions the downscaled version
+		else {
+			val scaling = (within.size / area).xyPair.min
+			positionRelativeToWithin(area * scaling, to, within, margin, swapToFit)
+		}
 	}
 }
 

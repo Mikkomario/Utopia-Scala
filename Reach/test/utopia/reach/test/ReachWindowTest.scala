@@ -24,11 +24,12 @@ object ReachWindowTest extends App
 	import utopia.reflection.test.TestContext._
 	
 	val baseWc = WindowContext(actorHandler, User)
+	if (cursors.isDefined) println("Using cursors") else println("No cursors in use")
 	implicit val wc: ReachWindowContext = ReachWindowContext(baseWc, cursors)//.revalidatingAfter(0.1.seconds, 0.5.seconds)
 	
 	val textPointer = new PointerWithEvents("Text")
 	
-	val (window, canvas) = ReachWindow(title = "Test") { hierarchy =>
+	val window = ReachWindow(title = "Test") { hierarchy =>
 		// EmptyLabel(hierarchy).withBackground(Color.magenta, StackSize.any(Size(400, 200)))
 		val bg = colorScheme.primary
 		implicit val c: TextContext = baseContext.against(bg).forTextComponents.larger.larger

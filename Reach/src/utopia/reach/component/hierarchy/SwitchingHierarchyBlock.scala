@@ -15,6 +15,7 @@ class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer
 	// ATTRIBUTES	---------------------------
 	
 	override lazy val parent = Right(parentComponent.parentHierarchy -> parentComponent)
+	override lazy val top = super.top
 	
 	override lazy val linkPointer = parentComponent.parentHierarchy.linkPointer.mergeWith(switchPointer) { _ && _ }
 	

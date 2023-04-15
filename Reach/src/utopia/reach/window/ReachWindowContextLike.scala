@@ -2,7 +2,6 @@ package utopia.reach.window
 
 import utopia.firmament.context.WindowContextWrapper
 import utopia.flow.collection.immutable.range.Span
-import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}

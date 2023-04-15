@@ -157,7 +157,7 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 			// Determines the draw location and scaling
 			val originalSize = stackSize.optimal
 			val displaySize = originalSize.fittingWithin(bounds.size)
-			val drawPosition = alignment.position(displaySize, bounds)
+			val drawPosition = alignment.position(displaySize, bounds).position
 			val scaling = (displaySize / originalSize).toVector
 			// Performs the actual drawing
 			animator.draw(drawer * AffineTransformation(drawPosition.toVector + drawOrigin * scaling, scaling = scaling))

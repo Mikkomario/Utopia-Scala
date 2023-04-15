@@ -89,7 +89,7 @@ class TextDrawer(protected override val graphics: LazyGraphics, color: Color)
 	  */
 	def drawMeasured(text: MeasuredText, within: Bounds) = {
 		graphics.value.setColor(color.toAwt)
-		val areaPosition = text.alignment.position(text.size, within)
+		val areaPosition = text.alignment.position(text.size, within).position
 		val areaOrigin = areaPosition - text.bounds.position
 		text.defaultDrawTargets.foreach { case (text, relativePosition) =>
 			val actualPosition = areaOrigin + relativePosition

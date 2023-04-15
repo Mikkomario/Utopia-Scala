@@ -1,5 +1,6 @@
 package utopia.flow.view.template.eventful
 
+import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 
 import scala.language.implicitConversions
@@ -57,6 +58,10 @@ trait FlagLike extends Any with Changing[Boolean]
 	  * @return Future that resolves when this flag is set
 	  */
 	def future = findMapFuture { if (_) Some(()) else None }
+	/**
+	  * @return Future that resolves when this flag is set the next time
+	  */
+	def nextFuture = findMapNextFuture { if (_) Some(()) else None }
 	
 	
 	// OTHER	-----------------
@@ -94,5 +99,36 @@ trait FlagLike extends Any with Changing[Boolean]
 					case None => mergeWith(other) { _ || _ }
 				}
 		}
+	}
+	
+	/**
+	  * Performs the specified function once this flag is set.
+	  * If this flag is already set, calls the function immediately.
+	  * @param f A function to call when this flag is set (will be called 0 or 1 times only)
+	  * @tparam U Arbitrary function result type
+	  */
+	def onceSet[U](f: => U) = addListenerAndSimulateEvent(false) { e =>
+		if (e.newValue) {
+			f
+			DetachmentChoice.detach
+		}
+		else
+			DetachmentChoice.continue
+	}
+	/**
+	  * Performs the specified function once this flag is set.
+	  * If this flag is already set, will only call the specified function after this flag has been
+	  * reset and then set again.
+	  * If this is not a resettable flag and has been set, the specified function will never get called.
+	  * @param f A function to call when this flag is set (will be called 0 or 1 times only)
+	  * @tparam U Arbitrary function result type
+	  */
+	def whenNextSet[U](f: => U) = addListener { e =>
+		if (e.newValue) {
+			f
+			DetachmentChoice.detach
+		}
+		else
+			DetachmentChoice.continue
 	}
 }

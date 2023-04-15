@@ -4,6 +4,8 @@ import scala.language.implicitConversions
 
 object DetachmentChoice
 {
+	// ATTRIBUTES   -----------------------
+	
 	/**
 	  * Represents a choice to continue listening for new events
 	  */
@@ -13,11 +15,28 @@ object DetachmentChoice
 	  */
 	val detach = apply(shouldContinue = false)
 	
+	
+	// IMPLICIT --------------------------
+	
 	// Unit implicitly converts to a choice to continue attached
 	implicit def continueByDefault(u: Unit): DetachmentChoice = continue
 	// Boolean is converted implicitly, so that true marks a desire to continue as attached
 	// while false leads to detachment
 	implicit def convertBoolean(shouldContinue: Boolean): DetachmentChoice = apply(shouldContinue)
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	  * @param condition A condition
+	  * @return Continues if 'condition' is true, otherwise detaches
+	  */
+	def continueIf(condition: Boolean) = apply(condition)
+	/**
+	  * @param condition A condition
+	  * @return Continues if the 'condition' is false, otherwise detaches
+	  */
+	def continueUntil(condition: Boolean) = apply(!condition)
 }
 
 /**

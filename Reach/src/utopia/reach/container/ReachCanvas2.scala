@@ -5,6 +5,7 @@ import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -46,7 +47,8 @@ object ReachCanvas2
 	  * Creates a new Reach canvas
 	  * @param attachmentPointer A pointer that contains true while this canvas is attached to a visible window hierarchy
 	  * @param absoluteParentPositionView A view into the parent element's absolute position.
-	  *                                   Preferably an instance of Changing.
+	  *                                   Either Left: a view or Right: a real-time pointer (preferred).
+	  *                                   Call-by-name.
 	  * @param cursors A set of custom cursors to use on this canvas (optional)
 	  * @param customDrawers Custom drawers to apply to this canvas (default = empty)
 	  * @param enableAwtDoubleBuffering Whether AWT double buffering should be allowed.
@@ -71,7 +73,8 @@ object ReachCanvas2
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def apply[C <: ReachComponentLike, R](attachmentPointer: FlagLike, absoluteParentPositionView: View[Point],
+	def apply[C <: ReachComponentLike, R](attachmentPointer: FlagLike,
+	                                      absoluteParentPositionView: => Either[View[Point], Changing[Point]],
 	                                      cursors: Option[CursorSet] = None,
 	                                      customDrawers: Vector[CustomDrawer] = Vector(),
 	                                      enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
@@ -102,7 +105,8 @@ object ReachCanvas2
   * @param attachmentPointer A pointer that contains true whenever this canvas is attached to the main component
   *                          hierarchy (i.e. connected to a visible screen)
   * @param absoluteParentPositionView A view into the parent element's absolute position.
-  *                                   Preferably an instance of Changing.
+  *                                   Either Left: a view or Right: a real-time pointer (preferred).
+  *                                   Call-by-name.
   * @param cursors Custom cursors to display on this canvas. Default = None = no custom cursor management enabled
   * @param customDrawers Custom drawers that paint on this canvas (default = empty)
   * @param enableAwtDoubleBuffering Whether AWT double buffering should be allowed.
@@ -120,8 +124,9 @@ object ReachCanvas2
   * @param exc Implicit execution context
   * @param log Implicit logging implementation for some error cases
   */
+// TODO: Cursor handling isn't working at this time
 class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: FlagLike,
-                             absoluteParentPositionView: View[Point],
+                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                              cursors: Option[CursorSet] = None, override val customDrawers: Vector[CustomDrawer] = Vector(),
                              enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
                             (revalidateImplementation: ReachCanvas2 => Unit)
@@ -164,8 +169,8 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	  */
 	// Caches calculations if possible
 	lazy val absolutePositionView = absoluteParentPositionView match {
-		case c: Changing[Point] => c.lazyMergeWith(positionPointer) { _ + _ }
-		case v => View { v.value + position }
+		case Right(c) => Right(c.mergeWith(positionPointer) { _ + _ })
+		case Left(v) => Left(View { v.value + position })
 	}
 	
 	override lazy val mouseButtonHandler: MouseButtonStateHandler = MouseButtonStateHandler()
@@ -210,7 +215,7 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	/**
 	  * @return The position of this canvas on the screen
 	  */
-	def absolutePosition = absolutePositionView.value
+	def absolutePosition = absolutePositionView.either.value
 	/**
 	  * @return The window that hosts this canvas instance
 	  */
@@ -330,42 +335,6 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 			case None => defaultAlignment.origin(windowBounds)
 		}
 	
-	/*
-	  * Creates a pop-up over the specified component-area
-	  * @param actorHandler Actor handler that will deliver action events for the pop-up
-	  * @param over Area over which the pop-up will be displayed
-	  * @param alignment Alignment to use when placing the pop-up (default = Right)
-	  * @param margin Margin to place between the area and the pop-up (not used with Center alignment)
-	  * @param autoCloseLogic Logic used for closing the pop-up (default = won't automatically close the pop-up)
-	  * @param makeContent A function for producing pop-up contents based on a component hierarchy
-	  * @tparam C Type of created component
-	  * @tparam R Type of additional result
-	  * @return A component wrapping result that contains the pop-up, the created component inside the canvas and
-	  *         the additional result returned by 'makeContent'
-	  */
-	/* TODO: Rewrite this function once ReachWindow class and a new PopUp class are available
-	def createPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, over: Bounds,
-											  alignment: Alignment = Alignment.Right, margin: Double = 0.0,
-											  autoCloseLogic: PopupAutoCloseLogic = Never)
-											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
-	{
-		val newCanvas = ReachCanvas(cursors)(makeContent)
-		// FIXME: Normal paint operations don't work while isTransparent = true, but partially transparent windows
-		//  don't work when it is false. Avoid this by creating a new pop-up system
-		// newCanvas.isTransparent = true
-		val popup = Popup(this, newCanvas.parent, actorHandler, autoCloseLogic, alignment) { (_, popupSize) =>
-			// Calculates pop-up top left coordinates based on alignment
-			Point.fromFunction2D { axis =>
-				alignment(axis) match {
-					case Close => over.minAlong(axis) - popupSize(axis) - margin
-					case Middle => over.center(axis) - popupSize(axis) / 2
-					case Far => over.maxAlong(axis) + margin
-				}
-			}
-		}
-		ComponentWrapResult(popup, newCanvas.child, newCanvas.result)
-	}*/
-	
 	
 	// NESTED	------------------------------
 	
@@ -374,6 +343,7 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 		override def parent = Left(ReachCanvas2.this)
 		override def linkPointer = attachmentPointer
 		override def isThisLevelLinked = isLinked
+		override def top = ReachCanvas2.this
 	}
 	
 	private object CustomDrawPanel extends JPanel(null)

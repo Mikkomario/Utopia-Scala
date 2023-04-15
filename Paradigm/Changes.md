@@ -2,6 +2,7 @@
 
 ## v1.3 (in development)
 ### Breaking Changes
+- **Alignment**`.position(Size, Bounds)` now returns **Bounds** instead of **Point**
 - **Dimensions**`.zeroValue` is now calculated lazily. This causes some breaking changes:
   1. **Dimensions** is no longer a case class
   2. **Dimensions** first constructor parameter is different
@@ -9,6 +10,8 @@
 ### New Features
 - New color features were moved over from **Reflection** and rewritten. 
   - This includes **ColorScheme**, **ColorLevel** and **ColorRole**
+## New Methods
+- Added a number of new positioning methods to **Alignment** and **LinearAlignment**
 ### Other Changes
 - **Alignment** now extends **Dimensional**
 

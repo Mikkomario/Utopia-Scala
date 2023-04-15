@@ -4,6 +4,8 @@ import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, FlagLike}
 
+import scala.concurrent.Future
+
 object Flag
 {
 	// OTHER    ------------------------
@@ -45,6 +47,9 @@ object Flag
 		
 		override def value = _value
 		override def isChanging = isNotSet
+		
+		// Can't be set twice, so asking for nextFuture after set is futile
+		override def nextFuture = if (isSet) Future.never else future
 		
 		// Listeners and dependencies are not accepted after this flag has been set,
 		// because they would never be triggered

@@ -95,8 +95,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		window.addWindowListener(OwnedWindowListener)
 		
 		// Checks whether the window has focus and should share it with the new owner
-		if (window.isFocused)
-		{
+		if (window.isFocused) {
 			currentOwnershipFocus = Some(owner, window)
 			focusOwner = Some(owner)
 			owner.focusListeners.foreach { _.onFocusEvent(FocusGained) }

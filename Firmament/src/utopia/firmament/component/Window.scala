@@ -12,11 +12,13 @@ import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.{Flag, IndirectPointer, PointerWithEvents, ResettableFlag}
-import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.{ActorHandler, KeyStateHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
@@ -351,6 +353,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	// Initializes position and size
 	_positionPointer.value = Point.of(component.getLocation)
 	_sizePointer.value = Size.of(component.getSize)
+	if (isNotFullScreen)
+		_boundsPointer.onNextChange { _ => centerOnParent() }
+	AwtEventThread.async { optimizeBounds(dictateSize = true) }
 	
 	// Registers to update the state when the wrapped window updates
 	component.addComponentListener(WindowComponentStateListener)
@@ -403,15 +408,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			mouseEventGenerator.kill()
 			keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
 			GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
-		}
-		
-		// Also, sets correct position and size
-		AwtEventThread.async {
-			optimizeBounds(dictateSize = true)
-			if (isNotFullScreen)
-				centerOnParent()
-				// position = ((screenSize - size) / 2.0).toPoint
-			updateLayout()
 		}
 	}
 	
@@ -712,6 +708,39 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		handler += KeyStateListener.onKeyReleased(KeyEvent.VK_ESCAPE) { _ => close() }
 	}
 	/**
+	  * Closes this window once the user releases any keyboard key
+	  */
+	def setToCloseOnAnyKeyRelease() = {
+		keyStateHandler += KeyStateListener.onAnyKeyReleased { _ => close() }
+	}
+	/**
+	  * Closes this window when it loses focus the next time
+	  */
+	def setToCloseOnFocusLost() = focusedFlag.addListener { e =>
+		// Case: Gained focus => Ignores
+		if (e.newValue)
+			DetachmentChoice.continue
+		// Case: Lost focus => Closes this window
+		else {
+			close()
+			DetachmentChoice.detach
+		}
+	}
+	/**
+	  * Closes this window when the user clicks on anywhere outside this window
+	  * @param activationDelay The delay after which mouse events should be recognized (default = no delay)
+	  */
+	def setToCloseWhenClickedOutside(activationDelay: Duration = Duration.Zero) = {
+		activationDelay.finite.foreach { delay =>
+			val threshold = Now + delay
+			val listener = MouseButtonStateListener(
+				MouseButtonStateEvent.leftButtonFilter && Filter { _: Any => Now > threshold } &&
+					MouseEvent.isOutsideAreaFilter(bounds)
+			) { _ => close(); None }
+			addMouseButtonListener(listener)
+		}
+	}
+	/**
 	  * Sets it so that the JVM will exit once this window closes.
 	  * @param delay Delay after window closing, before the closing of the JVM
 	  * @param exc   Implicit execution context
@@ -748,7 +777,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				.round
 			// Prevents the user from making this window too small
 			if (resizeLogic.allowsUserResize)
-				component.setMinimumSize(stackSize.min.toDimension)
+				AwtEventThread.async { component.setMinimumSize(stackSize.min.toDimension) }
 			bounds = newBounds
 			sizeAtStart != newBounds.size
 		}
@@ -780,12 +809,14 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			}
 			// Prevents the user from resizing too much
 			if (resizeLogic.allowsUserResize) {
-				component.setMinimumSize(stackSize.min.toDimension)
-				val maxDimension = stackSize.max match {
-					case Some(max) => max.toDimension
-					case None => null
+				AwtEventThread.async {
+					component.setMinimumSize(stackSize.min.toDimension)
+					val maxDimension = stackSize.max match {
+						case Some(max) => max.toDimension
+						case None => null
+					}
+					component.setMaximumSize(maxDimension)
 				}
-				component.setMaximumSize(maxDimension)
 			}
 			size = newSize
 			sizeAtStart != newSize

@@ -14,6 +14,7 @@ class StaticHierarchyBlock(parentComponent: ReachComponentLike) extends Componen
 	private lazy val parentHierarchy = parentComponent.parentHierarchy
 	
 	override lazy val parent = Right(parentHierarchy -> parentComponent)
+	override lazy val top = super.top
 	
 	
 	// IMPLEMENTED	-----------------------------

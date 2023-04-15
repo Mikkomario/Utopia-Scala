@@ -61,16 +61,6 @@ object ComponentCreationResult
 	// OTHER	------------------------------
 	
 	/**
-	  * Creates a new component creation result with additional data
-	  * @param component Created component
-	  * @param result Additional data
-	  * @tparam C Type of the component
-	  * @tparam R Type of additional data
-	  * @return A new component creation result
-	  */
-	def apply[C, R](component: C, result: R) = new ComponentCreationResult[C, R](component, result)
-	
-	/**
 	  * Wraps a component
 	  * @param component Component to wrap
 	  * @tparam C Type of the component
@@ -90,12 +80,17 @@ object ComponentCreationResult
 
 /**
   * An object for wrapping a created component and an optional result
-  * @author Mikko Hilpinen
-  * @since 7.10.2020, v0.1
   * @tparam C Type of wrapped component
   * @tparam R Type of additional result
+  *
+  * @constructor Wraps the specified component and attaches additional data
+  * @param component Created component
+  * @param result    Additional data
+  *
+  * @author Mikko Hilpinen
+  * @since 7.10.2020, v0.1
   */
-class ComponentCreationResult[+C, +R](val component: C, val result: R)
+case class ComponentCreationResult[+C, +R](component: C, result: R)
 {
 	// COMPUTED	-----------------------------
 	
@@ -120,7 +115,6 @@ class ComponentCreationResult[+C, +R](val component: C, val result: R)
 	  * @return A new component creation result with new component and same additional result
 	  */
 	def withComponent[C2](component: C2) = new ComponentCreationResult(component, result)
-	
 	/**
 	  * @param f A component mapping function
 	  * @tparam C2 Type of new component
@@ -134,7 +128,6 @@ class ComponentCreationResult[+C, +R](val component: C, val result: R)
 	  * @return A copy of this creation result with new additional value
 	  */
 	def withResult[R2](result: R2) = new ComponentCreationResult(component, result)
-	
 	/**
 	  * @param f A mapping function for the result part
 	  * @tparam R2 Type of the new result part

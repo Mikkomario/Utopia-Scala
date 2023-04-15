@@ -30,6 +30,17 @@ object NumericSpan
 	  */
 	def apply[N](start: N, end: N, step: N)(implicit n: Numeric[N]): NumericSpan[N] = new _NumericSpan(start, end, step)
 	
+	/**
+	  * @param span A span
+	  * @param n Implicit numeric implementation
+	  * @tparam N Type of numeric values used
+	  * @return A numeric span
+	  */
+	def from[N](span: HasInclusiveEnds[N])(implicit n: Numeric[N]): NumericSpan[N] = span match {
+		case s: NumericSpan[N] => s
+		case o => apply(span.start, span.end)
+	}
+	
 	
 	// IMPLEMENTED  ---------------------
 	

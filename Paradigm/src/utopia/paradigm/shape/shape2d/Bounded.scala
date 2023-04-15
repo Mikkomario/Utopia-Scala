@@ -103,15 +103,17 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  * @param alignment Alignment to use when positioning this item within the specified bounds.
 	  *                  For example, if left alignment is used, this item will be located at the center-left position
 	  *                  of the specified bounds.
+	  * @param cropToFit whether the size of this item may be adjusted in order to fit within the specified area.
+	  *                  Default = false.
 	  * @return A relocated copy of this item
 	  */
 	def positionedWithin(bounds: Bounds, alignment: Alignment, cropToFit: Boolean = false) = {
 		if (cropToFit) {
 			val newSize = size.croppedToFitWithin(bounds.size)
-			withBounds(Bounds(alignment.position(newSize, bounds), newSize))
+			withBounds(alignment.position(newSize, bounds))
 		}
 		else
-			withTopLeft(alignment.position(size, bounds))
+			withBounds(alignment.position(size, bounds))
 	}
 	
 	/**
@@ -125,8 +127,7 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  */
 	def fittedWithin(bounds: Bounds, alignment: Alignment) = {
 		val newSize = size.fittingWithin(bounds.size)
-		val newTopLeft = alignment.position(newSize, bounds)
-		withBounds(Bounds(newTopLeft, newSize))
+		withBounds(alignment.position(newSize, bounds))
 	}
 	
 	/**

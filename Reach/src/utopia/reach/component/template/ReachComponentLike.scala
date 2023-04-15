@@ -1,23 +1,24 @@
 package utopia.reach.component.template
 
-import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
+import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult}
+import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.util.Priority
-import utopia.reflection.component.drawing.template.DrawLevel
+import utopia.reach.window.{ReachWindow, ReachWindowContext}
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
-import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
-import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
+import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
+
+import scala.concurrent.ExecutionContext
 
 /**
   * A common trait for "Reach" (no-swing) style components
@@ -277,30 +278,61 @@ trait ReachComponentLike extends Stackable
 		.addContinuousListenerAndSimulateEvent(false) { e => listener(e.newValue) }
 	
 	/**
-	  * Creates a pop-up next to this component
-	  * @param actorHandler Actor handler that will deliver action events for the pop-up
-	  * @param alignment Alignment to use when placing the pop-up (default = Right)
-	  * @param margin Margin to place between this component and the pop-up (not used with Center alignment)
-	  * @param autoCloseLogic Logic used for closing the pop-up (default = won't automatically close the pop-up)
-	  * @param makeContent A function for producing pop-up contents based on a component hierarchy
-	  * @tparam C Type of created component
-	  * @tparam R Type of additional result
-	  * @return A component wrapping result that contains the pop-up, the created component inside the canvas and
-	  *         the additional result returned by 'makeContent'
+	  * Creates a new window next to this component
+	  * @param alignment          Alignment used when positioning the window relative to this component.
+	  *                           E.g. If Center is used, will position the over the center of this component.
+	  *                           Or if Right is used, will position this window right of this component.
+	  *
+	  *                           Please note that this alignment may be reversed in case there is not enough space
+	  *                           on that side.
+	  *
+	  *                           Bi-directional alignments, such as TopLeft will place the window next to the component
+	  *                           diagonally (so that they won't share any edge together).
+	  *
+	  *                           Default = Right
+	  *
+	  * @param margin             Margin placed between this component and the window, when possible
+	  *                           (ignored if preferredAlignment=Center).
+	  *                           Default = 0
+	  * @param title              Title displayed on the window (provided that OS headers are in use).
+	  *                           Default = empty = no title.
+	  * @param customDrawers      Custom drawers to assign to the window, in addition to those specified in the context.
+	  *                           Default = empty.
+	  * @param keepAnchored       Whether the window should be kept close to this component when its size changes
+	  *                           or the this component is moved or resized.
+	  *                           Set to false if you don't expect the owner component to move.
+	  *                           This will save some resources, as a large number of components needs to be tracked.
+	  *                           Default = true.
+	  * @param display            Whether the window should be displayed immediately (default = false)
+	  * @param createContent      A function that accepts a component hierarchy and creates the canvas content.
+	  *                           May return an additional result, that will be included in the result of this function.
+	  * @param context            Implicit window creation context
+	  * @param exc                Implicit execution context
+	  * @param log                Implicit logging implementation
+	  * @tparam C Type of created canvas content
+	  * @tparam R Type of additional function result
+	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
-	// FIXME: This function needs to be rewritten
-	def createPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, alignment: Alignment = Alignment.Right,
-											  margin: Double = 0.0, autoCloseLogic: PopupAutoCloseLogic = Never)
-											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]): ComponentWrapResult[Window, C, R] = ???
-		// parentCanvas.createPopup(actorHandler, boundsInsideTop, alignment, margin, autoCloseLogic)(makeContent)
+	def createWindow[C <: ReachComponentLike, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
+	                                             title: LocalizedString = LocalizedString.empty,
+	                                             customDrawers: Vector[CustomDrawer] = Vector(),
+	                                             keepAnchored: Boolean = true, display: Boolean = false)
+	                                            (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                            (implicit context: ReachWindowContext, exc: ExecutionContext,
+	                                             log: Logger): WindowCreationResult[C, R] =
+	{
+		val window = ReachWindow.anchoredTo(this, alignment, margin, title, customDrawers,
+			keepAnchored)(createContent)
+		if (display)
+			window.display()
+		window
+	}
 	
 	// Expects the clip zone to be completely inside this component's bounds
-	private def coversAllOf(clipZone: Bounds): Boolean =
-	{
+	private def coversAllOf(clipZone: Bounds): Boolean = {
 		if (opaque)
 			true
-		else
-		{
+		else {
 			val newClipZone = clipZone - position
 			children.view.filter { _.bounds.contains(newClipZone) }.exists { _.coversAllOf(newClipZone) }
 		}
