@@ -26,7 +26,7 @@ object AsyncViewTest extends App
 	// Pointer that updates with a delay
 	val delayed = original.delayedBy(delay)
 	// Pointer that slowly adds 1 to the original pointer value and performs a single calculation at a time
-	val mirror = original.mapAsyncCatching(0) { i => Delay(delay) { i + 1 } }
+	val mirror = original.mapToFuture(0) { i => Delay(delay) { i + 1 } }
 	
 	// Initial value tests
 	assert(original.value == 0)

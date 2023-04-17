@@ -18,6 +18,7 @@
 - The first day of the week may be configured using **WeekDays**
 - Added **NumberExtensions** -utilities (`utopia.flow.util.NumberExtensions`)
 - Added **IndirectPointer** and `Flag.wrap(...)`
+- Added **SingleThreadExecutionContext** class
 - **FileLogger** now supports time-based log entry grouping
 ### New Methods
 - **Changing**

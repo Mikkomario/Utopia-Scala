@@ -1,21 +1,22 @@
 package utopia.reach.container
 
 import utopia.firmament.awt.AwtComponentExtensions._
+import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
-import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
@@ -180,9 +181,8 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	// INITIAL CODE	---------------------------
 	
 	// When bounds get updated, updates the underlying component, also
-	// TODO: Restore
-	// positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
-	// sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
+	positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
+	sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
 	
 	attachmentPointer.addListener { event =>
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
@@ -393,10 +393,11 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	{
 		// ATTRIBUTES	-----------------------------
 		
-		private val minCursorDistance = 10
+		// Uses a custom execution context for optimization
+		private val swapExc = new SingleThreadExecutionContext("Cursor swapper")
 		
-		private var lastMousePosition = Point.origin
-		private var lastCursorImage: Option[Image] = None
+		private val minCursorDistance = 10
+		private val mousePositionPointer = new PointerWithEvents(Point.origin)
 		
 		private lazy val shadeCalculatorPointer = painterPointer.map[Bounds => ColorShade] {
 			case Some(painter) => area => painter.averageShadeOf(area)
@@ -404,20 +405,34 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 		}
 		
 		
-		// IMPLEMENTED	-----------------------------
+		// INITIAL CODE -----------------------------
 		
-		// TODO: Consider making cursor adjustments asynchronously (oftentimes shade calculation can take a while)
-		override def onMouseMove(event: MouseMoveEvent) = {
-			val newPosition = event.mousePosition - position
-			if ((lastMousePosition - newPosition).length >= minCursorDistance) {
-				lastMousePosition = newPosition
-				if (bounds.contains(event.mousePosition)) {
-					val newImage = cursorManager.cursorImageAt(newPosition) { shadeCalculatorPointer.value(_) }
-					if (!lastCursorImage.contains(newImage)) {
-						lastCursorImage = Some(newImage)
-						cursorManager.cursorForImage(newImage).foreach(component.setCursor)
+		// Calculates and changes the cursor image asynchronously
+		attachmentPointer.onceSet {
+			val defaultCursor = cursorManager.cursors.default.light
+			mousePositionPointer
+				// Calculates new cursor image to use when mouse position changes
+				.mapAsync(defaultCursor, skipInitialMap = true) { position =>
+					cursorManager.cursorImageAt(position) { shadeCalculatorPointer.value(_) }
+				}(swapExc, log)
+				// Whenever the image gets updated, changes the component cursor
+				.addListener { e =>
+					cursorManager.cursorForImage(e.newValue).foreach { cursor =>
+						AwtEventThread.blocking { component.setCursor(cursor) }
 					}
 				}
+		}
+		
+		
+		// IMPLEMENTED	-----------------------------
+		
+		override def onMouseMove(event: MouseMoveEvent) = {
+			val newPosition = event.mousePosition - position
+			mousePositionPointer.update { lastPosition =>
+				if (newPosition.distanceFrom(lastPosition) >= minCursorDistance)
+					newPosition
+				else
+					lastPosition
 			}
 		}
 	}

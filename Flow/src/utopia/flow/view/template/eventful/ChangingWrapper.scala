@@ -76,20 +76,25 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def existsFixed(condition: A => Boolean) = wrapped.existsFixed(condition)
 	override def notFixedWhere(condition: A => Boolean) = wrapped.notFixedWhere(condition)
 	override def flatMap[B](f: A => Changing[B]) = wrapped.flatMap(f)
-	override def mapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean)
-	                                    (f: A2 => Future[B])(merge: (R, Try[B]) => R)
-	                                    (implicit exc: ExecutionContext) =
-		wrapped.mapAsync(placeHolderResult, skipInitialMap)(f)(merge)
-	override def tryMapAsync[B](placeHolderResult: B, skipInitialMap: Boolean)
-	                           (f: A => Future[Try[B]])(merge: (B, Try[B]) => B)
-	                           (implicit exc: ExecutionContext) =
-		wrapped.tryMapAsync(placeHolderResult, skipInitialMap)(f)(merge)
-	override def mapAsyncCatching[B](placeHolderResult: B, skipInitialMap: Boolean)
-	                                (f: A => Future[B])
-	                                (implicit exc: ExecutionContext, logger: Logger) =
-		wrapped.mapAsyncCatching(placeHolderResult, skipInitialMap)(f)
-	override def mapAsyncTryCatching[B](placeHolderResult: B, skipInitialMap: Boolean)
-	                                   (f: A => Future[Try[B]])
-	                                   (implicit exc: ExecutionContext, logger: Logger) =
-		wrapped.mapAsyncTryCatching(placeHolderResult, skipInitialMap)(f)
+	override def incrementalMapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean)
+	                                               (f: A2 => B)(merge: (R, B) => R)
+	                                               (implicit exc: ExecutionContext, log: Logger) =
+		wrapped.incrementalMapAsync(placeHolderResult, skipInitialMap)(f)(merge)
+	override def mapAsync[A2 >: A, B](placeHolderResult: B, skipInitialMap: Boolean)(f: A2 => B)
+	                                  (implicit exc: ExecutionContext, log: Logger) =
+		wrapped.mapAsync(placeHolderResult, skipInitialMap)(f)
+	override def incrementalMapToFuture[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean)
+	                                                  (f: A2 => Future[B])(merge: (R, Try[B]) => R)
+	                                                  (implicit exc: ExecutionContext) =
+		wrapped.incrementalMapToFuture(placeHolderResult, skipInitialMap)(f)(merge)
+	override def incrementalMapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean)
+	                                         (f: A => Future[Try[B]])(merge: (B, Try[B]) => B)
+	                                         (implicit exc: ExecutionContext) =
+		wrapped.incrementalMapToTryFuture(placeHolderResult, skipInitialMap)(f)(merge)
+	override def mapToFuture[B](placeHolderResult: B, skipInitialMap: Boolean)
+	                           (f: A => Future[B])(implicit exc: ExecutionContext, logger: Logger) =
+		wrapped.mapToFuture(placeHolderResult, skipInitialMap)(f)
+	override def mapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean)(f: A => Future[Try[B]])
+	                              (implicit exc: ExecutionContext, logger: Logger) =
+		wrapped.mapToTryFuture(placeHolderResult, skipInitialMap)(f)
 }

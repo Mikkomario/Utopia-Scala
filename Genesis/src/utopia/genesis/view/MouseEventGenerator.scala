@@ -87,16 +87,14 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     // Allows handling when component is visible
     override def allowsHandlingFrom(handlerType: HandlerType) = component.exists { _.isShowing }
     
-    override def act(duration: FiniteDuration) =
-    {
+    override def act(duration: FiniteDuration) = {
         component.foreach { c =>
             // Checks for mouse movement
             // Sometimes mouse position can't be calculated, in which case assumes mouse to remain static
             Try { Option(MouseInfo.getPointerInfo) }.toOption.flatten.foreach { pointerInfo =>
                 val absoluteMousePosition = Point of pointerInfo.getLocation
                 val mousePosition = pointInPanel(absoluteMousePosition, c) / scaling
-                if (mousePosition != lastMousePosition)
-                {
+                if (mousePosition != lastMousePosition) {
                     val previousMousePosition = lastMousePosition
                     lastMousePosition = mousePosition
                     lastAbsoluteMousePosition = absoluteMousePosition

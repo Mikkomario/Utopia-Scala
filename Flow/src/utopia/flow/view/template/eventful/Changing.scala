@@ -7,7 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.{AsyncMirror, ChangeFuture, DelayedView, Fixed, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.view.immutable.eventful.{AsyncMirror, AsyncProcessMirror, ChangeFuture, DelayedView, Fixed, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -405,6 +405,42 @@ trait Changing[+A] extends Any with View[A]
 	/**
 	  * Creates an asynchronously mapping view of this changing item
 	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap    Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                          should be skipped, and the placeholder be used instead.
+	  *                          Suitable for situations where the placeholder is a proper mapping result.
+	  *                          Default = false.
+	  * @param f                 A synchronous mapping function
+	  * @param merge             A function which accepts the previously held value and the new map result and
+	  *                          produces a new pointer value.
+	  * @param exc               Implicit execution context
+	  * @param log               Implicit logging implementation
+	  * @tparam B Type of mapping result
+	  * @tparam R Type of merged / reduced mapping results
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def incrementalMapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
+	                                      (f: A2 => B)(merge: (R, B) => R)
+	                                      (implicit exc: ExecutionContext, log: Logger) =
+		AsyncProcessMirror.merging[A2, B, R](this, placeHolderResult, skipInitialMap)(f)(merge)
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param skipInitialMap    Whether the initial mapping process (i.e. the mapping of this item's current value)
+	  *                          should be skipped, and the placeholder be used instead.
+	  *                          Suitable for situations where the placeholder is a proper mapping result.
+	  *                          Default = false.
+	  * @param f                 A synchronous mapping function
+	  * @param exc               Implicit execution context
+	  * @param log               Implicit logging implementation
+	  * @tparam B Type of mapping result
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsync[A2 >: A, B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A2 => B)
+	                         (implicit exc: ExecutionContext, log: Logger) =
+		incrementalMapAsync[A2, B, B](placeHolderResult, skipInitialMap)(f) { (_, res) => res }
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the map result has been calculated
 	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
 	  *                       should be skipped, and the placeholder be used instead.
 	  *                       Suitable for situations where the placeholder is a proper mapping result.
@@ -417,10 +453,9 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merged / reduced mapping results
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
-	                           (f: A2 => Future[B])
-	                           (merge: (R, Try[B]) => R)
-	                           (implicit exc: ExecutionContext) =
+	def incrementalMapToFuture[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
+	                                         (f: A2 => Future[B])(merge: (R, Try[B]) => R)
+	                                         (implicit exc: ExecutionContext) =
 		AsyncMirror[A2, B, R](this, placeHolderResult, skipInitialMap)(f)(merge)
 	/**
 	  * Creates an asynchronously mapping view of this changing item
@@ -436,10 +471,9 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def tryMapAsync[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
-	                  (merge: (B, Try[B]) => B)
-	                  (implicit exc: ExecutionContext) =
-		mapAsync(placeHolderResult, skipInitialMap)(f) { (previous, result) => merge(previous, result.flatten) }
+	def incrementalMapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	                     (merge: (B, Try[B]) => B)(implicit exc: ExecutionContext) =
+		incrementalMapToFuture(placeHolderResult, skipInitialMap)(f) { (previous, result) => merge(previous, result.flatten) }
 	/**
 	  * Creates an asynchronously mapping view of this changing item.
 	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
@@ -455,9 +489,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsyncCatching[B](placeHolderResult: B, skipInitialMap: Boolean = false)
-	                       (f: A => Future[B])
-	                       (implicit exc: ExecutionContext, logger: Logger) =
+	def mapToFuture[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[B])
+	                  (implicit exc: ExecutionContext, logger: Logger) =
 		AsyncMirror.catching(this, placeHolderResult, skipInitialMap)(f)
 	/**
 	  * Creates an asynchronously mapping view of this changing item.
@@ -474,8 +507,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsyncTryCatching[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
-	                          (implicit exc: ExecutionContext, logger: Logger) =
+	def mapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	                     (implicit exc: ExecutionContext, logger: Logger) =
 		AsyncMirror.tryCatching(this, placeHolderResult, skipInitialMap)(f)
 	
 	/**

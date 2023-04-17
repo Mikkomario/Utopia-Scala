@@ -355,10 +355,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	_positionPointer.value = Point.of(component.getLocation)
 	_sizePointer.value = Size.of(component.getSize)
 	if (isNotFullScreen)
-		_boundsPointer.onNextChange { _ =>
-			println("Centers on parent")
-			centerOnParent()
-		}
+		_boundsPointer.onNextChange { _ => centerOnParent() }
 	AwtEventThread.async { optimizeBounds(dictateSize = true) }
 	
 	// Registers to update the state when the wrapped window updates
@@ -605,7 +602,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	override def position = _positionPointer.value
 	override def position_=(newPosition: Point) = {
-		println(s"Setting position to $newPosition")
 		if (newPosition != position)
 			AwtEventThread.async { component.setLocation(newPosition.toAwtPoint) }
 	}
@@ -625,7 +621,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	override def bounds: Bounds = _boundsPointer.value
 	override def bounds_=(b: Bounds): Unit = {
-		println(s"Setting bounds to $b")
 		if (b != bounds)
 			AwtEventThread.async { component.setBounds(b.toAwt) }
 	}
@@ -900,15 +895,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	private object WindowComponentStateListener extends ComponentAdapter
 	{
-		
 		override def componentShown(e: ComponentEvent) = _visibleFlag.set()
 		override def componentHidden(e: ComponentEvent) = _visibleFlag.reset()
 		
-		override def componentMoved(e: ComponentEvent) = {
-			println("Window moved")
-			_positionPointer.value = Point.of(component.getLocation)
-		}
-		// NB: This will not limit user's ability to resize window beyond minimum and maximum
+		override def componentMoved(e: ComponentEvent) = _positionPointer.value = Point.of(component.getLocation)
 		override def componentResized(e: ComponentEvent) = {
 			val newSize = Size.of(component.getSize)
 			_sizePointer.value = newSize

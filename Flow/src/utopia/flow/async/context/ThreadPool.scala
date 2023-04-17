@@ -17,8 +17,9 @@ import scala.util.Try
 * @since 28.3.2019
 **/
 class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
-                 val maxIdleDuration: FiniteDuration = Duration(1, TimeUnit.MINUTES))(implicit logger: Logger)
-    extends Executor
+                 val maxIdleDuration: FiniteDuration = Duration(1, TimeUnit.MINUTES))
+                (implicit logger: Logger)
+    extends Executor with ExecutionContext
 {
     // ATTRIBUTES    ---------------------
     
@@ -30,10 +31,13 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
     /**
      * An execution context based on this thread pool
      */
-    lazy implicit val executionContext: ExecutionContext = ExecutionContext.fromExecutor(this)
+    @deprecated("Please use this ThreadPool instance instead")
+    lazy implicit val executionContext: ExecutionContext = this
     
     
     // IMPLEMENTED    --------------------
+    
+    override def reportFailure(cause: Throwable) = logger(cause)
     
     /**
 	 * Executes a task asynchronously. If maximum amount of simultaneous tasks has been reached, 

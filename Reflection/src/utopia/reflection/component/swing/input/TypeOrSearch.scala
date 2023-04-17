@@ -134,7 +134,8 @@ class TypeOrSearch
 	
 	// Updates selectable values when search field content updates (possibly delayed)
 	(if (searchDelay > Duration.Zero) textField.valuePointer.delayedBy(searchDelay) else textField.valuePointer)
-		.mapAsyncCatching[Seq[String]](Vector())(optionsForInput).addListener { event =>
+		// TODO: Consider using .mapAsync instead
+		.mapToFuture[Seq[String]](Vector())(optionsForInput).addListener { event =>
 			// Won't include already selected items
 			val selected = selectedItemsPointer.value
 			manager.content = event.newValue.toVector.filterNot(selected.contains)

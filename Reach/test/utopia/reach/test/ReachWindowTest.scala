@@ -36,4 +36,6 @@ object ReachWindowTest extends App
 	window.setToExitOnClose()
 	window.setToCloseOnEsc()
 	window.display()
+	
+	start()
 }

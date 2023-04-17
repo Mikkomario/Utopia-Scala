@@ -6,6 +6,7 @@ import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.WindowResizePolicy.UserAndProgram
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
@@ -28,6 +29,8 @@ object ReachTestContext
 {
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	ParadigmDataType.setup()
+	
+	// ATTRIBUTES   ------------------------
 	
 	implicit val log: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
@@ -52,5 +55,15 @@ object ReachTestContext
 	val margins = Margins((cm * 0.75).round.toInt)
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
 	
+	private val actionLoop = new ActorLoop(actorHandler, 5 to 60)
+	
+	
+	// INIITAL CODE -----------------------
+	
 	GlobalKeyboardEventHandler.specifyExecutionContext(exc)
+	
+	
+	// OTHER    --------------------------
+	
+	def start() = actionLoop.runAsync()
 }

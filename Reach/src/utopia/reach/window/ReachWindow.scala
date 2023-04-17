@@ -9,8 +9,6 @@ import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, WaitTarget}
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
@@ -31,7 +29,6 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
-
 import scala.language.implicitConversions
 
 /**
@@ -117,7 +114,6 @@ object ReachWindow
 	}
 	
 	private def revalidate(window: Window, canvas: Stackable) = {
-		println("Revalidating window")
 		// Resets cached stack sizes in order to make sure the sizes are set correctly
 		canvas.resetCachedSize()
 		window.resetCachedSize()

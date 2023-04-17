@@ -10,7 +10,8 @@ import utopia.genesis.util.Fps
 
 import scala.concurrent.ExecutionContext
 
-class ActorLoop(handler: ActorHandler, val apsRange: Range = 15 to 60)(implicit exc: ExecutionContext, logger: Logger)
+class ActorLoop(handler: ActorHandler, val apsRange: Range = 15 to 60)
+               (implicit exc: ExecutionContext, logger: Logger)
 	extends LoopingProcess
 {
 	// ATTRIBUTES	-------------------
