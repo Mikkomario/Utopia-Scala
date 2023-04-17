@@ -16,39 +16,43 @@ trait WindowContextWrapper[+Repr] extends WindowContextLike[Repr]
 	/**
 	  * @return The wrapped window context
 	  */
-	def wrapped: WindowContext
+	def windowContext: WindowContext
 	
 	/**
 	  * @param base A new window context to wrap
 	  * @return A copy of this context, wrapping the specified window context
 	  */
-	def withBase(base: WindowContext): Repr
+	def withWindowContext(base: WindowContext): Repr
 	
 	
 	// IMPLEMENTED  -----------------
 	
-	override def actorHandler: ActorHandler = wrapped.actorHandler
-	override def windowResizeLogic: WindowResizePolicy = wrapped.windowResizeLogic
-	override def screenBorderMargins: Insets = wrapped.screenBorderMargins
-	override def icon: Image = wrapped.icon
+	override def actorHandler: ActorHandler = windowContext.actorHandler
+	override def windowResizeLogic: WindowResizePolicy = windowContext.windowResizeLogic
+	override def screenBorderMargins: Insets = windowContext.screenBorderMargins
+	override def icon: Image = windowContext.icon
 	
-	override def windowBordersEnabled: Boolean = wrapped.windowBordersEnabled
-	override def fullScreenEnabled: Boolean = wrapped.fullScreenEnabled
-	override def focusEnabled: Boolean = wrapped.focusEnabled
-	override def screenInsetsEnabled: Boolean = wrapped.screenInsetsEnabled
-	override def transparencyEnabled: Boolean = wrapped.transparencyEnabled
+	override def windowBordersEnabled: Boolean = windowContext.windowBordersEnabled
+	override def fullScreenEnabled: Boolean = windowContext.fullScreenEnabled
+	override def focusEnabled: Boolean = windowContext.focusEnabled
+	override def screenInsetsEnabled: Boolean = windowContext.screenInsetsEnabled
+	override def transparencyEnabled: Boolean = windowContext.transparencyEnabled
 	
-	override def withResizeLogic(logic: WindowResizePolicy): Repr = mapBase { _.withResizeLogic(logic) }
-	override def withScreenBorderMargins(margins: Insets): Repr = mapBase { _.withScreenBorderMargins(margins) }
-	override def withIcon(icon: Image): Repr = mapBase { _.withIcon(icon) }
-	override def withWindowBordersEnabled(enabled: Boolean): Repr = mapBase { _.withWindowBordersEnabled(enabled) }
-	override def withFullScreenEnabled(enabled: Boolean): Repr = mapBase { _.withFullScreenEnabled(enabled) }
-	override def withFocusEnabled(enabled: Boolean): Repr = mapBase { _.withFocusEnabled(enabled) }
-	override def withScreenInsetsEnabled(enabled: Boolean): Repr = mapBase { _.withScreenInsetsEnabled(enabled) }
-	override def withTransparencyEnabled(enabled: Boolean): Repr = mapBase { _.withTransparencyEnabled(enabled) }
+	override def withResizeLogic(logic: WindowResizePolicy): Repr = mapWindowContext { _.withResizeLogic(logic) }
+	override def withScreenBorderMargins(margins: Insets): Repr = mapWindowContext { _.withScreenBorderMargins(margins) }
+	override def withIcon(icon: Image): Repr = mapWindowContext { _.withIcon(icon) }
+	override def withWindowBordersEnabled(enabled: Boolean): Repr = mapWindowContext { _.withWindowBordersEnabled(enabled) }
+	override def withFullScreenEnabled(enabled: Boolean): Repr = mapWindowContext { _.withFullScreenEnabled(enabled) }
+	override def withFocusEnabled(enabled: Boolean): Repr = mapWindowContext { _.withFocusEnabled(enabled) }
+	override def withScreenInsetsEnabled(enabled: Boolean): Repr = mapWindowContext { _.withScreenInsetsEnabled(enabled) }
+	override def withTransparencyEnabled(enabled: Boolean): Repr = mapWindowContext { _.withTransparencyEnabled(enabled) }
 	
 	
 	// OTHER    ------------------
 	
-	private def mapBase(f: WindowContext => WindowContext) = withBase(f(wrapped))
+	/**
+	  * @param f A function for mapping the wrapped window context
+	  * @return A copy of this context with mapped window context
+	  */
+	def mapWindowContext(f: WindowContext => WindowContext) = withWindowContext(f(windowContext))
 }

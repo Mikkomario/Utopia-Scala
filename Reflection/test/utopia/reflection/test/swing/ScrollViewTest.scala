@@ -14,7 +14,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
-import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
+import utopia.firmament.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.firmament.component.display.Refreshable
 import utopia.reflection.container.stack.StackHierarchyManager

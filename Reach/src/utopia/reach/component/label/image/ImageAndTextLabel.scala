@@ -7,25 +7,25 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.reach.container.multi.Stack
 
-object ImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, ImageAndTextLabelFactory,
+object ImageAndTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, ImageAndTextLabelFactory,
 	ContextualImageAndTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextLabelFactory(hierarchy)
 }
 
 class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualImageAndTextLabelFactory]
+	extends FromGenericContextFactory[TextContext, ContextualImageAndTextLabelFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualImageAndTextLabelFactory(this, context)
@@ -62,7 +62,7 @@ class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualImageAndTextLabelFactory[+N <: TextContext](factory: ImageAndTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualImageAndTextLabelFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualImageAndTextLabelFactory]
 {
 	private implicit def c: TextContext = context
 	

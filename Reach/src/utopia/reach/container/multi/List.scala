@@ -20,15 +20,15 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 
 import java.awt.event.KeyEvent
 
@@ -42,13 +42,13 @@ case class ListRowContent(components: IterableOnce[ReachComponentLike], context:
   * @author Mikko Hilpinen
   * @since 12.12.2020, v0.1
   */
-object List extends ContextInsertableComponentFactoryFactory[ColorContext, ListFactory, ContextualListFactory]
+object List extends FromGenericContextComponentFactoryFactory[ColorContext, ListFactory, ContextualListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ListFactory(hierarchy)
 }
 
 class ListFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualListFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualListFactory]
 {
 	private implicit val canvas: ReachCanvas2 = parentHierarchy.top
 	
@@ -143,7 +143,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualListFactory[+N <: ColorContext](factory: ListFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualListFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualListFactory]
 {
 	override def withContext[N2 <: ColorContext](newContext: N2) =
 		copy(context = newContext)

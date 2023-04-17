@@ -1,4 +1,4 @@
-package utopia.reflection.component.drawing.template
+package utopia.firmament.drawing.template
 
 import utopia.genesis.graphics.{Drawer, MeasuredText}
 import utopia.genesis.text.Font

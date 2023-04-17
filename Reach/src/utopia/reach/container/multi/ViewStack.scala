@@ -12,22 +12,22 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 
-object ViewStack extends ContextInsertableComponentFactoryFactory[BaseContext, ViewStackFactory,
+object ViewStack extends FromGenericContextComponentFactoryFactory[BaseContext, ViewStackFactory,
 	ContextualViewStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewStackFactory(hierarchy)
 }
 
 case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[BaseContext, ContextualViewStackFactory]
+	extends FromGenericContextFactory[BaseContext, ContextualViewStackFactory]
 {
 	// COMPUTED	----------------------------------
 	
@@ -139,7 +139,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackFactory, context: N)
-	extends ContextualComponentFactory[N, BaseContext, ContextualViewStackFactory]
+	extends GenericContextualFactory[N, BaseContext, ContextualViewStackFactory]
 {
 	// COMPUTED	------------------------------------
 	
@@ -164,8 +164,8 @@ case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackF
 	  * @tparam F Type of component creation factories used
 	  * @return A new view stack builder
 	  */
-	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
-	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F]) =
+	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
+	(contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F]) =
 		new ContextualViewStackBuilder[N, F](this, contentFactory)
 	
 	/**
@@ -400,8 +400,8 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 		segmented(group, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)(fill)
 }
 
-class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
-(stackFactory: ContextualViewStackFactory[N], contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
+class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
+(stackFactory: ContextualViewStackFactory[N], contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F])
 {
 	// IMPLICIT	---------------------------------
 	
@@ -440,7 +440,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualCompo
 	                                      customDrawers: Vector[CustomDrawer] = Vector())
 									  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
 	{
-		val content = Open.manyWithContext(contentFactory, stackFactory.context)(fill)
+		val content = Open.withContext(stackFactory.context).many(contentFactory)(fill)
 		stackFactory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
 			.withResult(content.result)
 	}
@@ -514,7 +514,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualCompo
 	                 customDrawers: Vector[CustomDrawer] = Vector())
 					(fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
 	{
-		val content = Open.manyWithContext(contentFactory, context)(fill)
+		val content = Open.withContext(context).many(contentFactory)(fill)
 		stackFactory.segmented(group, content.component, layoutPointer, marginPointer, capPointer, customDrawers)
 			.withResult(content.result)
 	}

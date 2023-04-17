@@ -26,7 +26,7 @@ import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
-import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer}
+import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer}
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated

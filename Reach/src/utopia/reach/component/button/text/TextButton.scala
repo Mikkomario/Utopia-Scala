@@ -9,24 +9,24 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.StackInsets
 
-object TextButton extends ContextInsertableComponentFactoryFactory[TextContext, TextButtonFactory,
+object TextButton extends FromGenericContextComponentFactoryFactory[TextContext, TextButtonFactory,
 	ContextualTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new TextButtonFactory(hierarchy)
 }
 
 class TextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualTextButtonFactory]
+	extends FromGenericContextFactory[TextContext, ContextualTextButtonFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
@@ -65,7 +65,7 @@ class TextButtonFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualTextButtonFactory[+N <: TextContext](buttonFactory: TextButtonFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualTextButtonFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualTextButtonFactory]
 {
 	// IMPLEMENTED	------------------------------
 	

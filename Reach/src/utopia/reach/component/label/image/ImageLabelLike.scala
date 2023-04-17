@@ -3,7 +3,7 @@ package utopia.reach.component.label.image
 import utopia.firmament.component.stack.CachingStackable
 import utopia.genesis.image.Image
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reflection.component.drawing.template.CustomDrawable
+import utopia.firmament.drawing.template.CustomDrawable
 import utopia.firmament.model.stack.{StackInsets, StackSize}
 
 /**

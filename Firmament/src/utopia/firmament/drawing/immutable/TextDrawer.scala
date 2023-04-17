@@ -4,8 +4,8 @@ import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike}
+import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.{DrawLevel, TextDrawerLike}
 import utopia.firmament.model.stack.StackInsets
 
 /**

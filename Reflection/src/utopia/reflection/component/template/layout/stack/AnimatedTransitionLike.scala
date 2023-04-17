@@ -11,8 +11,8 @@ import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.animation.{Animation, AnimationLike}
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.event.TransitionState
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}

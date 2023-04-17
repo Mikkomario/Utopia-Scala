@@ -2,22 +2,22 @@ package utopia.reach.component.label.empty
 
 import utopia.firmament.context.ColorContext
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackSize
 
 object EmptyLabel
-	extends ContextInsertableComponentFactoryFactory[ColorContext, EmptyLabelFactory, ContextualEmptyLabelFactory]
+	extends FromGenericContextComponentFactoryFactory[ColorContext, EmptyLabelFactory, ContextualEmptyLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new EmptyLabelFactory(hierarchy)
 }
 
 class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualEmptyLabelFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualEmptyLabelFactory]
 {
 	// IMPLEMENTED  --------------------------------
 	
@@ -48,7 +48,7 @@ class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualEmptyLabelFactory[+N <: ColorContext](factory: EmptyLabelFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualEmptyLabelFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualEmptyLabelFactory]
 {
 	// COMPUTED ------------------------------------
 	

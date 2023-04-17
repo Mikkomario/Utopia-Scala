@@ -18,20 +18,20 @@ import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.VeryHigh
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.FiniteDuration
 
-object Switch extends ContextInsertableComponentFactoryFactory[ColorContext, SwitchFactory, ContextualSwitchFactory]
+object Switch extends FromGenericContextComponentFactoryFactory[ColorContext, SwitchFactory, ContextualSwitchFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	
@@ -44,7 +44,7 @@ object Switch extends ContextInsertableComponentFactoryFactory[ColorContext, Swi
 }
 
 class SwitchFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualSwitchFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
@@ -79,7 +79,7 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualSwitchFactory[N <: ColorContext](factory: SwitchFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualSwitchFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	

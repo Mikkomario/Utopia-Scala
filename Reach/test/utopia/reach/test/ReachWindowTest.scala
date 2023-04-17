@@ -1,7 +1,5 @@
 package utopia.reach.test
 
-import utopia.firmament.context.TextContext
-import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
@@ -20,13 +18,20 @@ object ReachWindowTest extends App
 	
 	val textPointer = new PointerWithEvents("Text")
 	
-	val window = ReachWindow.withResizeLogic(User).apply(title = "Test") { hierarchy =>
+	/*
+	val window = ReachWindow.withResizeLogic(User)
+		// .withTextContext(baseContext.against(colors.primary).forTextComponents)
+		.apply(title = "Test") { hierarchy =>
 		// EmptyLabel(hierarchy).withBackground(Color.magenta, StackSize.any(Size(400, 200)))
 		val bg = colors.primary
 		implicit val c: TextContext = baseContext.against(bg).forTextComponents.larger.larger
 			.withTextInsetsScaledBy(4).withoutShrinkingText
 		ViewTextLabel(hierarchy).contextual.apply(textPointer, customDrawers = Vector(BackgroundDrawer(bg)))
-	}
+	}*/
+	val window = ReachWindow.withResizeLogic(User)
+		.withTextContext(baseContext.against(colors.primary).forTextComponents
+			.larger.larger.withTextInsetsScaledBy(4).withoutShrinkingText)
+		.using(ViewTextLabel, title = "Test") { _(textPointer) }
 	
 	Loop.regularly(5.seconds, waitFirst = true) {
 		println()

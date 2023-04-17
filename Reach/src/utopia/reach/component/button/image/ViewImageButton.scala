@@ -11,23 +11,23 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackInsets
 
-object ViewImageButton extends ContextInsertableComponentFactoryFactory[ColorContext, ViewImageButtonFactory,
+object ViewImageButton extends FromGenericContextComponentFactoryFactory[ColorContext, ViewImageButtonFactory,
 	ContextualViewImageButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewImageButtonFactory(hierarchy)
 }
 
 class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualViewImageButtonFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	---------------------------
 	
@@ -62,7 +62,7 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualViewImageButtonFactory[+N <: ColorContext](factory: ViewImageButtonFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualViewImageButtonFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLICIT	-----------------------------
 	

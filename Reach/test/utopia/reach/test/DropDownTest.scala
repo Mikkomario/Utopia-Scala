@@ -1,24 +1,21 @@
 package utopia.reach.test
 
 import utopia.firmament.image.SingleColorIcon
-import utopia.flow.parse.file.FileExtensions._
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas2
-import utopia.reach.container.wrapper.Framing
-import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reach.container.multi.Stack
-import utopia.reflection.util.SingleFrameSetup
+import utopia.reach.container.wrapper.Framing
+import utopia.reach.window.ReachWindow
 
 /**
   * A test application with drop down fields
@@ -27,23 +24,18 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object DropDownTest extends App
 {
-	ParadigmDataType.setup()
-	System.setProperty("sun.java2d.noddraw", true.toString)
-	
-	import utopia.reflection.test.TestContext._
-	import TestCursors._
+	import ReachTestContext._
 	
 	val arrowImage = Image.readFrom("Reflection/test-images/arrow-back-48dp.png")
-	arrowImage.failure.foreach { _.printStackTrace() }
+	arrowImage.logFailure
 	val expandIcon = arrowImage.map { i => new SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationCounterClockwise)) }
 	val shrinkIcon = arrowImage.map { i => new SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
-	/*
-	val canvas = ReachCanvas2(cursors) { hierarchy =>
+	val window = ReachWindow.contextual.apply(title = "Drop-Down Test") { hierarchy =>
 		implicit val canvas: ReachCanvas2 = hierarchy.top
-		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.gray.light, Stack)
+		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack)
 			.apply(margins.medium.any.square) { stackF =>
 				stackF.mapContext { _.forTextComponents }.build(DropDown).column(areRelated = true) { ddF =>
 					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
@@ -73,11 +65,9 @@ object DropDownTest extends App
 					)
 				}
 			}
-	}.parent
+	}
 	
-	val frame = Frame.windowed(canvas, "Reach Test", Program)
-	frame.setToCloseOnEsc()
-	new SingleFrameSetup(actorHandler, frame).start()
-	
-	 */
+	window.setToCloseOnEsc()
+	window.display()
+	start()
 }

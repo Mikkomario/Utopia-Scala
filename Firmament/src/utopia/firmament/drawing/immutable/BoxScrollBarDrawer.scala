@@ -4,7 +4,7 @@ import utopia.firmament.model.ScrollBarBounds
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
+import utopia.firmament.drawing.template.ScrollBarDrawerLike
 
 object BoxScrollBarDrawer
 {

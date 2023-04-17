@@ -7,7 +7,7 @@ import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
-import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.firmament.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
 

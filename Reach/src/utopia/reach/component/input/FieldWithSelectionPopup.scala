@@ -31,7 +31,7 @@ import utopia.paradigm.enumeration.Alignment.Bottom
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
@@ -40,19 +40,19 @@ import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.window.ReachWindowContext
+import utopia.reach.context.ReachWindowContext
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
-object FieldWithSelectionPopup extends ContextInsertableComponentFactoryFactory[TextContext,
+object FieldWithSelectionPopup extends FromGenericContextComponentFactoryFactory[TextContext,
 	FieldWithSelectionPopupFactory, ContextualFieldWithSelectionPopupFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new FieldWithSelectionPopupFactory(hierarchy)
 }
 
 class FieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualFieldWithSelectionPopupFactory]
+	extends FromGenericContextFactory[TextContext, ContextualFieldWithSelectionPopupFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualFieldWithSelectionPopupFactory(parentHierarchy, context)
@@ -60,7 +60,7 @@ class FieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy)
 
 case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy,
 																		   context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualFieldWithSelectionPopupFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualFieldWithSelectionPopupFactory]
 {
 	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	

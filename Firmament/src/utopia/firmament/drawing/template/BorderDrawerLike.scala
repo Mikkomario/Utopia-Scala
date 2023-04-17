@@ -1,4 +1,4 @@
-package utopia.reflection.component.drawing.template
+package utopia.firmament.drawing.template
 
 import utopia.firmament.model.Border
 import utopia.genesis.graphics.{DrawSettings, Drawer}

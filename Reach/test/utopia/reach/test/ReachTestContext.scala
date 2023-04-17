@@ -16,7 +16,7 @@ import utopia.paradigm.color.{ColorScheme, ColorSet}
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.measurement.DistanceExtensions._
-import utopia.reach.window.ReachWindowContext
+import utopia.reach.context.ReachWindowContext
 
 import scala.concurrent.ExecutionContext
 
@@ -33,7 +33,7 @@ object ReachTestContext
 	// ATTRIBUTES   ------------------------
 	
 	implicit val log: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
+	implicit val exc: ExecutionContext = new ThreadPool("Reflection")
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
 	
@@ -43,17 +43,17 @@ object ReachTestContext
 	val actorHandler = ActorHandler()
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)
-	implicit val windowContext: ReachWindowContext = ReachWindowContext.wrap(WindowContext(actorHandler))
-		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
 	
 	val colors = ColorScheme.default ++
 		ColorScheme.twoTone(
 			ColorSet.fromHexes("#212121", "#484848", "#000000").get,
 			ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
 		)
-	val font = Font("Arial", cm, Plain)
-	val margins = Margins((cm * 0.75).round.toInt)
+	val font = Font("Arial", (cm * 0.75).round.toInt, Plain)
+	val margins = Margins((cm * 0.5).round.toInt)
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
+	implicit val windowContext: ReachWindowContext = ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
+		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
 	
 	private val actionLoop = new ActorLoop(actorHandler, 5 to 60)
 	

@@ -12,7 +12,7 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.component.input.SelectableWithPointers
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable

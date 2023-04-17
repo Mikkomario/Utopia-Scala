@@ -2,6 +2,7 @@ package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.firmament.model.stack.StackLength
@@ -9,20 +10,19 @@ import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
-import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.reflection.component.drawing.template.CustomDrawer
 
-object Stack extends ContextInsertableComponentFactoryFactory[BaseContext, StackFactory, ContextualStackFactory]
+object Stack extends FromGenericContextComponentFactoryFactory[BaseContext, StackFactory, ContextualStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
 }
 
 case class StackFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[BaseContext, ContextualStackFactory]
+	extends FromGenericContextFactory[BaseContext, ContextualStackFactory]
 {
 	// COMPUTED	--------------------------------
 	
@@ -159,7 +159,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualStackFactory[N <: BaseContext](stackFactory: StackFactory, context: N)
-	extends ContextualComponentFactory[N, BaseContext, ContextualStackFactory]
+	extends GenericContextualFactory[N, BaseContext, ContextualStackFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
@@ -175,8 +175,8 @@ case class ContextualStackFactory[N <: BaseContext](stackFactory: StackFactory, 
 	  * @tparam F Type of contextual content factories
 	  * @return A new stack builder that uses the same context as in this factory
 	  */
-	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
-	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F]) =
+	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
+	(contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F]) =
 		new ContextualStackBuilder(this, contentFactory)
 	
 	/**
@@ -400,8 +400,8 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 	}
 }
 
-class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
-(stackFactory: ContextualStackFactory[N], contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
+class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
+(stackFactory: ContextualStackFactory[N], contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F])
 {
 	private implicit def canvas: ReachCanvas2 = stackFactory.stackFactory.parentHierarchy.top
 	
@@ -426,7 +426,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponent
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 										 (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 	{
-		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
+		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory(content, direction, layout, cap, customDrawers, areRelated)
 	}
 	
@@ -448,7 +448,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponent
 	                                           customDrawers: Vector[CustomDrawer] = Vector())
 	                                          (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 	{
-		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
+		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.withMargin(content, margin, direction, layout, cap, customDrawers)
 	}
 	
@@ -469,7 +469,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponent
 												  customDrawers: Vector[CustomDrawer] = Vector())
 												 (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 	{
-		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
+		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.withoutMargin(content, direction, layout, cap, customDrawers)
 	}
 	
@@ -528,7 +528,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponent
 					 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 					(fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[ReachComponentLike], R]) =
 	{
-		val content = Open.manyWithContext(contentFactory, context) { factories =>
+		val content = Open.withContext(context).many(contentFactory) { factories =>
 			fill(factories).mapComponent { _.iterator.map { ComponentCreationResult(_) } }
 		}
 		stackFactory.segmented(group, content.component, layout, cap, customDrawers, areRelated).withResult(content.result)
@@ -556,7 +556,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: ContextualComponent
 										 forceFitLayout: Boolean = false)
 										(fill: F[N] => ComponentCreationResult[Pair[C], R]): ComponentWrapResult[Stack[C], Vector[C], R] =
 	{
-		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
+		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)
 	}
 }

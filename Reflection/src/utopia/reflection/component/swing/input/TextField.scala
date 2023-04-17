@@ -14,8 +14,8 @@ import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.TextDrawerLike
+import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.TextDrawerLike
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.Focusable
 import utopia.firmament.component.input.InputWithPointer

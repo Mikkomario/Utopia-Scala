@@ -2,6 +2,23 @@ package utopia.reach.component.factory
 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
+import scala.language.implicitConversions
+
+object ComponentFactoryFactory
+{
+	// IMPLICIT -------------------------
+	
+	implicit def apply[F](f: ComponentHierarchy => F): ComponentFactoryFactory[F] = new _Cff[F](f)
+	
+	
+	// NESTED   -------------------------
+	
+	private class _Cff[+F](f: ComponentHierarchy => F) extends ComponentFactoryFactory[F]
+	{
+		override def apply(hierarchy: ComponentHierarchy): F = f(hierarchy)
+	}
+}
+
 /**
   * A common trait for classes that produce component factories. Component factories then wrap a component hierarchy
   * and offer utility constructors for component creation

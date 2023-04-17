@@ -2,8 +2,8 @@ package utopia.reflection.component.swing.template
 
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.genesis.graphics.Drawer
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.{Background, Foreground, Normal}
 
 import java.awt.{Graphics, Graphics2D}
 

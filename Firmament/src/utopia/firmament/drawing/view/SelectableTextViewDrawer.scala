@@ -7,8 +7,8 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{DrawLevel, SelectableTextDrawerLike}
+import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.{DrawLevel, SelectableTextDrawerLike}
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.enumeration.Axis.X
 

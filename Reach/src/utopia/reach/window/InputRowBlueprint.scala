@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.{Alignment, HorizontalDirection}
-import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.firmament.localization.LocalizedString
 
@@ -24,8 +24,8 @@ object InputRowBlueprint
 	  * @tparam F Type of contextual component factory version
 	  * @return A new input row blueprint
 	  */
-	def using[F[X <: TextContext] <: ContextualComponentFactory[X, _ >: TextContext, F]]
-	(factory: ContextInsertableComponentFactoryFactory[_ >: TextContext, _, F], key: String,
+	def using[F[X <: TextContext] <: GenericContextualFactory[X, _ >: TextContext, F]]
+	(factory: FromGenericContextComponentFactoryFactory[_ >: TextContext, _, F], key: String,
 	 displayName: LocalizedString  = LocalizedString.empty,
 	 fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
 	 isScalable: Boolean = true)(createField: F[TextContext] => InputField) =

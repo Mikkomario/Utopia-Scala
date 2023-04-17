@@ -14,18 +14,18 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Background
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Background
 
 // TODO: Also add a component for text box + label
 object CheckBox
-	extends ContextInsertableComponentFactoryFactory[ColorContext, CheckBoxFactory, ContextualCheckBoxFactory]
+	extends FromGenericContextComponentFactoryFactory[ColorContext, CheckBoxFactory, ContextualCheckBoxFactory]
 {
 	// IMPLEMENTED	-------------------------
 	
@@ -46,7 +46,7 @@ object CheckBox
 }
 
 class CheckBoxFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualCheckBoxFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualCheckBoxFactory]
 {
 	override def withContext[N <: ColorContext](context: N) =
 		ContextualCheckBoxFactory(this, context)
@@ -73,7 +73,7 @@ class CheckBoxFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualCheckBoxFactory[+N <: ColorContext](factory: CheckBoxFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualCheckBoxFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualCheckBoxFactory]
 {
 	private implicit val c: ColorContext = context
 	
@@ -105,7 +105,7 @@ case class ContextualCheckBoxFactory[+N <: ColorContext](factory: CheckBoxFactor
 
 class FullCheckBoxFactoryFactory(onIcon: SingleColorIcon, offIcon: SingleColorIcon,
 								 selectionColorRole: ColorRole = Secondary)
-	extends ContextInsertableComponentFactoryFactory[ColorContext, FullCheckBoxFactory, FullContextualCheckBoxFactory]
+	extends FromGenericContextComponentFactoryFactory[ColorContext, FullCheckBoxFactory, FullContextualCheckBoxFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new FullCheckBoxFactory(new CheckBoxFactory(hierarchy), onIcon,
 		offIcon, selectionColorRole)
@@ -113,7 +113,7 @@ class FullCheckBoxFactoryFactory(onIcon: SingleColorIcon, offIcon: SingleColorIc
 
 class FullCheckBoxFactory(factory: CheckBoxFactory, onIcon: SingleColorIcon, offIcon: SingleColorIcon,
 						  selectionColorRole: ColorRole = Secondary)
-	extends ContextInsertableComponentFactory[ColorContext, FullContextualCheckBoxFactory]
+	extends FromGenericContextFactory[ColorContext, FullContextualCheckBoxFactory]
 {
 	override def withContext[N <: ColorContext](context: N) =
 		FullContextualCheckBoxFactory(factory.withContext(context), onIcon, offIcon, selectionColorRole)
@@ -122,7 +122,7 @@ class FullCheckBoxFactory(factory: CheckBoxFactory, onIcon: SingleColorIcon, off
 case class FullContextualCheckBoxFactory[+N <: ColorContext](factory: ContextualCheckBoxFactory[N],
 																 onIcon: SingleColorIcon, offIcon: SingleColorIcon,
 																 selectionColorRole: ColorRole = Secondary)
-	extends ContextualComponentFactory[N, ColorContext, FullContextualCheckBoxFactory]
+	extends GenericContextualFactory[N, ColorContext, FullContextualCheckBoxFactory]
 {
 	// IMPLEMENTED	----------------------------
 	

@@ -24,7 +24,7 @@ import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, ReachComponent, ReachComponentLike, ReachComponentWrapper}
@@ -34,19 +34,19 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reach.util.Priority.High
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.stack.StackLength
 import utopia.reach.container.multi.MutableStack
 
-object SelectionList extends ContextInsertableComponentFactoryFactory[ColorContext, SelectionListFactory,
+object SelectionList extends FromGenericContextComponentFactoryFactory[ColorContext, SelectionListFactory,
 	ContextualSelectionListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new SelectionListFactory(hierarchy)
 }
 
 class SelectionListFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualSelectionListFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualSelectionListFactory]
 {
 	override def withContext[N <: ColorContext](context: N) =
 		ContextualSelectionListFactory(this, context)
@@ -87,7 +87,7 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualSelectionListFactory[+N <: ColorContext](factory: SelectionListFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualSelectionListFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualSelectionListFactory]
 {
 	override def withContext[N2 <: ColorContext](newContext: N2) = copy(context = newContext)
 	

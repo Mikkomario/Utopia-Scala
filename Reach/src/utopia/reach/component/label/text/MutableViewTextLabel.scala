@@ -10,21 +10,21 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.stack.StackInsets
 
-object MutableViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
+object MutableViewTextLabel extends FromGenericContextComponentFactoryFactory[TextContext,
 	MutableViewTextLabelFactory, ContextualMutableViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableViewTextLabelFactory(hierarchy)
 }
 
 class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualMutableViewTextLabelFactory]
+	extends FromGenericContextFactory[TextContext, ContextualMutableViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
@@ -78,7 +78,7 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 
 case class ContextualMutableViewTextLabelFactory[+N <: TextContext](labelFactory: MutableViewTextLabelFactory,
 																		context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualMutableViewTextLabelFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualMutableViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	

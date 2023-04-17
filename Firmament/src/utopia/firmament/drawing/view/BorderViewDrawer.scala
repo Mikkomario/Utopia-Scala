@@ -2,9 +2,9 @@ package utopia.firmament.drawing.view
 
 import utopia.firmament.model.Border
 import utopia.flow.view.immutable.View
-import utopia.reflection.component.drawing.template
-import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template
+import utopia.firmament.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel.Normal
 
 /**
   * Used for drawing a mutable border over a component

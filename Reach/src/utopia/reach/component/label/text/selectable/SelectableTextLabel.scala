@@ -8,24 +8,24 @@ import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorRole.Secondary
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.StackInsets
 
 import scala.concurrent.duration.Duration
 
-object SelectableTextLabel extends ContextInsertableComponentFactoryFactory[TextContext,
+object SelectableTextLabel extends FromGenericContextComponentFactoryFactory[TextContext,
 	SelectableTextLabelFactory, ContextualSelectableTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new SelectableTextLabelFactory(hierarchy)
 }
 
 class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualSelectableTextLabelFactory]
+	extends FromGenericContextFactory[TextContext, ContextualSelectableTextLabelFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualSelectableTextLabelFactory(this, context)
@@ -128,7 +128,7 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 }
 
 case class ContextualSelectableTextLabelFactory[+N <: TextContext](factory: SelectableTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualSelectableTextLabelFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualSelectableTextLabelFactory]
 {
 	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)

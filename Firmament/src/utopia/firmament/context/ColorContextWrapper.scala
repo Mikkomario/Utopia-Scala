@@ -10,25 +10,39 @@ trait ColorContextWrapper[+Repr, +Textual] extends ColorContextLike[Repr, Textua
 {
 	// ABSTRACT	------------------------
 	
-	override def wrapped: ColorContext
+	/**
+	  * @return The color context wrapped by this context
+	  */
+	def colorContext: ColorContext
 	
 	/**
 	  * @param base New color context to wrap
 	  * @return A copy of this context, wrapping the specified color context
 	  */
-	def withColorBase(base: ColorContext): Repr
+	def withColorContext(base: ColorContext): Repr
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def background: Color = wrapped.background
-	override def textColor: Color = wrapped.textColor
+	override def base: BaseContext = colorContext
 	
-	override def withDefaultTextColor: Repr = withColorBase(wrapped.withDefaultTextColor)
-	override def withTextColor(color: Color): Repr = withColorBase(wrapped.withTextColor(color))
-	override def withTextColor(color: ColorSet): Repr = withColorBase(wrapped.withTextColor(color))
+	override def background: Color = colorContext.background
+	override def textColor: Color = colorContext.textColor
 	
-	override def against(background: Color): Repr = withColorBase(wrapped.against(background))
+	override def withDefaultTextColor: Repr = withColorContext(colorContext.withDefaultTextColor)
+	override def withTextColor(color: Color): Repr = withColorContext(colorContext.withTextColor(color))
+	override def withTextColor(color: ColorSet): Repr = withColorContext(colorContext.withTextColor(color))
 	
-	override def withBase(baseContext: BaseContext): Repr = withColorBase(wrapped.withBase(baseContext))
+	override def against(background: Color): Repr = withColorContext(colorContext.against(background))
+	
+	override def withBase(baseContext: BaseContext): Repr = withColorContext(colorContext.withBase(baseContext))
+	
+	
+	// OTHER    ----------------------
+	
+	/**
+	  * @param f A mapping function for the wrapped color context
+	  * @return A copy of this context with mapped color context
+	  */
+	def mapColorContext(f: ColorContext => ColorContext) = withColorContext(f(colorContext))
 }

@@ -3,7 +3,7 @@ package utopia.reach.component.template
 import utopia.firmament.component.stack.StackableWrapper
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
-import utopia.reflection.component.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel
 
 /**
   * A common trait for Reach component wrapper classes

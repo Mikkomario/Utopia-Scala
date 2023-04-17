@@ -1,8 +1,8 @@
 package utopia.firmament.drawing.immutable
 
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.template.DrawLevel.Background
-import utopia.reflection.component.drawing.template.{BackgroundDrawerLike, DrawLevel}
+import utopia.firmament.drawing.template.DrawLevel.Background
+import utopia.firmament.drawing.template.{BackgroundDrawerLike, DrawLevel}
 
 /**
   * A custom drawer that draws a background for the targeted component

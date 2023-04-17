@@ -21,8 +21,8 @@ import utopia.genesis.text.Font
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
-import utopia.paradigm.color.ColorShade
 import utopia.paradigm.color.ColorShade.Dark
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
@@ -33,7 +33,6 @@ import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
-import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer}
 
 import java.awt.event.KeyEvent
 import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}
@@ -49,8 +48,8 @@ object ReachCanvas2
 	  * @param absoluteParentPositionView A view into the parent element's absolute position.
 	  *                                   Either Left: a view or Right: a real-time pointer (preferred).
 	  *                                   Call-by-name.
+	  * @param background The background color used in this canvas
 	  * @param cursors A set of custom cursors to use on this canvas (optional)
-	  * @param customDrawers Custom drawers to apply to this canvas (default = empty)
 	  * @param enableAwtDoubleBuffering Whether AWT double buffering should be allowed.
 	  *                                 Setting this to true might make the painting less responsive.
 	  *                                 Default = false = disable AWT double buffering.
@@ -75,8 +74,7 @@ object ReachCanvas2
 	  */
 	def apply[C <: ReachComponentLike, R](attachmentPointer: FlagLike,
 	                                      absoluteParentPositionView: => Either[View[Point], Changing[Point]],
-	                                      cursors: Option[CursorSet] = None,
-	                                      customDrawers: Vector[CustomDrawer] = Vector(),
+	                                      background: Color, cursors: Option[CursorSet] = None,
 	                                      enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
 	                                     (revalidateImplementation: ReachCanvas2 => Unit)
 	                                     (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
@@ -84,8 +82,8 @@ object ReachCanvas2
 	{
 		// Creates the canvas first
 		val contentPointer = SettableOnce[ReachComponentLike]()
-		val canvas = new ReachCanvas2(contentPointer, attachmentPointer, absoluteParentPositionView, cursors,
-			customDrawers, enableAwtDoubleBuffering, disableFocus)(revalidateImplementation)
+		val canvas = new ReachCanvas2(contentPointer, attachmentPointer, absoluteParentPositionView, background, cursors,
+			enableAwtDoubleBuffering, disableFocus)(revalidateImplementation)
 		// Then creates the content, using the canvas' component hierarchy
 		val newContent = createContent(canvas.HierarchyConnection)
 		// Attaches the content to the canvas and returns both
@@ -107,8 +105,8 @@ object ReachCanvas2
   * @param absoluteParentPositionView A view into the parent element's absolute position.
   *                                   Either Left: a view or Right: a real-time pointer (preferred).
   *                                   Call-by-name.
+  * @param background The background color used in this canvas
   * @param cursors Custom cursors to display on this canvas. Default = None = no custom cursor management enabled
-  * @param customDrawers Custom drawers that paint on this canvas (default = empty)
   * @param enableAwtDoubleBuffering Whether AWT double buffering should be allowed.
   *                                 Setting this to true might make the painting less responsive.
   *                                 Default = false = disable AWT double buffering.
@@ -124,14 +122,13 @@ object ReachCanvas2
   * @param exc Implicit execution context
   * @param log Implicit logging implementation for some error cases
   */
-// TODO: Cursor handling isn't working at this time
 class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: FlagLike,
-                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
-                             cursors: Option[CursorSet] = None, override val customDrawers: Vector[CustomDrawer] = Vector(),
-                             enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+                             absoluteParentPositionView: => Either[View[Point], Changing[Point]], background: Color,
+                             cursors: Option[CursorSet] = None, enableAwtDoubleBuffering: Boolean = false,
+                             disableFocus: Boolean = false)
                             (revalidateImplementation: ReachCanvas2 => Unit)
                             (implicit exc: ExecutionContext, log: Logger)
-	extends ReachCanvasLike with Stackable with CustomDrawable
+	extends ReachCanvasLike with Stackable
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -140,7 +137,8 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	
 	override val focusManager = new ReachFocusManager(CustomDrawPanel)
 	private val painterPointer = contentPointer.map { _.map { c =>
-		RealTimeReachPaintManager(c, disableDoubleBuffering = !enableAwtDoubleBuffering)
+		RealTimeReachPaintManager(c, Some(background).filter { _.alpha > 0 },
+			disableDoubleBuffering = !enableAwtDoubleBuffering)
 	} }
 	override val cursorManager = cursors.map { new ReachCursorManager(_) }
 	private val cursorPainter = cursorManager.map { new CursorSwapper(_) }
@@ -179,6 +177,9 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	
 	
 	// INITIAL CODE	---------------------------
+	
+	component.setBackground(background.toAwt)
+	component.setOpaque(background.alpha >= 1.0)
 	
 	// When bounds get updated, updates the underlying component, also
 	positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
@@ -226,8 +227,6 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	
 	override protected def currentContent = contentPointer.value
 	override protected def currentPainter = painterPointer.value
-	
-	override def drawBounds = Bounds(Point.origin, size)
 	
 	override def stackSize = currentContent match {
 		case Some(content) => content.stackSize

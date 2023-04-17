@@ -12,13 +12,13 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.text.DurationField.focusTransferDelay
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.focus.ManyFocusableWrapper
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
 import utopia.reach.container.multi.Stack
@@ -26,7 +26,7 @@ import utopia.reach.container.multi.Stack
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-object DurationField extends ContextInsertableComponentFactoryFactory[TextContext, DurationFieldFactory,
+object DurationField extends FromGenericContextComponentFactoryFactory[TextContext, DurationFieldFactory,
 	ContextualDurationFieldFactory]
 {
 	private val focusTransferDelay = 0.05.seconds
@@ -35,14 +35,14 @@ object DurationField extends ContextInsertableComponentFactoryFactory[TextContex
 }
 
 class DurationFieldFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualDurationFieldFactory]
+	extends FromGenericContextFactory[TextContext, ContextualDurationFieldFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualDurationFieldFactory(parentHierarchy, context)
 }
 
 case class ContextualDurationFieldFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualDurationFieldFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualDurationFieldFactory]
 {
 	private implicit def c: TextContext = context
 	private implicit def localizer: Localizer = context.localizer

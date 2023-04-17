@@ -8,9 +8,8 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
+import utopia.reach.context.ReachWindowContext
 import utopia.reach.focus.{FocusListener, FocusRequestable}
-import utopia.reach.window.ReachWindowContext
-import utopia.reflection.component.drawing.template.CustomDrawer
 
 import scala.concurrent.ExecutionContext
 
@@ -170,8 +169,6 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  *                      Default = 0
 	  * @param title         Title displayed on the window (provided that OS headers are in use).
 	  *                      Default = empty = no title.
-	  * @param customDrawers Custom drawers to assign to the window, in addition to those specified in the context.
-	  *                      Default = empty.
 	  * @param keepAnchored  Whether the window should be kept close to this component when its size changes
 	  *                      or the this component is moved or resized.
 	  *                      Set to false if you don't expect the owner component to move.
@@ -189,14 +186,13 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  */
 	def createOwnedWindow[C <: ReachComponentLike, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
 	                                                  title: LocalizedString = LocalizedString.empty,
-	                                                  customDrawers: Vector[CustomDrawer] = Vector(),
 	                                                  keepAnchored: Boolean = true, display: Boolean = false)
 	                                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
 	                                                 (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                                  log: Logger): WindowCreationResult[C, R] =
 	{
 		// Always enables focus on the created windows
-		val window = createWindow[C, R](alignment, margin, title, customDrawers, keepAnchored,
+		val window = createWindow[C, R](alignment, margin, title, keepAnchored,
 			display)(createContent)(context.focusable, exc, log)
 		registerOwnershipOf(window.component)
 		window

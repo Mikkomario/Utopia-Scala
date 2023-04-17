@@ -14,7 +14,7 @@ import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackInsets
 
 object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]

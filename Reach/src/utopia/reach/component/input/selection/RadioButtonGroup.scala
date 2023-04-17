@@ -9,12 +9,12 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.check.RadioButtonLine
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.focus.ManyFocusableWrapper
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.component.display.Pool
 import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.TextContext
@@ -23,21 +23,21 @@ import utopia.paradigm.color.ColorRole.Secondary
 import utopia.firmament.localization.LocalizedString
 import utopia.reach.container.multi.Stack
 
-object RadioButtonGroup extends ContextInsertableComponentFactoryFactory[TextContext, RadioButtonGroupFactory,
+object RadioButtonGroup extends FromGenericContextComponentFactoryFactory[TextContext, RadioButtonGroupFactory,
 	ContextualRadioButtonGroupFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonGroupFactory(hierarchy)
 }
 
 class RadioButtonGroupFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualRadioButtonGroupFactory]
+	extends FromGenericContextFactory[TextContext, ContextualRadioButtonGroupFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualRadioButtonGroupFactory(parentHierarchy, context)
 }
 
 case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualRadioButtonGroupFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualRadioButtonGroupFactory]
 {
 	// IMPLICIT	----------------------------
 	

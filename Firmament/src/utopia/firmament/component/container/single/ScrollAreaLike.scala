@@ -17,8 +17,8 @@ import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.reflection.component.drawing.template.DrawLevel.Foreground
-import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
+import utopia.firmament.drawing.template.DrawLevel.Foreground
+import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.stack.StackSize
 
 import java.awt.event.KeyEvent

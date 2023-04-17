@@ -12,36 +12,50 @@ trait TextContextWrapper[+Repr] extends TextContextLike[Repr]
 {
 	// ABSTRACT	----------------------------
 	
-	override def wrapped: TextContext
+	/**
+	  * @return Wrapped text context
+	  */
+	def textContext: TextContext
 	
 	/**
 	  * @param base A new text context to wrap
 	  * @return A copy of this wrapper with that text context
 	  */
-	def withTextBase(base: TextContext): Repr
+	def withTextContext(base: TextContext): Repr
 	
 	
 	// IMPLEMENTED	------------------------
 	
-	override def textAlignment = wrapped.textAlignment
-	override def textInsets = wrapped.textInsets
+	override def colorContext: ColorContext = textContext
 	
-	override def promptFont = wrapped.promptFont
+	override def textAlignment = textContext.textAlignment
+	override def textInsets = textContext.textInsets
 	
-	override def betweenLinesMargin = wrapped.betweenLinesMargin
+	override def promptFont = textContext.promptFont
 	
-	override def allowLineBreaks = wrapped.allowLineBreaks
-	override def allowTextShrink = wrapped.allowTextShrink
+	override def betweenLinesMargin = textContext.betweenLinesMargin
 	
-	override def withDefaultPromptFont: Repr = withTextBase(wrapped.withDefaultPromptFont)
-	override def withPromptFont(font: Font): Repr = withTextBase(wrapped.withPromptFont(font))
-	override def withTextAlignment(alignment: Alignment): Repr = withTextBase(wrapped.withTextAlignment(alignment))
-	override def withTextInsets(insets: StackInsets): Repr = withTextBase(wrapped.withTextInsets(insets))
-	override def withMarginBetweenLines(margin: StackLength): Repr = withTextBase(wrapped.withMarginBetweenLines(margin))
+	override def allowLineBreaks = textContext.allowLineBreaks
+	override def allowTextShrink = textContext.allowTextShrink
+	
+	override def withDefaultPromptFont: Repr = withTextContext(textContext.withDefaultPromptFont)
+	override def withPromptFont(font: Font): Repr = withTextContext(textContext.withPromptFont(font))
+	override def withTextAlignment(alignment: Alignment): Repr = withTextContext(textContext.withTextAlignment(alignment))
+	override def withTextInsets(insets: StackInsets): Repr = withTextContext(textContext.withTextInsets(insets))
+	override def withMarginBetweenLines(margin: StackLength): Repr = withTextContext(textContext.withMarginBetweenLines(margin))
 	override def withAllowLineBreaks(allowLineBreaks: Boolean): Repr =
-		withTextBase(wrapped.withAllowLineBreaks(allowLineBreaks))
+		withTextContext(textContext.withAllowLineBreaks(allowLineBreaks))
 	override def withAllowTextShrink(allowTextShrink: Boolean): Repr =
-		withTextBase(wrapped.withAllowTextShrink(allowTextShrink))
+		withTextContext(textContext.withAllowTextShrink(allowTextShrink))
 	
-	override def withColorBase(base: ColorContext): Repr = withTextBase(wrapped.withColorBase(base))
+	override def withColorContext(base: ColorContext): Repr = withTextContext(textContext.withColorContext(base))
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * @param f A mapping function for the wrapped text context
+	  * @return A copy of this context with mapped text context
+	  */
+	def mapTextContext(f: TextContext => TextContext) = withTextContext(f(textContext))
 }

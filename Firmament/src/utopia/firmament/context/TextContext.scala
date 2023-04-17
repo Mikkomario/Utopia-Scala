@@ -5,8 +5,16 @@ import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 
+import scala.language.implicitConversions
+
 object TextContext
 {
+	// IMPLICIT -----------------------------
+	
+	// Implicitly wraps a ColorContext into a TextContext
+	implicit def wrap(base: ColorContext): TextContext = apply(base)
+	
+	
 	// OTHER    -----------------------------
 	
 	/**
@@ -25,7 +33,7 @@ object TextContext
 	
 	// NESTED   -----------------------------
 	
-	private case class _TextContext(wrapped: ColorContext, textInsets: StackInsets, textAlignment: Alignment,
+	private case class _TextContext(colorContext: ColorContext, textInsets: StackInsets, textAlignment: Alignment,
 	                                betweenLinesMargin: StackLength,
 	                                customPromptFont: Option[Font], allowLineBreaks: Boolean, allowTextShrink: Boolean)
 		extends TextContext
@@ -51,9 +59,10 @@ object TextContext
 		override def withAllowTextShrink(allowTextShrink: Boolean): TextContext =
 			if (this.allowTextShrink == allowTextShrink) this else copy(allowTextShrink = allowTextShrink)
 		
-		override def withColorBase(base: ColorContext): TextContext = if (base == wrapped) this else copy(wrapped = base)
+		override def withColorContext(base: ColorContext): TextContext =
+			if (base == colorContext) this else copy(colorContext = base)
 		
-		override def *(mod: Double): TextContext = copy(wrapped = wrapped * mod, textInsets = textInsets * mod,
+		override def *(mod: Double): TextContext = copy(colorContext = colorContext * mod, textInsets = textInsets * mod,
 			betweenLinesMargin = betweenLinesMargin * mod, customPromptFont = customPromptFont.map { _ * mod })
 	}
 }

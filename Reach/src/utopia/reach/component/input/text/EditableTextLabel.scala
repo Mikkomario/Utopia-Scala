@@ -15,12 +15,12 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.ColorShade.Light
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.AbstractSelectableTextLabel
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalString._
 
 import java.awt.Toolkit
@@ -29,14 +29,14 @@ import java.awt.event.KeyEvent
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-object EditableTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, EditableTextLabelFactory,
+object EditableTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, EditableTextLabelFactory,
 	ContextualEditableTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new EditableTextLabelFactory(hierarchy)
 }
 
 class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualEditableTextLabelFactory]
+	extends FromGenericContextFactory[TextContext, ContextualEditableTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	
@@ -80,7 +80,7 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualEditableTextLabelFactory[+N <: TextContext](factory: EditableTextLabelFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualEditableTextLabelFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualEditableTextLabelFactory]
 {
 	override def withContext[N2 <: TextContext](newContext: N2) =
 		copy(context = newContext)

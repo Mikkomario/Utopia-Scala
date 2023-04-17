@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.button
 import utopia.firmament.model.GuiElementStatus
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel
 
 /**
   * Used for drawing different button states

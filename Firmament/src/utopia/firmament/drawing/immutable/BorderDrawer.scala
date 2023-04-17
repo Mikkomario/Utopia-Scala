@@ -1,8 +1,8 @@
 package utopia.firmament.drawing.immutable
 
 import utopia.firmament.model.Border
-import utopia.reflection.component.drawing.template.{BorderDrawerLike, DrawLevel}
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.{BorderDrawerLike, DrawLevel}
+import utopia.firmament.drawing.template.DrawLevel.Normal
 
 /**
   * This custom drawer draws a set of borders inside the component without affecting component layout

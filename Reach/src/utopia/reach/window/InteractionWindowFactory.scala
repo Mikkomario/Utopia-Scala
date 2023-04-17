@@ -21,6 +21,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.multi.{ContextualStackFactory, Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
+import utopia.reach.context.ReachWindowContext
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
@@ -128,7 +129,7 @@ trait InteractionWindowFactory[A]
 		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.
 		//  Alternatively room should be allowed for a header component separately
 		// Contains the created buttons and the default action enabled -pointer as the additional result
-		val window = ReachWindow(parentWindow, title) { hierarchy =>
+		val window = ReachWindow.contextual.apply(parentWindow, title) { hierarchy =>
 			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
 				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>
 					stackF.build(Mixed).column() { factories =>

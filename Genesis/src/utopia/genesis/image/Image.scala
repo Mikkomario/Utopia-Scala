@@ -5,7 +5,7 @@ import utopia.flow.operator.{LinearScalable, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
-import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
@@ -572,6 +572,21 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	 * @return A new image with all pixels set to provided color. Original alpha channel is preserved, however.
 	 */
 	def withColorOverlay(hue: Color) = mapEachPixel { c => hue.withAlpha(c.alpha) }
+	/**
+	  * @param color Background color to use
+	  * @return This image with a painted background
+	  */
+	def withBackground(color: Color) = {
+		// Case: Has positive size => Paints this image over a solid background
+		if (sourceResolution.isPositive && color.alpha > 0)
+			Image.paint(sourceResolution) { drawer =>
+				drawer.draw(Bounds(Point.origin, sourceResolution))(DrawSettings.onlyFill(color))
+				drawWith(drawer, sourceResolutionOrigin)
+			}.copy(scaling = scaling, specifiedOrigin = specifiedOrigin)
+		// Case: Zero-sized image => No need to paint
+		else
+			this
+	}
 	
 	/**
 	  * Creates a new image with altered source resolution. This method can be used when you wish to lower the original

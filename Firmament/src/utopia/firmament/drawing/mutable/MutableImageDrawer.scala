@@ -2,9 +2,9 @@ package utopia.firmament.drawing.mutable
 
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.component.drawing.template
-import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template
+import utopia.firmament.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.stack.StackInsets
 
 /**

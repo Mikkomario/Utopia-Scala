@@ -4,16 +4,16 @@ import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.template.CacheLike
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
-import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
+import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.component.input.{InputWithPointer, InteractionWithPointer}
 
-object CachingViewSwapper extends ContextInsertableComponentFactoryFactory[Any, CachingViewSwapperFactory,
+object CachingViewSwapper extends FromGenericContextComponentFactoryFactory[Any, CachingViewSwapperFactory,
 	ContextualCachingViewSwapperFactory]
 {
 	// IMPLEMENTED	-------------------------
@@ -32,7 +32,7 @@ object CachingViewSwapper extends ContextInsertableComponentFactoryFactory[Any, 
 }
 
 class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[Any, ContextualCachingViewSwapperFactory]
+	extends FromGenericContextFactory[Any, ContextualCachingViewSwapperFactory]
 {
 	// IMPLICIT	-----------------------------
 	
@@ -87,7 +87,7 @@ case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFac
 	override def withContext[N2 <: Any](newContext: N2) =
 		copy(context = newContext)
 	
-	override def build[F[X] <: ContextualComponentFactory[X, _ >: N, F]](contentFactory: ContextualBuilderContentFactory[N, F]) =
+	override def build[F[X] <: GenericContextualFactory[X, _ >: N, F]](contentFactory: ContextualBuilderContentFactory[N, F]) =
 		new ContextualViewSwapperBuilder[N, F](factory, context, contentFactory)
 }
 
@@ -123,7 +123,7 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
-class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >: N, F]]
+class ContextualViewSwapperBuilder[N, +F[X] <: GenericContextualFactory[X, _ >: N, F]]
 (factory: CachingViewSwapperFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
 {
 	private implicit val canvas: ReachCanvas2 = factory.canvas
@@ -142,7 +142,7 @@ class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >
 	                                                        customDrawers: Vector[CustomDrawer] = Vector())
 	                                                       (makeContent: (F[N], A) => C) =
 		factory[A, C, P](valuePointer, customDrawers) { item =>
-			Open.withContext(contentFactory, context) { makeContent(_, item) }
+			Open.withContext(context)(contentFactory) { makeContent(_, item) }
 		}
 	
 	/**

@@ -7,6 +7,7 @@ import utopia.genesis.image.Image
 import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size}
 
@@ -36,7 +37,7 @@ object ImageTest extends App
 	
 	setup.registerObjects(
 		new GridDrawer(gameWorldSize, Size(50, 50)),
-		new ImageDrawer(original, Point(50, 50)),
+		new ImageDrawer(original.withBackground(Color.black), Point(50, 50)),
 		new ImageDrawer(original.flippedHorizontally, Point(150, 50)),
 		new ImageDrawer(original.flippedVertically, Point(250, 50)),
 		new ImageDrawer(original.withIncreasedContrast, Point(350, 50)),

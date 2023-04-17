@@ -1,21 +1,14 @@
 package utopia.reach.component.factory
 
-import scala.language.implicitConversions
-
-/*
-object ContextInsertableComponentFactory
-{
-	// Automatically inserts the implicit context to the available factory, if possible
-	implicit def autoInsertContext[N <: Top, Top, F[X <: Top] <: ContextualComponentFactory[X, Top, F]]
-	(factory: ContextInsertableComponentFactory[Top, F])(implicit context: N): F[N] = factory.withContext(context)
-}*/
-
 /**
-  * A factory that can be enriched with component creation context in order to create a contextual component factory
+  * A factory that can be enriched with component creation context in order to create a contextual component factory.
+  * Suppports generic context types.
   * @author Mikko Hilpinen
   * @since 12.10.2020, v0.1
+  * @tparam Top The highest accepted context class
+  * @tparam Contextual A contextual type of this factory (i.e. the result type of this factory)
   */
-trait ContextInsertableComponentFactory[Top, +Contextual[X <: Top] <: ContextualComponentFactory[X, Top, Contextual]]
+trait FromGenericContextFactory[-Top, +Contextual[X <: Top]]
 {
 	// ABSTRACT	-----------------------------
 	

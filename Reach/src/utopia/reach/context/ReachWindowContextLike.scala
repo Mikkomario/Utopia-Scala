@@ -1,6 +1,6 @@
-package utopia.reach.window
+package utopia.reach.context
 
-import utopia.firmament.context.WindowContextWrapper
+import utopia.firmament.context.{TextContext, WindowContextWrapper}
 import utopia.flow.collection.immutable.range.Span
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
@@ -8,7 +8,8 @@ import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
 import utopia.reach.container.{ReachCanvas2, RevalidationStyle}
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}
 import utopia.reach.cursor.{Cursor, CursorSet, CursorType}
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.paradigm.color.Color
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -18,10 +19,14 @@ import scala.concurrent.duration.FiniteDuration
   * @since 13.4.2023, v1.0
   * @tparam Repr Concrete context implementation
   */
-trait ReachWindowContextLike[+Repr] extends WindowContextWrapper[Repr]
+trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 {
 	// ABSTRACT ------------------------
 	
+	/**
+	  * @return The background color used in created windows
+	  */
+	def background: Color
 	/**
 	  * @return Cursors used in created canvases
 	  */
@@ -31,16 +36,17 @@ trait ReachWindowContextLike[+Repr] extends WindowContextWrapper[Repr]
 	  */
 	def revalidationStyle: RevalidationStyle
 	/**
-	  * @return Custom drawers applied to each created window
-	  */
-	def customDrawers: Vector[CustomDrawer]
-	/**
 	  * @return A function that determines the window anchor position.
 	  *         Accepts a canvas instance and window bounds.
 	  *         Returns a point within or outside the bounds that serves as the window "anchor".
 	  */
 	def getAnchor: (ReachCanvas2, Bounds) => Point
 	
+	/**
+	  * @param bg New background color to use
+	  * @return Context copy with specified background color
+	  */
+	def withBackground(bg: Color): Repr
 	/**
 	  * @param cursors New set of cursors to use. None if no cursors should be used.
 	  * @return A copy of this context with those cursors in use
@@ -52,15 +58,16 @@ trait ReachWindowContextLike[+Repr] extends WindowContextWrapper[Repr]
 	  */
 	def withRevalidationStyle(style: RevalidationStyle): Repr
 	/**
-	  * @param customDrawers New custom drawers to assign
-	  * @return Context copy assigning those (and only those) custom drawers to windows
-	  */
-	def withCustomDrawers(customDrawers: Vector[CustomDrawer]): Repr
-	/**
 	  * @param getAnchor An anchoring function
 	  * @return Context copy that uses the specified anchoring function
 	  */
 	def withGetAnchor(getAnchor: (ReachCanvas2, Bounds) => Point): Repr
+	
+	/**
+	  * @param textContext A text context to add to this context
+	  * @return A copy of this context with the specified textual context in place
+	  */
+	def withTextContext(textContext: TextContext): Textual
 	
 	
 	// COMPUTED ------------------------
@@ -88,11 +95,6 @@ trait ReachWindowContextLike[+Repr] extends WindowContextWrapper[Repr]
 	}
 	
 	/**
-	  * @return Context copy that doesn't assign any custom drawers to windows
-	  */
-	def withoutCustomDrawing = if (customDrawers.isEmpty) self else withCustomDrawers(Vector())
-	
-	/**
 	  * @return Context copy that anchors the windows on the focused component,
 	  *         or at the window center, if there is no focused component
 	  */
@@ -105,9 +107,14 @@ trait ReachWindowContextLike[+Repr] extends WindowContextWrapper[Repr]
 	
 	// OTHER    ------------------------
 	
+	/**
+	  * @param f A mapping function for background color
+	  * @return Context copy with mapped window background
+	  */
+	def mapBackground(f: Color => Color) = withBackground(f(background))
+	
 	def mapRevalidationStyle(f: RevalidationStyle => RevalidationStyle) =
 		withRevalidationStyle(f(revalidationStyle))
-	def mapCustomDrawers(f: Vector[CustomDrawer] => Vector[CustomDrawer]) = withCustomDrawers(f(customDrawers))
 	
 	/**
 	  * @param cursors New set of cursors to use
@@ -168,24 +175,16 @@ trait ReachWindowContextLike[+Repr] extends WindowContextWrapper[Repr]
 	def revalidatingAfter(min: FiniteDuration, max: FiniteDuration): Repr = revalidatingAfter(Span(min, max))
 	
 	/**
-	  * @param drawer A new custom drawer
-	  * @return Context copy with that custom drawer in use
-	  */
-	def withCustomDrawer(drawer: CustomDrawer) = mapCustomDrawers { _ :+ drawer }
-	def +(customDrawer: CustomDrawer) = withCustomDrawer(customDrawer)
-	/**
-	  * @param onlyDrawer A custom drawer
-	  * @return Context copy with onyl that one custom drawer in use
-	  */
-	def withOneCustomDrawer(onlyDrawer: CustomDrawer) = withCustomDrawers(Vector(onlyDrawer))
-	def withoutDrawer(customDrawer: CustomDrawer) = mapCustomDrawers { _.filter { _ != customDrawer } }
-	def -(drawer: CustomDrawer) = withoutDrawer(drawer)
-	
-	/**
 	  * @param alignment Alignment, around which windows should be anchored.
 	  *                  For example, if specifying Alignment.Left, windows will expand to the right and equally to
 	  *                  top and bottom, but not to the left.
 	  * @return Context copy with anchoring logic using that alignment
 	  */
 	def withAnchorAlignment(alignment: Alignment) = withGetAnchor { (_, b) => alignment.origin(b) }
+	
+	/**
+	  * @param textContext A text context to add to this window context
+	  * @return A context suitable for creating popup windows
+	  */
+	def ++(textContext: TextContext) = withTextContext(textContext)
 }

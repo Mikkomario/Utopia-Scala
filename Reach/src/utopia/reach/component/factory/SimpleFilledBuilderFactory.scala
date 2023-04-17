@@ -3,7 +3,7 @@ package utopia.reach.component.factory
 import utopia.firmament.context.{BaseContextLike, ColorContext}
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
 
 /**
   * A common trait for factory classes which produce container builders that produce containers with a specific
@@ -12,9 +12,9 @@ import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.C
   * @since 9.12.2020, v0.1
   */
 // FIXME: These functions are not available (type inference fails)
-trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]]
+trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]]
 {
-	protected def makeBuilder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	protected def makeBuilder[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 	(background: Color, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]): Builder[NC, F]
 	
 	/**
@@ -26,7 +26,7 @@ trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: ContextualComponentFa
 	  * @tparam F Type of component factories used
 	  * @return A new container builder
 	  */
-	def buildFilledWithContext[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	def buildFilledWithContext[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 	(context: BaseContextLike[_, NC], background: Color,
 	 contentFactory: ContextualBuilderContentFactory[NC, F]) =
 		makeBuilder[NC, F](background, context.against(background), contentFactory)
@@ -42,7 +42,7 @@ trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: ContextualComponentFa
 	  * @tparam F Type of component factories used
 	  * @return A new container builder
 	  */
-	def buildFilledWithMappedContext[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	def buildFilledWithMappedContext[NT, NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 	(context: BaseContextLike[_, NT], background: Color,
 	 contentFactory: ContextualBuilderContentFactory[NC, F])(mapContext: NT => NC) =
 		makeBuilder[NC, F](background, mapContext(context.against(background)), contentFactory)
@@ -57,7 +57,7 @@ trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: ContextualComponentFa
 	  * @tparam F Type of contextual content factory
 	  * @return A new container builder
 	  */
-	def buildFilledWithContextForRole[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	def buildFilledWithContextForRole[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 	(context: BaseContextLike[_, NC] with ColorContext, role: ColorRole,
 	 contentFactory: ContextualBuilderContentFactory[NC, F], preferredShade: ColorLevel = Standard) =
 		buildFilledWithContext[NC, F](context, context.color.preferring(preferredShade)(role), contentFactory)
@@ -74,7 +74,7 @@ trait SimpleFilledBuilderFactory[Builder[NC, F[X <: NC] <: ContextualComponentFa
 	  * @tparam F Type of component factories used
 	  * @return A new container builder
 	  */
-	def buildFilledWithMappedContextForRole[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	def buildFilledWithMappedContextForRole[NT, NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 	(context: BaseContextLike[_, NT] with ColorContext, role: ColorRole,
 	 contentFactory: ContextualBuilderContentFactory[NC, F], preferredShade: ColorLevel = Standard)
 	(mapContext: NT => NC) =

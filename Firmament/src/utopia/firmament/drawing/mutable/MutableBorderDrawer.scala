@@ -1,8 +1,8 @@
 package utopia.firmament.drawing.mutable
 
 import utopia.firmament.model.Border
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{BorderDrawerLike, DrawLevel}
+import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.{BorderDrawerLike, DrawLevel}
 
 /**
   * Used for drawing a mutable border over a component

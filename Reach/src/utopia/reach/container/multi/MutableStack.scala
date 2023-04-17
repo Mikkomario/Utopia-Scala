@@ -9,19 +9,19 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 
-object MutableStack extends ContextInsertableComponentFactoryFactory[BaseContext, MutableStackFactory,
+object MutableStack extends FromGenericContextComponentFactoryFactory[BaseContext, MutableStackFactory,
 	ContextualMutableStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableStackFactory(hierarchy)
 }
 
 class MutableStackFactory(hierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[BaseContext, ContextualMutableStackFactory]
+	extends FromGenericContextFactory[BaseContext, ContextualMutableStackFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	
@@ -73,7 +73,7 @@ class MutableStackFactory(hierarchy: ComponentHierarchy)
 }
 
 case class ContextualMutableStackFactory[+N <: BaseContext](hierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, BaseContext, ContextualMutableStackFactory]
+	extends GenericContextualFactory[N, BaseContext, ContextualMutableStackFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	

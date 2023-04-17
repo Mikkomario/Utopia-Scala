@@ -14,7 +14,7 @@ import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
 import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}
@@ -25,7 +25,7 @@ import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.localization.LocalizedString
@@ -55,7 +55,7 @@ case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListen
   */
 case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: Changing[Color])
 
-object Field extends ContextInsertableComponentFactoryFactory[TextContext, FieldFactory, ContextualFieldFactory]
+object Field extends FromGenericContextComponentFactoryFactory[TextContext, FieldFactory, ContextualFieldFactory]
 {
 	// ATTRIBUTES	--------------------------
 	
@@ -71,7 +71,7 @@ object Field extends ContextInsertableComponentFactoryFactory[TextContext, Field
 }
 
 class FieldFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualFieldFactory]
+	extends FromGenericContextFactory[TextContext, ContextualFieldFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualFieldFactory(this, context)
@@ -175,7 +175,7 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualFieldFactory[+N <: TextContext](factory: FieldFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualFieldFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualFieldFactory]
 {
 	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	

@@ -18,7 +18,7 @@ object ColorContext
 	
 	// NESTED   ----------------------------
 	
-	private case class _ColorContext(wrapped: BaseContext, background: Color, _textColor: Option[Either[Color, ColorSet]])
+	private case class _ColorContext(base: BaseContext, background: Color, _textColor: Option[Either[Color, ColorSet]])
 		extends ColorContext
 	{
 		// ATTRIBUTES   --------------------------
@@ -49,16 +49,15 @@ object ColorContext
 		override def withDefaultTextColor: ColorContext = if (_textColor.isDefined) copy(_textColor = None) else this
 		
 		override def withTextColor(color: Color): ColorContext = copy(_textColor = Some(Left(color)))
-		
 		override def withTextColor(color: ColorSet): ColorContext = copy(_textColor = Some(Right(color)))
 		
 		override def withBase(baseContext: BaseContext): ColorContext =
-			if (wrapped == baseContext) this else copy(wrapped = baseContext)
+			if (base == baseContext) this else copy(base = baseContext)
 		
 		override def against(background: Color): ColorContext =
 			if (background == this.background) this else copy(background = background)
 		
-		override def *(mod: Double): ColorContext = copy(wrapped = wrapped * mod)
+		override def *(mod: Double): ColorContext = copy(base = base * mod)
 		
 		override def forTextComponents: TextContext = TextContext(this)
 	}

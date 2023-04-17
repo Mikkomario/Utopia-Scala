@@ -1,4 +1,4 @@
-package utopia.reflection.component.drawing.template
+package utopia.firmament.drawing.template
 
 import utopia.flow.view.mutable.Pointer
 import utopia.genesis.graphics.{DrawSettings, Drawer, MeasuredText}

@@ -4,7 +4,7 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.firmament.model.GuiElementStatus
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 
 /**
   * Extended by button implementations that wish to represent their state by using a button state drawer

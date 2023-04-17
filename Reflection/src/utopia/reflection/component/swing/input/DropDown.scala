@@ -14,8 +14,8 @@ import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.paradigm.shape.shape2d.Insets
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.{ImageLabel, ItemLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable

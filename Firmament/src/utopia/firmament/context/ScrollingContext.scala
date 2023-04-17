@@ -4,7 +4,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
-import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
+import utopia.firmament.drawing.template.ScrollBarDrawerLike
 
 object ScrollingContext
 {

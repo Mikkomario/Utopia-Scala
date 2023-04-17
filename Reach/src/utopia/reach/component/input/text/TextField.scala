@@ -15,7 +15,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.input.InputValidationResult.Default
@@ -35,21 +35,21 @@ import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 
 import scala.concurrent.duration.Duration
 
-object TextField extends ContextInsertableComponentFactoryFactory[TextContext,
+object TextField extends FromGenericContextComponentFactoryFactory[TextContext,
 	TextFieldFactory, ContextualTextFieldFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new TextFieldFactory(hierarchy)
 }
 
 class TextFieldFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualTextFieldFactory]
+	extends FromGenericContextFactory[TextContext, ContextualTextFieldFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualTextFieldFactory(parentHierarchy, context)
 }
 
 case class ContextualTextFieldFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualTextFieldFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualTextFieldFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	

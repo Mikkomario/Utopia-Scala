@@ -2,8 +2,8 @@ package utopia.firmament.drawing.view
 
 import utopia.flow.view.immutable.View
 import utopia.genesis.image.Image
-import utopia.reflection.component.drawing.template.{DrawLevel, ImageDrawerLike}
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.{DrawLevel, ImageDrawerLike}
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.StackInsets
 

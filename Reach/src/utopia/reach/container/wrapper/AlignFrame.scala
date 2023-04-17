@@ -4,21 +4,21 @@ import utopia.firmament.component.container.single.AlignFrameLike
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
-import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, SimpleFilledBuilderFactory}
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
+import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 
-object AlignFrame extends ContextInsertableComponentFactoryFactory[Any, AlignFrameFactory, ContextualAlignFrameFactory]
+object AlignFrame extends FromGenericContextComponentFactoryFactory[Any, AlignFrameFactory, ContextualAlignFrameFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new AlignFrameFactory(hierarchy)
 }
 
 class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[Any, ContextualAlignFrameFactory] with BuilderFactory[AlignFrameBuilder]
+	extends FromGenericContextFactory[Any, ContextualAlignFrameFactory] with BuilderFactory[AlignFrameBuilder]
 		with SimpleFilledBuilderFactory[ContextualFilledAlignFrameBuilder]
 {
 	// IMPLEMENTED  ------------------------------
@@ -29,7 +29,7 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 	override def build[FF](contentFactory: ComponentFactoryFactory[FF]) =
 		new AlignFrameBuilder[FF](this, contentFactory)
 	
-	protected def makeBuilder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	protected def makeBuilder[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 		(background: Color, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
 		new ContextualFilledAlignFrameBuilder[NC, F](this, background, contentContext, contentFactory)
 	
@@ -54,7 +54,7 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualAlignFrameFactory[N](factory: AlignFrameFactory, context: N)
-	extends ContextualComponentFactory[N, Any, ContextualAlignFrameFactory]
+	extends GenericContextualFactory[N, Any, ContextualAlignFrameFactory]
 {
 	// COMPUTED ------------------------------
 	
@@ -77,7 +77,7 @@ case class ContextualAlignFrameFactory[N](factory: AlignFrameFactory, context: N
 	 * @tparam F Type of component creation factory used
 	 * @return A new builder
 	 */
-	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
 		(contentFactory: ContextualBuilderContentFactory[N, F]) =
 		new ContextualAlignFrameBuilder(factory, context, contentFactory)
 }
@@ -103,7 +103,7 @@ class AlignFrameBuilder[+F](factory: AlignFrameFactory, contentFactory: Componen
 	}
 }
 
-class ContextualAlignFrameBuilder[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+class ContextualAlignFrameBuilder[N, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
 (factory: AlignFrameFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
 {
 	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
@@ -120,12 +120,12 @@ class ContextualAlignFrameBuilder[N, +F[X <: N] <: ContextualComponentFactory[X,
 	def apply[C <: ReachComponentLike, R](alignment: Alignment, customDrawers: Vector[CustomDrawer] = Vector())
 	                                     (fill: F[N] => ComponentCreationResult[C, R]) =
 	{
-		val content = Open.withContext(contentFactory, context)(fill)
+		val content = Open.withContext(context)(contentFactory)(fill)
 		factory(content, alignment, customDrawers)
 	}
 }
 
-class ContextualFilledAlignFrameBuilder[NC, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+class ContextualFilledAlignFrameBuilder[NC, +F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
 (factory: AlignFrameFactory, background: Color, contentContext: NC,
  contentFactory: ContextualBuilderContentFactory[NC, F])
 {
@@ -143,7 +143,7 @@ class ContextualFilledAlignFrameBuilder[NC, +F[X <: NC] <: ContextualComponentFa
 	def apply[C <: ReachComponentLike, R](alignment: Alignment, customDrawers: Vector[CustomDrawer] = Vector())
 	                                     (fill: F[NC] => ComponentCreationResult[C, R]) =
 	{
-		val content = Open.withContext(contentFactory, contentContext)(fill)
+		val content = Open.withContext(contentContext)(contentFactory)(fill)
 		factory(content, alignment, BackgroundDrawer(background) +: customDrawers)
 	}
 }

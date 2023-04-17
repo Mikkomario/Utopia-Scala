@@ -3,9 +3,9 @@ package utopia.firmament.drawing.view
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.template
-import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.component.drawing.template.DrawLevel.Background
+import utopia.firmament.drawing.template
+import utopia.firmament.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel.Background
 
 object RoundedBackgroundViewDrawer
 {

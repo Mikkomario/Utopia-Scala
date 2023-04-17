@@ -6,7 +6,7 @@ package utopia.reach.component.factory
   * @author Mikko Hilpinen
   * @since 11.10.2020, v0.1
   */
-trait BuilderFactory[+Builder[+FF]]
+trait BuilderFactory[+Builder[+_]]
 {
 	/**
 	  * Creates a new container builder

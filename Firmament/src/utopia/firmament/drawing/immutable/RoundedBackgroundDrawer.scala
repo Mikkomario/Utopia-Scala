@@ -1,9 +1,9 @@
 package utopia.firmament.drawing.immutable
 
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.template
-import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.component.drawing.template.DrawLevel.Background
+import utopia.firmament.drawing.template
+import utopia.firmament.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel.Background
 
 object RoundedBackgroundDrawer
 {

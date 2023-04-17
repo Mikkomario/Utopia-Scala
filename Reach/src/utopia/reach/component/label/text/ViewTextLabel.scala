@@ -4,11 +4,11 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.firmament.drawing.immutable.BackgroundDrawer
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.component.display.PoolWithPointer
 import utopia.firmament.model.TextDrawContext
@@ -20,7 +20,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.reach.util.Priority
 import utopia.firmament.model.stack.StackInsets
 
-object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContext, ViewTextLabelFactory,
+object ViewTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, ViewTextLabelFactory,
 	ContextualViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextLabelFactory(hierarchy)
@@ -31,7 +31,7 @@ object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContex
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualViewTextLabelFactory]
+	extends FromGenericContextFactory[TextContext, ContextualViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
@@ -118,7 +118,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 
 case class ContextualViewTextLabelFactory[+N <: TextContext]
 (factory: ViewTextLabelFactory, override val context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualViewTextLabelFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualViewTextLabelFactory]
 {
 	// COMPUTED ---------------------------------
 	

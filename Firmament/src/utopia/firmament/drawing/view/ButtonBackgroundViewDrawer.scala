@@ -6,8 +6,8 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.reflection.component.drawing.template.DrawLevel.Background
-import utopia.reflection.component.drawing.template.{BorderDrawerLike, DrawLevel}
+import utopia.firmament.drawing.template.DrawLevel.Background
+import utopia.firmament.drawing.template.{BorderDrawerLike, DrawLevel}
 
 /**
   * Used for drawing button background and border, based on button state

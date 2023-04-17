@@ -3,7 +3,7 @@ package utopia.reach.component.template
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.paradigm.color.Color
 import utopia.firmament.drawing.immutable.BackgroundDrawer
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.firmament.model.stack.StackSize
 

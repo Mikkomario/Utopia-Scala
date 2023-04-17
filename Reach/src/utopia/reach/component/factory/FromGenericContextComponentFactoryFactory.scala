@@ -2,13 +2,13 @@ package utopia.reach.component.factory
 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
-object ContextInsertableComponentFactoryFactory
+object FromGenericContextComponentFactoryFactory
 {
 	/**
 	  * Type of component factory factory commonly used in contextual container builders
 	  */
-	type ContextualBuilderContentFactory[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]] =
-		ContextInsertableComponentFactoryFactory[_ >: N, _, F]
+	type ContextualBuilderContentFactory[N, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]] =
+		FromGenericContextComponentFactoryFactory[_ >: N, _, F]
 }
 
 /**
@@ -16,8 +16,8 @@ object ContextInsertableComponentFactoryFactory
   * @author Mikko Hilpinen
   * @since 14.10.2020, v0.1
   */
-trait ContextInsertableComponentFactoryFactory[Top, +F <: ContextInsertableComponentFactory[Top, CF],
-	+CF[X <: Top] <: ContextualComponentFactory[X, Top, CF]] extends ComponentFactoryFactory[F]
+trait FromGenericContextComponentFactoryFactory[Top, +F <: FromGenericContextFactory[Top, CF], +CF[X <: Top]]
+	extends ComponentFactoryFactory[F]
 {
 	/**
 	  * Creates a new contextual component factory

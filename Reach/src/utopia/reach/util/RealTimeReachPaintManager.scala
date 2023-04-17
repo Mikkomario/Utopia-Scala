@@ -6,7 +6,7 @@ import utopia.flow.operator.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
-import utopia.paradigm.color.ColorShade
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
@@ -21,6 +21,7 @@ object RealTimeReachPaintManager
 	/**
 	  * Creates a new repaint manager
 	  * @param component Component to paint
+	  * @param background Background color for filling the painted area (optional)
 	  * @param maxQueueSize The maximum amount of paint updates that can be queued before the whole component
 	  *                     is repainted instead (default = 30)
 	  * @param disableDoubleBuffering Whether double buffering should be disabled during draw operations.
@@ -29,9 +30,9 @@ object RealTimeReachPaintManager
 	  *                      This is to make the drawing results more responsive (default = true)
 	  * @return A new paint manager
 	  */
-	def apply(component: ReachComponentLike, maxQueueSize: Int = 30, disableDoubleBuffering: Boolean = true,
-			  syncAfterDraw: Boolean = true) =
-		new RealTimeReachPaintManager(component)
+	def apply(component: ReachComponentLike, background: Option[Color] = None,
+	          maxQueueSize: Int = 30, disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true) =
+		new RealTimeReachPaintManager(component, background, maxQueueSize, disableDoubleBuffering, syncAfterDraw)
 }
 
 /**
@@ -42,8 +43,8 @@ object RealTimeReachPaintManager
   */
 // TODO: Add a position modifier (call by name) that affects all draw operations
 //  (used for moving window contents while still keeping component position as (0,0))
-class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int = 30,
-								disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
+class RealTimeReachPaintManager(component: ReachComponentLike, background: Option[Color] = None, maxQueueSize: Int = 30,
+                                disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
 	extends PaintManager
 {
 	// ATTRIBUTES	---------------------------------
@@ -57,6 +58,18 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	private val bufferPointer = VolatileOption[Image]()
 	// None while overfilled, a vector of update images otherwise
 	private val queuedUpdatesPointer = VolatileOption[Vector[(Image, Point)]]()
+	
+	
+	// COMPUTED ----------------------------------
+	
+	private def componentImage = {
+		val base = component.toImage
+		// Applies background, if necessary
+		background match {
+			case Some(bg) => base.withBackground(bg)
+			case None => base
+		}
+	}
 	
 	
 	// IMPLEMENTED	---------------------------------
@@ -197,9 +210,11 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	{
 		// Prepares the buffer
 		val (shouldAddUpdates, baseImage) = bufferPointer.pop {
+			// Case: There already exists a buffer => Uses it, adding updates on top
 			case Some(existing) => (true, existing) -> Some(existing)
+			// Case: No buffer exists => Repaints the whole component
 			case None =>
-				val newImage = component.toImage
+				val newImage = componentImage
 				(false, newImage) -> Some(newImage)
 		}
 		
@@ -234,7 +249,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 					newImage -> Some(updatesToDelay)
 				// Case: There were too many updates
 				case None =>
-					val newImage = component.toImage
+					val newImage = componentImage
 					bufferPointer.setOne(newImage)
 					newImage -> Some(Vector())
 			}
@@ -250,22 +265,18 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	{
 		paint { drawer =>
 			var nextArea = first
-			do
-			{
+			do {
 				// Paints the next area, continues as long as areas can be pulled
-				nextArea match
-				{
+				nextArea match {
 					case Some(region) => paintArea(drawer, region)
 					case None => paintWith(drawer)
 				}
 				nextArea = queuePointer.pop { case (_, queue) =>
 					// Picks the next highest priority area (preferring smaller areas)
-					Priority.descending.find(queue.contains) match
-					{
+					Priority.descending.find(queue.contains) match {
 						case Some(targetPriority) =>
 							val options = queue(targetPriority)
-							if (options.size > 1)
-							{
+							if (options.size > 1) {
 								val next = options.minBy { _.area }
 								Some(next) -> (Some(next), queue + (targetPriority -> options.filterNot { _ == next }))
 							}
@@ -283,7 +294,13 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	private def paintArea(drawer: Drawer, region: Bounds) =
 	{
 		// First draws the component region to a separate image
-		val buffered = component.regionToImage(region)
+		val buffered = {
+			val base = component.regionToImage(region)
+			background match {
+				case Some(bg) => base.withBackground(bg)
+				case None => base
+			}
+		}
 		// Draws the buffered area using the drawer (may also draw the cursor)
 		drawer.clippedToBounds(region).use { d => buffered.drawWith(d, component.position + region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time

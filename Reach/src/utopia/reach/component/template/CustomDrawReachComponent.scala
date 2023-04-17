@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reflection.component.drawing.template.{CustomDrawable, CustomDrawer, DrawLevel}
+import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer, DrawLevel}
 import utopia.firmament.model.stack.StackSize
 
 object CustomDrawReachComponent

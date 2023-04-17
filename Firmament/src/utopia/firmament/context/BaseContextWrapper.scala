@@ -18,7 +18,7 @@ trait BaseContextWrapper[+Repr, +ColorSensitive] extends Any with BaseContextLik
 	/**
 	  * @return The wrapped base context
 	  */
-	def wrapped: BaseContext
+	def base: BaseContext
 	
 	/**
 	  * @param baseContext A new base context to wrap
@@ -29,33 +29,30 @@ trait BaseContextWrapper[+Repr, +ColorSensitive] extends Any with BaseContextLik
 	
 	// IMPLEMENTED	--------------------
 	
-	override def actorHandler = wrapped.actorHandler
+	override def actorHandler = base.actorHandler
+	override def localizer: Localizer = base.localizer
+	override def font: Font = base.font
+	override def colors: ColorScheme = base.colors
+	override def contrastStandard: ColorContrastStandard = base.contrastStandard
+	override def stackMargin: StackLength = base.stackMargin
+	override def smallStackMargin: StackLength = base.smallStackMargin
+	override def margins = base.margins
+	override def allowImageUpscaling = base.allowImageUpscaling
 	
-	override def localizer: Localizer = wrapped.localizer
-	
-	override def font: Font = wrapped.font
-	
-	override def colors: ColorScheme = wrapped.colors
-	
-	override def contrastStandard: ColorContrastStandard = wrapped.contrastStandard
-	
-	override def stackMargin: StackLength = wrapped.stackMargin
-	
-	override def smallStackMargin: StackLength = wrapped.smallStackMargin
-	
-	override def margins = wrapped.margins
-	
-	override def allowImageUpscaling = wrapped.allowImageUpscaling
-	
-	override def withFont(font: Font): Repr = withBase(wrapped.withFont(font))
-	
+	override def withFont(font: Font): Repr = withBase(base.withFont(font))
 	override def withColorContrastStandard(standard: ColorContrastStandard): Repr =
-		withBase(wrapped.withColorContrastStandard(standard))
-	
-	override def withMargins(margins: Margins): Repr = withBase(wrapped.withMargins(margins))
-	
-	override def withStackMargins(stackMargin: StackLength): Repr = withBase(wrapped.withStackMargins(stackMargin))
-	
+		withBase(base.withColorContrastStandard(standard))
+	override def withMargins(margins: Margins): Repr = withBase(base.withMargins(margins))
+	override def withStackMargins(stackMargin: StackLength): Repr = withBase(base.withStackMargins(stackMargin))
 	override def withAllowImageUpscaling(allowImageUpscaling: Boolean): Repr =
-		withBase(wrapped.withAllowImageUpscaling(allowImageUpscaling))
+		withBase(base.withAllowImageUpscaling(allowImageUpscaling))
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	  * @param f A mapping function for the wrapped base context
+	  * @return A copy of this context with mapped base context
+	  */
+	def mapBase(f: BaseContext => BaseContext) = withBase(f(base))
 }

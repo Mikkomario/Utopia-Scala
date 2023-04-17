@@ -10,7 +10,7 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.HandlerType
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldWithSelectionPopup
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
@@ -28,7 +28,7 @@ import utopia.paradigm.color.{ColorRole, ColorShade}
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.util.logging.Logger
-import utopia.reach.window.ReachWindowContext
+import utopia.reach.context.ReachWindowContext
 
 import scala.concurrent.ExecutionContext
 
@@ -37,21 +37,21 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 23.12.2020, v0.1
   */
-object DropDown extends ContextInsertableComponentFactoryFactory[TextContext, DropDownFactory,
+object DropDown extends FromGenericContextComponentFactoryFactory[TextContext, DropDownFactory,
 	ContextualDropDownFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new DropDownFactory(hierarchy)
 }
 
 class DropDownFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualDropDownFactory]
+	extends FromGenericContextFactory[TextContext, ContextualDropDownFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualDropDownFactory(parentHierarchy, context)
 }
 
 case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualDropDownFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualDropDownFactory]
 {
 	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
 	
@@ -159,6 +159,10 @@ case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: Compone
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param fillBackground Whether filled field style should be used (default = global default)
+	  * @param popupContext     Context that is used for the created pop-up windows.
+	  * @param scrollingContext Context used for the created scroll view
+	  * @param exc              Context used for parallel operations
+	  * @param log              Logger for various errors
 	  * @tparam A Type of selectable item
 	  * @tparam P Type of content pointer used
 	  * @return A new field

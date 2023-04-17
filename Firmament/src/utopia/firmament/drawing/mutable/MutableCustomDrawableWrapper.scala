@@ -1,6 +1,6 @@
 package utopia.firmament.drawing.mutable
 
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 
 /**
   * A common trait for classes which wrap a mutable custom drawable and want to expose it

@@ -2,8 +2,8 @@ package utopia.firmament.drawing.view
 
 import utopia.flow.view.immutable.View
 import utopia.paradigm.color.Color
-import utopia.reflection.component.drawing.template.BackgroundDrawerLike
-import utopia.reflection.component.drawing.template.DrawLevel.Background
+import utopia.firmament.drawing.template.BackgroundDrawerLike
+import utopia.firmament.drawing.template.DrawLevel.Background
 
 /**
   * A pointer-based background drawer

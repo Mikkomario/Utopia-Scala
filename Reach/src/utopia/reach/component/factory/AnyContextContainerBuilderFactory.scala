@@ -1,6 +1,6 @@
 package utopia.reach.component.factory
 
-import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
 
 /**
   * A contextual container factory which in practice is only used for contextual builder creation
@@ -11,8 +11,8 @@ import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.C
   * @tparam B Type of builder produced
   * @tparam Repr Implementation of this trait
   */
-trait AnyContextContainerBuilderFactory[N, +CF, +B[BN, BF[X] <: ContextualComponentFactory[X, _ >: BN, BF]], +Repr[X]]
-	extends ContextualComponentFactory[N, Any, Repr]
+trait AnyContextContainerBuilderFactory[N, +CF, +B[BN, BF[X] <: GenericContextualFactory[X, _ >: BN, BF]], +Repr[X]]
+	extends GenericContextualFactory[N, Any, Repr]
 {
 	// ABSTRACT	---------------------------------
 	
@@ -27,5 +27,5 @@ trait AnyContextContainerBuilderFactory[N, +CF, +B[BN, BF[X] <: ContextualCompon
 	  * @tparam F Type of desired content factory
 	  * @return A new builder
 	  */
-	def build[F[X] <: ContextualComponentFactory[X, _ >: N, F]](contentFactory: ContextualBuilderContentFactory[N, F]): B[N, F]
+	def build[F[X] <: GenericContextualFactory[X, _ >: N, F]](contentFactory: ContextualBuilderContentFactory[N, F]): B[N, F]
 }

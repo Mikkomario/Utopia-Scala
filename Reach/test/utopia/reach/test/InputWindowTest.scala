@@ -31,11 +31,12 @@ import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
-import utopia.reach.window.{InputRowBlueprint, InputWindowFactory, ReachWindowContext}
+import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.util.logging.Logger
 import utopia.reach.container.multi.{Stack, ViewStack}
+import utopia.reach.context.{PopupContext, ReachWindowContext}
 
 /**
   * Tests input window creation
@@ -69,9 +70,9 @@ object InputWindowTest extends App
 		// IMPLEMENTED	-------------------------
 		
 		override protected def windowContext: ReachWindowContext = ReachTestContext.windowContext
-		override protected def warningPopupContext: ReachWindowContext = windowContext.borderless.nonResizable
+		override protected def warningPopupContext: PopupContext =
+			windowContext.borderless.nonResizable.withTextContext(baseContext.against(colors.failure).forTextComponents)
 		override protected def log: Logger = ReachTestContext.log
-		override protected def warningPopupTextContext = baseContext.against(colors.failure).forTextComponents
 		
 		override protected def inputTemplate =
 		{

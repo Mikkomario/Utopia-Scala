@@ -1,6 +1,8 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.Stackable
+import utopia.firmament.drawing.template.DrawLevel
+import utopia.firmament.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.util.logging.Logger
@@ -13,10 +15,9 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
+import utopia.reach.context.ReachWindowContext
 import utopia.reach.util.Priority
-import utopia.reach.window.{ReachWindow, ReachWindowContext}
-import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
-import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
+import utopia.reach.window.ReachWindow
 
 import scala.concurrent.ExecutionContext
 
@@ -296,8 +297,6 @@ trait ReachComponentLike extends Stackable
 	  *                           Default = 0
 	  * @param title              Title displayed on the window (provided that OS headers are in use).
 	  *                           Default = empty = no title.
-	  * @param customDrawers      Custom drawers to assign to the window, in addition to those specified in the context.
-	  *                           Default = empty.
 	  * @param keepAnchored       Whether the window should be kept close to this component when its size changes
 	  *                           or the this component is moved or resized.
 	  *                           Set to false if you don't expect the owner component to move.
@@ -315,14 +314,12 @@ trait ReachComponentLike extends Stackable
 	  */
 	def createWindow[C <: ReachComponentLike, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
 	                                             title: LocalizedString = LocalizedString.empty,
-	                                             customDrawers: Vector[CustomDrawer] = Vector(),
 	                                             keepAnchored: Boolean = true, display: Boolean = false)
 	                                            (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
 	                                            (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{
-		val window = ReachWindow.anchoredTo(this, alignment, margin, title, customDrawers,
-			keepAnchored)(createContent)
+		val window = ReachWindow.anchoredTo(this, alignment, margin, title, keepAnchored)(createContent)
 		if (display)
 			window.display()
 		window

@@ -12,24 +12,24 @@ import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.High
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.stack.StackLength
 
 object RadioButton
-	extends ContextInsertableComponentFactoryFactory[ColorContext, RadioButtonFactory, ContextualRadioButtonFactory]
+	extends FromGenericContextComponentFactoryFactory[ColorContext, RadioButtonFactory, ContextualRadioButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonFactory(hierarchy)
 }
 
 class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[ColorContext, ContextualRadioButtonFactory]
+	extends FromGenericContextFactory[ColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	
@@ -67,7 +67,7 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualRadioButtonFactory[+N <: ColorContext](factory: RadioButtonFactory, context: N)
-	extends ContextualComponentFactory[N, ColorContext, ContextualRadioButtonFactory]
+	extends GenericContextualFactory[N, ColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLICIT ------------------------------
 	

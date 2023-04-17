@@ -12,7 +12,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.MutableTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
@@ -21,14 +21,14 @@ import utopia.reach.focus.FocusListener
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.StackInsets
 
-object MutableTextButton extends ContextInsertableComponentFactoryFactory[TextContext, MutableTextButtonFactory,
+object MutableTextButton extends FromGenericContextComponentFactoryFactory[TextContext, MutableTextButtonFactory,
 	ContextualMutableTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableTextButtonFactory(hierarchy)
 }
 
 class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualMutableTextButtonFactory]
+	extends FromGenericContextFactory[TextContext, ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
@@ -92,7 +92,7 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 
 case class ContextualMutableTextButtonFactory[+N <: TextContext](buttonFactory: MutableTextButtonFactory,
                                                                  context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualMutableTextButtonFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	

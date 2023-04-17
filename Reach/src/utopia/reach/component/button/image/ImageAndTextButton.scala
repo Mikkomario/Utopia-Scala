@@ -11,24 +11,24 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.StackInsets
 
-object ImageAndTextButton extends ContextInsertableComponentFactoryFactory[TextContext,
+object ImageAndTextButton extends FromGenericContextComponentFactoryFactory[TextContext,
 	ImageAndTextButtonFactory, ContextualImageAndTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextButtonFactory(hierarchy)
 }
 
 class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualImageAndTextButtonFactory]
+	extends FromGenericContextFactory[TextContext, ContextualImageAndTextButtonFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualImageAndTextButtonFactory(this, context)
@@ -73,7 +73,7 @@ class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualImageAndTextButtonFactory[+N <: TextContext](factory: ImageAndTextButtonFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualImageAndTextButtonFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualImageAndTextButtonFactory]
 {
 	private implicit def c: TextContext = context
 	

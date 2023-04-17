@@ -7,13 +7,13 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.CursorDefining
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.color.ColorRole.Secondary
@@ -25,21 +25,21 @@ import utopia.reach.container.multi.Stack
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
-object RadioButtonLine extends ContextInsertableComponentFactoryFactory[TextContext, RadioButtonLineFactory,
+object RadioButtonLine extends FromGenericContextComponentFactoryFactory[TextContext, RadioButtonLineFactory,
 	ContextualRadioButtonLineFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonLineFactory(hierarchy)
 }
 
 class RadioButtonLineFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualRadioButtonLineFactory]
+	extends FromGenericContextFactory[TextContext, ContextualRadioButtonLineFactory]
 {
 	override def withContext[N <: TextContext](context: N) =
 		ContextualRadioButtonLineFactory(parentHierarchy, context)
 }
 
 case class ContextualRadioButtonLineFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualRadioButtonLineFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualRadioButtonLineFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	

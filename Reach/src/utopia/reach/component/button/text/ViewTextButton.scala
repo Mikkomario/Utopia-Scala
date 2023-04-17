@@ -12,24 +12,24 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.StackInsets
 
-object ViewTextButton extends ContextInsertableComponentFactoryFactory[TextContext, ViewTextButtonFactory,
+object ViewTextButton extends FromGenericContextComponentFactoryFactory[TextContext, ViewTextButtonFactory,
 	ContextualViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
 }
 
 class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContext, ContextualViewTextButtonFactory]
+	extends FromGenericContextFactory[TextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
@@ -159,7 +159,7 @@ object ContextualViewTextButtonFactory
 }
 
 case class ContextualViewTextButtonFactory[+N <: TextContext](factory: ViewTextButtonFactory, context: N)
-	extends ContextualComponentFactory[N, TextContext, ContextualViewTextButtonFactory]
+	extends GenericContextualFactory[N, TextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	------------------------------
 	

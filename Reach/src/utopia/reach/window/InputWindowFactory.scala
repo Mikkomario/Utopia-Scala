@@ -26,6 +26,7 @@ import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenCompon
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.multi.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
+import utopia.reach.context.PopupContext
 import utopia.reach.focus.FocusRequestable
 
 import java.awt.event.KeyEvent
@@ -55,12 +56,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	/**
 	  * @return Context for creating the warning pop-up windows
 	  */
-	protected def warningPopupContext: ReachWindowContext
-	/**
-	  * @return Component creation context used in the warning pop-up.
-	  *         Determines pop-up background also and text styling.
-	  */
-	protected def warningPopupTextContext: TextContext
+	protected def warningPopupContext: PopupContext
 	
 	/**
 	  * @return Input creation blueprints and the context to use in subsequent creation method calls
@@ -184,16 +180,15 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	{
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
-		implicit val wc: ReachWindowContext = warningPopupContext
-		val popupContext = warningPopupTextContext
+		implicit val context: PopupContext = warningPopupContext
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up
 		val windowPointer = SettableOnce[Window]()
-		val window = field.createWindow(margin = popupContext.margins.small) { hierarchy =>
+		val window = field.createWindow(margin = context.margins.small) { hierarchy =>
 			// The pop-up contains a close button and the warning text
-			Framing(hierarchy).buildFilledWithContext(popupContext, popupContext.background, Stack)
-				.apply(popupContext.margins.small.any) { stackF: ContextualStackFactory[TextContext] =>
+			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
+				.apply(context.margins.small.any) { stackF: ContextualStackFactory[PopupContext] =>
 					stackF.build(Mixed).row(Center) { factories =>
 						Vector(
 							factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },

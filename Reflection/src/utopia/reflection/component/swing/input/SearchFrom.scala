@@ -11,8 +11,8 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, ImageDrawer}
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.{ItemLabel, ViewLabel}
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable

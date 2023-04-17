@@ -1,8 +1,6 @@
 package utopia.reach.component.factory
-
-import utopia.firmament.context.{TextContext, TextContextWrapper}
-
-object ContextualComponentFactory
+/*
+object GenericContextualFactory
 {
 	// EXTENSIONS	------------------------
 	
@@ -22,29 +20,28 @@ object ContextualComponentFactory
 	}
 	 */
 	
+	/*
 	implicit class TextContextComponentFactory[Repr[_]]
-	(val f: ContextualComponentFactory[_ <: TextContext, _ >: TextContext, Repr])
+	(val f: GenericContextualFactory[_ <: TextContext, _ >: TextContext, Repr])
 		extends TextContextWrapper[Repr[TextContext]]
 	{
 		override def self: Repr[TextContext] = f.withContext(f.context)
+		override def textContext: TextContext = f.context
 		
-		override def wrapped: TextContext = f.context
-		
-		override def withTextBase(base: TextContext): Repr[TextContext] = f.withContext(base)
-		
+		override def withTextContext(base: TextContext): Repr[TextContext] = f.withContext(base)
 		override def *(mod: Double): Repr[TextContext] = f.mapContext { _ * mod }
-	}
-}
+	}*/
+}*/
 
 /**
-  * A common trait for component factories that use a component creation context
+  * A common trait for component factories that use a generic component creation context
   * @author Mikko Hilpinen
   * @since 12.10.2020, v0.1
   * @tparam N Type of context used by this factory
   * @tparam Top The type limit of accepted context parameters
   * @tparam Repr Implementation type of this factory (generic)
   */
-trait ContextualComponentFactory[+N, Top, +Repr[N2 <: Top]]
+trait GenericContextualFactory[+N, Top, +Repr[N2 <: Top]]
 {
 	// ABSTRACT	----------------------------
 	
