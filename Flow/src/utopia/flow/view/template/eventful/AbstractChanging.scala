@@ -17,8 +17,6 @@ abstract class AbstractChanging[A] extends Changing[A]
 	/**
 	  * Listeners listening this changing instance
 	  */
-	// TODO: When modifying listeners based on their detachment choices, take into account that listener actions
-	//  may add new listeners. Therefore filter by itself is not enough.
 	var listeners = Vector[ChangeListener[A]]()
 	/**
 	  * Dependencies of this changing instance
@@ -59,8 +57,9 @@ abstract class AbstractChanging[A] extends Changing[A]
 		// Informs the dependencies first
 		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event.value) }
 		// Then the listeners (may remove some listeners in the process)
-		// TODO: This has a potential to remove newly added listeners
-		listeners = listeners.filter { _.onChangeEvent(event.value).shouldContinue }
+		val listenersToRemove = listeners.filter { _.onChangeEvent(event.value).shouldDetach }
+		if (listenersToRemove.nonEmpty)
+			listeners = listeners.filterNot(listenersToRemove.contains)
 		// Finally performs the after-effects defined by the dependencies
 		afterEffects.foreach { _() }
 	}
@@ -97,8 +96,9 @@ abstract class AbstractChanging[A] extends Changing[A]
 				None
 		} { case (event, actions) =>
 			// After the origin has finished its update, informs the listeners and triggers the dependency after-effects
-			// TODO: Add detachment choice -enforcing
-			listeners.foreach { _.onChangeEvent(event) }
+			val listenersToRemove = listeners.filter { _.onChangeEvent(event).shouldDetach }
+			if (listenersToRemove.nonEmpty)
+				listeners = listeners.filterNot(listenersToRemove.contains)
 			actions.foreach { _() }
 		})
 	}

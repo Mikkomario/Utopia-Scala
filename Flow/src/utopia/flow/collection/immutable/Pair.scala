@@ -212,6 +212,13 @@ case class Pair[+A](first: A, second: A)
 	  */
 	def toSpan[B >: A](implicit ord: Ordering[B]) = Span[B](first, second)
 	
+	/**
+	  * @param ord Implicit ordering to use
+	  * @tparam B Type of compared values
+	  * @return This pair ordered with the specified ordering, so that the smaller item appears before the larger item
+	  */
+	def minMax[B >: A](implicit ord: Ordering[B]) = if (ord.lt(first, second)) reverse else self
+	
 	
 	// IMPLEMENTED  ----------------------
 	
@@ -246,6 +253,10 @@ case class Pair[+A](first: A, second: A)
 		val cmp = ord.compare(first, second)
 		if (cmp > 0) reverse else this
 	}
+	override def sortWith(lt: (A, A) => Boolean) = if (lt(first, second)) reverse else this
+	override def sortBy[B](f: A => B)(implicit ord: Ordering[B]) =
+		if (ord.lt(f(first), f(second))) reverse else this
+	
 	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
 	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
 	
@@ -316,6 +327,15 @@ case class Pair[+A](first: A, second: A)
 	  */
 	def oppositeToWhere(f: A => Boolean) =
 		if (f(first)) Some(second) else if (f(second)) Some(first) else None
+	
+	/**
+	  * @param f A mapping function that determines ordering
+	  * @param ord Implicit ordering for mapping results
+	  * @tparam B Type of mapping results
+	  * @return A copy of this pair that is ordered so that the smaller item (according to the mapping result)
+	  *         appears before the larger item.
+	  */
+	def minMaxBy[B](f: A => B)(implicit ord: Ordering[B]) = minMax(Ordering.by(f))
 	
 	/**
 	  * @param newFirst New first item

@@ -1,14 +1,13 @@
 package utopia.reach.test
 
-import utopia.firmament.context.{TextContext, WindowContext}
+import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.window.{ReachWindow, ReachWindowContext}
+import utopia.reach.window.ReachWindow
 
 /**
   * Tests simple reach window creation
@@ -17,21 +16,13 @@ import utopia.reach.window.{ReachWindow, ReachWindowContext}
   */
 object ReachWindowTest extends App
 {
-	System.setProperty("sun.java2d.noddraw", true.toString)
-	ParadigmDataType.setup()
-	
-	import TestCursors._
-	import utopia.reflection.test.TestContext._
-	
-	val baseWc = WindowContext(actorHandler, User)
-	if (cursors.isDefined) println("Using cursors") else println("No cursors in use")
-	implicit val wc: ReachWindowContext = ReachWindowContext(baseWc, cursors)//.revalidatingAfter(0.1.seconds, 0.5.seconds)
+	import ReachTestContext._
 	
 	val textPointer = new PointerWithEvents("Text")
 	
-	val window = ReachWindow(title = "Test") { hierarchy =>
+	val window = ReachWindow.withResizeLogic(User).apply(title = "Test") { hierarchy =>
 		// EmptyLabel(hierarchy).withBackground(Color.magenta, StackSize.any(Size(400, 200)))
-		val bg = colorScheme.primary
+		val bg = colors.primary
 		implicit val c: TextContext = baseContext.against(bg).forTextComponents.larger.larger
 			.withTextInsetsScaledBy(4).withoutShrinkingText
 		ViewTextLabel(hierarchy).contextual.apply(textPointer, customDrawers = Vector(BackgroundDrawer(bg)))
@@ -39,7 +30,7 @@ object ReachWindowTest extends App
 	
 	Loop.regularly(5.seconds, waitFirst = true) {
 		println()
-		textPointer.update { t => s"more $t\n$t" }
+		textPointer.update { t => s"more $t" }
 	}
 	
 	window.setToExitOnClose()

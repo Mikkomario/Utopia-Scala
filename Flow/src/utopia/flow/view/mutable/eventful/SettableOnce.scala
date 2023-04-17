@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractChanging
 
@@ -97,6 +98,23 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 		else {
 			this.value = Some(value)
 			true
+		}
+	}
+	
+	/**
+	  * Calls the specified function once this pointer has been set.
+	  * If already set, calls the function immediately.
+	  * @param f A function to call once this pointer has been set.
+	  * @tparam U Arbitrary function result type.
+	  */
+	def onceSet[U](f: A => U) = addListenerAndSimulateEvent(None) { e =>
+		e.newValue match {
+			// Case: Set event => Calls the function and ends listening
+			case Some(value) =>
+				f(value)
+				DetachmentChoice.detach
+			// Case: Reset event (not applicable)
+			case None => DetachmentChoice.continue
 		}
 	}
 }

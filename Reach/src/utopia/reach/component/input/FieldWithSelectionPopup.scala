@@ -1,44 +1,48 @@
 package utopia.reach.component.input
 
+import utopia.firmament.component.Window
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.component.input.SelectionWithPointers
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
+import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process.Delay
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag}
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
+import utopia.flow.view.mutable.caching.ListenableResettableLazy
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.{Color, ColorRole}
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
+import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.inception.handling.HandlerType
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{Color, ColorRole}
+import utopia.paradigm.enumeration.Alignment.Bottom
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
-import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.CachingViewSwapper
-import utopia.firmament.drawing.view.BackgroundViewDrawer
-import utopia.firmament.component.display.Refreshable
-import utopia.firmament.component.input.SelectionWithPointers
-import utopia.firmament.model.enumeration.StackLayout
-import StackLayout.Fit
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.firmament.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment.BottomLeft
-import utopia.firmament.model.stack.StackLength
+import utopia.reach.container.wrapper.scrolling.ScrollView
+import utopia.reach.window.ReachWindowContext
 
-import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent}
+import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 object FieldWithSelectionPopup extends ContextInsertableComponentFactoryFactory[TextContext,
@@ -80,6 +84,18 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHie
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param fillBackground Whether filled field style should be used (default = global default)
+	  * @param makeField A function for creating the component inside teh main field.
+	  *                  Accepts contextual data (specific context and context of this factory).
+	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
+	  *                    Accepts a component hierarcy, and the item to display initially.
+	  *                    Returns a field that can display such a value.
+	  * @param makeRightHintLabel – A function for producing an additional right edge hint field.
+	  *                           Accepts created main field and component creation context.
+	  *                           Returns an open component or None if no label should be placed.
+	  * @param popupContext Context that is used for the created pop-up windows.
+	  * @param scrollingContext Context used for the created scroll view
+	  * @param exc Context used for parallel operations
+	  * @param log Logger for various errors
 	  * @tparam A Type of selectable item
 	  * @tparam C Type of component inside the field
 	  * @tparam D Type of component to display a selectable item
@@ -106,7 +122,8 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHie
 	                             (makeDisplay: (ComponentHierarchy, A) => D)
 	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
-	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext) =
+	                             (implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext,
+	                              exc: ExecutionContext, log: Logger) =
 		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
@@ -137,6 +154,18 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHie
   * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
   *                      Should only be specified when equality function (==) shouldn't be used.
   * @param fillBackground Whether filled field style should be used (default = global default)
+  * @param makeField          A function for creating the component inside teh main field.
+  *                           Accepts contextual data (specific context and context of this factory).
+  * @param makeDisplay        A function for constructing new item option fields in the pop-up selection list.
+  *                           Accepts a component hierarcy, and the item to display initially.
+  *                           Returns a field that can display such a value.
+  * @param makeRightHintLabel – A function for producing an additional right edge hint field.
+  *                           Accepts created main field and component creation context.
+  *                           Returns an open component or None if no label should be placed.
+  * @param popupContext       Context that is used for the created pop-up windows.
+  * @param scrollingContext   Context used for the created scroll view
+  * @param exc                Context used for parallel operations
+  * @param log                Logger for various errors
   * @tparam A Type of selectable item
   * @tparam C Type of component inside the field
   * @tparam D Type of component to display a selectable item
@@ -159,95 +188,51 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 (makeField: (FieldCreationContext, N) => C)
 (makeDisplay: (ComponentHierarchy, A) => D)
 (makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]])
-(implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
+(implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
 {
 	// ATTRIBUTES	------------------------------
 	
+	private val lazyPopup = ListenableResettableLazy[Window] { createPopup() }
 	// Follows the pop-up visibility state with a pointer
-	private val _popUpVisiblePointer = ResettableFlag()
+	/**
+	  * A pointer which shows whether a pop-up is being displayed
+	  */
+	private val popUpVisiblePointer = lazyPopup.stateView.flatMap {
+		case Some(window) => window.fullyVisibleFlag
+		case None => AlwaysFalse
+	}
+	// Merges the expand and the collapse icons, if necessary
 	private val rightIconPointer = rightExpandIcon match {
 		case Some(expandIcon) =>
-			rightCollapseIcon match
-			{
+			rightCollapseIcon match {
 				case Some(collapseIcon) =>
 					// Makes sure both icons have the same size
 					if (expandIcon.size == collapseIcon.size)
-						_popUpVisiblePointer.map { visible => Some(if (visible) collapseIcon else expandIcon) }
-					else
-					{
-						val smallerAndLarger = Vector(expandIcon, collapseIcon).sortBy { _.size.area }
-						val smaller = smallerAndLarger.head
-						val larger = smallerAndLarger(1)
+						popUpVisiblePointer.map { visible => Some(if (visible) collapseIcon else expandIcon) }
+					else {
+						val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
 						val targetSize = smaller.size
 						val shrankIcon = new SingleColorIcon(
 							larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize))
 						
 						val (newExpandIcon, newCollapseIcon) =
 							if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
-						_popUpVisiblePointer.map { visible => Some(if (visible) newCollapseIcon else newExpandIcon) }
+						popUpVisiblePointer.map { visible => Some(if (visible) newCollapseIcon else newExpandIcon) }
 					}
 				case None => Fixed(Some(expandIcon))
 			}
 		case None => Fixed(rightCollapseIcon)
 	}
 	
-	// Creates the wrapped field first
 	/**
 	  * Field wrapped by this field
 	  */
-	val field = Field(parentHierarchy).withContext(context).apply(isEmptyPointer, fieldNamePointer,
-		promptPointer, hintPointer, errorMessagePointer, leftIconPointer, rightIconPointer,
-		highlightStylePointer = highlightStylePointer, focusColorRole = focusColorRole,
-		fillBackground = fillBackground)(makeField)(makeRightHintLabel)
-	
-	private lazy val closePopUpListener: MouseButtonStateListener = MouseButtonStateListener.onLeftReleased { _ =>
-		hidePopup()
-		None
-	}
-	
-	// Creates the pop-up when necessary
-	private val lazyPopup = ResettableLazy {
-		// Automatically hides the pop-up when it loses focus
-		val popup = field.createOwnedPopup(context.actorHandler, BottomLeft) { hierarchy =>
-			implicit val canvas: ReachCanvas2 = hierarchy.top
-			// Creates the pop-up content in open form first
-			val openList = Open { hierarchy =>
-				val list = SelectionList(hierarchy).apply(context.actorHandler, field.innerBackgroundPointer, contentPointer,
-					valuePointer, Y, listLayout, context.stackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
-				// When mouse is released inside the pop-up closes it
-				list.addMouseButtonListener(closePopUpListener)
-				list
-			}
-			val scrollContent = noOptionsView match
-			{
-				// Case: "No options view" is used => shows it when there is no options to choose from
-				case Some(noOptionsView) =>
-					Open { hierarchy =>
-						CachingViewSwapper(hierarchy).generic(contentPointer.map { _.isEmpty }) { isEmpty: Boolean =>
-							if (isEmpty)
-								noOptionsView
-							else
-								openList
-						}
-					}
-				// Case: Selection list is always displayed, even when empty
-				case None => openList
-			}
-			// Wraps the content in a scroll view with custom background drawing
-			ScrollView(hierarchy).apply(scrollContent,
-				scrollBarMargin = Size(context.margins.small, listCap.optimal), limitsToContentSize = true,
-				customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer.lazyMap { c => c: Color })))
-				.withResult(openList.component)
-		}.parent
-		popup.component.addComponentListener(PopupVisibilityTracker)
-		/* FIXME: Add these back
-		popup.setToHideWhenNotInFocus()
-		popup.addKeyStateListener(PopupKeyListener)
-		 */
-		popup
-	}
+	val field = Field(parentHierarchy).withContext(context)
+		.apply(isEmptyPointer, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, leftIconPointer,
+			rightIconPointer, highlightStylePointer = highlightStylePointer, focusColorRole = focusColorRole,
+			fillBackground = fillBackground)(makeField)(makeRightHintLabel)
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -256,50 +241,19 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	addHierarchyListener { isAttached =>
 		if (isAttached)
 			GlobalKeyboardEventHandler += FieldKeyListener
-		else
-		{
+		else {
 			GlobalKeyboardEventHandler -= FieldKeyListener
-			cachedPopup.foreach { popup =>
-				popup.close()
-				lazyPopup.reset()
-				_popUpVisiblePointer.reset()
-				popup.component.removeComponentListener(PopupVisibilityTracker)
-			}
+			lazyPopup.popCurrent().foreach { _.close() }
 		}
 	}
 	
-	// Updates pop-up location when field bounds change
-	// TODO: Should be based on the absolute bounds
-	field.boundsPointer.mergeWith(_popUpVisiblePointer) { (fieldBounds, popupIsVisible) =>
-		if (popupIsVisible)
-			cachedPopup.foreach { popup =>
-				// Positions the pop-up
-				popup.position = field.absolutePosition + Y(fieldBounds.height)
-				// Matches field width, if possible
-				val stackWidth = popup.stackSize.width
-				if (fieldBounds.width < stackWidth.min)
-					popup.width = stackWidth.min
-				else
-					stackWidth.max.filter { _ < fieldBounds.width } match
-					{
-						case Some(maxWidth) => popup.width = maxWidth
-						case None => popup.width = fieldBounds.width
-					}
-			}
-	}
-	
 	// When gains focus, displays the pop-up. Hides the pop-up when focus is lost.
-	focusPointer.addContinuousListenerAndSimulateEvent(false) { event =>
-		if (event.newValue) openPopup() else hidePopup()
+	focusPointer.addContinuousListenerAndSimulateEvent(false) { e =>
+		if (e.newValue) openPopup() else cachedPopup.foreach { _.visible = false }
 	}
 	
 	
 	// COMPUTED	---------------------------------
-	
-	/**
-	  * @return A pointer which shows whether a pop-up is being displayed
-	  */
-	def popUpVisiblePointer = _popUpVisiblePointer.view
 	
 	private def cachedPopup = lazyPopup.current
 	
@@ -307,7 +261,6 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	// IMPLEMENTED	-----------------------------
 	
 	override protected def wrapped = field
-	
 	override protected def focusable = field
 	
 	
@@ -318,7 +271,81 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	  */
 	def openPopup() = lazyPopup.value.display()
 	
-	private def hidePopup() = cachedPopup.foreach { _.visible = false }
+	private def createPopup(): Window = {
+		// Collects the list lazily
+		val listPointer = SettableOnce[ReachComponentLike]()
+		// Creates the pop-up
+		val popup = field.createOwnedWindow(Bottom) { hierarchy =>
+			implicit val canvas: ReachCanvas2 = hierarchy.top
+			// Creates the pop-up content in open form first
+			val openList = Open { hierarchy =>
+				val list = SelectionList(hierarchy)
+					.apply(context.actorHandler, field.innerBackgroundPointer, contentPointer, valuePointer, Y,
+						listLayout, context.stackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
+				listPointer.set(list)
+				list
+			}
+			val scrollContent = noOptionsView match {
+				// Case: "No options view" is used => shows it when there is no options to choose from
+				case Some(noOptionsView) =>
+					Open { hierarchy =>
+						CachingViewSwapper(hierarchy).generic(contentPointer.map { _.isEmpty }) { isEmpty: Boolean =>
+							if (isEmpty) noOptionsView else openList
+						}
+					}
+				// Case: Selection list is always displayed, even when empty
+				case None => openList
+			}
+			// Wraps the content in a scroll view with custom background drawing
+			ScrollView(hierarchy)
+				.apply(scrollContent, scrollBarMargin = Size(context.margins.small, listCap.optimal),
+					limitsToContentSize = true,
+					customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer.lazyMap { c => c: Color })))
+				.withResult(openList.component)
+		}
+		// When the mouse is released inside the selection list, hides the pop-up
+		// Also hides when not in focus, and on some key-presses
+		popup.focusKeyStateHandler += new PopupKeyListener(popup)
+		popup.focusedFlag.addListener { e =>
+			if (!e.newValue)
+				popup.visible = false
+			DetachmentChoice.continueUntil(popup.hasClosed)
+		}
+		listPointer.onceSet { c =>
+			c.mouseButtonHandler += MouseButtonStateListener.onLeftReleasedInside(c.bounds) { _ =>
+				popup.visible = false
+				None
+			}
+		}
+		// Attempts to match the pop-up width with the field width
+		field.sizePointer.addListener { e =>
+			if (popup.isFullyVisible && e.toPair.isAsymmetricBy { _.width })
+				optimizePopupWidth(popup, e.newValue.width)
+			DetachmentChoice.continueUntil(popup.hasClosed)
+		}
+		popup.fullyVisibleFlag.addListener { e =>
+			if (e.newValue)
+				optimizePopupWidth(popup, field.width)
+			DetachmentChoice.continueUntil(popup.hasClosed)
+		}
+		// Returns the pop-up window
+		popup.window
+	}
+	
+	// Sets the popup width, but respects the pop-ups max and min width
+	private def optimizePopupWidth(popup: Window, targetWidth: Double) = {
+		val stackWidth = popup.stackSize.width
+		val newWidth = {
+			if (targetWidth < stackWidth.min)
+				stackWidth.min
+			else
+				stackWidth.max.filter { _ < targetWidth } match {
+					case Some(maxWidth) => maxWidth
+					case None => targetWidth
+				}
+		}
+		popup.width = newWidth
+	}
 	
 	
 	// NESTED	---------------------------------
@@ -336,14 +363,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		override def onKeyState(event: KeyStateEvent) = openPopup()
 		
 		// Is interested in key events while the field has focus and pop-up is not open
-		override def allowsHandlingFrom(handlerType: HandlerType) = !_popUpVisiblePointer.value && field.hasFocus
+		override def allowsHandlingFrom(handlerType: HandlerType) = !popUpVisiblePointer.value && field.hasFocus
 	}
 	
-	private object PopupKeyListener extends KeyStateListener
+	private class PopupKeyListener(popup: Window) extends KeyStateListener
 	{
 		// ATTRIBUTES	-------------------------
-		
-		private implicit val log: Logger = SysErrLogger
 		
 		// Listens to enter and tabulator presses
 		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
@@ -352,27 +377,15 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
+		override def onKeyState(event: KeyStateEvent) = {
 			// Hides the pop-up
-			hidePopup()
+			popup.visible = false
 			// On tabulator press, yields focus afterwards
 			if (event.index == KeyEvent.VK_TAB)
 				Delay(0.1.seconds) { yieldFocus(if (event.keyStatus.shift) Negative else Positive) }
 		}
 		
 		// Only reacts to events while the pop-up is visible
-		override def allowsHandlingFrom(handlerType: HandlerType) = _popUpVisiblePointer.value
-	}
-	
-	private object PopupVisibilityTracker extends ComponentListener
-	{
-		// IMPLEMENTED	-------------------------
-		
-		override def componentResized(e: ComponentEvent) = ()
-		override def componentMoved(e: ComponentEvent) = ()
-		
-		override def componentShown(e: ComponentEvent) = _popUpVisiblePointer.set()
-		override def componentHidden(e: ComponentEvent) = _popUpVisiblePointer.reset()
+		override def allowsHandlingFrom(handlerType: HandlerType) = popup.isFullyVisible
 	}
 }

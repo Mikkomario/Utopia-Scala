@@ -1,11 +1,10 @@
 package utopia.reach.container
 
 import utopia.firmament.awt.AwtComponentExtensions._
-import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.stack.StackSize
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -181,8 +180,9 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	// INITIAL CODE	---------------------------
 	
 	// When bounds get updated, updates the underlying component, also
-	positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
-	sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
+	// TODO: Restore
+	// positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
+	// sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
 	
 	attachmentPointer.addListener { event =>
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component

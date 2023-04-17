@@ -10,6 +10,7 @@
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
 - Fixed **Path**`.relativeTo(Path)`
 - Fixed a bug in **Iterable**`.filterBy(Extreme)(...)`
+- Fixed a bug in **AbstractChanging** where change event listeners would not get detached properly
 ### Deprecations
 - Deprecated `.equalsUsing(...)` and `.notEqualsUsing(...)` in favor of `.isSymmetricWith(...)` and `.isAsymmetricWith(...)`
 ### New Features
@@ -19,7 +20,11 @@
 - Added **IndirectPointer** and `Flag.wrap(...)`
 - **FileLogger** now supports time-based log entry grouping
 ### New Methods
+- **Changing**
+  - Added `.onNextChangeWhere(...)(...)` and `.once(...)(...)` that area a synchronous alternative to 
+    `futureWhere(...).foreach(...)`
 - **Iterable** (**CollectionExtensions**)
+  - Added `.minMaxBy(...)` and `.minMaxByOption(...)`
   - Added `.oneOrMany` and `.emptyOneOrMany`
   - Added `.toMapBy(...)`
   - Added `.replaceOrAppend(...)`, which is a variation of `.mergeOrAppend(...)`
@@ -28,10 +33,13 @@
   - Added `.columnIndices` and `.rowIndices`
 - **Pair**
   - Added `.isSymmetricWith(EqualsFunction)` and `.isAsymmetricWith(EqualsFunction)`
+  - Added `.minMax` and `.minMaxBy`
 - **Path** (**FileExtensions**)
   - Added `.isChildOf(Path)`
 - **Pointer**
   - Added `.filterCurrent(...)`, `.filterNotCurrent(...)` and `.mapCurrent(...)` to **Pointers** that contains **Options**
+- **SettableOnce**
+  - Added `.onceSet(...)` that works like `.future.foreach(...)` but is synchronous
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readLineIteratorWithPrompt(String)`
 - **Try** (**CollectionExtensions**)

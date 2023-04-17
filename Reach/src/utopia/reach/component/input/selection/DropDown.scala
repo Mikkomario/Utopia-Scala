@@ -27,6 +27,8 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.{ColorRole, ColorShade}
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.util.logging.Logger
+import utopia.reach.window.ReachWindowContext
 
 import scala.concurrent.ExecutionContext
 
@@ -75,6 +77,13 @@ case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: Compone
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param fillBackground Whether filled field style should be used (default = global default)
+	  * @param makeDisplay        A function for constructing new item option fields in the pop-up selection list.
+	  *                           Accepts a component hierarcy, and the item to display initially.
+	  *                           Returns a field that can display such a value.
+	  * @param popupContext       Context that is used for the created pop-up windows.
+	  * @param scrollingContext   Context used for the created scroll view
+	  * @param exc                Context used for parallel operations
+	  * @param log                Logger for various errors
 	  * @tparam A Type of selectable item
 	  * @tparam C Type of component inside the field
 	  * @tparam P Type of content pointer used
@@ -96,7 +105,7 @@ case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: Compone
 	 focusColorRole: ColorRole = Secondary, sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeDisplay: (ComponentHierarchy, A) => C)
-	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext) =
+	(implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
 		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty }
@@ -166,7 +175,7 @@ case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: Compone
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
 	 sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext) =
+	(implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 	{
 		val mainDisplayFunction = DisplayFunction.wrap[Option[A]] {
 			case Some(item) => displayFunction(item)

@@ -854,6 +854,21 @@ object CollectionExtensions
 		  *         None if this collection is empty.
 		  */
 		def minMaxOption(implicit ord: Ordering[A]) = if (t.isEmpty) None else Some(minMax)
+		/**
+		  * @param f A mapping function for ordered values
+		  * @param ord Implicit ordering for mapping results
+		  * @tparam B Type of mapping results
+		  * @return The minimum and the maximum values of this collection, based on the specified mapping function.
+		  */
+		def minMaxBy[B](f: A => B)(implicit ord: Ordering[B]) = t.iterator.minMaxBy(f)
+		/**
+		  * @param f   A mapping function for ordered values
+		  * @param ord Implicit ordering for mapping results
+		  * @tparam B Type of mapping results
+		  * @return The minimum and the maximum values of this collection, based on the specified mapping function.
+		  *         None if this collection is empty.
+		  */
+		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) = if (t.isEmpty) None else Some(minMaxBy(f))
 		
 		/**
 		  * @param other Another collection
@@ -1393,6 +1408,23 @@ object CollectionExtensions
 		  *         None if this iterator didn't contain any more items.
 		  */
 		def minMaxOption(implicit ord: Ordering[A]) = if (i.hasNext) Some(minMax) else None
+		/**
+		  * Finds the minimum and the maximum values from this iterator.
+		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		  * @param f A mapping function that determines the values for ordering
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value found from this iterator
+		  */
+		def minMaxBy[B](f: A => B)(implicit ord: Ordering[B]) = minMax(Ordering.by(f))
+		/**
+		  * Finds the minimum and the maximum values from this iterator.
+		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		  * @param f   A mapping function that determines the values for ordering
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value found from this iterator.
+		  *         None if this iterator is empty.
+		  */
+		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) = if (i.hasNext) Some(minMaxBy(f)) else None
 		
 		/**
 		  * Finds the last item accessible from this iterator. Consumes all items in this iterator.

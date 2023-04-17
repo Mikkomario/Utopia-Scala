@@ -31,9 +31,10 @@ import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
-import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
+import utopia.reach.window.{InputRowBlueprint, InputWindowFactory, ReachWindowContext}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.util.logging.Logger
 import utopia.reach.container.multi.{Stack, ViewStack}
 
 /**
@@ -46,8 +47,7 @@ object InputWindowTest extends App
 	ParadigmDataType.setup()
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
-	import TestCursors._
-	import utopia.reflection.test.TestContext._
+	import ReachTestContext._
 	
 	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
 	val selectedBoxIcon = icons("check-box-selected.png")
@@ -62,13 +62,16 @@ object InputWindowTest extends App
 		
 		override protected lazy val closeIcon = icons("close.png")
 		
-		override protected lazy val standardContext = baseContext.against(colorScheme.primary)
-		override protected lazy val fieldCreationContext = baseContext.against(colorScheme.primary.light)
+		override protected lazy val standardContext = baseContext.against(colors.primary)
+		override protected lazy val fieldCreationContext = baseContext.against(colors.primary.light)
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override protected def warningPopupContext = baseContext.against(colorScheme.failure).forTextComponents
+		override protected def windowContext: ReachWindowContext = ReachTestContext.windowContext
+		override protected def warningPopupContext: ReachWindowContext = windowContext.borderless.nonResizable
+		override protected def log: Logger = ReachTestContext.log
+		override protected def warningPopupTextContext = baseContext.against(colors.failure).forTextComponents
 		
 		override protected def inputTemplate =
 		{
@@ -174,7 +177,7 @@ object InputWindowTest extends App
 	StackHierarchyManager.startRevalidationLoop()
 	
 	// Displays a dialog
-	val result = TestWindows.displayBlocking(cursors = cursors).get
+	val result = TestWindows.displayBlocking().get
 	println(s"Dialog completed with result: $result")
 	
 	println(result("durationSeconds").getLong.seconds.description)

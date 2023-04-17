@@ -3,6 +3,9 @@ package utopia.reach.window
 import utopia.firmament.component.Window
 import utopia.firmament.context.{ColorContext, TextContext}
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{HotKey, RowGroup, RowGroups, WindowButtonBlueprint}
 import utopia.flow.async.process.Delay
 import utopia.flow.generic.model.immutable.{Constant, Model}
@@ -10,6 +13,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
@@ -20,17 +24,13 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.multi.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.focus.FocusRequestable
-import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
-import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.reach.container.multi.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.ExecutionContext
 
 /**
   * Used for creating new windows which contain input fields
@@ -53,9 +53,14 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  */
 	protected def fieldCreationContext: ColorContext
 	/**
-	  * @return Component creation context used in the warning pop-up. Determines pop-up background also.
+	  * @return Context for creating the warning pop-up windows
 	  */
-	protected def warningPopupContext: TextContext
+	protected def warningPopupContext: ReachWindowContext
+	/**
+	  * @return Component creation context used in the warning pop-up.
+	  *         Determines pop-up background also and text styling.
+	  */
+	protected def warningPopupTextContext: TextContext
 	
 	/**
 	  * @return Input creation blueprints and the context to use in subsequent creation method calls
@@ -179,34 +184,35 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	{
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
-		val popupContext = warningPopupContext
+		implicit val wc: ReachWindowContext = warningPopupContext
+		val popupContext = warningPopupTextContext
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up
-		val windowPromise = Promise[Window]()
-		
-		val window = field.createPopup(popupContext.actorHandler, margin = popupContext.margins.small,
-			autoCloseLogic = PopupAutoCloseLogic.WhenAnyKeyPressed) { hierarchy =>
+		val windowPointer = SettableOnce[Window]()
+		val window = field.createWindow(margin = popupContext.margins.small) { hierarchy =>
 			// The pop-up contains a close button and the warning text
 			Framing(hierarchy).buildFilledWithContext(popupContext, popupContext.background, Stack)
 				.apply(popupContext.margins.small.any) { stackF: ContextualStackFactory[TextContext] =>
 					stackF.build(Mixed).row(Center) { factories =>
 						Vector(
-							factories(ImageButton).withIcon(closeIcon) { windowPromise.future.foreach { _.close() } },
+							factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },
 							factories(TextLabel)(message)
 						)
 					}
 				}
-		}.parent
+		}
+		windowPointer.set(window)
 		// Registers pop-up ownership if possible
 		field match {
 			case focusableField: Focusable => focusableField.registerOwnershipOf(window.component)
 			case _ => ()
 		}
-		windowPromise.success(window)
 		
 		// Displays the pop-up and closes it automatically after a while
+		// Also closes the window if any key is pressed
 		window.display()
+		window.setToCloseOnAnyKeyRelease()
 		Delay(5.seconds) { window.close() }
 	}
 	

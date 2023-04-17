@@ -50,7 +50,7 @@ object ReachWindowContext
 		override def withGetAnchor(getAnchor: (ReachCanvas2, Bounds) => Point): ReachWindowContext =
 			copy(getAnchor = getAnchor)
 		
-		override protected def withBase(base: WindowContext): ReachWindowContext = copy(wrapped = base)
+		override def withBase(base: WindowContext): ReachWindowContext = copy(wrapped = base)
 	}
 }
 

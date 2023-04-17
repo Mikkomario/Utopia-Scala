@@ -2,13 +2,15 @@ package utopia.reach.window
 
 import utopia.firmament.component.Window
 import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{HotKey, WindowButtonBlueprint}
 import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
@@ -16,13 +18,9 @@ import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
-import utopia.reach.container.ReachCanvas2
-import utopia.reach.container.wrapper.{AlignFrame, Framing}
-import utopia.reach.cursor.CursorSet
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackLength
+import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.multi.{ContextualStackFactory, Stack, StackFactory}
+import utopia.reach.container.wrapper.{AlignFrame, Framing}
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
@@ -41,14 +39,31 @@ trait InteractionWindowFactory[A]
 	// ABSTRACT	-----------------------
 	
 	/**
+	  * @return Context used when creating windows
+	  */
+	protected def windowContext: ReachWindowContext
+	/**
 	  * @return Execution context used for performing asynchronous tasks
 	  */
 	protected def executionContext: ExecutionContext
-	
+	/**
+	  * @return A logging implementation for encountered errors
+	  */
+	protected def log: Logger
 	/**
 	  * @return Context used when creating the dialog. Provided container background specifies the dialog background color.
 	  */
 	protected def standardContext: ColorContext
+	
+	/**
+	  * @return Title displayed on this dialog
+	  */
+	protected def title: LocalizedString
+	
+	/**
+	  * @return Result provided when no result is gained through interacting with the buttons
+	  */
+	protected def defaultResult: A
 	
 	/**
 	  * @param buttonColor The desired button color
@@ -65,71 +80,60 @@ trait InteractionWindowFactory[A]
 	  */
 	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], View[Boolean])
 	
-	/**
-	  * @return Result provided when no result is gained through interacting with the buttons
-	  */
-	protected def defaultResult: A
-	
-	/**
-	  * @return Title displayed on this dialog
-	  */
-	protected def title: LocalizedString
-	
 	
 	// OTHER	-----------------------
 	
 	/**
 	  * Displays an interactive dialog to the user. Blocks while the dialog is visible
 	  * @param parentWindow Window over which this window is displayed
+	  * @return The selected result (or the default result)
 	  */
-	def displayBlockingOver(parentWindow: java.awt.Window, cursors: Option[CursorSet] = None) =
-		displayBlocking(Some(parentWindow), cursors)
-	
+	def displayBlockingOver(parentWindow: java.awt.Window) = displayBlocking(Some(parentWindow))
 	/**
 	  * Displays an interactive dialog to the user. Blocks while the dialog is visible
 	  * @param parentWindow Window over which this window is displayed (optional)
+	  * @return The selected result (or the default result)
 	  */
-	def displayBlocking(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None): Try[A] =
-		display(parentWindow, cursors)._2.waitFor()
-	
+	def displayBlocking(parentWindow: Option[java.awt.Window] = None): Try[A] = display(parentWindow).result.waitFor()
 	/**
 	 * Displays an interactive dialog to the user
 	 * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
-	 * @return 1: The window that was just opened, and
-	  *        2: a future of the closing of the window, with a selected result (or default if none was selected)
+	 * @return 1: The window that was just opened as the main result, and
+	  *        2: a future of the closing of the window, with a selected result (or default if none was selected),
+	  *        as an additional result
 	 */
-	def displayOver(parentWindow: java.awt.Window, cursors: Option[CursorSet] = None) =
-		display(Some(parentWindow), cursors)
-	
+	def displayOver(parentWindow: java.awt.Window) =
+		display(Some(parentWindow))
 	/**
 	  * Displays an interactive window to the user
-	  * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
-	  * @return 1: The window that was just opened, and
-	  *         2: a future of the closing of the window, with a selected result (or default if none was selected)
+	  * @param parentWindow Window that will "own" the new window.
+	  *                     None if the new window should be independent (default)
+	  * @return 1: The window that was just opened as the main result, and
+	  *         2: a future of the closing of the window, with a selected result (or default if none was selected),
+	  *         as an additional result
 	  */
-	// FIXME: Rewrite this using ReachWindow
-	def display(parentWindow: Option[java.awt.Window] = None,
-	            cursors: Option[CursorSet] = None): (Window, Future[A]) =
+	def display(parentWindow: Option[java.awt.Window] = None): ComponentCreationResult[Window, Future[A]] =
 	{
-		/*
+		implicit val wc: ReachWindowContext = windowContext
 		implicit val exc: ExecutionContext = executionContext
+		implicit val log: Logger = this.log
 		val context = standardContext
 		
 		val resultPromise = Promise[A]()
 		// When this function finishes, this pointer contains the actually used condition
 		// (the condition is built incrementally)
-		val enterEnabledConditionPointer = Pointer[View[Boolean]](AlwaysTrue)
+		val enterEnabledPointerPointer = SettableOnce[View[Boolean]]()
 		
-		// Creates the main content stack with 1-3 rows (based on button layouts)
+		// Creates the window and the main content stack with 1-3 rows (based on button layouts)
 		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.
 		//  Alternatively room should be allowed for a header component separately
-		val (content, buttons) = ReachCanvas2(cursors) { hierarchy =>
+		// Contains the created buttons and the default action enabled -pointer as the additional result
+		val window = ReachWindow(parentWindow, title) { hierarchy =>
 			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
 				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>
 					stackF.build(Mixed).column() { factories =>
 						// Creates the main content and determines the button blueprints
 						val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
-						enterEnabledConditionPointer.value = defaultActionEnabledPointer
 						
 						// Groups the buttons based on location
 						val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }
@@ -144,7 +148,8 @@ trait InteractionWindowFactory[A]
 						def appendButtons(blueprints: Vector[WindowButtonBlueprint[A]]): Unit = {
 							if (blueprints.nonEmpty) {
 								val (component, buttons) = buttonRow(factoriesWithoutContext, blueprints,
-									defaultButtonMargin, resultPromise, enterEnabledConditionPointer.value.value)
+									defaultButtonMargin, resultPromise,
+									enterEnabledPointerPointer.value.exists { _.value })
 								rowsBuilder += component
 								buttonsBuilder ++= buttons
 							}
@@ -155,23 +160,17 @@ trait InteractionWindowFactory[A]
 						rowsBuilder += mainContent
 						appendButtons(bottomButtons)
 						
-						rowsBuilder.result() -> buttonsBuilder.result()
+						rowsBuilder.result() -> (buttonsBuilder.result(), defaultActionEnabledPointer)
 					}
 				}
-		}.parentAndResult
-		
-		// Creates and sets up the dialog
-		val window = Window(content, parentWindow, title, Program, context.margins.medium, content.anchorPosition(_))
+		}
 		
 		// Displays the dialog
-		window.startEventGenerators(context.actorHandler)
 		window.display()
 		
 		// Finalizes the enter action enabled -function
 		// Triggers the default button on enter, provided that no button has focus and the window does
-		enterEnabledConditionPointer.update { baseCondition =>
-			View(baseCondition.value && buttons.forall { !_.hasFocus } && window.isFocusedWindow && window.visible)
-		}
+		enterEnabledPointerPointer.set(View { window.isFullyVisible && window.isFocused && window.result._2.value })
 		
 		// Closes the dialog once a result is acquired.
 		// Also completes the result with a default value if the dialog was closed without producing other result
@@ -179,9 +178,7 @@ trait InteractionWindowFactory[A]
 		resultFuture.onComplete { _ => window.close() }
 		window.closeFuture.onComplete { _ => if (!resultPromise.isCompleted) resultPromise.trySuccess(defaultResult) }
 		
-		window -> resultFuture
-		 */
-		???
+		ComponentCreationResult(window, resultFuture)
 	}
 	
 	private def buttonRow(factories: Mixed, buttons: Vector[WindowButtonBlueprint[A]],

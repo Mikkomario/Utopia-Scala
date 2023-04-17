@@ -22,7 +22,7 @@ trait WindowContextWrapper[+Repr] extends WindowContextLike[Repr]
 	  * @param base A new window context to wrap
 	  * @return A copy of this context, wrapping the specified window context
 	  */
-	protected def withBase(base: WindowContext): Repr
+	def withBase(base: WindowContext): Repr
 	
 	
 	// IMPLEMENTED  -----------------

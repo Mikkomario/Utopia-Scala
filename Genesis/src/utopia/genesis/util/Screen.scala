@@ -1,7 +1,7 @@
 package utopia.genesis.util
 
 import utopia.paradigm.measurement
-import utopia.paradigm.measurement.Distance
+import utopia.paradigm.measurement.{Distance, Ppi}
 import utopia.paradigm.shape.shape2d.{Insets, Size, Vector2D}
 
 import java.awt.{GraphicsConfiguration, Toolkit}
@@ -52,10 +52,10 @@ object Screen
 	def height = size.height
 	
 	/**
-	 * @return Pixels per inch resolution of the screen (zero ppi when there is no screen). Takes into account forced
+	  * @return Pixels per inch resolution of the screen (zero ppi when there is no screen). Takes into account forced
 	  *         scaling from the OS, provided that the real screen size has been manually registered.
-	 */
-	def ppi = {
+	  */
+	implicit def ppi: Ppi = {
 		val base = Try { measurement.Ppi(toolkit.getScreenResolution) }.getOrElse(measurement.Ppi.zero)
 		screenSizeMod match {
 			case Some(scaling) => base / scaling.maxDimension

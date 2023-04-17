@@ -363,6 +363,36 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam U Arbitrary function result type
 	  */
 	def onNextChange[U](f: ChangeEvent[A] => U) = addListener(ChangeListener.once(f))
+	/**
+	  * @param condition A condition that must be fulfilled for the specified function to be called
+	  * @param f A function that is called once a change event satisfies the specified condition.
+	  *          Will only be called up to once.
+	  * @tparam U Arbitrary function result type
+	  */
+	def onNextChangeWhere[U](condition: ChangeEvent[A] => Boolean)(f: ChangeEvent[A] => U) = addListener { e =>
+		if (condition(e)) {
+			f(e)
+			DetachmentChoice.detach
+		}
+		else
+			DetachmentChoice.continue
+	}
+	/**
+	  * Calls the specified function once the value of this item satisfies the specified condition.
+	  * If the current item satisfies the condition, the function is called immediately.
+	  * @param condition A condition that the item in this pointer must satisfy
+	  * @param f A function that shall be called for the item that satisfies the specified condition.
+	  *          Will be called only up to once.
+	  * @tparam U Arbitrary function result type
+	  */
+	def once[U](condition: A => Boolean)(f: A => U): Unit = {
+		// Case: Current values is accepted => Calls the specified function for the current value
+		if (condition(value))
+			f(value)
+		// Case: Current value is not accepted => Waits for a suitable value
+		else
+			onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
+	}
 	
 	/**
 	  * Adds a new dependency to this changing item
