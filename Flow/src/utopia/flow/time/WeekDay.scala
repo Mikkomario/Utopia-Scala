@@ -1,15 +1,16 @@
 package utopia.flow.time
 
+import utopia.flow.operator.UsesSelfOrdering
+
 import java.time.{DayOfWeek, LocalDate}
 import scala.language.implicitConversions
-import scala.math.Ordered.orderingToOrdered
 
 /**
   * An enumeration for day of week (Monday to Sunday)
   * @author Mikko Hilpinen
   * @since 30.7.2020, v1.8
   */
-sealed trait WeekDay
+sealed trait WeekDay extends UsesSelfOrdering[WeekDay]
 {
 	// ABSTRACT	--------------------------
 	
@@ -22,13 +23,22 @@ sealed trait WeekDay
 	// COMPUTED	------------------------
 	
 	/**
+	  * @return The week day previous to this one
+	  */
+	def previous: WeekDay = WeekDay(_index - 1)
+	/**
+	  * @return The next week day compared to this one
+	  */
+	def next: WeekDay = WeekDay(_index + 1)
+	
+	/**
 	  * @return An infinite iterator that starts from this week day and moves to the next week day
 	  */
-	def iterate(implicit w: WeekDays) = WeekDay.iterate(this)
+	def iterate = Iterator.iterate(this) { _.next }
 	/**
 	  * @return An infinite iterator that starts from this week day and moves back to previous day
 	  */
-	def reverseIterate(implicit w: WeekDays) = WeekDay.reverseIterate(this)
+	def reverseIterate = Iterator.iterate(this) { _.previous }
 	
 	/**
 	  * @param w Week calendar system
@@ -36,63 +46,55 @@ sealed trait WeekDay
 	  */
 	def index(implicit w: WeekDays) = w.indexOf(this)
 	
-	/**
-	  * @param w Week calendar system
-	  * @return Next week day
-	  */
-	def next(implicit w: WeekDays) = this + 1
-	/**
-	  * @param w Week calendar system
-	  * @return Previous week day
-	  */
-	def previous(implicit w: WeekDays) = this - 1
+	// Index used in private operations that are the same regardless of week start day
+	private def _index = WeekDay._values.indexOf(this)
+	
+	
+	// IMPLEMENTED  --------------------
+	
+	override def self: WeekDay = this
 	
 	
 	// OTHER	------------------------
 	
 	/**
 	  * @param dayCount Amount of days to move forwards
-	  * @param w Week calendar system
 	  * @return Weekday after 'dayCount' days from this day
 	  */
-	def +(dayCount: Int)(implicit w: WeekDays) = w(index + dayCount)
+	def +(dayCount: Int) = WeekDay(_index + dayCount)
 	/**
 	  * @param days Amount of days to move forwards
-	  * @param w        Week calendar system
 	  * @return Weekday after 'dayCount' days from this day
 	  */
-	def +(days: Days)(implicit w: WeekDays): WeekDay = this + days.toDays.toInt
+	def +(days: Days): WeekDay = this + days.toDays.toInt
 	/**
 	  * @param dayCount Amount of days to move backwards
-	  * @param w Week calendar system
 	  * @return Weekday before 'dayCount' days from this day
 	  */
-	def -(dayCount: Int)(implicit w: WeekDays) = this + (-dayCount)
+	def -(dayCount: Int) = this + (-dayCount)
 	/**
 	  * @param days Amount of days to move backwards
-	  * @param w        Week calendar system
 	  * @return Weekday before 'dayCount' days from this day
 	  */
-	def -(days: Days)(implicit w: WeekDays): WeekDay = this - days.toDays.toInt
+	def -(days: Days): WeekDay = this - days.toDays.toInt
 	
 	/**
 	  * @param anotherDay Another week day
-	  * @param w        Week calendar system
 	  * @return Period from the other week day to this day
 	  */
-	def -(anotherDay: WeekDay)(implicit w: WeekDays) = {
-		val days = if (this >= anotherDay) index - anotherDay.index else index + (7 - anotherDay.index)
+	def -(anotherDay: WeekDay) = {
+		val myIndex = _index
+		val theirIndex = anotherDay._index
+		val days = if (myIndex >= theirIndex) myIndex - theirIndex else myIndex + (7 - theirIndex)
 		Days(days)
 	}
 	/**
 	  * @param anotherDay Another week day
-	  * @param w        Week calendar system
 	  * @return Period from this week day to that other week day
 	  */
-	def until(anotherDay: WeekDay)(implicit w: WeekDays) = anotherDay - this
+	def until(anotherDay: WeekDay) = anotherDay - this
 }
 
-// TODO: Add support for weeks that start on sunday
 object WeekDay
 {
 	// ATTRIBUTES	--------------------
@@ -139,15 +141,18 @@ object WeekDay
 	  * @param w        Week calendar system
 	  * @return An infinite iterator that iterates over weekdays
 	  */
-	def iterate(startDay: WeekDay = Monday)(implicit w: WeekDays) =
-		Iterator.iterate(startDay) { _.next }
+	@deprecated("Please use startDay.iterate instead", "v2.1")
+	def iterate(startDay: WeekDay = Monday)(implicit w: WeekDays) = startDay.iterate
 	/**
 	  * @param startDay First week day to return
 	  * @param w        Week calendar system
 	  * @return An infinite iterator that iterates over weekdays in reverse order
 	  */
-	def reverseIterate(startDay: WeekDay = Sunday)(implicit w: WeekDays) =
-		Iterator.iterate(startDay) { _.previous }
+	@deprecated("Please use startDay.reverseIterate instead", "v2.1")
+	def reverseIterate(startDay: WeekDay = Sunday)(implicit w: WeekDays) = startDay.reverseIterate
+	
+	// Assumes Monday to Sunday - Not suitable for public exposure
+	private def apply(index: Int) = if (index >= 0) _values(index % 7) else _values(7 + (index % 7))
 	
 	
 	// NESTED	------------------------

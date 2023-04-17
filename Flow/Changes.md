@@ -5,6 +5,7 @@
 - Many **WeekDay** -related functions now require an implicit **WeekDays** -parameter
 - `WeekDay.current()` is now `WeekDay.current`
 - `YearMonth.week(WeekDay)` is now `YearMonth.week(implicit WeekDays)`
+- Renamed `.mapAsync(...)` variations in **Changing** to `.mapToFuture(...)`. Added new `.mapAsync(...)` implementations.
 - Replaced `allowReplace: Boolean` -parameter with `conflictResolve: FileConflictResolution` in move and copy -operations
 ### Bugfixes
 - There was a major performance issue with `.view(...)` and `.size` in **Matrix**, which is now fixed
@@ -13,6 +14,8 @@
 - Fixed a bug in **AbstractChanging** where change event listeners would not get detached properly
 ### Deprecations
 - Deprecated `.equalsUsing(...)` and `.notEqualsUsing(...)` in favor of `.isSymmetricWith(...)` and `.isAsymmetricWith(...)`
+- Deprecated `WeekDay.iterate(WeekDay)` and `.reverseIterate(WeekDay)` in favor of `.iterate` and 
+  `.reverseIterate` in **WeekDay** (instance) 
 ### New Features
 - Custom file conflict resolutions can now be used in standard file move and copy operations
 - The first day of the week may be configured using **WeekDays**
@@ -20,6 +23,7 @@
 - Added **IndirectPointer** and `Flag.wrap(...)`
 - Added **SingleThreadExecutionContext** class
 - **FileLogger** now supports time-based log entry grouping
+- Added **UsesOrdering** and **UsesSelfOrdering** traits for items that use multiple orderings
 ### New Methods
 - **Changing**
   - Added `.onNextChangeWhere(...)(...)` and `.once(...)(...)` that area a synchronous alternative to 
