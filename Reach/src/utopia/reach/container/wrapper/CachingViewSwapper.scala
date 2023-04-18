@@ -1,20 +1,20 @@
 package utopia.reach.container.wrapper
 
+import utopia.firmament.component.input.{InputWithPointer, InteractionWithPointer}
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.template.CacheLike
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
-import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.component.input.{InputWithPointer, InteractionWithPointer}
 
-object CachingViewSwapper extends FromGenericContextComponentFactoryFactory[Any, CachingViewSwapperFactory,
-	ContextualCachingViewSwapperFactory]
+object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
 {
 	// IMPLEMENTED	-------------------------
 	
@@ -87,7 +87,7 @@ case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFac
 	override def withContext[N2 <: Any](newContext: N2) =
 		copy(context = newContext)
 	
-	override def build[F[X] <: GenericContextualFactory[X, _ >: N, F]](contentFactory: ContextualBuilderContentFactory[N, F]) =
+	override def build[F[X]](contentFactory: Gccff[N, F]) =
 		new ContextualViewSwapperBuilder[N, F](factory, context, contentFactory)
 }
 
@@ -123,8 +123,7 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
-class ContextualViewSwapperBuilder[N, +F[X] <: GenericContextualFactory[X, _ >: N, F]]
-(factory: CachingViewSwapperFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
+class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory, context: N, contentFactory: Gccff[N, F])
 {
 	private implicit val canvas: ReachCanvas2 = factory.canvas
 	

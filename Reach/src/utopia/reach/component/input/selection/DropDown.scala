@@ -1,8 +1,15 @@
 package utopia.reach.component.input.selection
 
+import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.operator.EqualsFunction
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -10,7 +17,10 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.HandlerType
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{ColorRole, ColorShade}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldWithSelectionPopup
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
@@ -18,17 +28,8 @@ import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.cursor.CursorType.Interactive
-import utopia.firmament.component.display.Refreshable
-import utopia.firmament.model.enumeration.StackLayout
-import StackLayout.Fit
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.paradigm.color.{ColorRole, ColorShade}
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.firmament.model.stack.StackLength
-import utopia.flow.util.logging.Logger
 import utopia.reach.context.ReachWindowContext
+import utopia.reach.cursor.CursorType.Interactive
 
 import scala.concurrent.ExecutionContext
 
@@ -37,23 +38,18 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 23.12.2020, v0.1
   */
-object DropDown extends FromGenericContextComponentFactoryFactory[TextContext, DropDownFactory,
-	ContextualDropDownFactory]
+// TODO: Use PopupContext instead
+object DropDown extends Ccff[TextContext, ContextualDropDownFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new DropDownFactory(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) = ContextualDropDownFactory(hierarchy, context)
 }
 
-class DropDownFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualDropDownFactory]
+case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+	extends TextContextualFactory[ContextualDropDownFactory]
 {
-	override def withContext[N <: TextContext](context: N) =
-		ContextualDropDownFactory(parentHierarchy, context)
-}
-
-case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualDropDownFactory]
-{
-	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
+	override def self: ContextualDropDownFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	// TODO: Add enabled pointer parameter
 	
@@ -111,7 +107,7 @@ case class ContextualDropDownFactory[+N <: TextContext](parentHierarchy: Compone
 		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty }
 			.map { _.mergeWith(isEmptyPointer) { (prompt, isEmpty) => if (isEmpty) prompt else LocalizedString.empty } }
 			.getOrElse(promptPointer)
-		val field = FieldWithSelectionPopup(parentHierarchy).withContext(context)
+		val field = FieldWithSelectionPopup.withContext(parentHierarchy, context)
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				rightExpandIcon, rightCollapseIcon, fieldNamePointer, actualPromptPointer, hintPointer,
 				errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,

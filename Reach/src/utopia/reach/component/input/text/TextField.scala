@@ -1,7 +1,13 @@
 package utopia.reach.component.input.text
 
+import utopia.firmament.component.input.InputWithPointer
 import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
+import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.StackLength
+import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.generic.casting.ValueConversions._
@@ -11,11 +17,13 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.input.InputValidationResult.Default
@@ -25,31 +33,17 @@ import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.template.focus.{FocusableWithState, MutableFocusableWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
-import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.model.TextDrawContext
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
-import utopia.firmament.model.stack.StackLength
-import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 
 import scala.concurrent.duration.Duration
 
-object TextField extends FromGenericContextComponentFactoryFactory[TextContext,
-	TextFieldFactory, ContextualTextFieldFactory]
+object TextField extends Ccff[TextContext, ContextualTextFieldFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new TextFieldFactory(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualTextFieldFactory(hierarchy, context)
 }
 
-class TextFieldFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualTextFieldFactory]
-{
-	override def withContext[N <: TextContext](context: N) =
-		ContextualTextFieldFactory(parentHierarchy, context)
-}
-
-case class ContextualTextFieldFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualTextFieldFactory]
+case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+	extends TextContextualFactory[ContextualTextFieldFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	
@@ -62,12 +56,12 @@ case class ContextualTextFieldFactory[+N <: TextContext](parentHierarchy: Compon
 	
 	private implicit def languageCode: String = "en"
 	
-	private implicit def localizer: Localizer = context.localizer
-	
 	
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
+	override def self: ContextualTextFieldFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	------------------------------------

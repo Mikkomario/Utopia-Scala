@@ -24,7 +24,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.reach.container.multi.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
+import utopia.reach.container.multi.{SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.context.PopupContext
 import utopia.reach.focus.FocusRequestable
@@ -187,8 +187,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val windowPointer = SettableOnce[Window]()
 		val window = field.createWindow(margin = context.margins.small) { hierarchy =>
 			// The pop-up contains a close button and the warning text
-			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
-				.apply(context.margins.small.any) { stackF: ContextualStackFactory[PopupContext] =>
+			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack.static[TextContext])
+				.apply(context.margins.small.any) { stackF =>
 					stackF.build(Mixed).row(Center) { factories =>
 						Vector(
 							factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },

@@ -1,34 +1,33 @@
 package utopia.reach.component.label.text.selectable
 
 import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
-import utopia.firmament.model.TextDrawContext
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.text.Font
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
-import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.focus.FocusListener
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.text.Font
+import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.focus.FocusListener
 
 import scala.concurrent.duration.Duration
 
-object SelectableTextLabel extends FromGenericContextComponentFactoryFactory[TextContext,
-	SelectableTextLabelFactory, ContextualSelectableTextLabelFactory]
+object SelectableTextLabel extends Cff[SelectableTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new SelectableTextLabelFactory(hierarchy)
 }
 
 class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualSelectableTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualSelectableTextLabelFactory]
 {
-	override def withContext[N <: TextContext](context: N) =
-		ContextualSelectableTextLabelFactory(this, context)
+	override def withContext(context: TextContext) = ContextualSelectableTextLabelFactory(this, context)
 	
 	/**
 	  * Creates a new text label with text selection enabled
@@ -127,11 +126,12 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 			focusListeners, allowLineBreaks, allowTextShrink)
 }
 
-case class ContextualSelectableTextLabelFactory[+N <: TextContext](factory: SelectableTextLabelFactory, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualSelectableTextLabelFactory]
+case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualSelectableTextLabelFactory]
 {
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualSelectableTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	/**
 	  * Creates a new selectable text label

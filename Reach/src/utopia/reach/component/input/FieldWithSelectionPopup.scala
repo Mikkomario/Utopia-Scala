@@ -31,7 +31,8 @@ import utopia.paradigm.enumeration.Alignment.Bottom
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.{FromGenericContextComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
@@ -45,17 +46,11 @@ import utopia.reach.context.ReachWindowContext
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
-object FieldWithSelectionPopup extends FromGenericContextComponentFactoryFactory[TextContext,
-	FieldWithSelectionPopupFactory, ContextualFieldWithSelectionPopupFactory]
+// TODO: Switch to using PopupContext
+object FieldWithSelectionPopup extends Gccff[TextContext, ContextualFieldWithSelectionPopupFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new FieldWithSelectionPopupFactory(hierarchy)
-}
-
-class FieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualFieldWithSelectionPopupFactory]
-{
-	override def withContext[N <: TextContext](context: N) =
-		ContextualFieldWithSelectionPopupFactory(parentHierarchy, context)
+	override def withContext[N <: TextContext](parentHierarchy: ComponentHierarchy, context: N) =
+		ContextualFieldWithSelectionPopupFactory[N](parentHierarchy, context)
 }
 
 case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy,

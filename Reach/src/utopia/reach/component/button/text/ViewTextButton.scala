@@ -1,8 +1,11 @@
 package utopia.reach.component.button.text
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -12,28 +15,25 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.stack.StackInsets
 
-object ViewTextButton extends FromGenericContextComponentFactoryFactory[TextContext, ViewTextButtonFactory,
-	ContextualViewTextButtonFactory]
+object ViewTextButton extends Cff[ViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
 }
 
 class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualViewTextButtonFactory]
+	extends FromContextFactory[TextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualViewTextButtonFactory(this, context)
 	
 	
@@ -107,64 +107,14 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(_ => action)
 }
 
-object ContextualViewTextButtonFactory
-{
-	implicit class ButtonContextualViewTextButtonFactory[N <: TextContext]
-	(val factory: ContextualViewTextButtonFactory[N]) extends AnyVal
-	{
-		/**
-		  * Creates a new button
-		  * @param contentPointer Pointer that contains the displayed button content
-		  * @param enabledPointer Pointer that contains whether this button should be enabled (true) or disabled (false).
-		  *                       Default = always enabled.
-		  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
-		  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
-		  *                (default = empty)
-		  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
-		  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-		  * @param action The action performed when this button is pressed (accepts currently displayed content)
-		  * @tparam A Type of displayed content
-		  * @return A new button
-		  */
-		def apply[A](contentPointer: Changing[A], enabledPointer: Changing[Boolean] = AlwaysTrue,
-		             displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-		             additionalDrawers: Seq[CustomDrawer] = Vector(),
-		             additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
-		{
-			val context = factory.context
-			factory.factory[A](contentPointer, context.font, Fixed(context.background), enabledPointer,
-				displayFunction, context.buttonBorderWidth, context.textAlignment, context.textInsets,
-				context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
-				additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
-		}
-		
-		/**
-		  * Creates a new button
-		  * @param text Text displayed on this string
-		  * @param enabledPointer Pointer that contains whether this button should be enabled (true) or disabled (false).
-		  *                       Default = always enabled.
-		  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
-		  *                (default = empty)
-		  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
-		  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-		  * @param action The action performed when this button is pressed
-		  * @return A new button
-		  */
-		def withStaticText(text: LocalizedString, enabledPointer: Changing[Boolean] = AlwaysTrue,
-		                   hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-		                   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
-			apply[LocalizedString](Fixed(text), enabledPointer, DisplayFunction.identity, hotKeys,
-				additionalDrawers, additionalFocusListeners) { _ => action }
-	}
-}
-
-case class ContextualViewTextButtonFactory[+N <: TextContext](factory: ViewTextButtonFactory, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualViewTextButtonFactory]
+case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, context: TextContext)
+	extends TextContextualFactory[ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualViewTextButtonFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	----------------------------------
@@ -222,6 +172,49 @@ case class ContextualViewTextButtonFactory[+N <: TextContext](factory: ViewTextB
 		withChangingColor[A](contentPointer, rolePointer.map { role => context.color.preferring(preferredShade)(role) },
 			enabledPointer, displayFunction, borderWidth, hotKeys, additionalDrawers,
 			additionalFocusListeners)(action)
+	
+	/**
+	  * Creates a new button
+	  * @param contentPointer           Pointer that contains the displayed button content
+	  * @param enabledPointer           Pointer that contains whether this button should be enabled (true) or disabled (false).
+	  *                                 Default = always enabled.
+	  * @param displayFunction          A function for converting the displayed value to a localized string (default = toString)
+	  * @param hotKeys                  Keys that can be used for triggering this button even when it doesn't have focus
+	  *                                 (default = empty)
+	  * @param additionalDrawers        Additional custom drawers assigned to this button (default = empty)
+	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
+	  * @param action                   The action performed when this button is pressed (accepts currently displayed content)
+	  * @tparam A Type of displayed content
+	  * @return A new button
+	  */
+	def apply[A](contentPointer: Changing[A], enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+	             additionalDrawers: Seq[CustomDrawer] = Vector(),
+	             additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
+	{
+		factory[A](contentPointer, context.font, Fixed(context.background), enabledPointer,
+			displayFunction, context.buttonBorderWidth, context.textAlignment, context.textInsets,
+			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
+			additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
+	}
+	
+	/**
+	  * Creates a new button
+	  * @param text                     Text displayed on this string
+	  * @param enabledPointer           Pointer that contains whether this button should be enabled (true) or disabled (false).
+	  *                                 Default = always enabled.
+	  * @param hotKeys                  Keys that can be used for triggering this button even when it doesn't have focus
+	  *                                 (default = empty)
+	  * @param additionalDrawers        Additional custom drawers assigned to this button (default = empty)
+	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
+	  * @param action                   The action performed when this button is pressed
+	  * @return A new button
+	  */
+	def withStaticText(text: LocalizedString, enabledPointer: Changing[Boolean] = AlwaysTrue,
+	                   hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+	                   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
+		apply[LocalizedString](Fixed(text), enabledPointer, DisplayFunction.identity, hotKeys,
+			additionalDrawers, additionalFocusListeners) { _ => action }
 }
 
 /**

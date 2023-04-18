@@ -2,6 +2,9 @@ package utopia.reach.container.wrapper.scrolling
 
 import utopia.firmament.component.container.single.ScrollViewLike
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
+import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
+import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.mutable.ActorHandler
@@ -10,17 +13,16 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.{Bounds, Size}
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
-import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.firmament.drawing.immutable.BackgroundDrawer
-import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
-import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 
-object ScrollView extends FromGenericContextComponentFactoryFactory[Any, ScrollViewFactory, ContextualScrollViewFactory]
+object ScrollView extends Cff[ScrollViewFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ScrollViewFactory(hierarchy)
 }
@@ -37,8 +39,7 @@ class ScrollViewFactory(val parentHierarchy: ComponentHierarchy)
 	override def build[FF](contentFactory: ComponentFactoryFactory[FF]) =
 		new ScrollViewBuilder(this, contentFactory)
 	
-	protected def makeBuilder[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
-	(background: Color, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
+	protected def makeBuilder[NC, F](background: Color, contentContext: NC, contentFactory: Ccff[NC, F]) =
 		new ContextualFilledScrollViewBuilder[NC, F](this, background, contentContext, contentFactory)
 	
 	
@@ -95,8 +96,7 @@ case class ContextualScrollViewFactory[N](factory: ScrollViewFactory, context: N
 	 * @tparam F Type of component creation factory
 	 * @return A new scroll view builder
 	 */
-	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-		(contentFactory: ContextualBuilderContentFactory[N, F]) =
+	def build[F[X <: N]](contentFactory: Gccff[N, F]) =
 		new ContextualScrollViewBuilder(factory, context, contentFactory)
 }
 
@@ -130,8 +130,7 @@ class ScrollViewBuilder[+F](factory: ScrollViewFactory, contentFactory: Componen
 	}
 }
 
-class ContextualScrollViewBuilder[N, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-(factory: ScrollViewFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
+class ContextualScrollViewBuilder[N, +F[X <: N]](factory: ScrollViewFactory, context: N, contentFactory: Gccff[N, F])
 {
 	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
@@ -161,9 +160,8 @@ class ContextualScrollViewBuilder[N, +F[X <: N] <: GenericContextualFactory[X, _
 	}
 }
 
-class ContextualFilledScrollViewBuilder[NC, +F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
-(factory: ScrollViewFactory, background: Color, contentContext: NC,
- contentFactory: ContextualBuilderContentFactory[NC, F])
+class ContextualFilledScrollViewBuilder[NC, +F](factory: ScrollViewFactory, background: Color,
+                                                         contentContext: NC, contentFactory: Ccff[NC, F])
 {
 	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
@@ -185,7 +183,7 @@ class ContextualFilledScrollViewBuilder[NC, +F[X <: NC] <: GenericContextualFact
 										  maxOptimalLength: Option[Double] = None,
 										  customDrawers: Vector[CustomDrawer] = Vector(),
 										  limitsToContentSize: Boolean = false)
-										 (fill: F[NC] => ComponentCreationResult[C, R])
+										 (fill: F => ComponentCreationResult[C, R])
 										 (implicit scrollingContext: ScrollingContext) =
 	{
 		val content = Open.withContext(contentContext)(contentFactory)(fill)

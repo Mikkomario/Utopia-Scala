@@ -1,13 +1,13 @@
 package utopia.reach.window
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.{Alignment, HorizontalDirection}
-import utopia.reach.component.factory.{FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.firmament.localization.LocalizedString
 
 object InputRowBlueprint
 {
@@ -24,11 +24,9 @@ object InputRowBlueprint
 	  * @tparam F Type of contextual component factory version
 	  * @return A new input row blueprint
 	  */
-	def using[F[X <: TextContext] <: GenericContextualFactory[X, _ >: TextContext, F]]
-	(factory: FromGenericContextComponentFactoryFactory[_ >: TextContext, _, F], key: String,
-	 displayName: LocalizedString  = LocalizedString.empty,
-	 fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
-	 isScalable: Boolean = true)(createField: F[TextContext] => InputField) =
+	def using[F](factory: Ccff[TextContext, F], key: String, displayName: LocalizedString  = LocalizedString.empty,
+	             fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
+	             isScalable: Boolean = true)(createField: F => InputField) =
 		apply(key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
 			createField(factory.withContext(hierarchy, context))
 		}

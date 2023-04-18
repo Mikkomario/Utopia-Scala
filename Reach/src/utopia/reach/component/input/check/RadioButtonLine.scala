@@ -1,50 +1,45 @@
 package utopia.reach.component.input.check
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, Mixed}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.{Mixed, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.CursorDefining
+import utopia.reach.container.multi.Stack
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.FocusListener
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout.Center
-import utopia.paradigm.color.{Color, ColorRole}
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.firmament.localization.LocalizedString
-import utopia.reach.container.multi.Stack
 
 /**
  * Used for constructing radio buttons with labels
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
-object RadioButtonLine extends FromGenericContextComponentFactoryFactory[TextContext, RadioButtonLineFactory,
-	ContextualRadioButtonLineFactory]
+object RadioButtonLine extends Ccff[TextContext, ContextualRadioButtonLineFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonLineFactory(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualRadioButtonLineFactory(hierarchy, context)
 }
 
-class RadioButtonLineFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualRadioButtonLineFactory]
-{
-	override def withContext[N <: TextContext](context: N) =
-		ContextualRadioButtonLineFactory(parentHierarchy, context)
-}
-
-case class ContextualRadioButtonLineFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualRadioButtonLineFactory]
+case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+	extends TextContextualFactory[ContextualRadioButtonLineFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualRadioButtonLineFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER    ----------------------------------------

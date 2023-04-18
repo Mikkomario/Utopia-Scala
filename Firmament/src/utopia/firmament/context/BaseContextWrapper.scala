@@ -29,8 +29,9 @@ trait BaseContextWrapper[+Repr, +ColorSensitive] extends Any with BaseContextLik
 	
 	// IMPLEMENTED	--------------------
 	
+	override implicit def localizer: Localizer = base.localizer
+	
 	override def actorHandler = base.actorHandler
-	override def localizer: Localizer = base.localizer
 	override def font: Font = base.font
 	override def colors: ColorScheme = base.colors
 	override def contrastStandard: ColorContrastStandard = base.contrastStandard

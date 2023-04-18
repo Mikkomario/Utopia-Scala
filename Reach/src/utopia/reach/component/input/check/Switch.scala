@@ -2,8 +2,11 @@ package utopia.reach.component.input.check
 
 import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
@@ -18,20 +21,18 @@ import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.VeryHigh
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.FiniteDuration
 
-object Switch extends FromGenericContextComponentFactoryFactory[ColorContext, SwitchFactory, ContextualSwitchFactory]
+object Switch extends Cff[SwitchFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	
@@ -44,12 +45,11 @@ object Switch extends FromGenericContextComponentFactoryFactory[ColorContext, Sw
 }
 
 class SwitchFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[ColorContext, ContextualSwitchFactory]
+	extends FromContextFactory[ColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N <: ColorContext](context: N) =
-		ContextualSwitchFactory(this, context)
+	override def withContext(context: ColorContext) = ContextualSwitchFactory(this, context)
 	
 	
 	// OTHER	-------------------------------------
@@ -78,12 +78,14 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 			valuePointer, enabledPointer, animationDuration, customDrawers, focusListeners)
 }
 
-case class ContextualSwitchFactory[N <: ColorContext](factory: SwitchFactory, context: N)
-	extends GenericContextualFactory[N, ColorContext, ContextualSwitchFactory]
+case class ContextualSwitchFactory(factory: SwitchFactory, context: ColorContext)
+	extends ColorContextualFactory[ContextualSwitchFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	
-	override def withContext[N2 <: ColorContext](newContext: N2) = copy(context = newContext)
+	override def self: ContextualSwitchFactory = this
+	
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	
 	// OTHER	-------------------------------------

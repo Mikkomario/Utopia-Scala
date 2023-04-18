@@ -4,7 +4,9 @@ import utopia.firmament.component.text.MutableTextComponent
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.text.Font
@@ -12,27 +14,25 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.MutableTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackInsets
 
-object MutableTextButton extends FromGenericContextComponentFactoryFactory[TextContext, MutableTextButtonFactory,
-	ContextualMutableTextButtonFactory]
+object MutableTextButton extends Cff[MutableTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableTextButtonFactory(hierarchy)
 }
 
 class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualMutableTextButtonFactory]
+	extends FromContextFactory[TextContext, ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualMutableTextButtonFactory(this, context)
 	
 	
@@ -90,14 +90,14 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualMutableTextButtonFactory[+N <: TextContext](buttonFactory: MutableTextButtonFactory,
-                                                                 context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualMutableTextButtonFactory]
+case class ContextualMutableTextButtonFactory(buttonFactory: MutableTextButtonFactory, context: TextContext)
+	extends TextContextualFactory[ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualMutableTextButtonFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	------------------------------------

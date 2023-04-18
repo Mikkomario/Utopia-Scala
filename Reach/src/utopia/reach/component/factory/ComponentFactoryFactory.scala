@@ -6,6 +6,14 @@ import scala.language.implicitConversions
 
 object ComponentFactoryFactory
 {
+	// TYPES    -------------------------
+	
+	/**
+	  * Type alias for ComponentFactoryFactory
+	  */
+	type Cff[+F] = ComponentFactoryFactory[F]
+	
+	
 	// IMPLICIT -------------------------
 	
 	implicit def apply[F](f: ComponentHierarchy => F): ComponentFactoryFactory[F] = new _Cff[F](f)

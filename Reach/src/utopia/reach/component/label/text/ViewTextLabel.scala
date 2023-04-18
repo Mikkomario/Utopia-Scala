@@ -1,27 +1,27 @@
 package utopia.reach.component.label.text
 
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
-import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.firmament.component.display.PoolWithPointer
+import utopia.firmament.component.text.TextComponent
+import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
-import utopia.firmament.component.display.PoolWithPointer
-import utopia.firmament.model.TextDrawContext
-import utopia.firmament.component.text.TextComponent
-import utopia.firmament.context.TextContext
-import utopia.paradigm.color.ColorLevel.Standard
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.paradigm.enumeration.Alignment
-import utopia.reach.util.Priority
+import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
+import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.util.Priority
 
-object ViewTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, ViewTextLabelFactory,
-	ContextualViewTextLabelFactory]
+object ViewTextLabel extends Cff[ViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextLabelFactory(hierarchy)
 }
@@ -31,11 +31,11 @@ object ViewTextLabel extends FromGenericContextComponentFactoryFactory[TextConte
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualViewTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualViewTextLabelFactory(this, context)
 	
 	
@@ -116,9 +116,8 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			betweenLinesMargin, additionalDrawers, allowLineBreaks, allowTextShrink)
 }
 
-case class ContextualViewTextLabelFactory[+N <: TextContext]
-(factory: ViewTextLabelFactory, override val context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualViewTextLabelFactory]
+case class ContextualViewTextLabelFactory(factory: ViewTextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualViewTextLabelFactory]
 {
 	// COMPUTED ---------------------------------
 	
@@ -130,8 +129,9 @@ case class ContextualViewTextLabelFactory[+N <: TextContext]
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		ContextualViewTextLabelFactory(factory, newContext)
+	override def self: ContextualViewTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) = ContextualViewTextLabelFactory(factory, newContext)
 	
 	
 	// OTHER	---------------------------------

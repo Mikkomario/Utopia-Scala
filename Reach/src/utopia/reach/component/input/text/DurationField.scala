@@ -2,8 +2,11 @@ package utopia.reach.component.input.text
 
 import utopia.firmament.component.input.InputWithPointer
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -12,43 +15,35 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, Mixed}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.{Mixed, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.text.DurationField.focusTransferDelay
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.focus.ManyFocusableWrapper
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.{LocalizedString, Localizer}
-import utopia.firmament.model.stack.StackLength
 import utopia.reach.container.multi.Stack
+import utopia.reach.focus.ManyFocusableWrapper
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-object DurationField extends FromGenericContextComponentFactoryFactory[TextContext, DurationFieldFactory,
-	ContextualDurationFieldFactory]
+object DurationField extends Ccff[TextContext, ContextualDurationFieldFactory]
 {
 	private val focusTransferDelay = 0.05.seconds
 	
-	override def apply(hierarchy: ComponentHierarchy) = new DurationFieldFactory(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualDurationFieldFactory(hierarchy, context)
 }
 
-class DurationFieldFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualDurationFieldFactory]
-{
-	override def withContext[N <: TextContext](context: N) =
-		ContextualDurationFieldFactory(parentHierarchy, context)
-}
-
-case class ContextualDurationFieldFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualDurationFieldFactory]
+case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+	extends TextContextualFactory[ContextualDurationFieldFactory]
 {
 	private implicit def c: TextContext = context
-	private implicit def localizer: Localizer = context.localizer
 	private implicit val languageCode: String = "en"
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
+	override def self: ContextualDurationFieldFactory = this
+	
+	override def withContext(newContext: TextContext) =
 		copy(context = newContext)
 	
 	/**

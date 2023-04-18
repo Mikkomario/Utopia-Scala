@@ -1,6 +1,8 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackLength, StackSize}
@@ -20,15 +22,14 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
 
 import java.awt.event.KeyEvent
 
@@ -42,18 +43,17 @@ case class ListRowContent(components: IterableOnce[ReachComponentLike], context:
   * @author Mikko Hilpinen
   * @since 12.12.2020, v0.1
   */
-object List extends FromGenericContextComponentFactoryFactory[ColorContext, ListFactory, ContextualListFactory]
+object List extends Cff[ListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ListFactory(hierarchy)
 }
 
 class ListFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[ColorContext, ContextualListFactory]
+	extends FromContextFactory[ColorContext, ContextualListFactory]
 {
 	private implicit val canvas: ReachCanvas2 = parentHierarchy.top
 	
-	override def withContext[N <: ColorContext](context: N) =
-		ContextualListFactory(this, context)
+	override def withContext(context: ColorContext) = ContextualListFactory(this, context)
 	
 	/**
 	  * Creates a new list with content
@@ -142,11 +142,12 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualListFactory[+N <: ColorContext](factory: ListFactory, context: N)
-	extends GenericContextualFactory[N, ColorContext, ContextualListFactory]
+case class ContextualListFactory(factory: ListFactory, context: ColorContext)
+	extends ColorContextualFactory[ContextualListFactory]
 {
-	override def withContext[N2 <: ColorContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualListFactory = this
+	
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	/**
 	  * Creates a new list with content

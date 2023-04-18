@@ -19,7 +19,7 @@ import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult
-import utopia.reach.container.multi.{ContextualStackFactory, Stack, StackFactory}
+import utopia.reach.container.multi.{Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.context.ReachWindowContext
 
@@ -130,8 +130,8 @@ trait InteractionWindowFactory[A]
 		//  Alternatively room should be allowed for a header component separately
 		// Contains the created buttons and the default action enabled -pointer as the additional result
 		val window = ReachWindow.contextual.apply(parentWindow, title) { hierarchy =>
-			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack)
-				.apply(context.margins.medium.any) { stackF: ContextualStackFactory[ColorContext] =>
+			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack.static[ColorContext])
+				.apply(context.margins.medium.any) { stackF =>
 					stackF.build(Mixed).column() { factories =>
 						// Creates the main content and determines the button blueprints
 						val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)

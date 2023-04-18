@@ -3,32 +3,32 @@ package utopia.reach.component.label.text
 import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.component.text.{MutableStyleTextComponent, TextComponent}
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
+import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
-import utopia.firmament.drawing.immutable.BackgroundDrawer
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.stack.StackInsets
 
-object MutableViewTextLabel extends FromGenericContextComponentFactoryFactory[TextContext,
-	MutableViewTextLabelFactory, ContextualMutableViewTextLabelFactory]
+object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableViewTextLabelFactory(hierarchy)
 }
 
 class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualMutableViewTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualMutableViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualMutableViewTextLabelFactory(this, context)
 	
 	
@@ -76,13 +76,14 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
-case class ContextualMutableViewTextLabelFactory[+N <: TextContext](labelFactory: MutableViewTextLabelFactory,
-																		context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualMutableViewTextLabelFactory]
+case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualMutableViewTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
+	override def self: ContextualMutableViewTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	--------------------------------------

@@ -2,40 +2,40 @@ package utopia.reach.component.label.image
 
 import utopia.firmament.component.stack.ConstrainableWrapper
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.Open
-import utopia.reach.util.Priority.Low
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.view.BackgroundViewDrawer
-import utopia.paradigm.color.ColorLevel.Standard
-import utopia.firmament.localization.DisplayFunction
-import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.reach.container.multi.Stack
+import utopia.reach.util.Priority.Low
 
-object ViewImageAndTextLabel extends FromGenericContextComponentFactoryFactory[TextContext,
-	ViewImageAndTextLabelFactory, ContextualViewImageAndTextLabelFactory]
+object ViewImageAndTextLabel extends Cff[ViewImageAndTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewImageAndTextLabelFactory(hierarchy)
 }
 
 class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualViewImageAndTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualViewImageAndTextLabelFactory]
 {
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualViewImageAndTextLabelFactory(this, context)
 	
 	/**
@@ -76,12 +76,14 @@ class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
 }
 
-case class ContextualViewImageAndTextLabelFactory[+N <: TextContext](factory: ViewImageAndTextLabelFactory, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualViewImageAndTextLabelFactory]
+case class ContextualViewImageAndTextLabelFactory(factory: ViewImageAndTextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualViewImageAndTextLabelFactory]
 {
 	implicit def c: TextContext = context
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
+	override def self: ContextualViewImageAndTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) =
 		copy(context = newContext)
 	
 	/**

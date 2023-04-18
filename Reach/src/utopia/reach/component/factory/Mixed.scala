@@ -1,8 +1,10 @@
 package utopia.reach.component.factory
 
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
-object Mixed extends FromGenericContextComponentFactoryFactory[Any, Mixed, ContextualMixed]
+object Mixed extends Cff[Mixed]
 
 /**
   * A factory for creating all kinds of component factories
@@ -22,7 +24,6 @@ case class Mixed(parentHierarchy: ComponentHierarchy)
 	def apply[F](factoryFactory: ComponentFactoryFactory[F]) = factoryFactory(parentHierarchy)
 }
 
-// TODO: This may be possible to make covariant (see if necessary)
 case class ContextualMixed[N](parentHierarchy: ComponentHierarchy, context: N)
 	extends GenericContextualFactory[N, Any, ContextualMixed]
 {
@@ -46,15 +47,11 @@ case class ContextualMixed[N](parentHierarchy: ComponentHierarchy, context: N)
 	  * @tparam F Type of component factory
 	  * @return A specific type of component factory that uses this same hierarchy and context
 	  */
-	def apply[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-	(factoryFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F]) =
-		factoryFactory.withContext(parentHierarchy, context)
-	
+	def generic[F[X <: N]](factoryFactory: Gccff[N, F]) = factoryFactory.withContext(parentHierarchy, context)
 	/**
 	  * @param ff A component factory factory
 	  * @tparam F Type of contextual component factory
 	  * @return A contextual component factory from the specified factory that uses the context from this item
 	  */
-	def apply[F](ff: FromContextComponentFactoryFactory[N, F]) =
-		ff.withContext(parentHierarchy, context)
+	def apply[F](ff: FromContextComponentFactoryFactory[N, F]) = ff.withContext(parentHierarchy, context)
 }

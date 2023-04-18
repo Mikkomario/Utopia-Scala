@@ -4,39 +4,33 @@ import utopia.firmament.component.text.{MutableTextComponent, TextComponent}
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackInsets
 
-object MutableTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, MutableTextLabelFactory,
-	ContextualMutableTextLabelFactory]
+object MutableTextLabel extends Ccff[TextContext, ContextualMutableTextLabelFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = MutableTextLabelFactory(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualMutableTextLabelFactory(hierarchy, context)
 }
 
-case class MutableTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualMutableTextLabelFactory]
-{
-	override def withContext[N <: TextContext](context: N) =
-		ContextualMutableTextLabelFactory(parentHierarchy, context)
-}
-
-case class ContextualMutableTextLabelFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy,
-																	override val context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualMutableTextLabelFactory]
+case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+	extends TextContextualFactory[ContextualMutableTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	
-	override def withContext[C2 <: TextContext](newContext: C2) =
-		copy(context = newContext)
+	override def self: ContextualMutableTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	--------------------------------------

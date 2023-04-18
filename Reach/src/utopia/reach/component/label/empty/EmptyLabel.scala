@@ -1,28 +1,27 @@
 package utopia.reach.component.label.empty
 
 import utopia.firmament.context.ColorContext
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
-import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.firmament.drawing.immutable.BackgroundDrawer
-import utopia.paradigm.color.ColorLevel.Standard
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.CustomDrawReachComponent
 
-object EmptyLabel
-	extends FromGenericContextComponentFactoryFactory[ColorContext, EmptyLabelFactory, ContextualEmptyLabelFactory]
+object EmptyLabel extends Cff[EmptyLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new EmptyLabelFactory(hierarchy)
 }
 
 class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[ColorContext, ContextualEmptyLabelFactory]
+	extends FromContextFactory[ColorContext, ContextualEmptyLabelFactory]
 {
 	// IMPLEMENTED  --------------------------------
 	
-	override def withContext[N <: ColorContext](context: N) =
-		ContextualEmptyLabelFactory(this, context)
+	override def withContext(context: ColorContext) = ContextualEmptyLabelFactory(this, context)
 	
 	
 	// OTHER    ------------------------------------
@@ -47,8 +46,8 @@ class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 		apply(stackSize, BackgroundDrawer(color) +: customDrawers)
 }
 
-case class ContextualEmptyLabelFactory[+N <: ColorContext](factory: EmptyLabelFactory, context: N)
-	extends GenericContextualFactory[N, ColorContext, ContextualEmptyLabelFactory]
+case class ContextualEmptyLabelFactory(factory: EmptyLabelFactory, context: ColorContext)
+	extends ColorContextualFactory[ContextualEmptyLabelFactory]
 {
 	// COMPUTED ------------------------------------
 	
@@ -60,8 +59,9 @@ case class ContextualEmptyLabelFactory[+N <: ColorContext](factory: EmptyLabelFa
 	
 	// IMPLEMENTED  --------------------------------
 	
-	override def withContext[N2 <: ColorContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualEmptyLabelFactory = this
+	
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	
 	// OTHER    ------------------------------------

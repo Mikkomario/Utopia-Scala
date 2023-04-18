@@ -2,26 +2,27 @@ package utopia.reach.component.input.text
 
 import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, KeyTypedHandlerType, KeyTypedListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
+import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.ColorShade.Light
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.AbstractSelectableTextLabel
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.focus.FocusListener
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.LocalString._
 
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
@@ -29,19 +30,17 @@ import java.awt.event.KeyEvent
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-object EditableTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, EditableTextLabelFactory,
-	ContextualEditableTextLabelFactory]
+object EditableTextLabel extends Cff[EditableTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new EditableTextLabelFactory(hierarchy)
 }
 
 class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualEditableTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualEditableTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------------
 	
-	override def withContext[N <: TextContext](context: N) =
-		ContextualEditableTextLabelFactory(this, context)
+	override def withContext(context: TextContext) = ContextualEditableTextLabelFactory(this, context)
 	
 	
 	// OTHER	--------------------------------------
@@ -79,11 +78,12 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowTextShrink)
 }
 
-case class ContextualEditableTextLabelFactory[+N <: TextContext](factory: EditableTextLabelFactory, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualEditableTextLabelFactory]
+case class ContextualEditableTextLabelFactory(factory: EditableTextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualEditableTextLabelFactory]
 {
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualEditableTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	/**
 	  * Creates a new editable label

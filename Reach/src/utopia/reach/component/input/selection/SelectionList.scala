@@ -5,8 +5,11 @@ import utopia.firmament.component.input.SelectionWithPointers
 import utopia.firmament.context.ColorContext
 import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener}
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.immutable.View
@@ -24,31 +27,28 @@ import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.multi.MutableStack
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reach.util.Priority.High
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.stack.StackLength
-import utopia.reach.container.multi.MutableStack
 
-object SelectionList extends FromGenericContextComponentFactoryFactory[ColorContext, SelectionListFactory,
-	ContextualSelectionListFactory]
+object SelectionList extends Cff[SelectionListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new SelectionListFactory(hierarchy)
 }
 
 class SelectionListFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[ColorContext, ContextualSelectionListFactory]
+	extends FromContextFactory[ColorContext, ContextualSelectionListFactory]
 {
-	override def withContext[N <: ColorContext](context: N) =
+	override def withContext(context: ColorContext) =
 		ContextualSelectionListFactory(this, context)
 	
 	/**
@@ -86,10 +86,12 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 			alternativeKeyCondition)(makeDisplay)
 }
 
-case class ContextualSelectionListFactory[+N <: ColorContext](factory: SelectionListFactory, context: N)
-	extends GenericContextualFactory[N, ColorContext, ContextualSelectionListFactory]
+case class ContextualSelectionListFactory(factory: SelectionListFactory, context: ColorContext)
+	extends ColorContextualFactory[ContextualSelectionListFactory]
 {
-	override def withContext[N2 <: ColorContext](newContext: N2) = copy(context = newContext)
+	override def self: ContextualSelectionListFactory = this
+	
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	/**
 	  * Creates a new list
@@ -340,7 +342,8 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			lazy val bg = contextBackgroundPointer.value
 			def draw(pointer: View[Option[Bounds]], highlightLevel: Double) =
 				pointer.value.foreach { area =>
-					drawer.draw(area + bounds.position)(DrawSettings.onlyFill(bg.highlightedBy(highlightLevel)))
+					drawer.draw(area + bounds.position)(
+						DrawSettings.onlyFill(bg.highlightedBy(highlightLevel * highlightModifier)))
 				}
 			
 			// Checks whether currently selected area and the mouse area overlap

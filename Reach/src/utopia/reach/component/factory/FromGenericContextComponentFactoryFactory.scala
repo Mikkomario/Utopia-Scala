@@ -1,14 +1,43 @@
 package utopia.reach.component.factory
 
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.hierarchy.ComponentHierarchy
+
+import scala.language.implicitConversions
 
 object FromGenericContextComponentFactoryFactory
 {
+	// TYPES    ----------------------------
+	
+	/**
+	  * Type alias for FromGenericContextComponentFactoryFactory
+	  */
+	type Gccff[-N, +F[X <: N]] = FromGenericContextComponentFactoryFactory[N, F]
+	
 	/**
 	  * Type of component factory factory commonly used in contextual container builders
 	  */
-	type ContextualBuilderContentFactory[N, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]] =
-		FromGenericContextComponentFactoryFactory[_ >: N, _, F]
+	@deprecated("Deprecated for removal", "v1.0")
+	type ContextualBuilderContentFactory[-N, +F[X <: N]/* <: GenericContextualFactory[X, _ >: N, F]*/] =
+		FromGenericContextComponentFactoryFactory[N, F]
+	
+	
+	// IMPLICIT ----------------------------
+	
+	// Implicitly wraps certain kinds of component creation factories
+	implicit def wrap[Top, F[X <: Top]](factory: Cff[FromGenericContextFactory[Top, F]]): Gccff[Top, F] =
+		new _Gcff[Top, F](factory)
+	
+	
+	// NESTED   ----------------------------
+	
+	private class _Gcff[-Top, +F[X <: Top]](factory: ComponentFactoryFactory[FromGenericContextFactory[Top, F]])
+		extends FromGenericContextComponentFactoryFactory[Top, F]
+	{
+		override def withContext[N <: Top](parentHierarchy: ComponentHierarchy, context: N): F[N] =
+			factory(parentHierarchy).withContext(context)
+	}
 }
 
 /**
@@ -16,26 +45,38 @@ object FromGenericContextComponentFactoryFactory
   * @author Mikko Hilpinen
   * @since 14.10.2020, v0.1
   */
-trait FromGenericContextComponentFactoryFactory[Top, +F <: FromGenericContextFactory[Top, CF], +CF[X <: Top]]
-	extends ComponentFactoryFactory[F]
+trait FromGenericContextComponentFactoryFactory[-Top, +CF[X <: Top]]
 {
+	// ABSTRACT ------------------------
+	
 	/**
 	  * Creates a new contextual component factory
-	  * @param parentHierarchy Component hierarchy that will host created component(s)
+	  * @param hierarchy Component hierarchy that will host created component(s)
 	  * @param context Component creation context
 	  * @tparam N Type of component creation context
 	  * @return A new contextual component creation factory
 	  */
-	def withContext[N <: Top](parentHierarchy: ComponentHierarchy, context: N): CF[N] =
-		apply(parentHierarchy).withContext(context)
+	def withContext[N <: Top](hierarchy: ComponentHierarchy, context: N): CF[N]
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	  * @tparam N Type of highest accepted context
+	  * @return A copy of this factory that yields factories wrapping that context type
+	  */
+	def static[N <: Top]: Ccff[N, CF[N]] = FromContextComponentFactoryFactory(withContext)
+	
+	
+	// OTHER    -----------------------
 	
 	/**
 	  * Creates a new contextual component factory
-	  * @param parentHierarchy Component hierarchy that will host created component(s)
+	  * @param hierarchy Component hierarchy that will host created component(s)
 	  * @param context Implicit Component creation context
 	  * @tparam N Type of component creation context
 	  * @return A new contextual component creation factory
 	  */
-	def contextual[N <: Top](parentHierarchy: ComponentHierarchy)(implicit context: N): CF[N] =
-		withContext[N](parentHierarchy, context)
+	def contextual[N <: Top](hierarchy: ComponentHierarchy)(implicit context: N): CF[N] =
+		withContext[N](hierarchy, context)
 }

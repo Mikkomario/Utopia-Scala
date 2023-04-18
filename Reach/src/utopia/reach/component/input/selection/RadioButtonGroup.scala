@@ -1,43 +1,37 @@
 package utopia.reach.component.input.selection
 
+import utopia.firmament.component.display.Pool
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
-import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.paradigm.color.ColorRole.Secondary
+import utopia.paradigm.color.{Color, ColorRole}
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.check.RadioButtonLine
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.focus.ManyFocusableWrapper
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.component.display.Pool
-import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.context.TextContext
-import utopia.paradigm.color.{Color, ColorRole}
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.firmament.localization.LocalizedString
 import utopia.reach.container.multi.Stack
+import utopia.reach.focus.ManyFocusableWrapper
 
-object RadioButtonGroup extends FromGenericContextComponentFactoryFactory[TextContext, RadioButtonGroupFactory,
-	ContextualRadioButtonGroupFactory]
+object RadioButtonGroup extends Ccff[TextContext, ContextualRadioButtonGroupFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonGroupFactory(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualRadioButtonGroupFactory(hierarchy, context)
 }
 
-class RadioButtonGroupFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualRadioButtonGroupFactory]
-{
-	override def withContext[N <: TextContext](context: N) =
-		ContextualRadioButtonGroupFactory(parentHierarchy, context)
-}
-
-case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualRadioButtonGroupFactory]
+case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+	extends TextContextualFactory[ContextualRadioButtonGroupFactory]
 {
 	// IMPLICIT	----------------------------
 	
@@ -46,8 +40,9 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
 	
 	// IMPLEMENTED	------------------------
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualRadioButtonGroupFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	----------------------------

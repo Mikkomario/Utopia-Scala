@@ -10,15 +10,21 @@ import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
 
-object Stack extends FromGenericContextComponentFactoryFactory[BaseContext, StackFactory, ContextualStackFactory]
+object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
+	
+	override def withContext[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
+		apply(parentHierarchy).withContext(context)
 }
 
 case class StackFactory(parentHierarchy: ComponentHierarchy)
@@ -175,9 +181,7 @@ case class ContextualStackFactory[N <: BaseContext](stackFactory: StackFactory, 
 	  * @tparam F Type of contextual content factories
 	  * @return A new stack builder that uses the same context as in this factory
 	  */
-	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-	(contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F]) =
-		new ContextualStackBuilder(this, contentFactory)
+	def build[F](contentFactory: Ccff[N, F]) = new ContextualStackBuilder(this, contentFactory)
 	
 	/**
 	  * Creates a new stack of items
@@ -400,8 +404,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 	}
 }
 
-class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-(stackFactory: ContextualStackFactory[N], contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F])
+class ContextualStackBuilder[N <: BaseContext, +F](stackFactory: ContextualStackFactory[N], contentFactory: Ccff[N, F])
 {
 	private implicit def canvas: ReachCanvas2 = stackFactory.stackFactory.parentHierarchy.top
 	
@@ -424,7 +427,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	def apply[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
 										  cap: StackLength = StackLength.fixedZero,
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										 (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
+										 (fill: F => ComponentCreationResult[Vector[C], R]) =
 	{
 		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory(content, direction, layout, cap, customDrawers, areRelated)
@@ -446,7 +449,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	def withMargin[C <: ReachComponentLike, R](margin: StackLength, direction: Axis2D = Y, layout: StackLayout = Fit,
 	                                           cap: StackLength = StackLength.fixedZero,
 	                                           customDrawers: Vector[CustomDrawer] = Vector())
-	                                          (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
+	                                          (fill: F => ComponentCreationResult[Vector[C], R]) =
 	{
 		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.withMargin(content, margin, direction, layout, cap, customDrawers)
@@ -467,7 +470,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	def withoutMargin[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
 												  cap: StackLength = StackLength.fixedZero,
 												  customDrawers: Vector[CustomDrawer] = Vector())
-												 (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
+												 (fill: F => ComponentCreationResult[Vector[C], R]) =
 	{
 		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.withoutMargin(content, direction, layout, cap, customDrawers)
@@ -488,7 +491,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	  */
 	def row[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-									   (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
+									   (fill: F => ComponentCreationResult[Vector[C], R]) =
 		apply(X, layout, cap, customDrawers, areRelated)(fill)
 	
 	/**
@@ -506,7 +509,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	  */
 	def column[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										  (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
+										  (fill: F => ComponentCreationResult[Vector[C], R]) =
 		apply(Y, layout, cap, customDrawers, areRelated)(fill)
 	
 	/**
@@ -526,7 +529,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	  */
 	def segmented[R](group: SegmentGroup, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 					 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-					(fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[ReachComponentLike], R]) =
+					(fill: Iterator[F] => ComponentCreationResult[IterableOnce[ReachComponentLike], R]) =
 	{
 		val content = Open.withContext(context).many(contentFactory) { factories =>
 			fill(factories).mapComponent { _.iterator.map { ComponentCreationResult(_) } }
@@ -554,7 +557,7 @@ class ContextualStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFa
 	def pair[C <: ReachComponentLike, R](alignment: Alignment, cap: StackLength = StackLength.fixedZero,
 										 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
 										 forceFitLayout: Boolean = false)
-										(fill: F[N] => ComponentCreationResult[Pair[C], R]): ComponentWrapResult[Stack[C], Vector[C], R] =
+										(fill: F => ComponentCreationResult[Pair[C], R]): ComponentWrapResult[Stack[C], Vector[C], R] =
 	{
 		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)

@@ -1,22 +1,22 @@
 package utopia.reach.component.label.text
 
-import utopia.firmament.model.TextDrawContext
-import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
-import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.firmament.drawing.immutable.{BackgroundDrawer, TextDrawer}
-import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.component.text.TextComponent
 import utopia.firmament.context.TextContext
-import utopia.paradigm.color.ColorLevel.Standard
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, TextDrawer}
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
+import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.CustomDrawReachComponent
 
-object TextLabel extends FromGenericContextComponentFactoryFactory[TextContext, TextLabelFactory,
-	ContextualTextLabelFactory]
+object TextLabel extends Cff[TextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = TextLabelFactory(hierarchy)
 }
@@ -26,11 +26,11 @@ object TextLabel extends FromGenericContextComponentFactoryFactory[TextContext, 
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext[C2 <: TextContext](context: C2) =
+	override def withContext(context: TextContext) =
 		ContextualTextLabelFactory(this, context)
 	
 	
@@ -57,14 +57,14 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
 			betweenLinesMargin, allowLineBreaks), customDrawers, allowTextShrink)
 }
 
-case class ContextualTextLabelFactory[+N <: TextContext]
-(factory: TextLabelFactory, override val context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualTextLabelFactory]
+case class ContextualTextLabelFactory(factory: TextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualTextLabelFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext[C2 <: TextContext](newContext: C2) =
-		ContextualTextLabelFactory(factory, newContext)
+	override def self: ContextualTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) = ContextualTextLabelFactory(factory, newContext)
 	
 	
 	// OTHER	---------------------------------

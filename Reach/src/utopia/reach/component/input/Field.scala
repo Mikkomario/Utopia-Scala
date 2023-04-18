@@ -1,7 +1,13 @@
 package utopia.reach.component.input
 
 import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
@@ -10,11 +16,13 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorRole.{Failure, Secondary}
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, Mixed}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromGenericContextFactory, GenericContextualFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
 import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}
@@ -22,17 +30,10 @@ import utopia.reach.component.template.focus.{Focusable, FocusableWithPointer, F
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
-import utopia.firmament.model.enumeration.StackLayout.Center
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.paradigm.color.ColorRole.{Failure, Secondary}
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
-import utopia.reach.container.multi.{Stack, ViewStack}
 
 /**
   * A set of context variables provided when creating field contents
@@ -55,7 +56,7 @@ case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListen
   */
 case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: Changing[Color])
 
-object Field extends FromGenericContextComponentFactoryFactory[TextContext, FieldFactory, ContextualFieldFactory]
+object Field extends Cff[FieldFactory]
 {
 	// ATTRIBUTES	--------------------------
 	

@@ -11,7 +11,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
@@ -19,19 +19,19 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackInsets
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 
-object ViewImageButton extends FromGenericContextComponentFactoryFactory[ColorContext, ViewImageButtonFactory,
-	ContextualViewImageButtonFactory]
+object ViewImageButton extends Cff[ViewImageButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewImageButtonFactory(hierarchy)
 }
 
 class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[ColorContext, ContextualViewImageButtonFactory]
+	extends FromContextFactory[ColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	---------------------------
 	
-	override def withContext[N <: ColorContext](context: N) =
+	override def withContext(context: ColorContext) =
 		ContextualViewImageButtonFactory(this, context)
 	
 	
@@ -61,8 +61,8 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 			additionalDrawers, additionalFocusListeners, allowUpscaling, useLowPrioritySize)(action)
 }
 
-case class ContextualViewImageButtonFactory[+N <: ColorContext](factory: ViewImageButtonFactory, context: N)
-	extends GenericContextualFactory[N, ColorContext, ContextualViewImageButtonFactory]
+case class ContextualViewImageButtonFactory(factory: ViewImageButtonFactory, context: ColorContext)
+	extends ColorContextualFactory[ContextualViewImageButtonFactory]
 {
 	// IMPLICIT	-----------------------------
 	
@@ -71,8 +71,9 @@ case class ContextualViewImageButtonFactory[+N <: ColorContext](factory: ViewIma
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def withContext[N2 <: ColorContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualViewImageButtonFactory = this
+	
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	
 	// OTHER	-----------------------------

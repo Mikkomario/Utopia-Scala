@@ -2,18 +2,20 @@ package utopia.reach.container.wrapper
 
 import utopia.firmament.component.container.single.FramingLike
 import utopia.firmament.context.BaseContextLike
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.ContextualBuilderContentFactory
-import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.paradigm.color.Color
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.firmament.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
-import utopia.paradigm.color.Color
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 
-object Framing extends FromGenericContextComponentFactoryFactory[Any, FramingFactory, ContextualFramingFactory]
+object Framing extends Cff[FramingFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
 }
@@ -29,8 +31,7 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	override def build[F](contentFactory: ComponentFactoryFactory[F]) =
 		FramingBuilder(this, contentFactory)
 	
-	protected def makeBuilder[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
-	(background: Color, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
+	protected def makeBuilder[NC, F](background: Color, contentContext: NC, contentFactory: Ccff[NC, F]) =
 		new ContextualFilledFramingBuilder[NC, F](this, background, contentContext, contentFactory)
 	
 	
@@ -66,9 +67,8 @@ object ContextualFramingFactory
 		  * @tparam F Type of component creation factory used
 		  * @return A framing builder that fills the framing area with a background color
 		  */
-		def buildFilledWithMappedContext[NC, F[X <: NC] <: GenericContextualFactory[X, _ >: NC, F]]
-		(background: Color, contentFactory: FromGenericContextComponentFactoryFactory[_ >: NC, _, F])
-		(mapContext: NT => NC) =
+		def buildFilledWithMappedContext[NC, F](background: Color, contentFactory: Ccff[NC, F])
+		                                       (mapContext: NT => NC) =
 			new ContextualFilledFramingBuilder[NC, F](f.factory, background,
 				mapContext(f.context.against(background)), contentFactory)
 		
@@ -78,10 +78,8 @@ object ContextualFramingFactory
 		  * @tparam F Type of component creation factory used
 		  * @return A framing builder that fills the framing area with a background color
 		  */
-		def buildFilled[F[X <: NT] <: GenericContextualFactory[X, _ >: NT, F]]
-		(background: Color, contentFactory: FromGenericContextComponentFactoryFactory[_ >: NT, _, F]) =
-			new ContextualFilledFramingBuilder[NT, F](f.factory, background,
-				f.context.against(background), contentFactory)
+		def buildFilled[F](background: Color, contentFactory: Ccff[NT, F]) =
+			new ContextualFilledFramingBuilder[NT, F](f.factory, background, f.context.against(background), contentFactory)
 	}
 }
 
@@ -108,8 +106,7 @@ case class ContextualFramingFactory[N](factory: FramingFactory, context: N)
 	  * @tparam F Type of component factories used
 	  * @return A new framing builder that will also construct framing contents
 	  */
-	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-	(contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F]) =
+	def build[F[X <: N]](contentFactory: Gccff[N, F]) =
 		new ContextualFramingBuilder[N, F](factory, context, contentFactory)
 }
 
@@ -133,8 +130,7 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 	}
 }
 
-class ContextualFramingBuilder[N, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-(factory: FramingFactory, context: N, contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F])
+class ContextualFramingBuilder[N, +F[X <: N]](factory: FramingFactory, context: N, contentFactory: Gccff[N, F])
 {
 	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
@@ -156,9 +152,8 @@ class ContextualFramingBuilder[N, +F[X <: N] <: GenericContextualFactory[X, _ >:
 	}
 }
 
-class ContextualFilledFramingBuilder[N, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-(factory: FramingFactory, background: Color, context: N,
- contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F])
+class ContextualFilledFramingBuilder[N, +F](factory: FramingFactory, background: Color, context: N,
+                                            contentFactory: Ccff[N, F])
 {
 	// IMPLICIT	-------------------------------
 	
@@ -179,7 +174,7 @@ class ContextualFilledFramingBuilder[N, +F[X <: N] <: GenericContextualFactory[X
 	  */
 	def apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
 										  moreCustomDrawers: Vector[CustomDrawer] = Vector())
-										 (content: F[N] => ComponentCreationResult[C, R]) =
+										 (content: F => ComponentCreationResult[C, R]) =
 		_apply(insets, BackgroundDrawer(background) +: moreCustomDrawers)(content)
 	
 	/**
@@ -194,7 +189,7 @@ class ContextualFilledFramingBuilder[N, +F[X <: N] <: GenericContextualFactory[X
 	  */
 	def rounded[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
 											moreCustomDrawers: Vector[CustomDrawer] = Vector())
-										   (content: F[N] => ComponentCreationResult[C, R]) =
+										   (content: F => ComponentCreationResult[C, R]) =
 	{
 		val activeInsets = insets.toInsets
 		// The rounding amount is based on insets
@@ -209,7 +204,7 @@ class ContextualFilledFramingBuilder[N, +F[X <: N] <: GenericContextualFactory[X
 	
 	private def _apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
 												   customDrawers: Vector[CustomDrawer] = Vector())
-												  (fill: F[N] => ComponentCreationResult[C, R]) =
+												  (fill: F => ComponentCreationResult[C, R]) =
 	{
 		val newContent = Open.withContext(context)(contentFactory)(fill)
 		factory(newContent, insets, customDrawers)

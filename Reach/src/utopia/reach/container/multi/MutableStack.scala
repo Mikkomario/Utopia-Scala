@@ -9,24 +9,23 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{BaseContextualFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 
-object MutableStack extends FromGenericContextComponentFactoryFactory[BaseContext, MutableStackFactory,
-	ContextualMutableStackFactory]
+object MutableStack extends Cff[MutableStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableStackFactory(hierarchy)
 }
 
 class MutableStackFactory(hierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[BaseContext, ContextualMutableStackFactory]
+	extends FromContextFactory[BaseContext, ContextualMutableStackFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	
-	override def withContext[N <: BaseContext](context: N) =
-		ContextualMutableStackFactory(hierarchy, context)
+	override def withContext(context: BaseContext) = ContextualMutableStackFactory(hierarchy, context)
 	
 	
 	// OTHER	-------------------------------------
@@ -72,13 +71,14 @@ class MutableStackFactory(hierarchy: ComponentHierarchy)
 		apply[C](Y, layout, margin, cap)
 }
 
-case class ContextualMutableStackFactory[+N <: BaseContext](hierarchy: ComponentHierarchy, context: N)
-	extends GenericContextualFactory[N, BaseContext, ContextualMutableStackFactory]
+case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context: BaseContext)
+	extends BaseContextualFactory[ContextualMutableStackFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext[C2 <: BaseContext](newContext: C2) =
-		copy(context = newContext)
+	override def self: ContextualMutableStackFactory = this
+	
+	override def withContext(newContext: BaseContext) = copy(context = newContext)
 	
 	
 	// OTHER	-----------------------------------

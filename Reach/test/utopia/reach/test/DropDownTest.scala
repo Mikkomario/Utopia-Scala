@@ -1,5 +1,6 @@
 package utopia.reach.test
 
+import utopia.firmament.context.ColorContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
@@ -35,7 +36,7 @@ object DropDownTest extends App
 	
 	val window = ReachWindow.contextual.apply(title = "Drop-Down Test") { hierarchy =>
 		implicit val canvas: ReachCanvas2 = hierarchy.top
-		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack)
+		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack.static[ColorContext])
 			.apply(margins.medium.any.square) { stackF =>
 				stackF.mapContext { _.forTextComponents }.build(DropDown).column(areRelated = true) { ddF =>
 					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)

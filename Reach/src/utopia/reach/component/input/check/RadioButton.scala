@@ -1,8 +1,11 @@
 package utopia.reach.component.input.check
 
 import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
@@ -12,28 +15,25 @@ import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.High
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.stack.StackLength
 
-object RadioButton
-	extends FromGenericContextComponentFactoryFactory[ColorContext, RadioButtonFactory, ContextualRadioButtonFactory]
+object RadioButton extends Cff[RadioButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonFactory(hierarchy)
 }
 
 class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[ColorContext, ContextualRadioButtonFactory]
+	extends FromContextFactory[ColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	
-	override def withContext[N <: ColorContext](context: N) =
+	override def withContext(context: ColorContext) =
 		ContextualRadioButtonFactory(this, context)
 	
 	
@@ -66,8 +66,8 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 			focusListeners)
 }
 
-case class ContextualRadioButtonFactory[+N <: ColorContext](factory: RadioButtonFactory, context: N)
-	extends GenericContextualFactory[N, ColorContext, ContextualRadioButtonFactory]
+case class ContextualRadioButtonFactory(factory: RadioButtonFactory, context: ColorContext)
+	extends ColorContextualFactory[ContextualRadioButtonFactory]
 {
 	// IMPLICIT ------------------------------
 	
@@ -76,8 +76,9 @@ case class ContextualRadioButtonFactory[+N <: ColorContext](factory: RadioButton
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def withContext[N2 <: ColorContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualRadioButtonFactory = this
+	
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	
 	// OTHER    ------------------------------

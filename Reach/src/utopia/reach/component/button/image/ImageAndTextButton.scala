@@ -1,8 +1,11 @@
 package utopia.reach.component.button.image
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -11,26 +14,22 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackInsets
 
-object ImageAndTextButton extends FromGenericContextComponentFactoryFactory[TextContext,
-	ImageAndTextButtonFactory, ContextualImageAndTextButtonFactory]
+object ImageAndTextButton extends ComponentFactoryFactory[ImageAndTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextButtonFactory(hierarchy)
 }
 
 class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualImageAndTextButtonFactory]
+	extends FromContextFactory[TextContext, ContextualImageAndTextButtonFactory]
 {
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualImageAndTextButtonFactory(this, context)
 	
 	/**
@@ -72,13 +71,14 @@ class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 			forceEqualBreadth)(action)
 }
 
-case class ContextualImageAndTextButtonFactory[+N <: TextContext](factory: ImageAndTextButtonFactory, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualImageAndTextButtonFactory]
+case class ContextualImageAndTextButtonFactory(factory: ImageAndTextButtonFactory, context: TextContext)
+	extends TextContextualFactory[ContextualImageAndTextButtonFactory]
 {
 	private implicit def c: TextContext = context
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
-		copy(context = newContext)
+	override def self: ContextualImageAndTextButtonFactory = this
+	
+	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	/**
 	  * Creates a new button with both image and text

@@ -1,33 +1,33 @@
 package utopia.reach.component.label.image
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.collection.immutable.Pair
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.reach.component.factory.{FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.LocalizedString
-import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.reach.container.multi.Stack
 
-object ImageAndTextLabel extends FromGenericContextComponentFactoryFactory[TextContext, ImageAndTextLabelFactory,
-	ContextualImageAndTextLabelFactory]
+object ImageAndTextLabel extends Cff[ImageAndTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextLabelFactory(hierarchy)
 }
 
 class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[TextContext, ContextualImageAndTextLabelFactory]
+	extends FromContextFactory[TextContext, ContextualImageAndTextLabelFactory]
 {
-	override def withContext[N <: TextContext](context: N) =
+	override def withContext(context: TextContext) =
 		ContextualImageAndTextLabelFactory(this, context)
 	
 	/**
@@ -61,12 +61,14 @@ class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			useLowPriorityImageSize, forceEqualBreadth)
 }
 
-case class ContextualImageAndTextLabelFactory[+N <: TextContext](factory: ImageAndTextLabelFactory, context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualImageAndTextLabelFactory]
+case class ContextualImageAndTextLabelFactory(factory: ImageAndTextLabelFactory, context: TextContext)
+	extends TextContextualFactory[ContextualImageAndTextLabelFactory]
 {
 	private implicit def c: TextContext = context
 	
-	override def withContext[N2 <: TextContext](newContext: N2) =
+	override def self: ContextualImageAndTextLabelFactory = this
+	
+	override def withContext(newContext: TextContext) =
 		copy(context = newContext)
 	
 	/**

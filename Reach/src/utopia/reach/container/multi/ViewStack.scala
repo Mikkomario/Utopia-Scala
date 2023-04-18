@@ -2,6 +2,7 @@ package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
@@ -12,16 +13,16 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, FromGenericContextComponentFactoryFactory, GenericContextualFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
-import utopia.firmament.drawing.template.CustomDrawer
 
-object ViewStack extends FromGenericContextComponentFactoryFactory[BaseContext, ViewStackFactory,
-	ContextualViewStackFactory]
+object ViewStack extends Cff[ViewStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewStackFactory(hierarchy)
 }
@@ -164,8 +165,7 @@ case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackF
 	  * @tparam F Type of component creation factories used
 	  * @return A new view stack builder
 	  */
-	def build[F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-	(contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F]) =
+	def build[F[X <: N]](contentFactory: Gccff[N, F]) =
 		new ContextualViewStackBuilder[N, F](this, contentFactory)
 	
 	/**
@@ -400,8 +400,8 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 		segmented(group, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)(fill)
 }
 
-class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N] <: GenericContextualFactory[X, _ >: N, F]]
-(stackFactory: ContextualViewStackFactory[N], contentFactory: FromGenericContextComponentFactoryFactory[_ >: N, _, F])
+class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: ContextualViewStackFactory[N],
+                                                               contentFactory: Gccff[N, F])
 {
 	// IMPLICIT	---------------------------------
 	
