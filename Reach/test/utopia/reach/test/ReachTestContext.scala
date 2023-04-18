@@ -33,7 +33,7 @@ object ReachTestContext
 	// ATTRIBUTES   ------------------------
 	
 	implicit val log: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("Reflection")
+	implicit val exc: ExecutionContext = new ThreadPool("Reach")
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
 	

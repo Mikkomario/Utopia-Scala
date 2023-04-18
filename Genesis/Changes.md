@@ -8,6 +8,7 @@
 - **Animator** is now an abstract class
 ### New Features
 - Added mouse drag -tracking. See **MouseDragListener** and **GlobalMouseEventHandler**
+- **Drawer** now supports antialiasing
 ### New Methods
 - **Image**
   - Added `.cropped`, which removes all surrounding fully transparent pixel rows and columns

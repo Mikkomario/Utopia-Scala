@@ -8,10 +8,15 @@
       **ReachComponent with FocusRequestable**, hence the removal of generic type support in this instance
   - **ManagedField** had a lot of problems with the compiler as well, hence the new **InputField** trait / approach
 - In some component construction methods, renamed `additionalDrawers` to `customDrawers`
+### Bugfixes
+- **RadioButtonGroup** now uses correct alignment / insets
 ### New Features
 - Drag-and-drop support for external files. See **DragAndDropManager** and **DragAndDropTarget**.
+- **Switches** now support light and dark mode separately
 ### Other Changes
 - **RadioButtonLine** now requests focus when the label is clicked
+- **Switch** and **RadioButton** now use antialiasing
+- **Switches** are larger than previously
 - `CursorDefining.defineCursorFor(...)` now allows for more precise cursor customization
 
 ## v0.5 - 02.02.2023

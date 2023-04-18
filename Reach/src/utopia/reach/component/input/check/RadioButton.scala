@@ -223,27 +223,29 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 			val maxRadius = bounds.size.minDimension / 2
 			if (maxRadius > 1.0) {
 				val buttonRadius = (diameter / 2).round.toDouble min maxRadius
-				
-				// Draws the full (outer) circle first
-				drawer.draw(Circle(center, buttonRadius))(mainDsPointer.value)
-				
-				// Draws the background over the drawn circle to create an open circle
-				val emptyCircleRadius = {
-					val base = buttonRadius - ringWidth
-					(if (selected) base max 2.0 else base).round.toDouble
+				// Uses anti-aliasing while drawing
+				drawer.antialiasing.use { drawer =>
+					// Draws the full (outer) circle first
+					drawer.draw(Circle(center, buttonRadius))(mainDsPointer.value)
+					
+					// Draws the background over the drawn circle to create an open circle
+					val emptyCircleRadius = {
+						val base = buttonRadius - ringWidth
+						(if (selected) base max 2.0 else base).round.toDouble
+					}
+					if (emptyCircleRadius > 0)
+						drawer.draw(Circle(center, emptyCircleRadius))(bgDsPointer.value)
+					
+					// Draws the hover effect, if necessary
+					val hoverColor = hoverColorPointer.value
+					if (hoverColor.alpha > 0.0)
+						drawer.draw(Circle(center, (buttonRadius + hoverExtraRadius) min maxRadius))(
+							DrawSettings.onlyFill(hoverColor))
+					
+					// Finally draws the selected center, if necessary
+					if (selected)
+						drawer.draw(Circle(center, (emptyCircleRadius - emptyRingWidth) max 1.0))(mainDsPointer.value)
 				}
-				if (emptyCircleRadius > 0)
-					drawer.draw(Circle(center, emptyCircleRadius))(bgDsPointer.value)
-				
-				// Draws the hover effect, if necessary
-				val hoverColor = hoverColorPointer.value
-				if (hoverColor.alpha > 0.0)
-					drawer.draw(Circle(center, (buttonRadius + hoverExtraRadius) min maxRadius))(
-						DrawSettings.onlyFill(hoverColor))
-				
-				// Finally draws the selected center, if necessary
-				if (selected)
-					drawer.draw(Circle(center, (emptyCircleRadius - emptyRingWidth) max 1.0))(mainDsPointer.value)
 			}
 		}
 	}

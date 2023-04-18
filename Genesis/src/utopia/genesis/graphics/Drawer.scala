@@ -24,8 +24,6 @@ object Drawer
 class Drawer(protected override val graphics: LazyGraphics)
 	extends GraphicsContextLike[Drawer] with AutoCloseable with ScopeUsable[Drawer]
 {
-	// COMPUTED ------------------------------
-	
 	// IMPLEMENTED  --------------------------
 	
 	override def self = this

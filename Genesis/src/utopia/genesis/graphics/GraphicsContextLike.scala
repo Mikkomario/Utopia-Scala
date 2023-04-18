@@ -4,7 +4,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Polygonic}
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
 
-import java.awt.{AlphaComposite, Font}
+import java.awt.{AlphaComposite, Font, RenderingHints}
 
 /**
   * Provides read access to graphics related settings
@@ -52,6 +52,15 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	  */
 	def withoutClipping = withGraphics(graphics.withoutClipping)
 	
+	/**
+	  * @return A copy of this drawer where anti-aliasing is enabled
+	  */
+	def antialiasing = withAntialiasingState(true)
+	/**
+	  * @return A copy of this drawer where anti-aliasing is disabled
+	  */
+	def withoutAntialiasing = withAntialiasingState(false)
+	
 	
 	// IMPLEMENTED  ---------------------------
 	
@@ -97,5 +106,15 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	  */
 	def withAlpha(alpha: Double) = withMutatedGraphics {
 		_.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha.toFloat))
+	}
+	
+	/**
+	  * Enables or disables anti-aliasing
+	  * @param antialiasingEnabled Whether anti-aliasing should be enabled
+	  * @return Copy of this drawer with the specified rendering hint active
+	  */
+	def withAntialiasingState(antialiasingEnabled: Boolean) = withMutatedGraphics { graphics =>
+		val value = if (antialiasingEnabled) RenderingHints.VALUE_ANTIALIAS_ON else RenderingHints.VALUE_ANTIALIAS_OFF
+		graphics.wrapped.setRenderingHint(RenderingHints.KEY_ANTIALIASING, value)
 	}
 }
