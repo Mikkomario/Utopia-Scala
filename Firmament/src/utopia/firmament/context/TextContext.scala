@@ -22,12 +22,12 @@ object TextContext
 	  * @param alignment Text alignment to use (default = left)
 	  * @param allowLineBreaks Whether line breaks should be allowed within text components (default = true)
 	  * @param allowTextShrink Whether text components should be allowed to shrink their content
-	  *                        in order to conserve space (default = true)
+	  *                        in order to conserve space (default = false)
 	  * @return A new text context instance
 	  */
 	def apply(base: ColorContext, alignment: Alignment = Alignment.Left, allowLineBreaks: Boolean = true,
-	          allowTextShrink: Boolean = true): TextContext =
-		_TextContext(base, StackInsets.symmetric(base.margins.small.any, base.margins.verySmall.any),
+	          allowTextShrink: Boolean = false): TextContext =
+		_TextContext(base, StackInsets.symmetric(base.margins.aroundSmall, base.margins.aroundVerySmall),
 			alignment, base.margins.verySmall.downscaling, None, allowLineBreaks, allowTextShrink)
 	
 	

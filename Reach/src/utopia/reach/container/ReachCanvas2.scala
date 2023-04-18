@@ -10,8 +10,7 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
+import utopia.flow.view.mutable.eventful.{IndirectPointer, PointerWithEvents, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
@@ -150,24 +149,24 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	/**
 	  * A pointer that contains the up-to-date bounds of this canvas
 	  */
-	lazy val boundsPointer = contentPointer.flatMap {
-		case Some(c) => c.boundsPointer
-		case None => Fixed(Bounds.zero)
-	}
+	val boundsPointer = new PointerWithEvents(Bounds.zero)
+	// Uses an immutable version of the position and size pointer locally, exposes mutable versions publicly
+	private val _positionPointer = boundsPointer.map { _.position }
 	/**
 	  * A pointer that contains the up-to-date position of this canvas' top-left corner
 	  */
-	lazy val positionPointer = boundsPointer.map { _.position }
+	lazy val positionPointer = IndirectPointer(_positionPointer) { position = _ }
+	private val _sizePointer = boundsPointer.map { _.size }
 	/**
 	  * A pointer that contains the up-to-date size of this canvas
 	  */
-	lazy val sizePointer = boundsPointer.map { _.size }
+	lazy val sizePointer = IndirectPointer(_sizePointer) { size = _ }
 	/**
 	  * A view into the absolute position (i.e. position on screen) of this canvas element
 	  */
 	// Caches calculations if possible
 	lazy val absolutePositionView = absoluteParentPositionView match {
-		case Right(c) => Right(c.mergeWith(positionPointer) { _ + _ })
+		case Right(c) => Right(c.mergeWith(_positionPointer) { _ + _ })
 		case Left(v) => Left(View { v.value + position })
 	}
 	
@@ -182,8 +181,8 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	component.setOpaque(background.alpha >= 1.0)
 	
 	// When bounds get updated, updates the underlying component, also
-	positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
-	sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
+	_positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
+	_sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
 	
 	attachmentPointer.addListener { event =>
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
@@ -236,9 +235,10 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	override def bounds: Bounds = boundsPointer.value
 	// Could apply these updates once the content is initialized,
 	// but this feature shall not be implemented unless it becomes necessary
-	override def bounds_=(b: Bounds): Unit = currentContent.foreach { _.bounds = b }
-	override def position_=(p: Point): Unit = currentContent.foreach { _.position = p }
-	override def size_=(s: Size): Unit = currentContent.foreach { _.size = s }
+	// Please note that bounds and size updates don't come into effect before updateLayout() is called
+	override def bounds_=(b: Bounds): Unit = boundsPointer.value = b
+	override def position_=(p: Point): Unit = boundsPointer.update { _.withPosition(p) }
+	override def size_=(s: Size): Unit = boundsPointer.update { _.withSize(s) }
 	
 	override def fontMetricsWith(font: Font): FontMetricsWrapper = component.getFontMetrics(font.toAwt)
 	

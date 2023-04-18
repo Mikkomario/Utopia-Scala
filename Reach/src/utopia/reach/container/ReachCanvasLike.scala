@@ -67,9 +67,10 @@ trait ReachCanvasLike
 	  * if updates were previously ignored and can't be tracked anymore
 	  * @param targetContentSize Size to assign for the managed component
 	  */
-	def updateWholeLayout(targetContentSize: Size) = currentContent.foreach { content =>
-		updateLayout(content.toTree.branchesIterator.map { _.map { _.nav } }.toSet, targetContentSize)
-	}
+	def updateWholeLayout(targetContentSize: Size) =
+		currentContent.foreach { content =>
+			updateLayout(content.toTree.branchesIterator.map { _.map { _.nav } }.toSet, targetContentSize)
+		}
 	
 	/**
 	  * Updates component layout based on queued updates
@@ -78,9 +79,9 @@ trait ReachCanvasLike
 	  */
 	protected def updateLayout(queues: Set[Seq[ReachComponentLike]], componentTargetSize: Size) =
 	{
+		println("\nUpdating canvas layout")
 		// Updates content size
-		val contentSizeChanged = currentContent match
-		{
+		val contentSizeChanged = currentContent match {
 			case Some(content) =>
 				val requiresSizeUpdate = content.size != componentTargetSize
 				if (requiresSizeUpdate)
@@ -88,17 +89,16 @@ trait ReachCanvasLike
 				requiresSizeUpdate
 			case None => false
 		}
-		
 		// Updates content layout
 		val layoutUpdateQueues = queues.map { q: Seq[ReachComponentLike] => q -> contentSizeChanged }
-		val sizeChangeTargets: Set[ReachComponentLike] =
-		{
-			if (contentSizeChanged)
+		val sizeChangeTargets: Set[ReachComponentLike] = {
+			if (contentSizeChanged) {
+				println("Content size changed")
 				currentContent.toSet
-			else
+			} else
 				Set()
 		}
-		if (layoutUpdateQueues.nonEmpty)
+		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty)
 			updateLayoutFor(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
 	}
 	
@@ -134,8 +134,8 @@ trait ReachCanvasLike
 		val repaintZonesBuilder = new VectorBuilder[Bounds]()
 		
 		// Component -> Whether paint operation has already been queued
-		val nextTargets = componentQueues.map { case (queue, wasPainted) => queue.head -> wasPainted } ++
-			sizeChangedChildren.map { _ -> true }
+		val nextTargets = componentQueues
+			.map { case (queue, wasPainted) => queue.head -> wasPainted } ++ sizeChangedChildren.map { _ -> true }
 		// Updates the layout of the next layer (from top to bottom) components.
 		// Checks for size (and possible position) changes and queues updates for the children of components which
 		// changed size during the layout update
@@ -155,8 +155,7 @@ trait ReachCanvasLike
 			else
 				oldChildBounds.foreach { case (child, oldBounds) =>
 					val currentBounds = child.bounds
-					if (currentBounds != oldBounds)
-					{
+					if (currentBounds != oldBounds) {
 						repaintZonesBuilder += (Bounds.around(Vector(oldBounds, currentBounds)) +
 							child.parentHierarchy.positionToTopModifier)
 						if (oldBounds.size != currentBounds.size)

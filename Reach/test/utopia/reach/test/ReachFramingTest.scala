@@ -8,6 +8,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.async.process.Loop
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.paradigm.color.ColorRole.Secondary
 
 /**
   * Tests construction of a Framing
@@ -20,20 +21,21 @@ object ReachFramingTest extends App
 	
 	private val pointer = new PointerWithEvents("Some\nText")
 	val window = ReachWindow.popupContextual.using(Framing) { framingF =>
-		framingF.build(ViewTextLabel).apply(StackInsets.symmetric(margins.medium.any).expandingToLeft) { labelF =>
-			labelF.apply(pointer)
+		framingF.build(ViewTextLabel).apply(StackInsets.symmetric(margins.aroundMedium).expandingToRight) { labelF =>
+			labelF.withBackground(pointer, Secondary)
 		}
 	}
 	
 	window.visible = true
 	start()
 	
-	Loop.regularly(2.seconds, waitFirst = true) {
+	Loop.regularly(4.seconds, waitFirst = true) {
 		pointer.update { s =>
 			if (math.random() < 0.1)
-				s"$s\n$s"
+				s"$s\nMore"
 			else
 				s"$s Text"
 		}
+		println(s"${window.stackSize} / ${window.content.stackSize} / ${window.content.content.stackSize}")
 	}
 }

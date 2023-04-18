@@ -1,10 +1,13 @@
 package utopia.firmament.component.container.single
 
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
+
+import scala.annotation.tailrec
 
 /**
   * Framings are wrappers that present a component with scaling 'frames', like a painting
@@ -23,23 +26,14 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 	
 	// IMPLEMENTED	--------------------
 	
-	override def updateLayout() =
-	{
+	override def updateLayout() = {
+		println("\nUpdating framing layout")
 		// Repositions and resizes content
-		val layout = Axis2D.values.map { axis =>
-			// Calculates lengths
-			val (contentLength, topLeftMarginLength) = lengthsFor(axis)
-			// Margin cannot go below 0
-			if (topLeftMarginLength < 0)
-				axis -> (0.0, lengthAlong(axis))
-			else
-				axis -> (topLeftMarginLength, contentLength)
-		}.toMap
-		
-		val position = Point(layout(X)._1, layout(Y)._1)
-		val size = Size(layout(X)._2, layout(Y)._2)
-		
-		content.bounds = Bounds(position, size)
+		// Makes sure that the content stays within the bounds of this framing
+		val area = Bounds(Point.origin, size)
+		val newBounds = Bounds.fromFunction2D(lengthsFor)// .fittedInto(area)
+		println(s"=> Content=$newBounds\n\tArea=$area")
+		content.bounds = newBounds
 	}
 	
 	override def calculatedStackSize = content.stackSize + insets.total
@@ -47,110 +41,113 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 	
 	// OTHER	-----------------------
 	
-	// Returns content final length -> top/left margin final length
-	private def lengthsFor(axis: Axis2D) =
-	{
+	// Returns the content position and length as a span
+	private def lengthsFor(axis: Axis2D) = {
 		val myLength = lengthAlong(axis)
-		val contentLength = content.stackSize.along(axis)
-		val (firstInset, secondInset) = insets.sidesAlong(axis).toTuple
+		val contentLength = content.stackSize(axis)
+		val axisInsets = insets(axis)
 		
-		val totalAdjustment = myLength - (contentLength.optimal + firstInset.optimal + secondInset.optimal)
+		val totalAdjustment = myLength - (contentLength.optimal + axisInsets.map { _.optimal }.sum)
+		// Optimal position & optimal size
+		val optimal = Pair(axisInsets.first.optimal, contentLength.optimal)
 		
-		// Sometimes adjustment isn't necessary
-		if (totalAdjustment == 0)
-			contentLength.optimal -> firstInset.optimal
-		else
-		{
-			// Either enlarges or shrinks the components
-			if (totalAdjustment > 0)
-			{
-				val (contentAdjust, firstInsetAdjust) = adjustmentsFor(contentLength, firstInset, secondInset,
-					totalAdjustment) { l => l.max.map { _ - l.optimal } }
-				
-				(contentLength.optimal + contentAdjust) -> (firstInset.optimal + firstInsetAdjust)
+		println(s"$axis: Area=$myLength, Content=$contentLength, Insets=$axisInsets, Adjustment=$totalAdjustment")
+		
+		// Actual position & actual size
+		val applied = {
+			// Case: No adjustment is necessary => Uses default lengths
+			if (totalAdjustment == 0) {
+				println(s"No adjustment needed => $optimal")
+				optimal
 			}
-			else
-			{
-				val (contentAdjust, firstInsetAdjust) = adjustmentsFor(contentLength, firstInset, secondInset,
-					totalAdjustment) { l => Some(l.optimal - l.min) }
-				
-				(contentLength.optimal - contentAdjust) -> (firstInset.optimal - firstInsetAdjust)
+			// Case: Adjustment is needed => Distributes it between content and the insets
+			else {
+				val getMax = {
+					// Case: Enlargement required
+					if (totalAdjustment > 0) { l: StackLength => l.max.map { _ - l.optimal } }
+					// Case: Shrinking required
+					else { l: StackLength => Some(l.optimal - l.min) }
+				}
+				// Calculates the applied adjustments (content + first inset)
+				val adjustments = adjustmentsFor(contentLength, axisInsets, totalAdjustment)(getMax)
+				println(s"Adjusts by $adjustments")
+				// Returns adjusted values
+				optimal.mergeWith(adjustments) { _ + _ }
 			}
 		}
+		// Returns as a span
+		NumericSpan(applied.first, applied.sum)
 	}
 	
-	// Returns content adjustment -> first inset adjustment (with correct multiplier)
-	private def adjustmentsFor(contentLength: StackLength, firstInset: StackLength, secondInset: StackLength,
-							   totalAdjustment: Double)(getMaxAdjust: StackLength => Option[Double]): (Double, Double) =
+	// Returns adjustment to position (based on the first inset) and adjustment to content length
+	private def adjustmentsFor(contentLength: StackLength, insets: Pair[StackLength], totalAdjustment: Double)
+	                          (getMaxAdjust: StackLength => Option[Double]): Pair[Double] =
 	{
 		// First adjusts between content and total margins
-		val (contentAdjust, totalInsetsAdjust) = distributeAdjustmentBetween(contentLength, firstInset + secondInset,
-			totalAdjustment, treatAsEqual = false)(getMaxAdjust)
+		val (contentAdjust, totalInsetsAdjust) = distributeAdjustmentBetween(
+			Pair(contentLength, insets.merge { _ + _ }), totalAdjustment)(getMaxAdjust).toTuple
 		// Then adjusts between individual inset sides
-		val (firstInsetAdjust, _) =
-		{
+		val firstInsetAdjust = {
 			if (totalInsetsAdjust == 0)
-				0.0 -> 0.0
+				0.0
 			else
-				distributeAdjustmentBetween(firstInset, secondInset, totalInsetsAdjust, treatAsEqual = true)(getMaxAdjust)
+				distributeAdjustmentBetween(insets, totalInsetsAdjust)(getMaxAdjust).first
 		}
-		
-		// Returns content adjust + first inset adjust
-		contentAdjust -> firstInsetAdjust
+		Pair(firstInsetAdjust, contentAdjust)
 	}
 	
-	private def distributeAdjustmentBetween(firstLength: StackLength, secondLength: StackLength, adjustment: Double,
-											treatAsEqual: Boolean)
-										   (getMaxAdjust: StackLength => Option[Double]): (Double, Double) =
+	// Returns adjustments with the correct sign
+	private def distributeAdjustmentBetween(lengths: Pair[StackLength], adjustment: Double)
+										   (getMaxAdjust: StackLength => Option[Double]): Pair[Double] =
 	{
 		// Determines the default split based on length priorities
-		val firstPriority = firstLength.priority.isFirstAdjustedBy(adjustment)
-		val secondPriority = secondLength.priority.isFirstAdjustedBy(adjustment)
-		val (defaultFirstAdjust, defaultSecondAdjust) =
-		{
-			if (firstPriority == secondPriority)
-				(adjustment.abs / 2) -> (adjustment.abs / 2)
-			else if (firstPriority)
-				adjustment.abs -> 0.0
+		val priorities = lengths.map { _.priority.isFirstAdjustedBy(adjustment) }
+		val maxAdjustments = lengths.map(getMaxAdjust)
+		val target = adjustment.abs
+		distributeAdjustmentBetween(priorities, Pair.twice(0.0), maxAdjustments, target, target)
+			.map { _ * adjustment.sign }
+	}
+	
+	// Expects and returns adjustments as absolute values
+	// In priorities, true means low priority (expand first) and false means high priority (expand last)
+	@tailrec
+	private def distributeAdjustmentBetween(priorities: Pair[Boolean], placedAdjustments: Pair[Double],
+	                                        maxAdjustments: Pair[Option[Double]], targetAdjustment: Double,
+	                                        remainingAdjustment: Double): Pair[Double] =
+	{
+		// Splits the remaining adjustment without regard to maximums first
+		val defaultAdjustments = {
+			// Case: Equal priority => Splits the adjustment
+			if (priorities.isSymmetric)
+				placedAdjustments.map { _ + remainingAdjustment / 2 }
+			// Case: Unequal priority => Adjusts one of the components first
 			else
-				0.0 -> adjustment
-		}
-		
-		val firstMaxAdjust = getMaxAdjust(firstLength)
-		
-		// If content maximum is reached, puts the remaining adjustment to margin
-		if (firstMaxAdjust.exists { defaultFirstAdjust >= _ })
-		{
-			val remainsAfterMaxed = defaultFirstAdjust - firstMaxAdjust.get
-			firstMaxAdjust.get -> (defaultSecondAdjust + remainsAfterMaxed)
-		}
-		else
-		{
-			val secondMaxAdjust = getMaxAdjust(secondLength)
-			
-			// If margin maximum is reached, puts the remaining adjustment to component
-			// (until maxed, after which puts to margin anyway (or to both if treated equally))
-			if (secondMaxAdjust.exists { defaultSecondAdjust >= _ })
-			{
-				val remainsAfterSecondMaxed = defaultSecondAdjust - secondMaxAdjust.get
-				val proposedFirstAdjust = defaultFirstAdjust + remainsAfterSecondMaxed
-				
-				if (firstMaxAdjust.exists { proposedFirstAdjust > _ })
-				{
-					val remainsAfterFirstMaxed = proposedFirstAdjust - firstMaxAdjust.get
-					if (treatAsEqual)
-						(firstMaxAdjust.get + remainsAfterFirstMaxed / 2) -> (secondMaxAdjust.get + remainsAfterFirstMaxed / 2)
-					else
-						firstMaxAdjust.get -> (secondMaxAdjust.get + remainsAfterFirstMaxed)
+				priorities.mergeWith(placedAdjustments) { (isLow, placed) =>
+					if (isLow) placed + remainingAdjustment else placed
 				}
-				else
-				{
-					proposedFirstAdjust -> secondMaxAdjust.get
+		}
+		// If content (first) maximum is reached, puts the remaining adjustment to margin (second)
+		// This, except when both maximums are reached
+		val maxStatus = defaultAdjustments.mergeWith(maxAdjustments) { (default, max) => max.exists { _ < default } }
+		
+		// Case: No maximizing or both have been maximized => Implements the default distribution
+		if (maxStatus.forall { !_ } || maxStatus.isSymmetric)
+			defaultAdjustments
+		// Case: One is maximized => Applies the maximum default(s) at least
+		else {
+			val maxAdjusted = defaultAdjustments.mergeWith(maxAdjustments) { (target, max) =>
+				max match {
+					case Some(max) => target min max
+					case None => target
 				}
 			}
-			// If neither is reached, adjusts both equally
+			val stillRemaining = targetAdjustment - maxAdjusted.sum
+			// Case: Some adjustment is still required => Uses recursion
+			if (stillRemaining > 0)
+				distributeAdjustmentBetween(priorities, maxAdjusted, maxAdjustments, targetAdjustment, stillRemaining)
+			// Case: No more adjustment required => Completes
 			else
-				defaultFirstAdjust -> defaultSecondAdjust
+				maxAdjusted
 		}
 	}
 }

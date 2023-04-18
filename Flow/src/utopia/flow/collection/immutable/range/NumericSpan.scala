@@ -1,5 +1,6 @@
 package utopia.flow.collection.immutable.range
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator._
 
@@ -29,6 +30,13 @@ object NumericSpan
 	  * @return A new numeric span
 	  */
 	def apply[N](start: N, end: N, step: N)(implicit n: Numeric[N]): NumericSpan[N] = new _NumericSpan(start, end, step)
+	/**
+	  * @param ends Start and end points as a pair
+	  * @param n Implicit numeric implementation
+	  * @tparam N Type of numeric values used
+	  * @return A span that uses the specified end-points
+	  */
+	def apply[N](ends: Pair[N])(implicit n: Numeric[N]): NumericSpan[N] = apply(ends.first, ends.second)
 	
 	/**
 	  * @param span A span
@@ -38,7 +46,7 @@ object NumericSpan
 	  */
 	def from[N](span: HasInclusiveEnds[N])(implicit n: Numeric[N]): NumericSpan[N] = span match {
 		case s: NumericSpan[N] => s
-		case o => apply(span.start, span.end)
+		case o => apply(o.start, o.end)
 	}
 	
 	
