@@ -19,7 +19,8 @@ import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.ColorRole.Secondary
-import utopia.paradigm.color.{Color, ColorRole}
+import utopia.paradigm.color.ColorShade.{Dark, Light}
+import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
@@ -36,7 +37,7 @@ object Switch extends Cff[SwitchFactory]
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private val shadowDs = DrawSettings.onlyFill(Color.black.withAlpha(0.1))
+	private val shadowDs = DrawSettings.onlyFill(Color.black.withAlpha(0.15))
 	
 	
 	// IMPLEMENTED	--------------------------------
@@ -63,6 +64,9 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 	  * @param knobShadowOffset Offset applied for the knob shadow effect (default = 1px left and down)
 	  * @param valuePointer A mutable pointer to this switches pointer (default = new pointer)
 	  * @param enabledPointer A pointer containing the enabled status of this switch (default = always enabled)
+	  * @param shade The shade of this switch (dark or light). Call-by-name.
+	  *              Use a value suitable against the current background.
+	  *              Default = Light.
 	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
 	  * @param customDrawers Custom drawers applied to this switch (default = empty)
 	  * @param focusListeners Focus listeners applied to this switch (default = empty)
@@ -71,11 +75,11 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 	def apply(actorHandler: ActorHandler, color: Color,
 	          knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-	          enabledPointer: Changing[Boolean] = AlwaysTrue,
+	          enabledPointer: Changing[Boolean] = AlwaysTrue, shade: => ColorShade = Light,
 	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 		new Switch(parentHierarchy, actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset,
-			valuePointer, enabledPointer, animationDuration, customDrawers, focusListeners)
+			valuePointer, enabledPointer, shade, animationDuration, customDrawers, focusListeners)
 }
 
 case class ContextualSwitchFactory(factory: SwitchFactory, context: ColorContext)
@@ -104,11 +108,12 @@ case class ContextualSwitchFactory(factory: SwitchFactory, context: ColorContext
 	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 			 (implicit animationContext: AnimationContext) =
 	{
-		val knobR = context.margins.medium * 0.75
-		val xOffset = (knobR * 0.1) min 1.0
-		val yOffset = (knobR * 0.2) min 2.0
+		val knobR = context.margins.medium
+		val xOffset = (knobR * 0.2) min 1.0
+		val yOffset = (knobR * 0.3) min 2.0
+		val shade = context.background.shade.opposite
 		factory(animationContext.actorHandler, context.color(colorRole), knobR * 2, knobR * 0.75,
-			Vector2D(-xOffset, yOffset), valuePointer, enabledPointer, animationContext.animationDuration,
+			Vector2D(-xOffset, yOffset), valuePointer, enabledPointer, shade, animationContext.animationDuration,
 			customDrawers, focusListeners)
 	}
 }
@@ -121,7 +126,7 @@ case class ContextualSwitchFactory(factory: SwitchFactory, context: ColorContext
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-             enabledPointer: Changing[Boolean] = AlwaysTrue,
+             enabledPointer: Changing[Boolean] = AlwaysTrue, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
              additionalDrawers: Vector[CustomDrawer] = Vector(),
              additionalFocusListeners: Seq[FocusListener] = Vector())
@@ -137,8 +142,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	// The "bar" is exactly two knobs wide and 70% knob high
 	// The width and height are then extended on both sides by extra hover radius, which is not included in the
 	// minimum size. The switch extends horizontally, but only up to 200%
-	override val calculatedStackSize =
-	{
+	override val calculatedStackSize = {
 		val standardWidth = knobDiameter * 2
 		val optimalHeight = knobDiameter + hoverExtraRadius * 2
 		StackSize(StackLength(standardWidth, standardWidth + hoverExtraRadius * 2,
@@ -153,17 +157,13 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	// INITIAL CODE	--------------------------------
 	
 	setup(baseStatePointer)
-	
 	valuePointer.addContinuousListener { event => SwitchDrawer.updateTarget(event.newValue) }
-	
 	addHierarchyListener { isAttached =>
-		if (isAttached)
-		{
+		if (isAttached) {
 			actorHandler += SwitchDrawer
 			GlobalKeyboardEventHandler += ArrowKeyListener
 		}
-		else
-		{
+		else {
 			actorHandler -= SwitchDrawer
 			GlobalKeyboardEventHandler -= ArrowKeyListener
 		}
@@ -181,9 +181,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	override protected def trigger() = value = !value
 	
-	// TODO: Handle unselected color selection better
-	override def cursorToImage(cursor: Cursor, position: Point) =
-		if (value) cursor.over(color) else cursor.over(Color.white)
+	override def cursorToImage(cursor: Cursor, position: Point) = if (value) cursor.over(color) else cursor.over(shade)
 	
 	
 	// NESTED	------------------------------------
@@ -212,6 +210,10 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		override def draw(drawer: Drawer, bounds: Bounds) = {
 			if (bounds.size.isPositive) {
 				val actualDrawer = if (enabled) drawer else drawer.withAlpha(0.66)
+				val baseColor = shade match {
+					case Light => Color.white
+					case Dark => Color.black
+				}
 				
 				// Calculates drawn area bounds
 				val shorterSide = bounds.size.minDimension
@@ -231,7 +233,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				if (hoverR > 0 && enabled) {
 					val hoverAlpha = Switch.this.state.hoverAlpha
 					if (hoverAlpha > 0) {
-						val baseHoverColor = if (value) color else Color.textBlackDisabled
+						val baseHoverColor = if (value) color else baseColor
 						actualDrawer.draw(Circle(Point(knobX, y), knobR + hoverR))(
 							DrawSettings.onlyFill(baseHoverColor.timesAlpha(hoverAlpha)))
 					}
@@ -241,12 +243,14 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				val barR = knobR * 0.7
 				val barStartY = y - barR
 				val barHeight = 2 * barR
+				// Draws the left background side (gray)
 				if (progress < 1) {
 					actualDrawer.draw(
 						Bounds(Point(knobX - barR, barStartY), Size(maxKnobX - knobX + 2 * barR, barHeight))
 							.toRoundedRectangle(1.0))(
 						DrawSettings.onlyFill(color.timesAlpha(0.66).grayscale))
 				}
+				// Draws the right background side (color)
 				if (progress > 0) {
 					actualDrawer.draw(
 						Bounds(Point(minKnobX - barR, barStartY), Size(knobX - minKnobX + 2 * barR, barHeight))
@@ -259,9 +263,9 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 					if (progress >= 1)
 						color
 					else if (progress <= 0)
-						Color.white
+						baseColor
 					else
-						color.average(Color.white, progress, 1 - progress)
+						color.average(baseColor, progress, 1 - progress)
 				}
 				val knob = Circle(Point(knobX, y), knobR)
 				if (enabled && knobShadowOffset.nonZero)
@@ -270,8 +274,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 			}
 		}
 		
-		override def act(duration: FiniteDuration) =
-		{
+		override def act(duration: FiniteDuration) = {
 			val increment = duration / animationDuration
 			currentProgress = (currentProgress + increment) min 1.0
 			repaint(VeryHigh)
@@ -280,12 +283,10 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		// OTHER	-----------------
 		
-		def updateTarget(newStatus: Boolean) =
-		{
+		def updateTarget(newStatus: Boolean) = {
 			val startValue = state
 			val newTarget = if (newStatus) 1.0 else 0.0
-			if (startValue != newTarget)
-			{
+			if (startValue != newTarget) {
 				val transition = newTarget - startValue
 				currentAnimation = Animation { p => startValue + p * transition }.projectileCurved
 				currentProgress = 0.0

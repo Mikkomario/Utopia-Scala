@@ -344,7 +344,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				frame.setResizable(resizeLogic.allowsUserResize)
 		}
 		component.setFocusableWindowState(isFocusable)
-		component.setFocusable(isFocusable)
 		component.pack()
 		
 		// Sets transparent background if content doesn't have a background itself
@@ -355,8 +354,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Initializes position and size
 		_positionPointer.value = Point.of(component.getLocation)
 		_sizePointer.value = Size.of(component.getSize)
-		if (isNotFullScreen)
-			_boundsPointer.onNextChange { _ => centerOnParent() }
 		AwtEventThread.async { optimizeBounds(dictateSize = true) }
 		
 		// Registers to update the state when the wrapped window updates
@@ -671,24 +668,34 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  *                  (default = whether focus is generally allowed in this window)
 	  * @return Whether the state of this window was affected
 	  */
-	def display(gainFocus: Boolean = isFocusable): Boolean = {
+	def display(gainFocus: Boolean = isFocusable, centerOnParent: Boolean = false): Boolean = {
 		// Case: Closed => No change
 		if (hasClosed)
 			false
-		// Case: Default focus option => Updates visibility
-		else if (gainFocus == isFocusable)
-			visible = true
-		// Case: Already visible => No change
-		else if (visible)
-			false
-		// Case: Focus style altered => Makes visible with altered focus style
 		else {
-			AwtEventThread.async {
-				component.setFocusableWindowState(gainFocus)
-				visible = true
-				component.setFocusableWindowState(isFocusable)
+			// Centers on parent once visible, if requested
+			if (centerOnParent) {
+				if (visible)
+					this.centerOnParent()
+				else
+					visiblePointer.onNextChange { _ => this.centerOnParent() }
 			}
-			true
+			
+			// Case: Default focus option => Updates visibility
+			if (gainFocus == isFocusable)
+				visible = true
+			// Case: Already visible => No change
+			else if (visible)
+				false
+			// Case: Focus style altered => Makes visible with altered focus style
+			else {
+				AwtEventThread.async {
+					component.setFocusableWindowState(gainFocus)
+					visible = true
+					component.setFocusableWindowState(isFocusable)
+				}
+				true
+			}
 		}
 	}
 	
@@ -750,6 +757,12 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			addMouseButtonListener(listener)
 		}
 	}
+	/**
+	  * Makes it so that this window closes automatically after the specified time period
+	  * @param delay Delay before closing this window
+	  * @param log Implicit logging implementation for handling unexpected non-critical errors
+	  */
+	def setToCloseAfter(delay: Duration)(implicit log: Logger) = delay.finite.foreach { Delay(_) { close() } }
 	/**
 	  * Sets it so that the JVM will exit once this window closes.
 	  * @param delay Delay after window closing, before the closing of the JVM

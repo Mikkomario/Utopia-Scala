@@ -228,8 +228,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @param forceFocusLeave Whether to force the focus to leave the current component without testing its consent.
 	  *                        If true, no FocusLeaving events will be generated. Default = false.
 	  */
-	def moveFocus(direction: Sign = Positive, forceFocusLeave: Boolean = false) =
-	{
+	def moveFocus(direction: Sign = Positive, forceFocusLeave: Boolean = false) = {
 		// Checks whether there are other focusable components to target outside the managed focus system
 		// If not, loops the focus inside the system without yielding it
 		val isNextComponentAvailable = canYieldFocus(direction)
@@ -488,7 +487,6 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		}
 		
 		override def windowClosing(e: WindowEvent) = removeOwnershipOf(e.getWindow)
-		
 		override def windowClosed(e: WindowEvent) = removeOwnershipOf(e.getWindow)
 		
 		

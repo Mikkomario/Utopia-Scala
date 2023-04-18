@@ -50,7 +50,7 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	  * @return The intensity of this status, where 0 is no effect.
 	  *         May be positive or negative.
 	  */
-	def intensity = implicitStates.map { _.effect.modifier }.sum
+	def intensity = implicitStates.iterator.map { _.effect.modifier }.sum
 	
 	/**
 	  * @return Hover effect alpha value to use with this status
@@ -58,7 +58,7 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	def hoverAlpha = {
 		val i = intensity
 		if (i > 0)
-			0.1 + i * 0.05
+			0.2 + (i - 1) * 0.1
 		else
 			0
 	}
