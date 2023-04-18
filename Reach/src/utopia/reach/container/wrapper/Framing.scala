@@ -8,7 +8,6 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
@@ -106,8 +105,7 @@ case class ContextualFramingFactory[N](factory: FramingFactory, context: N)
 	  * @tparam F Type of component factories used
 	  * @return A new framing builder that will also construct framing contents
 	  */
-	def build[F[X <: N]](contentFactory: Gccff[N, F]) =
-		new ContextualFramingBuilder[N, F](factory, context, contentFactory)
+	def build[F](contentFactory: Ccff[N, F]) = new ContextualFramingBuilder[N, F](factory, context, contentFactory)
 }
 
 case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: ComponentFactoryFactory[F])
@@ -130,7 +128,7 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 	}
 }
 
-class ContextualFramingBuilder[N, +F[X <: N]](factory: FramingFactory, context: N, contentFactory: Gccff[N, F])
+class ContextualFramingBuilder[N, +F](factory: FramingFactory, context: N, contentFactory: Ccff[N, F])
 {
 	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
 	
@@ -145,7 +143,7 @@ class ContextualFramingBuilder[N, +F[X <: N]](factory: FramingFactory, context: 
 	  */
 	def apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
 										  customDrawers: Vector[CustomDrawer] = Vector())
-										 (fill: F[N] => ComponentCreationResult[C, R]) =
+										 (fill: F => ComponentCreationResult[C, R]) =
 	{
 		val content = Open.withContext(context)(contentFactory)(fill)
 		factory(content, insets, customDrawers)

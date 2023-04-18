@@ -32,7 +32,7 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.{FromGenericContextComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
@@ -41,23 +41,25 @@ import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.context.ReachWindowContext
+import utopia.reach.context.{PopupContext, ReachWindowContext}
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
-// TODO: Switch to using PopupContext
-object FieldWithSelectionPopup extends Gccff[TextContext, ContextualFieldWithSelectionPopupFactory]
+object FieldWithSelectionPopup extends Gccff[PopupContext, ContextualFieldWithSelectionPopupFactory]
 {
-	override def withContext[N <: TextContext](parentHierarchy: ComponentHierarchy, context: N) =
+	override def withContext[N <: PopupContext](parentHierarchy: ComponentHierarchy, context: N) =
 		ContextualFieldWithSelectionPopupFactory[N](parentHierarchy, context)
 }
 
-case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHierarchy: ComponentHierarchy,
-																		   context: N)
-	extends GenericContextualFactory[N, TextContext, ContextualFieldWithSelectionPopupFactory]
+case class ContextualFieldWithSelectionPopupFactory[+N <: PopupContext](parentHierarchy: ComponentHierarchy,
+                                                                        context: N)
+	extends GenericContextualFactory[N, PopupContext, ContextualFieldWithSelectionPopupFactory]
 {
-	override def withContext[N2 <: TextContext](newContext: N2) = copy(context = newContext)
+	private implicit val c: PopupContext = context
+	
+	override def withContext[N2 <: PopupContext](newContext: N2) =
+		copy(context = newContext)
 	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
@@ -87,7 +89,6 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHie
 	  * @param makeRightHintLabel – A function for producing an additional right edge hint field.
 	  *                           Accepts created main field and component creation context.
 	  *                           Returns an open component or None if no label should be placed.
-	  * @param popupContext Context that is used for the created pop-up windows.
 	  * @param scrollingContext Context used for the created scroll view
 	  * @param exc Context used for parallel operations
 	  * @param log Logger for various errors
@@ -117,8 +118,7 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContext](parentHie
 	                             (makeDisplay: (ComponentHierarchy, A) => D)
 	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
-	                             (implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext,
-	                              exc: ExecutionContext, log: Logger) =
+	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,

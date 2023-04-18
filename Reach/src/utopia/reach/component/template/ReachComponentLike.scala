@@ -319,7 +319,8 @@ trait ReachComponentLike extends Stackable
 	                                            (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{
-		val window = ReachWindow.anchoredTo(this, alignment, margin, title, keepAnchored)(createContent)
+		val window = ReachWindow.contextual.anchoredTo(this, alignment, margin, title,
+			keepAnchored)(createContent)
 		if (display)
 			window.display()
 		window

@@ -1,5 +1,6 @@
 package utopia.reach.context
 import utopia.firmament.context.TextContext
+import utopia.paradigm.color.Color
 
 /**
   * A common trait for context classes which wrap a popup context instance
@@ -30,6 +31,9 @@ trait PopupContextWrapper[+Repr] extends PopupContextLike[Repr]
 	override def withReachWindowContext(base: ReachWindowContext): Repr =
 		mapPopupContext { _.withReachWindowContext(base) }
 	override def withTextContext(textContext: TextContext): Repr = mapPopupContext { _.withTextContext(textContext) }
+	
+	override def withWindowBackground(bg: Color) = mapPopupContext { _.withWindowBackground(bg) }
+	override def withBackground(background: Color) = mapPopupContext { _.withBackground(background) }
 	
 	
 	// OTHER    --------------------

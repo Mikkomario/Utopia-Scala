@@ -16,6 +16,7 @@ import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas2
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.context.PopupContext.apply
 import utopia.reach.window.ReachWindow
 
 /**
@@ -38,33 +39,34 @@ object DropDownTest extends App
 		implicit val canvas: ReachCanvas2 = hierarchy.top
 		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack.static[ColorContext])
 			.apply(margins.medium.any.square) { stackF =>
-				stackF.mapContext { _.forTextComponents }.build(DropDown).column(areRelated = true) { ddF =>
-					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
-					val selectedItemPointer = new PointerWithEvents[Option[String]](None)
-					
-					selectedItemPointer.addListener { e => println(e) }
-					
-					Vector(
-						ddF.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer, expandIcon.toOption,
-							shrinkIcon.toOption, fieldNamePointer = Fixed("Category"),
-							promptPointer = Fixed("Select One")),
-						ddF.simple(selectedCategoryPointer.map {
-							case Some(category) => items(category)
-							case None => Vector()
-						}, selectedItemPointer, expandIcon.toOption, shrinkIcon.toOption,
-							fieldNamePointer = selectedCategoryPointer.map
-							{
-								case Some(category) => category
-								case None => "Item"
-							}, hintPointer = selectedCategoryPointer.map {
-								case Some(_) => LocalizedString.empty
-								case None => "Select category first"
-							},
-							promptPointer = Fixed("Select One"),
-							noOptionsView = Some(Open.using(TextLabel) { _.withContext(ddF.context).apply(
-								"Please select a category first", isHint = true) }))
-					)
-				}
+				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.build(DropDown)
+					.column(areRelated = true) { ddF =>
+						val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
+						val selectedItemPointer = new PointerWithEvents[Option[String]](None)
+						
+						selectedItemPointer.addListener { e => println(e) }
+						
+						Vector(
+							ddF.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer, expandIcon.toOption,
+								shrinkIcon.toOption, fieldNamePointer = Fixed("Category"),
+								promptPointer = Fixed("Select One")),
+							ddF.simple(selectedCategoryPointer.map {
+								case Some(category) => items(category)
+								case None => Vector()
+							}, selectedItemPointer, expandIcon.toOption, shrinkIcon.toOption,
+								fieldNamePointer = selectedCategoryPointer.map
+								{
+									case Some(category) => category
+									case None => "Item"
+								}, hintPointer = selectedCategoryPointer.map {
+									case Some(_) => LocalizedString.empty
+									case None => "Select category first"
+								},
+								promptPointer = Fixed("Select One"),
+								noOptionsView = Some(Open.using(TextLabel) { _.withContext(ddF.context).apply(
+									"Please select a category first", isHint = true) }))
+						)
+					}
 			}
 	}
 	

@@ -29,8 +29,7 @@ object ReachWindowTest extends App
 		ViewTextLabel(hierarchy).contextual.apply(textPointer, customDrawers = Vector(BackgroundDrawer(bg)))
 	}*/
 	val window = ReachWindow.withResizeLogic(User)
-		.withTextContext(baseContext.against(colors.primary).forTextComponents
-			.larger.larger.withTextInsetsScaledBy(4).withoutShrinkingText)
+		.withWindowBackground(colors.primary.default).larger.larger.withTextInsetsScaledBy(4).withoutShrinkingText
 		.using(ViewTextLabel, title = "Test") { _(textPointer) }
 	
 	Loop.regularly(5.seconds, waitFirst = true) {

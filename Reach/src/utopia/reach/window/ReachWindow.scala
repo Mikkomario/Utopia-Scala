@@ -45,8 +45,8 @@ object ReachWindow
 	// IMPLICIT ---------------------------
 	
 	implicit def autoFactory(f: ReachWindow.type)
-	                        (implicit c: ReachWindowContext, exc: ExecutionContext, log: Logger): ContextualReachWindowFactory =
-		f.contextual
+	                        (implicit c: PopupContext, exc: ExecutionContext, log: Logger): ReachPopupFactory =
+		f.popupContextual
 	
 	
 	// COMPUTED ---------------------------
@@ -59,6 +59,14 @@ object ReachWindow
 	  */
 	def contextual(implicit context: ReachWindowContext, exc: ExecutionContext, log: Logger) =
 		withContext(context)
+	/**
+	  * @param context Implicit popup window creation context
+	  * @param exc     Implicit execution context
+	  * @param log     Implicit logging execution
+	  * @return A new Reach window factory that uses the specified context
+	  */
+	def popupContextual(implicit context: PopupContext, exc: ExecutionContext, log: Logger): ReachPopupFactory =
+		contextual.withTextContext(context.textContext)
 	
 	
 	// OTHER    ---------------------------
@@ -144,7 +152,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		lazy val revalidation = revalidate(lazyWindow, lazyCanvas, context.revalidationStyle)
 		
 		// Creates the canvas
-		val canvas = ReachCanvas2(attachmentPointer, Right(absoluteWindowPositionPointer), context.background,
+		val canvas = ReachCanvas2(attachmentPointer, Right(absoluteWindowPositionPointer), context.windowBackground,
 			context.cursors, disableFocus = !context.focusEnabled) { _ => revalidation() }(createContent)
 		canvasPointer.set(canvas)
 		
@@ -349,6 +357,7 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	
 	/**
 	  * Creates a new reach window instance
+	  * @param factory       A component creation factory to use in the window content creation
 	  * @param parent        Parent window, if applicable.
 	  *                      Setting this to None will cause a Frame to be created, otherwise a Dialog will be created.
 	  * @param title         Title shown on the OS header of this window, if applicable (default = empty)
@@ -370,6 +379,7 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	
 	/**
 	  * Creates a new window, which is anchored so that it stays close to the owner component
+	  * @param factory       A component creation factory to use in the window content creation
 	  * @param component          A component that "owns" this window
 	  * @param preferredAlignment Alignment used when positioning this window relative to the owner component.
 	  *                           E.g. If Center is used, will position this window over the center of that component.

@@ -31,12 +31,12 @@ trait ReachWindowContextWrapper[+Repr, +Textual] extends ReachWindowContextLike[
 	
 	override def windowContext: WindowContext = reachWindowContext
 	
-	override def background: Color = reachWindowContext.background
+	override def windowBackground: Color = reachWindowContext.windowBackground
 	override def cursors: Option[CursorSet] = reachWindowContext.cursors
 	override def revalidationStyle: RevalidationStyle = reachWindowContext.revalidationStyle
 	override def getAnchor: (ReachCanvas2, Bounds) => Point = reachWindowContext.getAnchor
 	
-	override def withBackground(bg: Color): Repr = mapReachWindowContext { _.withBackground(bg) }
+	override def withWindowBackground(bg: Color): Repr = mapReachWindowContext { _.withWindowBackground(bg) }
 	override def withCursors(cursors: Option[CursorSet]): Repr = mapReachWindowContext { _.withCursors(cursors) }
 	override def withRevalidationStyle(style: RevalidationStyle): Repr = mapReachWindowContext { _.withRevalidationStyle(style) }
 	override def withGetAnchor(getAnchor: (ReachCanvas2, Bounds) => Point): Repr =

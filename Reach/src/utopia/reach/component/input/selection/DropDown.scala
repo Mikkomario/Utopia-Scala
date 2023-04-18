@@ -1,7 +1,7 @@
 package utopia.reach.component.input.selection
 
 import utopia.firmament.component.display.Refreshable
-import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
+import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
@@ -20,7 +20,7 @@ import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{ColorRole, ColorShade}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.TextContextualFactory
+import utopia.reach.component.factory.PopupContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldWithSelectionPopup
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
@@ -28,7 +28,7 @@ import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.context.ReachWindowContext
+import utopia.reach.context.PopupContext
 import utopia.reach.cursor.CursorType.Interactive
 
 import scala.concurrent.ExecutionContext
@@ -39,17 +39,20 @@ import scala.concurrent.ExecutionContext
   * @since 23.12.2020, v0.1
   */
 // TODO: Use PopupContext instead
-object DropDown extends Ccff[TextContext, ContextualDropDownFactory]
+object DropDown extends Ccff[PopupContext, ContextualDropDownFactory]
 {
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) = ContextualDropDownFactory(hierarchy, context)
+	override def withContext(hierarchy: ComponentHierarchy, context: PopupContext) =
+		ContextualDropDownFactory(hierarchy, context)
 }
 
-case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
-	extends TextContextualFactory[ContextualDropDownFactory]
+case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, context: PopupContext)
+	extends PopupContextualFactory[ContextualDropDownFactory]
 {
+	private implicit val c: PopupContext = context
+	
 	override def self: ContextualDropDownFactory = this
 	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContext(newContext: PopupContext) = copy(context = newContext)
 	
 	// TODO: Add enabled pointer parameter
 	
@@ -76,7 +79,6 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param makeDisplay        A function for constructing new item option fields in the pop-up selection list.
 	  *                           Accepts a component hierarcy, and the item to display initially.
 	  *                           Returns a field that can display such a value.
-	  * @param popupContext       Context that is used for the created pop-up windows.
 	  * @param scrollingContext   Context used for the created scroll view
 	  * @param exc                Context used for parallel operations
 	  * @param log                Logger for various errors
@@ -101,7 +103,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	 focusColorRole: ColorRole = Secondary, sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeDisplay: (ComponentHierarchy, A) => C)
-	(implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
+	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
 		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty }
@@ -155,7 +157,6 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param fillBackground Whether filled field style should be used (default = global default)
-	  * @param popupContext     Context that is used for the created pop-up windows.
 	  * @param scrollingContext Context used for the created scroll view
 	  * @param exc              Context used for parallel operations
 	  * @param log              Logger for various errors
@@ -175,7 +176,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
 	 sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	(implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
+	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 	{
 		val mainDisplayFunction = DisplayFunction.wrap[Option[A]] {
 			case Some(item) => displayFunction(item)

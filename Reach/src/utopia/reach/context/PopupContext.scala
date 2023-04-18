@@ -1,6 +1,7 @@
 package utopia.reach.context
 
 import utopia.firmament.context.TextContext
+import utopia.paradigm.color.Color
 
 object PopupContext
 {
@@ -37,6 +38,10 @@ object PopupContext
 			if (base == reachWindowContext) self else copy(reachWindowContext = base)
 		
 		override def *(mod: Double): PopupContext = withTextContext(textContext * mod)
+		
+		override def withWindowBackground(bg: Color) = withBackground(bg)
+		override def withBackground(background: Color) =
+			copy(reachWindowContext.withWindowBackground(background), textContext.withBackground(background))
 	}
 }
 

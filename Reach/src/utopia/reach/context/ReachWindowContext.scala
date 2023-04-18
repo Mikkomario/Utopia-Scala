@@ -41,14 +41,17 @@ object ReachWindowContext
 	
 	// NESTED   -----------------------
 	
-	private case class _ReachWindowContext(windowContext: WindowContext, background: Color, cursors: Option[CursorSet],
+	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color, cursors: Option[CursorSet],
 	                                       revalidationStyle: RevalidationStyle, customDrawers: Vector[CustomDrawer],
 	                                       getAnchor: (ReachCanvas2, Bounds) => Point)
 		extends ReachWindowContext
 	{
 		override def self: ReachWindowContext = this
 		
-		override def withBackground(bg: Color): ReachWindowContext = copy(background = bg)
+		override def transparent =
+			super.transparent.mapWindowBackground { _.withAlpha(0.0) }
+		
+		override def withWindowBackground(bg: Color): ReachWindowContext = copy(windowBackground = bg)
 		override def withCursors(cursors: Option[CursorSet]): ReachWindowContext = copy(cursors = cursors)
 		override def withRevalidationStyle(style: RevalidationStyle): ReachWindowContext =
 			copy(revalidationStyle = style)

@@ -16,7 +16,7 @@ import utopia.paradigm.color.{ColorScheme, ColorSet}
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.measurement.DistanceExtensions._
-import utopia.reach.context.ReachWindowContext
+import utopia.reach.context.{PopupContext, ReachWindowContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -52,8 +52,9 @@ object ReachTestContext
 	val font = Font("Arial", (cm * 0.75).round.toInt, Plain)
 	val margins = Margins((cm * 0.5).round.toInt)
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
-	implicit val windowContext: ReachWindowContext = ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
+	implicit val windowContext: PopupContext = ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
 		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
+		.withTextContext(baseContext)
 	
 	private val actionLoop = new ActorLoop(actorHandler, 5 to 60)
 	

@@ -1,15 +1,14 @@
 package utopia.reach.context
 
-import utopia.firmament.context.{TextContext, WindowContextWrapper}
+import utopia.firmament.context.{BaseContext, TextContext, WindowContextWrapper}
 import utopia.flow.collection.immutable.range.Span
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
 import utopia.reach.container.{ReachCanvas2, RevalidationStyle}
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}
 import utopia.reach.cursor.{Cursor, CursorSet, CursorType}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.paradigm.color.Color
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -26,7 +25,7 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	/**
 	  * @return The background color used in created windows
 	  */
-	def background: Color
+	def windowBackground: Color
 	/**
 	  * @return Cursors used in created canvases
 	  */
@@ -46,7 +45,7 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  * @param bg New background color to use
 	  * @return Context copy with specified background color
 	  */
-	def withBackground(bg: Color): Repr
+	def withWindowBackground(bg: Color): Repr
 	/**
 	  * @param cursors New set of cursors to use. None if no cursors should be used.
 	  * @return A copy of this context with those cursors in use
@@ -111,7 +110,7 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  * @param f A mapping function for background color
 	  * @return Context copy with mapped window background
 	  */
-	def mapBackground(f: Color => Color) = withBackground(f(background))
+	def mapWindowBackground(f: Color => Color) = withWindowBackground(f(windowBackground))
 	
 	def mapRevalidationStyle(f: RevalidationStyle => RevalidationStyle) =
 		withRevalidationStyle(f(revalidationStyle))
@@ -182,6 +181,12 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  */
 	def withAnchorAlignment(alignment: Alignment) = withGetAnchor { (_, b) => alignment.origin(b) }
 	
+	/**
+	  * @param context Context to use for creating window contents
+	  * @return A copy of this context that can create window content, also
+	  */
+	def withTextContext(context: BaseContext): Textual =
+		withTextContext(context.against(windowBackground).forTextComponents: TextContext)
 	/**
 	  * @param textContext A text context to add to this window context
 	  * @return A context suitable for creating popup windows
