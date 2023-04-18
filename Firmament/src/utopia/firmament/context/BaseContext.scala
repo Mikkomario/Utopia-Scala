@@ -1,14 +1,13 @@
 package utopia.firmament.context
 
+import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
-import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackLength
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
-import utopia.firmament.localization.Localizer
-import utopia.firmament.model.stack.StackLength
 
 object BaseContext
 {
@@ -41,10 +40,11 @@ object BaseContext
 	{
 		// ATTRIBUTES   ------------------------------
 		
-		override lazy val stackMargin: StackLength = customStackMargins.getOrElse(margins.medium.any)
+		override lazy val stackMargin: StackLength = customStackMargins
+			.getOrElse(StackLength(margins.verySmall, margins.medium, margins.large))
 		override lazy val smallStackMargin = customStackMargins match {
-			case Some(margins) => margins * 0.382
-			case None => margins.small.downscaling
+			case Some(margins) => margins * this.margins.diffMod
+			case None => StackLength(0, margins.small, margins.medium)
 		}
 		
 		

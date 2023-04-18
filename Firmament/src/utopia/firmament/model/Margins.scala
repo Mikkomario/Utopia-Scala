@@ -8,6 +8,9 @@ import utopia.flow.operator.LinearScalable
   * @author Mikko Hilpinen
   * @since 17.11.2019, Reflection v1
   * @param medium The standard margin
+  * @param diffMod A modifier that represents the difference between two states,
+  *                such as the medium and the large margin.
+  *                Default = 0.382 = 38.2% difference.
   */
 case class Margins(medium: Double, diffMod: Double = 0.382) extends LinearScalable[Margins]
 {

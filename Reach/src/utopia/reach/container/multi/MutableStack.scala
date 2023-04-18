@@ -171,7 +171,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 			revalidate()
 		}
 	}
-	
 	override def layout = _layout
 	def layout_=(newLayout: StackLayout) = {
 		if (_layout != newLayout) {
@@ -179,7 +178,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 			revalidate()
 		}
 	}
-	
 	override def margin = _margin
 	def margin_=(newMargin: StackLength) = {
 		if (_margin != newMargin) {
@@ -187,7 +185,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 			revalidate()
 		}
 	}
-	
 	override def cap = _cap
 	def cap_=(newCap: StackLength) = {
 		if (_cap != newCap) {
@@ -205,7 +202,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 			revalidate()
 		}
 	}
-	
 	override protected def add(components: IterableOnce[OpenComponent[C, _]], index: Int) = {
 		// Needs to buffer the components (iterating multiple times)
 		val newComps = components.iterator.filterNot { c => contains(c.component) }.toVector
@@ -222,7 +218,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		pointers.get(component.hashCode()).foreach { _.value = false }
 		revalidate()
 	}
-	
 	override protected def remove(components: IterableOnce[C]) = {
 		val buffered = components.iterator.toSet
 		_components = _components.filterNot(buffered.contains)
@@ -246,7 +241,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 			revalidate()
 		}
 	}
-	
 	override def addBack(components: IterableOnce[C], index: Int) = {
 		val newComps = components.iterator.filterNot(contains).toVector
 		if (newComps.nonEmpty) {

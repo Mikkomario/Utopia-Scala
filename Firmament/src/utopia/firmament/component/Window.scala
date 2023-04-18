@@ -327,103 +327,111 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// INITIAL CODE ----------------
 	
-	// Starts tracking window state
-	component.addWindowListener(WindowStateListener)
-	
-	// Sets up the underlying window
-	component.setLayout(null)
-	component.setContentPane(container)
-	// Some of the functions are only available through the two separate sub-classes
-	wrapped match {
-		case Left(dialog) =>
-			dialog.setUndecorated(isBorderless)
-			dialog.setResizable(resizeLogic.allowsUserResize)
-		case Right(frame) =>
-			frame.setUndecorated(isBorderless)
-			frame.setResizable(resizeLogic.allowsUserResize)
-	}
-	component.setFocusableWindowState(isFocusable)
-	component.setFocusable(isFocusable)
-	component.pack()
-	
-	// Sets transparent background if content doesn't have a background itself
-	// (only works in certain conditions. Doesn't work if this window is decorated)
-	if (enableTransparency && isBorderless && container.isBackgroundSet && container.getBackground.getAlpha < 255)
-		Try { component.setBackground(Color.black.withAlpha(0.0).toAwt) }
-	
-	// Initializes position and size
-	_positionPointer.value = Point.of(component.getLocation)
-	_sizePointer.value = Size.of(component.getSize)
-	if (isNotFullScreen)
-		_boundsPointer.onNextChange { _ => centerOnParent() }
-	AwtEventThread.async { optimizeBounds(dictateSize = true) }
-	
-	// Registers to update the state when the wrapped window updates
-	component.addComponentListener(WindowComponentStateListener)
-	
-	// Updates the window icon when appropriate
-	iconPointer.addListenerAndSimulateEvent(Image.empty) { e =>
-		// Is not interested in icon changes after this window has closed
-		if (hasClosed)
-			DetachmentChoice.detach
-		else {
-			// Copies the maximum size icon first
-			val original = e.newValue.downscaled
-			original.toAwt.foreach { maxImage =>
-				val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
-				// Case: No smaller icons are allowed
-				if (maxSize.fitsWithin(minIconSize))
-					component.setIconImage(maxImage)
-				// Case: Multiple icon sizes allowed
-				else {
-					// Shrinks the original image until minimum size is met
-					component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
-						.takeWhile { _.size.existsDimensionWith(minIconSize) { _ >= _ } }
-						.flatMap { _.toAwt }.toVector).asJava)
+	AwtEventThread.async {
+		// Starts tracking window state
+		component.addWindowListener(WindowStateListener)
+		
+		// Sets up the underlying window
+		component.setLayout(null)
+		component.setContentPane(container)
+		// Some of the functions are only available through the two separate sub-classes
+		wrapped match {
+			case Left(dialog) =>
+				dialog.setUndecorated(isBorderless)
+				dialog.setResizable(resizeLogic.allowsUserResize)
+			case Right(frame) =>
+				frame.setUndecorated(isBorderless)
+				frame.setResizable(resizeLogic.allowsUserResize)
+		}
+		component.setFocusableWindowState(isFocusable)
+		component.setFocusable(isFocusable)
+		component.pack()
+		
+		// Sets transparent background if content doesn't have a background itself
+		// (only works in certain conditions. Doesn't work if this window is decorated)
+		if (enableTransparency && isBorderless && container.isBackgroundSet && container.getBackground.getAlpha < 255)
+			Try { component.setBackground(Color.black.withAlpha(0.0).toAwt) }
+		
+		// Initializes position and size
+		_positionPointer.value = Point.of(component.getLocation)
+		_sizePointer.value = Size.of(component.getSize)
+		if (isNotFullScreen)
+			_boundsPointer.onNextChange { _ => centerOnParent() }
+		AwtEventThread.async { optimizeBounds(dictateSize = true) }
+		
+		// Registers to update the state when the wrapped window updates
+		component.addComponentListener(WindowComponentStateListener)
+		
+		// Updates the window icon when appropriate
+		iconPointer.addListenerAndSimulateEvent(Image.empty) { e =>
+			// Is not interested in icon changes after this window has closed
+			if (hasClosed)
+				DetachmentChoice.detach
+			else {
+				// Copies the maximum size icon first
+				val original = e.newValue.downscaled
+				original.toAwt.foreach { maxImage =>
+					val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
+					AwtEventThread.async {
+						// Case: No smaller icons are allowed
+						if (maxSize.fitsWithin(minIconSize))
+							component.setIconImage(maxImage)
+						// Case: Multiple icon sizes allowed
+						else {
+							// Shrinks the original image until minimum size is met
+							component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
+								.takeWhile { _.size.existsDimensionWith(minIconSize) { _ >= _ } }
+								.flatMap { _.toAwt }.toVector).asJava)
+						}
+					}
 				}
+				DetachmentChoice.continue
 			}
-			DetachmentChoice.continue
 		}
-	}
-	
-	// Once this window is open, starts event handling
-	openedFuture.foreach { _ =>
-		// Starts mouse listening (which is active only while visible)
-		val mouseEventGenerator = new MouseEventGenerator(container)
-		eventActorHandler += mouseEventGenerator
-		val whileVisibleFilter: Filter[Any] = _ => isFullyVisible
-		mouseEventGenerator.buttonHandler += MouseButtonStateListener(whileVisibleFilter) { e =>
-			content.distributeMouseButtonEvent(e)
-			None
-		}
-		mouseEventGenerator.moveHandler += MouseMoveListener(whileVisibleFilter)(content.distributeMouseMoveEvent)
-		mouseEventGenerator.wheelHandler += MouseWheelListener(whileVisibleFilter)(content.distributeMouseWheelEvent)
-		GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
 		
-		// Starts key listening (if used)
-		keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler += _ }
-		
-		// Quits event listening once this window closes
-		closeFuture.onComplete { _ =>
-			eventActorHandler -= mouseEventGenerator
-			mouseEventGenerator.kill()
-			keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
-			GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
-		}
-	}
-	
-	// Whenever this window becomes visible, updates content layout
-	// (layout updates are skipped while this window is not visible)
-	fullyVisibleFlag.addListener { e =>
-		if (hasClosed)
-			DetachmentChoice.detach
-		else {
-			if (e.newValue) {
-				updateLayout()
-				content.updateLayout()
+		// Once this window is open, starts event handling
+		openedFuture.foreach { _ =>
+			// Starts mouse listening (which is active only while visible)
+			val mouseEventGenerator = new MouseEventGenerator(container)
+			eventActorHandler += mouseEventGenerator
+			val whileVisibleFilter: Filter[Any] = _ => isFullyVisible
+			mouseEventGenerator.buttonHandler += MouseButtonStateListener(whileVisibleFilter) { e =>
+				content.distributeMouseButtonEvent(e)
+				None
 			}
-			component.repaint()
-			DetachmentChoice.continue
+			mouseEventGenerator.moveHandler += MouseMoveListener(whileVisibleFilter)(content.distributeMouseMoveEvent)
+			mouseEventGenerator.wheelHandler += MouseWheelListener(whileVisibleFilter)(content.distributeMouseWheelEvent)
+			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
+			
+			// Starts key listening (if used)
+			keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler += _ }
+			
+			// Quits event listening once this window closes
+			closeFuture.onComplete { _ =>
+				eventActorHandler -= mouseEventGenerator
+				mouseEventGenerator.kill()
+				keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
+				GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
+			}
+		}
+		
+		// Whenever this window becomes visible, updates content layout
+		// (layout updates are skipped while this window is not visible)
+		fullyVisibleFlag.addListener { e =>
+			if (hasClosed)
+				DetachmentChoice.detach
+			else {
+				if (e.newValue) {
+					content.resetCachedSize()
+					resetCachedSize()
+					if (!optimizeBounds()) {
+						updateLayout()
+						content.updateLayout()
+					}
+				}
+				AwtEventThread.async { component.repaint() }
+				DetachmentChoice.continue
+			}
 		}
 	}
 	

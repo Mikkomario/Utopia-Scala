@@ -177,7 +177,6 @@ trait ComponentHierarchy
 			parent match {
 				// Case: Top reached => Performs the revalidation function
 				case Left(canvas) =>
-					// TODO: It would be better if canvas accepted these in other order. See if that is possible.
 					val branch = branchBuilder.result().reverse
 					callCanvas(canvas, branch)
 				// Case: Parent is not canvas => Adds the component to the queue and continues recursively

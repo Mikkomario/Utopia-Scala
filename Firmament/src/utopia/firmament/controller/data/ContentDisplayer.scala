@@ -90,8 +90,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 	  * @param item A searched item
 	  * @return The display currently showing the provided item. None if no such display was found.
 	  */
-	def displayFor(item: A): Option[C] =
-	{
+	def displayFor(item: A): Option[C] = {
 		// May perform additional filtering in case there are duplicates
 		val options = displays.filter { d => representSameItem(item, d.content) }
 		if (options.size < 2)
@@ -105,15 +104,13 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 	
 	private object ContentUpdateListener extends ChangeListener[Vector[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Vector[A]]) =
-		{
+		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = {
 			setContent(event.newValue)
 			finalizeRefresh()
 			true
 		}
 		
-		private def setContent(newValues: Vector[A]) =
-		{
+		private def setContent(newValues: Vector[A]) = {
 			val d = displays
 			val oldContentSize = d.size
 			val newContentSize = newValues.size
@@ -123,11 +120,9 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 			// Finds similar start and end portions (if present)
 			val identicalStart = d.zip(newValues).takeWhile { case (display, newVal) =>
 				representSameItem(display.content, newVal) }
-			val identicalEnd =
-			{
+			val identicalEnd = {
 				// Compared parts (old vs new) must have identical size
-				val comparedPart =
-				{
+				val comparedPart = {
 					// Case: Addition -> new value start skipped
 					if (sizeDifference > 0)
 						d.zip(newValues.drop(sizeDifference))
@@ -146,8 +141,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 			val skipLast = identicalEnd.size
 			
 			// Size difference is positive => new items added somewhere
-			if (sizeDifference > 0)
-			{
+			if (sizeDifference > 0) {
 				// Case: New items are added to the end
 				if (skipFirst == oldContentSize)
 					addDisplaysFor(newValues.takeRight(sizeDifference), oldContentSize)
@@ -158,8 +152,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 				else if (skipFirst + skipLast == oldContentSize)
 					addDisplaysFor(newValues.slice(skipFirst, skipFirst + sizeDifference), skipFirst)
 				// Case: New items added in multiple locations
-				else
-				{
+				else {
 					// Adds items either to the beginning of collection or to the end of the updated area
 					val insertToEnd = identicalStart.nonEmpty || identicalEnd.isEmpty
 					val updateRange = skipFirst until (oldContentSize - skipLast)
@@ -174,8 +167,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 				}
 			}
 			// Size difference is negative => old items removed somewhere
-			else if (sizeDifference < 0)
-			{
+			else if (sizeDifference < 0) {
 				val removeCount = -sizeDifference
 				
 				// Case: Items removed from the end
@@ -188,8 +180,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 				else if (skipFirst + skipLast == newContentSize)
 					dropDisplaysAt(skipFirst until (skipFirst + removeCount))
 				// Case: Items removed from multiple places
-				else
-				{
+				else {
 					// Drops rows either from the beginning of the collection or at the end of the updated area
 					val dropFromEnd = identicalStart.nonEmpty || identicalEnd.isEmpty
 					val updatedRange = skipFirst until (newContentSize - skipLast)
@@ -204,16 +195,14 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 				}
 			}
 			// Sizes are identical => content swapped somewhere
-			else
-			{
+			else {
 				// Updates the content between identical areas
 				val updateRange = skipFirst until (newContentSize - skipLast)
 				update(updateRange, newValues.slice(updateRange))
 			}
 			
 			// May also update the state of identical items, in case their mutable state was altered (optional)
-			if (!contentIsStateless)
-			{
+			if (!contentIsStateless) {
 				(identicalStart.iterator ++ identicalEnd.iterator)
 					.filterNot { case (display, value) => itemsAreEqual(display.content, value) }
 					.foreach { case (display, value) => display.content = value }

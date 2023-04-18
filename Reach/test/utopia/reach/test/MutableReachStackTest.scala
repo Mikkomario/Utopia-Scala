@@ -5,47 +5,49 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas2
-import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.paradigm.enumeration.Alignment
-import utopia.reflection.util.SingleFrameSetup
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.container.multi.MutableStack
+import utopia.reach.window.ReachWindow
 
 /**
-  * Tests mutable Reach stack implementation and the new version of container content displayer
+  * Tests mutable Reach stack implementation and the new version of container content displayer.
+  *
+  * Instructions:
+  *     - There should be 3 labels (1, 2, 3) visible initially
+  *     - You can change the visible labels with number keys 0-9
+  *         - You should be able to see numbers between your two latest keystrokes
+  *     - There should be a small margin between each label
+  *     - Each label should have a solid background
+  *
   * @author Mikko Hilpinen
   * @since 21.10.2020, v0.1
   */
 object MutableReachStackTest extends App
 {
-	import utopia.reflection.test.TestContext._
-	import TestCursors._
-	/*
-	// Creates content stack
-	val (canvas, stack) = ReachCanvas2(cursors) { canvasHierarchy =>
-		MutableStack(canvasHierarchy).column[MutableViewTextLabel[Int]](margin = margins.small.any,
-			cap = margins.medium.any)
-	}.toTuple
+	import ReachTestContext._
+	
+	// Creates content stack and the window
+	val window = ReachWindow.popupContextual.using(MutableStack) { stackF =>
+		stackF.column[MutableViewTextLabel[Int]](cap = margins.aroundMedium)
+	}
 	
 	// Adds stack content management
-	val bg = colorScheme.primary.light
 	val dataPointer = new PointerWithEvents[Vector[Int]](Vector(1, 2, 3))
-	ContainerContentDisplayer.forStatelessItems(stack, dataPointer) { i =>
-		Open.withContext(MutableViewTextLabel,
-			baseContext.against(bg).forTextComponents.withTextAlignment(Alignment.Center)) { f =>
-			f.withBackground(i, Secondary)
-		}(canvas)
+	ContainerContentDisplayer.forStatelessItems(window.content, dataPointer) { i =>
+		implicit val c: ReachCanvas2 = window.canvas
+		Open.withContext(windowContext.withHorizontallyCenteredText)(MutableViewTextLabel) { labelF =>
+			labelF.withBackground(i, Secondary)
+		}
 	}
-	canvas.background = bg
 	
-	// Creates and displays the frame
-	val frame = Frame.windowed(canvas, "Reach Mutable Stack Test", Program)
-	new SingleFrameSetup(actorHandler, frame).start()
+	// Displays the window
+	window.setToExitOnClose()
+	window.centerOnParent()
+	window.display()
+	start()
 	
 	// Updates content in background
 	var lastIndex = 3
@@ -59,6 +61,4 @@ object MutableReachStackTest extends App
 			lastIndex = newIndex
 		}
 	}
-	
-	 */
 }
