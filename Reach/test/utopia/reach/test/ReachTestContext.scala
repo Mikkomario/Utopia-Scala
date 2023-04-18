@@ -49,8 +49,8 @@ object ReachTestContext
 			ColorSet.fromHexes("#212121", "#484848", "#000000").get,
 			ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
 		)
-	val font = Font("Arial", (cm * 0.75).round.toInt, Plain)
-	val margins = Margins((cm * 0.5).round.toInt)
+	val font = Font("Arial", (cm * 0.5).round.toInt, Plain)
+	val margins = Margins((cm * 0.25).round.toInt)
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
 	implicit val windowContext: PopupContext = ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
 		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)

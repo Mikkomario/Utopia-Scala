@@ -5,7 +5,7 @@ import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.Bounds
 
 import scala.annotation.tailrec
 
@@ -27,13 +27,10 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 	// IMPLEMENTED	--------------------
 	
 	override def updateLayout() = {
-		println("\nUpdating framing layout")
 		// Repositions and resizes content
-		// Makes sure that the content stays within the bounds of this framing
-		val area = Bounds(Point.origin, size)
-		val newBounds = Bounds.fromFunction2D(lengthsFor)// .fittedInto(area)
-		println(s"=> Content=$newBounds\n\tArea=$area")
-		content.bounds = newBounds
+		// Makes sure that the content stays within the bounds of this framing (disabled for now, uncomment to enable)
+		// val area = Bounds(Point.origin, size)
+		content.bounds = Bounds.fromFunction2D(lengthsFor)// .fittedInto(area)
 	}
 	
 	override def calculatedStackSize = content.stackSize + insets.total
@@ -51,15 +48,11 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 		// Optimal position & optimal size
 		val optimal = Pair(axisInsets.first.optimal, contentLength.optimal)
 		
-		println(s"$axis: Area=$myLength, Content=$contentLength, Insets=$axisInsets, Adjustment=$totalAdjustment")
-		
 		// Actual position & actual size
 		val applied = {
 			// Case: No adjustment is necessary => Uses default lengths
-			if (totalAdjustment == 0) {
-				println(s"No adjustment needed => $optimal")
+			if (totalAdjustment == 0)
 				optimal
-			}
 			// Case: Adjustment is needed => Distributes it between content and the insets
 			else {
 				val getMax = {
@@ -70,7 +63,6 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 				}
 				// Calculates the applied adjustments (content + first inset)
 				val adjustments = adjustmentsFor(contentLength, axisInsets, totalAdjustment)(getMax)
-				println(s"Adjusts by $adjustments")
 				// Returns adjusted values
 				optimal.mergeWith(adjustments) { _ + _ }
 			}

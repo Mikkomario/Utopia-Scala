@@ -77,9 +77,7 @@ trait ReachCanvasLike
 	  * @param queues Sequences of components from hierarchy top downwards that require a layout update
 	  * @param componentTargetSize Size to assign for the managed component
 	  */
-	protected def updateLayout(queues: Set[Seq[ReachComponentLike]], componentTargetSize: Size) =
-	{
-		println("\nUpdating canvas layout")
+	protected def updateLayout(queues: Set[Seq[ReachComponentLike]], componentTargetSize: Size) = {
 		// Updates content size
 		val contentSizeChanged = currentContent match {
 			case Some(content) =>
@@ -92,10 +90,9 @@ trait ReachCanvasLike
 		// Updates content layout
 		val layoutUpdateQueues = queues.map { q: Seq[ReachComponentLike] => q -> contentSizeChanged }
 		val sizeChangeTargets: Set[ReachComponentLike] = {
-			if (contentSizeChanged) {
-				println("Content size changed")
+			if (contentSizeChanged)
 				currentContent.toSet
-			} else
+			else
 				Set()
 		}
 		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty)
