@@ -110,22 +110,18 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
 	
 	override val keyStateEventFilter = KeyStateEvent.keysFilter(nextKeyCode, prevKeyCode)
 	
-	override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
-	{
+	override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
 		// Action events are received only when a button is being held down
 		case ActorHandlerType => buttonDown
 		case _ => true
 	}
 	
-	override def onKeyState(event: KeyStateEvent) =
-	{
+	override def onKeyState(event: KeyStateEvent) = {
 		val direction = if (event.index == nextKeyCode) Positive else Negative
 		// Case: Key press
-		if (event.isDown)
-		{
+		if (event.isDown) {
 			// Key presses may be ignored if a special condition is not met
-			if (listenEnabledCondition)
-			{
+			if (listenEnabledCondition) {
 				currentDirection = direction
 				remainingDelay = initialScrollDelay
 				nextDelay = initialScrollDelay * scrollDelayModifier
@@ -140,15 +136,13 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
 			buttonDown = false
 	}
 	
-	override def act(duration: FiniteDuration) =
-	{
+	override def act(duration: FiniteDuration) = {
 		// Moves towards the next "tick"
 		remainingDelay -= duration
 		
 		// Checks whether there should be any, or multiple, "ticks" during this action event
 		var move = 0
-		while (remainingDelay <= Duration.Zero)
-		{
+		while (remainingDelay <= Duration.Zero) {
 			move += 1
 			remainingDelay += nextDelay max minScrollDelay
 			nextDelay *= scrollDelayModifier

@@ -386,13 +386,11 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	private val borderDrawer = BorderViewDrawer(borderPointer)
 	
-	private val (_wrapped, field) =
-	{
+	private val (_wrapped, field) = {
 		// Creates the main area first
 		val openMainArea = makeInputArea()
 		// Checks whether a separate hint area is required
-		val component = makeHintArea(openMainArea.result) match
-		{
+		val component = makeHintArea(openMainArea.result) match {
 			// Case: Both main and hint area used => uses a view stack
 			case Some(openHintArea) =>
 				val framedMainArea = Open.using(Framing) { makeContentFraming(_, openMainArea) }
@@ -600,10 +598,8 @@ class Field[C <: ReachComponentLike with Focusable]
 		}
 	}
 	
-	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) = {
-		println("Creating a hint label")
+	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) =
 		factory.forText(textPointer, hintTextStylePointer, allowTextShrink = true)
-	}
 	
 	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) = {
 		val insets = {

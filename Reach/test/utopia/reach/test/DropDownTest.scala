@@ -70,7 +70,10 @@ object DropDownTest extends App
 			}
 	}
 	
+	// AwtEventThread.debugMode = true
+	// Loop.regularly(2.seconds) { println(AwtEventThread.debugString) }
+	
 	window.setToCloseOnEsc()
-	window.display()
+	window.display(centerOnParent = true)
 	start()
 }

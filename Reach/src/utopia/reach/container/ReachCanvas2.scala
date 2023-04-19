@@ -177,8 +177,11 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	
 	// INITIAL CODE	---------------------------
 	
-	component.setBackground(background.toAwt)
-	component.setOpaque(background.alpha >= 1.0)
+	AwtEventThread.async {
+		component.setFocusable(true)
+		component.setBackground(background.toAwt)
+		component.setOpaque(background.alpha >= 1.0)
+	}
 	
 	// When bounds get updated, updates the underlying component, also
 	_positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }

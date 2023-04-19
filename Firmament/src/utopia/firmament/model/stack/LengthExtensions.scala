@@ -2,14 +2,14 @@ package utopia.firmament.model.stack
 
 import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.stack
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.{Alignment, Axis2D, LinearAlignment}
 import utopia.paradigm.measurement.{Distance, Ppi}
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
-import utopia.firmament.model.stack
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength, StackSize}
 
 /**
   * These extensions allow easier creation of stack lengths & stack sizes
@@ -295,6 +295,7 @@ object LengthExtensions
 		  *                      Default = false.
 		  * @return Bounds that best match the specified requirements
 		  */
+		// TODO: Refactor utilizing the positiveRelativeToWithin that has already been written at Alignment
 		def positionNextToWithin(areaToPosition: StackSize, referenceArea: Bounds, within: Bounds,
 		                         optimalMargin: Double = 0.0, primaryAxis: Axis2D = Y, avoidOverlap: Boolean = false,
 		                         preserveShape: Boolean = false) =
@@ -372,6 +373,51 @@ object LengthExtensions
 				// Positions the area at the center of the reference area, using its optimal size (or lower)
 				case None => Bounds.centered(referenceArea.center, areaToPosition.optimal).fittedInto(within)
 			}
+		}
+		
+		/**
+		  * Stretches and positions an area so that it is placed next to the specified target area and lies within
+		  * the specified 'within' area, if possible.
+		  *
+		  * If the resulting area will share an edge with the target area
+		  * (i.e. alignment Left, Right, Top or Bottom is used),
+		  * attempts to match their lengths (respecting the input area's stack length limits).
+		  *
+		  * @param area The area to position, including maximum and minimum size of the resulting area
+		  * @param to Area the 'area' will be placed next to
+		  * @param within Area within which the resulting area should reside
+		  * @param margin Margin placed between the resulting area and 'to', whenever possible
+		  * @param swapToFit Whether this alignment may be switched to its opposite, in case that would help the
+		  *                  resulting area to not overlap with 'to'
+		  *
+		  * @return An area that lies relative to the 'to' area according to this alignment (or its opposite) and,
+		  *         if possible and applicable, shares an edge length with the 'to' area.
+		  */
+		def stretchNextToWithin(area: StackSize, to: Bounds, within: Bounds, margin: Double = 0.0,
+		                        swapToFit: Boolean = false) =
+		{
+			// Matches the shared edge length as much as possible
+			val defaultSize = a.directions.only match {
+				// Case: One-directional alignment => Edge matching enabled
+				case Some(direction) =>
+					// Modifies the area to match the target area along one edge
+					Size.fromFunction2D { axis =>
+						// Case: Aligning axis (perpendicular to the edge) => No change
+						if (direction.axis == axis)
+							area.optimal(axis)
+						// Case: Non-aligned axis (parallel to the edge) => Matches the edge (checks max size also)
+						else {
+							val target = to.size(axis)
+							area(axis).max.filter { _ < target }.getOrElse(target)
+						}
+					}
+				// Case: 0- or bi-directional alignment => Edge matching disabled
+				case None => area.optimal
+			}
+			// Makes sure the area fits within the target area (if possible),
+			// and that the minimum size of the area is respected
+			val actualSize = defaultSize.fittingWithin(within.size).filling(area.min)
+			a.positionRelativeToWithin(actualSize, to, within, margin, swapToFit)
 		}
 		
 		private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,

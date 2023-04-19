@@ -27,9 +27,13 @@ object ReachWindowTest extends App
 		textPointer.update { t => s"more $t" }
 	}
 	
+	window.focusedFlag.addContinuousListenerAndSimulateEvent(false) { e =>
+		println(if (e.newValue) "Window focused" else "Window lost focus")
+	}
+	
 	window.setToExitOnClose()
 	window.setToCloseOnEsc()
-	window.display()
+	window.display(centerOnParent = true)
 	
 	start()
 }

@@ -31,6 +31,7 @@ import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.context.PopupContext
 import utopia.reach.cursor.CursorType.Interactive
 
+import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 /**
@@ -38,7 +39,6 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 23.12.2020, v0.1
   */
-// TODO: Use PopupContext instead
 object DropDown extends Ccff[PopupContext, ContextualDropDownFactory]
 {
 	override def withContext(hierarchy: ComponentHierarchy, context: PopupContext) =
@@ -113,7 +113,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				rightExpandIcon, rightCollapseIcon, fieldNamePointer, actualPromptPointer, hintPointer,
 				errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
-				focusColorRole, sameItemCheck, fillBackground)
+				focusColorRole, Set(KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT), sameItemCheck, fillBackground)
 				{ (fieldContext, context) =>
 					val actualStylePointer = fieldContext.textStylePointer.map { _.expandingHorizontally }
 					val label = ViewTextLabel(fieldContext.parentHierarchy).apply(valuePointer, actualStylePointer,
@@ -124,8 +124,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 						_.view.map { c => label.calculatedStackSizeWith(displayFunction(Some(c))) }.reduceOption { _ max _ }
 					}
 					label.addConstraint { original =>
-						maxContentWidthPointer.value match
-						{
+						maxContentWidthPointer.value match {
 							case Some(maxContentSize) => original max maxContentSize
 							case None => original
 						}
@@ -188,7 +187,8 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 			context.margins.small.any, noOptionsView, highlightStylePointer, focusColorRole, sameItemCheck,
 			fillBackground)
 			{ (hierarchy, firstItem) =>
-				MutableViewTextLabel(hierarchy).withContext(context).apply(firstItem, displayFunction)
+				MutableViewTextLabel(hierarchy).withContext(context.withTextExpandingToRight)
+					.apply(firstItem, displayFunction)
 			}
 	}
 	

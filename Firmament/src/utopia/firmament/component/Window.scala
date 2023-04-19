@@ -86,6 +86,15 @@ object Window
 	  *                            (alpha < 100%) color. Transparency is only enabled on windows without OS borders, and
 	  *                            even in those cases transparency doesn't always work.
 	  *                            Default = false = transparency is always disabled.
+	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
+	  *                                 This concerns bounds updates that occur at two places:
+	  *                                 1) When this window is constructed (once), and
+	  *                                 2) Whenever this window becomes visible.
+	  *
+	  *                                 Set this to false if you intend to perform your own window bounds optimization
+	  *                                 upon these two cases.
+	  *
+	  *                                 Default = false = window automatically updates its bounds
 	  * @param exc                 Implicit execution context
 	  * @return A new window
 	  */
@@ -94,7 +103,8 @@ object Window
 	          resizeLogic: WindowResizePolicy = Program, screenBorderMargins: Insets = Insets.zero,
 	          getAnchor: Bounds => Point = _.center, icon: Image = ComponentCreationDefaults.windowIcon,
 	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
-	          ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false)
+	          ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false,
+	          disableAutoBoundsUpdates: Boolean = false)
 	         (implicit exc: ExecutionContext) =
 	{
 		val window = parent match {
@@ -102,7 +112,7 @@ object Window
 			case None => Right(new JFrame(title.string))
 		}
 		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins, getAnchor, icon,
-			!borderless, fullScreen, !disableFocus, !ignoreScreenInsets, enableTransparency)
+			!borderless, fullScreen, !disableFocus, !ignoreScreenInsets, enableTransparency, disableAutoBoundsUpdates)
 	}
 	
 	/**
@@ -117,14 +127,25 @@ object Window
 	  * @param getAnchor           A function for determining the so-called anchor position within this window's bounds on screen.
 	  *                            When this window is resized, the anchor position is not moved if at all possible.
 	  *                            Default = center = The center of this window will remain in the same place upon resize, if possible.
+	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
+	  *                                 This concerns bounds updates that occur at two places:
+	  *                                 1) When this window is constructed (once), and
+	  *                                 2) Whenever this window becomes visible.
+	  *
+	  *                                 Set this to false if you intend to perform your own window bounds optimization
+	  *                                 upon these two cases.
+	  *
+	  *                                 Default = false = window automatically updates its bounds
 	  * @return A new window
 	  */
 	def contextual(container: java.awt.Container, content: Stackable, parent: Option[java.awt.Window] = None,
-	               title: LocalizedString = LocalizedString.empty, getAnchor: Bounds => Point = _.center)
+	               title: LocalizedString = LocalizedString.empty, getAnchor: Bounds => Point = _.center,
+	               disableAutoBoundsUpdates: Boolean = false)
 	              (implicit context: WindowContext, exc: ExecutionContext) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
 			context.screenBorderMargins, getAnchor, context.icon, !context.windowBordersEnabled,
-			context.fullScreenEnabled, !context.focusEnabled, !context.screenInsetsEnabled, context.transparencyEnabled)
+			context.fullScreenEnabled, !context.focusEnabled, !context.screenInsetsEnabled, context.transparencyEnabled,
+			disableAutoBoundsUpdates)
 }
 
 /**
@@ -173,13 +194,22 @@ object Window
   *                           (alpha < 100%) color. Transparency is only enabled on windows without OS borders, and
   *                           even in those cases transparency doesn't always work.
   *                           Default = false = transparency is always disabled.
+  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
+  *                                 This concerns bounds updates that occur at two places:
+  *                                     1) When this window is constructed (once), and
+  *                                     2) Whenever this window becomes visible.
+  *
+  *                                 Set this to false if you intend to perform your own window bounds optimization
+  *                                 upon these two cases.
+  *
+  *                                 Default = false = window automatically updates its bounds
   */
 class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt.Container, content: Stackable,
              eventActorHandler: ActorHandler, resizeLogic: WindowResizePolicy = Program,
              screenBorderMargins: Insets = Insets.zero, getAnchor: Bounds => Point = _.center,
              initialIcon: Image = ComponentCreationDefaults.windowIcon, val hasBorders: Boolean = true,
              isFullScreen: Boolean = false, val isFocusable: Boolean = true, respectScreenInsets: Boolean = true,
-             enableTransparency: Boolean = false)
+             enableTransparency: Boolean = false, disableAutoBoundsUpdates: Boolean = false)
             (implicit exc: ExecutionContext)
 	extends CachingStackable
 {
@@ -208,7 +238,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private val _visibleFlag = ResettableFlag()
 	private val _minimizedFlag = ResettableFlag()
 	private val _activeFlag = ResettableFlag()
-	private val _focusedFlag = ResettableFlag()
+	private val _focusedFlag = ResettableFlag(component.isFocused)
 	
 	// Stores position and size in pointers, which are only updated on window events
 	private val _positionPointer = new PointerWithEvents(Point.origin)
@@ -319,7 +349,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	lazy val focusKeyStateHandler = {
 		val parent = keyStateHandlerPointer.value
 		val handler = KeyStateHandler()
-		handler.filter = _ => isFocused
+		handler.filter = { _ =>
+			println(s"Focus key handler incoming event. Focused=$isFocused")
+			isFocused
+		}
 		parent += handler
 		handler
 	}
@@ -354,7 +387,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Initializes position and size
 		_positionPointer.value = Point.of(component.getLocation)
 		_sizePointer.value = Size.of(component.getSize)
-		optimizeBounds(dictateSize = true)
+		if (!disableAutoBoundsUpdates)
+			optimizeBounds(dictateSize = true)
 		
 		// Registers to update the state when the wrapped window updates
 		component.addComponentListener(WindowComponentStateListener)
@@ -422,7 +456,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 					AwtEventThread.async {
 						content.resetCachedSize()
 						resetCachedSize()
-						if (!optimizeBounds()) {
+						// Automatic bounds-updates may be disabled
+						if (disableAutoBoundsUpdates || !optimizeBounds()) {
 							updateLayout()
 							content.updateLayout()
 							component.repaint()
@@ -722,6 +757,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * @param requireFocus Whether the escape key-press should only be recognized if this window is the
 	  *                     focused window at that time
 	  */
+	// FIXME: Doesn't work at all
 	def setToCloseOnEsc(requireFocus: Boolean = true) = {
 		val handler = if (requireFocus) focusKeyStateHandler else keyStateHandler
 		handler += KeyStateListener.onKeyReleased(KeyEvent.VK_ESCAPE) { _ => close() }
@@ -947,8 +983,16 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		override def windowIconified(e: WindowEvent) = _minimizedFlag.set()
 		override def windowDeiconified(e: WindowEvent) = _minimizedFlag.reset()
 		
-		override def windowActivated(e: WindowEvent) = _activeFlag.set()
-		override def windowDeactivated(e: WindowEvent) = _activeFlag.reset()
+		// Assumes that activation always comes with being focused, also.
+		// This, because the root windows don't seem to gain focus events at all
+		override def windowActivated(e: WindowEvent) = {
+			_activeFlag.set()
+			_focusedFlag.set()
+		}
+		override def windowDeactivated(e: WindowEvent) = {
+			_activeFlag.reset()
+			_focusedFlag.reset()
+		}
 		
 		override def windowGainedFocus(e: WindowEvent) = _focusedFlag.set()
 		override def windowLostFocus(e: WindowEvent) = _focusedFlag.reset()

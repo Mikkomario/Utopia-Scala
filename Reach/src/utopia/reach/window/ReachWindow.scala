@@ -5,6 +5,7 @@ import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.context.{TextContext, WindowContext}
 import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, WaitTarget}
@@ -16,7 +17,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.VolatileOption
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag, SettableOnce}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
@@ -121,6 +122,15 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @param parent        Parent window, if applicable.
 	  *                      Setting this to None will cause a Frame to be created, otherwise a Dialog will be created.
 	  * @param title         Title shown on the OS header of this window, if applicable (default = empty)
+	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
+	  *                                 This concerns bounds updates that occur at two places:
+	  *                                 1) When this window is constructed (once), and
+	  *                                 2) Whenever this window becomes visible.
+	  *
+	  *                                 Set this to false if you intend to perform your own window bounds optimization
+	  *                                 upon these two cases.
+	  *
+	  *                                 Default = false = window automatically updates its bounds
 	  * @param createContent A function for creating canvas contents.
 	  *                      Accepts the canvas component hierarchy.
 	  *                      May return a custom creation result, in addition to the component to wrap.
@@ -129,7 +139,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @return The created window + created canvas + created component + additional function result
 	  */
 	def apply[C <: ReachComponentLike, R](parent: Option[java.awt.Window] = None,
-	                                      title: LocalizedString = LocalizedString.empty)
+	                                      title: LocalizedString = LocalizedString.empty,
+	                                      disableAutoBoundsUpdates: Boolean = false)
 	                                     (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		// Prepares pointers for the window and canvas
@@ -158,7 +169,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		
 		// Creates the window
 		val window = Window.contextual(canvas.parent.component, canvas.parent, parent, title,
-			context.getAnchor(canvas, _))
+			context.getAnchor(canvas, _), disableAutoBoundsUpdates)
 		windowPointer.set(window)
 		
 		// Returns the canvas and the window
@@ -182,6 +193,12 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  *                           Default = 0
 	  * @param title              Title displayed on this window (provided that OS headers are in use).
 	  *                           Default = empty = no title.
+	  * @param matchEdgeLength    Whether the window should share an edge length with the anchor component.
+	  *                           E.g. If bottom alignment is used and 'matchEdgeLength' is enabled, the resulting
+	  *                           window will attempt to stretch so that to matches the width of the 'component'.
+	  *                           The stacksize limits of the window will be respected, however, and may limit the
+	  *                           resizing.
+	  *                           Default = false = will not resize the window.
 	  * @param keepAnchored       Whether this window should be kept close to the owner component when its size changes
 	  *                           or the owner component is moved or resized.
 	  *                           Set to false if you don't expect the owner component to move.
@@ -195,13 +212,14 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  */
 	def anchoredTo[C <: ReachComponentLike, R](component: ReachComponentLike, preferredAlignment: Alignment,
 	                                           margin: Double = 0.0, title: LocalizedString = LocalizedString.empty,
-	                                           keepAnchored: Boolean = true)
+	                                           matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
 	                                          (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		// Full-screen is not supported for anchored windows
 		val factory = windowed.withAnchorAlignment(preferredAlignment)
 		// Creates the window and the canvas
-		val windowCreation = factory(component.parentHierarchy.top.parentWindow, title)(createContent)
+		val windowCreation = factory(component.parentHierarchy.top.parentWindow, title,
+			disableAutoBoundsUpdates = true)(createContent)
 		val window = windowCreation.window
 		
 		// Determines the optimal position for the window
@@ -213,9 +231,21 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				base
 		}
 		
+		// A flag used to avoid looping size-altering & listening - Only needed when window streching is used
+		val ignoreNextSizeUpdateFlag = ResettableFlag()
 		def optimizeWindowPosition() = {
-			window.position = preferredAlignment.positionRelativeToWithin(window.size, component.absoluteBounds,
-				screenArea, margin, swapToFit = true).position
+			// Case: Stretching enabled => May modify window size as well
+			if (matchEdgeLength) {
+				val newBounds = preferredAlignment.stretchNextToWithin(window.stackSize, component.absoluteBounds,
+					screenArea, margin, swapToFit = true)
+				// Ignores the next size update when altering window size through this method
+				ignoreNextSizeUpdateFlag.value = window.size != newBounds.size
+				window.bounds = newBounds
+			}
+			// Case: Only positioning is enabled
+			else
+				window.position = preferredAlignment.positionRelativeToWithin(window.size, component.absoluteBounds,
+					screenArea, margin, swapToFit = true).position
 		}
 		
 		optimizeWindowPosition()
@@ -229,7 +259,17 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				// Stops reacting to events once the window has closed
 				DetachmentChoice.continueUntil(window.hasClosed)
 			}
-			window.sizePointer.addListener(repositionListener)
+			// Repositions on window size changes
+			// Case: Window optimization may alter size => Ignores recursive/looping calls
+			if (matchEdgeLength)
+				window.sizePointer.addListener { _ =>
+					if (!ignoreNextSizeUpdateFlag.reset())
+						optimizeWindowPosition()
+					DetachmentChoice.continueUntil(window.hasClosed)
+				}
+			// Case: Window optimization never alters size => Repositions on every size change
+			else
+				window.sizePointer.addListener(repositionListener)
 			component.boundsPointer.addListener(repositionListener)
 			component.parentHierarchy.parentsIterator.foreach { _.positionPointer.addListener(repositionListener) }
 			// The canvas absolute position tracking may not be working
@@ -362,6 +402,15 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	  * @param parent        Parent window, if applicable.
 	  *                      Setting this to None will cause a Frame to be created, otherwise a Dialog will be created.
 	  * @param title         Title shown on the OS header of this window, if applicable (default = empty)
+	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
+	  *                                 This concerns bounds updates that occur at two places:
+	  *                                 1) When this window is constructed (once), and
+	  *                                 2) Whenever this window becomes visible.
+	  *
+	  *                                 Set this to false if you intend to perform your own window bounds optimization
+	  *                                 upon these two cases.
+	  *
+	  *                                 Default = false = window automatically updates its bounds
 	  * @param createContent A function for creating canvas contents.
 	  *                      Accepts the parent Reach canvas and an initialized component creation factory.
 	  *                      May return a custom creation result, in addition to the component to wrap.
@@ -372,9 +421,10 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	  */
 	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[TextContext, F],
 	                                         parent: Option[java.awt.Window] = None,
-	                                         title: LocalizedString = LocalizedString.empty)
+	                                         title: LocalizedString = LocalizedString.empty,
+	                                         disableAutoBoundsUpdates: Boolean = false)
 	                                        (createContent: (ReachCanvas2, F) => ComponentCreationResult[C, R]) =
-		windowFactory(parent, title) { hierarchy =>
+		windowFactory(parent, title, disableAutoBoundsUpdates = disableAutoBoundsUpdates) { hierarchy =>
 			createContent(hierarchy.top, factory.withContext(hierarchy, textContext))
 		}
 	
@@ -396,6 +446,12 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	  *                           Default = 0
 	  * @param title              Title displayed on this window (provided that OS headers are in use).
 	  *                           Default = empty = no title.
+	  * @param matchEdgeLength Whether the window should share an edge length with the anchor component.
+	  *                        E.g. If bottom alignment is used and 'matchEdgeLength' is enabled, the resulting
+	  *                        window will attempt to stretch so that to matches the width of the 'component'.
+	  *                        The stacksize limits of the window will be respected, however, and may limit the
+	  *                        resizing.
+	  *                        Default = false = will not resize the window.
 	  * @param keepAnchored       Whether this window should be kept close to the owner component when its size changes
 	  *                           or the owner component is moved or resized.
 	  *                           Set to false if you don't expect the owner component to move.
@@ -413,9 +469,9 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	                                                   component: ReachComponentLike, preferredAlignment: Alignment,
 	                                                   margin: Double = 0.0,
 	                                                   title: LocalizedString = LocalizedString.empty,
-	                                                   keepAnchored: Boolean = true)
+	                                                   matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
 	                                                  (createContent: (ReachCanvas2, F) => ComponentCreationResult[C, R]) =
-		windowFactory.anchoredTo(component, preferredAlignment, margin, title, keepAnchored) { hierarchy =>
+		windowFactory.anchoredTo(component, preferredAlignment, margin, title, matchEdgeLength, keepAnchored) { hierarchy =>
 			createContent(hierarchy.top, factory.withContext(hierarchy, context))
 		}
 }

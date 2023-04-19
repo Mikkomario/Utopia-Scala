@@ -169,6 +169,12 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  *                      Default = 0
 	  * @param title         Title displayed on the window (provided that OS headers are in use).
 	  *                      Default = empty = no title.
+	  * @param matchEdgeLength Whether the window should share an edge length with the anchor component.
+	  *                        E.g. If bottom alignment is used and 'matchEdgeLength' is enabled, the resulting
+	  *                        window will attempt to stretch so that to matches the width of the 'component'.
+	  *                        The stacksize limits of the window will be respected, however, and may limit the
+	  *                        resizing.
+	  *                        Default = false = will not resize the window.
 	  * @param keepAnchored  Whether the window should be kept close to this component when its size changes
 	  *                      or the this component is moved or resized.
 	  *                      Set to false if you don't expect the owner component to move.
@@ -186,13 +192,14 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  */
 	def createOwnedWindow[C <: ReachComponentLike, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
 	                                                  title: LocalizedString = LocalizedString.empty,
-	                                                  keepAnchored: Boolean = true, display: Boolean = false)
+	                                                  matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
+	                                                  display: Boolean = false)
 	                                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
 	                                                 (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                                  log: Logger): WindowCreationResult[C, R] =
 	{
 		// Always enables focus on the created windows
-		val window = createWindow[C, R](alignment, margin, title, keepAnchored,
+		val window = createWindow[C, R](alignment, margin, title, matchEdgeLength, keepAnchored,
 			display)(createContent)(context.focusable, exc, log)
 		registerOwnershipOf(window.component)
 		window
