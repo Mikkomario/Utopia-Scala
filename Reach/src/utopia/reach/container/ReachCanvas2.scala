@@ -248,6 +248,7 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	  *                         this canvas has been revalidated
 	  */
 	override def revalidate(updateComponents: Seq[ReachComponentLike]): Unit = {
+		println(s"Reach canvas revalidation called with branch of length ${updateComponents.size}")
 		if (updateComponents.nonEmpty)
 			layoutUpdateQueue :+= updateComponents
 		revalidate()
@@ -268,6 +269,7 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	override def resetCachedSize() = currentContent.foreach { _.resetCachedSize() }
 	
 	override def updateLayout(): Unit = {
+		println("Updating ReachCanvas layout")
 		// Updates content size and layout
 		updateLayout(layoutUpdateQueue.popAll().toSet, size)
 		// Performs the queued tasks
@@ -311,7 +313,10 @@ class ReachCanvas2 protected(contentPointer: Changing[Option[ReachComponentLike]
 	  * Requests this canvas' content hierarchy to be revalidated.
 	  * Should cause resetCachedStackSize() and updateLayout() to be called, but not necessarily immediately.
 	  */
-	def revalidate() = revalidateImplementation(this)
+	def revalidate() = {
+		println("Reach canvas revalidation called")
+		revalidateImplementation(this)
+	}
 	
 	/**
 	  * Calculates the default window anchor position.

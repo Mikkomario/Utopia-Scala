@@ -1,5 +1,6 @@
 package utopia.reach.container
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.shape2d.{Bounds, Size, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.cursor.ReachCursorManager
@@ -95,8 +96,9 @@ trait ReachCanvasLike
 			else
 				Set()
 		}
-		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty)
+		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty) {
 			updateLayoutFor(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
+		}
 	}
 	
 	/**
@@ -166,16 +168,24 @@ trait ReachCanvasLike
 		// Moves to the next layer of components, if there is one
 		val nextSizeChangedChildren = nextSizeChangeChildrenBuilder.result().toSet
 		val paintedChildren = nextSizeChangedChildren ++ nextPositionChangeChildrenBuilder.result()
-		val nextQueues = componentQueues.filter { _._1.size > 1 }.map { case (queue, wasPainted) =>
+		val (leaves, branches) = componentQueues.divideBy { _._1.hasSize > 1 }
+		val nextQueues = branches.map { case (queue, wasPainted) =>
 			if (wasPainted)
 				queue.tail -> wasPainted
 			else
 				// Checks whether a paint operation was queued for this component already
 				queue.tail -> paintedChildren.contains(queue(1))
 		}
+		// Also, paints all of the lowest revalidation levels, unless their parents were already painted
+		leaves.iterator.foreach { case (queue, wasPainted) =>
+			if (!wasPainted && !paintedChildren.contains(queue.head))
+				repaintZonesBuilder += queue.head.boundsInsideTop
+		}
 		val repaintZones = repaintZonesBuilder.result()
+		// Case: Reached the bottom => Returns
 		if (nextQueues.isEmpty && nextSizeChangedChildren.isEmpty)
 			repaintZones
+		// Case: There are more branches / depth => Moves one level deeper
 		else
 			 repaintZones ++ updateLayoutFor(nextQueues, nextSizeChangedChildren)
 	}

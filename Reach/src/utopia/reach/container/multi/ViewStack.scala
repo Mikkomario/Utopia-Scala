@@ -7,6 +7,7 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.Changing
@@ -14,7 +15,7 @@ import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
@@ -165,8 +166,7 @@ case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackF
 	  * @tparam F Type of component creation factories used
 	  * @return A new view stack builder
 	  */
-	def build[F[X <: N]](contentFactory: Gccff[N, F]) =
-		new ContextualViewStackBuilder[N, F](this, contentFactory)
+	def build[F](contentFactory: Ccff[N, F]) = new ContextualViewStackBuilder[N, F](this, contentFactory)
 	
 	/**
 	  * Creates a new stack
@@ -400,8 +400,8 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 		segmented(group, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)(fill)
 }
 
-class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: ContextualViewStackFactory[N],
-                                                               contentFactory: Gccff[N, F])
+class ContextualViewStackBuilder[N <: BaseContext, +F](stackFactory: ContextualViewStackFactory[N],
+                                                       contentFactory: Ccff[N, F])
 {
 	// IMPLICIT	---------------------------------
 	
@@ -438,7 +438,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: Con
 	                                      marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
 	                                      capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	                                      customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
+									  (fill: Iterator[F] => SwitchableCreations[C, R]) =
 	{
 		val content = Open.withContext(stackFactory.context).many(contentFactory)(fill)
 		stackFactory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
@@ -465,7 +465,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: Con
 	                                                      cap: StackLength = StackLength.fixedZero,
 	                                                      customDrawers: Vector[CustomDrawer] = Vector(),
 	                                                      areRelated: Boolean = false)
-													  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
+													  (fill: Iterator[F] => SwitchableCreations[C, R]) =
 		apply[C, R](directionPointer, Fixed(layout),
 			Fixed(if (areRelated) context.stackMargin else context.smallStackMargin),
 			Fixed(cap), customDrawers)(fill)
@@ -490,7 +490,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: Con
 												cap: StackLength = StackLength.fixedZero,
 												customDrawers: Vector[CustomDrawer] = Vector(),
 												areRelated: Boolean = false)
-											   (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
+											   (fill: Iterator[F] => SwitchableCreations[C, R]) =
 		withChangingDirection[C, R](Fixed(direction), layout, cap, customDrawers, areRelated)(fill)
 	
 	/**
@@ -512,7 +512,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: Con
 	                 marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
 	                 capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	                 customDrawers: Vector[CustomDrawer] = Vector())
-					(fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
+					(fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
 	{
 		val content = Open.withContext(context).many(contentFactory)(fill)
 		stackFactory.segmented(group, content.component, layoutPointer, marginPointer, capPointer, customDrawers)
@@ -538,7 +538,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F[X <: N]](stackFactory: Con
 	def segmentedWithFixedStyle[R](group: SegmentGroup, layout: StackLayout = Fit,
 								   cap: StackLength = StackLength.fixedZero,
 								   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-								  (fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
+								  (fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
 		segmented(group, Fixed(layout),
 			Fixed(if (areRelated) context.stackMargin else context.smallStackMargin),
 			Fixed(cap), customDrawers)(fill)
@@ -566,10 +566,16 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 		}
 	}
 	
-	private val revalidateOnChange = ChangeListener.onAnyChange { revalidate() }
+	private val revalidateOnChange = ChangeListener.onAnyChange {
+		println("Initiating revalidation on view stack change")
+		revalidate()
+		DetachmentChoice.continue
+	}
 	private lazy val resetActiveComponentsOnChange = ChangeListener.onAnyChange {
+		println("Resetting active components and revalidating view stack")
 		activeComponentsCache.reset()
-		revalidateAndRepaint()
+		revalidate()
+		DetachmentChoice.continue
 	}
 	
 	/**

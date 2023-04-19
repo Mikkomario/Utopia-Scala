@@ -109,7 +109,7 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 		if (event.equalsBy { _.size })
 			repaint()
 		else
-			revalidateAndRepaint()
+			revalidate()
 	}
 	addCustomDrawer(TextViewDrawer(measuredTextPointer, stylePointer))
 	

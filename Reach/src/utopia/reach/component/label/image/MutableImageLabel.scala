@@ -67,9 +67,9 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 		if (change.equalsBy { _.size } && change.equalsBy { _.sourceResolution })
 			repaint()
 		else
-			revalidateAndThen { repaint() }
+			revalidate()
 	}
-	insetsPointer.addContinuousListener { _ => revalidateAndThen { repaint() } }
+	insetsPointer.addContinuousListener { _ => revalidate() }
 	alignmentPointer.addContinuousListener { _ => repaint() }
 	
 	

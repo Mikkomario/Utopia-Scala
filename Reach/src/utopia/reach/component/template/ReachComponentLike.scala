@@ -202,6 +202,7 @@ trait ReachComponentLike extends Stackable
 	  * @param priority Priority to use for the repaint operation. Higher priority components are drawn first.
 	  *                 (Default = Normal).
 	  */
+	@deprecated(".revalidate() now repaints the lowest level automatically", "v1.0")
 	def revalidateAndRepaint(priority: Priority = Priority.Normal) = revalidateAndThen { repaint(priority) }
 	
 	/**

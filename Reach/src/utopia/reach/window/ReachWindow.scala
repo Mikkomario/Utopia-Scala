@@ -277,9 +277,11 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	}
 	
 	private def revalidate(window: Window, canvas: Stackable) = {
+		println("Revalidating windows and canvas")
 		// Resets cached stack sizes in order to make sure the sizes are set correctly
 		canvas.resetCachedSize()
 		window.resetCachedSize()
+		// TODO: Size optimization may fails sometimes, as the window has a minimum size (low priority bug)
 		val windowSizeChanged = AwtEventThread.blocking {
 			// Optimizes window bounds based on up-to-date sizes
 			window.optimizeBounds()

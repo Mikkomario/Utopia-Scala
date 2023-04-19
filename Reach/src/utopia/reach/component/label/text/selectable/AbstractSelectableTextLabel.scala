@@ -195,13 +195,13 @@ abstract class AbstractSelectableTextLabel
 			if (event.equalsBy { _.size })
 				repaint(VeryHigh)
 			else
-				revalidateAndRepaint(VeryHigh)
+				revalidate()
 		}
 		stylePointer.addListener { change =>
 			if (change.merge { _ hasSameDimensionsAs _ })
 				repaint()
 			else
-				revalidateAndRepaint()
+				revalidate()
 		}
 		drawnCaretPointer.addListener(repaintListener)
 		caretColorPointer.addListener(repaintListener)

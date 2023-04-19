@@ -78,9 +78,9 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 		if (change.equalsBy { _.size } && change.equalsBy { _.sourceResolution })
 			repaint()
 		else
-			revalidateAndRepaint()
+			revalidate()
 	}
-	insetsPointer.addContinuousListener { _ => revalidateAndRepaint() }
+	insetsPointer.addContinuousListener { _ => revalidate() }
 	alignmentPointer.addContinuousListener { _ => repaint() }
 	
 	
