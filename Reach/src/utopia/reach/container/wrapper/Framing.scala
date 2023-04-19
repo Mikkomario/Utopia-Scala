@@ -1,11 +1,12 @@
 package utopia.reach.container.wrapper
 
 import utopia.firmament.component.container.single.FramingLike
-import utopia.firmament.context.BaseContextLike
+import utopia.firmament.context.{BaseContextLike, ColorContextLike}
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory, SimpleFilledBuilderFactory}
@@ -79,6 +80,24 @@ object ContextualFramingFactory
 		  */
 		def buildFilled[F](background: Color, contentFactory: Ccff[NT, F]) =
 			new ContextualFilledFramingBuilder[NT, F](f.factory, background, f.context.against(background), contentFactory)
+	}
+	
+	implicit class ColorFramingFactory[NT](val f: ContextualFramingFactory[_ <: ColorContextLike[NT, _]]) extends AnyVal
+	{
+		/**
+		  * Builds a frame that has a solid background color
+		  * @param background The color role used as background.
+		  *                   A suitable color is selected based on the current context background.
+		  * @param contentFactory A factory for producing the framing content
+		  * @param preferredShade Preferred color shade in framing background (default = Standard)
+		  * @tparam F Type of contextual content factory used
+		  * @return A new framing builder
+		  */
+		def buildFilled[F](background: ColorRole, contentFactory: Ccff[NT, F], preferredShade: ColorLevel = Standard) = {
+			val actualColor = f.context.color.preferring(preferredShade)(background)
+			new ContextualFilledFramingBuilder[NT, F](f.factory, actualColor, f.context.against(actualColor),
+				contentFactory)
+		}
 	}
 }
 

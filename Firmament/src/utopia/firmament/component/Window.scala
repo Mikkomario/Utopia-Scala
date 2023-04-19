@@ -327,7 +327,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// INITIAL CODE ----------------
 	
-	AwtEventThread.blocking {
+	AwtEventThread.async {
 		// Starts tracking window state
 		component.addWindowListener(WindowStateListener)
 		
@@ -425,8 +425,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 						if (!optimizeBounds()) {
 							updateLayout()
 							content.updateLayout()
+							component.repaint()
 						}
-						component.repaint()
 					}
 				}
 				DetachmentChoice.continue

@@ -215,7 +215,7 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	// INITIAL CODE	----------------------------
 	
-	// TODO: WET WET (see ScrollArea)
+	// WET WET (see ScrollArea)
 	setupMouseHandling(actorHandler, scrollPerWheelClick)
 	sizePointer.addListener(ChangeListener.onAnyChange { updateScrollBarBounds() })
 	content.sizePointer.addContinuousAnyChangeListener { updateScrollBarBounds(repaintAfter = true) }

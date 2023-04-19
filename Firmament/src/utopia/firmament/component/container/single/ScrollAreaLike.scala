@@ -501,7 +501,6 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		
 		// Listens to left mouse presses & releases
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter
-		
 		// Only listens to wheel events inside component bounds
 		override val mouseWheelEventFilter = Consumable.notConsumedFilter && MouseEvent.isOverAreaFilter(bounds)
 		
@@ -528,6 +527,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 				}
 				// Consumed pressed events are only considered in scroll bar(s)
 				// if outside, starts drag scrolling
+				// TODO: This not consumed -requirement should likely be customizable
 				else if (event.isOverArea(bounds) && !event.isConsumed) {
 					isDraggingBar = false
 					contentDragPosition = event.mousePosition

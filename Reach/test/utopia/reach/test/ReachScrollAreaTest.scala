@@ -30,8 +30,6 @@ object ReachScrollAreaTest extends App
 {
 	import ReachTestContext._
 	
-	AwtEventThread.debugMode = true
-	
 	// Settings and data
 	val blockSize = StackSize.any(Size(96, 96))
 	val altBlockSize = blockSize * 0.75
