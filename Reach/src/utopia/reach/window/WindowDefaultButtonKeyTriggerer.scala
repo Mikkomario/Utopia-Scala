@@ -1,5 +1,6 @@
 package utopia.reach.window
 
+import utopia.firmament.component.Window
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.genesis.event.KeyStateEvent
@@ -7,7 +8,6 @@ import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reach.component.template.focus.FocusableWithState
-import utopia.reflection.container.swing.window.Window
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
@@ -25,10 +25,9 @@ object WindowDefaultButtonKeyTriggerer
 	  * @param exc Implicit execution context
 	  * @return A new window button listener
 	  */
-	def register(window: Window[_], buttons: Iterable[FocusableWithState],
-	             additionalCondition: View[Boolean] = AlwaysTrue,
+	def register(window: Window, buttons: Iterable[FocusableWithState], additionalCondition: View[Boolean] = AlwaysTrue,
 	             triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
-			 (implicit exc: ExecutionContext) =
+	            (implicit exc: ExecutionContext) =
 	{
 		// Creates the listener
 		val listener = new WindowDefaultButtonKeyTriggerer(window, buttons, additionalCondition,
@@ -45,9 +44,10 @@ object WindowDefaultButtonKeyTriggerer
   * @author Mikko Hilpinen
   * @since 4.3.2021, v0.1
   */
-class WindowDefaultButtonKeyTriggerer(window: Window[_], buttons: Iterable[FocusableWithState],
+class WindowDefaultButtonKeyTriggerer(window: Window, buttons: Iterable[FocusableWithState],
                                       additionalCondition: View[Boolean] = AlwaysTrue,
-                                      triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
+                                      triggerKeyIndex: Int = KeyEvent.VK_ENTER)
+                                     (action: => Unit)
 	extends KeyStateListener
 {
 	// ATTRIBUTES	----------------------------
@@ -57,13 +57,12 @@ class WindowDefaultButtonKeyTriggerer(window: Window[_], buttons: Iterable[Focus
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def onKeyState(event: KeyStateEvent) =
-	{
+	override def onKeyState(event: KeyStateEvent) = {
 		// Checks whether required conditions are met
 		if (buttons.forall { !_.hasFocus } && additionalCondition.value)
 			action
 	}
 	
 	override def allowsHandlingFrom(handlerType: HandlerType) =
-		window.isFocusedWindow && window.visible
+		window.isFocused && window.isFullyVisible
 }

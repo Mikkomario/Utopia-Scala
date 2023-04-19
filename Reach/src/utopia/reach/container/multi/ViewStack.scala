@@ -21,7 +21,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 object ViewStack extends Cff[ViewStackFactory]
 {
@@ -33,7 +33,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 {
 	// COMPUTED	----------------------------------
 	
-	private implicit def canvas: ReachCanvas2 = parentHierarchy.top
+	private implicit def canvas: ReachCanvas = parentHierarchy.top
 	
 	
 	// IMPLEMENTED	------------------------------
@@ -145,7 +145,7 @@ case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackF
 {
 	// COMPUTED	------------------------------------
 	
-	private implicit def canvas: ReachCanvas2 = stackFactory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = stackFactory.parentHierarchy.top
 	
 	/**
 	  * @return A version of this factory which doesn't utilize component creation context
@@ -297,7 +297,7 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 {
 	// IMPLICIT	---------------------------------
 	
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	
 	// OTHER	---------------------------------
@@ -405,7 +405,7 @@ class ContextualViewStackBuilder[N <: BaseContext, +F](stackFactory: ContextualV
 {
 	// IMPLICIT	---------------------------------
 	
-	implicit def canvas: ReachCanvas2 = stackFactory.stackFactory.parentHierarchy.top
+	implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
 	
 	
 	// COMPUTED	---------------------------------

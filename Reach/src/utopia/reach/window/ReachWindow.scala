@@ -23,13 +23,13 @@ import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, PopupContextualFactory}
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, ReachContentWindowContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
-import utopia.reach.container.{ReachCanvas2, RevalidationStyle}
-import utopia.reach.context.{PopupContext, ReachWindowContext, ReachWindowContextWrapper}
+import utopia.reach.container.{ReachCanvas, RevalidationStyle}
+import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext, ReachWindowContextWrapper}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
@@ -46,8 +46,8 @@ object ReachWindow
 	// IMPLICIT ---------------------------
 	
 	implicit def autoFactory(f: ReachWindow.type)
-	                        (implicit c: PopupContext, exc: ExecutionContext, log: Logger): ReachPopupFactory =
-		f.popupContextual
+	                        (implicit c: ReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+		f.contentContextual
 	
 	
 	// COMPUTED ---------------------------
@@ -66,8 +66,8 @@ object ReachWindow
 	  * @param log     Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def popupContextual(implicit context: PopupContext, exc: ExecutionContext, log: Logger): ReachPopupFactory =
-		contextual.withTextContext(context.textContext)
+	def contentContextual(implicit context: ReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+		contextual.withContentContext(context.textContext)
 	
 	
 	// OTHER    ---------------------------
@@ -92,7 +92,7 @@ object ReachWindow
 }
 
 case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger)
-	extends ReachWindowContextWrapper[ContextualReachWindowFactory, ReachPopupFactory]
+	extends ReachWindowContextWrapper[ContextualReachWindowFactory, ReachContentWindowFactory]
 {
 	// ATTRIBUTES   ---------------
 	
@@ -107,8 +107,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	
 	override def withReachWindowContext(base: ReachWindowContext): ContextualReachWindowFactory = copy(base)
 	
-	override def withTextContext(textContext: TextContext) =
-		ReachPopupFactory(this, context.withTextContext(textContext))
+	override def withContentContext(textContext: TextContext) =
+		ReachContentWindowFactory(this, context.withContentContext(textContext))
 	
 	
 	// OTHER    ------------------
@@ -163,8 +163,9 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		lazy val revalidation = revalidate(lazyWindow, lazyCanvas, context.revalidationStyle)
 		
 		// Creates the canvas
-		val canvas = ReachCanvas2(attachmentPointer, Right(absoluteWindowPositionPointer), context.windowBackground,
-			context.cursors, disableFocus = !context.focusEnabled) { _ => revalidation() }(createContent)
+		val canvas = ReachCanvas(attachmentPointer, Right(absoluteWindowPositionPointer),
+			Fixed(context.windowBackground), context.cursors,
+			disableFocus = !context.focusEnabled) { _ => revalidation() }(createContent)
 		canvasPointer.set(canvas)
 		
 		// Creates the window
@@ -403,14 +404,15 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	}
 }
 
-case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFactory, context: PopupContext)
-	extends PopupContextualFactory[ReachPopupFactory]
+case class ReachContentWindowFactory(private val windowFactory: ContextualReachWindowFactory,
+                                     context: ReachContentWindowContext)
+	extends ReachContentWindowContextualFactory[ReachContentWindowFactory]
 {
 	// IMPLEMENTED  ----------------------
 	
-	override def self: ReachPopupFactory = this
+	override def self: ReachContentWindowFactory = this
 	
-	override def withContext(context: PopupContext): ReachPopupFactory =
+	override def withContext(context: ReachContentWindowContext): ReachContentWindowFactory =
 		copy(windowFactory = windowFactory.withContext(context), context = context)
 	
 	
@@ -443,7 +445,7 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	                                         parent: Option[java.awt.Window] = None,
 	                                         title: LocalizedString = LocalizedString.empty,
 	                                         disableAutoBoundsUpdates: Boolean = false)
-	                                        (createContent: (ReachCanvas2, F) => ComponentCreationResult[C, R]) =
+	                                        (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
 		windowFactory(parent, title, disableAutoBoundsUpdates = disableAutoBoundsUpdates) { hierarchy =>
 			createContent(hierarchy.top, factory.withContext(hierarchy, textContext))
 		}
@@ -490,10 +492,8 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	                                                   margin: Double = 0.0,
 	                                                   title: LocalizedString = LocalizedString.empty,
 	                                                   matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
-	                                                  (createContent: (ReachCanvas2, F) => ComponentCreationResult[C, R]) =
+	                                                  (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
 		windowFactory.anchoredTo(component, preferredAlignment, margin, title, matchEdgeLength, keepAnchored) { hierarchy =>
 			createContent(hierarchy.top, factory.withContext(hierarchy, context))
 		}
 }
-
-case class ReachPopupBuilder[F](windowFactory: ContextualReachWindowFactory, textContext: TextContext)

@@ -8,7 +8,7 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.MutableStack
 import utopia.reach.window.ReachWindow
 
@@ -30,14 +30,14 @@ object MutableReachStackTest extends App
 	import ReachTestContext._
 	
 	// Creates content stack and the window
-	val window = ReachWindow.popupContextual.using(MutableStack) { (_, stackF) =>
+	val window = ReachWindow.contentContextual.using(MutableStack) { (_, stackF) =>
 		stackF.column[MutableViewTextLabel[Int]](cap = margins.aroundMedium)
 	}
 	
 	// Adds stack content management
 	val dataPointer = new PointerWithEvents[Vector[Int]](Vector(1, 2, 3))
 	ContainerContentDisplayer.forStatelessItems(window.content, dataPointer) { i =>
-		implicit val c: ReachCanvas2 = window.canvas
+		implicit val c: ReachCanvas = window.canvas
 		Open.withContext(windowContext.withHorizontallyCenteredText)(MutableViewTextLabel) { labelF =>
 			labelF.withBackground(i, Secondary)
 		}

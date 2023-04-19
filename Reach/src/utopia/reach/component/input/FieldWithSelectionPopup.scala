@@ -42,27 +42,27 @@ import utopia.reach.component.input.selection.SelectionList
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.context.{PopupContext, ReachWindowContext}
+import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
-object FieldWithSelectionPopup extends Gccff[PopupContext, ContextualFieldWithSelectionPopupFactory]
+object FieldWithSelectionPopup extends Gccff[ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
 {
-	override def withContext[N <: PopupContext](parentHierarchy: ComponentHierarchy, context: N) =
+	override def withContext[N <: ReachContentWindowContext](parentHierarchy: ComponentHierarchy, context: N) =
 		ContextualFieldWithSelectionPopupFactory[N](parentHierarchy, context)
 }
 
-case class ContextualFieldWithSelectionPopupFactory[+N <: PopupContext](parentHierarchy: ComponentHierarchy,
-                                                                        context: N)
-	extends GenericContextualFactory[N, PopupContext, ContextualFieldWithSelectionPopupFactory]
+case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowContext](parentHierarchy: ComponentHierarchy,
+                                                                                     context: N)
+	extends GenericContextualFactory[N, ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
 {
-	private implicit val c: PopupContext = context
+	private implicit val c: ReachContentWindowContext = context
 	
-	override def withContext[N2 <: PopupContext](newContext: N2) =
+	override def withContext[N2 <: ReachContentWindowContext](newContext: N2) =
 		copy(context = newContext)
 	
 	/**
@@ -314,7 +314,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		val listPointer = SettableOnce[ReachComponentLike]()
 		// Creates the pop-up
 		val popup = field.createOwnedWindow(Bottom, matchEdgeLength = true) { hierarchy =>
-			implicit val canvas: ReachCanvas2 = hierarchy.top
+			implicit val canvas: ReachCanvas = hierarchy.top
 			// Creates the pop-up content in open form first
 			val openList = Open { hierarchy =>
 				val list = SelectionList(hierarchy)

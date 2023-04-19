@@ -23,10 +23,10 @@ import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
-import utopia.reach.context.PopupContext
+import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.focus.FocusRequestable
 
 import java.awt.event.KeyEvent
@@ -56,7 +56,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	/**
 	  * @return Context for creating the warning pop-up windows
 	  */
-	protected def warningPopupContext: PopupContext
+	protected def warningPopupContext: ReachContentWindowContext
 	
 	/**
 	  * @return Input creation blueprints and the context to use in subsequent creation method calls
@@ -107,7 +107,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	override protected def createContent(factories: ContextualMixed[ColorContext]) =
 	{
-		implicit val canvas: ReachCanvas2 = factories.parentHierarchy.top
+		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
 		val (template, dialogContext) = inputTemplate
 		val context = fieldCreationContext
 		val (nameContext, fieldContext) = makeFieldNameAndFieldContext(context)
@@ -179,7 +179,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	protected def showWarningFor(field: RowField, message: LocalizedString): Unit = {
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
-		implicit val context: PopupContext = warningPopupContext.nonFocusable
+		implicit val context: ReachContentWindowContext = warningPopupContext.nonFocusable
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up

@@ -12,7 +12,7 @@ import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, Compon
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
 {
@@ -36,7 +36,7 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 {
 	// IMPLICIT	-----------------------------
 	
-	implicit def canvas: ReachCanvas2 = parentHierarchy.top
+	implicit def canvas: ReachCanvas = parentHierarchy.top
 	
 	
 	// IMPLEMENTED	-------------------------
@@ -93,7 +93,7 @@ case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFac
 
 class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentFactory: ComponentFactoryFactory[F])
 {
-	private implicit val canvas: ReachCanvas2 = factory.canvas
+	private implicit val canvas: ReachCanvas = factory.canvas
 	
 	/**
 	  * Creates a new swapper
@@ -125,7 +125,7 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 
 class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory, context: N, contentFactory: Gccff[N, F])
 {
-	private implicit val canvas: ReachCanvas2 = factory.canvas
+	private implicit val canvas: ReachCanvas = factory.canvas
 	
 	/**
 	  * Creates a new swapper

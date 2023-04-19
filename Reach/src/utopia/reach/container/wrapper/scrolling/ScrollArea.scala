@@ -18,7 +18,7 @@ import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 object ScrollArea extends Cff[ScrollAreaFactory]
 {
@@ -97,7 +97,7 @@ case class ContextualScrollAreaFactory[N](factory: ScrollAreaFactory, context: N
 
 class ScrollAreaBuilder[+F](factory: ScrollAreaFactory, contentFactory: ComponentFactoryFactory[F])
 {
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
 	  * Creates a new scroll area
@@ -125,7 +125,7 @@ class ScrollAreaBuilder[+F](factory: ScrollAreaFactory, contentFactory: Componen
 
 class ContextualScrollAreaBuilder[N, +F](factory: ScrollAreaFactory, context: N, contentFactory: Ccff[N, F])
 {
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
 	  * Creates a new scroll area
@@ -154,7 +154,7 @@ class ContextualScrollAreaBuilder[N, +F](factory: ScrollAreaFactory, context: N,
 class ContextualFilledScrollAreaBuilder[NC, +F](factory: ScrollAreaFactory, background: Color, contentContext: NC,
                                                 contentFactory: Ccff[NC, F])
 {
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
 	  * Creates a new scroll area

@@ -29,7 +29,7 @@ import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointer, FocusableWrapper}
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
@@ -293,7 +293,7 @@ class Field[C <: ReachComponentLike with Focusable]
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	private implicit def c: ReachCanvas2 = parentHierarchy.top
+	private implicit def c: ReachCanvas = parentHierarchy.top
 	
 	private lazy val defaultHintInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
 		.mapVertical { _ * hintScaleFactor }

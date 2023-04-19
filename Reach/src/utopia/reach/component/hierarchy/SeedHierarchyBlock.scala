@@ -6,7 +6,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 /**
   * This component hierarchy block doesn't initially know it's parent hierarchy, but expects to connect to it
@@ -15,11 +15,11 @@ import utopia.reach.container.ReachCanvas2
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
   */
-class SeedHierarchyBlock(override val top: ReachCanvas2) extends CompletableComponentHierarchy
+class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableComponentHierarchy
 {
 	// ATTRIBUTES	--------------------------
 	
-	private var foundParent: Option[Either[ReachCanvas2, (ComponentHierarchy, ReachComponentLike)]] = None
+	private var foundParent: Option[Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)]] = None
 	
 	
 	// IMPLEMENTED	-------------------------

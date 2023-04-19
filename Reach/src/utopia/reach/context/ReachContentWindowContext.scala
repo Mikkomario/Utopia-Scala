@@ -3,7 +3,7 @@ package utopia.reach.context
 import utopia.firmament.context.TextContext
 import utopia.paradigm.color.Color
 
-object PopupContext
+object ReachContentWindowContext
 {
 	// IMPLICIT -------------------------
 	
@@ -11,7 +11,7 @@ object PopupContext
 	  * @param textContext A text context to wrap
 	  * @return A Pop-up creation context that uses the specified text context and default settings
 	  */
-	implicit def apply(textContext: TextContext): PopupContext =
+	implicit def apply(textContext: TextContext): ReachContentWindowContext =
 		apply(ReachWindowContext(textContext.actorHandler, textContext.background).borderless.windowed, textContext)
 	
 	
@@ -22,22 +22,22 @@ object PopupContext
 	  * @param text Text context to wrap
 	  * @return A new pop-up context
 	  */
-	def apply(window: ReachWindowContext, text: TextContext): PopupContext = _PopupContext(window, text)
+	def apply(window: ReachWindowContext, text: TextContext): ReachContentWindowContext = _ReachContentWindowContext(window, text)
 	
 	
 	// NESTED   -------------------------
 	
-	private case class _PopupContext(reachWindowContext: ReachWindowContext, textContext: TextContext)
-		extends PopupContext
+	private case class _ReachContentWindowContext(reachWindowContext: ReachWindowContext, textContext: TextContext)
+		extends ReachContentWindowContext
 	{
-		override def self: PopupContext = this
+		override def self: ReachContentWindowContext = this
 		
-		override def withTextContext(base: TextContext): PopupContext =
+		override def withTextContext(base: TextContext): ReachContentWindowContext =
 			if (base == textContext) self else copy(textContext = base)
-		override def withReachWindowContext(base: ReachWindowContext): PopupContext =
+		override def withReachWindowContext(base: ReachWindowContext): ReachContentWindowContext =
 			if (base == reachWindowContext) self else copy(reachWindowContext = base)
 		
-		override def *(mod: Double): PopupContext = withTextContext(textContext * mod)
+		override def *(mod: Double): ReachContentWindowContext = withContentContext(textContext * mod)
 		
 		override def withWindowBackground(bg: Color) = withBackground(bg)
 		override def withBackground(background: Color) =
@@ -51,4 +51,4 @@ object PopupContext
   * @author Mikko Hilpinen
   * @since 17.4.2023, v1.0
   */
-trait PopupContext extends PopupContextLike[PopupContext] with TextContext with ReachWindowContext
+trait ReachContentWindowContext extends ReachContentWindowContextLike[ReachContentWindowContext] with TextContext with ReachWindowContext

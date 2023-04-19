@@ -33,7 +33,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.MutableStack
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
@@ -136,7 +136,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private implicit val canvas: ReachCanvas2 = parentHierarchy.top
+	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
 	override lazy val focusId = hashCode()
 	private val focusTracker = new FocusStateTracker(false)

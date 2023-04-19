@@ -1,7 +1,7 @@
 package utopia.reach.component.wrapper
 
 import utopia.firmament.component.Window
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 import scala.language.implicitConversions
 
@@ -22,7 +22,7 @@ object WindowCreationResult
 	  * @tparam R Type of additional result
 	  * @return A new window creation result
 	  */
-	def apply[C, R](window: Window, canvasCreation: ComponentWrapResult[ReachCanvas2, C, R]): WindowCreationResult[C, R] =
+	def apply[C, R](window: Window, canvasCreation: ComponentWrapResult[ReachCanvas, C, R]): WindowCreationResult[C, R] =
 		apply(window, canvasCreation.parent, canvasCreation.child, canvasCreation.result)
 	
 	/**
@@ -33,7 +33,7 @@ object WindowCreationResult
 	  * @tparam C Type of created content
 	  * @return A new window creation result with no additional result
 	  */
-	def apply[C](window: Window, canvas: ReachCanvas2, content: C): WindowCreationResult[C, Unit] =
+	def apply[C](window: Window, canvas: ReachCanvas, content: C): WindowCreationResult[C, Unit] =
 		apply[C, Unit](window, canvas, content, ())
 }
 
@@ -47,7 +47,7 @@ object WindowCreationResult
   * @author Mikko Hilpinen
   * @since 14.4.2023, v1.0
   */
-case class WindowCreationResult[+C, +R](window: Window, canvas: ReachCanvas2, content: C, result: R)
+case class WindowCreationResult[+C, +R](window: Window, canvas: ReachCanvas, content: C, result: R)
 {
 	// COMPUTED -----------------------
 	

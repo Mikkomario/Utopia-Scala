@@ -37,7 +37,7 @@ object ReachComponentTest extends App
 	
 	// Creates the components
 	private val windowPointer = SettableOnce[Window]()
-	val window = ReachWindow.popupContextual.using(Stack) { (_, stackF) =>
+	val window = ReachWindow.contentContextual.using(Stack) { (_, stackF) =>
 		// Column
 		stackF.build(Mixed).withoutMargin() { factories =>
 			// 1: Framing (Secondary)

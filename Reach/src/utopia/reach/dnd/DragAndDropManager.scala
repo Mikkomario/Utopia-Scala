@@ -7,7 +7,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.container.{ReachCanvas, ReachCanvas2}
+import utopia.reach.container.ReachCanvas
 import utopia.reach.dnd.DragAndDropEvent._
 
 import java.awt.dnd._
@@ -22,13 +22,7 @@ object DragAndDropManager
 	  * @param log    Implicit logging implementation
 	  * @return A new drag-and-drop manager that supervises the specified canvas
 	  */
-	def apply(canvas: ReachCanvas)(implicit log: Logger) = new DragAndDropManager(canvas.component)
-	/**
-	  * @param canvas A Reach canvas for which the drag-and-drop process is managed
-	  * @param log    Implicit logging implementation
-	  * @return A new drag-and-drop manager that supervises the specified canvas
-	  */
-	def apply(canvas: => ReachCanvas2)(implicit log: Logger) = new DragAndDropManager(canvas.component)
+	def apply(canvas: => ReachCanvas)(implicit log: Logger) = new DragAndDropManager(canvas.component)
 }
 
 /**

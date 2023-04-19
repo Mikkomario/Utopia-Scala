@@ -23,6 +23,7 @@
       <module fileurl="file://$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" filepath="$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" />
       <module fileurl="file://$PROJECT_DIR$/Paradigm/Paradigm.iml" filepath="$PROJECT_DIR$/Paradigm/Paradigm.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reach/Reach.iml" filepath="$PROJECT_DIR$/Reach/Reach.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Reach-in-Reflection/Reach-in-Reflection.iml" filepath="$PROJECT_DIR$/Reach-in-Reflection/Reach-in-Reflection.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reflection/Reflection.iml" filepath="$PROJECT_DIR$/Reflection/Reflection.iml" />
       <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe.iml" filepath="$PROJECT_DIR$/Scribe/Scribe.iml" />
       <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />

@@ -11,7 +11,7 @@ import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 object AlignFrame extends Cff[AlignFrameFactory]
 {
@@ -82,7 +82,7 @@ case class ContextualAlignFrameFactory[N](factory: AlignFrameFactory, context: N
 
 class AlignFrameBuilder[+F](factory: AlignFrameFactory, contentFactory: ComponentFactoryFactory[F])
 {
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
 	 * Creates a new filled align frame
@@ -103,7 +103,7 @@ class AlignFrameBuilder[+F](factory: AlignFrameFactory, contentFactory: Componen
 
 class ContextualAlignFrameBuilder[N, +F](factory: AlignFrameFactory, context: N, contentFactory: Ccff[N, F])
 {
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
 	 * Creates a new filled align frame
@@ -125,7 +125,7 @@ class ContextualAlignFrameBuilder[N, +F](factory: AlignFrameFactory, context: N,
 class ContextualFilledAlignFrameBuilder[NC, +F](factory: AlignFrameFactory, background: Color, contentContext: NC,
                                                 contentFactory: Ccff[NC, F])
 {
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
 	 * Creates a new filled align frame

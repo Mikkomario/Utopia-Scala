@@ -3,7 +3,7 @@ package utopia.reach.context
 import utopia.firmament.context.WindowContext
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.container.{ReachCanvas2, RevalidationStyle}
+import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorSet
 
 /**
@@ -34,12 +34,12 @@ trait ReachWindowContextWrapper[+Repr, +Textual] extends ReachWindowContextLike[
 	override def windowBackground: Color = reachWindowContext.windowBackground
 	override def cursors: Option[CursorSet] = reachWindowContext.cursors
 	override def revalidationStyle: RevalidationStyle = reachWindowContext.revalidationStyle
-	override def getAnchor: (ReachCanvas2, Bounds) => Point = reachWindowContext.getAnchor
+	override def getAnchor: (ReachCanvas, Bounds) => Point = reachWindowContext.getAnchor
 	
 	override def withWindowBackground(bg: Color): Repr = mapReachWindowContext { _.withWindowBackground(bg) }
 	override def withCursors(cursors: Option[CursorSet]): Repr = mapReachWindowContext { _.withCursors(cursors) }
 	override def withRevalidationStyle(style: RevalidationStyle): Repr = mapReachWindowContext { _.withRevalidationStyle(style) }
-	override def withGetAnchor(getAnchor: (ReachCanvas2, Bounds) => Point): Repr =
+	override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): Repr =
 		mapReachWindowContext { _.withGetAnchor(getAnchor) }
 	
 	override def withWindowContext(base: WindowContext): Repr =

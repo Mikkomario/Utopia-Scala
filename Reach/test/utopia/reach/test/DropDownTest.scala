@@ -13,10 +13,10 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
-import utopia.reach.context.PopupContext.apply
+import utopia.reach.context.ReachContentWindowContext.apply
 import utopia.reach.window.ReachWindow
 
 /**
@@ -36,7 +36,7 @@ object DropDownTest extends App
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
 	val window = ReachWindow.contextual.apply(title = "Drop-Down Test") { hierarchy =>
-		implicit val canvas: ReachCanvas2 = hierarchy.top
+		implicit val canvas: ReachCanvas = hierarchy.top
 		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack.static[ColorContext])
 			.apply(margins.medium.any.square) { stackF =>
 				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.build(DropDown)

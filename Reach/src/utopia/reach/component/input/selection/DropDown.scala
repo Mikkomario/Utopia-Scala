@@ -20,7 +20,7 @@ import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{ColorRole, ColorShade}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.PopupContextualFactory
+import utopia.reach.component.factory.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldWithSelectionPopup
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
@@ -28,7 +28,7 @@ import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.context.PopupContext
+import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.cursor.CursorType.Interactive
 
 import java.awt.event.KeyEvent
@@ -39,20 +39,20 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 23.12.2020, v0.1
   */
-object DropDown extends Ccff[PopupContext, ContextualDropDownFactory]
+object DropDown extends Ccff[ReachContentWindowContext, ContextualDropDownFactory]
 {
-	override def withContext(hierarchy: ComponentHierarchy, context: PopupContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: ReachContentWindowContext) =
 		ContextualDropDownFactory(hierarchy, context)
 }
 
-case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, context: PopupContext)
-	extends PopupContextualFactory[ContextualDropDownFactory]
+case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, context: ReachContentWindowContext)
+	extends ReachContentWindowContextualFactory[ContextualDropDownFactory]
 {
-	private implicit val c: PopupContext = context
+	private implicit val c: ReachContentWindowContext = context
 	
 	override def self: ContextualDropDownFactory = this
 	
-	override def withContext(newContext: PopupContext) = copy(context = newContext)
+	override def withContext(newContext: ReachContentWindowContext) = copy(context = newContext)
 	
 	// TODO: Add enabled pointer parameter
 	

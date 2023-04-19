@@ -44,7 +44,7 @@ object ImageViewStackTest extends App
 	val pointer3 = new PointerWithEvents(false)
 	
 	// Window[Stack[Label1, Label2]]
-	val window = ReachWindow.popupContextual.using(ViewStack) { (_, stackF) =>
+	val window = ReachWindow.contentContextual.using(ViewStack) { (_, stackF) =>
 		stackF.build(Mixed).withFixedStyle(X, Center) { factories =>
 			Vector(
 				// The first label is static, but sometimes disappears

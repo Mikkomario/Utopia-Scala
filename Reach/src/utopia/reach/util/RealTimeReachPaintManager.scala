@@ -21,7 +21,7 @@ object RealTimeReachPaintManager
 	/**
 	  * Creates a new repaint manager
 	  * @param component Component to paint
-	  * @param background Background color for filling the painted area (optional)
+	  * @param background Background color for filling the painted area (optional, call-by-name)
 	  * @param maxQueueSize The maximum amount of paint updates that can be queued before the whole component
 	  *                     is repainted instead (default = 30)
 	  * @param disableDoubleBuffering Whether double buffering should be disabled during draw operations.
@@ -30,7 +30,7 @@ object RealTimeReachPaintManager
 	  *                      This is to make the drawing results more responsive (default = true)
 	  * @return A new paint manager
 	  */
-	def apply(component: ReachComponentLike, background: Option[Color] = None,
+	def apply(component: ReachComponentLike, background: => Option[Color] = None,
 	          maxQueueSize: Int = 30, disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true) =
 		new RealTimeReachPaintManager(component, background, maxQueueSize, disableDoubleBuffering, syncAfterDraw)
 }
@@ -43,7 +43,7 @@ object RealTimeReachPaintManager
   */
 // TODO: Add a position modifier (call by name) that affects all draw operations
 //  (used for moving window contents while still keeping component position as (0,0))
-class RealTimeReachPaintManager(component: ReachComponentLike, background: Option[Color] = None, maxQueueSize: Int = 30,
+class RealTimeReachPaintManager(component: ReachComponentLike, background: => Option[Color] = None, maxQueueSize: Int = 30,
                                 disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
 	extends PaintManager
 {

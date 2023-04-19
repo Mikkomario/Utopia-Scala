@@ -14,5 +14,5 @@ trait ReachWindowContextualFactory[+Repr]
 	override def reachWindowContext: ReachWindowContext = context
 	
 	override def withReachWindowContext(base: ReachWindowContext): Repr = withContext(base)
-	override def withTextContext(textContext: TextContext): Repr = mapContext { _.withTextContext(textContext) }
+	override def withContentContext(textContext: TextContext): Repr = mapContext { _.withContentContext(textContext) }
 }

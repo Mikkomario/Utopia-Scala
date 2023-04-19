@@ -28,7 +28,7 @@ import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
 import java.awt.event.KeyEvent
@@ -51,7 +51,7 @@ object List extends Cff[ListFactory]
 class ListFactory(parentHierarchy: ComponentHierarchy)
 	extends FromContextFactory[ColorContext, ContextualListFactory]
 {
-	private implicit val canvas: ReachCanvas2 = parentHierarchy.top
+	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
 	override def withContext(context: ColorContext) = ContextualListFactory(this, context)
 	

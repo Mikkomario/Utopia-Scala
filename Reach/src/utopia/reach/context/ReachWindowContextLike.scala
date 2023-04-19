@@ -6,7 +6,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
-import utopia.reach.container.{ReachCanvas2, RevalidationStyle}
+import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}
 import utopia.reach.cursor.{Cursor, CursorSet, CursorType}
 
@@ -39,7 +39,7 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  *         Accepts a canvas instance and window bounds.
 	  *         Returns a point within or outside the bounds that serves as the window "anchor".
 	  */
-	def getAnchor: (ReachCanvas2, Bounds) => Point
+	def getAnchor: (ReachCanvas, Bounds) => Point
 	
 	/**
 	  * @param bg New background color to use
@@ -60,13 +60,13 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  * @param getAnchor An anchoring function
 	  * @return Context copy that uses the specified anchoring function
 	  */
-	def withGetAnchor(getAnchor: (ReachCanvas2, Bounds) => Point): Repr
+	def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): Repr
 	
 	/**
 	  * @param textContext A text context to add to this context
 	  * @return A copy of this context with the specified textual context in place
 	  */
-	def withTextContext(textContext: TextContext): Textual
+	def withContentContext(textContext: TextContext): Textual
 	
 	
 	// COMPUTED ------------------------
@@ -185,11 +185,11 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  * @param context Context to use for creating window contents
 	  * @return A copy of this context that can create window content, also
 	  */
-	def withTextContext(context: BaseContext): Textual =
-		withTextContext(context.against(windowBackground).forTextComponents: TextContext)
+	def withContentContext(context: BaseContext): Textual =
+		withContentContext(context.against(windowBackground).forTextComponents: TextContext)
 	/**
 	  * @param textContext A text context to add to this window context
 	  * @return A context suitable for creating popup windows
 	  */
-	def ++(textContext: TextContext) = withTextContext(textContext)
+	def ++(textContext: TextContext) = withContentContext(textContext)
 }

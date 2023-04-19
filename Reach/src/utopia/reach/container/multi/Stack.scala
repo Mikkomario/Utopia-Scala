@@ -17,7 +17,7 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericConte
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 
 object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
 {
@@ -32,7 +32,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 {
 	// COMPUTED	--------------------------------
 	
-	private implicit def canvas: ReachCanvas2 = parentHierarchy.top
+	private implicit def canvas: ReachCanvas = parentHierarchy.top
 	
 	/**
 	  * Creates a new stack builder
@@ -326,7 +326,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 {
 	// IMPLICIT	----------------------------
 	
-	private implicit def canvas: ReachCanvas2 = factory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	
 	// OTHER	-----------------------------
@@ -406,7 +406,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 
 class ContextualStackBuilder[N <: BaseContext, +F](stackFactory: ContextualStackFactory[N], contentFactory: Ccff[N, F])
 {
-	private implicit def canvas: ReachCanvas2 = stackFactory.stackFactory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
 	
 	private def context = stackFactory.context
 	

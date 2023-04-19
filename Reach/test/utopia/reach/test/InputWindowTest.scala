@@ -3,6 +3,7 @@ package utopia.reach.test
 import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.image.SingleColorIconCache
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{RowGroup, RowGroups}
@@ -10,16 +11,15 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
-import utopia.genesis.handling.ActorLoop
 import utopia.genesis.util.ScreenExtensions._
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.factory.ContextualMixed
@@ -28,15 +28,12 @@ import utopia.reach.component.input.selection.RadioButtonGroup
 import utopia.reach.component.input.text.{DurationField, TextField}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
-import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.firmament.localization.LocalizedString
-import utopia.flow.util.logging.Logger
-import utopia.reach.container.multi.{Stack, ViewStack}
-import utopia.reach.context.{PopupContext, ReachWindowContext}
 
 /**
   * Tests input window creation
@@ -67,8 +64,8 @@ object InputWindowTest extends App
 		// IMPLEMENTED	-------------------------
 		
 		override protected def windowContext: ReachWindowContext = ReachTestContext.windowContext
-		override protected def warningPopupContext: PopupContext =
-			windowContext.borderless.nonResizable.withTextContext(baseContext.against(colors.failure).forTextComponents)
+		override protected def warningPopupContext: ReachContentWindowContext =
+			windowContext.borderless.nonResizable.withContentContext(baseContext.against(colors.failure).forTextComponents)
 		override protected def log: Logger = ReachTestContext.log
 		
 		override protected def inputTemplate =

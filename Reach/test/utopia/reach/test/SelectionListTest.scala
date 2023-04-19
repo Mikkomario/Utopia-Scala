@@ -31,7 +31,7 @@ object SelectionListTest extends App
 	val mainBg = colors.gray.default
 	
 	// Creates the components
-	val window = ReachWindow.popupContextual.using(Framing) { (_, framingF) =>
+	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
 		framingF.build(Stack).apply(margins.aroundMedium) { stackF =>
 			// Stack[ScrollView + Button]

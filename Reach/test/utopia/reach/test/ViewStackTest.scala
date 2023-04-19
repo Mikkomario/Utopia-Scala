@@ -31,7 +31,7 @@ object ViewStackTest extends App
 	val numberPointer = new PointerWithEvents[Int](1)
 	
 	// Creates the components
-	val window = ReachWindow.popupContextual.using(Framing) { (_, framingF) =>
+	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
 		framingF.build(ViewStack).apply(margins.aroundMedium) { stackF =>
 			// Stack

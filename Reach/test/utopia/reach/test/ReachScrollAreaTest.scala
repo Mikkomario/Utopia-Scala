@@ -13,7 +13,7 @@ import utopia.paradigm.color.Hsl
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollArea
@@ -40,8 +40,8 @@ object ReachScrollAreaTest extends App
 	val activeSizePointer = isAltSizeFlag.map { if (_) altBlockSize else blockSize }
 	
 	// Creates the components
-	val window = ReachWindow.popupContextual.withWindowBackground(bg).using(Framing) { (canvas, framingF) =>
-		implicit val c: ReachCanvas2 = canvas
+	val window = ReachWindow.contentContextual.withWindowBackground(bg).using(Framing) { (canvas, framingF) =>
+		implicit val c: ReachCanvas = canvas
 		// Framing
 		val framing = framingF.build(ScrollArea).apply(margins.aroundMedium) { scrollF =>
 			// Scroll area

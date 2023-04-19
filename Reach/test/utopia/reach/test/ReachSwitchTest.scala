@@ -33,7 +33,7 @@ object ReachSwitchTest extends App
 	
 	// Creates the components
 	// Window
-	val window = ReachWindow.popupContextual.using(Framing) { (_, framingF) =>
+	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
 		framingF.build(Stack).apply(margins.aroundMedium) { colF =>
 			// Y-Stack
@@ -82,7 +82,7 @@ object ReachSwitchTest extends App
 	// Shows a pop-up when enabled switch state changes
 	window.result.valuePointer.addListener { event =>
 		// Pop-up
-		val popup = ReachWindow.popupContextual.withWindowBackground(colors.info).borderless.nonFocusable
+		val popup = ReachWindow.contentContextual.withWindowBackground(colors.info).borderless.nonFocusable
 			.anchoredToUsing(Framing, window.result, Alignment.Right, margins.medium) { (_, framingF) =>
 				// Framing
 				framingF.build(TextLabel).apply(margins.aroundSmall) { labelF =>

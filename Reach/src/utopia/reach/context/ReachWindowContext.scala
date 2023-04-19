@@ -4,7 +4,7 @@ import utopia.firmament.context.{TextContext, WindowContext}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.container.RevalidationStyle.Immediate
-import utopia.reach.container.{ReachCanvas2, RevalidationStyle}
+import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorSet
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.paradigm.color.Color
@@ -27,7 +27,7 @@ object ReachWindowContext
 	  */
 	def apply(base: WindowContext, background: Color, cursors: Option[CursorSet] = None,
 	          revalidationStyle: RevalidationStyle = Immediate.async, customDrawers: Vector[CustomDrawer] = Vector(),
-	          getAnchor: (ReachCanvas2, Bounds) => Point = _.anchorPosition(_)): ReachWindowContext =
+	          getAnchor: (ReachCanvas, Bounds) => Point = _.anchorPosition(_)): ReachWindowContext =
 		_ReachWindowContext(base, background, cursors, revalidationStyle, customDrawers, getAnchor)
 	
 	/**
@@ -43,7 +43,7 @@ object ReachWindowContext
 	
 	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color, cursors: Option[CursorSet],
 	                                       revalidationStyle: RevalidationStyle, customDrawers: Vector[CustomDrawer],
-	                                       getAnchor: (ReachCanvas2, Bounds) => Point)
+	                                       getAnchor: (ReachCanvas, Bounds) => Point)
 		extends ReachWindowContext
 	{
 		override def self: ReachWindowContext = this
@@ -55,13 +55,13 @@ object ReachWindowContext
 		override def withCursors(cursors: Option[CursorSet]): ReachWindowContext = copy(cursors = cursors)
 		override def withRevalidationStyle(style: RevalidationStyle): ReachWindowContext =
 			copy(revalidationStyle = style)
-		override def withGetAnchor(getAnchor: (ReachCanvas2, Bounds) => Point): ReachWindowContext =
+		override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): ReachWindowContext =
 			copy(getAnchor = getAnchor)
 		
 		override def withWindowContext(base: WindowContext): ReachWindowContext =
 			if (base == windowContext) self else copy(windowContext = base)
 		
-		override def withTextContext(textContext: TextContext): PopupContext = PopupContext(this, textContext)
+		override def withContentContext(textContext: TextContext): ReachContentWindowContext = ReachContentWindowContext(this, textContext)
 	}
 }
 
@@ -70,4 +70,4 @@ object ReachWindowContext
   * @author Mikko Hilpinen
   * @since 13.4.2023, v1.0
   */
-trait ReachWindowContext extends ReachWindowContextLike[ReachWindowContext, PopupContext] with WindowContext
+trait ReachWindowContext extends ReachWindowContextLike[ReachWindowContext, ReachContentWindowContext] with WindowContext
