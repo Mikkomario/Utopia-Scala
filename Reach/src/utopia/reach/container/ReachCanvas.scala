@@ -10,7 +10,7 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.{IndirectPointer, PointerWithEvents, SettableOnce}
+import utopia.flow.view.mutable.eventful.{IndirectPointer, PointerWithEvents, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
@@ -24,7 +24,7 @@ import utopia.paradigm.color.ColorShade.Dark
 import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult
@@ -33,7 +33,7 @@ import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.focus.ReachFocusManager
 import utopia.reach.util.RealTimeReachPaintManager
 
-import java.awt.event.KeyEvent
+import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent}
 import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}
 import java.util
 import javax.swing.{JComponent, JPanel}
@@ -81,13 +81,103 @@ object ReachCanvas
 	{
 		// Creates the canvas first
 		val contentPointer = SettableOnce[ReachComponentLike]()
-		val canvas = new ReachCanvas(contentPointer, attachmentPointer, absoluteParentPositionView, backgroundPointer,
-			cursors, enableAwtDoubleBuffering, disableFocus)(revalidateImplementation)
+		// The canvas is created in the AWT event thread
+		val canvas = AwtEventThread.blocking {
+			new ReachCanvas(contentPointer, attachmentPointer, absoluteParentPositionView, backgroundPointer,
+				cursors, enableAwtDoubleBuffering, disableFocus)(revalidateImplementation)
+		}
 		// Then creates the content, using the canvas' component hierarchy
 		val newContent = createContent(canvas.hierarchy)
 		// Attaches the content to the canvas and returns both
 		contentPointer.set(newContent.component)
 		newContent in canvas
+	}
+	
+	/**
+	  * Creates a new Reach canvas that is suitable to be used as a Swing component (see ReachCanvas.component).
+	  * Please note that the primary use of Reach components is not inside a Swing (or even Reflection) system,
+	  * but inside a ReachWindow. This function is intended for those rare situations where you want to have a
+	  * fixed ReachCanvas layout / component inside a somewhat fixed Swing or AWT component system.
+	  * The resulting canvas will never resize itself automatically. If you want the canvas to change size, you
+	  * must resize it manually. Remember to call .updateLayout() after any size change.
+	  *
+	  * @param backgroundPointer          A pointer that contains the background use in this canvas
+	  * @param cursors                    A set of custom cursors to use on this canvas (optional)
+	  *
+	  * @param revalidateListener         A function that is called during ReachCanvas revalidation.
+	  *                                   At this point the canvas stack size has been reset.
+	  *                                   After this function call the canvas will update its layout.
+	  *
+	  *                                   This function accepts this canvas instance.
+	  *                                   This function should be blocking, and may resize the canvas.
+	  *
+	  *                                   The default implementation of this function does nothing,
+	  *                                   which is suitable in cases where you don't want the canvas to change its size.
+	  *
+	  * @param enableAwtDoubleBuffering   Whether AWT double buffering should be allowed.
+	  *                                   Setting this to true might make the painting less responsive.
+	  *                                   Default = false = disable AWT double buffering.
+	  * @param disableFocus               Whether this canvas shall not be allowed to gain or manage focus.
+	  *                                   Default = false = focus is enabled.
+	  *                                   content component that this canvas will wrap.
+	  *                                   May return an additional result, which will be returned by this function also.
+	  * @param exc                        Implicit execution context
+	  * @param log                        Implicit logging implementation for some error cases
+	  * @tparam C Type of the component wrapped by this canvas
+	  * @tparam R Type of the additional result from the 'createContent' function
+	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
+	  */
+	def forSwing[C <: ReachComponentLike, R](backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
+	                                         revalidateListener: ReachCanvas => Unit = _ => (),
+	                                         enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+	                                        (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                        (implicit exc: ExecutionContext, log: Logger) =
+	{
+		// Performs the canvas creation in the AWT event tread (blocks)
+		AwtEventThread.blocking {
+			// Implements the attachment tracking etc.
+			val attachmentPointer = ResettableFlag()
+			val componentPointer = SettableOnce[java.awt.Component]()
+			val absoluteParentPositionView = View {
+				componentPointer.value match {
+					case Some(component) =>
+						component.parentsIterator.takeTo { _.isInstanceOf[java.awt.Window] }
+							.foldLeft(Point.origin) { (p, c) =>
+								c match {
+									case window: java.awt.Window =>
+										val insets = Insets.of(window.getInsets)
+										p + Point.of(window.getLocation) + insets.toPoint
+									case component => p + Point.of(component.getLocation)
+								}
+							}
+					case None => Point.origin
+				}
+			}
+			// Creates the canvas
+			val canvas = apply(attachmentPointer, Left(absoluteParentPositionView), backgroundPointer, cursors,
+				enableAwtDoubleBuffering, disableFocus) { canvas =>
+				// The revalidation is performed synchronously, and doesn't necessarily alter canvas size in any way
+				canvas.resetCachedSize()
+				revalidateListener(canvas)
+				canvas.updateLayout()
+			}(createContent)
+			componentPointer.set(canvas.component)
+			canvas.component.addComponentListener(new SwingAttachmentTracker(attachmentPointer))
+			
+			// Initializes canvas size
+			canvas.size = canvas.stackSize.optimal
+			
+			canvas
+		}
+	}
+	
+	
+	// NESTED   ----------------------------
+	
+	private class SwingAttachmentTracker(pointer: ResettableFlag) extends ComponentAdapter
+	{
+		override def componentShown(e: ComponentEvent) = pointer.set()
+		override def componentHidden(e: ComponentEvent) = pointer.reset()
 	}
 }
 
@@ -193,6 +283,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	backgroundPointer.addContinuousListener { e =>
 		component.setBackground(e.newValue.toAwt)
 		component.setOpaque(e.newValue.alpha >= 1.0)
+		repaint()
 	}
 	
 	attachmentPointer.addListener { event =>
