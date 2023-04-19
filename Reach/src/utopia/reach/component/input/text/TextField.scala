@@ -518,6 +518,6 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	/**
 	  * Clears this field of all text
 	  */
-	// TODO: This goes against the immutable nature of this field
+	@deprecated("This method will be removed, as it violates this field's capsuling principles")
 	def clear() = textContentPointer.value = ""
 }

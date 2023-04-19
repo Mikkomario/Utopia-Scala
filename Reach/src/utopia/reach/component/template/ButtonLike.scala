@@ -191,7 +191,6 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled && (!requiresFocus || hasFocus)
 	}
 	
-	// TODO: Remove test prints
 	private class ButtonMouseListener(statePointer: Pointer[GuiElementStatus]) extends MouseButtonStateListener
 		with MouseMoveListener
 	{

@@ -102,7 +102,6 @@ trait ComponentHierarchy
 	  *         placed in the beginning and the last element is the first direct parent component. If this hierarchy
 	  *         doesn't have parents before the canvas, returns an empty vector.
 	  */
-	// TODO: It would be better if this was ordered the other way around. See what the implications of that would be.
 	def toVector: Vector[ReachComponentLike] = parentsIterator.toVector.reverse
 	
 	

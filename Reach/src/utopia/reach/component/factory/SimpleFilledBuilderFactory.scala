@@ -11,7 +11,6 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
   * @author Mikko Hilpinen
   * @since 9.12.2020, v0.1
   */
-// FIXME: These functions are not available (type inference fails)
 trait SimpleFilledBuilderFactory[Builder[NC, F]]
 {
 	protected def makeBuilder[NC, F](background: Color, contentContext: NC,

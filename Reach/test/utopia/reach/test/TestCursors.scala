@@ -17,7 +17,6 @@ import java.nio.file.Path
 object TestCursors
 {
 	private val cursorsDirectory: Path = "Reach/test-images"
-	// TODO: Fix cursor setup
 	lazy val cursors: Option[CursorSet] = Image.readFrom(cursorsDirectory/"cursor-arrow.png").toOption.map { arrowImage =>
 		val arrowCursor = Cursor(new SingleColorIcon(arrowImage.withSourceResolutionOrigin(Point(7, 4))))
 		val handImage = Image.readFrom(cursorsDirectory/"cursor-hand.png").toOption.map { i =>
