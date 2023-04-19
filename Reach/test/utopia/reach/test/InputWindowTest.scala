@@ -45,9 +45,6 @@ import utopia.reach.context.{PopupContext, ReachWindowContext}
   */
 object InputWindowTest extends App
 {
-	ParadigmDataType.setup()
-	System.setProperty("sun.java2d.noddraw", true.toString)
-	
 	import ReachTestContext._
 	
 	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
@@ -172,12 +169,8 @@ object InputWindowTest extends App
 		override protected def title = "Test"
 	}
 	
-	// Starts events
-	val actionLoop = new ActorLoop(actorHandler)
-	actionLoop.runAsync()
-	StackHierarchyManager.startRevalidationLoop()
-	
 	// Displays a dialog
+	start()
 	val result = TestWindows.displayBlocking().get
 	println(s"Dialog completed with result: $result")
 	

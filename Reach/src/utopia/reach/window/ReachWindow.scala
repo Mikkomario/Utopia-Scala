@@ -234,21 +234,41 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		// A flag used to avoid looping size-altering & listening - Only needed when window streching is used
 		val ignoreNextSizeUpdateFlag = ResettableFlag()
 		def optimizeWindowPosition() = {
-			// Case: Stretching enabled => May modify window size as well
-			if (matchEdgeLength) {
-				val newBounds = preferredAlignment.stretchNextToWithin(window.stackSize, component.absoluteBounds,
-					screenArea, margin, swapToFit = true)
-				// Ignores the next size update when altering window size through this method
-				ignoreNextSizeUpdateFlag.value = window.size != newBounds.size
-				window.bounds = newBounds
+			if (window.isFullyVisible) {
+				// Case: Stretching enabled => May modify window size as well
+				if (matchEdgeLength) {
+					val newBounds = preferredAlignment.stretchNextToWithin(window.stackSize, component.absoluteBounds,
+						screenArea, margin, swapToFit = true)
+					// Ignores the next size update when altering window size through this method
+					ignoreNextSizeUpdateFlag.value = window.size != newBounds.size
+					window.bounds = newBounds
+				}
+				// Case: Only positioning is enabled
+				else
+					window.position = preferredAlignment.positionRelativeToWithin(window.size, component.absoluteBounds,
+						screenArea, margin, swapToFit = true).position
 			}
-			// Case: Only positioning is enabled
-			else
-				window.position = preferredAlignment.positionRelativeToWithin(window.size, component.absoluteBounds,
-					screenArea, margin, swapToFit = true).position
 		}
 		
-		optimizeWindowPosition()
+		// Whenever the window becomes visible, updates its location and size
+		window.fullyVisibleFlag.addListener { e =>
+			// Case: Window became visible
+			if (e.newValue) {
+				// Case: Optimizing both size and position
+				if (matchEdgeLength)
+					optimizeWindowPosition()
+				// Case: Optimizing size only => Uses window.optimizeBounds() to update size
+				else {
+					// Case: .optimizeBounds() alters size (delayed) => Updates position once the update takes place
+					if (window.optimizeBounds())
+						window.sizePointer.onNextChange { _ => optimizeWindowPosition() }
+					// Case: No size altered => Optimizes position immediately
+					else
+						optimizeWindowPosition()
+				}
+			}
+			DetachmentChoice.continueUntil(window.hasClosed)
+		}
 		
 		// Updates the window position whenever the owner component's absolute position changes,
 		// or when the window's size changes

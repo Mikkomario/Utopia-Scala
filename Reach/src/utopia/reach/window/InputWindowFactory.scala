@@ -176,16 +176,15 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @param field The field next to which the pop-up will be displayed
 	  * @param message The message to display on the pop-up
 	  */
-	protected def showWarningFor(field: RowField, message: LocalizedString): Unit =
-	{
+	protected def showWarningFor(field: RowField, message: LocalizedString): Unit = {
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
-		implicit val context: PopupContext = warningPopupContext
+		implicit val context: PopupContext = warningPopupContext.nonFocusable
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up
 		val windowPointer = SettableOnce[Window]()
-		val window = field.createWindow(margin = context.margins.small) { hierarchy =>
+		val window = field.createWindow(margin = context.margins.medium) { hierarchy =>
 			// The pop-up contains a close button and the warning text
 			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack.static[TextContext])
 				.apply(context.margins.small.any) { stackF =>

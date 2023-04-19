@@ -167,7 +167,7 @@ trait InteractionWindowFactory[A]
 		}
 		
 		// Displays the dialog
-		window.display()
+		window.display(centerOnParent = true)
 		
 		// Finalizes the enter action enabled -function
 		// Triggers the default button on enter, provided that no button has focus and the window does
