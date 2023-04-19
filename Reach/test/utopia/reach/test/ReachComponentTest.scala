@@ -1,31 +1,25 @@
 package utopia.reach.test
 
-import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.component.Window
+import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
+import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.text.EditableTextLabel
-import utopia.reach.component.label.text.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
-import utopia.reach.container.ReachCanvas2
+import utopia.reach.component.label.text.{MutableTextLabel, TextLabel}
+import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusListener
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.reflection.container.swing.window.{Frame, Window}
-import utopia.firmament.localization.LocalString._
-import utopia.firmament.model.stack.StackLength
-import utopia.reach.container.multi.{ContextualStackFactory, Stack}
-import utopia.reflection.test.TestContext
-import utopia.reflection.util.SingleFrameSetup
+import utopia.reach.window.ReachWindow
 
 import java.awt.event.KeyEvent
 
@@ -36,44 +30,43 @@ import java.awt.event.KeyEvent
   */
 object ReachComponentTest extends App
 {
-	import TestContext._
-	import TestCursors._
+	import ReachTestContext._
 	
-	System.setProperty("sun.java2d.noddraw", true.toString)
+	private def focusReporter(componentName: String) =
+		FocusListener { event => println(s"$componentName: $event") }
 	
-	def focusReporter(componentName: String) = FocusListener { event => println(s"$componentName: $event") }
-	/*
-	val windowPointer = Pointer[Option[Window[_]]](None)
-	val result = ReachCanvas(cursors) { canvasHierarchy =>
-		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargins(StackLength.fixedZero))
-			.build(Mixed).column() { factories =>
-			
-			val (framing, label) = factories.withoutContext(Framing).buildFilledWithMappedContext[ColorContext,
-				TextContext, ContextualMutableTextLabelFactory](baseContext, colorScheme.secondary.light,
-				MutableTextLabel) { _.forTextComponents.withTextAlignment(Alignment.Center) }
-				.apply(margins.medium.any) { labelFactory =>
-					labelFactory.withBackground("Hello!", Primary)
+	// Creates the components
+	private val windowPointer = SettableOnce[Window]()
+	val window = ReachWindow.popupContextual.using(Stack) { (_, stackF) =>
+		// Column
+		stackF.build(Mixed).withoutMargin() { factories =>
+			// 1: Framing (Secondary)
+			val (framing, label) = factories(Framing).buildFilled(Secondary, MutableTextLabel, Light)
+				.apply(margins.aroundMedium) { labelF =>
+					// Hello Label (Primary)
+					labelF.withHorizontallyCenteredText.withBackground("Hello!", Primary)
 				}.toTuple
-			
-			// TODO: The second label "twitches" on content updates
-			val label2 = factories.withContext(baseContext.against(colorScheme.primary)
-				.forTextComponents.withTextAlignment(Alignment.Center))(TextLabel)
-				.withCustomBackground("Hello 2\nThis label contains 2 lines", colorScheme.primary)
-			
-			val editLabelFraming = factories.withoutContext(Framing)
-				.buildFilledWithMappedContext[ColorContext, TextContext, ContextualStackFactory](baseContext,
-					colorScheme.primary.light, Stack) { _.forTextComponents.withTextAlignment(Alignment.Center) }
-				.apply(margins.medium.any) {
-					_.build(Mixed).column(Center) { factories =>
+			// 2: Hello Label 2
+			val label2 = factories(TextLabel).withTextAlignment(Alignment.Center)
+				.apply("Hello 2\nThis label contains 2 lines")
+			// 3: Framing
+			val editLabelFraming = factories(Framing).buildFilled(Primary, Stack, Light)
+				.apply(margins.medium.any) { stackF =>
+					// Column (Centered)
+					stackF.build(Mixed).column(Center) { factories =>
+						// 1: Editable text label
 						val editableLabel = factories(EditableTextLabel)(new PointerWithEvents("Type Here"))
 						editableLabel.addFocusListener(focusReporter("Label"))
+						// 2: Button Row
 						val buttonStack = factories(Stack).build(Mixed).row(areRelated = true) { factories =>
-							val clearButton = factories.mapContext { _/Secondary }(TextButton)
+							// 2.1: Clear Button
+							val clearButton = factories.mapContext { _ / Secondary }(TextButton)
 								.apply("Clear (F1)", Set(HotKey.keyWithIndex(KeyEvent.VK_F1)),
 									focusListeners = Vector(focusReporter("Clear Button"))) {
 									editableLabel.text = ""
 								}
-							val closeButton = factories.mapContext { _/Primary }(TextButton)
+							// 2.2: Close Button
+							val closeButton = factories.mapContext { _ / Primary }(TextButton)
 								.apply("Close (esc)", Set(HotKey.keyWithIndex(KeyEvent.VK_ESCAPE)),
 									focusListeners = Vector(focusReporter("Close Button"))) {
 									windowPointer.value.foreach { _.close() }
@@ -85,35 +78,19 @@ object ReachComponentTest extends App
 				}.parent
 			
 			Vector(framing, label2, editLabelFraming) -> label
-		}.toTriple
-		
-		stack -> label
-		
-		/*
-		Framing(canvasHierarchy).builder(MutableTextLabel).withBackground(
-			colorScheme.secondary.light, margins.medium.any)
-		{
-			(labelFactory, c) =>
-				implicit val context: TextContext = c.forTextComponents(Alignment.Center)
-				labelFactory.withBackground("Hello!", Primary)
-		}(baseContext).toTuple*/
+		}
 	}
-	val canvas = result.parent
-	canvas.background = Color.magenta
+	windowPointer.set(window)
 	
-	val frame = Frame.windowed(canvas, "Reach Test", Program)
-	windowPointer.value = Some(frame)
-	new SingleFrameSetup(actorHandler, frame).start()
+	// Displays the window
+	window.setToExitOnClose()
+	window.display(centerOnParent = true)
+	start()
 	
-	val label = result.result
-	
-	println(s"Canvas stack size: ${ canvas.stackSize }")
-	println(s"Label bounds: ${ label.bounds }")
-	
+	// Adds user interaction
+	val label = window.result
 	GlobalKeyboardEventHandler += KeyTypedListener { event: KeyTypedEvent => label.text += event.typedChar.toString }
-	frame.addKeyStateListener(KeyStateListener(KeyStateEvent.keyFilter(KeyEvent.VK_BACK_SPACE)) { _ =>
+	window.focusKeyStateHandler += KeyStateListener(KeyStateEvent.keyFilter(KeyEvent.VK_BACK_SPACE)) { _ =>
 		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped
-	})
-	
-	 */
+	}
 }
