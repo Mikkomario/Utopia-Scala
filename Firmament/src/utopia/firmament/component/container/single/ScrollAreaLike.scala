@@ -1,7 +1,10 @@
 package utopia.firmament.component.container.single
 
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
+import utopia.firmament.drawing.template.DrawLevel.Foreground
+import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.ScrollBarBounds
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -15,11 +18,8 @@ import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.motion.motion2d.Velocity2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.firmament.drawing.template.DrawLevel.Foreground
-import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
-import utopia.firmament.model.stack.StackSize
 
 import java.awt.event.KeyEvent
 import java.time.Instant
@@ -32,7 +32,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 15.5.2019, Reflection v1+
   */
-trait ScrollAreaLike[C <: Stackable] extends CachingStackable
+trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 {
 	// ATTRIBUTES	----------------
 	
@@ -99,11 +99,9 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * @return The top-left corner of this area's contents
 	  */
 	def contentOrigin = content.position
-	def contentOrigin_=(pos: Point) =
-	{
+	def contentOrigin_=(pos: Point) = {
 		val newContentPosition = minContentOrigin.bottomRight(pos).topLeft(Point.origin)
-		if (content.position != newContentPosition)
-		{
+		if (content.position != newContentPosition) {
 			content.position = newContentPosition
 			updateScrollBarBounds(repaintAfter = true)
 		}
@@ -140,8 +138,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  */
 	def edgeScrollBarMargin = scrollBarMargin.height
 	
-	private def scrollBarContentOverlap =
-	{
+	private def scrollBarContentOverlap = {
 		if (scrollBarIsInsideContent)
 			Size.zero
 		else
@@ -154,64 +151,50 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	
 	override def children = Vector(content)
 	
-	override def calculatedStackSize =
-	{
+	override def calculatedStackSize = {
 		val contentSize = content.stackSize
-		val lengths = Axis2D.values.map
-		{
-			axis =>
-				// Handles scrollable & non-scrollable axes differently
-				if (axes.contains(axis))
-				{
-					// Uses content size but may limit it in process
-					val raw = contentSize(axis)
-					val limited = (if (limitsToContentSize) raw else raw.noMax).withLowPriority.noMin
-					// May also expand according to scroll bar width
-					if (scrollBarIsInsideContent)
-						axis -> limited
-					else
-						axis -> (limited + scrollBarWidth + scrollBarMargin.width)
-				}
+		StackSize.fromFunction2D { axis =>
+			// Handles scrollable & non-scrollable axes differently
+			if (axes.contains(axis)) {
+				// Uses content size but may limit it in process
+				val raw = contentSize(axis)
+				val limited = (if (limitsToContentSize) raw else raw.noMax).withLowPriority.noMin
+				// May also expand according to scroll bar width
+				if (scrollBarIsInsideContent)
+					limited
 				else
-					axis -> contentSize(axis)
-		}.toMap
-		
-		StackSize(lengths(X), lengths(Y))
+					limited + scrollBarWidth + scrollBarMargin.width
+			}
+			else
+				contentSize(axis)
+		}
 	}
 	
 	// Updates content size & position
-	override def updateLayout() =
-	{
+	override def updateLayout() = {
 		// Non-scrollable content side is dependent from this component's side while scrollable side(s) are always set to optimal
 		val contentSize = content.stackSize
 		val contentAreaSize = size - scrollBarContentOverlap
 		
-		val lengths: Map[Axis2D, Double] = Axis2D.values.map
-		{
-			axis =>
-				if (axes.contains(axis))
-				{
-					// If this area's maximum size is tied to that of the content, will not allow the content to
-					// be smaller than this area
-					if (limitsToContentSize)
-						axis -> (contentSize(axis).optimal max contentAreaSize(axis))
-					else
-						axis -> contentSize(axis).optimal
-				}
+		content.size = Size.fromFunction2D { axis =>
+			if (axes.contains(axis)) {
+				// If this area's maximum size is tied to that of the content, will not allow the content to
+				// be smaller than this area
+				if (limitsToContentSize)
+					contentSize(axis).optimal max contentAreaSize(axis)
 				else
-					axis -> contentAreaSize(axis)
-		}.toMap
-		
-		content.size = Size(lengths(X), lengths(Y))
+					contentSize(axis).optimal
+			}
+			else
+				contentAreaSize(axis)
+		}
 		
 		// May scroll on content size change
-		if (content.width >= contentAreaSize.width)
-		{
+		if (content.width >= contentAreaSize.width) {
 			if (content.x + content.width < contentAreaSize.width)
 				content.x = contentAreaSize.width - content.width
 		}
-		if (content.height >= contentAreaSize.height)
-		{
+		if (content.height >= contentAreaSize.height) {
 			if (content.y + content.height < contentAreaSize.height)
 				content.y = contentAreaSize.height - content.height
 		}
@@ -227,43 +210,38 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * @param abovePercents The portion of the content that should be above this view [0, 1]
 	  * @param animated Whether scrolling should be animated (default = true). If false, scrolling will be completed at once.
 	  */
-	def scrollTo(abovePercents: HasDoubleDimensions, animated: Boolean = true) =
-	{
+	def scrollTo(abovePercents: HasDoubleDimensions, animated: Boolean = true) = {
 		val target = -contentSize.toPoint * abovePercents
 		if (animated)
 			animateScrollTo(target)
 		else
 			contentOrigin = target
 	}
-	
 	/**
 	  * Scrolls to a specific percentage on a single axis
 	  * @param abovePercent The portion of the content that should be above this view [0, 1]
 	  * @param axis The axis on which the scrolling is applied
 	  * @param animated Whether scrolling should be animated (default = true). If false, scrolling will be completed at once.
 	  */
-	def scrollTo(abovePercent: Double, axis: Axis2D, animated: Boolean) =
-	{
+	def scrollTo(abovePercent: Double, axis: Axis2D, animated: Boolean) = {
 		val target = contentOrigin.withDimension(contentSize.along(axis) * -abovePercent)
 		if (animated)
 			animateScrollTo(target)
 		else
 			contentOrigin = target
 	}
-	
 	/**
 	  * Scrolls to a specific percentage on a single axis
 	  * @param abovePercent The portion of the content that should be above this view [0, 1]
 	  * @param axis The axis on which the scrolling is applied
 	  */
-	def scrollTo(abovePercent: Double, axis: Axis2D): Unit = scrollTo(abovePercent, axis, animated = true)
+	def scrollTo(abovePercent: Double, axis: Axis2D): Unit = () // scrollTo(abovePercent, axis, animated = true)
 	
 	/**
 	  * Scrolls this view a certain amount
 	  * @param amounts The scroll vector
 	  */
-	def scroll(amounts: HasDoubleDimensions, animated: Boolean = true, preservePreviousMomentum: Boolean = true) =
-	{
+	def scroll(amounts: HasDoubleDimensions, animated: Boolean = true, preservePreviousMomentum: Boolean = true) = {
 		if (animated)
 			animateScrollTo(contentOrigin + amounts, preservePreviousMomentum)
 		else
@@ -279,8 +257,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * Scrolls to the right edge, if horizontal scrolling is supported
 	  * @param animated Whether scrolling should be animated
 	  */
-	def scrollToRight(animated: Boolean = true) =
-	{
+	def scrollToRight(animated: Boolean = true) = {
 		val target = contentOrigin.withX(minContentOrigin.x)
 		if (animated)
 			animateScrollTo(target)
@@ -296,8 +273,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * Scrolls to the bottom, if vertical scrolling is supported
 	  * @param animated Whether scrolling should be animated
 	  */
-	def scrollToBottom(animated: Boolean = true) =
-	{
+	def scrollToBottom(animated: Boolean = true) = {
 		val target = contentOrigin.withY(minContentOrigin.y)
 		if (animated)
 			animateScrollTo(target)
@@ -310,39 +286,28 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * @param area The target area (within content's relative space
 	  *             (Eg. position (0, 0) is considered the top left corner of content))
 	  */
-	def ensureAreaIsVisible(area: Bounds, animated: Boolean = true) =
-	{
+	def ensureAreaIsVisible(area: Bounds, animated: Boolean = true) = {
 		// Performs calculations in scroll view's relative space
 		val areaInViewSpace = area + contentOrigin
-		
 		// Calculates how much scrolling is required
-		// TODO: Refactor
-		val xTransition = {
-			if (areaInViewSpace.leftX < 0)
-				areaInViewSpace.leftX
-			else if (areaInViewSpace.rightX > width)
-				areaInViewSpace.rightX - width
+		val translation = areaInViewSpace.dimensions.mergeWith(size, 0.0) { (area, myLength) =>
+			if (area.start < 0)
+				-area.start
+			else if (area.end > myLength)
+				myLength - area.end
 			else
-				0
+				0.0
 		}
-		val yTransition = {
-			if (areaInViewSpace.topY < 0)
-				areaInViewSpace.topY
-			else if (areaInViewSpace.bottomY > height)
-				areaInViewSpace.bottomY - height
-			else
-				0
-		}
-		
 		// Performs actual scrolling
-		scroll(Vector2D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
+		scroll(translation, animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) =
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = {
 		Axis2D.values.foreach { axis =>
 			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize(axis))
 				barBounds.get(axis).foreach { b => barDrawer.draw(drawer, b + position, axis) }
 		}
+	}
 	
 	/**
 	  * Converts a scroll bar drawer to a custom drawer, which should then be added to this view
@@ -357,10 +322,8 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * setupMouseHandling is called
 	  * @param actorHandler The actor handler that will deliver action events
 	  */
-	private def setupAnimatedScrolling(actorHandler: ActorHandler) =
-	{
-		if (scroller.isEmpty)
-		{
+	private def setupAnimatedScrolling(actorHandler: ActorHandler) = {
+		if (scroller.isEmpty) {
 			val newScroller = new AnimatedScroller
 			scroller = Some(newScroller)
 			
@@ -408,8 +371,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  */
 	protected def animateScrollTo(newContentOrigin: Point, preservePreviousMomentum: Boolean = false) =
 	{
-		if (scroller.isDefined)
-		{
+		if (scroller.isDefined) {
 			// Calculates duration first (in milliseconds)
 			// t = Sqrt(2D/a)
 			val distanceVector = (newContentOrigin - contentOrigin).toVector
@@ -446,19 +408,15 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 	  * Updates the scroll bar position and size etc
 	  * @param repaintAfter Whether this scroll area should be repainted afterwards (default = false)
 	  */
-	protected def updateScrollBarBounds(repaintAfter: Boolean = false) =
-	{
-		if (contentSize.area == 0)
-		{
+	protected def updateScrollBarBounds(repaintAfter: Boolean = false) = {
+		if (contentSize.area == 0) {
 			if (barBounds.nonEmpty)
 				barBounds = HashMap()
 		}
-		else
-		{
+		else {
 			barBounds = axes.map { axis =>
 				// Calculates the size of the scroll area
-				val barAreaSize = axis match
-				{
+				val barAreaSize = axis match {
 					case X => Size(width - edgeScrollBarMargin * 2, scrollBarWidth)
 					case Y => Size(scrollBarWidth, height - edgeScrollBarMargin * 2)
 				}
@@ -500,10 +458,8 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def act(duration: FiniteDuration) =
-		{
-			if (!velocity.amount.isZero)
-			{
+		override def act(duration: FiniteDuration) = {
+			if (!velocity.amount.isZero) {
 				// Calculates the amount of scrolling and velocity after applying friction
 				val (transition, newVelocity) = velocity(duration, -friction.abs, preserveDirection = true)
 				
@@ -557,15 +513,13 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 			// Performs some calculations in this component's context
 			val relativeEvent = event.relativeTo(position)
 			
-			if (event.wasPressed)
-			{
+			if (event.wasPressed) {
 				// If mouse was pressed inside inside scroll bar, starts dragging the bar
 				val barUnderEvent = axes.findMap { axis =>
 					barBounds.get(axis).filter { b => relativeEvent.isOverArea(b.bar) }.map { axis -> _.bar }
 				}
 				
-				if (barUnderEvent.isDefined)
-				{
+				if (barUnderEvent.isDefined) {
 					isDraggingContent = false
 					barDragAxis = barUnderEvent.get._1
 					barDragPosition = relativeEvent.positionOverArea(barUnderEvent.get._2)
@@ -574,8 +528,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 				}
 				// Consumed pressed events are only considered in scroll bar(s)
 				// if outside, starts drag scrolling
-				else if (event.isOverArea(bounds) && !event.isConsumed)
-				{
+				else if (event.isOverArea(bounds) && !event.isConsumed) {
 					isDraggingBar = false
 					contentDragPosition = event.mousePosition
 					isDraggingContent = true
@@ -588,14 +541,12 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 		override def onMouseMove(event: MouseMoveEvent) =
 		{
 			// If dragging scroll bar, scrolls the content
-			if (isDraggingBar)
-			{
+			if (isDraggingBar) {
 				val newBarOrigin = event.positionOverArea(bounds) - barDragPosition
 				scrollTo(newBarOrigin(barDragAxis) / lengthAlong(barDragAxis), barDragAxis, animated = false)
 			}
 			// If dragging content, updates scrolling and remembers velocity
-			else if (isDraggingContent)
-			{
+			else if (isDraggingContent) {
 				// Drag scrolling is different when both axes are being scrolled
 				if (allows2DScrolling)
 					scroll(event.transition, animated = false)
@@ -608,17 +559,11 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 		}
 		
 		// When wheel is rotated inside component bounds, scrolls
-		override def onMouseWheelRotated(event: MouseWheelEvent) =
-		{
+		override def onMouseWheelRotated(event: MouseWheelEvent) = {
 			// in 2D scroll views, X-scrolling is applied only if shift is being held
-			val scrollAxis =
-			{
-				if (allows2DScrolling)
-				{
-					if (GlobalKeyboardEventHandler.keyStatus(KeyEvent.VK_SHIFT))
-						X
-					else
-						Y
+			val scrollAxis = {
+				if (allows2DScrolling) {
+					if (GlobalKeyboardEventHandler.keyStatus(KeyEvent.VK_SHIFT)) X else Y
 				}
 				else
 					axes.headOption getOrElse Y
@@ -639,12 +584,10 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable
 			override val mouseButtonStateEventFilter =
 				MouseButtonStateEvent.leftButtonFilter && MouseButtonStateEvent.wasReleasedFilter
 			
-			override def onMouseButtonState(event: MouseButtonStateEvent) =
-			{
+			override def onMouseButtonState(event: MouseButtonStateEvent) = {
 				// When mouse is released, stops dragging. May apply scrolling velocity
 				isDraggingBar = false
-				if (isDraggingContent)
-				{
+				if (isDraggingContent) {
 					isDraggingContent = false
 					
 					// Calculates the scrolling velocity

@@ -327,7 +327,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// INITIAL CODE ----------------
 	
-	AwtEventThread.async {
+	AwtEventThread.blocking {
 		// Starts tracking window state
 		component.addWindowListener(WindowStateListener)
 		
@@ -354,7 +354,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Initializes position and size
 		_positionPointer.value = Point.of(component.getLocation)
 		_sizePointer.value = Size.of(component.getSize)
-		AwtEventThread.async { optimizeBounds(dictateSize = true) }
+		optimizeBounds(dictateSize = true)
 		
 		// Registers to update the state when the wrapped window updates
 		component.addComponentListener(WindowComponentStateListener)
@@ -419,14 +419,16 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				DetachmentChoice.detach
 			else {
 				if (e.newValue) {
-					content.resetCachedSize()
-					resetCachedSize()
-					if (!optimizeBounds()) {
-						updateLayout()
-						content.updateLayout()
+					AwtEventThread.async {
+						content.resetCachedSize()
+						resetCachedSize()
+						if (!optimizeBounds()) {
+							updateLayout()
+							content.updateLayout()
+						}
+						component.repaint()
 					}
 				}
-				AwtEventThread.async { component.repaint() }
 				DetachmentChoice.continue
 			}
 		}

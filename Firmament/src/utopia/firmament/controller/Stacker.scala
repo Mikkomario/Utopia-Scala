@@ -33,8 +33,7 @@ object Stacker
 	{
 		if (componentSizes.isEmpty)
 			StackSize.any.mapDimension(stackAxis) { _.expanding }
-		else
-		{
+		else {
 			// Checks component sizes
 			val lengths = componentSizes map { _ along stackAxis }
 			val breadths = componentSizes map { _ along stackAxis.perpendicular }

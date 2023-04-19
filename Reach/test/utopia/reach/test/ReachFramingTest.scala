@@ -20,7 +20,7 @@ object ReachFramingTest extends App
 	import ReachTestContext._
 	
 	private val pointer = new PointerWithEvents("Some\nText")
-	val window = ReachWindow.popupContextual.using(Framing) { framingF =>
+	val window = ReachWindow.popupContextual.using(Framing) { (_, framingF) =>
 		framingF.build(ViewTextLabel).apply(StackInsets.symmetric(margins.aroundMedium).expandingToRight) { labelF =>
 			labelF.withBackground(pointer, Secondary)
 		}

@@ -18,19 +18,9 @@ object ReachWindowTest extends App
 	
 	val textPointer = new PointerWithEvents("Text")
 	
-	/*
-	val window = ReachWindow.withResizeLogic(User)
-		// .withTextContext(baseContext.against(colors.primary).forTextComponents)
-		.apply(title = "Test") { hierarchy =>
-		// EmptyLabel(hierarchy).withBackground(Color.magenta, StackSize.any(Size(400, 200)))
-		val bg = colors.primary
-		implicit val c: TextContext = baseContext.against(bg).forTextComponents.larger.larger
-			.withTextInsetsScaledBy(4).withoutShrinkingText
-		ViewTextLabel(hierarchy).contextual.apply(textPointer, customDrawers = Vector(BackgroundDrawer(bg)))
-	}*/
 	val window = ReachWindow.withResizeLogic(User)
 		.withWindowBackground(colors.primary.default).larger.larger.withTextInsetsScaledBy(4).withoutShrinkingText
-		.using(ViewTextLabel, title = "Test") { _(textPointer) }
+		.using(ViewTextLabel, title = "Test") { (_, f) => f(textPointer) }
 	
 	Loop.regularly(5.seconds, waitFirst = true) {
 		println()

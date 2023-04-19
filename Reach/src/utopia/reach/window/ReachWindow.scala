@@ -362,7 +362,7 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	  *                      Setting this to None will cause a Frame to be created, otherwise a Dialog will be created.
 	  * @param title         Title shown on the OS header of this window, if applicable (default = empty)
 	  * @param createContent A function for creating canvas contents.
-	  *                      Accepts an initialized component creation factory.
+	  *                      Accepts the parent Reach canvas and an initialized component creation factory.
 	  *                      May return a custom creation result, in addition to the component to wrap.
 	  * @tparam F Type of contextual component creation factory used
 	  * @tparam C Type of wrapped component
@@ -372,9 +372,9 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[TextContext, F],
 	                                         parent: Option[java.awt.Window] = None,
 	                                         title: LocalizedString = LocalizedString.empty)
-	                                        (createContent: F => ComponentCreationResult[C, R]) =
+	                                        (createContent: (ReachCanvas2, F) => ComponentCreationResult[C, R]) =
 		windowFactory(parent, title) { hierarchy =>
-			createContent(factory.withContext(hierarchy, textContext))
+			createContent(hierarchy.top, factory.withContext(hierarchy, textContext))
 		}
 	
 	/**
@@ -401,7 +401,7 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	  *                           This will save some resources, as a large number of components needs to be tracked.
 	  *                           Default = true.
 	  * @param createContent A function for creating canvas contents.
-	  *                      Accepts an initialized component creation factory.
+	  *                      Accepts the parent Reach canvas and an initialized component creation factory.
 	  *                      May return a custom creation result, in addition to the component to wrap.
 	  * @tparam F Type of contextual component creation factory used
 	  * @tparam C Type of created canvas content
@@ -413,9 +413,9 @@ case class ReachPopupFactory(private val windowFactory: ContextualReachWindowFac
 	                                                   margin: Double = 0.0,
 	                                                   title: LocalizedString = LocalizedString.empty,
 	                                                   keepAnchored: Boolean = true)
-	                                                  (createContent: F => ComponentCreationResult[C, R]) =
+	                                                  (createContent: (ReachCanvas2, F) => ComponentCreationResult[C, R]) =
 		windowFactory.anchoredTo(component, preferredAlignment, margin, title, keepAnchored) { hierarchy =>
-			createContent(factory.withContext(hierarchy, context))
+			createContent(hierarchy.top, factory.withContext(hierarchy, context))
 		}
 }
 

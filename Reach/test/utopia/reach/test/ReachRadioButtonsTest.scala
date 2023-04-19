@@ -19,7 +19,7 @@ object ReachRadioButtonsTest extends App
 	private val valuePointer = new PointerWithEvents(1)
 	
 	// Creates the components
-	val window = ReachWindow.popupContextual.using(Framing) { framingF =>
+	val window = ReachWindow.popupContextual.using(Framing) { (_, framingF) =>
 		// Framing
 		framingF.build(RadioButtonGroup).apply(margins.aroundMedium) { btnF =>
 			// Radio buttons

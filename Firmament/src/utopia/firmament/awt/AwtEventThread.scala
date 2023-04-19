@@ -1,10 +1,13 @@
 package utopia.firmament.awt
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.process.{Delay, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.SysErrLogger
 
 import java.time.Instant
 import javax.swing.SwingUtilities
@@ -34,8 +37,7 @@ object AwtEventThread
 	/**
 	  * @return A string representation of the current state of this interface. Only works while debug mode is active.
 	  */
-	def debugString =
-	{
+	def debugString = {
 		val now = Instant.now()
 		val currentTasks = tasks.updateAndGet { _.dropWhile { _.endTime.exists { now - _ > taskKeepDuration } } }
 		val (active, waiting) = currentTasks.divideBy { _.isWaiting }
@@ -66,18 +68,15 @@ object AwtEventThread
 	  * @param operation An operation that should be performed in the awt event thread
 	  * @tparam U Arbitrary result type
 	  */
-	def async[U](operation: => U): Unit =
-	{
+	def async[U](operation: => U): Unit = {
 		if (SwingUtilities.isEventDispatchThread)
 			operation
 		else
 			_async(operation)
 	}
 	
-	private def _async[U](operation: => U): Unit =
-	{
-		if (debugMode)
-		{
+	private def _async[U](operation: => U): Unit = {
+		if (debugMode) {
 			val task = new TaskWrapper(operation)
 			tasks.update { old =>
 				val now = Instant.now()
@@ -95,20 +94,17 @@ object AwtEventThread
 	  * @tparam A Operation result type
 	  * @return Future with the eventual return value of the operation
 	  */
-	def future[A](operation: => A) =
-	{
+	def future[A](operation: => A) = {
 		if (SwingUtilities.isEventDispatchThread)
 			Future.successful(operation)
-		else
-		{
+		else {
 			val completionPromise = Promise[A]()
 			_async { completionPromise.success(operation) }
 			completionPromise.future
 		}
 	}
 	
-	private def _future[A](operation: => A) =
-	{
+	private def _future[A](operation: => A) = {
 		val completionPromise = Promise[A]()
 		_async { completionPromise.success(operation) }
 		completionPromise.future
@@ -130,6 +126,10 @@ object AwtEventThread
 	
 	// NESTED	----------------------------
 	
+	private object TaskWrapper {
+		private lazy val exc = new ThreadPool("AwtEventThreadMonitor", coreSize = 0, maxSize = 10)(SysErrLogger)
+	}
+	
 	private class TaskWrapper[U](operation: => U) extends Runnable
 	{
 		// ATTRIBUTES	--------------------
@@ -147,8 +147,7 @@ object AwtEventThread
 		
 		def waitTime = startTime.getOrElse(Instant.now()) - created
 		
-		def runTime: Duration = startTime match
-		{
+		def runTime: Duration = startTime match {
 			case Some(started) => _endTime.getOrElse(Instant.now()) - started
 			case None => Duration.Zero
 		}
@@ -156,8 +155,7 @@ object AwtEventThread
 		
 		// IMPLEMENTED	--------------------
 		
-		override def toString = endTime match
-		{
+		override def toString = endTime match {
 			case Some(_) => s"Completed(${runTime.description})"
 			case None =>
 				if (isWaiting)
@@ -166,11 +164,17 @@ object AwtEventThread
 					s"RUN(${runTime.description})"
 		}
 		
-		override def run() =
-		{
+		override def run() = {
 			startTime = Some(Now)
+			val t = Thread.currentThread()
+			val waitLock = new AnyRef
+			Delay(3.seconds, waitLock) {
+				if (_endTime.isEmpty)
+					t.interrupt()
+			}(TaskWrapper.exc, SysErrLogger)
 			operation
 			_endTime = Some(Now)
+			WaitUtils.notify(waitLock)
 		}
 	}
 }

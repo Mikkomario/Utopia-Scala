@@ -69,6 +69,11 @@ object StackSizeModifier
 	// OTHER	----------------------------
 	
 	/**
+	  * @param f A modifier function
+	  * @return That function as a stack size modifier
+	  */
+	def apply(f: StackSize => StackSize): StackSizeModifier = new FunctionalModifier(f)
+	/**
 	  * Creates a modifier that only applies to a single axis
 	  * @param axis Targeted axis
 	  * @param modifier Stack length modifier to wrap
@@ -83,7 +88,6 @@ object StackSizeModifier
 	  * @return A new stack size modifier
 	  */
 	def horizontal(modifier: StackLengthModifier) = apply(X)(modifier)
-	
 	/**
 	  * Creates a modifier that only applies to stack size height
 	  * @param modifier Length modifier to wrap

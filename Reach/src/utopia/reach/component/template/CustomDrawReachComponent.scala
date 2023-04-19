@@ -49,8 +49,7 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable
 	
 	override def transparent = customDrawers.forall { _.transparent }
 	
-	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
-	{
+	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = {
 		val drawers = customDrawers.filter { _.drawLevel == drawLevel }
 		// Draws with custom drawers
 		if (drawers.nonEmpty) {
