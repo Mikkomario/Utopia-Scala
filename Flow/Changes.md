@@ -12,6 +12,7 @@
 - Fixed **Path**`.relativeTo(Path)`
 - Fixed a bug in **Iterable**`.filterBy(Extreme)(...)`
 - Fixed a bug in **AbstractChanging** where change event listeners would not get detached properly
+- Fixed a bug in **TripleMergeMirror** where the third input was not always mirrored properly
 ### Deprecations
 - Deprecated `.equalsUsing(...)` and `.notEqualsUsing(...)` in favor of `.isSymmetricWith(...)` and `.isAsymmetricWith(...)`
 - Deprecated `WeekDay.iterate(WeekDay)` and `.reverseIterate(WeekDay)` in favor of `.iterate` and 

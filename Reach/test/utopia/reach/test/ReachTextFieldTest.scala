@@ -1,52 +1,55 @@
 package utopia.reach.test
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.model.enumeration.StackLayout.Trailing
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default
 import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.container.ReachCanvas2
-import utopia.reach.container.wrapper.Framing
-import utopia.firmament.model.enumeration.StackLayout.Trailing
-import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.localization.LocalString._
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.StackLength
 import utopia.reach.container.multi.Stack
-import utopia.reflection.test.TestContext
-import utopia.reflection.util.SingleFrameSetup
+import utopia.reach.container.wrapper.Framing
+import utopia.reach.window.ReachWindow
 
 /**
-  * A simple test for text fields
+  * A simple test for text fields.
+  *
+  * Instructions:
+  *     - You should see 5 text fields
+  *     - Each field should show their output value next to them
+  *     - The first and the second field should have a maximum length (visible in first)
+  *     - The first field should show a warning when empty
+  *     - The fourth field should show an error if negative
+  *     - The fifth field should show an error if > 1.0
+  *
   * @author Mikko Hilpinen
   * @since 18.11.2020, v0.1
   */
 object ReachTextFieldTest extends App
 {
-	System.setProperty("sun.java2d.noddraw", true.toString)
+	import ReachTestContext._
 	
-	import TestContext._
-	import TestCursors._
-	/*
-	// Creates text fields (+ result views)
-	val canvas = ReachCanvas2(cursors) { hierarchy =>
-		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.gray, Stack).apply(margins.medium.any.square) { stack =>
-			stack.build(Stack).column() { r =>
-				val rows = r.mapContext { _.forTextComponents }
-				
-				def makeRow[A](displayFunction: DisplayFunction[A])(makeField: ContextualTextFieldFactory[TextContext] => TextField[A]) =
+	// Creates the components
+	val window = ReachWindow.popupContextual.using(Framing) { (_, framingF) =>
+		// Framing
+		framingF.build(Stack).apply(margins.aroundMedium) { stackF =>
+			// Stack (Y)
+			stackF.build(Stack).column() { rowF =>
+				// Each row contains a text field and a value label
+				def makeRow[A](displayFunction: DisplayFunction[A])(makeField: ContextualTextFieldFactory => TextField[A]) =
 				{
-					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row =>
+					rowF.build(Mixed).row(layout = Trailing, areRelated = true) { row =>
 						val field = makeField(row(TextField))
 						val summary = row(ViewTextLabel)(field.valuePointer, displayFunction)
 						Vector(field, summary)
 					}.parent
 				}
 				
+				// Contains 5 rows
 				Vector(
 					makeRow[String](DisplayFunction.raw) {
 						_.forString(320.any, Fixed("Text"), maxLength = Some(32),
@@ -69,11 +72,11 @@ object ReachTextFieldTest extends App
 				)
 			}
 		}
-	}.parent
+	}
 	
-	val frame = Frame.windowed(canvas, "Reach Test", Program, getAnchor = canvas.anchorPosition(_))
-	frame.setToCloseOnEsc()
-	new SingleFrameSetup(actorHandler, frame).start()
-	
-	 */
+	// Displays the window
+	window.setToExitOnClose()
+	window.setToCloseOnEsc()
+	window.display(centerOnParent = true)
+	start()
 }

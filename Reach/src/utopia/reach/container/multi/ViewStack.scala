@@ -567,12 +567,10 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	}
 	
 	private val revalidateOnChange = ChangeListener.onAnyChange {
-		println("Initiating revalidation on view stack change")
 		revalidate()
 		DetachmentChoice.continue
 	}
 	private lazy val resetActiveComponentsOnChange = ChangeListener.onAnyChange {
-		println("Resetting active components and revalidating view stack")
 		activeComponentsCache.reset()
 		revalidate()
 		DetachmentChoice.continue

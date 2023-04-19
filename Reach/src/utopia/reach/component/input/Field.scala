@@ -354,7 +354,7 @@ class Field[C <: ReachComponentLike with Focusable]
 			val colorRole = if (isError) Some(Failure) else highlight
 			colorRole match {
 				// Case: Highlighting applied
-				case Some(colorRole) => colorScheme(colorRole).against(background): Color
+				case Some(colorRole) => colorScheme(colorRole).against(background)
 				// Case: Default hint color
 				case None => background.shade.defaultHintTextColor
 			}
@@ -362,14 +362,12 @@ class Field[C <: ReachComponentLike with Focusable]
 	
 	private lazy val hintTextStylePointer = hintColorPointer.map { makeHintStyle(_) }
 	
-	private val borderPointer =
-	{
+	private val borderPointer = {
 		// Border widths at 0 => No border is drawn
 		if (defaultBorderWidth <= 0 && focusBorderWidth <= 0)
 			Fixed(Border.zero)
 		// When using filled background style, only draws the bottom border which varies in style based state
-		else if (fillBackground)
-		{
+		else if (fillBackground) {
 			// In case both focus and default borders share the same width, doesn't listen to the focus state
 			if (defaultBorderWidth == focusBorderWidth)
 				contentColorPointer.map { Border.bottom(defaultBorderWidth, _) }
@@ -602,8 +600,10 @@ class Field[C <: ReachComponentLike with Focusable]
 		}
 	}
 	
-	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) =
+	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) = {
+		println("Creating a hint label")
 		factory.forText(textPointer, hintTextStylePointer, allowTextShrink = true)
+	}
 	
 	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) = {
 		val insets = {

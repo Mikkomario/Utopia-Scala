@@ -174,8 +174,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 	  */
 	def selectable = allowSelectionWhileDisabled || enabled
 	
-	override def allowsFocusLeave =
-	{
+	override def allowsFocusLeave = {
 		// Checks with focus leave conditions
 		val (textAfter, allowed) = focusLeaveConditions.foldLeft((_text, true)) { (prev, condition) =>
 			if (prev._2)
@@ -202,14 +201,11 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 	  */
 	def clear() = text = ""
 	
-	private def insertToCaret(text: String) =
-	{
+	private def insertToCaret(text: String) = {
 		// If a range of characters is selected, overwrites those, then removes the selection
-		selectedRange match
-		{
+		selectedRange match {
 			case Some(selection) =>
-				val replaceText = maxLength match
-				{
+				val replaceText = maxLength match {
 					case Some(maxLength) =>
 						val availableSpace = maxLength - _text.length + selection.length
 						limitedLengthString(availableSpace, text)
@@ -222,13 +218,11 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 				caretIndex = selection.start + replaceText.length
 			case None =>
 				// May insert only part of the text, due to length limits
-				val textToInsert = maxLength match
-				{
+				val textToInsert = maxLength match {
 					case Some(maxLength) => limitedLengthString(maxLength - _text.length, text)
 					case None => text
 				}
-				if (textToInsert.nonEmpty)
-				{
+				if (textToInsert.nonEmpty) {
 					val (before, after) = textPointer.value.splitAt(caretIndex)
 					
 					textPointer.value = s"$before$textToInsert$after"
@@ -238,18 +232,15 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 		}
 	}
 	
-	private def limitedLengthString(maxLength: Int, original: String) =
-	{
-		if (maxLength > 0)
-		{
+	private def limitedLengthString(maxLength: Int, original: String) = {
+		if (maxLength > 0) {
 			if (maxLength > original.length) original else original.take(maxLength)
 		}
 		else
 			""
 	}
 	
-	private def removeAt(index: Int) =
-	{
+	private def removeAt(index: Int) = {
 		if (index >= 0)
 			textPointer.update { old =>
 				if (index < old.length)
@@ -259,8 +250,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 			}
 	}
 	
-	private def removeSelectedText() =
-	{
+	private def removeSelectedText() = {
 		selectedRange.foreach { selection =>
 			caretIndex = selection.start
 			val replaceStartCharIndex = measuredText.caretIndexToCharacterIndex(selection.start)
@@ -291,8 +281,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 		override def onKeyTyped(event: KeyTypedEvent) =
 		{
 			// Skips cases handled by key state listening
-			if (!ignoredOnType.contains(event.index) && font.toAwt.canDisplay(event.typedChar))
-			{
+			if (!ignoredOnType.contains(event.index) && font.toAwt.canDisplay(event.typedChar)) {
 				// Inserts the typed character into the string (if accepted by the content filter)
 				if (inputFilter.forall { _(event.typedChar.toString) })
 					insertToCaret(event.typedChar.toString)
@@ -301,32 +290,27 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 		
 		override def onKeyState(event: KeyStateEvent) =
 		{
-			if (event.isDown)
-			{
+			if (event.isDown) {
 				// Inserts a line-break on enter (if enabled)
 				if (textDrawContext.allowLineBreaks && event.index == KeyEvent.VK_ENTER)
 					insertToCaret("\n")
 				// Removes a character on backspace / delete
-				else if (event.index == KeyEvent.VK_BACK_SPACE)
-				{
+				else if (event.index == KeyEvent.VK_BACK_SPACE) {
 					if (selectedRange.nonEmpty)
 						removeSelectedText()
-					else if (caretIndex > 0)
-					{
+					else if (caretIndex > 0) {
 						removeAt(caretIndex - 1)
 						caretIndex -= 1
 					}
 				}
-				else if (event.index == KeyEvent.VK_DELETE)
-				{
+				else if (event.index == KeyEvent.VK_DELETE) {
 					if (selectedRange.nonEmpty)
 						removeSelectedText()
 					else
 						removeAt(caretIndex)
 				}
 				// Listens to shortcut keys (ctrl + C, V or X)
-				else if (event.keyStatus.control)
-				{
+				else if (event.keyStatus.control) {
 					if (event.index == KeyEvent.VK_V && enabled)
 						Try {
 							// Retrieves the clipboard contents and pastes them on the string
@@ -356,8 +340,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 		}
 		
 		// Only listens to key events while focused
-		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus && (handlerType match
-		{
+		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus && (handlerType match {
 			case KeyTypedHandlerType => enabled
 			case _ => selectable
 		})

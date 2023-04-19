@@ -21,27 +21,34 @@ object TripleMergeMirror
 	                     (merge: (O1, O2, O3) => R) =
 	{
 		// Uses mapping functions or even a fixed value if possible
-		if (firstSource.isChanging)
-		{
-			if (secondSource.isChanging)
-			{
+		if (firstSource.isChanging) {
+			if (secondSource.isChanging) {
+				// Case: All sources change => Uses triple merge mirror
 				if (thirdSource.isChanging)
 					apply(firstSource, secondSource, thirdSource)(merge)
+				// Case: Sources 1 & 2 change => Uses merge mirror
 				else
 					MergeMirror(firstSource, secondSource)({ (a, b) => merge(a, b, thirdSource.value) })
 			}
+			// Case: Source 1 & 3 chage => Uses merge mirror
 			else if (thirdSource.isChanging)
 				MergeMirror(firstSource, thirdSource)({ (a, c) => merge(a, secondSource.value, c) })
+			// Case: Only source 1 changes => Uses mapping
 			else
 				firstSource.map { merge(_, secondSource.value, thirdSource.value) }
 		}
-		else if (secondSource.isChanging)
-		{
+		else if (secondSource.isChanging) {
+			// Case: Sources 2 & 3 change => Merge
 			if (thirdSource.isChanging)
 				MergeMirror(secondSource, thirdSource)({ (b, c) => merge(firstSource.value, b, c) })
+			// Case: Source 2 only changes => Maps
 			else
 				secondSource.map { merge(firstSource.value, _, thirdSource.value) }
 		}
+		// Case: Source 3 changes only => Maps
+		else if (thirdSource.isChanging)
+			thirdSource.map { merge(firstSource.value, secondSource.value, _) }
+		// Case: Nothing changes => Uses a fixed value
 		else
 			Fixed(merge(firstSource.value, secondSource.value, thirdSource.value))
 	}

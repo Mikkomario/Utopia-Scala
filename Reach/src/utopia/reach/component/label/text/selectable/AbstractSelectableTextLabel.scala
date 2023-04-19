@@ -105,8 +105,7 @@ abstract class AbstractSelectableTextLabel
 	  * @return Current index of the text caret
 	  */
 	def caretIndex = caretIndexPointer.value
-	protected def caretIndex_=(newIndex: Int) =
-	{
+	protected def caretIndex_=(newIndex: Int) = {
 		if (measuredText.isValidCaretIndex(newIndex))
 			caretIndexPointer.value = newIndex
 	}
@@ -141,12 +140,10 @@ abstract class AbstractSelectableTextLabel
 	
 	override def cursorBounds = boundsInsideTop
 	
-	override def cursorToImage(cursor: Cursor, position: Point) =
-	{
+	override def cursorToImage(cursor: Cursor, position: Point) = {
 		// If hovering over a selected area, bases cursor color on that
 		// Otherwise proposes standard text color
-		selectionBackgroundColorPointer.value match
-		{
+		selectionBackgroundColorPointer.value match {
 			case Some(selectedAreaBackground) =>
 				val highlightAreas = mainDrawer.drawTargets._2
 				lazy val positionInTextBounds = ((this.position + position) -
@@ -166,20 +163,17 @@ abstract class AbstractSelectableTextLabel
 	  * Sets up this component's automated functions.
 	  * Should be called when the sub-class has first been initialized.
 	  */
-	protected def setup() =
-	{
+	protected def setup() = {
 		// Registers some listeners only while attached to top hierarchy
 		addHierarchyListener { isAttached =>
-			if (isAttached)
-			{
+			if (isAttached) {
 				enableFocusHandling()
 				GlobalKeyboardEventHandler.register(KeyListener)
 				GlobalMouseEventHandler.register(GlobalMouseReleaseListener)
 				actorHandler += CaretBlinker
 				parentCanvas.cursorManager.foreach { _ += this }
 			}
-			else
-			{
+			else {
 				disableFocusHandling()
 				GlobalKeyboardEventHandler.unregister(KeyListener)
 				GlobalMouseEventHandler.unregister(GlobalMouseReleaseListener)
@@ -235,18 +229,14 @@ abstract class AbstractSelectableTextLabel
 	  */
 	def clearSelection() = selectedRangePointer.value = None
 	
-	private def moveCaret(direction: Direction2D, selecting: Boolean = false, jumpWord: Boolean = false) =
-	{
+	private def moveCaret(direction: Direction2D, selecting: Boolean = false, jumpWord: Boolean = false) = {
 		if (selectedRange.nonEmpty && !selecting)
 			clearSelection()
-		else
-		{
+		else {
 			val previousIndex = caretIndex
-			val nextIndex =
-			{
+			val nextIndex = {
 				// Word jump feature is only supported on the horizontal direction
-				if (jumpWord)
-				{
+				if (jumpWord) {
 					if (direction.isHorizontal)
 						skipWord(previousIndex, direction.sign)
 					else
@@ -260,8 +250,7 @@ abstract class AbstractSelectableTextLabel
 				caretIndex = newIndex
 				// Updates text selection, if specified
 				if (selecting)
-					selectedRangePointer.update
-					{
+					selectedRangePointer.update {
 						case Some((start, _)) =>
 							// Extends the selected range to the new index
 							Some(start -> newIndex).filterNot { case (start, end) => start == end }
@@ -273,19 +262,15 @@ abstract class AbstractSelectableTextLabel
 	}
 	
 	// Returns new index after skip
-	private def skipWord(originIndex: Int, direction: Sign) =
-	{
+	private def skipWord(originIndex: Int, direction: Sign) = {
 		// Checks whether there is space to move
-		val isSpaceAvailable = direction match
-		{
+		val isSpaceAvailable = direction match {
 			case Positive => originIndex <= _text.length - 1
 			case Negative => originIndex > 0
 		}
-		if (isSpaceAvailable)
-		{
+		if (isSpaceAvailable) {
 			// Checks the first skipped character
-			val firstCharIndex = direction match
-			{
+			val firstCharIndex = direction match {
 				case Positive => originIndex
 				case Negative => originIndex -1
 			}
@@ -294,8 +279,7 @@ abstract class AbstractSelectableTextLabel
 			val takeCondition: Char => Boolean =
 				if (nextChar.isLetterOrDigit) c => c.isLetterOrDigit else c => c == nextChar
 			// Checks how many characters can be skipped
-			val charsToSkip = (direction match
-			{
+			val charsToSkip = (direction match {
 				case Positive => _text.drop(originIndex + 1).iterator
 				case Negative => _text.take(originIndex - 1).reverseIterator
 			}).takeWhile(takeCondition).size + 1
@@ -330,18 +314,15 @@ abstract class AbstractSelectableTextLabel
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def onFocusChangeEvent(event: FocusChangeEvent) =
-		{
+		override def onFocusChangeEvent(event: FocusChangeEvent) = {
 			// Tracks focus state
 			focus = event.hasFocus
 			// Alters caret / selection on focus changes
-			if (event.hasFocus)
-			{
+			if (event.hasFocus) {
 				moveCaretToEnd()
 				CaretBlinker.show()
 			}
-			else
-			{
+			else {
 				CaretBlinker.hide()
 				clearSelection()
 			}
@@ -358,11 +339,9 @@ abstract class AbstractSelectableTextLabel
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def act(duration: FiniteDuration) =
-		{
+		override def act(duration: FiniteDuration) = {
 			passedDuration += duration
-			if (passedDuration >= caretBlinkFrequency)
-			{
+			if (passedDuration >= caretBlinkFrequency) {
 				resetCounter()
 				caretVisibilityPointer.update { !_ }
 			}
@@ -376,8 +355,7 @@ abstract class AbstractSelectableTextLabel
 		def resetCounter() = passedDuration = Duration.Zero
 		
 		// Makes caret visible for the full duration / refreshes duration if already visible
-		def show() =
-		{
+		def show() = {
 			caretVisibilityPointer.value = true
 			resetCounter()
 		}
@@ -400,19 +378,15 @@ abstract class AbstractSelectableTextLabel
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
+		override def onKeyState(event: KeyStateEvent) = {
 			keyStatus = event.keyStatus
-			if (event.isDown)
-			{
-				event.arrow match
-				{
+			if (event.isDown) {
+				event.arrow match {
 					// On arrow keys, changes caret position (and possibly selected area)
 					case Some(arrowDirection) => moveCaret(arrowDirection, event.keyStatus.shift, event.keyStatus.control)
 					case None =>
 						// Listens to shortcut keys (ctrl + C, V or X)
-						if (event.keyStatus.control)
-						{
+						if (event.keyStatus.control) {
 							if (event.index == KeyEvent.VK_C)
 								selectedText.filterNot { _.isEmpty }.foreach { selected =>
 									Try { clipBoard.setContents(new StringSelection(selected), this) }
@@ -442,8 +416,7 @@ abstract class AbstractSelectableTextLabel
 		
 		// IMPLEMENTED	---------------------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override def onMouseButtonState(event: MouseButtonStateEvent) = {
 			draggingMouse = true
 			updateCaret(event.mousePosition, KeyListener.keyStatus.shift)
 			Some(ConsumeEvent("EditableTextLabel clicked"))
@@ -451,8 +424,7 @@ abstract class AbstractSelectableTextLabel
 		
 		override def onMouseMove(event: MouseMoveEvent) = updateCaret(event.mousePosition, selectArea = true)
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
-		{
+		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
 			case MouseMoveHandlerType => draggingMouse
 			case _ => true
 		}
@@ -460,8 +432,7 @@ abstract class AbstractSelectableTextLabel
 		
 		// OTHER	----------------------------------
 		
-		private def updateCaret(mousePosition: Point, selectArea: => Boolean) =
-		{
+		private def updateCaret(mousePosition: Point, selectArea: => Boolean) = {
 			// Calculates and updates the new caret position
 			val previousCaretIndex = caretIndex
 			val (newLineIndex, newIndexOnLine) = measuredText.caretIndexClosestTo(
@@ -470,23 +441,18 @@ abstract class AbstractSelectableTextLabel
 			caretIndex = newCaretIndex
 			
 			// If this component wasn't on focus, requests focus now, otherwise checks if selection should be updated
-			if (hasFocus)
-			{
-				if (_text.nonEmpty)
-				{
+			if (hasFocus) {
+				if (_text.nonEmpty) {
 					// Shift + click selects an area of text
-					if (selectArea)
-					{
+					if (selectArea) {
 						if (selectedRangePointer.value.forall { _._2 != newCaretIndex })
-							selectedRangePointer.update
-							{
+							selectedRangePointer.update {
 								case Some((start, _)) => Some(start -> newCaretIndex)
 								case None => Some(previousCaretIndex -> newCaretIndex)
 							}
 					}
 					// If same caret position is clicked twice, expands the selection to the word around
-					else if (previousCaretIndex == newCaretIndex)
-					{
+					else if (previousCaretIndex == newCaretIndex) {
 						val newSelectionStart = skipWord(previousCaretIndex, Negative).getOrElse(previousCaretIndex)
 						val newSelectionEnd = skipWord(previousCaretIndex, Positive).getOrElse(previousCaretIndex)
 						if (newSelectionStart != newSelectionEnd)
@@ -506,8 +472,7 @@ abstract class AbstractSelectableTextLabel
 	{
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.wasReleasedFilter
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override def onMouseButtonState(event: MouseButtonStateEvent) = {
 			draggingMouse = false
 			None
 		}
