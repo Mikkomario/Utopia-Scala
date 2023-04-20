@@ -1,7 +1,24 @@
 # Utopia Reach - List of Changes
 
-## v0.6 (in development)
+## v1.0 (in development)
 ### Breaking Changes
+- This module now extends Utopia **Firmament** instead of Utopia **Reflection**, 
+  and reflects all changes made when converting from **Reflection** to **Firmament**
+  - This includes:
+    - Different context class hierarchy (notice the new context types)
+    - **GuiElementStatus** instead of **ButtonState**
+- Rewrote most of the factory and builder traits, including **Open** and **Mixed**
+  - The factories are now divided into two categories:
+    - Ones supporting generic context type (for containers) and 
+    - Ones using a static context type (e.g. TextContext)
+  - Previously all factories were of this more generic type, which caused some challenges with type-inference
+  - Generic type parameters in different kinds of factories were also greatly altered, 
+    in order to make them as simple as possible
+  - Please check the instructions in README on how to build these new factories, and/or check the source code
+- Rewrote **ReachCanvas**
+  - This new **ReachCanvas** doesn't have any **Reflection** dependencies or interfaces available. 
+    If you want to use a **ReachCanvas** instance inside **Reflection**, check the **Reach-in-Reflection** module
+  - This new **ReachCanvas** performs component repainting automatically upon `.revalidate()` calls
 - **InputRowBluePrint** now only accepts **InputFields** instead of various kinds of **ManagedFields**
   - Removed much of generic type support from this class because the compiler couldn't keep up with the generic types
     - **ManagedField** was only used in **InputWindowFactory**, and there it only supported type 
@@ -11,6 +28,8 @@
 ### Bugfixes
 - **RadioButtonGroup** now uses correct alignment / insets
 ### New Features
+- Added **ReachWindow**, which enables 100% **Reach** component layouts with no **Reflection** components being used
+  - This object uses the new **ReachWindowContext** and **ReachContentWindowContext** classes
 - Drag-and-drop support for external files. See **DragAndDropManager** and **DragAndDropTarget**.
 - **Switches** now support light and dark mode separately
 ### Other Changes

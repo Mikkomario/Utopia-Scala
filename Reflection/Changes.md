@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 
 ## v2.0 (in development)
+### Notice
+- This module is unlikely to be expanded much more. Future development will be targeting the **Reach** module instead.
 ### Breaking Changes
 - Moved a number of classes to **Firmament**. This includes:
   - Generic component traits

@@ -1,17 +1,24 @@
 # Utopia Reflection
+This module provides a scala interface for Swing / AWT components. 
+Many of the layout management features are custom-written, and the Swing-dependencies are somewhat limited.
+
+## Notice
+Please note that this module is unlikely to receive much development in the future. 
+The new **Reach** layout module performs all the same standard functions in a cleaner manner. 
+This module still contains more features, such as animation support, however.
 
 ## Parent Modules
 - Utopia Flow
 - Utopia Paradigm
 - Utopia Inception
 - Utopia Genesis
+- Utopia Firmament
 
 ## Main Features
-
 New UI component style
-- ComponentLike and it's sub-traits are based on Genesis shapes instead of their awt counterparts
-- Completely overhauled and more reliable non-awt event system that relies on Genesis events
-and Inception handling system
+- ComponentLike and it's sub-traits are based on **Paradigm** shapes instead of their awt counterparts
+- Completely overhauled and more reliable non-awt event system that relies on **Genesis** events
+and **Inception** handling system
 - Completely scala-friendly interface
 
 Stacking layout framework
@@ -21,17 +28,6 @@ Stacking layout framework
   parent component's bounds
 - Dynamic size specifications are easy to make by utilizing simple classes like **StackLength**, 
   **StackSize** and **StackInsets**
-
-Localization support
-- All components that display text are built around localization
-- **LocalString**, **LocalizedString**, **Localizer** and **DisplayFunction** make handling localization easy
-- Localization is done mostly implicitly behind the scenes
-- You can skip all localization simply by defining an implicit **NoLocalization** localizer
-
-Custom drawing
-- Many of the components support custom drawing over their boundaries, which allows for animation,
-advanced borders, image overlays etc.
-- Custom drawers utilize easy to use **Drawer** class from **Genesis**
 
 Custom components
 - Buttons and Labels are provided from the get-go
@@ -45,37 +41,15 @@ Custom components
 
 Implicit component build context
 - Contextual constructor options in existing components allow you to skip repetitious style definitions by
-passing an implicit context instances instead
+  passing an implicit context instances instead
 - This makes standardized layout styles easy to implement and use
 
-Automatic container content management
-- **ContentDisplayer** and it's subclasses handle displaying of item lists for you
-
 ## Implementation Hints
-
-### Extensions you should be aware of
-- utopia.reflection.util.**AwtComponentExtensions**
-  - Adds new utility methods to awt component classes
-- utopia.reflection.shape.**LengthExtensions**
-    - Allows you to generate **StackLength** instances simply by writing 4.upscaling, 
-      2.downscaling, 8.upTo(10) etc.
-- utopia.firmament.localization.**LocalString**
-    - Allows one to skip localization for specific strings by calling .noLanguageLocalizationSkipped,
-      .local etc. on a string.
 
 #### You should get familiar with these classes
 - **SingleFrameSetup** - Lets you get started with your test App as smoothly as possible
   (replaces **DefaultSetup** from Genesis)
-- **BaseContext**, **ColorContext**, **TextContext** and **ButtonContext** - You will most
-  likely need these to specify common component creation parameters (E.g. Font used). Seek for
-  .contextual -constructors in components to utilize these.
 - **Stack** - You go-to container when presenting multiple components together
-- **StackLength**, **StackSize** & **StackInsets** - Basic building blocks for dynamic sizes used in 
-  most components
-- **StackLayout** & **Alignment** - These enumerations are used for specifying content placement in 
-  **Stacks** and other components.
-- **Font** - Replaces java.awt.Font
-- **LocalizedString**, **Localizer** & **NoLocalization** - When you need to present localized text
 - **TextLabel** - Along with other **Label** classes, these basic components let you draw text, images, etc.
 - **TextButton** & **TextAndImageButton** - When you need to create interactive buttons
 - **TextField**, **DropDown** & **Switch** - These, among other components, allow user to input data to 
@@ -84,12 +58,9 @@ Automatic container content management
   .framed(...) on a component.
 - **ScrollView** - When you need a scrollable view. Check **ScrollArea** when you need 2D scrolling.
 - **Dialog**, **Frame** & **PopUp** - In case you need to display multiple windows during a program
-- **Refreshable** - One of the many input traits that allows you to display content on a UI component.
-- **ComponentLike** - All components extend this trait so you should at least know what it contains.
-- **Stackable** & **CachingStackable** - In case you need to write your own components that support 
+- **ReflectionComponentLike** - All components extend this trait so you should at least know what it contains.
+- **ReflectionStackable** & **CachingReflectionStackable** - In case you need to write your own components that support 
   stack layout system.
-- **CustomDrawer** - In case you need to implement your own custom drawer. It's useful to check the 
-  sub-classes as well.
 - **ContainerContentDisplayer** - When you need to present a changing list of items in
   a **Stack** or another container.
 
