@@ -1,6 +1,14 @@
 # Utopia Reach - List of Changes
 
 ## v1.0 (in development)
+This is intended as the initial release of the full version of **Reach**, which is, from this version onwards, 
+a module completely independent of the **Utopia Reflection** module.
+
+A lot of code was rewritten for this version, not only because of the module separation, but also to 
+fix certain design issues that were present in the earlier versions.
+
+If you've been using **Reach** already, please take a look at the **Reach-in-Reflection** module and pay 
+close attention to these changes, as well as to the README document.
 ### Breaking Changes
 - This module now extends Utopia **Firmament** instead of Utopia **Reflection**, 
   and reflects all changes made when converting from **Reflection** to **Firmament**

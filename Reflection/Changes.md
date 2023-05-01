@@ -1,6 +1,11 @@
 # Utopia Reflection - List of Changes
 
 ## v2.0 (in development)
+This release completes the separation of the **Reach** and **Reflection** modules, and removes much of the 
+previously accumulated overlapping code.
+
+Many classes have been renamed and relocated to the **Utopia Firmament** module. 
+Hence, migrating to this version of **Reflection** will require a lot of refactoring.
 ### Notice
 - This module is unlikely to be expanded much more. Future development will be targeting the **Reach** module instead.
 ### Breaking Changes

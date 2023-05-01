@@ -1,7 +1,7 @@
 # Utopia Ambassador - List of Changes
 
 ## v2.1.4 (in development)
-Supports **Vault v1.16**
+This update supports **Vault v1.16**
 
 ## v2.1.3 - 2.2.2023
 This update supports the changes introduced in **Flow** v2.0.

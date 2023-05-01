@@ -1,6 +1,7 @@
 # Utopia Genesis - List of Changes
 
 ## v3.3 (in development)
+This version introduces a completely rewritten **Drawer** implementation with a new interface.
 ### Breaking Changes
 - Rewrote **Drawer**
   - This change will require a lot of refactoring

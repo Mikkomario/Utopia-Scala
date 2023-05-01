@@ -1,6 +1,6 @@
 # Utopia Conflict - List of Changes
 
-## v1.4.2 (In Development)
+## v1.4.2 - 02.02.2023
 This update supports the changes introduced in **Flow** v2.0 and **Paradigm** v1.2.
 
 ## v1.4.1 - 02.10.2022

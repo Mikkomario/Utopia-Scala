@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.16 (in development)
+While this update focuses on adding new utility functions, 
+please note that you will need to perform some refactoring in order to migrate.
 ### Breaking Changes
 - **FilterableView** now requires the implementation of `.self`
 - Removed implicit conversions from access points to **Vector** and **Option**

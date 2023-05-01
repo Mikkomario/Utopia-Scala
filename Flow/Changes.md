@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
 ## v2.1 (in development)
+This update mostly introduces new utility functions and some new utility classes.  
+Most of the changes target **WeekDay** and **Pointer** classes. 
+This update also introduces a number of new functions for collections.
 ### Breaking Changes
 - Many **WeekDay** -related functions now require an implicit **WeekDays** -parameter
 - `WeekDay.current()` is now `WeekDay.current`

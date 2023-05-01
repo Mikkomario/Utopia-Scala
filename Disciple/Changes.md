@@ -1,6 +1,7 @@
 # Utopia Disciple - List of Changes
 
 ## v1.6.1 (in development)
+This minor update adds a utility option for SSL trust store verification skipping.
 ### New Features
 - Added `disableTrustStoreVerification: Boolean = false` parameter to **Gateway** constructors, allowing the user to 
   disable SSL trust store verification process entirely, when needed.

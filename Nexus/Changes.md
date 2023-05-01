@@ -1,6 +1,6 @@
 # Utopia Nexus - List of Changes
 
-## v1.9 (In Development)
+## v1.9 - 02.02.2023
 This update mostly reflects changes made in **Flow** v2.0, including similar naming and type updates.  
 In addition to this, more convenience is added with the importing of **PostContext** and with the addition of 
 **ItemsByIdResource**, two very practical features.

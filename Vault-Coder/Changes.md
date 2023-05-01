@@ -1,6 +1,8 @@
 # Utopia Vault Coder
 
 ## v1.9 (in development)
+This update introduces a lot of bugfixes, as well as more extensive code-generation. 
+This update is intended to be used with **Vault v1.16** (or later).
 ### Bugfixes
 - `.apply(...)` implementation in factory objects that use potentially failing value conversions is now fixed
 - Fixed a bug where certain enumeration ids would be 0-based instead of 1-based
@@ -16,8 +18,8 @@
 - Generated UniqueXAccess traits now implement filtering
   - Also, generated single access root points provide a new utility function `.filterDistinct(Condition)`
 ### Other Changes
-- Supports Vault v1.16
-- Generated UniqueXAccess traits now extend SingleChronoRowModelFactory where appropriate
+- Supports **Vault v1.16**
+- Generated UniqueXAccess traits now extend **SingleChronoRowModelFactory** where appropriate
 - Generated access traits now extends **NullDeprecatableView** or **TimeDeprecatableView**, where applicable
 - Generated combined factory objects now extend **FromRowFactoryWithTimestamps** where appropriate
 - Enumeration values are now listed in sql comments

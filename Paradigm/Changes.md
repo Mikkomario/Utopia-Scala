@@ -1,6 +1,8 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.3 (in development)
+This update introduces new color classes (which are originally from **Reflection**), as well as some 
+changes to the **Alignment** classes.
 ### Breaking Changes
 - **Alignment**`.position(Size, Bounds)` now returns **Bounds** instead of **Point**
 - **Dimensions**`.zeroValue` is now calculated lazily. This causes some breaking changes:
