@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.0 (in development)
+## v2.0 - 01.05.2023
 This release completes the separation of the **Reach** and **Reflection** modules, and removes much of the 
 previously accumulated overlapping code.
 

@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.5 (in development)
+## v1.5 - 01.05.2023
 This update doesn't introduce many changes, but the change it introduces requires refactoring.
 ### Breaking Changes
 - Api methods now return Future[RequestResult] instead of Future[Try[Response]]

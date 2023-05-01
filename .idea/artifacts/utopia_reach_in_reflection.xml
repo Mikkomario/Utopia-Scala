@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-reach-in-reflection">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_reach_in_reflection</output-path>
+    <root id="archive" name="utopia-reach-in-reflection.jar">
+      <element id="module-output" name="Reach-in-Reflection" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Reach-in-Reflection/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-source" name="Reach-in-Reflection" />
+    </root>
+  </artifact>
+</component>

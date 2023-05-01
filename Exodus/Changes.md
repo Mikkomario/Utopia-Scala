@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v4.1.3 (in development)
+## v4.1.3 - 01.05.2023
 This update supports **Vault v1.16**
 
 ## v4.1.2 - 2.2.2023

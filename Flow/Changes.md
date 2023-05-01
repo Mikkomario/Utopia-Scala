@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.1 (in development)
+## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  
 Most of the changes target **WeekDay** and **Pointer** classes. 
 This update also introduces a number of new functions for collections.

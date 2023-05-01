@@ -1,5 +1,8 @@
 # Utopia Inception - List of Changes
 
+## v2.3.4 - 01.05.2023
+Rebuild due to the changes in other modules.
+
 ## v2.3.3 - 02.02.2023
 This update supports the changes introduced in **Flow** v2.0.
 

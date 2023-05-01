@@ -1,6 +1,6 @@
 # Utopia Reach - List of Changes
 
-## v1.0 (in development)
+## v1.0 - 01.05.2023
 This is intended as the initial release of the full version of **Reach**, which is, from this version onwards, 
 a module completely independent of the **Utopia Reflection** module.
 

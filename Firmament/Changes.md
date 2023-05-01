@@ -1,6 +1,6 @@
 # Utopia Firmament - List of Changes
 
-## v1.0 (in development)
+## v1.0 - 01.05.2023
 Initial version  
 The following features were moved over from **Reflection**
 - Generic component traits

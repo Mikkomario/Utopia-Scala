@@ -1,5 +1,8 @@
 # Utopia Conflict - List of Changes
 
+## v1.4.3 - 01.05.2023
+Rebuild due to the changes in **Genesis**
+
 ## v1.4.2 - 02.02.2023
 This update supports the changes introduced in **Flow** v2.0 and **Paradigm** v1.2.
 

@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.16 (in development)
+## v1.16 - 01.05.2023
 While this update focuses on adding new utility functions, 
 please note that you will need to perform some refactoring in order to migrate.
 ### Breaking Changes

@@ -1,5 +1,8 @@
 # Utopia Trove - List of Changes
 
+## v1.1.6 - 01.05.2023
+Rebuild due to the changes in other modules.
+
 ## v1.1.5 - 02.02.2023
 This update supports the changes introduced in **Flow** v2.0.
 
