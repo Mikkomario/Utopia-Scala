@@ -48,6 +48,8 @@
   - Added `.onceSet(...)` that works like `.future.foreach(...)` but is synchronous
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readLineIteratorWithPrompt(String)`
+- **String** (**StringExtensions**)'
+  - Added `.isSimilarTo(String, Int)`
 - **Try** (**CollectionExtensions**)
   - Added `.logFailure` and `.logFailureWithMessage(String)`
 ### Other

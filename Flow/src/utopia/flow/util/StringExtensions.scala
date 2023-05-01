@@ -1,7 +1,9 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 
@@ -321,8 +323,7 @@ object StringExtensions
 		 * @param str A separator string where this string will be split
 		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
 		 */
-		def splitAtFirst(str: String) = optionIndexOf(str) match
-		{
+		def splitAtFirst(str: String) = optionIndexOf(str) match {
 			case Some(index) => s.take(index) -> s.drop(index + str.length)
 			case None => s -> ""
 		}
@@ -342,8 +343,7 @@ object StringExtensions
 		 * @param str A separator string where this string will be split
 		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
 		 */
-		def splitAtLast(str: String) = optionLastIndexOf(str) match
-		{
+		def splitAtLast(str: String) = optionLastIndexOf(str) match {
 			case Some(index) => s.take(index) -> s.drop(index + str.length)
 			case None => s -> ""
 		}
@@ -366,14 +366,12 @@ object StringExtensions
 		 * @param divider A divider that separates different parts
 		 * @return Divided parts of this string with the dividers included
 		 */
-		def divideWith(divider: String) =
-		{
+		def divideWith(divider: String) = {
 			val dividerIndices = indexOfIterator(divider).toVector
 			// Case: No dividers => returns the string as is
 			if (dividerIndices.isEmpty)
 				Vector(s)
-			else
-			{
+			else {
 				val divLength = divider.length
 				// Collects the strings between dividers. Includes the dividers themselves.
 				val (finalStart, firstParts) = dividerIndices
@@ -417,6 +415,62 @@ object StringExtensions
 		def replaceEachMatchOf(regex: Regex, replacement: => String) = replaceAll(regex, replacement)
 		
 		/**
+		  * @param other Another string
+		  * @param allowedDifference The maximum number of differences allowed between these strings in order for
+		  *                          this function to return true.
+		  *
+		  *                          Differences come in two forms:
+		  *                             1) Character is missing from one of these strings (e.g. "apple" vs. "aple"), or
+		  *                             2) Character is swapped (e.g. "tyko" vs, "typo")
+		  *
+		  *                          Please note that case-difference (e.g. "A" vs "a")
+		  *                          does NOT constitute a difference in this function.
+		  *
+		  * @return Whether these two strings no more than the specified number of differences.
+		  */
+		def isSimilarTo(other: String, allowedDifference: Int) =
+			areSimilar(Pair(s, other), Pair.twice(0), allowedDifference)
+		private def areSimilar(strings: Pair[String], indices: Pair[Int], allowedDifference: Int): Boolean = {
+			// Used when the end of one string is reached
+			def lengthDifferenceResult = {
+				val lengthDifference = strings.mergeWith(indices) { (s, i) => (s.length - i) max 0 }.merge { _ - _ }.abs
+				if (lengthDifference > allowedDifference)
+					false
+				else
+					true
+			}
+			
+			// Only returns valid index pairs
+			val indexIter = Iterator.iterate(indices) { _.map { _ + 1 } }
+				.takeWhile { _.forallWith(strings) { _ < _.length } }
+			// Case: There are more characters to compare =>
+			// Compares until finds a difference or until reaches the end of a string
+			if (indexIter.hasNext) {
+				indexIter.find { strings.mergeWith(_) { _(_) }.isAsymmetricWith(EqualsFunction.charCaseInsensitive) } match {
+					// Case: Difference found => Terminates or splits
+					case Some(nonMatchingIndex) =>
+						if (allowedDifference > 1) {
+							// Splits based on 3 assumptions:
+							//      1) An invalid character (swap)
+							//      2) A missing character
+							//      3) An additional character
+							// Are similar if they can be similar enough with any of those assumptions
+							areSimilar(strings, nonMatchingIndex.map { _ + 1 }, allowedDifference - 1) ||
+								areSimilar(strings, nonMatchingIndex.mapSecond { _ + 1 }, allowedDifference - 1) ||
+								areSimilar(strings, nonMatchingIndex.mapFirst { _ + 1 }, allowedDifference - 1)
+						}
+						else
+							false
+					// Case: End of a string reached => Checks lengths and returns
+					case None => lengthDifferenceResult
+				}
+			}
+			// Case: End of a string reached => Checks lengths and returns
+			else
+				lengthDifferenceResult
+		}
+		
+		/**
 		  * @return Some(this) if not empty. None if empty.
 		  */
 		def notEmpty = if (s.isEmpty) None else Some(s)
@@ -430,7 +484,6 @@ object StringExtensions
 		  * @return This if not empty, otherwise the default
 		  */
 		def nonEmptyOrElse[B >: String](default: => B) = if (s.isEmpty) default else s
-		
 		/**
 		  * @param f A mapping function to apply for non-empty items
 		  * @tparam B Type of mapping result
