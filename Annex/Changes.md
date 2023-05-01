@@ -1,5 +1,9 @@
 # Utopia Annex - List of Changes
 
+## v1.5 (in development)
+### Breaking Changes
+- Api methods now return Future[RequestResult] instead of Future[Try[Response]]
+
 ## v1.4 - 02.02.2023
 This update is compatible with the latest **Flow** (v2.0) and **Disciple** (v1.6) updates.  
 In addition, the **Schrödinger** concept has been completely rewritten.

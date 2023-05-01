@@ -1,18 +1,18 @@
 package utopia.annex.controller
 
-import utopia.access.http.{Headers, Method}
 import utopia.access.http.Method.{Get, Post}
+import utopia.access.http.{Headers, Method}
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.Response
+import utopia.annex.model.response.{NoConnection, RequestResult, Response}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * An interface used for sending requests to a server
@@ -87,7 +87,7 @@ trait Api
 	  * @param exc Implicit execution context
 	  * @return Response from server (asynchronous)
 	  */
-	def sendRequest(request: ApiRequest)(implicit exc: ExecutionContext): Future[Try[Response]] =
+	def sendRequest(request: ApiRequest)(implicit exc: ExecutionContext): Future[RequestResult] =
 		makeRequest(request.method, request.path, body = request.body)
 	
 	/**
@@ -97,7 +97,10 @@ trait Api
 	  * @return Response from server (asynchronous)
 	  */
 	def sendRequest(request: Request)(implicit exc: ExecutionContext) =
-		gateway.valueResponseFor(request).map { _.map(Response.from) }
+		gateway.valueResponseFor(request).map {
+			case Success(response) => Response.from(response)
+			case Failure(error) => NoConnection(error)
+		}
 	
 	/**
 	  * Sends a request to the server and wraps the response

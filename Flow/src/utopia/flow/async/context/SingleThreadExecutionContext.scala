@@ -66,7 +66,6 @@ class SingleThreadExecutionContext(name: String)(implicit log: Logger)
 								case e: InterruptedException =>
 									log(e)
 									killedFlag.set()
-								case _ => ()
 							}
 						}
 				}

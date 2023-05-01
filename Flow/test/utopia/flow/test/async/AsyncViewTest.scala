@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
 object AsyncViewTest extends App
 {
 	implicit val logger: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("AsyncViewTest").executionContext
+	implicit val exc: ExecutionContext = new ThreadPool("AsyncViewTest")
 	val delay = 0.2.seconds
 	val waitLock = new AnyRef
 	

@@ -4,11 +4,10 @@ import utopia.access.http.Status.Unauthorized
 import utopia.access.http.{Headers, Method}
 import utopia.annex.controller.Api
 import utopia.annex.model.error.UnauthorizedRequestException
-import utopia.annex.model.response.Response
+import utopia.annex.model.response.{NoConnection, RequestResult, Response}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.StringBody
 import utopia.disciple.model.error.RequestFailedException
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -48,23 +47,25 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 	override protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
 									   body: Value = Value.empty, params: Model = Model.empty,
 									   modHeaders: Headers => Headers = h => h)
-									  (implicit context: ExecutionContext): Future[Try[Response]] =
+									  (implicit context: ExecutionContext): Future[RequestResult] =
 	{
 		// May acquire a new session key before making further requests
-		if (Now > resetSessionThreshold)
-		{
-			LocalDevice.id match
-			{
+		if (Now > resetSessionThreshold) {
+			LocalDevice.id match {
 				case Some(deviceId) =>
 					sessionResetFuture.setOneIfEmpty {
 						val result = resetSession(deviceId)
 						result.onComplete { _ => sessionResetFuture.clear() }
 						result
-					}.tryFlatMapIfSuccess { newKey =>
-						super.makeRequest(method, path, timeout, body, params,
-							h => modHeaders(h.withBearerAuthorization(newKey)))
+					}.flatMap {
+						case Success(newKey) =>
+							super.makeRequest(method, path, timeout, body, params,
+								h => modHeaders(h.withBearerAuthorization(newKey)))
+						case Failure(error) => Future.successful(NoConnection(error))
 					}
-				case None => asyncFailure(new RequestFailedException("Device id not known, can't reacquire session key"))
+				case None =>
+					Future.successful(NoConnection(
+						new RequestFailedException("Device id not known, can't reacquire session key")))
 			}
 		}
 		else
@@ -76,7 +77,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 	
 	private def resetSession(deviceId: Int)(implicit exc: ExecutionContext) =
 	{
-		get(s"devices/$deviceId/session-key", headersMod = resetSessionHeadersMod).tryMapIfSuccess {
+		get(s"devices/$deviceId/session-key", headersMod = resetSessionHeadersMod).map {
 			case Response.Success(status, responseBody, _) =>
 				// Reads the new session key from the response body and uses that from this point onwards
 				responseBody.value.string match {
@@ -94,6 +95,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 				else
 					Failure(new RequestFailedException(message.getOrElse(
 						s"Couldn't acquire a new session key. Response status: $status")))
+			case NoConnection(error) => Failure(new RequestFailedException("Couldn't access the server", error))
 		}
 	}
 	

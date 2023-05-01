@@ -3,7 +3,7 @@ package utopia.journey.controller
 import utopia.access.http.Headers
 import utopia.access.http.Status.Unauthorized
 import utopia.annex.controller.Api
-import utopia.annex.model.response.Response
+import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.disciple.http.request.StringBody
 import utopia.flow.generic.casting.ValueConversions._
@@ -64,8 +64,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 			Some(credentials.email), credentials.allowDeviceKeyUse)
 		
 		// Posts new user data to the server
-		post("users", newUser.toModel).tryMapIfSuccess
-		{
+		post("users", newUser.toModel).map {
 			// Checks response status and parses user data from the body
 			case Response.Success(status, body, _) =>
 				body match {
@@ -94,6 +93,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 				}
 			case Response.Failure(status, message, _) =>
 				Failure(new RequestFailedException(message.getOrElse(s"Received $status when posting new user")))
+			case failure: RequestFailure => failure.toFailure
 		}
 	}
 	
@@ -109,7 +109,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		implicit val parser: DetailedClientDevice.type = DetailedClientDevice
 		
 		post("devices", device.toModel,
-			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {
+			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).flatMap {
 			case Response.Success(status, body, _) =>
 				body match {
 					case c: Content =>
@@ -130,6 +130,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 						s"Expected to receive device data. Instead received an empty response with status $status"))
 				}
 			case f: Response.Failure => Future.successful(handleLoginFailureResponse(f))
+			case f: RequestFailure => Future.successful(f.toFailure)
 		}
 	}
 	
@@ -161,7 +162,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	private def retrieveAndUseDeviceKey(deviceId: Int, credentials: UserCredentials)(implicit exc: ExecutionContext) =
 	{
 		get(s"devices/$deviceId/device-key",
-			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {
+			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).flatMap {
 			case Response.Success(status, body, _) =>
 				body.value.string match {
 					case Some(key) =>
@@ -172,6 +173,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 						s"Expected a device key but an empty response ($status) received instead"))
 				}
 			case failure: Response.Failure => Future.successful(handleLoginFailureResponse(failure))
+			case failure: RequestFailure => Future.successful(failure.toFailure)
 		}
 	}
 	
@@ -183,7 +185,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 			case Left(basic) => headers.withBasicAuthorization(basic.email, basic.password)
 		}
 		
-		get(s"devices/$deviceId/session-key", headersMod = modHeaders).tryMapIfSuccess {
+		get(s"devices/$deviceId/session-key", headersMod = modHeaders).map {
 			case Response.Success(status, body, _) =>
 				body.value.string match {
 					case Some(key) => Success(new ExodusApi(gateway, rootPath, credentials, key))
@@ -191,6 +193,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 						s"Expected a session key but received an empty response with status $status"))
 				}
 			case failure: Response.Failure => handleLoginFailureResponse(failure)
+			case failure: RequestFailure => failure.toFailure
 		}
 	}
 	
