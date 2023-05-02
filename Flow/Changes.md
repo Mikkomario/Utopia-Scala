@@ -3,6 +3,9 @@
 ## v2.1.1 (in development)
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
+### New Methods
+- **Try** (**CollectionExtensions**)
+  - Added `.toOptionLogging` and `.toOptionLoggingWithMessage(String)`
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

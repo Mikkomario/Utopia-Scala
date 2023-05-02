@@ -1803,6 +1803,30 @@ object CollectionExtensions
 		def logFailureWithMessage(message: => String)(implicit log: Logger) = failure.foreach { log(_, message) }
 		
 		/**
+		 * Converts this try into an option. Logs possible failure state.
+		 * @param log Implicit logger to use to log the potential failure.
+		 * @return Some if success, None otherwise
+		 */
+		def toOptionLogging(implicit log: Logger) = t match {
+			case Success(a) => Some(a)
+			case Failure(error) =>
+				log(error)
+				None
+		}
+		/**
+		 * Converts this try into an option. Logs possible failure state.
+		 * @param message Message to log in case of a failure (call-by-name)
+		 * @param log Implicit logger to use to log the potential failure.
+		 * @return Some if success, None otherwise
+		 */
+		def toOptionLoggingWithMessage(message: => String)(implicit log: Logger) = t match {
+			case Success(a) => Some(a)
+			case Failure(error) =>
+				log(error, message)
+				None
+		}
+		
+		/**
 		  * @param f A mapping function for possible failure
 		  * @tparam B Result type
 		  * @return Contents of this try on success, mapped error on failure
