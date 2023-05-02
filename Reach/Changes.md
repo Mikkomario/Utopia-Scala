@@ -1,5 +1,12 @@
 # Utopia Reach - List of Changes
 
+## v1.1 (in development)
+### Breaking Changes
+- Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
+### New Methods
+- **ReachWindow**
+  - Added a new `.withContext(ReachContentWindowContext)` -variant
+
 ## v1.0 - 01.05.2023
 This is intended as the initial release of the full version of **Reach**, which is, from this version onwards, 
 a module completely independent of the **Utopia Reflection** module.

@@ -19,7 +19,7 @@ object ActionQueueTest extends App
 {
 	// Tests with limited thread availablility
 	implicit val logger: Logger = SysErrLogger
-	implicit val context: ExecutionContext = new ThreadPool("Test", 2, 4).executionContext
+	implicit val context: ExecutionContext = new ThreadPool("Test", 2, 4)
 	
 	val queue = new ActionQueue(5)
 	

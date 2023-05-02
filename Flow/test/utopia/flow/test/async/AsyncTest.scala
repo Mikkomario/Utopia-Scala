@@ -16,8 +16,7 @@ object AsyncTest extends App
 {
 	// Creates the thread pool and the execution context
 	implicit val logger: Logger = SysErrLogger
-	implicit val context: ExecutionContext = new ThreadPool("test-main", 3, 6,
-		2.seconds).executionContext
+	implicit val context: ExecutionContext = new ThreadPool("test-main", 3, 6, 2.seconds)
 	
 	val starts = VolatileList[Int]()
 	val ends = VolatileList[Int]()

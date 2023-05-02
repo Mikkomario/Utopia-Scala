@@ -2,12 +2,11 @@ package utopia.reach.context
 
 import utopia.firmament.context.{TextContext, WindowContext}
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.container.RevalidationStyle.Immediate
 import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorSet
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.paradigm.color.Color
 
 import scala.language.implicitConversions
 
@@ -21,14 +20,13 @@ object ReachWindowContext
 	  * @param background Background color to use in the created windows
 	  * @param cursors Set of cursors to use (optional)
 	  * @param revalidationStyle Revalidation style to use (default = revalidate immediately in a separate thread)
-	  * @param customDrawers Custom drawers to assign to windows (default = empty)
 	  * @param getAnchor Anchoring function (default = anchor over the focused component, or at the window center)
 	  * @return A new reach window context
 	  */
 	def apply(base: WindowContext, background: Color, cursors: Option[CursorSet] = None,
-	          revalidationStyle: RevalidationStyle = Immediate.async, customDrawers: Vector[CustomDrawer] = Vector(),
+	          revalidationStyle: RevalidationStyle = Immediate.async,
 	          getAnchor: (ReachCanvas, Bounds) => Point = _.anchorPosition(_)): ReachWindowContext =
-		_ReachWindowContext(base, background, cursors, revalidationStyle, customDrawers, getAnchor)
+		_ReachWindowContext(base, background, cursors, revalidationStyle, getAnchor)
 	
 	/**
 	  * @param actorHandler The actor handler to wrap
@@ -42,7 +40,7 @@ object ReachWindowContext
 	// NESTED   -----------------------
 	
 	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color, cursors: Option[CursorSet],
-	                                       revalidationStyle: RevalidationStyle, customDrawers: Vector[CustomDrawer],
+	                                       revalidationStyle: RevalidationStyle,
 	                                       getAnchor: (ReachCanvas, Bounds) => Point)
 		extends ReachWindowContext
 	{

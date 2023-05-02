@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 object WeakListTest extends App
 {
 	implicit val logger: Logger = SysErrLogger
-	private implicit val exc: ExecutionContext = new ThreadPool("Test").executionContext
+	private implicit val exc: ExecutionContext = new ThreadPool("Test")
 	
 	val first = "First"
 	val second = "Second"

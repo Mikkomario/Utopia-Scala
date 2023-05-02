@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object FutureRaceTest extends App
 {
 	implicit val logger: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("test-main").executionContext
+	implicit val exc: ExecutionContext = new ThreadPool("test-main")
 	val immediate = Future { 1 }
 	immediate.waitFor()
 	

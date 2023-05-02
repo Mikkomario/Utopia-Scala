@@ -81,6 +81,14 @@ object ReachWindow
 	def withContext(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger) =
 		ContextualReachWindowFactory(context)
 	/**
+	 * @param context Window creation context
+	 * @param exc     Implicit execution context
+	 * @param log     Implicit logging execution
+	 * @return A new Reach window factory that uses the specified context
+	 */
+	def withContext(context: ReachContentWindowContext)(implicit exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+		ContextualReachWindowFactory(context).withContentContext(context.textContext)
+	/**
 	  * @param actorHandler Actor handler to use
 	  * @param background Window background color
 	  * @param exc Implicit execution context
