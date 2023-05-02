@@ -1,8 +1,12 @@
 # Utopia Flow - List of Changes
 
-## v2.1.1 (in development)
+## v2.2 (in development)
+### Breaking Changes
+- **IterableOnce**`.toTryCatch` now returns a **TryCatch** instead of a **Try**
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
+### New Features
+- Added new **TryCatch** utility class for handling situations that included non-critical failures 
 ### New Methods
 - **Try** (**CollectionExtensions**)
   - Added `.toOptionLogging` and `.toOptionLoggingWithMessage(String)`

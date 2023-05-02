@@ -8,7 +8,7 @@ import utopia.flow.operator.End.{EndingSequence, First, Last}
 import utopia.flow.operator.Extreme.{Max, Min}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{CombinedOrdering, End, EqualsFunction, Extreme, Identity, Sign}
-import utopia.flow.util.HasSize
+import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.Flag
@@ -477,19 +477,19 @@ object CollectionExtensions
 		  *         If one or more attempts succeeded, or if no attempts were made, returns a success containing
 		  *         caught errors, as well as successes
 		  */
-		def toTryCatch = {
+		def toTryCatch: TryCatch[Vector[A]] = {
 			val (failures, successes) = tries.divided
 			if (successes.isEmpty) {
 				failures.headOption match {
 					// Case: All attempts failed => fails with the first encountered error
-					case Some(firstError) => Failure(firstError)
+					case Some(firstError) => TryCatch.Failure(firstError)
 					// Case: No attempts were made => empty success
-					case None => Success(failures -> successes)
+					case None => TryCatch.Success(successes, failures)
 				}
 			}
 			// Case: One or more attempts succeeded => success
 			else
-				Success(failures -> successes)
+				TryCatch.Success(successes, failures)
 		}
 		
 		/**
