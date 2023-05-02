@@ -1,6 +1,6 @@
 package utopia.flow.async.process
 
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.async.process.ProcessState.Completed
 import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
@@ -57,6 +57,31 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
                                 (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, shutdownReaction)
 {
+	// ATTRIBUTES   ------------------------
+	
+	// True while the wait target was swapped during wait
+	private val resetFlag = VolatileFlag()
+	
+	
+	// INITIAL CODE -------------------------
+	
+	// Reacts to changes in the target wait time once started
+	statePointer.onNextChange { _ =>
+		waitTargetPointer.addContinuousAnyChangeListener {
+			val st = state
+			// Case: Running while wait time changes => Updates the wait
+			if (st.isRunning) {
+				resetFlag.set()
+				WaitUtils.notify(waitLock)
+			}
+			// Case: Finished while wait time changes => Runs this process again with the new wait target
+			// (provided that this is allowed by 'isRestartable')
+			else if (st == Completed && isRestartable)
+				runAsync()
+		}
+	}
+	
+	
 	// ABSTRACT ----------------------------
 	
 	/**
@@ -68,14 +93,6 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 	// IMPLEMENTED  ------------------------
 	
 	override protected def runOnce() = {
-		// True while the wait target was swapped during wait
-		val resetFlag = VolatileFlag()
-		// Reacts to wait target changes by resetting the waiting process
-		val changeListener = ChangeListener.continuousOnAnyChange {
-			resetFlag.set()
-			WaitUtils.notify(waitLock)
-		}
-		waitTargetPointer.addListener(changeListener)
 		// Waits until any of:
 		// a) A wait target is reached successfully
 		// b) This process is broken or scheduled to hurry
@@ -108,13 +125,8 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 					Certain(true)
 			}
 		}.flatMap { _.value }.next()
-		// Once waiting is completed, stops listening for wait target changes
-		waitTargetPointer.removeListener(changeListener)
 		// Case: Execution was allowed => Executes
 		if (shouldRun) {
-			// Restarts this process when the wait target updates, if allowed by 'isRestartable'
-			if (isRestartable)
-				waitTargetPointer.onNextChange { _ => runAsync() }
 			// Executes the wrapped function
 			afterDelay()
 		}
