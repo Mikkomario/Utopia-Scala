@@ -445,8 +445,8 @@ object AccessWriter
 		val filterDec = MethodDeclaration("filterDistinct", Set(uniqueAccessRef), Protected,
 			returnDescription = s"An access point to the ${className.doc} that satisfies the specified condition")(
 			Parameter("condition", Reference.condition,
-				description = s"Filter condition to apply. Should yield unique ${className.pluralDoc}."))(
-			s"${uniqueAccessRef.target}(condition)")
+				description = s"Filter condition to apply in addition to this root view's condition. Should yield unique ${className.pluralDoc}."))(
+			s"${uniqueAccessRef.target}(mergeCondition(condition))")
 		
 		File(singleAccessPackage,
 			ObjectDeclaration((accessPrefix +: className).className,

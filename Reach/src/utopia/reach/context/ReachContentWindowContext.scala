@@ -3,6 +3,8 @@ package utopia.reach.context
 import utopia.firmament.context.TextContext
 import utopia.paradigm.color.Color
 
+import scala.language.implicitConversions
+
 object ReachContentWindowContext
 {
 	// IMPLICIT -------------------------

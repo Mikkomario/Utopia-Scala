@@ -1,12 +1,18 @@
 package utopia.metropolis.model.stored.language
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.combined.description.LinkedDescription
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.partial.language.LanguageFamiliarityData
-import utopia.metropolis.model.stored.StoredModelConvertible
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
+
+object LanguageFamiliarity extends StoredFromModelFactory[LanguageFamiliarity, LanguageFamiliarityData]
+{
+	override def dataFactory: FromModelFactory[LanguageFamiliarityData] = LanguageFamiliarityData
+}
 
 /**
   * Represents a LanguageFamiliarity that has already been stored in the database

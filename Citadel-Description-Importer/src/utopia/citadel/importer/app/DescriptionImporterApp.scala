@@ -29,7 +29,7 @@ object DescriptionImporterApp extends App
 	
 	implicit val logger: Logger = SysErrLogger
 	implicit val jsonParser: JsonParser = JsonBunny
-	implicit val executionContext: ExecutionContext = new ThreadPool("Description-Importer").executionContext
+	implicit val executionContext: ExecutionContext = new ThreadPool("Description-Importer")
 	val connectionPool = new ConnectionPool()
 	
 	// Sets up context based on settings

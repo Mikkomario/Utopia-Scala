@@ -6,7 +6,7 @@ import utopia.vault.model.immutable.Table
 /**
   * This is a collection of tables used in the tests
   */
-object TestTables extends Tables(TestConnectionPool)(TestThreadPool.executionContext)
+object TestTables extends Tables(TestConnectionPool)(TestThreadPool)
 {
 	// ATTRIBUTES   -----------------
 	

@@ -1,11 +1,15 @@
 package utopia.metropolis.model.combined.language
 
-import utopia.metropolis.model.combined.description.{DescribedFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 
 object DescribedLanguageFamiliarity 
-	extends DescribedFactory[LanguageFamiliarity, DescribedLanguageFamiliarity]
+	extends DescribedFromModelFactory[LanguageFamiliarity, DescribedLanguageFamiliarity]
+{
+	override protected def undescribedFactory: FromModelFactory[LanguageFamiliarity] = LanguageFamiliarity
+}
 
 /**
   * Combines LanguageFamiliarity with the linked descriptions
