@@ -349,10 +349,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	lazy val focusKeyStateHandler = {
 		val parent = keyStateHandlerPointer.value
 		val handler = KeyStateHandler()
-		handler.filter = { _ =>
-			println(s"Focus key handler incoming event. Focused=$isFocused")
-			isFocused
-		}
+		handler.filter = { _ => isFocused }
 		parent += handler
 		handler
 	}

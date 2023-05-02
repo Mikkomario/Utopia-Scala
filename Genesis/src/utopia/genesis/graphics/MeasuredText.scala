@@ -296,15 +296,11 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	/**
 	  * Converts a caret index to an index in the string
 	  * @param caretIndex A caret index
-	  * @return An index in the string (inside string bounds)
+	  * @return An index in the string.
+	 *         The resulting index is inside the string bounds, or equal to the length of this string
 	  */
 	def caretIndexToCharacterIndex(caretIndex: Int) =
-	{
-		if (caretIndex < 0)
-			0
-		else
-			caretIndex min (text.length - 1)
-	}
+		if (caretIndex < 0) 0 else caretIndex min text.length
 	
 	/**
 	  * Converts a caret index to an index in the string
@@ -320,12 +316,10 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param endCaretIndex Then ending point caret index
 	  * @return A string between the two caret points
 	  */
-	def subString(startCaretIndex: Int, endCaretIndex: Int) =
-	{
+	def subString(startCaretIndex: Int, endCaretIndex: Int) = {
 		if (isEmpty)
 			text
-		else
-		{
+		else {
 			val startStringIndex = caretIndexToCharacterIndex(startCaretIndex) // Inclusive
 			val endStringIndex = (endCaretIndex min text.length) max startStringIndex // Exclusive
 			text.substring(startStringIndex, endStringIndex)

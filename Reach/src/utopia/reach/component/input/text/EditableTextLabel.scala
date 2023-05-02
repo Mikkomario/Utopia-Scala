@@ -278,8 +278,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def onKeyTyped(event: KeyTypedEvent) =
-		{
+		override def onKeyTyped(event: KeyTypedEvent) ={
 			// Skips cases handled by key state listening
 			if (!ignoredOnType.contains(event.index) && font.toAwt.canDisplay(event.typedChar)) {
 				// Inserts the typed character into the string (if accepted by the content filter)
