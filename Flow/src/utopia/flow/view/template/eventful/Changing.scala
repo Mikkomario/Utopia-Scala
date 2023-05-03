@@ -7,7 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.{AsyncMirror, AsyncProcessMirror, ChangeFuture, DelayedView, Fixed, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, AsyncMirror, AsyncProcessMirror, ChangeFuture, DelayedView, Fixed, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -61,6 +61,18 @@ object Changing
 	  */
 	def wrapFutureToOption[A](future: Future[A])(implicit exc: ExecutionContext, log: Logger) =
 		this.future[Option[A], A](None, future) { _.toOption }
+	/**
+	 * Creates a pointer that tracks the completion of a future, whether successful or failed
+	 * @param future A future to track
+	 * @param exc    Implicit execution context
+	 * @return A pointer that contains true when the specified future has completed
+	 */
+	def completionOf(future: Future[Any])(implicit exc: ExecutionContext): FlagLike = {
+		if (future.isCompleted)
+			AlwaysTrue
+		else
+			ChangeFuture.merging[Boolean, Any](false, future) { (_, _) => true }
+	}
 }
 
 /**
