@@ -9,6 +9,8 @@
 - Updated **InputWindowFactory** in following ways:
   - Replaced `.fieldCreationContext` and `.makeFieldNameAndFieldContext(ColorContext)` with `.contentContext`
   - `.buildLayout(...)` now accepts **TextContext** instead of **ColorContext**
+- Removed all **Option**-wrappings of **SingleColorIcons**. 
+  - Use `SingleColorIcon.empty` to represent None and `icon.notEmpty` if you want to wrap it in an **Option**.
 - Updated FieldWithSelectionPopup and DropDown constructors:
   - `makeDisplay` now accepts 4 parameters instead of 2
   - Replaced `noOptionsView: Option[OpenComponent]` with `makeNoOptionsView: Option[...]`

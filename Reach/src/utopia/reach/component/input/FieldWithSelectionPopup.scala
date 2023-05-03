@@ -123,13 +123,13 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
 	def apply[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
 		P <: Changing[Vector[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
 	                              valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-	                              rightExpandIcon: Option[SingleColorIcon] = None,
-	                              rightCollapseIcon: Option[SingleColorIcon] = None,
-	                              fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	                              promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	                              hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	                              errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	                              leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	                              rightExpandIcon: SingleColorIcon = SingleColorIcon.empty,
+	                              rightCollapseIcon: SingleColorIcon = SingleColorIcon.empty,
+	                              fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	                              promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	                              hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	                              errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	                              leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	                              listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
 	                              makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	                              makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
@@ -213,12 +213,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	+P <: Changing[Vector[A]], +N <: TextContext]
 (parentHierarchy: ComponentHierarchy, context: N, isEmptyPointer: Changing[Boolean], override val contentPointer: P,
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
- rightExpandIcon: Option[SingleColorIcon] = None, rightCollapseIcon: Option[SingleColorIcon] = None,
- fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), listLayout: StackLayout = Fit,
+ rightExpandIcon: SingleColorIcon = SingleColorIcon.empty, rightCollapseIcon: SingleColorIcon = SingleColorIcon.empty,
+ fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty, listLayout: StackLayout = Fit,
  listCap: StackLength = StackLength.fixedZero,
  makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
  makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
@@ -249,13 +249,13 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		case None => AlwaysFalse
 	}
 	// Merges the expand and the collapse icons, if necessary
-	private val rightIconPointer = rightExpandIcon match {
+	private val rightIconPointer: Changing[SingleColorIcon] = rightExpandIcon.notEmpty match {
 		case Some(expandIcon) =>
-			rightCollapseIcon match {
+			rightCollapseIcon.notEmpty match {
 				case Some(collapseIcon) =>
 					// Makes sure both icons have the same size
 					if (expandIcon.size == collapseIcon.size)
-						popUpVisiblePointer.map { visible => Some(if (visible) collapseIcon else expandIcon) }
+						popUpVisiblePointer.map { visible => if (visible) collapseIcon else expandIcon }
 					else {
 						val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
 						val targetSize = smaller.size
@@ -264,9 +264,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 						
 						val (newExpandIcon, newCollapseIcon) =
 							if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
-						popUpVisiblePointer.map { visible => Some(if (visible) newCollapseIcon else newExpandIcon) }
+						popUpVisiblePointer.map { visible => if (visible) newCollapseIcon else newExpandIcon }
 					}
-				case None => Fixed(Some(expandIcon))
+				case None => Fixed(expandIcon)
 			}
 		case None => Fixed(rightCollapseIcon)
 	}

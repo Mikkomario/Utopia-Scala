@@ -47,8 +47,6 @@ object DropDown extends Ccff[ReachContentWindowContext, ContextualDropDownFactor
 case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, context: ReachContentWindowContext)
 	extends ReachContentWindowContextualFactory[ContextualDropDownFactory]
 {
-	private implicit val c: ReachContentWindowContext = context
-	
 	override def self: ContextualDropDownFactory = this
 	
 	override def withContext(newContext: ReachContentWindowContext) = copy(context = newContext)
@@ -103,14 +101,14 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-	 rightExpandIcon: Option[SingleColorIcon] = None,
-	 rightCollapseIcon: Option[SingleColorIcon] = None,
+	 rightExpandIcon: SingleColorIcon = SingleColorIcon.empty,
+	 rightCollapseIcon: SingleColorIcon = SingleColorIcon.empty,
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
-	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	 listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
 	 makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	 makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
@@ -192,12 +190,12 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	  */
 	def simple[A, P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-	 rightExpandIcon: Option[SingleColorIcon] = None, rightCollapseIcon: Option[SingleColorIcon] = None,
+	 rightExpandIcon: SingleColorIcon = SingleColorIcon.empty, rightCollapseIcon: SingleColorIcon = SingleColorIcon.empty,
 	 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
+	 fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
 	 makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	 makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
@@ -210,7 +208,8 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 			case None => LocalizedString.empty
 		}
 		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, rightExpandIcon, rightCollapseIcon,
-			mainDisplayFunction, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, Fixed(None), Fit,
+			mainDisplayFunction, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer,
+			SingleColorIcon.alwaysEmpty, Fit,
 			context.margins.small.any, makeNoOptionsView, makeAdditionalOption, highlightStylePointer, focusColorRole,
 			sameItemCheck, fillBackground)
 			{ (hierarchy, context, _, firstItem) =>

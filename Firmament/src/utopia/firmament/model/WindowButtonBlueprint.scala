@@ -24,8 +24,8 @@ object WindowButtonBlueprint
 	  * @tparam A Type of yielded result
 	  * @return A new button blueprint
 	  */
-	def closeWithResult[A](text: LocalizedString, icon: Option[SingleColorIcon] = None, role: ColorRole = Primary,
-						   location: Alignment = BottomRight, hotkey: Option[HotKey] = None,
+	def closeWithResult[A](text: LocalizedString, icon: SingleColorIcon = SingleColorIcon.empty,
+	                       role: ColorRole = Primary, location: Alignment = BottomRight, hotkey: Option[HotKey] = None,
 						   isDefault: Boolean = false)(result: => A) =
 		apply[A](text, icon, role, location, hotkey) { _.tryComplete(Try { result }) }
 }
@@ -43,8 +43,7 @@ object WindowButtonBlueprint
   * @param pressAction A function called when this button is pressed. Accepts a promise that accepts the final
   *                    result and will close the parent window when completed.
   */
-// TODO: Icon should not be option (use empty icon as None)
-case class WindowButtonBlueprint[A](text: LocalizedString, icon: Option[SingleColorIcon] = None,
+case class WindowButtonBlueprint[A](text: LocalizedString, icon: SingleColorIcon = SingleColorIcon.empty,
                                     role: ColorRole = Primary, location: Alignment = BottomRight,
                                     hotkey: Option[HotKey] = None, isDefault: Boolean = false)
 								   (val pressAction: Promise[A] => Unit)

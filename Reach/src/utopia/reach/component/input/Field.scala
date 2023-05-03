@@ -14,7 +14,6 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
-import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorRole.{Failure, Secondary}
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
@@ -110,12 +109,12 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	(colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
 	 contextBackgroundPointer: Changing[Color], font: Font, alignment: Alignment = Alignment.Left,
 	 textInsets: StackInsets = StackInsets.any,
-	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+	 rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
 	 hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -158,12 +157,12 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	(colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
 	 contextBackgroundPointer: Changing[Color], font: Font, alignment: Alignment = Alignment.Left,
 	 textInsets: StackInsets = StackInsets.any,
-	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+	 rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
 	 hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -206,12 +205,12 @@ case class ContextualFieldFactory[+N <: TextContext](factory: FieldFactory, cont
 	  */
 	def apply[C <: ReachComponentLike with Focusable]
 	(isEmptyPointer: Changing[Boolean],
-	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+	 rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -252,12 +251,12 @@ case class ContextualFieldFactory[+N <: TextContext](factory: FieldFactory, cont
 	  */
 	def withoutExtraLabel[C <: ReachComponentLike with Focusable]
 	(isEmptyPointer: Changing[Boolean],
-	 fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
-	 rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	 fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+	 leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+	 rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -277,12 +276,12 @@ case class ContextualFieldFactory[+N <: TextContext](factory: FieldFactory, cont
 class Field[C <: ReachComponentLike with Focusable]
 (parentHierarchy: ComponentHierarchy, colorScheme: ColorScheme, isEmptyPointer: Changing[Boolean],
  contextBackgroundPointer: Changing[Color], font: Font, alignment: Alignment = Alignment.Left,
- textInsets: StackInsets = StackInsets.any, fieldNamePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
- leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
- rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), iconOutsideMargins: StackSize = StackSize.any,
+ textInsets: StackInsets = StackInsets.any, fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
+ leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+ rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty, iconOutsideMargins: StackSize = StackSize.any,
  highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
  defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
  hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -446,10 +445,12 @@ class Field[C <: ReachComponentLike with Focusable]
 						makeOpenViewImageLabel(rightIconPointer, Direction2D.Left)), X, Center,
 						StackLength.fixedZero)
 				}
-			else if (leftIconPointer.value.isDefined || rightIconPointer.value.isDefined)
+			else if (leftIconPointer.value.nonEmpty || rightIconPointer.value.nonEmpty)
 				Open.using(Stack) { stackF =>
-					val leftLabel = leftIconPointer.value.map { makeImageLabel(content.hierarchy, _, Direction2D.Right) }
-					val rightLabel = rightIconPointer.value.map { makeImageLabel(content.hierarchy, _, Direction2D.Left) }
+					val leftLabel = leftIconPointer.value.notEmpty
+						.map { makeImageLabel(content.hierarchy, _, Direction2D.Right) }
+					val rightLabel = rightIconPointer.value.notEmpty
+						.map { makeImageLabel(content.hierarchy, _, Direction2D.Left) }
 					stackF.withoutMargin(content.mapComponent { c => Vector(leftLabel, Some(c), rightLabel).flatten },
 						X, Center)
 				}
@@ -460,8 +461,7 @@ class Field[C <: ReachComponentLike with Focusable]
 		// Top and side inset are increased if border is drawn on all sides
 		val borderInsets = if (fillBackground) Insets.bottom(focusBorderWidth) else Insets.symmetric(focusBorderWidth)
 		// Draws background (optional) and border
-		val drawers =
-		{
+		val drawers = {
 			if (fillBackground)
 				Vector(makeBackgroundDrawer(), borderDrawer)
 			else
@@ -470,19 +470,15 @@ class Field[C <: ReachComponentLike with Focusable]
 		factory(framingContent, borderInsets.fixed, drawers).withResult(content.result)
 	}
 	
-	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[Option[SingleColorIcon]],
+	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[SingleColorIcon],
 	                               noMarginSide: Direction2D) =
 	{
-		ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { (icon, bg) =>
-			icon match {
-				case Some(icon) => icon.against(bg)
-				case None => Image.empty
-			}
-		}, iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+		ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { _ against _ },
+			iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 	}
 	
-	private def makeOpenViewImageLabel(pointer: Changing[Option[SingleColorIcon]], noMarginSide: Direction2D) =
-		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.map { _.isDefined })
+	private def makeOpenViewImageLabel(pointer: Changing[SingleColorIcon], noMarginSide: Direction2D) =
+		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.map { _.nonEmpty })
 	
 	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
 	{

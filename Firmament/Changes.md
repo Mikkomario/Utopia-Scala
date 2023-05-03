@@ -2,9 +2,16 @@
 
 ## v1.1 (in development)
 ### Breaking Changes
+- The icon parameter **WindowButtonBlueprint** is no longer an **Option**. An empty **SingleColorIcon** acts as "no icon"
 - **SingleColorIconCache** now requires an implicit **Logger** parameter
+### New Methods
+- **LocalizedString** (object)
+  - Added `.alwaysEmpty`
+- **SingleColorIcon** (object)
+  - Added `.alwaysEmpty`
 ### Other Changes
 - **SingleColorIconCache** now logs errors and appends ".png" to file names in case the file extension is not specified
+- **SingleColorIcon** now extends **MayBeEmpty**
 
 ## v1.0 - 01.05.2023
 Initial version  

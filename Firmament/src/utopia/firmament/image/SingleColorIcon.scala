@@ -2,6 +2,9 @@ package utopia.firmament.image
 
 import utopia.firmament.context.ColorContext
 import utopia.flow.collection.immutable.caching.cache.WeakCache
+import utopia.flow.collection.template.MapAccess
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
@@ -18,6 +21,10 @@ object SingleColorIcon
 	  * An empty icon
 	  */
 	val empty = new SingleColorIcon(Image.empty)
+	/**
+	 * A pointer that always contains an empty icon
+	 */
+	val alwaysEmpty = Fixed(empty)
 	
 	
 	// IMPLICIT ---------------------------
@@ -30,20 +37,24 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, Reflection v1.2
   */
-class SingleColorIcon(val original: Image) extends Sized[SingleColorIcon] with FromShadeFactory[Image]
+class SingleColorIcon(val original: Image)
+	extends Sized[SingleColorIcon] with FromShadeFactory[Image] with MaybeEmpty[SingleColorIcon]
 {
 	// ATTRIBUTES	------------------------
 	
-	private val paintedImageCache = WeakCache[Color, Image] { c => original.withColorOverlay(c) }
+	private val paintedImageCache = original.notEmpty match {
+		case Some(img) => WeakCache[Color, Image] { c => img.withColorOverlay(c) }
+		case None => MapAccess { _: Any => original }
+	}
 	
 	/**
 	  * A black version of this icon
 	  */
-	lazy val black = original.withAlpha(0.88)
+	lazy val black = original.mapIfNotEmpty { _.withAlpha(0.88) }
 	/**
 	  * A white version of this icon
 	  */
-	lazy val white = original.withColorOverlay(Color.white)
+	lazy val white = original.mapIfNotEmpty { _.withColorOverlay(Color.white) }
 	/**
 	  * A version of this icon for light image + text buttons
 	  */
@@ -94,6 +105,8 @@ class SingleColorIcon(val original: Image) extends Sized[SingleColorIcon] with F
 	// IMPLEMENTED  -----------------------
 	
 	override def self = this
+	
+	override def isEmpty: Boolean = original.isEmpty
 	
 	override def size = original.size
 	

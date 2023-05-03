@@ -10,6 +10,17 @@ object MapAccess
 	implicit def functionToMapLike[K, V](f: K => V): MapAccess[K, V] = new MapLikeFunction[K, V](f)
 	
 	
+	// OTHER    -----------------------------
+	
+	/**
+	 * @param f A function that serves as a mapping
+	 * @tparam K Type of mapping keys
+	 * @tparam V Type of mapping values
+	 * @return A map that is solely based on the specified function
+	 */
+	def apply[K, V](f: K => V): MapAccess[K, V] = new MapLikeFunction[K, V](f)
+	
+	
 	// NESTED   ----------------------------
 	
 	/**
@@ -18,7 +29,7 @@ object MapAccess
 	  * @tparam K Type of keys used
 	  * @tparam V Types of values returned
 	  */
-	class MapLikeFunction[-K, +V](f: K => V) extends MapAccess[K, V]
+	private class MapLikeFunction[-K, +V](f: K => V) extends MapAccess[K, V]
 	{
 		override def apply(key: K) = f(key)
 	}

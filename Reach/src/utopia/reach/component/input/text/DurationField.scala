@@ -68,8 +68,8 @@ case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy, c
 	          maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
 	          separatorText: LocalizedString = ":",
 	          enabledPointer: Changing[Boolean] = AlwaysTrue,
-	          leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
-	          rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+	          leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+	          rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
 	          selectionStylePointer: Changing[ColorRole] = Fixed(Secondary),
 	          focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
 	          captureSeconds: Boolean = false, showLabels: Boolean = false)(implicit exc: ExecutionContext) =
@@ -86,8 +86,8 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
                     maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
                     separatorText: LocalizedString = LocalizedString.empty,
                     enabledPointer: Changing[Boolean] = AlwaysTrue,
-                    leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
-                    rightIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
+                    leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
+                    rightIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
                     selectionStylePointer: Changing[ColorRole] = Fixed(Secondary),
                     focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
                     captureSeconds: Boolean = false, showLabels: Boolean = false)
@@ -121,9 +121,9 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 			val fieldFactory = factories(TextField)
 			def makeField(label: => LocalizedString, hint: LocalizedString, initialValue: Int, maxValue: Int,
 						  isLeftmost: Boolean = false, isRightmost: Boolean = false) = fieldFactory.forInt(
-				if (showLabels) Fixed(label) else Fixed(LocalizedString.empty), Fixed(hint),
-				leftIconPointer = if (isLeftmost) leftIconPointer else Fixed(None),
-				rightIconPointer = if (isRightmost) rightIconPointer else Fixed(None),
+				if (showLabels) Fixed(label) else LocalizedString.alwaysEmpty, Fixed(hint),
+				leftIconPointer = if (isLeftmost) leftIconPointer else SingleColorIcon.alwaysEmpty,
+				rightIconPointer = if (isRightmost) rightIconPointer else SingleColorIcon.alwaysEmpty,
 				enabledPointer = enabledPointer, initialValue = if (initialValue > 0) Some(initialValue) else None,
 				minValue = 0, maxValue = maxValue, selectionStylePointer = selectionStylePointer,
 				focusColorRole = focusColorRole, allowAutoHint = false)

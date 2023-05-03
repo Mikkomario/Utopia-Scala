@@ -252,7 +252,7 @@ trait InteractionWindowFactory[A]
 	private def actualize(factories: Mixed, blueprint: WindowButtonBlueprint[A], resultPromise: Promise[A],
 	                      defaultActionEnabled: => Boolean) =
 	{
-		implicit val context: TextContext = buttonContext(blueprint.role, blueprint.icon.isDefined)
+		implicit val context: TextContext = buttonContext(blueprint.role, blueprint.icon.nonEmpty)
 		val enterHotkey = {
 			if (blueprint.isDefault)
 				Some(HotKey.conditionalKeyWithIndex(KeyEvent.VK_ENTER)(defaultActionEnabled))
@@ -260,7 +260,7 @@ trait InteractionWindowFactory[A]
 				None
 		}
 		val hotkeys = blueprint.hotkey.toSet ++ enterHotkey
-		val button = blueprint.icon match {
+		val button = blueprint.icon.notEmpty match {
 			case Some(icon) =>
 				factories(ImageAndTextButton).withContext(context).withIcon(icon, blueprint.text, hotKeys = hotkeys) {
 					blueprint.pressAction(resultPromise)

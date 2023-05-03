@@ -1,5 +1,7 @@
 package utopia.firmament.localization
 
+import utopia.flow.view.immutable.eventful.Fixed
+
 import scala.language.implicitConversions
 
 object LocalizedString
@@ -8,6 +10,10 @@ object LocalizedString
 	  * An empty localized string
 	  */
 	val empty = LocalizedString(LocalString.empty, LocalString.empty)
+	/**
+	 * A pointer that always contains an empty localized string
+	 */
+	val alwaysEmpty = Fixed(empty)
 	
 	/**
 	  * Creates a new localized string

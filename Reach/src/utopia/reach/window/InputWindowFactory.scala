@@ -151,7 +151,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 		// Creates the default close button (if enabled)
 		val defaultCloseButton = defaultCloseButtonText.notEmpty.map { text =>
-			WindowButtonBlueprint.closeWithResult(text, Some(closeIcon),
+			WindowButtonBlueprint.closeWithResult(text, closeIcon,
 				hotkey = Some(HotKey.keyWithIndex(KeyEvent.VK_ESCAPE))) { defaultResult }
 		}
 		

@@ -8,6 +8,8 @@
 ### New Features
 - Added new **TryCatch** utility class for handling situations that included non-critical failures 
 ### New Methods
+- **MapAccess** (object)
+  - Added `.apply(...)` for converting functions into map accesses
 - **Try** (**CollectionExtensions**)
   - Added `.logToOption` and `.logToOptionWithMessage(String)`
 
