@@ -3,6 +3,7 @@ package utopia.reach.cursor
 import utopia.firmament.image.SingleColorIcon
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Combinable
+import utopia.flow.util.TryCatch
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.cursor.CursorType.Default
@@ -18,11 +19,9 @@ object CursorSet
 	 *              Each path is also accompanied by the cursor origin / pointer pixel coordinates.
 	 * @param defaultCursorType The cursor type that is considered the default (default = Default)
 	 * @return Failure if the default cursor couldn't be loaded. Success otherwise.
-	 *         Success contains 2 elements:
-	 *          1) Encountered cursor load failures
-	 *          2) Resulting cursor set
+	 *         Success also contains non-critical cursor-loading failures.
 	 */
-	def loadIcons(paths: Map[CursorType, (Path, Point)], defaultCursorType: CursorType = Default) = {
+	def loadIcons(paths: Map[CursorType, (Path, Point)], defaultCursorType: CursorType = Default): TryCatch[CursorSet] = {
 		// Reads the images from the specified files
 		val readResults = paths.map { case (cType, (path, origin)) =>
 			cType -> Image.readFrom(path).map { img =>
@@ -40,7 +39,7 @@ object CursorSet
 						case Failure(error) => Left(error)
 					}
 				}
-				failures -> apply(cursors.toMap, default)
+				apply(cursors.toMap, default) -> failures
 			}
 	}
 }

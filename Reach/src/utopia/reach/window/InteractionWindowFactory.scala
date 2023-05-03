@@ -1,7 +1,7 @@
 package utopia.reach.window
 
 import utopia.firmament.component.Window
-import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.context.TextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
@@ -21,7 +21,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.multi.{Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
-import utopia.reach.context.ReachWindowContext
+import utopia.reach.context.ReachContentWindowContext
 
 import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
@@ -40,9 +40,10 @@ trait InteractionWindowFactory[A]
 	// ABSTRACT	-----------------------
 	
 	/**
-	  * @return Context used when creating windows
+	  * @return Context used when creating windows.
+	 *         Defines the default settings to use for the content as well.
 	  */
-	protected def windowContext: ReachWindowContext
+	protected def windowContext: ReachContentWindowContext
 	/**
 	  * @return Execution context used for performing asynchronous tasks
 	  */
@@ -51,10 +52,6 @@ trait InteractionWindowFactory[A]
 	  * @return A logging implementation for encountered errors
 	  */
 	protected def log: Logger
-	/**
-	  * @return Context used when creating the dialog. Provided container background specifies the dialog background color.
-	  */
-	protected def standardContext: ColorContext
 	
 	/**
 	  * @return Title displayed on this dialog
@@ -79,7 +76,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[ColorContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], View[Boolean])
+	protected def createContent(factories: ContextualMixed[TextContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], View[Boolean])
 	
 	
 	// OTHER	-----------------------
@@ -115,10 +112,9 @@ trait InteractionWindowFactory[A]
 	  */
 	def display(parentWindow: Option[java.awt.Window] = None): ComponentCreationResult[Window, Future[A]] =
 	{
-		implicit val wc: ReachWindowContext = windowContext
+		implicit val wc: ReachContentWindowContext = windowContext
 		implicit val exc: ExecutionContext = executionContext
 		implicit val log: Logger = this.log
-		val context = standardContext
 		
 		val resultPromise = Promise[A]()
 		// When this function finishes, this pointer contains the actually used condition
@@ -129,41 +125,40 @@ trait InteractionWindowFactory[A]
 		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.
 		//  Alternatively room should be allowed for a header component separately
 		// Contains the created buttons and the default action enabled -pointer as the additional result
-		val window = ReachWindow.contextual.apply(parentWindow, title) { hierarchy =>
-			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack.static[ColorContext])
-				.apply(context.margins.medium.any) { stackF =>
-					stackF.build(Mixed).column() { factories =>
-						// Creates the main content and determines the button blueprints
-						val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
-						
-						// Groups the buttons based on location
-						val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }
-						
-						// Places the main content and the buttons in a vertical stack
-						val factoriesWithoutContext = factories.withoutContext
-						val defaultButtonMargin = context.stackMargin.optimal
-						val rowsBuilder = new VectorBuilder[ReachComponentLike]()
-						val buttonsBuilder = new VectorBuilder[ButtonLike]()
-						
-						// Appends a single button row, if necessary
-						def appendButtons(blueprints: Vector[WindowButtonBlueprint[A]]): Unit = {
-							if (blueprints.nonEmpty) {
-								val (component, buttons) = buttonRow(factoriesWithoutContext, blueprints,
-									defaultButtonMargin, resultPromise,
-									enterEnabledPointerPointer.value.exists { _.value })
-								rowsBuilder += component
-								buttonsBuilder ++= buttons
-							}
+		val window = ReachWindow.contentContextual.using(Framing, parentWindow, title) { (_, framingF) =>
+			framingF.build(Stack).apply(wc.margins.aroundMedium) { stackF =>
+				stackF.build(Mixed).column() { factories =>
+					// Creates the main content and determines the button blueprints
+					val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
+					
+					// Groups the buttons based on location
+					val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }
+					
+					// Places the main content and the buttons in a vertical stack
+					val factoriesWithoutContext = factories.withoutContext
+					val defaultButtonMargin = factories.context.stackMargin.optimal
+					val rowsBuilder = new VectorBuilder[ReachComponentLike]()
+					val buttonsBuilder = new VectorBuilder[ButtonLike]()
+					
+					// Appends a single button row, if necessary
+					def appendButtons(blueprints: Vector[WindowButtonBlueprint[A]]): Unit = {
+						if (blueprints.nonEmpty) {
+							val (component, buttons) = buttonRow(factoriesWithoutContext, blueprints,
+								defaultButtonMargin, resultPromise,
+								enterEnabledPointerPointer.value.exists { _.value })
+							rowsBuilder += component
+							buttonsBuilder ++= buttons
 						}
-						
-						appendButtons(topButtons)
-						// Adds the main content to the center
-						rowsBuilder += mainContent
-						appendButtons(bottomButtons)
-						
-						rowsBuilder.result() -> (buttonsBuilder.result(), defaultActionEnabledPointer)
 					}
+					
+					appendButtons(topButtons)
+					// Adds the main content to the center
+					rowsBuilder += mainContent
+					appendButtons(bottomButtons)
+					
+					rowsBuilder.result() -> (buttonsBuilder.result(), defaultActionEnabledPointer)
 				}
+			}
 		}
 		
 		// Displays the dialog

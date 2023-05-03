@@ -42,14 +42,11 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponentLike, switchConditionPointer: Changing[Boolean]) =
-	{
-		foundParent match
-		{
+	def complete(parent: ReachComponentLike, switchConditionPointer: Changing[Boolean]) ={
+		foundParent match {
 			// Throws if there already existed a parent connection
 			case Some(existingParent) =>
-				val existingHierarchyString = existingParent match
-				{
+				val existingHierarchyString = existingParent match {
 					case Left(_) => "direct ReachCanvas connection"
 					case Right((_, component)) => s"connection to component $component"
 				}
@@ -69,11 +66,9 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def lockToTop(switchConditionPointer: Changing[Boolean] = AlwaysTrue) = foundParent match
-	{
+	def lockToTop(switchConditionPointer: Changing[Boolean] = AlwaysTrue) = foundParent match {
 		case Some(existingParent) =>
-			existingParent match
-			{
+			existingParent match {
 				case Left(_) => ()
 				case Right((_, component)) => throw new IllegalStateException(s"Already connected to component $component")
 			}
@@ -149,22 +144,17 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		def onLinkedToCanvas(additionalConditionPointer: Changing[Boolean]) =
 			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer)
 		
-		private def specifyFinalPointer(pointer: Changing[Boolean]) =
-		{
+		private def specifyFinalPointer(pointer: Changing[Boolean]) = {
 			// Updates the pointer(s)
 			finalManagedPointer = Some(pointer)
 			
 			// Transfers dependencies, if any were queued
-			val afterEffects =
-			{
-				if (queuedDependencies.nonEmpty)
-				{
+			val afterEffects = {
+				if (queuedDependencies.nonEmpty) {
 					queuedDependencies.foreach { pointer.addDependency(_) }
 					// Informs the dependencies of this new change
-					val afterEffects =
-					{
-						if (pointer.value)
-						{
+					val afterEffects = {
+						if (pointer.value) {
 							val event = ChangeEvent(false, true)
 							queuedDependencies.flatMap { _.beforeChangeEvent(event) }
 						}

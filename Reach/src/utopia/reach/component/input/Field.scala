@@ -497,7 +497,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	private def makeContentAndNameArea(fieldNamePointer: Changing[LocalizedString]) =
 	{
 		Open.using(ViewStack) { stackFactory =>
-			stackFactory.builder(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
+			stackFactory.build(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
 				// Creates the field name label first
 				// Field name is displayed when
 				// a) it is available AND

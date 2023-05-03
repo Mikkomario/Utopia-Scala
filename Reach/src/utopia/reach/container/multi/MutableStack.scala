@@ -1,12 +1,13 @@
 package utopia.reach.container.multi
 
-import utopia.firmament.component.container.many.{MutableMultiContainer, StackLike}
+import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -149,17 +150,27 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 class MutableStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
 											initialDirection: Axis2D, initialLayout: StackLayout,
 											initialMargin: StackLength, initialCap: StackLength)
-	extends MutableCustomDrawReachComponent with StackLike[C] with MutableMultiContainer[OpenComponent[C, _], C]
+	extends MutableCustomDrawReachComponent with Stack[C] with MutableMultiContainer[OpenComponent[C, _], C]
 {
 	// ATTRIBUTES	------------------------
 	
-	private var _components = Vector[C]()
+	private val _componentsPointer = new PointerWithEvents[Vector[C]](Vector())
 	private var pointers = Map[Int, Pointer[Boolean]]()
 	
 	private var _direction = initialDirection
 	private var _layout = initialLayout
 	private var _margin = initialMargin
 	private var _cap = initialCap
+	
+	override lazy val visibilityPointer: FlagLike = _componentsPointer.map { _.nonEmpty }
+	
+	
+	// COMPUTED -----------------------------
+	
+	/**
+	 * @return A read-only pointer to this stack's current contents
+	 */
+	def componentsPointer = _componentsPointer.view
 	
 	
 	// IMPLEMENTED	------------------------
@@ -193,11 +204,9 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		}
 	}
 	
-	override def children = components
-	
 	override protected def add(component: OpenComponent[C, _], index: Int) = {
 		if (!contains(component.component)) {
-			_components = (_components.take(index) :+ component.component) ++ _components.drop(index)
+			_componentsPointer.update { old => (old.take(index) :+ component.component) ++ old.drop(index) }
 			updatePointerFor(component)
 			revalidate()
 		}
@@ -206,7 +215,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		// Needs to buffer the components (iterating multiple times)
 		val newComps = components.iterator.filterNot { c => contains(c.component) }.toVector
 		if (newComps.nonEmpty) {
-			_components = _components.take(index) ++ newComps.map { _.component } ++ _components.drop(index)
+			_componentsPointer.update { old => old.take(index) ++ newComps.map { _.component } ++ old.drop(index) }
 			newComps.foreach(updatePointerFor)
 			revalidate()
 		}
@@ -214,18 +223,18 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	
 	// Disconnects the component and revalidates this container
 	override protected def remove(component: C) = {
-		_components = _components.filterNot { _ == component }
+		_componentsPointer.update { _.filterNot { _ == component } }
 		pointers.get(component.hashCode()).foreach { _.value = false }
 		revalidate()
 	}
 	override protected def remove(components: IterableOnce[C]) = {
-		val buffered = components.iterator.toSet
-		_components = _components.filterNot(buffered.contains)
+		val buffered = Set.from(components)
+		_componentsPointer.update { _.filterNot(buffered.contains) }
 		buffered.iterator.flatMap { c => pointers.get(c.hashCode()) }.foreach { _.value = false }
 		revalidate()
 	}
 	
-	override def components = _components
+	override def components = _componentsPointer.value
 	
 	/**
 	  * Adds a previously added component back to this stack
@@ -234,9 +243,9 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	  * @throws NoSuchElementException If the specified component has never been added to this stack previously
 	  */
 	@throws[NoSuchElementException]
-	override def addBack(component: C, index: Int = _components.size) = {
+	override def addBack(component: C, index: Int = components.size) = {
 		if (!contains(component)) {
-			_components = (_components.take(index) :+ component) ++ _components.drop(index)
+			_componentsPointer.update { old => (old.take(index) :+ component) ++ old.drop(index) }
 			pointers(component.hashCode()).value = true
 			revalidate()
 		}
@@ -244,7 +253,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	override def addBack(components: IterableOnce[C], index: Int) = {
 		val newComps = components.iterator.filterNot(contains).toVector
 		if (newComps.nonEmpty) {
-			_components = _components.take(index) ++ newComps ++ _components.drop(index)
+			_componentsPointer.update { old =>  old.take(index) ++ newComps ++ old.drop(index) }
 			newComps.foreach { c => pointers(c.hashCode()).value = true }
 			revalidate()
 		}

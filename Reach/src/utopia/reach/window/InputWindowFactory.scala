@@ -50,9 +50,10 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	// ABSTRACT	---------------------------------
 	
 	/**
-	  * @return Component creation context used as the base when creating input fields and their labels
-	  */
-	protected def fieldCreationContext: ColorContext
+	 * @return The context to use for 1) the field name labels, if applicable, and 2) for the fields themselves
+	 */
+	protected def contentContext: (TextContext, TextContext)
+	
 	/**
 	  * @return Context for creating the warning pop-up windows
 	  */
@@ -69,18 +70,12 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	protected def closeIcon: SingleColorIcon
 	
 	/**
-	  * @param base The basic field creation context
-	  * @return 1) Context to use for the field name labels and 2) Context to use for the fields themselves
-	  */
-	protected def makeFieldNameAndFieldContext(base: ColorContext): (TextContext, TextContext)
-	
-	/**
 	  * Combines components to a single layout
 	  * @param content Content to combine in open format, each has a visibility pointer as an additional result
 	  * @param context Additional context item created in inputTemplate
 	  * @return Combined component
 	  */
-	protected def buildLayout(factories: ContextualMixed[ColorContext],
+	protected def buildLayout(factories: ContextualMixed[TextContext],
 	                          content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 	                          context: N): ReachComponentLike
 	
@@ -105,19 +100,18 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override protected def createContent(factories: ContextualMixed[ColorContext]) =
+	override protected def createContent(factories: ContextualMixed[TextContext]) =
 	{
 		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
 		val (template, dialogContext) = inputTemplate
-		val context = fieldCreationContext
-		val (nameContext, fieldContext) = makeFieldNameAndFieldContext(context)
+		val (nameContext, fieldContext) = contentContext
 		implicit val rowContext: FieldRowContext = FieldRowContext(nameContext, fieldContext)
 		val fieldsBuilder = new VectorBuilder[(String, InputField)]
 		
 		// Creates component layouts based on the template row groups
 		val openGroups = template.map { groups =>
 			Open { hierarchy =>
-				groupsToComponent(Mixed(hierarchy).withContext(context), groups, fieldsBuilder)
+				groupsToComponent(Mixed(hierarchy).withContext(factories.context), groups, fieldsBuilder)
 			}
 		}
 		

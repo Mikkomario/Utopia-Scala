@@ -1,11 +1,11 @@
 package utopia.reach.window
 
-import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.context.TextContext
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.WindowButtonBlueprint
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.label.text.TextLabel
-import utopia.firmament.localization.LocalizedString
 
 /**
   * A common trait for window factories that produce interactive message or question windows.
@@ -35,7 +35,7 @@ trait MessageWindowFactory[A] extends InteractionWindowFactory[A]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override protected def createContent(factories: ContextualMixed[ColorContext]) = {
+	override protected def createContent(factories: ContextualMixed[TextContext]) = {
 		// The main content is simply a text label
 		val content = factories.withContext(messageContext)(TextLabel).apply(message)
 		(content, buttonBlueprints, AlwaysTrue)

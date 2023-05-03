@@ -11,8 +11,8 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process.Delay
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.operator.EqualsFunction
@@ -20,10 +20,10 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
@@ -36,13 +36,13 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.GenericContextualFactory
+import utopia.reach.component.factory.{GenericContextualFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.input.selection.SelectionList
+import utopia.reach.component.input.selection.{SelectionList, SelectionListFactory}
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
-import utopia.reach.component.wrapper.{Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
+import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
@@ -79,7 +79,18 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
 	  * @param leftIconPointer A pointer to the icon displayed on the left side of this component (default = always None)
 	  * @param listLayout Stack layout used in the selection list (default = Fit)
 	  * @param listCap Cap placed at each end of the selection list (default = always 0)
-	  * @param noOptionsView A view to display when there are no options to choose from (optional, in open form)
+	  * @param makeNoOptionsView   An optional function used for constructing the view to display,
+	 *                             when no options are available.
+	 *                             Accepts 3 parameters:
+	 *                             1) Component hierarchy,
+	 *                             2) Component creation context, and
+	 *                             3) Background color pointer
+	 * @param makeAdditionalOption An optional function used for constructing an additional view that is presented
+	 *                             under the main selection list. May be used, for example, for providing an "add" option.
+	 *                             Accepts 3 parameters:
+	 *                             1) Component hierarchy,
+	 *                             2) Component creation context, and
+	 *                             3) Background color pointer
 	  * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
 	  * @param focusColorRole Color role used when this field has focus (default = Secondary)
 	  * @param additionalActivationKeys Additional key-indices that should activate the pop-up.
@@ -91,8 +102,12 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
 	  * @param makeField A function for creating the component inside teh main field.
 	  *                  Accepts contextual data (specific context and context of this factory).
 	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
-	  *                    Accepts a component hierarcy, and the item to display initially.
-	  *                    Returns a field that can display such a value.
+	 *                     Accepts four values:
+	 *                     1) A component hierarchy,
+	 *                     2) Component creation context,
+	 *                     3) Background color pointer
+	 *                     4) Item to display initially
+	 *                     Returns a properly initialized display
 	  * @param makeRightHintLabel – A function for producing an additional right edge hint field.
 	  *                           Accepts created main field and component creation context.
 	  *                           Returns an open component or None if no label should be placed.
@@ -116,21 +131,22 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
 	                              errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	                              leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
 	                              listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
-	                              noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
+	                              makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
+	                              makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	                              highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	                              focusColorRole: ColorRole = Secondary,
 	                              additionalActivationKeys: Set[Int] = Set(),
 	                              sameItemCheck: Option[EqualsFunction[A]] = None,
 	                              fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	                             (makeField: (FieldCreationContext, N) => C)
-	                             (makeDisplay: (ComponentHierarchy, A) => D)
+	                             (makeDisplay: (ComponentHierarchy, TextContext, Changing[Color], A) => D)
 	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
 	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
-			errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
-			focusColorRole, additionalActivationKeys, sameItemCheck,
+			errorMessagePointer, leftIconPointer, listLayout, listCap, makeNoOptionsView, makeAdditionalOption,
+			highlightStylePointer, focusColorRole, additionalActivationKeys, sameItemCheck,
 			fillBackground)(makeField)(makeDisplay)(makeRightHintLabel)
 }
 
@@ -152,8 +168,19 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
   * @param leftIconPointer A pointer to the icon displayed on the left side of this component (default = always None)
   * @param listLayout Stack layout used in the selection list (default = Fit)
   * @param listCap Cap placed at each end of the selection list (default = always 0)
-  * @param noOptionsView A view to display when there are no options to choose from (optional, in open form)
-  * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
+  * @param makeNoOptionsView An optional function used for constructing the view to display,
+ *                          when no options are available.
+ *                          Accepts 3 parameters:
+ *                              1) Component hierarchy,
+ *                              2) Component creation context, and
+ *                              3) Background color pointer
+  * @param makeAdditionalOption An optional function used for constructing an additional view that is presented
+ *                             under the main selection list. May be used, for example, for providing an "add" option.
+ *                              Accepts 3 parameters:
+ *                                  1) Component hierarchy,
+ *                                  2) Component creation context, and
+ *                                  3) Background color pointer
+ * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
   * @param focusColorRole Color role used when this field has focus (default = Secondary)
   * @param additionalActivationKeys Additional key-indices that should activate the pop-up.
   *                                 By default, only the down arrow activates the pop-up.
@@ -163,9 +190,13 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
   * @param fillBackground Whether filled field style should be used (default = global default)
   * @param makeField          A function for creating the component inside teh main field.
   *                           Accepts contextual data (specific context and context of this factory).
-  * @param makeDisplay        A function for constructing new item option fields in the pop-up selection list.
-  *                           Accepts a component hierarcy, and the item to display initially.
-  *                           Returns a field that can display such a value.
+  * @param makeDisplay       A function for constructing new item option fields in the pop-up selection list.
+ *                           Accepts four values:
+ *                              1) A component hierarchy,
+ *                              2) Component creation context,
+ *                              3) Background color pointer
+ *                              4) Item to display initially
+ *                            Returns a properly initialized display
   * @param makeRightHintLabel – A function for producing an additional right edge hint field.
   *                           Accepts created main field and component creation context.
   *                           Returns an open component or None if no label should be placed.
@@ -188,12 +219,14 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
  hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
  errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
  leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None), listLayout: StackLayout = Fit,
- listCap: StackLength = StackLength.fixedZero, noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
+ listCap: StackLength = StackLength.fixedZero,
+ makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
+ makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
  highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
  additionalActivationKeys: Set[Int] = Set(), sameItemCheck: Option[EqualsFunction[A]] = None,
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: (FieldCreationContext, N) => C)
-(makeDisplay: (ComponentHierarchy, A) => D)
+(makeDisplay: (ComponentHierarchy, TextContext, Changing[Color], A) => D)
 (makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]])
 (implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
@@ -310,36 +343,60 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	def openPopup() = lazyPopup.value.display()
 	
 	private def createPopup(): Window = {
-		// Collects the list lazily
-		val listPointer = SettableOnce[ReachComponentLike]()
 		// Creates the pop-up
 		val popup = field.createOwnedWindow(Bottom, matchEdgeLength = true) { hierarchy =>
-			implicit val canvas: ReachCanvas = hierarchy.top
-			// Creates the pop-up content in open form first
-			val openList = Open { hierarchy =>
-				val list = SelectionList(hierarchy)
-					.apply(context.actorHandler, field.innerBackgroundPointer, contentPointer, valuePointer, Y,
-						listLayout, context.stackMargin, listCap, 1.0, sameItemCheck)(makeDisplay)
-				listPointer.set(list)
-				list
-			}
-			val scrollContent = noOptionsView match {
-				// Case: "No options view" is used => shows it when there is no options to choose from
-				case Some(noOptionsView) =>
-					Open { hierarchy =>
-						CachingViewSwapper(hierarchy).generic(contentPointer.map { _.isEmpty }) { isEmpty: Boolean =>
-							if (isEmpty) noOptionsView else openList
-						}
+			// The pop-up content resides in a scroll view with custom background drawing
+			ScrollView(hierarchy).build(Mixed).apply(scrollBarMargin = Size(context.margins.small, listCap.optimal),
+				limitsToContentSize = true,
+				customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer))) { factories =>
+				// The scrollable content consists of either:
+				//  1) Main content + additional view, or
+				//  2) Main content only
+				def makeOptionsList(factory: SelectionListFactory) =
+					factory.apply(context.actorHandler, field.innerBackgroundPointer, contentPointer, valuePointer, Y,
+						listLayout, context.stackMargin, listCap, 1.0, sameItemCheck) { (hierarchy, item) =>
+						makeDisplay(hierarchy, context.against(field.innerBackgroundPointer.value),
+							field.innerBackgroundPointer, item)
 					}
-				// Case: Selection list is always displayed, even when empty
-				case None => openList
+				def makeMainContent(factories: Mixed) = {
+					// The main content is either:
+					//   1) Switchable between options and no-options -view
+					//   2) Only the options view
+					makeNoOptionsView match {
+						// Case: No options -view used => Switches between the two views
+						case Some(makeNoOptionsView) =>
+							factories(CachingViewSwapper).build(Mixed)
+								.generic(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
+									// Case: No options -view constructor
+									if (isEmpty)
+										makeNoOptionsView(factories.parentHierarchy,
+											context.against(field.innerBackgroundPointer.value),
+											field.innerBackgroundPointer)
+									// Case: List constructor
+									else
+										makeOptionsList(factories(SelectionList))
+								}
+						// Case: No no options -view used => Always displays the selection list
+						case None => makeOptionsList(factories(SelectionList))
+					}
+				}
+				makeAdditionalOption match {
+					// Case: Additional view used => Places it below the main content
+					case Some(makeAdditionalOption) =>
+						factories(ViewStack).build(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
+							val mainContent = makeMainContent(factories.next())
+							val additional = makeAdditionalOption(factories.next().parentHierarchy,
+								context.against(field.innerBackgroundPointer.value), field.innerBackgroundPointer)
+							// The main content may be hidden, if empty
+							val mainContentVisiblePointer = {
+								if (makeNoOptionsView.isDefined) AlwaysTrue else contentPointer.map { _.nonEmpty }
+							}
+							Vector(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+						}
+					// CAse: No additional view used => Always displays the main content
+					case None => makeMainContent(factories)
+				}
 			}
-			// Wraps the content in a scroll view with custom background drawing
-			ScrollView(hierarchy)
-				.apply(scrollContent, scrollBarMargin = Size(context.margins.small, listCap.optimal),
-					limitsToContentSize = true,
-					customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer.lazyMap { c => c: Color })))
-				.withResult(openList.component)
 		}
 		// When the mouse is released, hides the pop-up
 		// Also hides when not in focus, and on some key-presses

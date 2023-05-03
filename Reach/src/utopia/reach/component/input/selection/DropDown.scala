@@ -1,7 +1,7 @@
 package utopia.reach.component.input.selection
 
 import utopia.firmament.component.display.Refreshable
-import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
+import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
@@ -18,7 +18,7 @@ import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole.Secondary
-import utopia.paradigm.color.{ColorRole, ColorShade}
+import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -27,7 +27,6 @@ import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
-import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.cursor.CursorType.Interactive
 
@@ -70,15 +69,30 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param leftIconPointer A pointer to the icon displayed on the left side of this component (default = always None)
 	  * @param listLayout Stack layout used in the selection list (default = Fit)
 	  * @param listCap Cap placed at each end of the selection list (default = always 0)
-	  * @param noOptionsView A view to display when there are no options to choose from (optional, in open form)
+	  * @param makeNoOptionsView   An optional function used for constructing the view to display,
+	 *                             when no options are available.
+	 *                             Accepts 3 parameters:
+	 *                             1) Component hierarchy,
+	 *                             2) Component creation context, and
+	 *                             3) Background color pointer
+	 * @param makeAdditionalOption An optional function used for constructing an additional view that is presented
+	 *                             under the main selection list. May be used, for example, for providing an "add" option.
+	 *                             Accepts 3 parameters:
+	 *                             1) Component hierarchy,
+	 *                             2) Component creation context, and
+	 *                             3) Background color pointer
 	  * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
 	  * @param focusColorRole Color role used when this field has focus (default = Secondary)
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param fillBackground Whether filled field style should be used (default = global default)
-	  * @param makeDisplay        A function for constructing new item option fields in the pop-up selection list.
-	  *                           Accepts a component hierarcy, and the item to display initially.
-	  *                           Returns a field that can display such a value.
+	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
+	 *                     Accepts four values:
+	 *                     1) A component hierarchy,
+	 *                     2) Component creation context,
+	 *                     3) Background color pointer
+	 *                     4) Item to display initially
+	 *                     Returns a properly initialized display
 	  * @param scrollingContext   Context used for the created scroll view
 	  * @param exc                Context used for parallel operations
 	  * @param log                Logger for various errors
@@ -98,11 +112,12 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	 leftIconPointer: Changing[Option[SingleColorIcon]] = Fixed(None),
 	 listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
-	 noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
+	 makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
+	 makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	(makeDisplay: (ComponentHierarchy, A) => C)
+	(makeDisplay: (ComponentHierarchy, TextContext, Changing[Color], A) => C)
 	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
@@ -112,8 +127,9 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 		val field = FieldWithSelectionPopup.withContext(parentHierarchy, context)
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				rightExpandIcon, rightCollapseIcon, fieldNamePointer, actualPromptPointer, hintPointer,
-				errorMessagePointer, leftIconPointer, listLayout, listCap, noOptionsView, highlightStylePointer,
-				focusColorRole, Set(KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT), sameItemCheck, fillBackground)
+				errorMessagePointer, leftIconPointer, listLayout, listCap, makeNoOptionsView, makeAdditionalOption,
+				highlightStylePointer, focusColorRole, Set(KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT), sameItemCheck,
+				fillBackground)
 				{ (fieldContext, context) =>
 					val actualStylePointer = fieldContext.textStylePointer.map { _.expandingHorizontally }
 					val label = ViewTextLabel(fieldContext.parentHierarchy).apply(valuePointer, actualStylePointer,
@@ -150,7 +166,18 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param promptPointer A pointer to the prompt displayed on this field (default = always empty)
 	  * @param hintPointer A pointer to the hint displayed under this field (default = always empty)
 	  * @param errorMessagePointer A pointer to the error message displayed on this field (default = always empty)
-	  * @param noOptionsView A view to display when there are no options to choose from (optional, in open form)
+	  * @param makeNoOptionsView   An optional function used for constructing the view to display,
+	 *                             when no options are available.
+	 *                             Accepts 3 parameters:
+	 *                             1) Component hierarchy,
+	 *                             2) Component creation context, and
+	 *                             3) Background color pointer
+	 * @param makeAdditionalOption An optional function used for constructing an additional view that is presented
+	 *                             under the main selection list. May be used, for example, for providing an "add" option.
+	 *                             Accepts 3 parameters:
+	 *                             1) Component hierarchy,
+	 *                             2) Component creation context, and
+	 *                             3) Background color pointer
 	  * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
 	  * @param focusColorRole Color role used when this field has focus (default = Secondary)
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
@@ -171,7 +198,8 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 	 promptPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	 hintPointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
 	 errorMessagePointer: Changing[LocalizedString] = Fixed(LocalizedString.empty),
-	 noOptionsView: Option[OpenComponent[ReachComponentLike, Any]] = None,
+	 makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
+	 makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
 	 highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
 	 sameItemCheck: Option[EqualsFunction[A]] = None,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
@@ -181,12 +209,11 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy, contex
 			case Some(item) => displayFunction(item)
 			case None => LocalizedString.empty
 		}
-		// TODO: Display constructor assumes wrong background color
 		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, rightExpandIcon, rightCollapseIcon,
 			mainDisplayFunction, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, Fixed(None), Fit,
-			context.margins.small.any, noOptionsView, highlightStylePointer, focusColorRole, sameItemCheck,
-			fillBackground)
-			{ (hierarchy, firstItem) =>
+			context.margins.small.any, makeNoOptionsView, makeAdditionalOption, highlightStylePointer, focusColorRole,
+			sameItemCheck, fillBackground)
+			{ (hierarchy, context, _, firstItem) =>
 				MutableViewTextLabel(hierarchy).withContext(context.withTextExpandingToRight)
 					.apply(firstItem, displayFunction)
 			}

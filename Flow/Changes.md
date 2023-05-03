@@ -9,7 +9,7 @@
 - Added new **TryCatch** utility class for handling situations that included non-critical failures 
 ### New Methods
 - **Try** (**CollectionExtensions**)
-  - Added `.toOptionLogging` and `.toOptionLoggingWithMessage(String)`
+  - Added `.logToOption` and `.logToOptionWithMessage(String)`
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

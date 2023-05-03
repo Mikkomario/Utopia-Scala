@@ -1,5 +1,11 @@
 # Utopia Firmament - List of Changes
 
+## v1.1 (in development)
+### Breaking Changes
+- **SingleColorIconCache** now requires an implicit **Logger** parameter
+### Other Changes
+- **SingleColorIconCache** now logs errors and appends ".png" to file names in case the file extension is not specified
+
 ## v1.0 - 01.05.2023
 Initial version  
 The following features were moved over from **Reflection**

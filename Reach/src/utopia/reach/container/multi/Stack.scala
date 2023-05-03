@@ -7,6 +7,8 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
@@ -19,12 +21,67 @@ import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponent
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 
+/**
+ * Common trait for all Reach stack implementations, regardless of implementation style
+ * @tparam C Type of components held within this stack
+ */
+trait Stack[C <: ReachComponentLike] extends CustomDrawReachComponent with StackLike[C]
+{
+	// ABSTRACT --------------------------
+	
+	/**
+	 * @return A pointer that contains true while this stack should be displayed. I.e. is non-empty.
+	 */
+	def visibilityPointer: FlagLike
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def children = components
+}
+
 object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
 {
+	// IMPLEMENTED  ----------------------
+	
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
 	
 	override def withContext[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
 		apply(parentHierarchy).withContext(context)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	 * Creates a new stack
+	 * @param parentHierarchy Component hierarchy this stack will be attached to
+	 * @param components Components to place within this stack
+	 * @param direction Direction of this stack (default = Y = vertical)
+	 * @param layout Layout of this stack (default = Fit)
+	 * @param margin Margin placed between items (default = any)
+	 * @param cap Cap placed at each end of this stack (default = 0)
+	 * @param customDrawers Custom drawers to apply (default = empty)
+	 * @tparam C Type of items within this stack
+	 * @return A new stack
+	 */
+	def raw[C <: ReachComponentLike](parentHierarchy: ComponentHierarchy, components: Vector[C],
+	                                   direction: Axis2D = Y, layout: StackLayout = Fit,
+	                                   margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
+	                                   customDrawers: Vector[CustomDrawer] = Vector()): Stack[C] =
+		new _Stack[C](parentHierarchy, components, direction, layout, margin, cap, customDrawers)
+	
+	
+	// NESTED   -------------------------
+	
+	private class _Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
+	                                              override val components: Vector[C], override val direction: Axis2D,
+	                                              override val layout: StackLayout, override val margin: StackLength,
+	                                              override val cap: StackLength,
+	                                              override val customDrawers: Vector[CustomDrawer])
+		extends Stack[C]
+	{
+		override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue
+	}
 }
 
 case class StackFactory(parentHierarchy: ComponentHierarchy)
@@ -69,7 +126,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 										   cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
-		val stack = new Stack[C](parentHierarchy, content.component, direction, layout, margin, cap, customDrawers)
+		val stack = Stack.raw[C](parentHierarchy, content.component, direction, layout, margin, cap, customDrawers)
 		content attachTo stack
 	}
 	
@@ -562,18 +619,4 @@ class ContextualStackBuilder[N <: BaseContext, +F](stackFactory: ContextualStack
 		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)
 	}
-}
-
-/**
-  * A static Reach implementation of the stack concept
-  * @author Mikko Hilpinen
-  * @since 11.10.2020, v0.1
-  */
-class Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-									 override val components: Vector[C], override val direction: Axis2D,
-									 override val layout: StackLayout, override val margin: StackLength,
-									 override val cap: StackLength, override val customDrawers: Vector[CustomDrawer])
-	extends CustomDrawReachComponent with StackLike[C]
-{
-	override def children = components
 }

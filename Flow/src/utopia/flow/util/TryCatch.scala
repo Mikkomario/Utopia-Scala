@@ -38,12 +38,22 @@ sealed trait TryCatch[+A]
 	 * @return Success if this operation was at least partially successful, Failure otherwise
 	 */
 	def logToTry(implicit log: Logger): Try[A]
+	/**
+	 * Logs critical and non-critical failures that were encountered and returns an Option
+	 * @param log Implicit logging implementation
+	 * @return Some on success, None on failure
+	 */
+	def logToOption(implicit log: Logger): Option[A]
 }
 
 object TryCatch
 {
 	// IMPLICIT -------------------------
 	
+	implicit def fromTry[A](t: Try[(A, Vector[Throwable])]): TryCatch[A] = t match {
+		case scala.util.Success((result, failures)) => Success(result, failures)
+		case scala.util.Failure(error) => Failure(error)
+	}
 	implicit def convertFailure[A](f: scala.util.Failure[A]): Failure[A] = Failure(f.exception)
 	
 	
@@ -93,6 +103,10 @@ object TryCatch
 			logFailures
 			toTry
 		}
+		override def logToOption(implicit log: Logger) = {
+			logFailures
+			Some(value)
+		}
 	}
 	/**
 	 * Represents a failed attempt
@@ -108,5 +122,9 @@ object TryCatch
 		override def failures: Vector[Throwable] = Vector(cause)
 		
 		override def logToTry(implicit log: Logger) = toTry
+		override def logToOption(implicit log: Logger) = {
+			log(cause)
+			None
+		}
 	}
 }

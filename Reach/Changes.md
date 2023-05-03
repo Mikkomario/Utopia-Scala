@@ -2,10 +2,31 @@
 
 ## v1.1 (in development)
 ### Breaking Changes
+- Updated **InteractionWindowFactory** in following ways:
+  - The abstract property `.windowContext` is now required to be of type **ReachContentWindowContext**
+  - Removed `.standardContext`, which is now replaced by the `.windowContext`
+  - `.createContent(...)` now accepts **TextContext** instead of **ColorContext**
+- Updated **InputWindowFactory** in following ways:
+  - Replaced `.fieldCreationContext` and `.makeFieldNameAndFieldContext(ColorContext)` with `.contentContext`
+  - `.buildLayout(...)` now accepts **TextContext** instead of **ColorContext**
+- Updated FieldWithSelectionPopup and DropDown constructors:
+  - `makeDisplay` now accepts 4 parameters instead of 2
+  - Replaced `noOptionsView: Option[OpenComponent]` with `makeNoOptionsView: Option[...]`
+  - Added `makeAdditionalView: Option` -parameter
+- **CursorSet**`.loadIcons(...)` now returns a **TryCatch** instead of a **Try**
+- **ViewStack** constructors now return a **Stack**
+  - This was added in order to automatically optimize between the **ViewStack** and the **Stack** options
 - Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
+### New Features
+- **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
+  (optional feature)
 ### New Methods
+- **CachingViewSwapper** (factory)
+  - Added the missing `.build(...)` method
 - **ReachWindow**
   - Added a new `.withContext(ReachContentWindowContext)` -variant
+### Other Changes
+- **ViewStack** constructors now optimize resources by constructing a **Stack** if the content is static
 
 ## v1.0 - 01.05.2023
 This is intended as the initial release of the full version of **Reach**, which is, from this version onwards, 

@@ -12,7 +12,6 @@ import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
@@ -50,21 +49,26 @@ object DropDownTest extends App
 							ddF.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer, expandIcon.toOption,
 								shrinkIcon.toOption, fieldNamePointer = Fixed("Category"),
 								promptPointer = Fixed("Select One")),
-							ddF.simple(selectedCategoryPointer.map {
-								case Some(category) => items(category)
-								case None => Vector()
-							}, selectedItemPointer, expandIcon.toOption, shrinkIcon.toOption,
-								fieldNamePointer = selectedCategoryPointer.map
-								{
+							ddF.simple(
+								selectedCategoryPointer.map {
+									case Some(category) => items(category)
+									case None => Vector()
+								},
+								selectedItemPointer, expandIcon.toOption, shrinkIcon.toOption,
+								fieldNamePointer = selectedCategoryPointer.map {
 									case Some(category) => category
 									case None => "Item"
-								}, hintPointer = selectedCategoryPointer.map {
+								},
+								hintPointer = selectedCategoryPointer.map {
 									case Some(_) => LocalizedString.empty
 									case None => "Select category first"
 								},
 								promptPointer = Fixed("Select One"),
-								noOptionsView = Some(Open.using(TextLabel) { _.withContext(ddF.context).apply(
-									"Please select a category first", isHint = true) }))
+								makeNoOptionsView = Some({ (hierarchy, context, _) =>
+									TextLabel(hierarchy).withContext(context)
+										.apply("Please select a category first", isHint = true)
+								})
+							)
 						)
 					}
 			}

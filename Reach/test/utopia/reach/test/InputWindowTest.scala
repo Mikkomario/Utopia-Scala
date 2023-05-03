@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.image.SingleColorIconCache
 import utopia.firmament.localization.LocalizedString
@@ -30,7 +30,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
-import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
+import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
@@ -54,16 +54,18 @@ object InputWindowTest extends App
 		// ATTRIBUTES	-------------------------
 		
 		private val defaultFieldWidth = 5.cm.toScreenPixels.any
+		private val fieldBackground = colors.primary.light
 		
 		override protected lazy val closeIcon = icons("close.png")
-		
-		override protected lazy val standardContext = baseContext.against(colors.primary)
-		override protected lazy val fieldCreationContext = baseContext.against(colors.primary.light)
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override protected def windowContext: ReachWindowContext = ReachTestContext.windowContext
+		override protected def windowContext = ReachTestContext.windowContext.withWindowBackground(colors.primary)
+		override protected def contentContext: (TextContext, TextContext) = {
+			val base = windowContext.textContext.against(fieldBackground)
+			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.singleLine
+		}
 		override protected def warningPopupContext: ReachContentWindowContext =
 			windowContext.borderless.nonResizable.withContentContext(baseContext.against(colors.failure).forTextComponents)
 		override protected def log: Logger = ReachTestContext.log
@@ -109,10 +111,7 @@ object InputWindowTest extends App
 				RowGroups.singleRow(acceptTermsField)) -> ()
 		}
 		
-		override protected def makeFieldNameAndFieldContext(base: ColorContext) =
-			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.singleLine
-		
-		override protected def buildLayout(factories: ContextualMixed[ColorContext],
+		override protected def buildLayout(factories: ContextualMixed[TextContext],
 		                                   content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 		                                   context: Unit) =
 		{
@@ -121,17 +120,17 @@ object InputWindowTest extends App
 			// Frames content
 			if (content.size == 1)
 				factories(Framing).withoutContext(content.head, framingMargin,
-					Vector(BackgroundDrawer(fieldCreationContext.background)))
+					Vector(BackgroundDrawer(fieldBackground)))
 			// If there are many, wraps them in a stack also
 			else if (content.forall { _.result.isAlwaysTrue })
 				factories(Stack).build(Framing).column() { framingF =>
 					content.map { c => framingF.withoutContext(c, framingMargin,
-						Vector(BackgroundDrawer(fieldCreationContext.background))) }
+						Vector(BackgroundDrawer(fieldBackground))) }
 				}
 			else
 				factories(ViewStack).build(Framing).withFixedStyle() { factories =>
 					content.map { c => factories.next().withoutContext(c, framingMargin,
-						Vector(BackgroundDrawer(fieldCreationContext.background))).parentAndResult }
+						Vector(BackgroundDrawer(fieldBackground))).parentAndResult }
 				}
 		}
 		
@@ -151,12 +150,13 @@ object InputWindowTest extends App
 		
 		override protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean) =
 		{
+			val base = windowContext.textContext
 			if (hasIcon)
-				standardContext.forTextComponents.withTextAlignment(Alignment.Left)
+				base.withTextAlignment(Alignment.Left)
 					.mapTextInsets { _.mapLeft { _ * 0.5 }.mapRight { _ * 1.5 }.expandingToRight }
 					.withBackground(buttonColor)
 			else
-				standardContext.forTextComponents.withTextAlignment(Alignment.Center)
+				base.withTextAlignment(Alignment.Center)
 					.mapTextInsets { _.mapHorizontal { _ * 1.5 } }
 					.withBackground(buttonColor)
 		}

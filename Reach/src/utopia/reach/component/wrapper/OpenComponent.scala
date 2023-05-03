@@ -390,7 +390,6 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  * @return The wrapped component
 	  */
 	def component = creation.component
-	
 	/**
 	  * @return Additional component creation result value
 	  */
@@ -427,7 +426,6 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  * @return A copy of this component with the new additional result
 	  */
 	def withResult[R2](newResult: R2) = new OpenComponent(creation.withResult(newResult), hierarchy)
-	
 	/**
 	  * @param f Result mapping function
 	  * @tparam R2 Type of the new result

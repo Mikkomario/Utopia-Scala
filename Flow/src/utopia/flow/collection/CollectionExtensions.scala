@@ -1807,7 +1807,7 @@ object CollectionExtensions
 		 * @param log Implicit logger to use to log the potential failure.
 		 * @return Some if success, None otherwise
 		 */
-		def toOptionLogging(implicit log: Logger) = t match {
+		def logToOption(implicit log: Logger) = t match {
 			case Success(a) => Some(a)
 			case Failure(error) =>
 				log(error)
@@ -1819,7 +1819,7 @@ object CollectionExtensions
 		 * @param log Implicit logger to use to log the potential failure.
 		 * @return Some if success, None otherwise
 		 */
-		def toOptionLoggingWithMessage(message: => String)(implicit log: Logger) = t match {
+		def logToOptionWithMessage(message: => String)(implicit log: Logger) = t match {
 			case Success(a) => Some(a)
 			case Failure(error) =>
 				log(error, message)
@@ -1834,6 +1834,17 @@ object CollectionExtensions
 		def getOrMap[B >: A](f: Throwable => B): B = t match {
 			case Success(item) => item
 			case Failure(error) => f(error)
+		}
+		/**
+		 * Returns the success value or logs the error and returns a placeholder value
+		 * @param f A function for generating the returned value in case of a failure
+		 * @param log Implicit logging implementation for encountered errors
+		 * @tparam B Result type
+		 * @return Successful contents of this try, or the specified placeholder value
+		 */
+		def getOrElseLog[B >: A](f: => B)(implicit log: Logger): B = getOrMap { error =>
+			log(error)
+			f
 		}
 	}
 	

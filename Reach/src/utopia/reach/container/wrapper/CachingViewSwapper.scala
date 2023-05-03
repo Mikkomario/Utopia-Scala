@@ -76,6 +76,14 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	def generic[A](valuePointer: Changing[A], customDrawers: Vector[CustomDrawer] = Vector())
 				  (makeContent: A => OpenComponent[ReachComponentLike, _]) =
 		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
+	
+	/**
+	 * @param contentFactory A factory for building displayed views
+	 * @tparam F Type of actual factories used for building content
+	 * @return A new view swapper builder
+	 */
+	def build[F](contentFactory: ComponentFactoryFactory[F]) =
+		new CachingViewSwapperBuilder[F](this, contentFactory)
 }
 
 case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFactory, context: N)

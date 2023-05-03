@@ -1,6 +1,5 @@
 package utopia.reach.container.multi
 
-import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
@@ -8,6 +7,7 @@ import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.Changing
@@ -17,8 +17,8 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
-import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
+import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
@@ -49,7 +49,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam F Type of the used content factory
 	  * @return A new view stack builder
 	  */
-	def builder[F](contentFactory: ComponentFactoryFactory[F]) = new ViewStackBuilder[F](this, contentFactory)
+	def build[F](contentFactory: ComponentFactoryFactory[F]) = new ViewStackBuilder[F](this, contentFactory)
 	
 	/**
 	  * Creates a new stack
@@ -70,10 +70,26 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	                                   capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
 	                                   customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
-		val stack = new ViewStack[C](parentHierarchy, content.map { open => open.component -> open.result },
-			directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
-		content.foreach { open => open.attachTo(stack, open.result) }
-		ComponentWrapResult(stack, content.map { _.component })
+		// Creates either a static stack or a view stack, based on whether the pointers are actually used
+		// Case: All parameters are fixed values => Creates an immutable stack
+		if (content.isEmpty || (directionPointer.isFixed &&
+			layoutPointer.isFixed && marginPointer.isFixed && capPointer.isFixed && content.forall { _.result.isFixed }))
+		{
+			val remainingContent = content.filter { _.result.value }
+			val mergedContent = NotEmpty(remainingContent) match {
+				case Some(content) => new OpenComponent(content.map { _.component }, content.head.hierarchy)
+				case None => new OpenComponent(Vector[C](), new SeedHierarchyBlock(parentHierarchy.top))
+			}
+			Stack(parentHierarchy).apply[C, Unit](mergedContent, directionPointer.value, layoutPointer.value,
+				marginPointer.value, capPointer.value, customDrawers)
+		}
+		// Case: Values include changing values => Creates a view stack
+		else {
+			val stack = new ViewStack[C](parentHierarchy, content.map { open => open.component -> open.result },
+				directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+			content.foreach { open => open.attachTo(stack, open.result) }
+			ComponentWrapResult(stack, content.map { _.component })
+		}
 	}
 	
 	/**
@@ -556,7 +572,7 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
                                          marginPointer: Changing[StackLength] = Fixed(StackLength.any),
                                          capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
                                          override val customDrawers: Vector[CustomDrawer] = Vector())
-	extends CustomDrawReachComponent with StackLike[C]
+	extends Stack[C]
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -580,7 +596,7 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	  * A pointer to this stack's visibility state.
 	  * This stack is visible while there is one or more components visible inside.
 	  */
-	lazy val visibilityPointer = {
+	override lazy val visibilityPointer = {
 		val pointers = componentData.map { _._2 }
 		if (pointers.isEmpty)
 			AlwaysFalse
@@ -613,6 +629,4 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	override def cap = capPointer.value
 	
 	override def components = activeComponentsCache.value
-	
-	override def children = components
 }
