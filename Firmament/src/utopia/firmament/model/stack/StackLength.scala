@@ -3,6 +3,7 @@ package utopia.firmament.model.stack
 import utopia.flow.operator.EqualsBy
 import utopia.flow.collection.CollectionExtensions._
 import utopia.firmament.model.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
+import utopia.paradigm.transform.SizeAdjustable
 
 object StackLength
 {
@@ -143,7 +144,7 @@ object StackLength
 **/
 class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None,
 				  val priority: LengthPriority = Normal)
-	extends EqualsBy with StackInsetsConvertible
+	extends EqualsBy with StackInsetsConvertible with SizeAdjustable[StackLength]
 {
     // ATTRIBUTES    ------------------------
 	
@@ -248,9 +249,17 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	
 	// IMPLEMENTED    -----------------------
 	
+	override def self: StackLength = this
+	
 	override def toInsets = StackInsets.symmetric(this)
 	
 	protected def equalsProperties: Iterable[Any] = Vector(min, optimal, max, priority)
+	
+	/**
+	  * @param multi A multiplier
+	  * @return A multiplied version of this length where min, optimal and max lengths are all affected, if present
+	  */
+	def *(multi: Double) = map { _ * multi }
 	
 	override def toString =
 	{
@@ -301,18 +310,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A decreased version of this stack length (min, optimal and max adjusted, if present). Minimum won't go below 0
 	  */
 	def -(length: Double): StackLength = this + (-length)
-	
-	/**
-	  * @param multi A multiplier
-	  * @return A multiplied version of this length where min, optimal and max lengths are all affected, if present
-	  */
-	def *(multi: Double) = map { _ * multi }
-	
-	/**
-	  * @param div A divider
-	  * @return A divided version of this length where min, optimal and max lengths are all affected, if present
-	  */
-	def /(div: Double) = *(1/div)
 	
 	/**
 	  * Combines this stack length with another in order to create a stack size

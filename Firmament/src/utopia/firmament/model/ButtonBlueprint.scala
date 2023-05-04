@@ -12,7 +12,7 @@ import utopia.paradigm.enumeration.Alignment.BottomRight
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success}
 
-object ButtonBlueprint
+object ButtonBluePrint
 {
 	// OTHER    ------------------------
 	
@@ -112,7 +112,7 @@ object ButtonBlueprint
 			 * @return A new button blueprint
 			 */
 			def apply[A](action: => Future[A])(implicit exc: ExecutionContext) =
-				ButtonBlueprintFactory.this[A](useLoadingState) { promise =>
+				ButtonBlueprintFactory.this.apply[A](useLoadingState) { promise =>
 					val f = action
 					val pointer = Changing.completionOf(f)
 					promise.completeWith(f)
@@ -129,7 +129,7 @@ object ButtonBlueprint
 			 * @return A new button blueprint
 			 */
 			def attempt[A](action: => Future[Option[A]])(implicit exc: ExecutionContext) =
-				ButtonBlueprintFactory.this[A](useLoadingState) { promise =>
+				ButtonBlueprintFactory.this.apply[A](useLoadingState) { promise =>
 					val f = action
 					val pointer = Changing.completionOf(f)
 					f.onComplete {

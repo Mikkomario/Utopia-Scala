@@ -1,5 +1,9 @@
 # Utopia Paradigm - List of Changes
 
+## v1.3.1 (in development)
+### New Features
+- Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
+
 ## v1.3 - 01.05.2023
 This update introduces new color classes (which are originally from **Reflection**), as well as some 
 changes to the **Alignment** classes.

@@ -1,14 +1,13 @@
 package utopia.firmament.component.stack
 
 import utopia.firmament.component.Component
-import utopia.firmament.model.stack.StackSize
 
 /**
 * This trait is inherited by component classes that can be placed in stacks (component hierarchies with auto-layout)
 * @author Mikko Hilpinen
 * @since 25.2.2019, Reflection v1
 **/
-trait Stackable extends Component
+trait Stackable extends Component with HasStackSize
 {
 	// ABSTRACT	---------------------
 	
@@ -18,11 +17,6 @@ trait Stackable extends Component
 	  * should be reset at this point.
 	  */
 	def updateLayout(): Unit
-	
-	/**
-	  * The current size requirements of this component
-	  */
-	def stackSize: StackSize
 	
 	/**
 	  * Resets cached stackSize, if there is one, so that it will be recalculated when requested next time

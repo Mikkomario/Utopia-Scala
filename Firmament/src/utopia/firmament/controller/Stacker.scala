@@ -1,12 +1,13 @@
 package utopia.firmament.controller
 
-import utopia.firmament.component.stack.Stackable
+import utopia.firmament.component.HasMutableBounds
+import utopia.firmament.component.stack.HasStackSize
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading, Trailing}
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Bounds
-import utopia.firmament.model.stack.{StackLength, StackSize}
 
 import scala.collection.immutable.VectorBuilder
 import scala.math.Ordering.Double.TotalOrdering
@@ -46,10 +47,8 @@ object Stacker
 			
 			// Non-fit stacks don't have max breadth while fit versions do
 			// Breadth is considered low priority only if all items are low priority
-			val breadth =
-			{
-				if (layout == Fit)
-				{
+			val breadth = {
+				if (layout == Fit) {
 					val min = breadths.map { _.min }.max
 					val optimal = breadths.map { _.optimal }.max
 					val max = breadths.flatMap { _.max }.reduceOption { _ min _ }
@@ -77,11 +76,11 @@ object Stacker
 	 * @param cap Cap at each end of the stack (default = fixed to 0)
 	 * @param layout How the items are placed perpendicular to target axis (default = Fit = each item has same breadth)
 	 */
-	def apply(components: Seq[Stackable], area: Bounds, optimalLength: Double, stackAxis: Axis2D,
-	          margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0), layout: StackLayout = Fit) =
+	def apply(components: Seq[HasMutableBounds with HasStackSize], area: Bounds, optimalLength: Double,
+	          stackAxis: Axis2D, margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0),
+	          layout: StackLayout = Fit) =
 	{
-		if (components.nonEmpty)
-		{
+		if (components.nonEmpty) {
 			// Calculates the necessary length adjustment
 			val lengthAdjustment = area.size(stackAxis) - optimalLength
 			
@@ -89,8 +88,7 @@ object Stacker
 			val caps = Vector.fill(2)(Pointer(0.0))
 			val numberOfMargins = (components.size - 1) max 0
 			val margins = Vector.fill(numberOfMargins)(Pointer(0.0))
-			val targets =
-			{
+			val targets = {
 				val builder = new VectorBuilder[LengthAdjust]()
 				
 				// Starts with a cap
@@ -244,35 +242,28 @@ object Stacker
 		// OPERATORS    ------------------
 		
 		// Adjusts length, returns remaining adjustment
-		def +=(amount: Double) =
-		{
+		def +=(amount: Double) = {
 			val target = currentAdjust + amount
 			
 			// Adjustment may be negative (shrinking) or positive (enlarging)
-			if (amount < 0)
-			{
-				if (target > min)
-				{
+			if (amount < 0) {
+				if (target > min) {
 					currentAdjust = target
 					0.0
 				}
 				// If trying to shrink below minimum, goes to minimum and returns remaining amount (negative)
-				else
-				{
+				else {
 					currentAdjust = min
 					target - min
 				}
 			}
-			else if (amount > 0)
-			{
+			else if (amount > 0) {
 				// If trying to enlarge beyond maximum, caps at maximum and returns remaining amount (positive)
-				if (max exists { target > _ })
-				{
+				if (max exists { target > _ }) {
 					currentAdjust = max.get
 					target - max.get
 				}
-				else
-				{
+				else {
 					currentAdjust = target
 					0.0
 				}
@@ -287,10 +278,10 @@ object Stacker
 		def apply() = setLength(length.optimal.ceil + currentAdjust)
 	}
 	
-	private class StackableLengthAdjust(private val target: Stackable, private val direction: Axis2D) extends LengthAdjust
+	private class StackableLengthAdjust(private val target: HasMutableBounds with HasStackSize,
+	                                    private val direction: Axis2D) extends LengthAdjust
 	{
 		def length = target.stackSize(direction)
-		
 		def setLength(length: Double) = target.setLength(direction(length))
 	}
 	

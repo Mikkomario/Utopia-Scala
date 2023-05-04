@@ -1,14 +1,15 @@
 package utopia.firmament.context
 
+import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
-import utopia.flow.operator.{LinearScalable, ScopeUsable}
+import utopia.firmament.model.stack.{LengthPriority, StackLength}
+import utopia.flow.operator.ScopeUsable
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
-import utopia.firmament.localization.Localizer
-import utopia.firmament.model.stack.{LengthPriority, StackLength}
+import utopia.paradigm.transform.SizeAdjustable
 
 /**
   * A trait common for basic component context implementations
@@ -17,7 +18,7 @@ import utopia.firmament.model.stack.{LengthPriority, StackLength}
   * @tparam Repr This context type
   * @tparam ColorSensitive A color sensitive version of this context
   */
-trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr] with LinearScalable[Repr]
+trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr] with SizeAdjustable[Repr]
 {
 	// ABSTRACT	-------------------------
 	
@@ -177,15 +178,6 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  * @return Copy of this context that allows image upscaling
 	  */
 	def withoutUpscalingImages = withAllowImageUpscaling(false)
-	
-	/**
-	  * @return A copy of this context where everything is 25% larger
-	  */
-	def larger = this * 1.25
-	/**
-	  * @return A copy of this context where everything is 20% smaller
-	  */
-	def smaller = this * 0.8
 	
 	@deprecated("Replaced with stackMargin", "v1.0")
 	def defaultStackMargin = stackMargin

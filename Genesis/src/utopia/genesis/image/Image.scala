@@ -1,7 +1,7 @@
 package utopia.genesis.image
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{LinearScalable, MaybeEmpty}
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
@@ -13,6 +13,7 @@ import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape1d.Vector1D
 import utopia.paradigm.shape.shape2d._
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.transform.SizeAdjustable
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
@@ -153,7 +154,7 @@ object Image
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: Lazy[Pixels])
-	extends ImageLike with LinearScalable[Image] with Sized[Image] with MaybeEmpty[Image]
+	extends ImageLike with SizeAdjustable[Image] with Sized[Image] with MaybeEmpty[Image]
 {
 	// ATTRIBUTES	----------------
 	

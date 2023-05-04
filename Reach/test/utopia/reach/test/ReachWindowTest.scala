@@ -19,7 +19,7 @@ object ReachWindowTest extends App
 	val textPointer = new PointerWithEvents("Text")
 	
 	val window = ReachWindow.withResizeLogic(User)
-		.withWindowBackground(colors.primary.default).larger.larger.withTextInsetsScaledBy(4).withoutShrinkingText
+		.withWindowBackground(colors.primary.default).muchLarger.withTextInsetsScaledBy(4).withoutShrinkingText
 		.using(ViewTextLabel, title = "Test") { (_, f) => f(textPointer) }
 	
 	Loop.regularly(5.seconds, waitFirst = true) {

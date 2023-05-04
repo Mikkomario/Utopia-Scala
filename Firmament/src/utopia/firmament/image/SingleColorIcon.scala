@@ -10,6 +10,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet, ColorShade, FromShadeFactory}
 import utopia.paradigm.shape.shape2d.{Size, Sized}
+import utopia.paradigm.transform.SizeAdjustable
 
 import scala.language.implicitConversions
 
@@ -39,6 +40,7 @@ object SingleColorIcon
   */
 class SingleColorIcon(val original: Image)
 	extends Sized[SingleColorIcon] with FromShadeFactory[Image] with MaybeEmpty[SingleColorIcon]
+		with SizeAdjustable[SingleColorIcon]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -120,6 +122,8 @@ class SingleColorIcon(val original: Image)
 		case Light => white
 		case Dark => black
 	}
+	
+	override def *(mod: Double): SingleColorIcon = map { _ * mod }
 	
 	
 	// OTHER	---------------------------

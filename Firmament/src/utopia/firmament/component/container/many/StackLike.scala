@@ -1,14 +1,14 @@
 package utopia.firmament.component.container.many
 
-import utopia.firmament.component.{AreaOfItems, HasMutableBounds}
-import utopia.firmament.component.stack.{StackSizeCalculating, Stackable, StackableWrapper}
+import utopia.firmament.component.stack.{StackSizeCalculating, Stackable}
+import utopia.firmament.component.{AreaOfItems, DelayedBoundsUpdate}
 import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 
 /**
 * A stack holds multiple stackable components in a stack-like manner either horizontally or vertically
@@ -72,13 +72,13 @@ trait StackLike[C <: Stackable] extends MultiContainer[C] with StackSizeCalculat
     override def updateLayout() =
     {
         // Wraps the components in order to delay changes
-        val wrappedComponents = components.map { new DelayedBoundsUpdate(_) }
+        val wrappedComponents = components.map { DelayedBoundsUpdate(_) }
         
         // Positions the components using a stacker
         Stacker(wrappedComponents, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
             
         // Finally applies the changes
-        wrappedComponents.foreach { _.updateBounds() }
+        wrappedComponents.foreach { _.apply() }
     }
     
     /**
@@ -136,42 +136,3 @@ trait StackLike[C <: Stackable] extends MultiContainer[C] with StackSizeCalculat
       */
     def indexOf(component: Any) = components.indexOf(component)
 }
-
-private class DelayedBoundsUpdate[C <: Stackable](val source: C) extends HasMutableBounds with StackableWrapper
-{
-    // ATTRIBUTES    -------------------
-    
-    private var nextPosition: Option[Point] = None
-    private var nextSize: Option[Size] = None
-    
-    
-    // IMPLEMENTED    -----------------
-    
-    override def bounds = Bounds(position, size)
-    override def bounds_=(b: Bounds) =
-    {
-        position = b.position
-        size = b.size
-    }
-    
-    override def position = nextPosition getOrElse source.position
-    override def position_=(p: Point) = nextPosition = Some(p)
-    
-    override def size = nextSize getOrElse source.size
-    override def size_=(s: Size) = nextSize = Some(s)
-    
-    override protected def wrapped = source
-    
-    
-    // OTHER    -----------------------
-    
-    def updateBounds() =
-    {
-        nextPosition filterNot { _ ~== source.position } foreach { source.position = _ }
-        nextPosition = None
-        
-        nextSize filterNot { _ ~== source.size } foreach { source.size = _ }
-        nextSize = None
-    }
-}
-

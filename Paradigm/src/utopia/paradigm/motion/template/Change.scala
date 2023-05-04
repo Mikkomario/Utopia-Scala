@@ -1,7 +1,7 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.LinearScalable
 import utopia.flow.time.TimeExtensions._
+import utopia.paradigm.transform.SizeAdjustable
 
 import scala.concurrent.duration.Duration
 
@@ -12,7 +12,7 @@ import scala.concurrent.duration.Duration
   * @tparam A    Type of change amount over a specific time period
   * @tparam Repr A concrete implementation of this trait
   */
-trait Change[+A, +Repr <: Change[A, _]] extends LinearScalable[Repr]
+trait Change[+A, +Repr <: Change[A, _]] extends SizeAdjustable[Repr]
 {
 	// ABSTRACT	-----------------
 	

@@ -11,6 +11,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.SizeType
 import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
+import utopia.paradigm.transform.SizeAdjustable
 
 import java.awt.{Dimension, Insets}
 import scala.util.Success
@@ -64,7 +65,7 @@ object Size extends VectorFactory[Size] with FromModelFactory[Size]
 **/
 class Size private(override val dimensions: Dimensions[Double])
     extends DoubleVectorLike[Size] with DoubleVector with ValueConvertible with ModelConvertible
-        with SignedOrZero[Size] with Sized[Size] with EqualsBy
+        with SignedOrZero[Size] with Sized[Size] with SizeAdjustable[Size] with EqualsBy
 {
     // COMPUTED    --------------------------
     

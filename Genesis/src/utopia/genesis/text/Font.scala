@@ -1,12 +1,12 @@
 package utopia.genesis.text
 
-import utopia.flow.operator.LinearScalable
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.text.FontStyle._
 import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.ColorContrastStandard
-import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.measurement.DistanceExtensions._
+import utopia.paradigm.measurement.Ppi
+import utopia.paradigm.transform.SizeAdjustable
 
 import java.awt
 import java.awt.GraphicsEnvironment
@@ -50,7 +50,7 @@ object Font
   * @param scaling The instance level scaling of this font (affects final font size)
   */
 case class Font(name: String, baseSize: Int, style: FontStyle = FontStyle.Plain, scaling: Double = 1.0)
-	extends LinearScalable[Font]
+	extends SizeAdjustable[Font]
 {
 	// ATTRIBUTES	-------------------
 	

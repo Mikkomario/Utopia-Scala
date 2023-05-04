@@ -43,7 +43,7 @@ object BaseContext
 		override lazy val stackMargin: StackLength = customStackMargins
 			.getOrElse(StackLength(margins.verySmall, margins.medium, margins.large))
 		override lazy val smallStackMargin = customStackMargins match {
-			case Some(margins) => margins * this.margins.diffMod
+			case Some(margins) => margins * this.margins.adjustment(-1)
 			case None => StackLength(0, margins.small, margins.medium)
 		}
 		

@@ -7,6 +7,33 @@ import utopia.paradigm.shape.shape2d.{Bounds, HasBounds, Point, Size}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
+object HasMutableBounds
+{
+    // OTHER    ---------------------
+    
+    /**
+      * @param initialBounds A set of bounds to wrap initially
+      * @return A mutable bounds-wrapper
+      */
+    def apply(initialBounds: Bounds = Bounds.zero): HasMutableBounds = new MutableBoundsWrapper(initialBounds)
+    
+    
+    // NESTED   ---------------------
+    
+    private class MutableBoundsWrapper(initial: Bounds) extends HasMutableBounds
+    {
+        // ATTRIBUTES   -------------
+        
+        override var bounds = initial
+        
+        
+        // IMPLEMENTED  -------------
+        
+        override def position_=(p: Point): Unit = bounds = bounds.withPosition(p)
+        override def size_=(s: Size): Unit = bounds = bounds.withSize(s)
+    }
+}
+
 /**
 * This trait is extended by classes that occupy a certain 2D space (position + size)
 * @author Mikko Hilpinen

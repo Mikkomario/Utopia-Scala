@@ -16,6 +16,7 @@ import utopia.paradigm.color.{ColorScheme, ColorSet}
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.measurement.DistanceExtensions._
+import utopia.paradigm.transform.Adjustment
 import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
 
 import scala.concurrent.ExecutionContext
@@ -36,6 +37,7 @@ object ReachTestContext
 	implicit val exc: ExecutionContext = new ThreadPool("Reach")
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
+	implicit val adjustment: Adjustment = Adjustment(0.25)
 	
 	implicit val ppi: Ppi = Screen.ppi
 	val cm = 1.cm.toPixels.round.toInt

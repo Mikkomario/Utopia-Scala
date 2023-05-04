@@ -12,6 +12,7 @@ import utopia.paradigm.generic.ParadigmDataType.CircleType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.template.DoubleVectorLike
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.transform.SizeAdjustable
 
 import java.awt.geom.Ellipse2D
 import scala.util.Success
@@ -34,7 +35,7 @@ object Circle extends FromModelFactory[Circle]
  */
 case class Circle(origin: Point = Point.origin, radius: Double)
     extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
-        with LinearScalable[Circle] with Combinable[HasDoubleDimensions, Circle] with HasBounds
+        with SizeAdjustable[Circle] with Combinable[HasDoubleDimensions, Circle] with HasBounds
 {
     // COMPUTED PROPERTIES    ---------
     

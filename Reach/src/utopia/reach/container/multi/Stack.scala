@@ -48,40 +48,6 @@ object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFa
 	
 	override def withContext[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
 		apply(parentHierarchy).withContext(context)
-	
-	
-	// OTHER    -------------------------
-	
-	/**
-	 * Creates a new stack
-	 * @param parentHierarchy Component hierarchy this stack will be attached to
-	 * @param components Components to place within this stack
-	 * @param direction Direction of this stack (default = Y = vertical)
-	 * @param layout Layout of this stack (default = Fit)
-	 * @param margin Margin placed between items (default = any)
-	 * @param cap Cap placed at each end of this stack (default = 0)
-	 * @param customDrawers Custom drawers to apply (default = empty)
-	 * @tparam C Type of items within this stack
-	 * @return A new stack
-	 */
-	def raw[C <: ReachComponentLike](parentHierarchy: ComponentHierarchy, components: Vector[C],
-	                                   direction: Axis2D = Y, layout: StackLayout = Fit,
-	                                   margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
-	                                   customDrawers: Vector[CustomDrawer] = Vector()): Stack[C] =
-		new _Stack[C](parentHierarchy, components, direction, layout, margin, cap, customDrawers)
-	
-	
-	// NESTED   -------------------------
-	
-	private class _Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-	                                              override val components: Vector[C], override val direction: Axis2D,
-	                                              override val layout: StackLayout, override val margin: StackLength,
-	                                              override val cap: StackLength,
-	                                              override val customDrawers: Vector[CustomDrawer])
-		extends Stack[C]
-	{
-		override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue
-	}
 }
 
 case class StackFactory(parentHierarchy: ComponentHierarchy)
@@ -126,7 +92,8 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 										   cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
-		val stack = Stack.raw[C](parentHierarchy, content.component, direction, layout, margin, cap, customDrawers)
+		val stack: Stack[C] = new _Stack[C](parentHierarchy, content.component, direction, layout, margin, cap,
+			customDrawers)
 		content attachTo stack
 	}
 	
@@ -218,6 +185,19 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }
 		// Creates the stack
 		apply(orderedContent, axis, if (forceFitLayout) Fit else layout, margin, cap, customDrawers)
+	}
+	
+	
+	// NESTED   -------------------------
+	
+	private class _Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
+	                                              override val components: Vector[C], override val direction: Axis2D,
+	                                              override val layout: StackLayout, override val margin: StackLength,
+	                                              override val cap: StackLength,
+	                                              override val customDrawers: Vector[CustomDrawer])
+		extends Stack[C]
+	{
+		override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue
 	}
 }
 

@@ -16,8 +16,7 @@ import scala.math.Ordering.Double.TotalOrdering
   * @tparam Collection Type of collections that combine multiple components
   * @tparam Container Type of container that holds the collections
  */
-trait CollectionViewLike[
-	C <: Component, Collection <: MutableMultiContainer[C, C],
+trait CollectionViewLike[C <: Component, Collection <: MutableMultiContainer[C, C],
 	Container <: MutableMultiContainer[Collection, Collection] with Stackable]
 	extends MultiContainer[C] with StackableWrapper
 {

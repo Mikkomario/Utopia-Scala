@@ -8,6 +8,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Insets, Size}
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
 import utopia.firmament.model.stack.LengthPriority.Low
+import utopia.paradigm.transform.SizeAdjustable
 
 object StackSize extends DimensionsWrapperFactory[StackLength, StackSize]
 {
@@ -122,7 +123,7 @@ object StackSize extends DimensionsWrapperFactory[StackLength, StackSize]
 * @since 25.2.2019
 **/
 class StackSize private(override val dimensions: Dimensions[StackLength])
-    extends Dimensional[StackLength, StackSize] with StackInsetsConvertible with LinearScalable[StackSize]
+    extends Dimensional[StackLength, StackSize] with StackInsetsConvertible with SizeAdjustable[StackSize]
         with SelfCombinable[StackSize] with EqualsBy
 {
     // COMPUTED PROPERTIES    --------
