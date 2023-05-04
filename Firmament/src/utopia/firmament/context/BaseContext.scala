@@ -56,7 +56,7 @@ object BaseContext
 		override def withColorContrastStandard(standard: ColorContrastStandard): BaseContext =
 			copy(contrastStandard = standard)
 		override def withMargins(margins: Margins): BaseContext = copy(margins = margins)
-		override def withStackMargins(stackMargin: StackLength): BaseContext =
+		override def withStackMargin(stackMargin: StackLength): BaseContext =
 			copy(customStackMargins = Some(stackMargin))
 		override def withAllowImageUpscaling(allowImageUpscaling: Boolean): BaseContext =
 			copy(allowImageUpscaling = allowImageUpscaling)

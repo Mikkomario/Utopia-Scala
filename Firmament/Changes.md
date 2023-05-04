@@ -14,6 +14,8 @@
 - Added new **SizeCategory** and **StandardSizeAdjustable** classes
   - **SingleColorIcon** now extends **StandardSizeAdjustable**, offering a number of new utility functions
 ### New Methods
+- **BaseContext** & **TextContext**
+  - Added multiple utility functions that utilize the new **SizeCategory** class
 - **LocalizedString** (object)
   - Added `.alwaysEmpty`
 - **Margins**

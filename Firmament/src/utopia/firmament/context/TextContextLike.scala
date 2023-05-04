@@ -1,6 +1,7 @@
 package utopia.firmament.context
 
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment.Center
@@ -151,6 +152,8 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  */
 	def withoutMarginBetweenLines = withMarginBetweenLines(StackLength.fixedZero)
 	def withSmallMarginBetweenLines = withMarginBetweenLines(margins.small.downscaling)
+	def withSmallerMarginBetweenLines = mapMarginBetweenLines { _.smaller(margins.adjustment) }
+	def withLargerMarginBetweenLines = mapMarginBetweenLines { _.larger(margins.adjustment) }
 	
 	/**
 	  * @return Copy of this context that only allows single line components
@@ -240,7 +243,7 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @param f A mapping function for text insets
 	  * @return A modified copy of this context
 	  */
-	def mapTextInsets(f: StackInsets => StackInsets) = withTextInsets(f(textInsets))
+	def mapTextInsets(f: StackInsets => StackInsets): Repr = withTextInsets(f(textInsets))
 	
 	/**
 	  * @param axis Targeted axis
@@ -258,6 +261,44 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return A copy of this context with text insets scaled by the specified factor
 	  */
 	def withTextInsetsScaledBy(scaling: Double) = mapTextInsets { _ * scaling }
+	/**
+	  * @param insetsSize New text inset sizes to apply on all sides (relative to margins)
+	  * @return A copy of this context with specified inset sizes
+	  */
+	def withTextInsets(insetsSize: SizeCategory): Repr = {
+		val medium = margins.medium
+		val targetScale = insetsSize.scaling(margins.adjustment)
+		mapTextInsets { _.map { current =>
+			val currentScale = current.optimal / medium
+			current * (targetScale/currentScale)
+		} }
+	}
+	/**
+	  * @param axis Targeted axis
+	  * @param insetsSize New text inset sizes to apply along the specified axis (relative to margins)
+	  * @return A copy of this context with specified inset sizes
+	  */
+	def withTextInsetsAlong(axis: Axis2D, insetsSize: SizeCategory) = {
+		// WET WET
+		val medium = margins.medium
+		val targetScale = insetsSize.scaling(margins.adjustment)
+		mapTextInsets {
+			_.mapAxis(axis) { current =>
+				val currentScale = current.optimal / medium
+				current * (targetScale / currentScale)
+			}
+		}
+	}
+	/**
+	  * @param insetsSize New horizontal text inset sizes to apply (relative to margins)
+	  * @return A copy of this context with specified inset sizes
+	  */
+	def withHorizontalTextInsets(insetsSize: SizeCategory) = withTextInsetsAlong(X, insetsSize)
+	/**
+	  * @param insetsSize New vertical text inset sizes to apply (relative to margins)
+	  * @return A copy of this context with specified inset sizes
+	  */
+	def withVerticalTextInsets(insetsSize: SizeCategory) = withTextInsetsAlong(Y, insetsSize)
 	
 	/**
 	  * @param axis Targeted axis
@@ -275,4 +316,14 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return A modified copy of this context
 	  */
 	def mapMarginBetweenLines(f: StackLength => StackLength) = withMarginBetweenLines(f(betweenLinesMargin))
+	/**
+	  * @param margin Margin to place between the lines (relative to margins)
+	  * @return A copy of this context with that between lines -margin
+	  */
+	def withMarginBetweenLines(margin: SizeCategory) = {
+		val targetScaling = margin.scaling(margins.adjustment)
+		val current = betweenLinesMargin
+		val currentScaling = current.optimal / margins.medium
+		current * (targetScaling/currentScaling)
+	}
 }

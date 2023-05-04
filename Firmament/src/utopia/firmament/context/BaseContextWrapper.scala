@@ -44,7 +44,7 @@ trait BaseContextWrapper[+Repr, +ColorSensitive] extends Any with BaseContextLik
 	override def withColorContrastStandard(standard: ColorContrastStandard): Repr =
 		withBase(base.withColorContrastStandard(standard))
 	override def withMargins(margins: Margins): Repr = withBase(base.withMargins(margins))
-	override def withStackMargins(stackMargin: StackLength): Repr = withBase(base.withStackMargins(stackMargin))
+	override def withStackMargin(stackMargin: StackLength): Repr = withBase(base.withStackMargin(stackMargin))
 	override def withAllowImageUpscaling(allowImageUpscaling: Boolean): Repr =
 		withBase(base.withAllowImageUpscaling(allowImageUpscaling))
 	

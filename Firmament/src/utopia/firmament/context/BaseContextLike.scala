@@ -2,6 +2,8 @@ package utopia.firmament.context
 
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
+import utopia.firmament.model.enumeration.SizeCategory
+import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
 import utopia.firmament.model.stack.{LengthPriority, StackLength}
 import utopia.flow.operator.ScopeUsable
 import utopia.genesis.handling.mutable.ActorHandler
@@ -9,7 +11,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.{Adjustment, SizeAdjustable}
 
 /**
   * A trait common for basic component context implementations
@@ -83,7 +85,9 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  * @param stackMargin New stack margins to apply
 	  * @return A copy of this context with those margins
 	  */
-	def withStackMargins(stackMargin: StackLength): Repr
+	def withStackMargin(stackMargin: StackLength): Repr
+	@deprecated("Renamed to withStackMargin", "v1.1")
+	def withStackMargins(stackMargin: StackLength): Repr = withStackMargin(stackMargin)
 	/**
 	  * @param allowImageUpscaling Whether image upscaling should be allowed
 	  * @return A copy of this context with that setting
@@ -134,31 +138,59 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	/**
 	  * @return A copy of this context that doesn't allow any space between stacked items
 	  */
-	def withoutStackMargin = withStackMargins(StackLength.fixedZero)
+	def withoutStackMargin = withStackMargin(StackLength.fixedZero)
 	/**
 	  * @return A copy of this context where the minimum (stack) margin is 0 px
 	  */
-	def withoutMinMargin = mapStackMargins { _.noMin }
+	def withoutMinMargin = mapStackMargin { _.noMin }
 	/**
 	  * @return A copy of this context where there is no maximum (stack) margin defined
 	  */
-	def withoutMaxMargin = if (stackMargin.hasMax) mapStackMargins { _.noMax } else self
+	def withoutMaxMargin = if (stackMargin.hasMax) mapStackMargin { _.noMax } else self
 	/**
 	  * @return A copy of this context where (stack) margins expand easily
 	  */
-	def withExpandingMargin = mapStackMargins { _.expanding }
+	def withExpandingMargin = mapStackMargin { _.expanding }
 	/**
 	  * @return A copy of this context where (stack) margins shrink easily
 	  */
-	def withShrinkingMargin = mapStackMargins { _.shrinking }
+	def withShrinkingMargin = mapStackMargin { _.shrinking }
 	/**
 	  * @return A copy of this context where (stack) margins shrink and expand easily
 	  */
-	def withLowPriorityMargin = mapStackMargins { _.withLowPriority }
+	def withLowPriorityMargin = mapStackMargin { _.withLowPriority }
 	/**
 	  * @return A copy of this context where (stack) margins don't shrink or expand easily
 	  */
-	def withNormalPriorityMargin = mapStackMargins { _.withPriority(LengthPriority.Normal) }
+	def withNormalPriorityMargin = mapStackMargin { _.withPriority(LengthPriority.Normal) }
+	/**
+	  * @return A copy of this context with smaller stack margins in place
+	  */
+	def withSmallerStackMargin = mapStackMargin { _.smaller(margins.adjustment) }
+	/**
+	  * @return A copy of this context with larger stack margins in place
+	  */
+	def withLargerStackMargin = mapStackMargin { _.larger(margins.adjustment) }
+	/**
+	  * @return A copy of this context with medium (i.e. standard) stack margins in place
+	  */
+	def withMediumStackMargin = withStackMargin(Medium)
+	/**
+	  * @return A copy of this context with small stack margins in place
+	  */
+	def withSmallStackMargin = withStackMargin(Small)
+	/**
+	  * @return A copy of this context with very small stack margins in place
+	  */
+	def withVerySmallStackMargin = withStackMargin(VerySmall)
+	/**
+	  * @return A copy of this context with large stack margins in place
+	  */
+	def withLargeStackMargin = withStackMargin(Large)
+	/**
+	  * @return A copy of this context with very large stack margins in place
+	  */
+	def withVeryLargeStackMargin = withStackMargin(VeryLarge)
 	
 	/**
 	  * @return A copy of this context with image-upscaling allowed
@@ -178,6 +210,17 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  * @return Copy of this context that allows image upscaling
 	  */
 	def withoutUpscalingImages = withAllowImageUpscaling(false)
+	
+	/**
+	  * @param adj Implicit adjustments to apply
+	  * @return A copy of this context with larger font
+	  */
+	def withLargerFont(implicit adj: Adjustment) = mapFont { _.larger }
+	/**
+	  * @param adj Implicit adjustments to apply
+	  * @return A copy of this context with larger font
+	  */
+	def withSmallerFont(implicit adj: Adjustment) = mapFont { _.smaller }
 	
 	@deprecated("Replaced with stackMargin", "v1.0")
 	def defaultStackMargin = stackMargin
@@ -201,7 +244,9 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  * @param f A mapping function for stack margins to use
 	  * @return A mapped copy of this context
 	  */
-	def mapStackMargins(f: StackLength => StackLength) = withStackMargins(f(stackMargin))
+	def mapStackMargin(f: StackLength => StackLength) = withStackMargin(f(stackMargin))
+	@deprecated("Renamed to mapStackMargin", "v1.1")
+	def mapStackMargins(f: StackLength => StackLength) = mapStackMargin(f)
 	
 	/**
 	  * @param scaling A scaling to apply to the used font
@@ -217,23 +262,37 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  * @param scaling Scaling to apply to stack margins
 	  * @return A copy of this context with scaled stack margins
 	  */
-	def withStackMarginsScaledBy(scaling: Double) = mapStackMargins { _ * scaling }
+	def withStackMarginScaledBy(scaling: Double) = mapStackMargin { _ * scaling }
+	@deprecated("Renamed to withStackMarginScaledBy", "v1.1")
+	def withStackMarginsScaledBy(scaling: Double) = withStackMarginScaledBy(scaling)
 	
 	/**
 	  * @param minMargin New minimum (stack) margin to use
 	  * @return A copy of this context with that margin applying
 	  */
-	def withMinMargin(minMargin: Double) = mapStackMargins { _.withMin(minMargin) }
+	def withMinMargin(minMargin: Double) = mapStackMargin { _.withMin(minMargin) }
 	/**
 	  * @param optimalMargin New optimal (stack) margin to use
 	  * @return A copy of this context with that margin applying
 	  */
-	def withOptimalMargin(optimalMargin: Double) = mapStackMargins { _.withOptimal(optimalMargin) }
+	def withOptimalMargin(optimalMargin: Double) = mapStackMargin { _.withOptimal(optimalMargin) }
 	/**
 	  * @param maxMargin New maximum margin to use
 	  * @return A copy of this context with that margin applying
 	  */
-	def withMaxMargin(maxMargin: Double) = mapStackMargins { _.withMax(maxMargin) }
+	def withMaxMargin(maxMargin: Double) = mapStackMargin { _.withMax(maxMargin) }
+	
+	/**
+	  * @param size New stack margins size category to use
+	  * @return A copy of this context with those stack margins in use
+	  */
+	def withStackMargin(size: SizeCategory): Repr = mapStackMargin { current =>
+		// Calculates the current scaling relative to medium
+		// Medium level corresponds with margins.medium
+		val currentLevel = current.optimal / margins.medium
+		val targetLevel = margins(size) / margins.medium
+		if (currentLevel == targetLevel) current else current * (targetLevel/currentLevel)
+	}
 	
 	/**
 	  * @param color Background color role
