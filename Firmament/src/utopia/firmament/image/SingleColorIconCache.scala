@@ -32,8 +32,8 @@ class SingleColorIconCache(val imageReadDirectory: Path, standardIconSize: Optio
 		.after[String, SingleColorIcon](cacheDuration) { imgName =>
 			val image = Image.readFrom(imageReadDirectory/imgName).getOrElseLog(Image.empty)
 			standardIconSize match {
-				case Some(size) => new SingleColorIcon(image.fittingWithin(size))
-				case None => new SingleColorIcon(image)
+				case Some(size) => SingleColorIcon(image.fittingWithin(size), size)
+				case None => SingleColorIcon(image)
 			}
 		}
 		// Appends the .png portion to image names, if missing

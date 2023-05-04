@@ -31,8 +31,8 @@ object TypeOrSearchTest extends App
 	
 	AwtEventThread.debugMode = true
 	
-	val addIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/add.png").get)
-	val closeIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/close.png").get * 0.8)
+	val addIcon = SingleColorIcon(Image.readFrom("Reflection/test-images/add.png").get)
+	val closeIcon = SingleColorIcon(Image.readFrom("Reflection/test-images/close.png").get * 0.8)
 	
 	implicit val context: TextContext = baseContext.against(colorScheme(Gray).light).forTextComponents
 	

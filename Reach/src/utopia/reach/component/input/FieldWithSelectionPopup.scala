@@ -259,8 +259,8 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 					else {
 						val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
 						val targetSize = smaller.size
-						val shrankIcon = new SingleColorIcon(
-							larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize))
+						val shrankIcon = SingleColorIcon(
+							larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize), larger.standardSize)
 						
 						val (newExpandIcon, newCollapseIcon) =
 							if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller

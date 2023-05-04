@@ -29,9 +29,9 @@ object DropDownTest extends App
 	
 	val arrowImage = Image.readFrom("Reflection/test-images/arrow-back-48dp.png")
 	arrowImage.logFailure
-	val expandIcon = arrowImage.map { i => new SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationCounterClockwise)) }
+	val expandIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationCounterClockwise)) }
 		.getOrElse(SingleColorIcon.empty)
-	val shrinkIcon = arrowImage.map { i => new SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
+	val shrinkIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
 		.getOrElse(SingleColorIcon.empty)
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))

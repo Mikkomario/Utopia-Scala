@@ -2,6 +2,8 @@
 
 ## v1.1 (in development)
 ### Breaking Changes
+- **SingleColorIcon** default construction parameters changed
+  - Please also note that **SingleColorIcon** is now a case class and the `new` keyword should no more be used
 - The icon parameter **WindowButtonBlueprint** is no longer an **Option**. An empty **SingleColorIcon** acts as "no icon"
 - **Margins** now accepts **Adjustment** as the second parameter, not **Double**
 - The functions `.larger` and `.smaller` in **BaseContextLike** now require an implicit **Adjustment** parameter
@@ -9,7 +11,8 @@
 ### Bug Fixes
 - The adjustment modifier in **Margins** didn't work as described in the documentary
 ### New Features
-- Added new **SizeCategory** class
+- Added new **SizeCategory** and **StandardSizeAdjustable** classes
+  - **SingleColorIcon** now extends **StandardSizeAdjustable**, offering a number of new utility functions
 ### New Methods
 - **LocalizedString** (object)
   - Added `.alwaysEmpty`

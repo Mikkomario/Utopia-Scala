@@ -1,6 +1,7 @@
 package utopia.firmament.image
 
 import utopia.firmament.context.ColorContext
+import utopia.firmament.model.StandardSizeAdjustable
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.operator.MaybeEmpty
@@ -21,7 +22,7 @@ object SingleColorIcon
 	/**
 	  * An empty icon
 	  */
-	val empty = new SingleColorIcon(Image.empty)
+	val empty = apply(Image.empty, Size.zero)
 	/**
 	 * A pointer that always contains an empty icon
 	 */
@@ -31,6 +32,15 @@ object SingleColorIcon
 	// IMPLICIT ---------------------------
 	
 	implicit def iconToImage(icon: SingleColorIcon)(implicit context: ColorContext): Image = icon.contextual
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * @param image The image to wrap
+	  * @return An icon based on that image
+	  */
+	def apply(image: Image): SingleColorIcon = apply(image, image.size)
 }
 
 /**
@@ -38,9 +48,9 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, Reflection v1.2
   */
-class SingleColorIcon(val original: Image)
+case class SingleColorIcon(original: Image, standardSize: Size)
 	extends Sized[SingleColorIcon] with FromShadeFactory[Image] with MaybeEmpty[SingleColorIcon]
-		with SizeAdjustable[SingleColorIcon]
+		with StandardSizeAdjustable[SingleColorIcon]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -74,6 +84,13 @@ class SingleColorIcon(val original: Image)
 	  */
 	lazy val whiteIndividualButton = ButtonImageSet.darkening(white)
 	
+	override protected lazy val relativeToStandardSize: Double = {
+		if (standardSize.dimensions.exists { _ == 0.0 })
+			1.0
+		else
+			(size/standardSize).xyPair.sum/2.0
+	}
+	
 	
 	// COMPUTED	---------------------------
 	
@@ -94,7 +111,7 @@ class SingleColorIcon(val original: Image)
 		if (original == newIcon)
 			this
 		else
-			new SingleColorIcon(newIcon)
+			new SingleColorIcon(newIcon, standardSize)
 	}
 	
 	/**
@@ -146,7 +163,7 @@ class SingleColorIcon(val original: Image)
 	  * @param f A mapping function
 	  * @return A mapped copy of this icon
 	  */
-	def map(f: Image => Image) = new SingleColorIcon(f(original))
+	def map(f: Image => Image) = new SingleColorIcon(f(original), standardSize)
 	
 	/**
 	  * @param color Target icon color

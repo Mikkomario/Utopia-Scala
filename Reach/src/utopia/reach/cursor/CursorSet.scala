@@ -25,7 +25,7 @@ object CursorSet
 		// Reads the images from the specified files
 		val readResults = paths.map { case (cType, (path, origin)) =>
 			cType -> Image.readFrom(path).map { img =>
-				Cursor(new SingleColorIcon(img.withSourceResolutionOrigin(origin)))
+				Cursor(SingleColorIcon(img.withSourceResolutionOrigin(origin)))
 			}
 		}
 		// The default cursor load must succeed
