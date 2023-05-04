@@ -18,7 +18,7 @@ import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Random, Success, Try}
 
 /**
   * This object contains some extensions for the more traditional collections / data structures
@@ -1303,6 +1303,11 @@ object CollectionExtensions
 	
 	implicit class RichSeq[A](val s: Seq[A]) extends AnyVal
 	{
+		/**
+		  * @return A random item from this collection
+		  */
+		def random = s.apply(Random.nextInt(s.size))
+		
 		/**
 		  * @param end Targeted end of this collection
 		  * @return The index of the element at that end of this collection. Out of bounds if this collection is empty.

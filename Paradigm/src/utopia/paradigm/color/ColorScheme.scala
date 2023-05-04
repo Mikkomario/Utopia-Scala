@@ -65,6 +65,11 @@ case class ColorScheme(default: ColorSet, colors: Map[ColorRole, ColorSet])
 	// COMPUTED	------------------------------
 	
 	/**
+	  * @return Color roles that have been defined in this color scheme
+	  */
+	def definedRoles = colors.keySet
+	
+	/**
 	  * @return Gray colors available
 	  */
 	def gray = apply(Gray)

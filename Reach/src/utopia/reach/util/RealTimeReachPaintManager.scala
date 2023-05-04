@@ -80,8 +80,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		flatten().drawWith(drawer, component.position)
 	}
 	
-	override def paint(region: Option[Bounds], priority: Priority): Unit =
-	{
+	override def paint(region: Option[Bounds], priority: Priority): Unit = {
 		// May have to repaint if component size had changed since the last paint
 		checkForSizeChanges()
 		// Makes sure the image buffer is up to date
@@ -152,10 +151,8 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 				paintQueue(None)
 	}
 	
-	override def shift(originalArea: Bounds, transition: Vector2D) =
-	{
-		if (transition.nonZero)
-		{
+	override def shift(originalArea: Bounds, transition: Vector2D) = {
+		if (transition.nonZero) {
 			// Copies the area
 			paint { _.copyArea(originalArea, transition) }
 			// Invalidates buffer
@@ -206,8 +203,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	// Makes sure the buffer is updated (prepares the buffer applies any queued updates)
 	// Accepts a region to flatten. None if whole image should be flattened.
 	// If Some(X), updates outside area X are not applied yet.
-	private def flatten(region: Option[Bounds] = None) =
-	{
+	private def flatten(region: Option[Bounds] = None) = {
 		// Prepares the buffer
 		val (shouldAddUpdates, baseImage) = bufferPointer.pop {
 			// Case: There already exists a buffer => Uses it, adding updates on top
@@ -261,8 +257,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	}
 	
 	// Pass None if whole component should be painted
-	private def paintQueue(first: Option[Bounds]) =
-	{
+	private def paintQueue(first: Option[Bounds]) = {
 		paint { drawer =>
 			var nextArea = first
 			do {

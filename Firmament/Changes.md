@@ -10,6 +10,10 @@
 - **SingleColorIconCache** now requires an implicit **Logger** parameter
 ### Bug Fixes
 - The adjustment modifier in **Margins** didn't work as described in the documentary
+- Window didn't always properly update layout or repaint content - fixed
+### Deprecations
+- In **BaseContext**, deprecated methods that referred to stack margins as plural in favor of new renamed functions
+  - E.g. `.withStackMargins(...)` is now `.withStackMargin(...)`
 ### New Features
 - Added new **SizeCategory** and **StandardSizeAdjustable** classes
   - **SingleColorIcon** now extends **StandardSizeAdjustable**, offering a number of new utility functions

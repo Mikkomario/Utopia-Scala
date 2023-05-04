@@ -12,6 +12,8 @@
   - Added `.completionOf(Future)`
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
+- **Seq**
+  - Added `.random`
 - **Try** (**CollectionExtensions**)
   - Added `.logToOption` and `.logToOptionWithMessage(String)`
 

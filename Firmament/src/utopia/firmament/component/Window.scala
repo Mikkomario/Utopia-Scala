@@ -864,7 +864,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 								case None => current
 							}
 					}
-			}
+			}.round
 			// Prevents the user from resizing too much
 			if (resizeLogic.allowsUserResize) {
 				AwtEventThread.async {

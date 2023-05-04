@@ -6,22 +6,25 @@ import utopia.firmament.component.{DelayedBoundsUpdate, HasMutableBounds}
 import utopia.firmament.context.BaseContext
 import utopia.firmament.controller.Stacker
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
-import utopia.reach.component.factory.GenericContextualFactory
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.{FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Collection.{StackBoundsWrapper, layoutPriorities}
 
 import scala.collection.immutable.VectorBuilder
 
-object Collection
+object Collection extends Cff[CollectionFactory]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -37,7 +40,9 @@ object Collection
 	)
 	
 	
-	// OTHER    -----------------------------
+	// IMPLEMENTED    -----------------------
+	
+	override def apply(hierarchy: ComponentHierarchy): CollectionFactory = new CollectionFactory(hierarchy)
 	
 	
 	// NESTED   -----------------------------
@@ -56,9 +61,23 @@ object Collection
 	}
 }
 
-class CollectionFactory(parentHierarchy: ComponentHierarchy)
+class CollectionFactory(val parentHierarchy: ComponentHierarchy)
+	extends FromGenericContextFactory[BaseContext, ContextualCollectionFactory]
 {
+	// IMPLEMENTED  ------------------------
+	
+	override def withContext[N <: BaseContext](context: N): ContextualCollectionFactory[N] =
+		new ContextualCollectionFactory[N](this, context)
+	
+	
 	// OTHER    ----------------------------
+	
+	/**
+	  * @param contentFactory Factory used for building collection content
+	  * @tparam F Type of individual content factory
+	  * @return A new collection builder
+	  */
+	def build[F](contentFactory: Cff[F]) = new CollectionBuilder[F](this, contentFactory)
 	
 	/**
 	  * Creates a new collection view
@@ -105,9 +124,17 @@ class CollectionFactory(parentHierarchy: ComponentHierarchy)
 		extends CustomDrawReachComponent with Collection[C]
 }
 
-class ContextualCollectionFactory[+N <: BaseContext](factory: CollectionFactory, override val context: N)
+class ContextualCollectionFactory[N <: BaseContext](factory: CollectionFactory, override val context: N)
 	extends GenericContextualFactory[N, BaseContext, ContextualCollectionFactory]
 {
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return Component hierarchy used by this factory
+	  */
+	def parentHierarchy = factory.parentHierarchy
+	
+	
 	// IMPLEMENTED  ----------------------
 	
 	override def withContext[N2 <: BaseContext](newContext: N2): ContextualCollectionFactory[N2] =
@@ -116,7 +143,117 @@ class ContextualCollectionFactory[+N <: BaseContext](factory: CollectionFactory,
 	
 	// OTHER    --------------------------
 	
+	/**
+	  * @param contentFactory Factory used for creating collection contents
+	  * @tparam F Type of generated factories
+	  * @return A new collection builder
+	  */
+	def build[F](contentFactory: Ccff[N, F]) = new ContextualCollectionBuilder[N, F](this, contentFactory)
 	
+	/**
+	  * Creates a new collection view
+	  * @param content           The components to place within this collection (in open form, grouped)
+	  * @param primaryAxis       The direction along which this collection will first expand (default = vertical)
+	  * @param insideRowLayout   The layout to use inside the primary rows or columns (default = Fit)
+	  * @param betweenRowsLayout The layout to use for the rows or columns (default = Leading)
+	  * @param outerMargin       Size of the margin placed at the edges of this collection.
+	  *                          None if no margin shall be placed (default).
+	  * @param splitThreshold    A length threshold after which this collection prefers to split content to a new line.
+	  *                          None if the preferred option is to keep a single line.
+	  *                          Affects the stack size of this collection.
+	  *                          Default = None.
+	  * @param customDrawers     Custom drawers to apply to this view (default = empty)
+	  * @param areRelated        Whether the items in this collection should be considered closely related, and
+	  *                          therefore only separated by a small margin (default = false = use medium margin)
+	  * @tparam C Type of components stored within this collection
+	  * @tparam R Type of additional component creation result
+	  * @return A new collection
+	  */
+	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], primaryAxis: Axis2D = X,
+	                                      insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
+	                                      outerMargin: Option[SizeCategory] = None,
+	                                      splitThreshold: Option[Double] = None,
+	                                      customDrawers: Vector[CustomDrawer] = Vector(),
+	                                      areRelated: Boolean = false) =
+	{
+		val outer = outerMargin match {
+			case Some(s) => context.margins.around(s)
+			case None => StackLength.fixedZero
+		}
+		factory(content, primaryAxis, insideRowLayout, betweenRowsLayout,
+			if (areRelated) context.smallStackMargin else context.stackMargin, outer, splitThreshold, customDrawers)
+	}
+}
+
+class CollectionBuilder[+F](factory: CollectionFactory, contentFactory: Cff[F])
+{
+	implicit val c: ReachCanvas = factory.parentHierarchy.top
+	
+	/**
+	  * Creates a new collection view
+	  * @param primaryAxis       The direction along which this collection will first expand (default = vertical)
+	  * @param insideRowLayout   The layout to use inside the primary rows or columns (default = Fit)
+	  * @param betweenRowsLayout The layout to use for the rows or columns (default = Leading)
+	  * @param innerMargin       Margin placed between the items inside this collection (default = any)
+	  * @param outerMargin       Margin placed at the edges of this collection (default = always 0)
+	  * @param splitThreshold    A length threshold after which this collection prefers to split content to a new line.
+	  *                          None if the preferred option is to keep a single line.
+	  *                          Affects the stack size of this collection.
+	  *                          Default = None.
+	  * @param customDrawers     Custom drawers to apply to this view (default = empty)
+	  * @param fill A function for filling this collection with content
+	  * @tparam C Type of components stored within this collection
+	  * @tparam R Type of additional component creation result
+	  * @return A new collection
+	  */
+	def apply[C <: ReachComponentLike, R](primaryAxis: Axis2D = X, insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
+	                                      innerMargin: StackLength = StackLength.any,
+	                                      outerMargin: StackLength = StackLength.fixedZero,
+	                                      splitThreshold: Option[Double] = None,
+	                                      customDrawers: Vector[CustomDrawer] = Vector())
+	                                     (fill: F => ComponentCreationResult[Vector[C], R]) =
+	{
+		val content = Open.using(contentFactory)(fill)
+		factory(content, primaryAxis, insideRowLayout, betweenRowsLayout, innerMargin, outerMargin, splitThreshold,
+			customDrawers)
+	}
+}
+
+class ContextualCollectionBuilder[N <: BaseContext, +F](factory: ContextualCollectionFactory[N],
+                                                        contentFactory: Ccff[N, F])
+{
+	implicit val c: ReachCanvas = factory.parentHierarchy.top
+	
+	/**
+	  * Creates a new collection view
+	  * @param primaryAxis       The direction along which this collection will first expand (default = vertical)
+	  * @param insideRowLayout   The layout to use inside the primary rows or columns (default = Fit)
+	  * @param betweenRowsLayout The layout to use for the rows or columns (default = Leading)
+	  * @param outerMargin       Size of the margin placed at the edges of this collection.
+	  *                          None if no margin shall be placed (default).
+	  * @param splitThreshold    A length threshold after which this collection prefers to split content to a new line.
+	  *                          None if the preferred option is to keep a single line.
+	  *                          Affects the stack size of this collection.
+	  *                          Default = None.
+	  * @param customDrawers     Custom drawers to apply to this view (default = empty)
+	  * @param areRelated        Whether the items in this collection should be considered closely related, and
+	  *                          therefore only separated by a small margin (default = false = use medium margin)
+	  * @param fill              A function for creating the contents for this collection
+	  * @tparam C Type of components stored within this collection
+	  * @tparam R Type of additional component creation result
+	  * @return A new collection
+	  */
+	// TODO: WET WET - Maybe it could be possible to create a preset factory using the parameters below and only
+	//  then determine whether a builder is used or not.
+	def apply[C <: ReachComponentLike, R](primaryAxis: Axis2D = X,
+	                                      insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
+	                                      outerMargin: Option[SizeCategory] = None,
+	                                      splitThreshold: Option[Double] = None,
+	                                      customDrawers: Vector[CustomDrawer] = Vector(),
+	                                      areRelated: Boolean = false)
+	                                     (fill: F => ComponentCreationResult[Vector[C], R]) =
+		factory(Open.withContext(factory.context)(contentFactory)(fill), primaryAxis, insideRowLayout,
+			betweenRowsLayout, outerMargin, splitThreshold, customDrawers, areRelated)
 }
 
 /**

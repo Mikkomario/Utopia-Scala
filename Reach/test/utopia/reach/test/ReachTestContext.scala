@@ -52,7 +52,7 @@ object ReachTestContext
 			ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
 		)
 	val font = Font("Arial", (cm * 0.5).round.toInt, Plain)
-	val margins = Margins((cm * 0.25).round.toInt)
+	val margins = Margins((cm * 0.1).round.toInt)
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
 	implicit val windowContext: ReachContentWindowContext = ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
 		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)

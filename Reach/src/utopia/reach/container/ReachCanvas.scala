@@ -467,6 +467,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		override def paint(g: Graphics) = paintComponent(g)
 		override def paintComponent(g: Graphics) =
 			currentPainter.foreach { p => Drawer(g.asInstanceOf[Graphics2D]).use(p.paintWith) }
+		
 		// Never paints children (because won't have any children)
 		override def paintChildren(g: Graphics) = ()
 	}

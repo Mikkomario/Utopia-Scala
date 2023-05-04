@@ -72,6 +72,6 @@ object ImageViewStackTest extends App
 	window.content.addConstraint { _ => StackSize.fixed(testSize) }
 	
 	window.setToCloseOnEsc()
-	window.visible = true
+	window.display(centerOnParent = true)
 	start()
 }
