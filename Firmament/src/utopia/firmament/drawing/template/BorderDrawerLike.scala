@@ -28,7 +28,8 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	override def draw(drawer: Drawer, bounds: Bounds) = {
 		// Draws the border (recursively)
-		drawBorder(drawer, bounds, border)
+		// Uses anti-aliasing
+		drawBorder(drawer.antialiasing, bounds, border)
 	}
 	
 	

@@ -311,7 +311,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// Case: Field doesn't need to be aligned to any side but can fill the whole area
 			// => it is attached directly to the stack
 			if (blueprint.isScalable) {
-				val field = blueprint(factories.parentHierarchy, context.fieldContext)
+				val field = blueprint.apply(factories.parentHierarchy, context.fieldContext)
 				fieldsBuilder += blueprint.key -> field
 				field.field -> blueprint.visibilityPointer
 			}
@@ -342,8 +342,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	{
 		// TODO: Possibly add a way for the blueprint to edit a) label creation context and b) label during or after
 		//  creation (E.g. by adding mouse listeners)
-		val labelFactory =
-		{
+		val labelFactory = {
 			val base = factories.withContext(context.nameContext)(TextLabel)
 			if (expandLabel)
 				base.mapContext { _.withHorizontallyExpandingText }

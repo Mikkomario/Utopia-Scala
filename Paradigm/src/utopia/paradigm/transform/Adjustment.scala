@@ -17,7 +17,7 @@ case class Adjustment(decrease: Double) extends Scalable[Double, Double]
 	/**
 	  * The amount of increase applied upon a single step / level of impact.
 	  */
-	val increase = 1.0 / (1.0 - decrease)
+	val increase = (1.0 / (1.0 - decrease)) - 1.0
 	
 	
 	// OTHER    ------------------------------
@@ -36,7 +36,7 @@ case class Adjustment(decrease: Double) extends Scalable[Double, Double]
 			math.pow(1.0 + increase, impactLevel)
 		// Case: Negative impact => Shrinks
 		else
-			math.pow(1.0 - decrease, impactLevel)
+			math.pow(1.0 - decrease, -impactLevel)
 	}
 	/**
 	  * @param direction The direction of impact, where positive makes larger and negative shrinks

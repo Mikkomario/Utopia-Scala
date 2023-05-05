@@ -135,7 +135,7 @@ trait FramingLike[+C <: Stackable] extends SingleContainer[C] with CachingStacka
 			}
 			val stillRemaining = targetAdjustment - maxAdjusted.sum
 			// Case: Some adjustment is still required => Uses recursion
-			if (stillRemaining > 0)
+			if (stillRemaining >= 0.5)
 				distributeAdjustmentBetween(priorities.mergeWith(maxStatus) { _ && !_ }, maxAdjusted, maxAdjustments,
 					targetAdjustment, stillRemaining)
 			// Case: No more adjustment required => Completes

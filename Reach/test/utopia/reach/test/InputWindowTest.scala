@@ -1,5 +1,6 @@
 package utopia.reach.test
 
+import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.image.SingleColorIconCache
@@ -7,6 +8,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{RowGroup, RowGroups}
+import utopia.flow.async.process.Loop
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
@@ -61,13 +63,15 @@ object InputWindowTest extends App
 		
 		// IMPLEMENTED	-------------------------
 		
-		override protected def windowContext = ReachTestContext.windowContext.withWindowBackground(colors.primary)
+		override protected def windowContext =
+			ReachTestContext.windowContext.withWindowBackground(colors.primary)
 		override protected def contentContext: (TextContext, TextContext) = {
 			val base = windowContext.textContext.against(fieldBackground)
 			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.singleLine
 		}
 		override protected def warningPopupContext: ReachContentWindowContext =
 			windowContext.borderless.nonResizable.withContentContext(baseContext.against(colors.failure).forTextComponents)
+		
 		override protected def log: Logger = ReachTestContext.log
 		
 		override protected def inputTemplate =
@@ -89,15 +93,16 @@ object InputWindowTest extends App
 						LocalizedString.empty
 				}
 			}
+			
 			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) {
 				_.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional")) }
+			
 			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex",
 				Alignment.BottomLeft) { _(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female")) }
 			
 			val durationField = InputRowBlueprint.using(DurationField, "durationSeconds",
 				"Login Duration") { _.apply(maxValue = 24.hours).convertWith { _.toSeconds }
 			}
-			
 			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
 				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
 				isScalable = false) {
@@ -105,7 +110,6 @@ object InputWindowTest extends App
 						if (_) LocalizedString.empty else "You must accept the terms and conditions to continue"
 					}
 			}
-			
 			Vector(RowGroups(RowGroup(firstNameField, lastNameField),
 				RowGroup.singleRow(sexField), RowGroup.singleRow(durationField)),
 				RowGroups.singleRow(acceptTermsField)) -> ()
@@ -148,8 +152,7 @@ object InputWindowTest extends App
 		
 		override protected def executionContext = exc
 		
-		override protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean) =
-		{
+		override protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean) = {
 			val base = windowContext.textContext
 			if (hasIcon)
 				base.withTextAlignment(Alignment.Left)
