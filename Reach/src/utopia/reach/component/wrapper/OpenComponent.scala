@@ -278,6 +278,23 @@ case class ContextualOpenComponentFactory[N](context: N)
 
 object OpenComponent
 {
+	// TYPES    -----------------------------
+	
+	/**
+	  * Type of open component that wraps multiple components
+	  */
+	type BundledOpenComponents[+C, +R] = OpenComponent[Vector[C], R]
+	/**
+	  * Type for separate open components
+	  */
+	type SeparateOpenComponents[+C, +R] = Vector[OpenComponent[C, R]]
+	/**
+	  * Type for separate open components that may be switched on or off using a specific pointer.
+	  * Typically used in view containers.
+	  */
+	type SwitchableOpenComponents[+C, +R] = ComponentCreationResult[SeparateOpenComponents[C, Changing[Boolean]], R]
+	
+	
 	// IMPLICIT	-----------------------------
 	
 	// Allows one to implicitly access the wrapped component

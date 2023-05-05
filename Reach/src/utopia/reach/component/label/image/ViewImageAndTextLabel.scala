@@ -25,7 +25,7 @@ import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.Stack
-import utopia.reach.util.Priority.Low
+import utopia.reach.drawing.Priority.Low
 
 object ViewImageAndTextLabel extends Cff[ViewImageAndTextLabelFactory]
 {

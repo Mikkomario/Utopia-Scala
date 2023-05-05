@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.reach.util.Priority
+import utopia.reach.drawing.Priority
 
 object ViewTextLabel extends Cff[ViewTextLabelFactory]
 {

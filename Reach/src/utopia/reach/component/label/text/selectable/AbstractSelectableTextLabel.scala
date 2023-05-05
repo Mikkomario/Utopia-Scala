@@ -23,7 +23,7 @@ import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
-import utopia.reach.util.Priority.VeryHigh
+import utopia.reach.drawing.Priority.VeryHigh
 import utopia.firmament.drawing.view.SelectableTextViewDrawer
 import utopia.firmament.component.text.TextComponent
 import utopia.firmament.localization.LocalizedString

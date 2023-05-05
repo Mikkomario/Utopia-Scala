@@ -32,7 +32,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
-import utopia.reach.util.Priority.High
+import utopia.reach.drawing.Priority.High
 
 /**
   * A set of context variables provided when creating field contents

@@ -16,7 +16,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.context.ReachWindowContext
-import utopia.reach.util.Priority
+import utopia.reach.drawing.Priority
 import utopia.reach.window.ReachWindow
 
 import scala.concurrent.ExecutionContext

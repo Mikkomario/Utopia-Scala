@@ -8,8 +8,8 @@ import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
-import utopia.reach.util.Priority
-import utopia.reach.util.Priority.Normal
+import utopia.reach.drawing.Priority
+import utopia.reach.drawing.Priority.Normal
 
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder

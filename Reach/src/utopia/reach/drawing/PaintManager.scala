@@ -1,9 +1,9 @@
-package utopia.reach.util
+package utopia.reach.drawing
 
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.color.ColorShade
 import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
-import utopia.reach.util.Priority.Normal
+import utopia.reach.drawing.Priority.Normal
 
 /**
   * A common trait for classes which manage and optimize component painting

@@ -99,8 +99,7 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Vector[StackLayout] = 
 	def wrap[C <: ReachComponentLike, R](row: Seq[OpenComponent[C, R]])(nextHierarchy: => ComponentHierarchy) =
 	{
 		// Adds each piece of the row into its own segment (creates new segments if necessary)
-		if (row.size > segments.size)
-		{
+		if (row.size > segments.size) {
 			val newSegmentLayouts = layouts.drop(segments.size)
 			val newSegments = (0 until (row.size - segments.size)).map { idx =>
 				new Segment(rowDirection.perpendicular, newSegmentLayouts.getOrElse(idx, Fit))

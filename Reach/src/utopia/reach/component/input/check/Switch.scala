@@ -28,7 +28,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reach.util.Priority.VeryHigh
+import utopia.reach.drawing.Priority.VeryHigh
 
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.FiniteDuration

@@ -38,7 +38,7 @@ import utopia.reach.container.multi.MutableStack
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
-import utopia.reach.util.Priority.High
+import utopia.reach.drawing.Priority.High
 
 object SelectionList extends Cff[SelectionListFactory]
 {

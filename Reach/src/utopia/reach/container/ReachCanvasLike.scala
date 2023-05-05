@@ -5,7 +5,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Size, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager
-import utopia.reach.util.{PaintManager, Priority}
+import utopia.reach.drawing.{PaintManager, Priority}
 import scala.collection.immutable.VectorBuilder
 
 /**

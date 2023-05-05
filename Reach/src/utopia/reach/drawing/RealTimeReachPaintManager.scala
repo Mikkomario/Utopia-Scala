@@ -1,4 +1,4 @@
-package utopia.reach.util
+package utopia.reach.drawing
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._

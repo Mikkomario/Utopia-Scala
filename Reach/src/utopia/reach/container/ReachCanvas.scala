@@ -31,7 +31,7 @@ import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.focus.ReachFocusManager
-import utopia.reach.util.RealTimeReachPaintManager
+import utopia.reach.drawing.RealTimeReachPaintManager
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent}
 import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}

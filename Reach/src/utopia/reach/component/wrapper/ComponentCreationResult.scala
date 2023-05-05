@@ -13,19 +13,23 @@ object ComponentCreationResult
 	/**
 	  * Component creation result without additional result value
 	  */
-	type CreationWrapper[C] = ComponentCreationResult[C, Unit]
+	type CreationWrapper[+C] = ComponentCreationResult[C, Unit]
+	/**
+	  * Component creation result that wraps multiple components at once
+	  */
+	type BundledCreations[+C, +R] = ComponentCreationResult[Vector[C], R]
 	/**
 	  * A wrapper that wraps multiple creation results, containing an additional result of its own
 	  */
-	type CreationsResult[C, CR, R] = ComponentCreationResult[IterableOnce[ComponentCreationResult[C, CR]], R]
+	type CreationsResult[+C, +CR, +R] = ComponentCreationResult[IterableOnce[ComponentCreationResult[C, CR]], R]
 	/**
 	  * A wrapper that wraps multiple creation results with no additional value
 	  */
-	type CreationsWrapper[C, CR] = CreationsResult[C, CR, Unit]
+	type CreationsWrapper[+C, +CR] = CreationsResult[C, CR, Unit]
 	/**
 	  * Component creation result wrapping multiple components that have individual visibility states
 	  */
-	type SwitchableCreations[C, R] = CreationsResult[C, Changing[Boolean], R]
+	type SwitchableCreations[+C, +R] = CreationsResult[C, Changing[Boolean], R]
 	
 	
 	// IMPLICIT	------------------------------

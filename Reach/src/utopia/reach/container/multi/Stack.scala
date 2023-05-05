@@ -2,6 +2,7 @@ package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
@@ -18,27 +19,10 @@ import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
+import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
-
-/**
- * Common trait for all Reach stack implementations, regardless of implementation style
- * @tparam C Type of components held within this stack
- */
-trait Stack[C <: ReachComponentLike] extends CustomDrawReachComponent with StackLike[C]
-{
-	// ABSTRACT --------------------------
-	
-	/**
-	 * @return A pointer that contains true while this stack should be displayed. I.e. is non-empty.
-	 */
-	def visibilityPointer: FlagLike
-	
-	
-	// IMPLEMENTED  ----------------------
-	
-	override def children = components
-}
 
 object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
 {
@@ -49,6 +33,134 @@ object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFa
 	override def withContext[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
 		apply(parentHierarchy).withContext(context)
 }
+
+trait InitializedStackFactory[+Repr <: InitializedStackFactory[_]]
+	extends CombiningContainerFactory[Stack, ReachComponentLike] with CustomDrawableFactory[Repr]
+{
+	// ABSTRACT --------------------------
+	
+	def axis: Axis2D
+	def layout: StackLayout
+	def margin: StackLength
+	def cap: StackLength
+	
+	/**
+	  * @param axis New axis, along which this stack places the components.
+	  *             X = horizontal stack (row) & Y = vertical stack (column)
+	  * @return A copy of this factory with the specified axis
+	  */
+	def withAxis(axis: Axis2D): Repr
+	/**
+	  * @param layout The layout to use in this stack. Affects the breadth of the placed components.
+	  * @return A copy of this factory with the specified layout.
+	  */
+	def withLayout(layout: StackLayout): Repr
+	/**
+	  * @param margin Margin to place between the items in this stack
+	  * @return A copy of this factory with the specified margin
+	  */
+	def withMargin(margin: StackLength): Repr
+	/**
+	  * @param cap The cap to place at each end of this stack
+	  * @return A copy of this factory with the specified cap
+	  */
+	def withCap(cap: StackLength): Repr
+	
+	def withAxisAndLayout(axis: Axis2D, layout: StackLayout): Repr
+	
+	
+	// COMPUTED ------------------------------
+	
+	/**
+	  * @return A copy of this factory that builds columns
+	  */
+	def column = withAxis(Y)
+	/**
+	  * @return A copy of this factory that builds rows
+	  */
+	def row = withAxis(X)
+	/**
+	  * @return A copy of this factory that doesn't allow any margins
+	  */
+	def withoutMargins = withMargin(StackLength.fixedZero)
+	
+	
+	// IMPLEMENTED  ----------------------------
+	
+	override def apply[C <: ReachComponentLike, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Stack[C], C, R] = {
+		val stack: Stack[C] = new _Stack[C](parentHierarchy, content.component, axis, layout, margin, cap,
+			customDrawers)
+		content attachTo stack
+	}
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * Creates a new stack using the specified components as segments
+	  * @param group The group within which the segments shall be placed
+	  * @param content The components to place within this stack, in open form
+	  * @tparam C Type of the placed components
+	  * @tparam R Type of additional results for each component
+	  * @return A new segmented stack
+	  */
+	def withSegments[C <: ReachComponentLike, R](group: SegmentGroup, content: Seq[OpenComponent[C, R]]) = {
+		// Wraps the components in segments first
+		implicit val c: ReachCanvas = parentHierarchy.top
+		val wrapped = Open { hierarchy =>
+			val wrapResult = group.wrapUnderSingle(hierarchy, content)
+			wrapResult.map { _.parent } -> wrapResult.map { _.result }
+		}
+		// The specified group defines the direction of this stack
+		val stack = withAxis(group.rowDirection)(wrapped)
+		// Returns with the original components as children (even though the segments are the real children)
+		stack.withChild(content.map { _.component })
+	}
+	
+	/**
+	  * Creates a new stack that contains two items
+	  * @param content        Items to place in this stack
+	  * @param alignment      Alignment to use when placing the items.
+	  *                       The direction of the alignment determines the
+	  *                       position of the 'first' item in the 'content'.
+	  *
+	  *                       Eg. Left alignment means that the first item will be
+	  *                       placed at the left side and the second item on the right.
+	  *                       Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                       the top.
+	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
+	  * @tparam C Type of the components
+	  * @tparam R Type of additional creation result
+	  * @return A new stack with the two items in it
+	  */
+	def withPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment,
+	                                         forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
+	{
+		// Specifies stack axis, layout and item order based on the alignment
+		// The first item always goes to the direction of the alignment
+		// (Eg. Left = first, then second (centered vertically), Bottom = second (centered horizontally), then first)
+		val (axis, sign, layout) = alignment.horizontalDirection match {
+			case Some(horizontal) =>
+				val layout = alignment.verticalDirection match {
+					case Some(vertical) =>
+						vertical match {
+							case Down => Trailing
+							case Up => Leading
+						}
+					case None => Center
+				}
+				(X, horizontal.sign, layout)
+			case None => (Y, alignment.vertical.sign, Center)
+		}
+		// Negative sign keeps order, positive swaps it
+		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }
+		// Creates the stack
+		withAxisAndLayout(axis, if (forceFitLayout) Fit else layout)(orderedContent)
+	}
+}
+
+trait InitializedNonContextualStackFactory[+Repr <: InitializedStackFactory[_]]
+	extends InitializedStackFactory[Repr] with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
 
 case class StackFactory(parentHierarchy: ComponentHierarchy)
 	extends FromGenericContextFactory[BaseContext, ContextualStackFactory]
@@ -165,14 +277,11 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 		// Specifies stack axis, layout and item order based on the alignment
 		// The image label always goes to the direction of the alignment
 		// (Eg. Left = Image, then text (centered vertically), Bottom = Text (centered horizontally), then image)
-		val (axis, sign, layout) = alignment.horizontalDirection match
-		{
+		val (axis, sign, layout) = alignment.horizontalDirection match {
 			case Some(horizontal) =>
-				val layout = alignment.verticalDirection match
-				{
+				val layout = alignment.verticalDirection match {
 					case Some(vertical) =>
-						vertical match
-						{
+						vertical match {
 							case Down => Trailing
 							case Up => Leading
 						}
@@ -185,19 +294,6 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }
 		// Creates the stack
 		apply(orderedContent, axis, if (forceFitLayout) Fit else layout, margin, cap, customDrawers)
-	}
-	
-	
-	// NESTED   -------------------------
-	
-	private class _Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-	                                              override val components: Vector[C], override val direction: Axis2D,
-	                                              override val layout: StackLayout, override val margin: StackLength,
-	                                              override val cap: StackLength,
-	                                              override val customDrawers: Vector[CustomDrawer])
-		extends Stack[C]
-	{
-		override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue
 	}
 }
 
@@ -599,4 +695,33 @@ class ContextualStackBuilder[N <: BaseContext, +F](stackFactory: ContextualStack
 		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
 		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)
 	}
+}
+
+/**
+  * Common trait for all Reach stack implementations, regardless of implementation style
+  * @tparam C Type of components held within this stack
+  */
+trait Stack[C <: ReachComponentLike] extends CustomDrawReachComponent with StackLike[C]
+{
+	// ABSTRACT --------------------------
+	
+	/**
+	  * @return A pointer that contains true while this stack should be displayed. I.e. is non-empty.
+	  */
+	def visibilityPointer: FlagLike
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def children = components
+}
+
+private class _Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
+                                              override val components: Vector[C], override val direction: Axis2D,
+                                              override val layout: StackLayout, override val margin: StackLength,
+                                              override val cap: StackLength,
+                                              override val customDrawers: Vector[CustomDrawer])
+	extends Stack[C]
+{
+	override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue
 }

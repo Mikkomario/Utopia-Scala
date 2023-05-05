@@ -1,9 +1,24 @@
 package utopia.reach.component.wrapper
 
+import utopia.flow.view.template.eventful.Changing
+
 import scala.language.implicitConversions
 
 object ComponentWrapResult
 {
+	// TYPES    ------------------------
+	
+	/**
+	  * Type of component wrap result that wraps multiple components
+	  */
+	type ComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Vector[C], R]
+	/**
+	  * Type of component wrap result that wraps multiple switchable components and
+	  * includes their visibility pointers
+	  */
+	type SwitchableComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Vector[(C, Changing[Boolean])], R]
+	
+	
 	// IMPLICIT	------------------------
 	
 	// Results can implicitly be converted to supply the parent component when requested
@@ -63,6 +78,13 @@ case class ComponentWrapResult[+P, +C, +R](parent: P, child: C, result: R)
 	
 	
 	// OTHER	----------------------------
+	
+	/**
+	  * @param newChild New child to assign to this result
+	  * @tparam C2 Type of the new child component
+	  * @return A copy of this result with the specified child component
+	  */
+	def withChild[C2](newChild: C2) = copy(child = newChild)
 	
 	/**
 	  * @param newResult New additional result
