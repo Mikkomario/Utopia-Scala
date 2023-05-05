@@ -106,9 +106,10 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 	private implicit val localizer: Localizer = context.localizer
 	
 	// The input fields are placed in a horizontal stack and separated with ":"
-	private val (_wrapped, (fields, _valuePointer)) = Stack(parentHierarchy).contextual.build(Mixed)
-		.withMargin(if (separatorText.isEmpty) context.smallStackMargin else StackLength.fixedZero, X,
-			Center, customDrawers = customDrawers) { factories =>
+	private val (_wrapped, (fields, _valuePointer)) = Stack(parentHierarchy).contextual
+		.withMargin(if (separatorText.isEmpty) context.smallStackMargin else StackLength.fixedZero)
+		.copy(axis = X, layout = Center, customDrawers = customDrawers)
+		.build(Mixed) { factories =>
 			// Creates the input fields
 			val maxHours = maxValue.toHours
 			val hoursFieldLength = maxHours.toString.length

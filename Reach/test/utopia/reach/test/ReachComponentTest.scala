@@ -3,7 +3,6 @@ package utopia.reach.test
 import utopia.firmament.component.Window
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.HotKey
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
@@ -12,6 +11,7 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.text.EditableTextLabel
@@ -39,7 +39,7 @@ object ReachComponentTest extends App
 	private val windowPointer = SettableOnce[Window]()
 	val window = ReachWindow.contentContextual.using(Stack) { (_, stackF) =>
 		// Column
-		stackF.build(Mixed).withoutMargin() { factories =>
+		stackF.withoutMargin.build(Mixed) { factories =>
 			// 1: Framing (Secondary)
 			val (framing, label) = factories(Framing).buildFilled(Secondary, MutableTextLabel, Light)
 				.apply(margins.aroundMedium) { labelF =>
@@ -53,12 +53,12 @@ object ReachComponentTest extends App
 			val editLabelFraming = factories(Framing).buildFilled(Primary, Stack, Light)
 				.apply(margins.medium.any) { stackF =>
 					// Column (Centered)
-					stackF.build(Mixed).column(Center) { factories =>
+					stackF.centered.build(Mixed) { factories =>
 						// 1: Editable text label
 						val editableLabel = factories(EditableTextLabel)(new PointerWithEvents("Type Here"))
 						editableLabel.addFocusListener(focusReporter("Label"))
 						// 2: Button Row
-						val buttonStack = factories(Stack).build(Mixed).row(areRelated = true) { factories =>
+						val buttonStack = factories(Stack).copy(axis = X, areRelated = true).build(Mixed) { factories =>
 							// 2.1: Clear Button
 							val clearButton = factories.mapContext { _ / Secondary }(TextButton)
 								.apply("Clear (F1)", Set(HotKey.keyWithIndex(KeyEvent.VK_F1)),

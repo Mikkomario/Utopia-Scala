@@ -22,6 +22,8 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
   */
 trait ContainerFactory[+Container[C <: Top], -Top, -Content[_, _], +Result[+_, _, _]]
 {
+	// ABSTRACT ---------------------------
+	
 	/**
 	  * @return The component hierarchy used by this factory
 	  */
@@ -37,4 +39,12 @@ trait ContainerFactory[+Container[C <: Top], -Top, -Content[_, _], +Result[+_, _
 	  *             3) The additional result from the content
 	  */
 	def apply[C <: Top, R](content: Content[C, R]): Result[Container[C], C, R]
+	
+	
+	// COMPUTED -------------------------
+	
+	/**
+	  * @return The reach canvas modified by this factory
+	  */
+	implicit def canvas: ReachCanvas = parentHierarchy.top
 }

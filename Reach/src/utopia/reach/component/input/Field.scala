@@ -451,8 +451,8 @@ class Field[C <: ReachComponentLike with Focusable]
 						.map { makeImageLabel(content.hierarchy, _, Direction2D.Right) }
 					val rightLabel = rightIconPointer.value.notEmpty
 						.map { makeImageLabel(content.hierarchy, _, Direction2D.Left) }
-					stackF.withoutMargin(content.mapComponent { c => Vector(leftLabel, Some(c), rightLabel).flatten },
-						X, Center)
+					stackF.row.centered
+						.withoutMargin(content.mapComponent { c => Vector(leftLabel, Some(c), rightLabel).flatten })
 				}
 			else
 				content

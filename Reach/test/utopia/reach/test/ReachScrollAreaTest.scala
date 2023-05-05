@@ -47,7 +47,7 @@ object ReachScrollAreaTest extends App
 			// Scroll area
 			scrollF.build(Stack).apply(maxOptimalSize = Some(Size(320, 320))) { rowF =>
 				// Stack (X)
-				rowF.build(Stack).row() { colF =>
+				rowF.row.build(Stack) { colF =>
 					// Each row contains 5 columns, which each contain 5 blocks,
 					// resulting in a 5x5 matrix
 					val blocks = Vector.fill(5) {

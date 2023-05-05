@@ -6,6 +6,7 @@ import utopia.firmament.model.enumeration.StackLayout.Trailing
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default
@@ -38,11 +39,11 @@ object ReachTextFieldTest extends App
 		// Framing
 		framingF.build(Stack).apply(margins.aroundMedium) { stackF =>
 			// Stack (Y)
-			stackF.build(Stack).column() { rowF =>
+			stackF.build(Stack) { rowF =>
 				// Each row contains a text field and a value label
 				def makeRow[A](displayFunction: DisplayFunction[A])(makeField: ContextualTextFieldFactory => TextField[A]) =
 				{
-					rowF.build(Mixed).row(layout = Trailing, areRelated = true) { row =>
+					rowF.copy(axis = X, layout = Trailing, areRelated = true).build(Mixed) { row =>
 						val field = makeField(row(TextField))
 						val summary = row(ViewTextLabel)(field.valuePointer, displayFunction)
 						Vector(field, summary)

@@ -182,7 +182,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// The pop-up contains a close button and the warning text
 			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack.static[TextContext])
 				.apply(context.margins.small.any) { stackF =>
-					stackF.build(Mixed).row(Center) { factories =>
+					stackF.centeredRow.build(Mixed) { factories =>
 						Vector(
 							factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },
 							factories(TextLabel)(message)
@@ -230,7 +230,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// Checks whether the groups visibility may change
 			// Case: All groups always remain visible => uses a static stack
 			if (rowGroups.forall { _.rows.exists { _.isAlwaysVisible } })
-				factories(Stack).build(Mixed).column() { factories =>
+				factories(Stack).build(Mixed) { factories =>
 					groups.groups.map { group => groupToComponent(factories, group, segmentGroup, fieldsBuffer)._1 }
 				}.parent -> AlwaysTrue
 			// Case: Some groups may appear or disappear => uses a view stack
@@ -258,7 +258,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// May hide some of the group rows at times
 			// Case: all rows are always visible => uses a static stack
 			if (group.rows.forall { _.isAlwaysVisible })
-				factories(Stack).build(Mixed).column(areRelated = true) { factories =>
+				factories(Stack).related.build(Mixed) { factories =>
 					group.rows.map { blueprint => actualizeRow(factories, blueprint, segmentGroup, fieldsBuffer)._1 }
 				}.parent -> AlwaysTrue
 			// Case: Some rows are not always visible => uses a view stack
@@ -283,12 +283,13 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				segmentGroup match {
 					// Case segmented grouping is used
 					case Some(segmentGroup) =>
-						factories(Stack).build(Mixed).segmented(segmentGroup, Center, areRelated = true) { factories =>
-							createHorizontalFieldAndNameRow(factories.next(), blueprint, fieldsBuilder)
-						}.parentAndResult
+						factories(Stack).copy(layout = Center, areRelated = true)
+							.buildSegmented(Mixed, segmentGroup) { factories =>
+								createHorizontalFieldAndNameRow(factories.next(), blueprint, fieldsBuilder)
+							}.parentAndResult
 					// Case: Segmented grouping is not used (only single row)
 					case None =>
-						factories(Stack).build(Mixed).row(Center, areRelated = true) { factories =>
+						factories(Stack).centeredRow.build(Mixed) { factories =>
 							createHorizontalFieldAndNameRow(factories, blueprint, fieldsBuilder)
 						}.parentAndResult
 				}
@@ -300,7 +301,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 					case Far => Trailing
 					case Middle => if (blueprint.isScalable) Fit else Center
 				}
-				factories(Stack).build(Mixed).column(horizontalLayout, areRelated = true) { factories =>
+				factories(Stack).copy(layout = horizontalLayout, areRelated = true).build(Mixed) { factories =>
 					createFieldAndName(factories, blueprint, fieldsBuilder,
 						blueprint.fieldAlignment.vertical != Close, horizontalLayout == Fit)
 				}.parentAndResult

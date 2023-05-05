@@ -4,8 +4,8 @@ import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.context.BaseContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
@@ -16,13 +16,13 @@ import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
 import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
 
 object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
 {
@@ -31,10 +31,10 @@ object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFa
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
 	
 	override def withContext[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
-		apply(parentHierarchy).withContext(context)
+		ContextualStackFactory(parentHierarchy, context)
 }
 
-trait InitializedStackFactory[+Repr <: InitializedStackFactory[_]]
+trait InitializedStackFactoryLike[+Repr <: InitializedStackFactoryLike[_]]
 	extends CombiningContainerFactory[Stack, ReachComponentLike] with CustomDrawableFactory[Repr]
 {
 	// ABSTRACT --------------------------
@@ -79,10 +79,21 @@ trait InitializedStackFactory[+Repr <: InitializedStackFactory[_]]
 	  * @return A copy of this factory that builds rows
 	  */
 	def row = withAxis(X)
+	
 	/**
 	  * @return A copy of this factory that doesn't allow any margins
 	  */
-	def withoutMargins = withMargin(StackLength.fixedZero)
+	def withoutMargin = withMargin(StackLength.fixedZero)
+	
+	/**
+	  * @return A copy of this factory with center layout
+	  */
+	def centered = withLayout(Center)
+	
+	/**
+	  * @return A copy of this factory that builds centered rows
+	  */
+	def centeredRow = withAxisAndLayout(X, Center)
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -98,15 +109,14 @@ trait InitializedStackFactory[+Repr <: InitializedStackFactory[_]]
 	
 	/**
 	  * Creates a new stack using the specified components as segments
-	  * @param group The group within which the segments shall be placed
 	  * @param content The components to place within this stack, in open form
+	  * @param group The group within which the segments shall be placed
 	  * @tparam C Type of the placed components
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def withSegments[C <: ReachComponentLike, R](group: SegmentGroup, content: Seq[OpenComponent[C, R]]) = {
+	def withSegments[C <: ReachComponentLike, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) = {
 		// Wraps the components in segments first
-		implicit val c: ReachCanvas = parentHierarchy.top
 		val wrapped = Open { hierarchy =>
 			val wrapResult = group.wrapUnderSingle(hierarchy, content)
 			wrapResult.map { _.parent } -> wrapResult.map { _.result }
@@ -128,12 +138,15 @@ trait InitializedStackFactory[+Repr <: InitializedStackFactory[_]]
 	  *                       placed at the left side and the second item on the right.
 	  *                       Bottom alignment means that the first item will be placed at the bottom and the second at
 	  *                       the top.
+	  *
+	  *                       Default = Left
+	  *
 	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
 	  * @tparam C Type of the components
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def withPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment,
+	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
 	                                         forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
 	{
 		// Specifies stack axis, layout and item order based on the alignment
@@ -159,542 +172,176 @@ trait InitializedStackFactory[+Repr <: InitializedStackFactory[_]]
 	}
 }
 
-trait InitializedNonContextualStackFactory[+Repr <: InitializedStackFactory[_]]
-	extends InitializedStackFactory[Repr] with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
-
-case class StackFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[BaseContext, ContextualStackFactory]
+case class StackFactory(parentHierarchy: ComponentHierarchy, axis: Axis2D = Y, layout: StackLayout = Fit,
+                        margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
+                        customDrawers: Vector[CustomDrawer] = Vector())
+	extends InitializedStackFactoryLike[StackFactory]
+		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
+		with FromGenericContextFactory[BaseContext, ContextualStackFactory]
 {
-	// COMPUTED	--------------------------------
+	// IMPLEMENTED  ------------------------
 	
-	private implicit def canvas: ReachCanvas = parentHierarchy.top
+	override def withContext[N <: BaseContext](context: N): ContextualStackFactory[N] =
+		ContextualStackFactory(parentHierarchy, context, axis, layout, cap, customDrawers, None)
 	
-	/**
-	  * Creates a new stack builder
-	  * @param contentFactory Factory used for stack content factories
-	  * @tparam F Type of content factory
-	  * @return A stack builder
-	  */
-	def build[F](contentFactory: ComponentFactoryFactory[F]) = new StackBuilder[F](this, contentFactory)
+	override def withAxis(axis: Axis2D): StackFactory = copy(axis = axis)
+	override def withLayout(layout: StackLayout): StackFactory = copy(layout = layout)
+	override def withMargin(margin: StackLength): StackFactory = copy(margin = margin)
+	override def withCap(cap: StackLength): StackFactory = copy(cap = cap)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): StackFactory =
+		copy(customDrawers = customDrawers)
 	
-	
-	// IMPLEMENTED	----------------------------
-	
-	override def withContext[N <: BaseContext](context: N) =
-		ContextualStackFactory(this, context)
+	override def withAxisAndLayout(axis: Axis2D, layout: StackLayout): StackFactory =
+		copy(axis = axis, layout = layout)
 	
 	
-	// OTHER	--------------------------------
+	// OTHER    ---------------------------
 	
 	/**
-	  * Creates a new stack of items
-	  * @param content Content to attach to this stack
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param margin Margin placed between each component (default = any margin, preferring 0)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
+	  * Builds a segmented stack. Segmented means that the size of the contents is adjusted to match parallel
+	  * stacks or other components.
+	  * @param contentFactory Factory used for creating the components
+	  * @param group   The group within which the segments shall be placed
+	  * @param fill A function that accepts an iterator that yields new component factories.
+	  *             Yields the components to place in this stack.
+	  *             The components should be returned in the same order as the
+	  *             factories were acquired from the iterator.
+	  * @tparam C Type of the placed components
+	  * @tparam R Type of additional results for each component
+	  * @return A new segmented stack
 	  */
-	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
-										   layout: StackLayout = Fit, margin: StackLength = StackLength.any,
-										   cap: StackLength = StackLength.fixedZero,
-										   customDrawers: Vector[CustomDrawer] = Vector()) =
+	def buildSegmented[F, C <: ReachComponentLike, R](contentFactory: Cff[F], group: SegmentGroup)
+	                                                 (fill: Iterator[F] => ComponentsResult[C, R]) =
 	{
-		val stack: Stack[C] = new _Stack[C](parentHierarchy, content.component, direction, layout, margin, cap,
-			customDrawers)
-		content attachTo stack
-	}
-	
-	/**
-	  * Creates a new stack of items with no margin between them
-	  * @param content Content to attach to this stack
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def withoutMargin[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
-												  layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-												  customDrawers: Vector[CustomDrawer] = Vector()) =
-		apply(content, direction, layout, StackLength.fixedZero, cap, customDrawers)
-	
-	/**
-	  * Creates a new stack where each item belongs to a shared segment (so that they are aligned with another
-	  * stack's / container's items)
-	  * @param group A segment group that determines content alignment
-	  * @param content Components to place in this stack
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param margin Margin placed between each component (default = any margin, preferring 0)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @tparam R Type of an individual component creation result
-	  * @return A new stack
-	  */
-	def segmented[R](group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, R]], layout: StackLayout = Fit,
-					 margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
-					 customDrawers: Vector[CustomDrawer] = Vector()) =
-	{
-		// Wraps the components in segments first
-		val wrapped = Open { hierarchy =>
-			val wrapResult = group.wrapUnderSingle(hierarchy, content)
-			wrapResult.map { _.parent } -> wrapResult.map { _.result }
-		}
-		// Then wraps the segments in a stack
-		apply(wrapped, group.rowDirection, layout, margin, cap, customDrawers)
+		val content = Open.manyUsing(contentFactory) { fill(_) }
+		withSegments(content.component, group).withResult(content.result)
 	}
 	
 	/**
 	  * Creates a new stack that contains two items
-	  * @param content Items to place in this stack
-	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
-	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
-	  *                  that the first item will be placed at the left side and the second item on the right.
-	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
-	  *                  the top.
-	  * @param margin Margin placed between the items (default = any, preferring 0)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
+	  * @param contentFactory A factory used for building the contents of this stack
+	  * @param alignment      Alignment to use when placing the items.
+	  *                       The direction of the alignment determines the
+	  *                       position of the 'first' item in the 'content'.
+	  *
+	  *                       Eg. Left alignment means that the first item will be
+	  *                       placed at the left side and the second item on the right.
+	  *                       Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                       the top.
+	  *
+	  *                       Default = Left
+	  *
+	  * @param forceFitLayout Whether layout should always be set to Fit, regardless of alignment
+	  * @param fill A function that accepts an initialized component factory and yields two components
 	  * @tparam C Type of the components
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment,
-	                                        margin: StackLength = StackLength.any,
-	                                        cap: StackLength = StackLength.fixedZero,
-	                                        customDrawers: Vector[CustomDrawer] = Vector(),
-	                                        forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
-	{
-		// Specifies stack axis, layout and item order based on the alignment
-		// The image label always goes to the direction of the alignment
-		// (Eg. Left = Image, then text (centered vertically), Bottom = Text (centered horizontally), then image)
-		val (axis, sign, layout) = alignment.horizontalDirection match {
-			case Some(horizontal) =>
-				val layout = alignment.verticalDirection match {
-					case Some(vertical) =>
-						vertical match {
-							case Down => Trailing
-							case Up => Leading
-						}
-					case None => Center
-				}
-				(X, horizontal.sign, layout)
-			case None => (Y, alignment.vertical.sign, Center)
-		}
-		// Negative sign keeps order, positive swaps it
-		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }
-		// Creates the stack
-		apply(orderedContent, axis, if (forceFitLayout) Fit else layout, margin, cap, customDrawers)
-	}
+	def buildPair[F, C <: ReachComponentLike, R](contentFactory: Cff[F], alignment: Alignment = Alignment.Left,
+	                                             forceFitLayout: Boolean = false)
+	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
+		forPair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
 }
 
-case class ContextualStackFactory[N <: BaseContext](stackFactory: StackFactory, context: N)
-	extends GenericContextualFactory[N, BaseContext, ContextualStackFactory]
+case class ContextualStackFactory[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
+                                                    axis: Axis2D = Y, layout: StackLayout = Fit,
+                                                    cap: StackLength = StackLength.fixedZero,
+                                                    customDrawers: Vector[CustomDrawer] = Vector(),
+                                                    customMargin: Option[StackLength] = None,
+                                                    areRelated: Boolean = false)
+	extends InitializedStackFactoryLike[ContextualStackFactory[N]]
+		with ContextualCombiningContainerFactory[N, BaseContext, Stack, ReachComponentLike, ContextualStackFactory]
 {
-	// IMPLEMENTED	--------------------------------
+	// COMPUTED -------------------------------
 	
-	override def withContext[C2 <: BaseContext](newContext: C2) =
+	/**
+	  * @return Copy of this factory that places the items close to each other
+	  */
+	def related = copy(areRelated = true)
+	/**
+	  * @return Copy of this factory that places the items at the default distance from each other
+	  */
+	def unrelated = copy(areRelated = false)
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def margin: StackLength = customMargin.getOrElse {
+		if (areRelated) context.smallStackMargin else context.stackMargin
+	}
+	
+	override def withContext[N2 <: BaseContext](newContext: N2): ContextualStackFactory[N2] =
 		copy(context = newContext)
 	
+	override def withAxis(axis: Axis2D) = copy(axis = axis)
+	override def withLayout(layout: StackLayout) = copy(layout = layout)
+	override def withMargin(margin: StackLength) =
+		copy(customMargin = Some(margin))
+	override def withCap(cap: StackLength) = copy(cap = cap)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		copy(customDrawers = customDrawers)
 	
-	// OTHER	------------------------------------
+	override def withAxisAndLayout(axis: Axis2D, layout: StackLayout) =
+		copy(axis = axis, layout = layout)
 	
-	/**
-	  * Creates a new builder that builds both the stack and the content inside
-	  * @param contentFactory A factory that produces content factories
-	  * @tparam F Type of contextual content factories
-	  * @return A new stack builder that uses the same context as in this factory
-	  */
-	def build[F](contentFactory: Ccff[N, F]) = new ContextualStackBuilder(this, contentFactory)
 	
-	/**
-	  * Creates a new stack of items
-	  * @param content Content to attach to this stack
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R],
-										  direction: Axis2D = Y, layout: StackLayout = Fit,
-										  cap: StackLength = StackLength.fixedZero,
-										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
-		stackFactory(content, direction, layout,
-			if (areRelated) context.smallStackMargin else context.stackMargin, cap, customDrawers)
+	// OTHER    -----------------------------
 	
 	/**
-	  * Creates a new stack of items
-	  * @param content Content to attach to this stack
-	  * @param margin Margin placed between stack elements
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
+	  * @param margin New size of margins to use (general)
+	  * @return Copy of this factory that uses the specified margin size
 	  */
-	def withMargin[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], margin: StackLength,
-	                                           direction: Axis2D = Y, layout: StackLayout = Fit,
-	                                           cap: StackLength = StackLength.fixedZero,
-	                                           customDrawers: Vector[CustomDrawer] = Vector()) =
-		stackFactory(content, direction, layout, margin, cap, customDrawers)
+	def withMargin(margin: SizeCategory): ContextualStackFactory[N] = withMargin(context.margins.around(margin))
+	/**
+	  * @param cap New size of margins to place at each end of this stack (general)
+	  * @return Copy of this factory that uses the specified cap size
+	  */
+	def withCap(cap: SizeCategory): ContextualStackFactory[N] = withCap(context.margins.around(cap))
 	
 	/**
-	  * Creates a new stack of items with no margin between them
-	  * @param content Content to attach to this stack
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
+	  * Builds a segmented stack. Segmented means that the size of the contents is adjusted to match parallel
+	  * stacks or other components.
+	  * @param contentFactory Factory used for creating the components
+	  * @param group          The group within which the segments shall be placed
+	  * @param fill           A function that accepts an iterator that yields new component factories.
+	  *                       Yields the components to place in this stack.
+	  *                       The components should be returned in the same order as the
+	  *                       factories were acquired from the iterator.
+	  * @tparam C Type of the placed components
+	  * @tparam R Type of additional results for each component
+	  * @return A new segmented stack
 	  */
-	def withoutMargin[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
-												  layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-												  customDrawers: Vector[CustomDrawer] = Vector()) =
-		stackFactory.withoutMargin(content, direction, layout, cap, customDrawers)
-	
-	/**
-	  * Creates a new row of items
-	  * @param content Content to attach to this stack
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def row[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
-										cap: StackLength = StackLength.fixedZero,
-										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
-		apply(content, X, layout, cap, customDrawers, areRelated)
-	
-	/**
-	  * Creates a new column of items
-	  * @param content Content to attach to this stack
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def column[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
-										   cap: StackLength = StackLength.fixedZero,
-										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
-		apply(content, Y, layout, cap, customDrawers, areRelated)
-	
-	/**
-	  * Creates a new stack where each item belongs to a shared segment (so that they are aligned with another
-	  * stack's / container's items)
-	  * @param group A segment group that determines content alignment
-	  * @param content Components to place in this stack
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the stacked components should be considered closely related (affects margin)
-	  *                   (default = false)
-	  * @tparam R Type of an individual component creation result
-	  * @return A new stack
-	  */
-	def segmented[R](group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, R]], layout: StackLayout = Fit,
-					 cap: StackLength = StackLength.fixedZero, customDrawers: Vector[CustomDrawer] = Vector(),
-					 areRelated: Boolean = false) =
-		stackFactory.segmented(group, content, layout,
-			if (areRelated) context.stackMargin else context.smallStackMargin, cap, customDrawers)
-	
-	/**
-	  * Creates a new stack that contains two items
-	  * @param content Items to place in this stack
-	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
-	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
-	  *                  that the first item will be placed at the left side and the second item on the right.
-	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
-	  *                  the top.
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
-	  * @tparam C Type of the components
-	  * @tparam R Type of additional creation result
-	  * @return A new stack with the two items in it
-	  */
-	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment,
-											cap: StackLength = StackLength.fixedZero,
-											customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
-											forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
-		stackFactory.forPair(content, alignment,
-			if (areRelated) context.smallStackMargin else context.stackMargin, cap, customDrawers,
-			forceFitLayout)
-}
-
-class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFactory[F])
-{
-	// IMPLICIT	----------------------------
-	
-	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
-	
-	
-	// OTHER	-----------------------------
-	
-	/**
-	  * Builds a new stack of items
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param margin Margin placed between each component (default = any margin, preferring 0)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param fill A function for filling this stack
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def apply[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
-										  margin: StackLength = StackLength.any,
-										  cap: StackLength = StackLength.fixedZero,
-										  customDrawers: Vector[CustomDrawer] = Vector())
-										 (fill: F => ComponentCreationResult[Vector[C], R]) =
+	def buildSegmented[F, C <: ReachComponentLike, R](contentFactory: Ccff[N, F], group: SegmentGroup)
+	                                                 (fill: Iterator[F] => ComponentsResult[C, R]) =
 	{
-		val content = Open.using(contentFactory)(fill)
-		factory(content, direction, layout, margin, cap, customDrawers)
-	}
-	
-	/**
-	  * Builds a new stack that aligns its contents with another container's contents
-	  * @param group A group that defines content alignment
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param margin Margin placed between each component (default = any margin, preferring 0)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param fill A function for filling this stack. Accepts an infinite iterator of component factories.
-	  *             Each factory acquired with next() must only be used once (for one component).
-	  * @tparam R Type of component creation result
-	  * @return A new stack
-	  */
-	def segmented[R](group: SegmentGroup, layout: StackLayout = Fit, margin: StackLength = StackLength.any,
-					 cap: StackLength = StackLength.fixedZero, customDrawers: Vector[CustomDrawer] = Vector())
-					(fill: Iterator[F] => ComponentCreationResult[IterableOnce[ReachComponentLike], R]) =
-	{
-		val content = Open.manyUsing(contentFactory) { factories =>
-			fill(factories).mapComponent { _.iterator.map { ComponentCreationResult(_) } }
-		}
-		factory.segmented(group, content.component, layout, margin, cap, customDrawers).withResult(content.result)
-	}
-	
-	/**
-	  * Builds a new stack that contains two items
-	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
-	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
-	  *                  that the first item will be placed at the left side and the second item on the right.
-	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
-	  *                  the top.
-	  * @param margin Margin placed between the items (default = any, preferring 0)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
-	  * @param fill A function for filling this stack
-	  * @tparam C Type of the components
-	  * @tparam R Type of additional creation result
-	  * @return A new stack with the two items in it
-	  */
-	def forPair[C <: ReachComponentLike, R](alignment: Alignment, margin: StackLength = StackLength.any,
-											cap: StackLength = StackLength.fixedZero,
-											customDrawers: Vector[CustomDrawer] = Vector(),
-											forceFitLayout: Boolean = false)
-										   (fill: F => ComponentCreationResult[Pair[C], R]) =
-	{
-		val content = Open.using(contentFactory)(fill)
-		factory.forPair(content, alignment, margin, cap, customDrawers, forceFitLayout)
-	}
-}
-
-class ContextualStackBuilder[N <: BaseContext, +F](stackFactory: ContextualStackFactory[N], contentFactory: Ccff[N, F])
-{
-	private implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
-	
-	private def context = stackFactory.context
-	
-	/**
-	  * Creates a new stack of items
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param fill A function for creating the components that will be placed in this stack
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with the created components and possible additional result value
-	  */
-	def apply[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
-										  cap: StackLength = StackLength.fixedZero,
-										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										 (fill: F => ComponentCreationResult[Vector[C], R]) =
-	{
-		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
-		stackFactory(content, direction, layout, cap, customDrawers, areRelated)
-	}
-	
-	/**
-	  * Creates a new stack of items
-	  * @param margin Margin placed between stack elements
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param fill A function for creating the components that will be placed in this stack
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with the created components and possible additional result value
-	  */
-	def withMargin[C <: ReachComponentLike, R](margin: StackLength, direction: Axis2D = Y, layout: StackLayout = Fit,
-	                                           cap: StackLength = StackLength.fixedZero,
-	                                           customDrawers: Vector[CustomDrawer] = Vector())
-	                                          (fill: F => ComponentCreationResult[Vector[C], R]) =
-	{
-		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
-		stackFactory.withMargin(content, margin, direction, layout, cap, customDrawers)
-	}
-	
-	/**
-	  * Creates a new stack of items with no margin between them
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param fill A function for creating the components that will be placed in this stack
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with the created components and possible additional result value
-	  */
-	def withoutMargin[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
-												  cap: StackLength = StackLength.fixedZero,
-												  customDrawers: Vector[CustomDrawer] = Vector())
-												 (fill: F => ComponentCreationResult[Vector[C], R]) =
-	{
-		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
-		stackFactory.withoutMargin(content, direction, layout, cap, customDrawers)
-	}
-	
-	/**
-	  * Creates a new row of items
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param fill A function for creating the components that will be placed in this stack
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with the created components and possible additional result value
-	  */
-	def row[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-									   (fill: F => ComponentCreationResult[Vector[C], R]) =
-		apply(X, layout, cap, customDrawers, areRelated)(fill)
-	
-	/**
-	  * Creates a new column of items
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param fill A function for creating the components that will be placed in this stack
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with the created components and possible additional result value
-	  */
-	def column[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										  (fill: F => ComponentCreationResult[Vector[C], R]) =
-		apply(Y, layout, cap, customDrawers, areRelated)(fill)
-	
-	/**
-	  * Builds a new segmented stack of items. The items in this stack are aligned with some other container's items
-	  * @param group A group that determines item alignment
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers  Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param fill A function for creating the components that will be placed in this stack. Accepts an infinite
-	  *             iterator of component factories. Each factory acquired with next() must only be used once
-	  *             (for creation of a single component)
-	  * @tparam R Type of component creation result
-	  * @return A new stack
-	  */
-	def segmented[R](group: SegmentGroup, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-					 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-					(fill: Iterator[F] => ComponentCreationResult[IterableOnce[ReachComponentLike], R]) =
-	{
-		val content = Open.withContext(context).many(contentFactory) { factories =>
-			fill(factories).mapComponent { _.iterator.map { ComponentCreationResult(_) } }
-		}
-		stackFactory.segmented(group, content.component, layout, cap, customDrawers, areRelated).withResult(content.result)
+		val content = Open.withContext(context).many(contentFactory) { fill(_) }
+		withSegments(content.component, group).withResult(content.result)
 	}
 	
 	/**
 	  * Creates a new stack that contains two items
-	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
-	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
-	  *                  that the first item will be placed at the left side and the second item on the right.
-	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
-	  *                  the top.
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
-	  * @param fill A function for creating the components that will be placed in this stack
+	  * @param contentFactory A factory used for building the contents of this stack
+	  * @param alignment      Alignment to use when placing the items.
+	  *                       The direction of the alignment determines the
+	  *                       position of the 'first' item in the 'content'.
+	  *
+	  *                       Eg. Left alignment means that the first item will be
+	  *                       placed at the left side and the second item on the right.
+	  *                       Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                       the top.
+	  *
+	  *                       Default = Left
+	  *
+	  * @param forceFitLayout Whether layout should always be set to Fit, regardless of alignment
+	  * @param fill           A function that accepts an initialized component factory and yields two components
 	  * @tparam C Type of the components
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def pair[C <: ReachComponentLike, R](alignment: Alignment, cap: StackLength = StackLength.fixedZero,
-										 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
-										 forceFitLayout: Boolean = false)
-										(fill: F => ComponentCreationResult[Pair[C], R]): ComponentWrapResult[Stack[C], Vector[C], R] =
-	{
-		val content = Open.withContext(stackFactory.context)(contentFactory)(fill)
-		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)
-	}
+	def buildPair[F, C <: ReachComponentLike, R](contentFactory: Ccff[N, F], alignment: Alignment = Alignment.Left,
+	                                             forceFitLayout: Boolean = false)
+	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
+		forPair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
 }
 
 /**

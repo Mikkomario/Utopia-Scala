@@ -80,8 +80,9 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 				case Some(content) => new OpenComponent(content.map { _.component }, content.head.hierarchy)
 				case None => new OpenComponent(Vector[C](), new SeedHierarchyBlock(parentHierarchy.top))
 			}
-			Stack(parentHierarchy).apply[C, Unit](mergedContent, directionPointer.value, layoutPointer.value,
-				marginPointer.value, capPointer.value, customDrawers)
+			Stack(parentHierarchy).copy(axis = directionPointer.value, layout = layoutPointer.value,
+				margin = marginPointer.value, cap = capPointer.value, customDrawers = customDrawers)
+				.apply[C, Unit](mergedContent)
 		}
 		// Case: Values include changing values => Creates a view stack
 		else {

@@ -40,39 +40,38 @@ object DropDownTest extends App
 		implicit val canvas: ReachCanvas = hierarchy.top
 		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack.static[ColorContext])
 			.apply(margins.medium.any.square) { stackF =>
-				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.build(DropDown)
-					.column(areRelated = true) { ddF =>
-						val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
-						val selectedItemPointer = new PointerWithEvents[Option[String]](None)
-						
-						selectedItemPointer.addListener { e => println(e) }
-						
-						Vector(
-							ddF.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer, expandIcon,
-								shrinkIcon, fieldNamePointer = Fixed("Category"),
-								promptPointer = Fixed("Select One")),
-							ddF.simple(
-								selectedCategoryPointer.map {
-									case Some(category) => items(category)
-									case None => Vector()
-								},
-								selectedItemPointer, expandIcon, shrinkIcon,
-								fieldNamePointer = selectedCategoryPointer.map {
-									case Some(category) => category
-									case None => "Item"
-								},
-								hintPointer = selectedCategoryPointer.map {
-									case Some(_) => LocalizedString.empty
-									case None => "Select category first"
-								},
-								promptPointer = Fixed("Select One"),
-								makeNoOptionsView = Some({ (hierarchy, context, _) =>
-									TextLabel(hierarchy).withContext(context)
-										.apply("Please select a category first", isHint = true)
-								})
-							)
+				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.build(DropDown) { ddF =>
+					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
+					val selectedItemPointer = new PointerWithEvents[Option[String]](None)
+					
+					selectedItemPointer.addListener { e => println(e) }
+					
+					Vector(
+						ddF.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer, expandIcon,
+							shrinkIcon, fieldNamePointer = Fixed("Category"),
+							promptPointer = Fixed("Select One")),
+						ddF.simple(
+							selectedCategoryPointer.map {
+								case Some(category) => items(category)
+								case None => Vector()
+							},
+							selectedItemPointer, expandIcon, shrinkIcon,
+							fieldNamePointer = selectedCategoryPointer.map {
+								case Some(category) => category
+								case None => "Item"
+							},
+							hintPointer = selectedCategoryPointer.map {
+								case Some(_) => LocalizedString.empty
+								case None => "Select category first"
+							},
+							promptPointer = Fixed("Select One"),
+							makeNoOptionsView = Some({ (hierarchy, context, _) =>
+								TextLabel(hierarchy).withContext(context)
+									.apply("Please select a category first", isHint = true)
+							})
 						)
-					}
+					)
+				}
 			}
 	}
 	

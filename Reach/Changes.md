@@ -1,7 +1,9 @@
 # Utopia Reach - List of Changes
 
 ## v1.1 (in development)
+TODO: Document changes in container constructors
 ### Breaking Changes
+- Renamed `utopia.reach.util` to `utopia.reach.drawing`
 - Updated **InteractionWindowFactory** in following ways:
   - The abstract property `.windowContext` is now required to be of type **ReachContentWindowContext**
   - Removed `.standardContext`, which is now replaced by the `.windowContext`

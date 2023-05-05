@@ -4,7 +4,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Pair
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -141,8 +141,7 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text:
 {
 	// ATTRIBUTES	------------------------------
 	
-	override protected val wrapped =
-	{
+	override protected val wrapped = {
 		def makeTextLabel(hierarchy: ComponentHierarchy) =
 			TextLabel(hierarchy).apply(text, font, textColor, alignment, textInsets, betweenLinesMargin,
 				allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
@@ -162,8 +161,9 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text:
 				ComponentCreationResult(Pair(makeImageLabel(hierarchy), makeTextLabel(hierarchy)))
 			}(parentHierarchy.top)
 			// Wraps the components in a stack
-			Stack(parentHierarchy).forPair(openItems, alignment, StackLength.fixedZero,
-				customDrawers = additionalDrawers, forceFitLayout = forceEqualBreadth).parent
+			Stack(parentHierarchy).withoutMargin.withCustomDrawers(additionalDrawers)
+				.forPair(openItems, alignment, forceFitLayout = forceEqualBreadth)
+				.parent
 		}
 	}
 }

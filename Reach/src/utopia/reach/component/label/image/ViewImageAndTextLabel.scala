@@ -7,7 +7,7 @@ import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.TextDrawContext
-import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.Fixed
@@ -246,8 +246,7 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 	private val stylePointer = new PointerWithEvents[TextDrawContext](updatedStyle)
 	private val updateStyleListener: ChangeListener[Any] = _ => stylePointer.value = updatedStyle
 	
-	override protected val wrapped =
-	{
+	override protected val wrapped = {
 		// Creates stack content (image and text label)
 		val openItems = Open { hierarchy =>
 			val imageLabel = ViewImageLabel(hierarchy).apply(imagePointer, imageInsetsPointer,
@@ -258,8 +257,9 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 			Pair(imageLabel, textLabel)
 		}(parentHierarchy.top)
 		// Wraps the components in a stack
-		Stack(parentHierarchy).forPair(openItems, alignment, StackLength.fixedZero,
-			customDrawers = additionalDrawers, forceFitLayout = forceEqualBreadth).parent
+		Stack(parentHierarchy).withoutMargin.withCustomDrawers(additionalDrawers)
+			.forPair(openItems, alignment, forceFitLayout = forceEqualBreadth)
+			.parent
 	}
 	
 	

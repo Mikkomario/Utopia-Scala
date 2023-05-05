@@ -17,7 +17,7 @@ object ComponentCreationResult
 	/**
 	  * Component creation result that wraps multiple components at once
 	  */
-	type BundledCreations[+C, +R] = ComponentCreationResult[Vector[C], R]
+	type ComponentsResult[+C, +R] = ComponentCreationResult[Vector[C], R]
 	/**
 	  * A wrapper that wraps multiple creation results, containing an additional result of its own
 	  */
@@ -34,6 +34,9 @@ object ComponentCreationResult
 	
 	// IMPLICIT	------------------------------
 	
+	implicit def componentsToCreations[C, R](components: ComponentsResult[C, R]): CreationsResult[C, Unit, R] =
+		components.mapComponent { _.map { c => ComponentCreationResult(c) } }
+	
 	implicit def tupleToResult[C, R](tuple: (C, R)): ComponentCreationResult[C, R] =
 		new ComponentCreationResult[C, R](tuple._1, tuple._2)
 	
@@ -42,11 +45,6 @@ object ComponentCreationResult
 	
 	implicit def componentPairToResult[C <: ReachComponentLike](componentPair: Pair[C]): CreationWrapper[Pair[C]] =
 		new ComponentCreationResult[Pair[C], Unit](componentPair, ())
-	
-	/*
-	implicit def vectorToResult[C](components: Vector[C]): ComponentCreationResult[Vector[C], Unit] =
-		new ComponentCreationResult[Vector[C], Unit](components, ())
-	*/
 	
 	implicit def componentVectorToResult[C <: ReachComponentLike](components: Vector[C]): CreationWrapper[Vector[C]] =
 		new ComponentCreationResult[Vector[C], Unit](components, ())

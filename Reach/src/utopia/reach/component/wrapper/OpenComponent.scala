@@ -351,7 +351,8 @@ object OpenComponent
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 			   (implicit context: BaseContext, canvas: ReachCanvas) =
 			Open.withContext(context).apply(Stack) { sf =>
-				val stack = sf(c, direction, layout, cap, customDrawers, areRelated)
+				val stack = sf.copy(axis = direction, layout = layout, cap = cap, customDrawers = customDrawers,
+					areRelated = areRelated)(c)
 				stack.parent -> stack.result
 			}
 		

@@ -127,7 +127,7 @@ trait InteractionWindowFactory[A]
 		// Contains the created buttons and the default action enabled -pointer as the additional result
 		val window = ReachWindow.contentContextual.using(Framing, parentWindow, title) { (_, framingF) =>
 			framingF.build(Stack).apply(wc.margins.aroundMedium) { stackF =>
-				stackF.build(Mixed).column() { factories =>
+				stackF.build(Mixed) { factories =>
 					// Creates the main content and determines the button blueprints
 					val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
 					
@@ -191,7 +191,7 @@ trait InteractionWindowFactory[A]
 			// Case: More than one button
 			if (blueprints.size > 1)
 				factories(AlignFrame).build(Stack)(alignment) { stackF =>
-					stackF.build(Mixed).apply(X, margin = nonScalingMargin) { factories =>
+					stackF.copy(axis = X, margin = nonScalingMargin).build(Mixed) { factories =>
 						val buttons = blueprints.map { blueprint =>
 							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
 						}
@@ -228,11 +228,11 @@ trait InteractionWindowFactory[A]
 									resultPromise: Promise[A],
 									defaultActionEnabled: => Boolean): (Stack[ReachComponentLike], Vector[ButtonLike]) =
 	{
-		factory.build(Mixed)(X, margin = scalingMargin) { factories =>
+		factory.copy(axis = X, margin = scalingMargin).build(Mixed) { factories =>
 			val (components, buttons) = buttonGroups.splitMap { group =>
 				// If there are multiple buttons in a group, places them in a stack
 				if (group.size > 1) {
-					factories(Stack).build(Mixed)(X, margin = nonScalingMargin) { factories =>
+					factories(Stack).copy(axis = X, margin = nonScalingMargin).build(Mixed) { factories =>
 						val buttons = group.map { blueprint =>
 							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
 						}

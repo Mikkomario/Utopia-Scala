@@ -112,7 +112,8 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	
 	private val (_wrapped, buttons) = Stack(parentHierarchy)
 		.withContext(if (direction == Y) context.withTextExpandingToRight else context)
-		.build(RadioButtonLine)(direction, customDrawers = customDrawers, areRelated = true) { lineF =>
+		.copy(axis = direction, customDrawers = customDrawers, areRelated = true)
+		.build(RadioButtonLine) { lineF =>
 			// Creates a line for each option
 			val lines = options.map { case (item, text) =>
 				lineF(valuePointer, item, text, selectedColorRole, backgroundColorPointer = backgroundColorPointer)

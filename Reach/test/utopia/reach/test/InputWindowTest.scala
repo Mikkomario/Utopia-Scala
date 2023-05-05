@@ -125,7 +125,7 @@ object InputWindowTest extends App
 					Vector(BackgroundDrawer(fieldBackground)))
 			// If there are many, wraps them in a stack also
 			else if (content.forall { _.result.isAlwaysTrue })
-				factories(Stack).build(Framing).column() { framingF =>
+				factories(Stack).build(Framing) { framingF =>
 					content.map { c => framingF.withoutContext(c, framingMargin,
 						Vector(BackgroundDrawer(fieldBackground))) }
 				}

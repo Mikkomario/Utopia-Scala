@@ -2,7 +2,7 @@ package utopia.reach.container.multi
 
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.GenericContextualFactory
-import utopia.reach.component.wrapper.ComponentCreationResult.BundledCreations
+import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
 import utopia.reach.component.wrapper.Open
 
 /**
@@ -27,6 +27,6 @@ trait ContextualCombiningContainerFactory[+N, TopN, +Container[C <: TopC], -TopC
 	  * @tparam R Type of additional component creation result
 	  * @return A new container (also includes the created component and the additional creation result)
 	  */
-	def build[F, C <: TopC, R](contentFactory: Ccff[N, F])(fill: F => BundledCreations[C, R]) =
+	def build[F, C <: TopC, R](contentFactory: Ccff[N, F])(fill: F => ComponentsResult[C, R]) =
 		apply[C, R](Open.withContext(context)(contentFactory)(fill)(parentHierarchy.top))
 }

@@ -37,14 +37,13 @@ object ReachSwitchTest extends App
 		// Framing
 		framingF.build(Stack).apply(margins.aroundMedium) { colF =>
 			// Y-Stack
-			colF.build(Stack).column() { rowF =>
+			colF.build(Stack) { rowF =>
 				// Uses segmentation between the rows
 				val rowGroup = SegmentGroup.rowsWithLayouts(Trailing, Center, Leading)
 				
 				// Creates a single row with 1) name label, 2) switch and 3) switch value label
-				def makeRow(fieldName: LocalizedString)(makeSwitch: ContextualSwitchFactory => Switch) =
-				{
-					rowF.build(Mixed).segmented(rowGroup, layout = Center, areRelated = true) { factories =>
+				def makeRow(fieldName: LocalizedString)(makeSwitch: ContextualSwitchFactory => Switch) = {
+					rowF.copy(layout = Center, areRelated = true).buildSegmented(Mixed, rowGroup) { factories =>
 						// 1: Name label
 						val nameLabel = factories.next().mapContext {
 							_.forTextComponents.withTextAlignment(Alignment.Right)

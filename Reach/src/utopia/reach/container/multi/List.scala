@@ -92,9 +92,10 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 			content.iterator.map { rowContent =>
 				val wrappedRowComponents = new OpenComponent(rowContent.components.iterator.toVector,
 					rowContent.context.parentHierarchy)
-				
-				(rowF(wrappedRowComponents, rowDirection, insideRowLayout, columnMargin,
-					rowCap).parent: ReachComponentLike) -> rowContent
+				val row = rowF.copy(axis = rowDirection, layout = insideRowLayout, margin = columnMargin,
+					cap = rowCap)(wrappedRowComponents)
+					.parent: ReachComponentLike
+				row -> rowContent
 			}.splitMap { p => p }
 		}
 		val rowsWithResults = mainStackContent.component.zip(mainStackContent.result)
@@ -106,10 +107,10 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val keyPressedPointer = Pointer(false)
 		val stackPointer = Pointer[Option[Stack[ReachComponentLike]]](None)
 		val selector = new Selector(stackPointer, contextBackgroundPointer, selectedComponentPointer, keyPressedPointer)
-		val stackCreation = Stack(parentHierarchy)(mainStackContent, rowDirection.perpendicular, Fit, rowMargin,
-			mainStackCap, selector +: customDrawers)
-		if (rowsWithResults.nonEmpty)
-		{
+		val stackCreation = Stack(parentHierarchy)
+			.copy(axis = rowDirection.perpendicular, layout = Fit, margin = rowMargin, cap = mainStackCap,
+				customDrawers = selector +: customDrawers)(mainStackContent)
+		if (rowsWithResults.nonEmpty) {
 			val stack = stackCreation.parent
 			stackPointer.value = Some(stack)
 			stack.addMouseMoveListener(selector)

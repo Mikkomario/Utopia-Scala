@@ -35,7 +35,7 @@ object SelectionListTest extends App
 		// Framing
 		framingF.build(Stack).apply(margins.aroundMedium) { stackF =>
 			// Stack[ScrollView + Button]
-			stackF.build(Mixed).column() { factories =>
+			stackF.build(Mixed) { factories =>
 				// 1: Scroll View
 				val scroll = factories(ScrollView).build(Framing)(maxOptimalLength = Some(224)) { framingF =>
 					// Framing
