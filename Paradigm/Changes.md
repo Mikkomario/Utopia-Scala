@@ -3,6 +3,7 @@
 ## v1.3.1 (in development)
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
+- Added **FromDirectionFactory** and **FromAlignmentFactory** -traits
 ### New Methods
 - **InsetsLike**
   - Added `-(Axis2D)`

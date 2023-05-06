@@ -291,12 +291,12 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 	  * @param margin New size of margins to use (general)
 	  * @return Copy of this factory that uses the specified margin size
 	  */
-	def withMargin(margin: SizeCategory): ContextualStackFactory[N] = withMargin(context.margins.around(margin))
+	def withMargin(margin: SizeCategory): ContextualStackFactory[N] = withMargin(context.scaledStackMargin(margin))
 	/**
 	  * @param cap New size of margins to place at each end of this stack (general)
 	  * @return Copy of this factory that uses the specified cap size
 	  */
-	def withCap(cap: SizeCategory): ContextualStackFactory[N] = withCap(context.margins.around(cap))
+	def withCap(cap: SizeCategory): ContextualStackFactory[N] = withCap(context.scaledStackMargin(cap))
 	
 	/**
 	  * Builds a segmented stack. Segmented means that the size of the contents is adjusted to match parallel

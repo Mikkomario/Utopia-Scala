@@ -316,7 +316,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			}
 			// Case: Field needs to be aligned => it is wrapped before adding to the layout
 			else
-				factories(AlignFrame).build(Mixed)(blueprint.fieldAlignment) { factories =>
+				factories(AlignFrame)(blueprint.fieldAlignment).build(Mixed) { factories =>
 					val field = blueprint(factories.parentHierarchy, context.fieldContext)
 					fieldsBuilder += blueprint.key -> field
 					field.field

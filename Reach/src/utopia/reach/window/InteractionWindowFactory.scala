@@ -190,7 +190,7 @@ trait InteractionWindowFactory[A]
 			val (alignment, blueprints) = buttonsByLocation.head
 			// Case: More than one button
 			if (blueprints.size > 1)
-				factories(AlignFrame).build(Stack)(alignment) { stackF =>
+				factories(AlignFrame)(alignment).build(Stack) { stackF =>
 					stackF.copy(axis = X, margin = nonScalingMargin).build(Mixed) { factories =>
 						val buttons = blueprints.map { blueprint =>
 							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
@@ -200,7 +200,7 @@ trait InteractionWindowFactory[A]
 				}.parentAndResult
 			// Case: Only one button
 			else
-				factories(AlignFrame).build(Mixed)(alignment) { factories =>
+				factories(AlignFrame)(alignment).build(Mixed) { factories =>
 					val button = actualize(factories, blueprints.head, resultPromise, defaultActionEnabled)
 					button -> Vector(button)
 				}.parentAndResult
@@ -216,7 +216,7 @@ trait InteractionWindowFactory[A]
 					defaultActionEnabled)
 			// Case: Items only on center and right => aligns the stack
 			else
-				factories(AlignFrame).build(Stack)(Alignment.Right) { stackF =>
+				factories(AlignFrame).right.build(Stack) { stackF =>
 					buttonGroupsToStack(stackF, buttonGroups, scalingMargin, nonScalingMargin, resultPromise,
 						defaultActionEnabled)
 				}.parentAndResult

@@ -208,7 +208,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
 	// IMPLEMENTED	--------------------------------
 	
 	override protected def marginPointer: Changing[StackLength] = customMarginPointer match {
-		case Some(Left(sizePointer)) => sizePointer.map { context.margins.around(_) }
+		case Some(Left(sizePointer)) => sizePointer.map(context.scaledStackMargin)
 		case Some(Right(pointer)) => pointer
 		case None => relatedFlag.map { if (_) context.smallStackMargin else context.stackMargin }
 	}
@@ -238,7 +238,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
 	  * @return Copy of this factory with that pointer in use
 	  */
 	def withCapSizePointer(p: Changing[SizeCategory]) =
-		copy(capPointer = p.map { context.margins.around(_) })
+		copy(capPointer = p.map(context.scaledStackMargin))
 	/**
 	  * @param flag A pointer that indicates whether the components
 	  *          should be placed close to each other (true) or at the default distance (false)
