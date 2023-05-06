@@ -1,14 +1,12 @@
 package utopia.reach.test
 
+import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.window.ReachWindow
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.StackInsets
-import utopia.flow.async.process.Loop
-import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.ColorRole.Secondary
 
 /**
   * Tests construction of a Framing
@@ -21,7 +19,7 @@ object ReachFramingTest extends App
 	
 	private val pointer = new PointerWithEvents("Some\nText")
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
-		framingF.build(ViewTextLabel).apply(StackInsets.symmetric(margins.aroundMedium).expandingToRight) { labelF =>
+		framingF.expandingToRight.build(ViewTextLabel) { labelF =>
 			labelF.withBackground(pointer, Secondary)
 		}
 	}

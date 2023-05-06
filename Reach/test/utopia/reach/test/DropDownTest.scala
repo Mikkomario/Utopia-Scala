@@ -1,9 +1,7 @@
 package utopia.reach.test
 
-import utopia.firmament.context.ColorContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
@@ -12,7 +10,6 @@ import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.context.ReachContentWindowContext.apply
@@ -36,10 +33,9 @@ object DropDownTest extends App
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
-	val window = ReachWindow.contextual.apply(title = "Drop-Down Test") { hierarchy =>
-		implicit val canvas: ReachCanvas = hierarchy.top
-		Framing(hierarchy).buildFilledWithContext(baseContext, colors.gray.light, Stack.static[ColorContext])
-			.apply(margins.medium.any.square) { stackF =>
+	val window = ReachWindow.contentContextual.withWindowBackground(colors.gray.light)
+		.using(Framing, title = "Drop-Down Test") { (_, framingF) =>
+			framingF.build(Stack) { stackF =>
 				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.build(DropDown) { ddF =>
 					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
 					val selectedItemPointer = new PointerWithEvents[Option[String]](None)

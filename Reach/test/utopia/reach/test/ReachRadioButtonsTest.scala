@@ -21,7 +21,7 @@ object ReachRadioButtonsTest extends App
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
-		framingF.build(RadioButtonGroup).apply(margins.aroundMedium) { btnF =>
+		framingF.build(RadioButtonGroup) { btnF =>
 			// Radio buttons
 			btnF.withPointer(Vector[(Int, LocalizedString)](1 -> "First", 2 -> "Second", 3 -> "Third Option"),
 				valuePointer)

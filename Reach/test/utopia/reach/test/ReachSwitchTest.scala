@@ -35,7 +35,7 @@ object ReachSwitchTest extends App
 	// Window
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
-		framingF.build(Stack).apply(margins.aroundMedium) { colF =>
+		framingF.build(Stack) { colF =>
 			// Y-Stack
 			colF.build(Stack) { rowF =>
 				// Uses segmentation between the rows
@@ -84,7 +84,7 @@ object ReachSwitchTest extends App
 		val popup = ReachWindow.contentContextual.withWindowBackground(colors.info).borderless.nonFocusable
 			.anchoredToUsing(Framing, window.result, Alignment.Right, margins.medium) { (_, framingF) =>
 				// Framing
-				framingF.build(TextLabel).apply(margins.aroundSmall) { labelF =>
+				framingF.small.build(TextLabel) { labelF =>
 					// Label (Enabled | Disabled)
 					labelF.apply(if (event.newValue) "Enabled!" else "Disabled!")
 				}

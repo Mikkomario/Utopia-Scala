@@ -1,7 +1,6 @@
 package utopia.reach.test
 
 import utopia.firmament.context.TextContext
-import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.image.SingleColorIconCache
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
@@ -121,18 +120,17 @@ object InputWindowTest extends App
 			
 			// Frames content
 			if (content.size == 1)
-				factories(Framing).withoutContext(content.head, framingMargin,
-					Vector(BackgroundDrawer(fieldBackground)))
+				factories(Framing).withBackground(fieldBackground).withInsets(framingMargin).apply(content.head)
 			// If there are many, wraps them in a stack also
 			else if (content.forall { _.result.isAlwaysTrue })
 				factories(Stack).build(Framing) { framingF =>
-					content.map { c => framingF.withoutContext(c, framingMargin,
-						Vector(BackgroundDrawer(fieldBackground))) }
+					content.map { c => framingF.withBackground(fieldBackground).withInsets(framingMargin).apply(c) }
 				}
 			else
 				factories(ViewStack).build(Framing) { factories =>
-					content.map { c => factories.next().withoutContext(c, framingMargin,
-						Vector(BackgroundDrawer(fieldBackground))).parentAndResult }
+					content.map { c =>
+						factories.next().withBackground(fieldBackground).withInsets(framingMargin)(c).parentAndResult
+					}
 				}
 		}
 		

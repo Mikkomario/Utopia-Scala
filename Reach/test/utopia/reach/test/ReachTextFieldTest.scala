@@ -37,7 +37,7 @@ object ReachTextFieldTest extends App
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
-		framingF.build(Stack).apply(margins.aroundMedium) { stackF =>
+		framingF.build(Stack) { stackF =>
 			// Stack (Y)
 			stackF.build(Stack) { rowF =>
 				// Each row contains a text field and a value label

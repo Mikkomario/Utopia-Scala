@@ -292,6 +292,11 @@ trait InsetsLike[L, +S, +Repr] extends Dimensional[Pair[L], Repr] with SizeAdjus
       * @return A copy of these insets without an inset for the specified direction
       */
     def -(direction: Direction2D) = withAmounts(amounts - direction)
+    /**
+      * @param axis Axis to omit from these insets
+      * @return Copy of these insets without values along the specified axis
+      */
+    def -(axis: Axis2D) = withAmounts(amounts.filterNot { _._1.axis == axis })
     
     
     // OTHER    ------------------

@@ -5,7 +5,6 @@ import utopia.firmament.context.{ColorContext, TextContext}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{HotKey, RowGroup, RowGroups, WindowButtonBlueprint}
 import utopia.flow.async.process.Delay
 import utopia.flow.generic.model.immutable.{Constant, Model}
@@ -180,15 +179,14 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val windowPointer = SettableOnce[Window]()
 		val window = field.createWindow(margin = context.margins.medium) { hierarchy =>
 			// The pop-up contains a close button and the warning text
-			Framing(hierarchy).buildFilledWithContext(context, context.background, Stack.static[TextContext])
-				.apply(context.margins.small.any) { stackF =>
-					stackF.centeredRow.build(Mixed) { factories =>
-						Vector(
-							factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },
-							factories(TextLabel)(message)
-						)
-					}
+			Framing(hierarchy).withContext(context.textContext).small.build(Stack) { stackF =>
+				stackF.centeredRow.build(Mixed) { factories =>
+					Vector(
+						factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },
+						factories(TextLabel)(message)
+					)
 				}
+			}
 		}
 		windowPointer.set(window)
 		// Registers pop-up ownership if possible

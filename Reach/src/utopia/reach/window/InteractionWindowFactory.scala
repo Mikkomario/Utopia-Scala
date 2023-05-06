@@ -126,7 +126,7 @@ trait InteractionWindowFactory[A]
 		//  Alternatively room should be allowed for a header component separately
 		// Contains the created buttons and the default action enabled -pointer as the additional result
 		val window = ReachWindow.contentContextual.using(Framing, parentWindow, title) { (_, framingF) =>
-			framingF.build(Stack).apply(wc.margins.aroundMedium) { stackF =>
+			framingF.build(Stack) { stackF =>
 				stackF.build(Mixed) { factories =>
 					// Creates the main content and determines the button blueprints
 					val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)

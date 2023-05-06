@@ -3,6 +3,9 @@
 ## v1.3.1 (in development)
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
+### New Methods
+- **InsetsLike**
+  - Added `-(Axis2D)`
 
 ## v1.3 - 01.05.2023
 This update introduces new color classes (which are originally from **Reflection**), as well as some 

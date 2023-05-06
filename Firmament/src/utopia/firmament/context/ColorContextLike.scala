@@ -220,6 +220,11 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 		def info = apply(Info)
 		
 		/**
+		  * @param color A proposed set of colors
+		  * @return The best color from the specified set for this context
+		  */
+		def apply(color: ColorSet) = color.against(background, level, minimumContrast)
+		/**
 		  * @param role A color role
 		  * @return Color to use for that role in this context
 		  */

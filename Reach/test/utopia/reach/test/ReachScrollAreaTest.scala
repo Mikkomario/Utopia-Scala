@@ -43,7 +43,7 @@ object ReachScrollAreaTest extends App
 	val window = ReachWindow.contentContextual.withWindowBackground(bg).using(Framing) { (canvas, framingF) =>
 		implicit val c: ReachCanvas = canvas
 		// Framing
-		val framing = framingF.build(ScrollArea).apply(margins.aroundMedium) { scrollF =>
+		val framing = framingF.build(ScrollArea) { scrollF =>
 			// Scroll area
 			scrollF.build(Stack).apply(maxOptimalSize = Some(Size(320, 320))) { rowF =>
 				// Stack (X)

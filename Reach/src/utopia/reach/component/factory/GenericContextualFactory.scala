@@ -2,7 +2,8 @@ package utopia.reach.component.factory
 
 import utopia.firmament.context.ColorContextLike
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 object GenericContextualFactory
 {
@@ -30,9 +31,36 @@ object GenericContextualFactory
 		  * @param background Background color to apply to this component
 		  * @return Copy of this factory with background drawing and modified context
 		  */
-		def withBackground(background: Color) = {
+		def withBackground(background: Color): F[N] =
 			f.mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
-		}
+		/**
+		  * Applies the best background color for the current context
+		  * @param background Background color set to apply to this component
+		  * @param preferredShade The color shade that is preferred (default = Standard)
+		  * @return Copy of this factory with background drawing and modified context
+		  */
+		def withBackground(background: ColorSet, preferredShade: ColorLevel): F[N] =
+			withBackground(f.context.color.preferring(preferredShade)(background))
+		/**
+		  * Applies the best background color for the current context
+		  * @param background Background color set to apply to this component
+		  * @return Copy of this factory with background drawing and modified context
+		  */
+		def withBackground(background: ColorSet): F[N] = withBackground(background, Standard)
+		/**
+		  * Applies the best background color for the current context
+		  * @param background Role of the background color to apply to this component
+		  * @param preferredShade The color shade that is preferred (default = Standard)
+		  * @return Copy of this factory with background drawing and modified context
+		  */
+		def withBackground(background: ColorRole, preferredShade: ColorLevel): F[N] =
+			withBackground(f.context.color.preferring(preferredShade)(background))
+		/**
+		  * Applies the best background color for the current context
+		  * @param background Role of the background color to apply to this component
+		  * @return Copy of this factory with background drawing and modified context
+		  */
+		def withBackground(background: ColorRole): F[N] = withBackground(background, Standard)
 	}
 	
 	/*

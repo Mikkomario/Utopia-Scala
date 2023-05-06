@@ -33,13 +33,13 @@ object SelectionListTest extends App
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
-		framingF.build(Stack).apply(margins.aroundMedium) { stackF =>
+		framingF.build(Stack) { stackF =>
 			// Stack[ScrollView + Button]
 			stackF.build(Mixed) { factories =>
 				// 1: Scroll View
 				val scroll = factories(ScrollView).build(Framing)(maxOptimalLength = Some(224)) { framingF =>
 					// Framing
-					framingF.buildFilled(Primary, SelectionList, Light).apply(margins.aroundSmall) { listF =>
+					framingF.withBackground(Primary, Light).small.build(SelectionList) { listF =>
 						// Selection list
 						listF.apply(contentPointer, valuePointer, alternativeKeyCondition = true) { (hierarchy, item: Int) =>
 							MutableViewTextLabel(hierarchy).withContext(listF.context)

@@ -464,7 +464,7 @@ class Field[C <: ReachComponentLike with Focusable]
 			else
 				Vector(borderDrawer)
 		}
-		factory(framingContent, borderInsets.fixed, drawers).withResult(content.result)
+		factory(borderInsets.fixed).withCustomDrawers(drawers)(framingContent).withResult(content.result)
 	}
 	
 	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[SingleColorIcon],

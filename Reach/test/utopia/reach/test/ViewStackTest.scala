@@ -32,7 +32,7 @@ object ViewStackTest extends App
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		// Framing
-		framingF.build(ViewStack).apply(margins.aroundMedium) { stackF =>
+		framingF.build(ViewStack) { stackF =>
 			// Stack
 			stackF.mapContext { _.withTextExpandingToRight }.row.build(TextLabel) { labelFactories =>
 				// 1-9 Labels

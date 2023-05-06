@@ -3,7 +3,6 @@ package utopia.reach.test
 import utopia.firmament.component.Window
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.HotKey
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
@@ -41,8 +40,8 @@ object ReachComponentTest extends App
 		// Column
 		stackF.withoutMargin.build(Mixed) { factories =>
 			// 1: Framing (Secondary)
-			val (framing, label) = factories(Framing).buildFilled(Secondary, MutableTextLabel, Light)
-				.apply(margins.aroundMedium) { labelF =>
+			val (framing, label) = factories(Framing).withBackground(Secondary, Light)
+				.build(MutableTextLabel) { labelF =>
 					// Hello Label (Primary)
 					labelF.withHorizontallyCenteredText.withBackground("Hello!", Primary)
 				}.toTuple
@@ -50,8 +49,7 @@ object ReachComponentTest extends App
 			val label2 = factories(TextLabel).withTextAlignment(Alignment.Center)
 				.apply("Hello 2\nThis label contains 2 lines")
 			// 3: Framing
-			val editLabelFraming = factories(Framing).buildFilled(Primary, Stack, Light)
-				.apply(margins.medium.any) { stackF =>
+			val editLabelFraming = factories(Framing).withBackground(Primary, Light).build(Stack) { stackF =>
 					// Column (Centered)
 					stackF.centered.build(Mixed) { factories =>
 						// 1: Editable text label
