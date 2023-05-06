@@ -346,57 +346,57 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// Creates the pop-up
 		val popup = field.createOwnedWindow(Bottom, matchEdgeLength = true) { hierarchy =>
 			// The pop-up content resides in a scroll view with custom background drawing
-			ScrollView(hierarchy).build(Mixed).apply(scrollBarMargin = Size(context.margins.small, listCap.optimal),
-				limitsToContentSize = true,
-				customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer))) { factories =>
-				// The scrollable content consists of either:
-				//  1) Main content + additional view, or
-				//  2) Main content only
-				def makeOptionsList(factory: SelectionListFactory) =
-					factory.apply(context.actorHandler, field.innerBackgroundPointer, contentPointer, valuePointer, Y,
-						listLayout, context.stackMargin, listCap, 1.0, sameItemCheck) { (hierarchy, item) =>
-						makeDisplay(hierarchy, context.against(field.innerBackgroundPointer.value),
-							field.innerBackgroundPointer, item)
-					}
-				def makeMainContent(factories: Mixed) = {
-					// The main content is either:
-					//   1) Switchable between options and no-options -view
-					//   2) Only the options view
-					makeNoOptionsView match {
-						// Case: No options -view used => Switches between the two views
-						case Some(makeNoOptionsView) =>
-							factories(CachingViewSwapper).build(Mixed)
-								.generic(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
-									// Case: No options -view constructor
-									if (isEmpty)
-										makeNoOptionsView(factories.parentHierarchy,
-											context.against(field.innerBackgroundPointer.value),
-											field.innerBackgroundPointer)
-									// Case: List constructor
-									else
-										makeOptionsList(factories(SelectionList))
-								}
-						// Case: No no options -view used => Always displays the selection list
-						case None => makeOptionsList(factories(SelectionList))
-					}
-				}
-				makeAdditionalOption match {
-					// Case: Additional view used => Places it below the main content
-					case Some(makeAdditionalOption) =>
-						factories(ViewStack).withoutMargin.build(Mixed) { factories =>
-							val mainContent = makeMainContent(factories.next())
-							val additional = makeAdditionalOption(factories.next().parentHierarchy,
-								context.against(field.innerBackgroundPointer.value), field.innerBackgroundPointer)
-							// The main content may be hidden, if empty
-							val mainContentVisiblePointer = {
-								if (makeNoOptionsView.isDefined) AlwaysTrue else contentPointer.map { _.nonEmpty }
-							}
-							Vector(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+			ScrollView(hierarchy).withScrollBarMargin(context.margins.small, listCap.optimal).limitedToContentSize
+				.withCustomDrawer(BackgroundViewDrawer(field.innerBackgroundPointer))
+				.build(Mixed) { factories =>
+					// The scrollable content consists of either:
+					//  1) Main content + additional view, or
+					//  2) Main content only
+					def makeOptionsList(factory: SelectionListFactory) =
+						factory.apply(context.actorHandler, field.innerBackgroundPointer, contentPointer, valuePointer, Y,
+							listLayout, context.stackMargin, listCap, 1.0, sameItemCheck) { (hierarchy, item) =>
+							makeDisplay(hierarchy, context.against(field.innerBackgroundPointer.value),
+								field.innerBackgroundPointer, item)
 						}
-					// CAse: No additional view used => Always displays the main content
-					case None => makeMainContent(factories)
+					def makeMainContent(factories: Mixed) = {
+						// The main content is either:
+						//   1) Switchable between options and no-options -view
+						//   2) Only the options view
+						makeNoOptionsView match {
+							// Case: No options -view used => Switches between the two views
+							case Some(makeNoOptionsView) =>
+								factories(CachingViewSwapper).build(Mixed)
+									.generic(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
+										// Case: No options -view constructor
+										if (isEmpty)
+											makeNoOptionsView(factories.parentHierarchy,
+												context.against(field.innerBackgroundPointer.value),
+												field.innerBackgroundPointer)
+										// Case: List constructor
+										else
+											makeOptionsList(factories(SelectionList))
+									}
+							// Case: No no options -view used => Always displays the selection list
+							case None => makeOptionsList(factories(SelectionList))
+						}
+					}
+					makeAdditionalOption match {
+						// Case: Additional view used => Places it below the main content
+						case Some(makeAdditionalOption) =>
+							factories(ViewStack).withoutMargin.build(Mixed) { factories =>
+								val mainContent = makeMainContent(factories.next())
+								val additional = makeAdditionalOption(factories.next().parentHierarchy,
+									context.against(field.innerBackgroundPointer.value), field.innerBackgroundPointer)
+								// The main content may be hidden, if empty
+								val mainContentVisiblePointer = {
+									if (makeNoOptionsView.isDefined) AlwaysTrue else contentPointer.map { _.nonEmpty }
+								}
+								Vector(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+							}
+						// CAse: No additional view used => Always displays the main content
+						case None => makeMainContent(factories)
+					}
 				}
-			}
 		}
 		// When the mouse is released, hides the pop-up
 		// Also hides when not in focus, and on some key-presses

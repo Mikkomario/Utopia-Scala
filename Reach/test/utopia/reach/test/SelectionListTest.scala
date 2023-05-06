@@ -37,7 +37,7 @@ object SelectionListTest extends App
 			// Stack[ScrollView + Button]
 			stackF.build(Mixed) { factories =>
 				// 1: Scroll View
-				val scroll = factories(ScrollView).build(Framing)(maxOptimalLength = Some(224)) { framingF =>
+				val scroll = factories(ScrollView).initialized.withMaxOptimalLength(224).build(Framing) { framingF =>
 					// Framing
 					framingF.withBackground(Primary, Light).small.build(SelectionList) { listF =>
 						// Selection list
