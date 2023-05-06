@@ -226,7 +226,7 @@ trait InteractionWindowFactory[A]
 	private def buttonGroupsToStack(factory: StackFactory, buttonGroups: Vector[Vector[WindowButtonBlueprint[A]]],
 									scalingMargin: StackLength, nonScalingMargin: StackLength,
 									resultPromise: Promise[A],
-									defaultActionEnabled: => Boolean): (Stack[ReachComponentLike], Vector[ButtonLike]) =
+									defaultActionEnabled: => Boolean): (Stack, Vector[ButtonLike]) =
 	{
 		factory.copy(axis = X, margin = scalingMargin).build(Mixed) { factories =>
 			val (components, buttons) = buttonGroups.splitMap { group =>

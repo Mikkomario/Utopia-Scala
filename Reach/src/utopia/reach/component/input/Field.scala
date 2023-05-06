@@ -5,9 +5,8 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackSize}
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
@@ -17,7 +16,6 @@ import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorRole.{Failure, Secondary}
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
-import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -31,8 +29,8 @@ import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenCompon
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
-import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.drawing.Priority.High
+import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 
 /**
   * A set of context variables provided when creating field contents
@@ -393,8 +391,8 @@ class Field[C <: ReachComponentLike with Focusable]
 			// Case: Both main and hint area used => uses a view stack
 			case Some(openHintArea) =>
 				val framedMainArea = Open.using(Framing) { makeContentFraming(_, openMainArea) }
-				ViewStack(parentHierarchy).withFixedStyle(Vector(framedMainArea.withResult(AlwaysTrue), openHintArea),
-					margin = StackLength.fixedZero).parent
+				ViewStack(parentHierarchy)
+					.withoutMargin(Vector(framedMainArea.withResult(AlwaysTrue), openHintArea)).parent
 			// Case: Only main area used => uses framing only
 			case None => makeContentFraming(Framing(parentHierarchy), openMainArea).parent
 		}
@@ -435,15 +433,14 @@ class Field[C <: ReachComponentLike with Focusable]
 	private def makeContentFraming[C2 <: ReachComponentLike](factory: FramingFactory, content: OpenComponent[C2, C]) =
 	{
 		// If extra icons are used, places them with the main content in a stack view
-		val framingContent =
-		{
+		val framingContent = {
 			if (leftIconPointer.isChanging || rightIconPointer.isChanging)
 				Open.using(ViewStack) { stackF =>
-					stackF.withFixedStyle(Vector(
+					stackF.row.centered.withoutMargin(Vector(
 						makeOpenViewImageLabel(leftIconPointer, Direction2D.Right),
 						content.withResult(AlwaysTrue),
-						makeOpenViewImageLabel(rightIconPointer, Direction2D.Left)), X, Center,
-						StackLength.fixedZero)
+						makeOpenViewImageLabel(rightIconPointer, Direction2D.Left)
+					))
 				}
 			else if (leftIconPointer.value.nonEmpty || rightIconPointer.value.nonEmpty)
 				Open.using(Stack) { stackF =>
@@ -493,7 +490,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	private def makeContentAndNameArea(fieldNamePointer: Changing[LocalizedString]) =
 	{
 		Open.using(ViewStack) { stackFactory =>
-			stackFactory.build(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
+			stackFactory.withoutMargin.build(Mixed) { factories =>
 				// Creates the field name label first
 				// Field name is displayed when
 				// a) it is available AND
@@ -578,9 +575,13 @@ class Field[C <: ReachComponentLike with Focusable]
 						val cap = (textInsets.horizontal / 2 + (if (fillBackground) 0 else defaultBorderWidth))
 							.notExpanding
 						val hintLabel = Open.using(ViewTextLabel) { makeHintLabel(_, hintTextPointer) }
-						val stack = Open.using(ViewStack) { _.withFixedStyle(
-							Vector(hintLabel.withResult(hintVisibilityPointer), rightComponent.withResult(AlwaysTrue)), X,
-							margin = StackLength.any, cap = cap).parent
+						val stack = Open.using(ViewStack) {
+							_.row.withCap(cap)
+								.apply(Vector(
+									hintLabel.withResult(hintVisibilityPointer),
+									rightComponent.withResult(AlwaysTrue)
+								))
+								.parent
 						}
 						Some(stack.withResult(AlwaysTrue))
 					// Case: Only the right hint element should be displayed

@@ -20,7 +20,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
   *                     2) Type of created component(s), and
   *                     3) Additional result type
   */
-trait ContainerFactory[+Container[C <: Top], -Top, -Content[_, _], +Result[+_, _, _]]
+trait ContainerFactory[+Container, -Top, -Content[_, _], +Result[+_, _, _]]
 {
 	// ABSTRACT ---------------------------
 	
@@ -38,7 +38,7 @@ trait ContainerFactory[+Container[C <: Top], -Top, -Content[_, _], +Result[+_, _
 	  *             2) The wrapped component, and
 	  *             3) The additional result from the content
 	  */
-	def apply[C <: Top, R](content: Content[C, R]): Result[Container[C], C, R]
+	def apply[C <: Top, R](content: Content[C, R]): Result[Container, C, R]
 	
 	
 	// COMPUTED -------------------------

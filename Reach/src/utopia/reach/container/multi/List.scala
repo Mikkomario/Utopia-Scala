@@ -1,6 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.context.ColorContext
+import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.StackLayout
@@ -11,7 +12,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -105,7 +106,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val selectedComponentPointer = selectedRowIndexPointer
 			.map { i => rowsWithIndices.find { _._2 == i }.map { _._1 } }
 		val keyPressedPointer = Pointer(false)
-		val stackPointer = Pointer[Option[Stack[ReachComponentLike]]](None)
+		val stackPointer = SettableOnce[Stack]()
 		val selector = new Selector(stackPointer, contextBackgroundPointer, selectedComponentPointer, keyPressedPointer)
 		val stackCreation = Stack(parentHierarchy)
 			.copy(axis = rowDirection.perpendicular, layout = Fit, margin = rowMargin, cap = mainStackCap,
@@ -116,9 +117,10 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 			stack.addMouseMoveListener(selector)
 			stack.addMouseButtonListener(selector)
 			// Also adds item selection on left mouse press
+			val locations = StackItemAreas(stack)
 			stack.addMouseButtonListener(MouseButtonStateListener(MouseButtonStateEvent.leftPressedFilter &&
 				Consumable.notConsumedFilter && MouseEvent.isOverAreaFilter(stack.bounds)) { e =>
-				stack.itemNearestTo(e.mousePosition - stack.position).flatMap { c => rowsWithIndices.find { _._1 == c } }
+				locations.itemNearestTo(e.mousePosition - stack.position).flatMap { c => rowsWithIndices.find { _._1 == c } }
 					.map { case (_, index) =>
 						selectedRowIndexPointer.value = index
 						ConsumeEvent("List item selected")
@@ -208,21 +210,26 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 	override def allowsHandlingFrom(handlerType: HandlerType) = focusStatePointer.value
 }
 
-private class Selector(stackPointer: View[Option[Stack[ReachComponentLike]]],
-                       backgroundPointer: View[Color],
+private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer: View[Color],
                        selectedComponentPointer: Changing[Option[ReachComponentLike]],
                        keyPressedPointer: View[Boolean])
 	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener with Handleable
 {
 	// ATTRIBUTES	----------------------------------
 	
-	private val selectedAreaPointer = selectedComponentPointer
-		.lazyMap { c => stack.flatMap { s => c.flatMap(s.areaOf) } }
+	private lazy val locationTrackerPointer = stackPointer.map { _.map { StackItemAreas(_) } }
+	private lazy val selectedAreaPointer = locationTrackerPointer
+		.lazyMergeWith(selectedComponentPointer) { (items, selected) =>
+			items.flatMap { items => selected.flatMap(items.areaOf) }
+		}
 	
 	private var mousePressed = false
+	
 	private val relativeMousePositionPointer = new PointerWithEvents[Option[Point]](None)
-	private val mouseOverAreaPointer = relativeMousePositionPointer
-		.lazyMap { p => stack.flatMap { s => p.flatMap(s.areaNearestTo) } }
+	private lazy val mouseOverAreaPointer = relativeMousePositionPointer
+		.lazyMergeWith(locationTrackerPointer) { (pos, items) =>
+			pos.flatMap { pos => items.flatMap { _.areaNearestTo(pos) } }
+		}
 	
 	override val mouseButtonStateEventFilter = Consumable.notConsumedFilter
 	

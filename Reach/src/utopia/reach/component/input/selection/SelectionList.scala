@@ -3,6 +3,7 @@ package utopia.reach.component.input.selection
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectionWithPointers
 import utopia.firmament.context.ColorContext
+import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener}
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.firmament.drawing.template.CustomDrawer
@@ -143,6 +144,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	override var focusListeners: Seq[FocusListener] = Vector(focusTracker)
 	
 	private val stack = MutableStack(parentHierarchy)[C](direction, layout, margin, cap)
+	private val locationTracker = new StackItemAreas[C](stack, stack.componentsPointer)
 	private val manager = sameItemCheck match {
 		case Some(check) => ContainerSingleSelectionManager.forImmutableStates(stack, contentPointer,
 			valuePointer)(check) { item => Open { makeDisplay(_, item) } }
@@ -154,10 +156,10 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	  * A pointer that contains the currently selected sub-area within this list.
 	  * The origin (0,0) coordinates of the contained bounds are the position of this list.
 	  */
-	lazy val selectedAreaPointer = manager.selectedDisplayPointer.flatMap { _.headOption match {
+	lazy val selectedAreaPointer = manager.selectedDisplayPointer.flatMap { d => d.headOption match {
 		case Some(display) =>
 			display.boundsPointer.map { b =>
-				stack.areaOf(display).filter { _.size.dimensions.forall { _ > 0.0 } }.orElse { Some(b) }
+				locationTracker.areaOf(display).filter { _.size.dimensions.forall { _ > 0.0 } }.orElse { Some(b) }
 			}
 		case None => Fixed(None)
 	} }
@@ -259,7 +261,8 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		// ATTRIBUTES	----------------------------
 		
 		private val relativeMousePositionPointer = new PointerWithEvents[Option[Point]](None)
-		val hoverComponentPointer = relativeMousePositionPointer.map { _.flatMap(stack.itemNearestTo) }
+		// FIXME: stack.itemNearestTo doesn't return the correct item anymore
+		val hoverComponentPointer = relativeMousePositionPointer.map { _.flatMap(locationTracker.itemNearestTo) }
 		
 		private var pressedDisplay: Option[C] = None
 		
@@ -329,7 +332,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	{
 		// ATTRIBUTES	---------------------------
 		
-		val hoverAreaPointer = LocalMouseListener.hoverComponentPointer.map { _.flatMap(stack.areaOf) }
+		val hoverAreaPointer = LocalMouseListener.hoverComponentPointer.map { _.flatMap(locationTracker.areaOf) }
 		
 		
 		// IMPLEMENTED	---------------------------

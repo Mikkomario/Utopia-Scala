@@ -6,6 +6,7 @@
   - Please also note that **SingleColorIcon** is now a case class and the `new` keyword should no more be used
 - The icon parameter **WindowButtonBlueprint** is no longer an **Option**. An empty **SingleColorIcon** acts as "no icon"
 - **Margins** now accepts **Adjustment** as the second parameter, not **Double**
+- **StackLike** no longer extends **AreaOfItems**. Please use **StackItemAreas** instead.
 - The functions `.larger` and `.smaller` in **BaseContextLike** now require an implicit **Adjustment** parameter
 - **SingleColorIconCache** now requires an implicit **Logger** parameter
 ### Bug Fixes

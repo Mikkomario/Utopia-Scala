@@ -235,7 +235,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				}.parent -> AlwaysTrue
 			// Case: Some groups may appear or disappear => uses a view stack
 			else {
-				val stack = factories(ViewStack).build(Mixed).withFixedStyle() { factories =>
+				val stack = factories(ViewStack).build(Mixed) { factories =>
 					groups.groups.map { group => groupToComponent(factories.next(), group, segmentGroup, fieldsBuffer) }
 				}.parent
 				stack -> stack.visibilityPointer
@@ -263,7 +263,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				}.parent -> AlwaysTrue
 			// Case: Some rows are not always visible => uses a view stack
 			else {
-				val stack = factories(ViewStack).build(Mixed).withFixedStyle(areRelated = true) { factories =>
+				val stack = factories(ViewStack).related.build(Mixed) { factories =>
 					group.rows.map { blueprint => actualizeRow(factories.next(), blueprint, segmentGroup, fieldsBuffer) }
 				}.parent
 				stack -> stack.visibilityPointer

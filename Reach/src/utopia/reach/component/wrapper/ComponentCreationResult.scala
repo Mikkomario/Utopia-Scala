@@ -3,6 +3,7 @@ package utopia.reach.component.wrapper
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
 
 import scala.language.implicitConversions
 
@@ -34,6 +35,8 @@ object ComponentCreationResult
 	
 	// IMPLICIT	------------------------------
 	
+	implicit def autoAccess[C](result: ComponentCreationResult[C, _]): C = result.component
+	
 	implicit def componentsToCreations[C, R](components: ComponentsResult[C, R]): CreationsResult[C, Unit, R] =
 		components.mapComponent { _.map { c => ComponentCreationResult(c) } }
 	
@@ -52,6 +55,9 @@ object ComponentCreationResult
 	implicit def componentAndVisibilityPointersToResult[C <: ReachComponentLike]
 	(components: IterableOnce[(C, Changing[Boolean])]): SwitchableCreations[C, Unit] =
 		apply(components.iterator.map { case (c, p) => apply(c, p) })
+	
+	implicit def autoWrapSwitchableComponents[C](c: Vector[OpenComponent[C, Changing[Boolean]]]): SwitchableOpenComponents[C, Unit] =
+		ComponentCreationResult(c)
 	
 	implicit def containerVectorToResult[P](containers: Vector[ComponentWrapResult[P, _, _]]): CreationWrapper[Vector[P]] =
 		ComponentCreationResult[Vector[P]](containers.map { _.parent })

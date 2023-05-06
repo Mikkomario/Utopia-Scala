@@ -383,7 +383,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				makeAdditionalOption match {
 					// Case: Additional view used => Places it below the main content
 					case Some(makeAdditionalOption) =>
-						factories(ViewStack).build(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
+						factories(ViewStack).withoutMargin.build(Mixed) { factories =>
 							val mainContent = makeMainContent(factories.next())
 							val additional = makeAdditionalOption(factories.next().parentHierarchy,
 								context.against(field.innerBackgroundPointer.value), field.innerBackgroundPointer)

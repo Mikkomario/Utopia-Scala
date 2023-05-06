@@ -85,6 +85,12 @@ case class ComponentWrapResult[+P, +C, +R](parent: P, child: C, result: R)
 	  * @return A copy of this result with the specified child component
 	  */
 	def withChild[C2](newChild: C2) = copy(child = newChild)
+	/**
+	  * @param f A mapping function for the wrapped child components
+	  * @tparam C2 Type of mapping result
+	  * @return A copy of this result with mapped children
+	  */
+	def mapChild[C2](f: C => C2) = copy(child = f(child))
 	
 	/**
 	  * @param newResult New additional result

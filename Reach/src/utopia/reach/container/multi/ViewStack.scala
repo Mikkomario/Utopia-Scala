@@ -1,9 +1,10 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.context.BaseContext
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout
-import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.enumeration.StackLayout.{Center, Fit}
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
@@ -12,553 +13,248 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
-import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
+import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
+import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
 
 object ViewStack extends Cff[ViewStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewStackFactory(hierarchy)
 }
 
-case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[BaseContext, ContextualViewStackFactory]
+trait ViewStackFactoryLike[+Repr]
+	extends ViewContainerFactory[Stack, ReachComponentLike] with CustomDrawableFactory[Repr]
 {
-	// COMPUTED	----------------------------------
+	// ABSTRACT ---------------------------
 	
-	private implicit def canvas: ReachCanvas = parentHierarchy.top
+	protected def axisPointer: Changing[Axis2D]
+	protected def layoutPointer: Changing[StackLayout]
+	protected def marginPointer: Changing[StackLength]
+	protected def capPointer: Changing[StackLength]
 	
-	
-	// IMPLEMENTED	------------------------------
-	
-	override def withContext[N <: BaseContext](context: N) =
-		ContextualViewStackFactory(this, context)
-	
-	
-	// OTHER	----------------------------------
+	protected def segmentGroup: Option[SegmentGroup]
 	
 	/**
-	  * @param contentFactory A stack content factory factory
-	  * @tparam F Type of the used content factory
-	  * @return A new view stack builder
+	  * @param p Pointer that contains the axis to use on this stack
+	  * @return A copy of this factory that uses the specified pointer
 	  */
-	def build[F](contentFactory: ComponentFactoryFactory[F]) = new ViewStackBuilder[F](this, contentFactory)
+	def withAxisPointer(p: Changing[Axis2D]): Repr
+	/**
+	  * @param p Pointer that contains the layout to use on this stack
+	  * @return A copy of this factory that uses the specified pointer
+	  */
+	def withLayoutPointer(p: Changing[StackLayout]): Repr
+	/**
+	  * @param p Pointer that contains the margin to place between items inside this stack
+	  * @return A copy of this factory that uses the specified pointer
+	  */
+	def withMarginPointer(p: Changing[StackLength]): Repr
+	/**
+	  * @param p Pointer that contains the margin to place at each end of this stack
+	  * @return A copy of this factory that uses the specified pointer
+	  */
+	def withCapPointer(p: Changing[StackLength]): Repr
+	
+	
+	// COMPUTED ---------------------------
 	
 	/**
-	  * Creates a new stack
-	  * @param content Content placed in the stack. Each component needs to have an attachment pointer
-	  *                as a creation result
-	  * @param directionPointer A pointer determining the direction of this stack (default = always vertical (Y))
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
+	  * @return Copy of this factory that builds rows
 	  */
-	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
-	                                   directionPointer: Changing[Axis2D] = Fixed(Y),
-	                                   layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                                   marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-	                                   capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	                                   customDrawers: Vector[CustomDrawer] = Vector()) =
+	def row = withAxis(X)
+	
+	/**
+	  * @return Copy of this factory where items are centered
+	  */
+	def centered = withLayout(Center)
+	
+	/**
+	  * @return Copy of this factory that doesn't allow for any stack margins
+	  */
+	def withoutMargin = withMargin(StackLength.fixedZero)
+	
+	
+	// IMPLEMENTED  -----------------------
+	
+	override def apply[C <: ReachComponentLike, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Stack, C, R] =
 	{
 		// Creates either a static stack or a view stack, based on whether the pointers are actually used
 		// Case: All parameters are fixed values => Creates an immutable stack
-		if (content.isEmpty || (directionPointer.isFixed &&
-			layoutPointer.isFixed && marginPointer.isFixed && capPointer.isFixed && content.forall { _.result.isFixed }))
+		if (content.isEmpty || (axisPointer.isFixed &&
+			layoutPointer.isFixed && marginPointer.isFixed && capPointer.isFixed &&
+			content.forall { _.result.isFixed }))
 		{
+			// Removes content that will never be visible
 			val remainingContent = content.filter { _.result.value }
-			val mergedContent = NotEmpty(remainingContent) match {
-				case Some(content) => new OpenComponent(content.map { _.component }, content.head.hierarchy)
-				case None => new OpenComponent(Vector[C](), new SeedHierarchyBlock(parentHierarchy.top))
+			val stackF = Stack(parentHierarchy)
+				.copy(axis = axisPointer.value, layout = layoutPointer.value,
+					margin = marginPointer.value, cap = capPointer.value, customDrawers = customDrawers)
+			// Uses segmentation if available
+			val stack = segmentGroup match {
+				// Case: Segmentation used
+				case Some(group) => stackF.withSegments(content, group)
+				// Case: No segmentation used
+				case None =>
+					// Merges the content under a single OpenComponent & ComponentHierarchy instance
+					val mergedContent = NotEmpty(remainingContent) match {
+						case Some(content) => new OpenComponent(content.map { _.component }, content.head.hierarchy)
+						case None => new OpenComponent(Vector[C](), new SeedHierarchyBlock(parentHierarchy.top))
+					}
+					stackF(mergedContent)
 			}
-			Stack(parentHierarchy).copy(axis = directionPointer.value, layout = layoutPointer.value,
-				margin = marginPointer.value, cap = capPointer.value, customDrawers = customDrawers)
-				.apply[C, Unit](mergedContent)
+			stack.mapChild { _.map { _ -> AlwaysTrue } }.withResult(content.result)
 		}
 		// Case: Values include changing values => Creates a view stack
 		else {
-			val stack = new ViewStack[C](parentHierarchy, content.map { open => open.component -> open.result },
-				directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
-			content.foreach { open => open.attachTo(stack, open.result) }
-			ComponentWrapResult(stack, content.map { _.component })
+			// May use segmentation
+			segmentGroup match {
+				// Case: Segmentation used
+				case Some(group) =>
+					// WET WET
+					// Wraps the components into segments before placing them in this stack
+					val wrappers = Open.many { hierarchies =>
+						group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
+					}.component
+					val stack = new ViewStack(parentHierarchy, wrappers.map { _.componentAndResult },
+						axisPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+					wrappers.foreach { open => open.attachTo(stack, open.result) }
+					// Still returns the components as the children and not the wrappers
+					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
+				// Case: No segmentation used
+				case None =>
+					val components = content.map { _.componentAndResult }
+					val stack = new ViewStack(parentHierarchy, components,
+						axisPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+					content.foreach { open => open.attachTo(stack, open.result) }
+					ComponentWrapResult(stack, components, content.result)
+			}
 		}
 	}
 	
-	/**
-	  * Creates a new stack with immutable style
-	  * @param content Content placed in the stack. Each component needs to have an attachment pointer
-	  *                as a creation result
-	  * @param direction the direction of this stack (default = vertical = Y)
-	  * @param layout this stack's layout (default = Fit)
-	  * @param margin the margin between the items in this stack (default = any, preferring 0)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def withFixedStyle[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
-	                                            direction: Axis2D = Y, layout: StackLayout = Fit,
-	                                            margin: StackLength = StackLength.any,
-	                                            cap: StackLength = StackLength.fixedZero,
-	                                            customDrawers: Vector[CustomDrawer] = Vector()) =
-		apply[C](content, Fixed(direction), Fixed(layout), Fixed(margin), Fixed(cap),
-			customDrawers)
+	
+	// OTHER    ----------------------------------
 	
 	/**
-	  * Creates a new stack with content aligned with that of some other container
-	  * @param group A segmented group that defines content alignment
-	  * @param content Content to place on this stack. Each component is paired with a pointer that
-	  *                determines whether it should be connected to this stack.
-	  *                None is considered to always be connected.
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @return A new stack
+	  * @param axis Axis along which the items are placed.
+	  *             X for horizontal rows, Y for vertical columns.
+	  * @return Copy of this factory that uses the specified axis
 	  */
-	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
-	              layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	              marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-	              capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	              customDrawers: Vector[CustomDrawer] = Vector()) =
-	{
-		val wrappers = Open.many { hierarchies =>
-			group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
-		}.component
-		apply(wrappers, Fixed(group.rowDirection), layoutPointer, marginPointer, capPointer, customDrawers)
-	}
-	
+	def withAxis(axis: Axis2D) = withAxisPointer(Fixed(axis))
 	/**
-	  * Creates a new stack with content aligned with that of some other container
-	  * @param group A segmented group that defines content alignment
-	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
-	  *                determines whether it should be connected to this stack.
-	  *                None is considered to always be connected.
-	  * @param layout this stack's layout (default = Fit)
-	  * @param margin the margin between the items in this stack (default = any, preferring 0)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @return A new stack
+	  * @param layout Layout to use on this stack
+	  * @return Copy of this factory with the specified layout
 	  */
-	def segmentedWithFixedStyle(group: SegmentGroup,
-	                            content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
-	                            layout: StackLayout = Fit, margin: StackLength = StackLength.any,
-	                            cap: StackLength = StackLength.fixedZero,
-	                            customDrawers: Vector[CustomDrawer] = Vector()) =
-		segmented(group, content, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)
+	def withLayout(layout: StackLayout) = withLayoutPointer(Fixed(layout))
+	/**
+	  * @param margin Margins to place between each item in this stack
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withMargin(margin: StackLength) = withMarginPointer(Fixed(margin))
+	/**
+	  * @param cap Margin to place at each end of this stack
+	  * @return Copy of this factory with the specified cap
+	  */
+	def withCap(cap: StackLength) = withCapPointer(Fixed(cap))
 }
 
-case class ContextualViewStackFactory[N <: BaseContext](stackFactory: ViewStackFactory, context: N)
-	extends GenericContextualFactory[N, BaseContext, ContextualViewStackFactory]
+case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
+                            axisPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),
+                            marginPointer: Changing[StackLength] = Fixed(StackLength.any),
+                            capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
+                            customDrawers: Vector[CustomDrawer] = Vector(), segmentGroup: Option[SegmentGroup] = None)
+	extends ViewStackFactoryLike[ViewStackFactory] with NonContextualViewContainerFactory[Stack, ReachComponentLike]
+		with FromGenericContextFactory[BaseContext, ContextualViewStackFactory]
 {
-	// COMPUTED	------------------------------------
+	// IMPLEMENTED	------------------------------
 	
-	private implicit def canvas: ReachCanvas = stackFactory.parentHierarchy.top
+	override def withAxisPointer(p: Changing[Axis2D]): ViewStackFactory = copy(axisPointer = p)
+	override def withLayoutPointer(p: Changing[StackLayout]): ViewStackFactory = copy(layoutPointer = p)
+	override def withMarginPointer(p: Changing[StackLength]): ViewStackFactory = copy(marginPointer = p)
+	override def withCapPointer(p: Changing[StackLength]): ViewStackFactory = copy(capPointer = p)
+	
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewStackFactory =
+		copy(customDrawers = drawers)
+	
+	override def withContext[N <: BaseContext](context: N) =
+		ContextualViewStackFactory(parentHierarchy, context)
+}
+
+case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
+                                                         axisPointer: Changing[Axis2D] = Fixed(Y),
+                                                         layoutPointer: Changing[StackLayout] = Fixed(Fit),
+                                                         capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
+                                                         customDrawers: Vector[CustomDrawer] = Vector(),
+                                                         segmentGroup: Option[SegmentGroup] = None,
+                                                         customMarginPointer: Option[Either[Changing[SizeCategory], Changing[StackLength]]] = None,
+                                                         relatedFlag: Changing[Boolean] = AlwaysFalse)
+	extends ViewStackFactoryLike[ContextualViewStackFactory[N]]
+		with ContextualViewContainerFactory[N, BaseContext, Stack, ReachComponentLike, ContextualViewStackFactory]
+{
+	// COMPUTED --------------------------
 	
 	/**
-	  * @return A version of this factory which doesn't utilize component creation context
+	  * @return Copy of this factory that places the items close to each other
 	  */
-	def withoutContext = stackFactory
+	def related = withRelatedFlag(AlwaysTrue)
 	
 	
 	// IMPLEMENTED	--------------------------------
+	
+	override protected def marginPointer: Changing[StackLength] = customMarginPointer match {
+		case Some(Left(sizePointer)) => sizePointer.map { context.margins.around(_) }
+		case Some(Right(pointer)) => pointer
+		case None => relatedFlag.map { if (_) context.smallStackMargin else context.stackMargin }
+	}
+	
+	override def withAxisPointer(p: Changing[Axis2D]): ContextualViewStackFactory[N] = copy(axisPointer = p)
+	override def withLayoutPointer(p: Changing[StackLayout]): ContextualViewStackFactory[N] = copy(layoutPointer = p)
+	override def withMarginPointer(p: Changing[StackLength]): ContextualViewStackFactory[N] =
+		copy(customMarginPointer = Some(Right(p)))
+	override def withCapPointer(p: Changing[StackLength]): ContextualViewStackFactory[N] = copy(capPointer = p)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewStackFactory[N] =
+		copy(customDrawers = drawers)
 	
 	override def withContext[N2 <: BaseContext](newContext: N2) =
 		copy(context = newContext)
 	
 	
-	// OTHER	------------------------------------
+	// OTHER    ---------------------------------
 	
 	/**
-	  * @param contentFactory A factory for producing component creation factories
-	  * @tparam F Type of component creation factories used
-	  * @return A new view stack builder
+	  * @param p A pointer for margin sizes (general)
+	  * @return Copy of this factory with that pointer in use
 	  */
-	def build[F](contentFactory: Ccff[N, F]) = new ContextualViewStackBuilder[N, F](this, contentFactory)
+	def withMarginSizePointer(p: Changing[SizeCategory]) =
+		copy(customMarginPointer = Some(Left(p)))
+	/**
+	  * @param p A pointer for stack cap sizes (general)
+	  * @return Copy of this factory with that pointer in use
+	  */
+	def withCapSizePointer(p: Changing[SizeCategory]) =
+		copy(capPointer = p.map { context.margins.around(_) })
+	/**
+	  * @param flag A pointer that indicates whether the components
+	  *          should be placed close to each other (true) or at the default distance (false)
+	  * @return Copy of this factory with that pointer in use
+	  */
+	def withRelatedFlag(flag: Changing[Boolean]) = copy(relatedFlag = flag)
 	
 	/**
-	  * Creates a new stack
-	  * @param content Content placed in the stack. Each component needs to have an attachment pointer
-	  *                as a creation result
-	  * @param directionPointer A pointer determining the direction of this stack (default = always vertical (Y))
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = determined by context)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
+	  * @param margin Margin to place between items (general)
+	  * @return Copy of this factory with those margins
 	  */
-	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
-	                                   directionPointer: Changing[Axis2D] = Fixed(Y),
-	                                   layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                                   marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
-	                                   capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	                                   customDrawers: Vector[CustomDrawer] = Vector()) =
-		stackFactory[C](content, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
-	
+	def withMargin(margin: SizeCategory) = withMarginSizePointer(Fixed(margin))
 	/**
-	  * Creates a new stack with immutable style, yet changing direction
-	  * @param content Content placed in the stack. Each component needs to have an optional attachment pointer
-	  *                as a creation result
-	  * @param directionPointer A pointer to the direction of this stack
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
-	  *                   (default = false)
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
+	  * @param cap Cap to place at each end of this stack
+	  * @return Copy of this factory with that cap margin
 	  */
-	def withChangingDirection[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
-	                                                   directionPointer: Changing[Axis2D], layout: StackLayout = Fit,
-	                                                   cap: StackLength = StackLength.fixedZero,
-	                                                   customDrawers: Vector[CustomDrawer] = Vector(),
-	                                                   areRelated: Boolean = false) =
-		stackFactory[C](content, directionPointer, Fixed(layout),
-			Fixed(if (areRelated) context.smallStackMargin else context.stackMargin),
-			Fixed(cap), customDrawers)
-	
-	/**
-	  * Creates a new stack with immutable style
-	  * @param content Content placed in the stack. Each component needs to have an optional attachment pointer
-	  *                as a creation result
-	  * @param direction the direction of this stack (default = vertical = Y)
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
-	  *                   (default = false)
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def withFixedStyle[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
-	                                            direction: Axis2D = Y, layout: StackLayout = Fit,
-	                                            cap: StackLength = StackLength.fixedZero,
-	                                            customDrawers: Vector[CustomDrawer] = Vector(),
-	                                            areRelated: Boolean = false) =
-		withChangingDirection[C](content, Fixed(direction), layout, cap, customDrawers, areRelated)
-	
-	/**
-	  * Creates a new stack with immutable style and no margin between items
-	  * @param content Content placed in the stack. Each component needs to have an optional attachment pointer
-	  *                as a creation result
-	  * @param direction the direction of this stack (default = vertical = Y)
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def withoutMargin[C <: ReachComponentLike](content: Vector[OpenComponent[C, Changing[Boolean]]],
-	                                           direction: Axis2D = Y, layout: StackLayout = Fit,
-	                                           cap: StackLength = StackLength.fixedZero,
-	                                           customDrawers: Vector[CustomDrawer] = Vector()) =
-		stackFactory[C](content, Fixed(direction), Fixed(layout), Fixed(StackLength.fixedZero),
-			Fixed(cap), customDrawers)
-	
-	/**
-	  * Creates a new stack with content aligned with that of some other container
-	  * @param group A segmented group that defines content alignment
-	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
-	  *                determines whether it should be connected to this stack.
-	  *                None is considered to always be connected.
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = determined by context)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @return A new stack
-	  */
-	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
-	              layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	              marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
-	              capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	              customDrawers: Vector[CustomDrawer] = Vector()) =
-	{
-		val wrappers = Open.many { hierarchies =>
-			group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
-		}.component
-		apply(wrappers, Fixed(group.rowDirection), layoutPointer, marginPointer, capPointer, customDrawers)
-	}
-	
-	/**
-	  * Creates a new stack with content aligned with that of some other container
-	  * @param group A segmented group that defines content alignment
-	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
-	  *                determines whether it should be connected to this stack.
-	  *                None is considered to always be connected.
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
-	  *                   (default = false)
-	  * @return A new stack
-	  */
-	def segmentedWithFixedStyle(group: SegmentGroup,
-	                            content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
-	                            layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-	                            customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
-		stackFactory.segmentedWithFixedStyle(group, content, layout,
-			if (areRelated) context.stackMargin else context.smallStackMargin, cap, customDrawers)
-}
-
-class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentFactoryFactory[F])
-{
-	// IMPLICIT	---------------------------------
-	
-	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
-	
-	
-	// OTHER	---------------------------------
-	
-	/**
-	  * Creates a new stack
-	  * @param directionPointer A pointer determining the direction of this stack (default = always vertical (Y))
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def apply[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D] = Fixed(Y),
-	                                      layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                                      marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-	                                      capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	                                      customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F] => SwitchableCreations[C, R]) =
-	{
-		val content = Open.manyUsing(contentFactory)(fill)
-		factory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
-			.withResult(content.result)
-	}
-	
-	/**
-	  * Creates a new stack with immutable style
-	  * @param direction the direction of this stack (default = vertical = Y)
-	  * @param layout this stack's layout (default = Fit)
-	  * @param margin the margin between the items in this stack (default = any, preferring 0)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def withFixedStyle[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
-												margin: StackLength = StackLength.any,
-												cap: StackLength = StackLength.fixedZero,
-												customDrawers: Vector[CustomDrawer] = Vector())
-												  (fill: Iterator[F] => SwitchableCreations[C, R]) =
-		apply[C, R](Fixed(direction), Fixed(layout), Fixed(margin), Fixed(cap),
-			customDrawers)(fill)
-	
-	/**
-	  * Builds a new segmented stack
-	  * @param group A segmented group that defines content alignment
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam R Type of additional creation result
-	  * @return A new stack
-	  */
-	def segmented[R](group: SegmentGroup, layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                 marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-	                 capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	                 customDrawers: Vector[CustomDrawer] = Vector())
-					(fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
-	{
-		val content = Open.manyUsing(contentFactory)(fill)
-		factory.segmented(group, content.component, layoutPointer, marginPointer, capPointer, customDrawers)
-			.withResult(content.result)
-	}
-	
-	/**
-	  * Builds a new segmented stack
-	  * @param group A segmented group that defines content alignment
-	  * @param layout this stack's layout (default = Fit)
-	  * @param margin the margin between the items in this stack (default = any, preferring 0)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam R Type of additional creation result
-	  * @return A new stack
-	  */
-	def segmentedWithFixedStyle[R](group: SegmentGroup, layout: StackLayout = Fit,
-								   margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
-								   customDrawers: Vector[CustomDrawer] = Vector())
-								  (fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
-		segmented(group, Fixed(layout), Fixed(margin), Fixed(cap), customDrawers)(fill)
-}
-
-class ContextualViewStackBuilder[N <: BaseContext, +F](stackFactory: ContextualViewStackFactory[N],
-                                                       contentFactory: Ccff[N, F])
-{
-	// IMPLICIT	---------------------------------
-	
-	implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
-	
-	
-	// COMPUTED	---------------------------------
-	
-	/**
-	  * @return The component creation context used by this builder
-	  */
-	def context = stackFactory.context
-	
-	
-	// OTHER	---------------------------------
-	
-	/**
-	  * Creates a new stack
-	  * @param directionPointer A pointer determining the direction of this stack (default = always vertical (Y))
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = determined by context)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def apply[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D] = Fixed(Y),
-	                                      layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                                      marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
-	                                      capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	                                      customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F] => SwitchableCreations[C, R]) =
-	{
-		val content = Open.withContext(stackFactory.context).many(contentFactory)(fill)
-		stackFactory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
-			.withResult(content.result)
-	}
-	
-	/**
-	  * Creates a new stack with static layout yet changing direction
-	  * @param directionPointer A pointer determining the direction of this stack
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
-	  *                   (default = false)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def withChangingDirection[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D], layout: StackLayout = Fit,
-	                                                      cap: StackLength = StackLength.fixedZero,
-	                                                      customDrawers: Vector[CustomDrawer] = Vector(),
-	                                                      areRelated: Boolean = false)
-													  (fill: Iterator[F] => SwitchableCreations[C, R]) =
-		apply[C, R](directionPointer, Fixed(layout),
-			Fixed(if (areRelated) context.stackMargin else context.smallStackMargin),
-			Fixed(cap), customDrawers)(fill)
-	
-	/**
-	  * Creates a new stack with static layout
-	  * @param direction The direction of this stack (default = vertical = Y)
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
-	  *                   (default = false)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam C Type of components in this stack
-	  * @return A new stack
-	  */
-	def withFixedStyle[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
-												cap: StackLength = StackLength.fixedZero,
-												customDrawers: Vector[CustomDrawer] = Vector(),
-												areRelated: Boolean = false)
-											   (fill: Iterator[F] => SwitchableCreations[C, R]) =
-		withChangingDirection[C, R](Fixed(direction), layout, cap, customDrawers, areRelated)(fill)
-	
-	/**
-	  * Builds a new segmented stack
-	  * @param group A segmented group that defines content alignment
-	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
-	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
-	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam R Type of additional creation result
-	  * @return A new stack
-	  */
-	def segmented[R](group: SegmentGroup, layoutPointer: Changing[StackLayout] = Fixed(Fit),
-	                 marginPointer: Changing[StackLength] = Fixed(context.stackMargin),
-	                 capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-	                 customDrawers: Vector[CustomDrawer] = Vector())
-					(fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
-	{
-		val content = Open.withContext(context).many(contentFactory)(fill)
-		stackFactory.segmented(group, content.component, layoutPointer, marginPointer, capPointer, customDrawers)
-			.withResult(content.result)
-	}
-	
-	/**
-	  * Builds a new segmented stack
-	  * @param group A segmented group that defines content alignment
-	  * @param layout this stack's layout (default = Fit)
-	  * @param cap the cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers applied to this stack (default = empty)
-	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
-	  *                   (default = false)
-	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
-	  *             a component factory for each component separately. Returns possibly multiple components, with their
-	  *             individual connection pointers (if defined). The number of returned components should match exactly
-	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
-	  *             between multiple components is not allowed.
-	  * @tparam R Type of additional creation result
-	  * @return A new stack
-	  */
-	def segmentedWithFixedStyle[R](group: SegmentGroup, layout: StackLayout = Fit,
-								   cap: StackLength = StackLength.fixedZero,
-								   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-								  (fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
-		segmented(group, Fixed(layout),
-			Fixed(if (areRelated) context.stackMargin else context.smallStackMargin),
-			Fixed(cap), customDrawers)(fill)
+	def withCap(cap: SizeCategory) = withCapSizePointer(Fixed(cap))
 }
 
 /**
@@ -566,14 +262,13 @@ class ContextualViewStackBuilder[N <: BaseContext, +F](stackFactory: ContextualV
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
-class ViewStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-                                         componentData: Vector[(C, Changing[Boolean])],
-                                         directionPointer: Changing[Axis2D] = Fixed(Y),
-                                         layoutPointer: Changing[StackLayout] = Fixed(Fit),
-                                         marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-                                         capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                                         override val customDrawers: Vector[CustomDrawer] = Vector())
-	extends Stack[C]
+class ViewStack(override val parentHierarchy: ComponentHierarchy,
+                componentData: Vector[(ReachComponentLike, Changing[Boolean])],
+                directionPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),
+                marginPointer: Changing[StackLength] = Fixed(StackLength.any),
+                capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
+                override val customDrawers: Vector[CustomDrawer] = Vector())
+	extends Stack
 {
 	// ATTRIBUTES	-------------------------------
 	

@@ -15,7 +15,7 @@ import utopia.reach.component.wrapper.Open
   * @tparam Container The type of container yielded by this factory
   * @tparam Top       The highest accepted wrapped component type (typically ReachComponentLike)
   */
-trait NonContextualViewContainerFactory[+Container[C <: Top], -Top <: ReachComponentLike]
+trait NonContextualViewContainerFactory[+Container, -Top <: ReachComponentLike]
 	extends ViewContainerFactory[Container, Top]
 {
 	/**
@@ -30,6 +30,6 @@ trait NonContextualViewContainerFactory[+Container[C <: Top], -Top <: ReachCompo
 	  * @return The created container, created components and the additional result
 	  */
 	def build[F, C <: Top, R](contentFactory: Cff[F])
-	                         (fill: Iterator[F] => SwitchableCreations[C, R]): SwitchableComponentsWrapResult[Container[C], C, R] =
+	                         (fill: Iterator[F] => SwitchableCreations[C, R]): SwitchableComponentsWrapResult[Container, C, R] =
 		apply(Open.manyUsing[F, C, Changing[Boolean], R](contentFactory)(fill)(parentHierarchy.top))
 }

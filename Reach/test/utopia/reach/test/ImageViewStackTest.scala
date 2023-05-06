@@ -1,7 +1,6 @@
 package utopia.reach.test
 
 import utopia.firmament.drawing.immutable.BackgroundDrawer
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -10,7 +9,6 @@ import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.image.Image
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
@@ -45,7 +43,7 @@ object ImageViewStackTest extends App
 	
 	// Window[Stack[Label1, Label2]]
 	val window = ReachWindow.contentContextual.using(ViewStack) { (_, stackF) =>
-		stackF.build(Mixed).withFixedStyle(X, Center) { factories =>
+		stackF.row.centered.build(Mixed) { factories =>
 			Vector(
 				// The first label is static, but sometimes disappears
 				factories.next().withoutContext(ImageLabel)

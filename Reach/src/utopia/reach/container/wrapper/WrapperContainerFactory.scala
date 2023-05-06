@@ -10,5 +10,5 @@ import utopia.reach.container.ContainerFactory
   * @tparam Container The type of container yielded by this factory
   * @tparam Top The highest accepted wrapped component type (typically ReachComponentLike)
   */
-trait WrapperContainerFactory[+Container[C <: Top], -Top]
+trait WrapperContainerFactory[+Container, -Top]
 	extends ContainerFactory[Container, Top, OpenComponent, ComponentWrapResult]

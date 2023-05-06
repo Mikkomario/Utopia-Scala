@@ -4,7 +4,6 @@ import utopia.firmament.localization.LocalString._
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.Framing
@@ -35,14 +34,13 @@ object ViewStackTest extends App
 		// Framing
 		framingF.build(ViewStack).apply(margins.aroundMedium) { stackF =>
 			// Stack
-			stackF.mapContext { _.withTextExpandingToRight }.build(TextLabel)
-				.withFixedStyle(X) { labelFactories =>
-					// 1-9 Labels
-					(1 to 9).map { i =>
-						labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->
-							numberPointer.map { _ >= i }
-					}.toVector
-				}
+			stackF.mapContext { _.withTextExpandingToRight }.row.build(TextLabel) { labelFactories =>
+				// 1-9 Labels
+				(1 to 9).map { i =>
+					labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->
+						numberPointer.map { _ >= i }
+				}.toVector
+			}
 		}
 	}
 	

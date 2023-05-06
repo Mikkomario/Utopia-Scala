@@ -130,7 +130,7 @@ object InputWindowTest extends App
 						Vector(BackgroundDrawer(fieldBackground))) }
 				}
 			else
-				factories(ViewStack).build(Framing).withFixedStyle() { factories =>
+				factories(ViewStack).build(Framing) { factories =>
 					content.map { c => factories.next().withoutContext(c, framingMargin,
 						Vector(BackgroundDrawer(fieldBackground))).parentAndResult }
 				}

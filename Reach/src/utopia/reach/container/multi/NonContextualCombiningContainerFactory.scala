@@ -12,7 +12,7 @@ import utopia.reach.component.wrapper.Open
   * @tparam Container The type of container yielded by this factory
   * @tparam Top       The highest accepted wrapped component type (typically ReachComponentLike)
   */
-trait NonContextualCombiningContainerFactory[+Container[C <: Top], -Top]
+trait NonContextualCombiningContainerFactory[+Container, -Top]
 	extends CombiningContainerFactory[Container, Top]
 {
 	/**

@@ -413,6 +413,12 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  */
 	def result = creation.result
 	
+	/**
+	  * @return A tuple containing the wrapped component and the wrapped additional result,
+	  *         but not the component hierarchy
+	  */
+	def componentAndResult = component -> result
+	
 	
 	// OTHER	---------------------------------
 	

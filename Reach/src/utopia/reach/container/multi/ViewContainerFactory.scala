@@ -9,5 +9,5 @@ import utopia.reach.container.ContainerFactory
   * @author Mikko Hilpinen
   * @since 5.5.2023, v1.1
   */
-trait ViewContainerFactory[+Container[C <: Top], -Top]
+trait ViewContainerFactory[+Container, -Top]
 	extends ContainerFactory[Container, Top, SwitchableOpenComponents, SwitchableComponentsWrapResult]

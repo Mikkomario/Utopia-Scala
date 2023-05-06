@@ -150,7 +150,7 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 class MutableStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
 											initialDirection: Axis2D, initialLayout: StackLayout,
 											initialMargin: StackLength, initialCap: StackLength)
-	extends MutableCustomDrawReachComponent with Stack[C] with MutableMultiContainer[OpenComponent[C, _], C]
+	extends MutableCustomDrawReachComponent with Stack with MutableMultiContainer[OpenComponent[C, _], C]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -174,6 +174,8 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	
 	
 	// IMPLEMENTED	------------------------
+	
+	override def components = _componentsPointer.value
 	
 	override def direction = _direction
 	def direction_=(newDirection: Axis2D) = {
@@ -233,8 +235,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		buffered.iterator.flatMap { c => pointers.get(c.hashCode()) }.foreach { _.value = false }
 		revalidate()
 	}
-	
-	override def components = _componentsPointer.value
 	
 	/**
 	  * Adds a previously added component back to this stack

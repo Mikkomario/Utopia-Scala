@@ -1,11 +1,10 @@
 package utopia.firmament.component.container.many
 
+import utopia.firmament.component.DelayedBoundsUpdate
 import utopia.firmament.component.stack.{StackSizeCalculating, Stackable}
-import utopia.firmament.component.{AreaOfItems, DelayedBoundsUpdate}
 import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
@@ -15,7 +14,7 @@ import utopia.paradigm.shape.shape2d.{Bounds, Point}
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-trait StackLike[C <: Stackable] extends MultiContainer[C] with StackSizeCalculating with AreaOfItems[C] with Stackable
+trait StackLike[+C <: Stackable] extends MultiContainer[C] with StackSizeCalculating with Stackable
 {
     // ABSTRACT -------------------------
     
@@ -79,52 +78,6 @@ trait StackLike[C <: Stackable] extends MultiContainer[C] with StackSizeCalculat
             
         // Finally applies the changes
         wrappedComponents.foreach { _.apply() }
-    }
-    
-    /**
-      * Finds the area of a single element in this stack, including the area around the object
-      * @param item An item in this stack
-      * @return The bounds around the item. None if the item isn't in this stack
-      */
-    override def areaOf(item: C) =
-    {
-        // Caches components so that indexes won't change in between
-        val c = components
-        c.optionIndexOf(item).map { i =>
-            if (c.size == 1)
-                Bounds(Point.origin, size)
-            else {
-                // Includes half of the area between items (if there is no item, uses cap)
-                val top = if (i > 0) (item.position(direction) - c(i - 1).maxAlong(direction)) / 2 else
-                    item.position(direction)
-                val bottom = if (i < c.size - 1) (c(i + 1).position(direction) - item.maxAlong(direction)) / 2 else
-                    length - item.maxAlong(direction)
-                
-                // Also includes the whole stack breadth
-                Bounds(item.position - direction(top), item.size.withDimension(direction.perpendicular(breadth)) +
-                    direction(top + bottom))
-            }
-        }
-    }
-    
-    /**
-      * Finds the item that's neares to a <b>relative</b> point
-      * @param relativePoint A point relative to this Stack's position ((0, 0) = stack origin)
-      * @return The component that's nearest to the provided point. None if this stack is empty
-      */
-    override def itemNearestTo(relativePoint: Point) =
-    {
-        val p = relativePoint(direction)
-        val c = components
-        // Finds the first item past the relative point
-        c.indexWhereOption { _.position(direction) > p }.map { nextIndex =>
-            // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
-            if (nextIndex == 0 || c(nextIndex).position(direction) - p < p - c(nextIndex - 1).maxAlong(direction))
-                c(nextIndex)
-            else
-                c(nextIndex - 1)
-            
-        }.orElse(c.lastOption)
     }
     
     
