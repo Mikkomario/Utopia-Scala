@@ -2,10 +2,9 @@ package utopia.reach.test
 
 import utopia.firmament.model.enumeration.SizeCategory.Large
 import utopia.firmament.model.stack.StackSize
-import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.TimeExtensions._
 import utopia.genesis.util.Screen
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.container.multi.Collection
@@ -25,7 +24,7 @@ object ReachCollectionTest extends App
 	
 	val colorOptions = colors.definedRoles.toVector
 	val window = ReachWindow.contentContextual.using(Collection) { (_, collF) =>
-		collF.build(EmptyLabel).apply(outerMargin = Some(Large), splitThreshold = Some(Screen.width * 0.5)) { labelF =>
+		collF.withOuterMargin(Large).withSplitThreshold(Screen.width * 0.5).build(EmptyLabel) { labelF =>
 			Vector.fill(20) {
 				labelF.withBackgroundForRole(colorOptions.random,
 					StackSize.upscaling(Size.square(16),

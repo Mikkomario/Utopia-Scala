@@ -182,7 +182,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, axis: Axis2D = Y, l
 	// IMPLEMENTED  ------------------------
 	
 	override def withContext[N <: BaseContext](context: N): ContextualStackFactory[N] =
-		ContextualStackFactory(parentHierarchy, context, axis, layout, cap, customDrawers, None)
+		ContextualStackFactory(parentHierarchy, context, axis, layout, cap, customDrawers)
 	
 	override def withAxis(axis: Axis2D): StackFactory = copy(axis = axis)
 	override def withLayout(layout: StackLayout): StackFactory = copy(layout = layout)

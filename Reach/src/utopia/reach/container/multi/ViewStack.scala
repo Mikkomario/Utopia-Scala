@@ -182,7 +182,8 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
 		copy(customDrawers = drawers)
 	
 	override def withContext[N <: BaseContext](context: N) =
-		ContextualViewStackFactory(parentHierarchy, context)
+		ContextualViewStackFactory(parentHierarchy, context, axisPointer, layoutPointer, capPointer, customDrawers,
+			segmentGroup)
 }
 
 case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
@@ -262,6 +263,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
+// TODO: Create a variant that works with static components
 class ViewStack(override val parentHierarchy: ComponentHierarchy,
                 componentData: Vector[(ReachComponentLike, Changing[Boolean])],
                 directionPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),

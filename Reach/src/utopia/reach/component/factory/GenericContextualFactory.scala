@@ -1,8 +1,39 @@
 package utopia.reach.component.factory
-/*
+
+import utopia.firmament.context.ColorContextLike
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
+import utopia.paradigm.color.Color
+
 object GenericContextualFactory
 {
 	// EXTENSIONS	------------------------
+	
+	/*
+	trait FillableGenericContextualFactory[+N, Top, Repr[N2 <: Top]]
+		extends GenericContextualFactory[N, Top, Repr] with CustomDrawableFactory[Repr]
+	 */
+	/*
+	// Works in IntelliJ builder but not in Scala builder
+	implicit class FillableGenericContextualFactory[N1 <: BaseContextLike[_, N2], N2 <: Top, Top >: N1,
+		F[X <: Top] <: CustomDrawableFactory[F[X]]](val f: GenericContextualFactory[N1, Top, F]) extends AnyVal
+	{
+		def withBackground(background: Color) = {
+			f.mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
+		}
+	}*/
+	// Works for all context types except base context
+	// The base context version is too hard for the compiler to understand (at 5.5.2023)
+	implicit class GenericColorContextualFactory[N <: ColorContextLike[N, _], Top >: N,
+		F[N2 <: Top] <: CustomDrawableFactory[F[N2]]](val f: GenericContextualFactory[N, Top, F]) extends AnyVal
+	{
+		/**
+		  * @param background Background color to apply to this component
+		  * @return Copy of this factory with background drawing and modified context
+		  */
+		def withBackground(background: Color) = {
+			f.mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
+		}
+	}
 	
 	/*
 	implicit class BaseContextComponentFactory[N <: BaseContext, Repr[_]]
@@ -31,7 +62,7 @@ object GenericContextualFactory
 		override def withTextContext(base: TextContext): Repr[TextContext] = f.withContext(base)
 		override def *(mod: Double): Repr[TextContext] = f.mapContext { _ * mod }
 	}*/
-}*/
+}
 
 /**
   * A common trait for component factories that use a generic component creation context
