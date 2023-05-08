@@ -21,6 +21,8 @@
 ### New Methods
 - **BaseContext** & **TextContext**
   - Added multiple utility functions that utilize the new **SizeCategory** class
+- **DisplayFunction** (object)
+  - Added `.option(DisplayFunction, LocalizedString)`
 - **LocalizedString** (object)
   - Added `.alwaysEmpty`
 - **Margins**

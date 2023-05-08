@@ -13,6 +13,15 @@ object Span
 	  */
 	def apply[P](start: P, end: P)(implicit ordering: Ordering[P]): Span[P] = _Span[P](start, end)
 	
+	/**
+	 * @param start Starting point
+	 * @param end Ending point
+	 * @param n Numeric implementation for the end-points
+	 * @tparam N Type of numeric type used
+	 * @return A new span
+	 */
+	def numeric[N](start: N, end: N)(implicit n: Numeric[N]) = NumericSpan(start, end)
+	
 	
 	// NESTED   -------------------------
 	

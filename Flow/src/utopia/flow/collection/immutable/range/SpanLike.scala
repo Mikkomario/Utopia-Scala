@@ -106,6 +106,14 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return A copy of this span with mapped end-points
 	  */
 	def mapEnds(f: P => P) = withEnds(f(start), f(end))
+	/**
+	 * Maps the ends of this span to a different data type
+	 * @param f A mapping function applied for both ends of this span
+	 * @param ord Ordering to use for the mapping results
+	 * @tparam P2 Type of mapping results
+	 * @return A new span based on the mapping result of this span
+	 */
+	def map[P2](f: P => P2)(implicit ord: Ordering[P2]) = Span(f(start), f(end))
 	
 	/**
 	  * @param start A new starting point for this span

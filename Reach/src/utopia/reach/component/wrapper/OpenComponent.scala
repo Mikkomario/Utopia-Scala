@@ -315,7 +315,7 @@ object OpenComponent
 		def framed(insets: StackInsetsConvertible, customDrawers: Vector[CustomDrawer] = Vector()) =
 		{
 			Open.using(Framing) { ff =>
-				val wrapping = ff(c, insets, customDrawers)
+				val wrapping = ff.apply(insets).withCustomDrawers(customDrawers)(c)
 				wrapping.parent -> wrapping.result
 			}(c.parentHierarchy.top)
 		}

@@ -14,8 +14,14 @@
   - Added `.apply(...)` for converting functions into map accesses
 - **Seq**
   - Added `.random`
+- **Span** (object)
+  - Added `.numeric(...)`
+- **SpanLike**
+  - Added `.map(...)`
 - **Try** (**CollectionExtensions**)
   - Added `.logToOption` and `.logToOptionWithMessage(String)`
+- **Year** (**TimeExtensions**)
+  - Added `.dates`
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

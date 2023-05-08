@@ -156,12 +156,23 @@ object DisplayFunction
 	def interpolating(string: LocalizedString) = new DisplayFunction[Any](item => string.interpolated(Vector(item)))
 	
 	/**
+	 * @param whenDefined A display function to use when an item has been defined
+	 * @param whenNotDefined A string to display for undefined (None) items
+	 * @tparam A Type of displayed values, when defined
+	 * @return A new display function that works with optional values
+	 */
+	def option[A](whenDefined: DisplayFunction[A], whenNotDefined: LocalizedString = LocalizedString.empty) =
+		new DisplayFunction[Option[A]] ({
+			case Some(item) => whenDefined(item)
+			case None => whenNotDefined
+		})
+	
+	/**
 	  * This display function is used for displaying time in a specific format
 	  * @param formatter A date time formatter
 	  * @return A display function for time elements
 	  */
-	def forTime(formatter: DateTimeFormatter) =
-	{
+	def forTime(formatter: DateTimeFormatter) = {
 		noLocalization[TemporalAccessor] {
 			case instant: Instant => LocalString(instant.toStringWith(formatter))
 			case default => LocalString(formatter.format(default))
@@ -174,6 +185,7 @@ object DisplayFunction
   * @author Mikko Hilpinen
   * @since 22.4.2019, Reflection v1+
   */
+// TODO: Convert into a trait
 class DisplayFunction[-A](f: A => LocalizedString)
 {
 	// OPERATORS	-------------------

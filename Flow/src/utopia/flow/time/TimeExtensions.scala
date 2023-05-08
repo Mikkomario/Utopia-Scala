@@ -1,7 +1,9 @@
 package utopia.flow.time
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.range.IterableSpan
 import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.Sign.{Negative, Positive}
 
 import java.time._
 import java.time.format.DateTimeFormatter
@@ -10,7 +12,6 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.implicitConversions
-import scala.math.Ordered.orderingToOrdered
 import scala.util.Try
 
 /**
@@ -688,6 +689,15 @@ object TimeExtensions
 		  * @return The last day of this year
 		  */
 		def lastDay: LocalDate = y(12).lastDay
+		/**
+		 * @return Dates of this year
+		 */
+		def dates = IterableSpan.iterate(firstDay, lastDay) { (date, direction) =>
+			direction match {
+				case Positive => date.tomorrow
+				case Negative => date.yesterday
+			}
+		}
 		
 		/**
 		  * @return January (1) of this year
