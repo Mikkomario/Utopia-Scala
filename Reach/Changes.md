@@ -1,8 +1,11 @@
 # Utopia Reach - List of Changes
 
 ## v1.1 (in development)
-TODO: Document changes in container constructors
 ### Breaking Changes
+- Updated how containers are built
+  - The `.build(...)(...)` function is now performed after specifying the other parameters. 
+    These parameters are no longer included in this function.
+  - The factories support incremental parameter definition. Multiple parameters may be defined using `.copy(...)`
 - Renamed `utopia.reach.util` to `utopia.reach.drawing`
 - Updated **InteractionWindowFactory** in following ways:
   - The abstract property `.windowContext` is now required to be of type **ReachContentWindowContext**

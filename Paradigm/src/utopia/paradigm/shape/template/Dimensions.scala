@@ -397,6 +397,13 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	}
 	
 	/**
+	  * @param newZero New zero value to use
+	  * @param f Mapping function for specified values
+	  * @tparam B New dimension type
+	  * @return A mapped copy of these dimensions
+	  */
+	def mapWithZero[B](newZero: => B)(f: A => B) = new Dimensions[B](Lazy(newZero), values.map(f))
+	/**
 	  * Maps all dimensions in this set
 	  * @param f A mapping function that accepts a dimension and the axis on which the dimension applies.
 	  *          Returns a modified dimension.

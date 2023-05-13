@@ -45,7 +45,7 @@ object ReachScrollAreaTest extends App
 		// Framing
 		val framing = framingF.build(ScrollArea) { scrollF =>
 			// Scroll area
-			scrollF.build(Stack).apply(maxOptimalSize = Some(Size(320, 320))) { rowF =>
+			scrollF.withMaxOptimalSize(Size.square(320)).build(Stack) { rowF =>
 				// Stack (X)
 				rowF.row.build(Stack) { colF =>
 					// Each row contains 5 columns, which each contain 5 blocks,

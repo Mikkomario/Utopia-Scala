@@ -5,6 +5,8 @@
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
 - Added **FromDirectionFactory** and **FromAlignmentFactory** -traits
 ### New Methods
+- **Dimensions**
+  - Added `.mapWithZero(...)(...)`
 - **InsetsLike**
   - Added `-(Axis2D)`
 
