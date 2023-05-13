@@ -62,8 +62,7 @@ object DropDownTest extends App
 							},
 							promptPointer = Fixed("Select One"),
 							makeNoOptionsView = Some({ (hierarchy, context, _) =>
-								TextLabel(hierarchy).withContext(context)
-									.apply("Please select a category first", isHint = true)
+								TextLabel(hierarchy).withContext(context).hint("Please select a category first")
 							})
 						)
 					)

@@ -6,6 +6,8 @@
   - The `.build(...)(...)` function is now performed after specifying the other parameters. 
     These parameters are no longer included in this function.
   - The factories support incremental parameter definition. Multiple parameters may be defined using `.copy(...)`
+- Updated the following contextual component constructors: 
+  - **TextLabel** and **ViewTextLabel**
 - Renamed `utopia.reach.util` to `utopia.reach.drawing`
 - Updated **InteractionWindowFactory** in following ways:
   - The abstract property `.windowContext` is now required to be of type **ReachContentWindowContext**
@@ -25,11 +27,15 @@
   - This was added in order to automatically optimize between the **ViewStack** and the **Stack** options
 - Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
 ### Deprecations
-- Deprecated existing **EmptyLabel** and **ViewEmptyLabel** constructors
+- Deprecated existing constructors in
+  - **EmptyLabel** and **ViewEmptyLabel**
+  - Contextual **TextLabel** and **ViewTextLabel**
 ### New Features
 - **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
   (optional feature)
-- Added new constructor style to **EmptyLabel** and **ViewEmptyLabel**
+- Added new constructor style to
+  - **EmptyLabel** and **ViewEmptyLabel**
+  - Contextual **TextLabel** and **ViewTextLabel**
 - Added easier methods for adding background drawing to certain components and containers
   - In containers, the new `.withBackground(...)` functions are available implicitly (see **GenericContextualFactory**)
   - In component factories, these become available after importing **ContextualBackgroundAssignableFactory**

@@ -3,7 +3,6 @@ package utopia.reach.test
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.Mixed
@@ -53,7 +52,7 @@ object ReachSwitchTest extends App
 						val switch = makeSwitch(factories.next()(Switch))
 						// 3: Switch value label
 						val valueLabel = factories.next().mapContext { _.forTextComponents }(ViewTextLabel)
-							.apply(switch.valuePointer, isHintPointer = AlwaysTrue)
+							.hint(switch.valuePointer)
 						
 						// Returns the created switch as an additional result
 						Vector(nameLabel, switch, valueLabel) -> switch

@@ -196,12 +196,11 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 						}
 					}
 					
-					if (separatorText.nonEmpty)
-					{
+					if (separatorText.nonEmpty) {
 						// Places separators between the fields
-						val separatorFactory = factories(TextLabel)
+						val separatorFactory = factories(TextLabel).hint
 						val separatorFields = Vector.fill(inputFields.size - 1) {
-							separatorFactory(separatorText, isHint = true)
+							separatorFactory(separatorText)
 						}
 						inputFields.dropRight(1).zip(separatorFields)
 							.flatMap { case (field, separator) => Vector(field, separator) } :+ inputFields.last
