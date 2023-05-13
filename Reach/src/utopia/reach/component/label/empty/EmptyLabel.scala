@@ -1,13 +1,13 @@
 package utopia.reach.component.label.empty
 
 import utopia.firmament.context.ColorContext
-import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackSize
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
+import utopia.reach.component.factory.{ContextualBackgroundAssignableFactory, ColorContextualFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
@@ -21,7 +21,7 @@ class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 {
 	// IMPLEMENTED  --------------------------------
 	
-	override def withContext(context: ColorContext) = ContextualEmptyLabelFactory(this, context)
+	override def withContext(context: ColorContext) = ContextualEmptyLabelFactory(parentHierarchy, context)
 	
 	
 	// OTHER    ------------------------------------
@@ -46,15 +46,19 @@ class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 		apply(stackSize, BackgroundDrawer(color) +: customDrawers)
 }
 
-case class ContextualEmptyLabelFactory(factory: EmptyLabelFactory, context: ColorContext)
+case class ContextualEmptyLabelFactory(hierarchy: ComponentHierarchy, context: ColorContext,
+                                       customDrawers: Vector[CustomDrawer] = Vector())
 	extends ColorContextualFactory[ContextualEmptyLabelFactory]
+		with ContextualBackgroundAssignableFactory[ColorContext, ContextualEmptyLabelFactory]
+		with CustomDrawableFactory[ContextualEmptyLabelFactory]
 {
 	// COMPUTED ------------------------------------
 	
 	/**
 	 * @return A copy of this factory without context information
 	 */
-	def withoutContext = factory
+	@deprecated("Deprecated for removal", "v1.1")
+	def withoutContext = EmptyLabel(hierarchy)
 	
 	
 	// IMPLEMENTED  --------------------------------
@@ -62,9 +66,17 @@ case class ContextualEmptyLabelFactory(factory: EmptyLabelFactory, context: Colo
 	override def self: ContextualEmptyLabelFactory = this
 	
 	override def withContext(newContext: ColorContext) = copy(context = newContext)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualEmptyLabelFactory =
+		copy(customDrawers = drawers)
 	
 	
 	// OTHER    ------------------------------------
+	
+	/**
+	  * @param size Size assigned for the created label
+	  * @return A new empty label
+	  */
+	def apply(size: StackSize) = new EmptyLabel(hierarchy, size, customDrawers)
 	
 	/**
 	 * Creates a new empty label which is filled with a background color suitable for a specific role
@@ -74,9 +86,10 @@ case class ContextualEmptyLabelFactory(factory: EmptyLabelFactory, context: Colo
 	 * @param customDrawers Additional custom drawers to assign (default = empty)
 	 * @return A new empty label
 	 */
+	@deprecated("Please use .withBackground(ColorRole, ColorLevel).apply(StackSize) instead", "v1.1")
 	def withBackgroundForRole(role: ColorRole, stackSize: StackSize, preferredShade: ColorLevel = Standard,
 	                          customDrawers: Vector[CustomDrawer] = Vector()) =
-		factory.withBackground(context.color.preferring(preferredShade)(role), stackSize, customDrawers)
+		withoutContext.withBackground(context.color.preferring(preferredShade)(role), stackSize, customDrawers)
 }
 
 /**

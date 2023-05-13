@@ -24,9 +24,15 @@
 - **ViewStack** constructors now return a **Stack**
   - This was added in order to automatically optimize between the **ViewStack** and the **Stack** options
 - Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
+### Deprecations
+- Deprecated existing **EmptyLabel** and **ViewEmptyLabel** constructors
 ### New Features
 - **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
   (optional feature)
+- Added new constructor style to **EmptyLabel** and **ViewEmptyLabel**
+- Added easier methods for adding background drawing to certain components and containers
+  - In containers, the new `.withBackground(...)` functions are available implicitly (see **GenericContextualFactory**)
+  - In component factories, these become available after importing **ContextualBackgroundAssignableFactory**
 ### New Methods
 - **CachingViewSwapper** (factory)
   - Added the missing `.build(...)` method

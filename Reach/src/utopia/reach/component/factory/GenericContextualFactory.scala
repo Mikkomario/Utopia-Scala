@@ -2,8 +2,7 @@ package utopia.reach.component.factory
 
 import utopia.firmament.context.ColorContextLike
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
-import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
+import utopia.paradigm.color.Color
 
 object GenericContextualFactory
 {
@@ -25,42 +24,17 @@ object GenericContextualFactory
 	// Works for all context types except base context
 	// The base context version is too hard for the compiler to understand (at 5.5.2023)
 	implicit class GenericColorContextualFactory[N <: ColorContextLike[N, _], Top >: N,
-		F[N2 <: Top] <: CustomDrawableFactory[F[N2]]](val f: GenericContextualFactory[N, Top, F]) extends AnyVal
+		F[N2 <: Top] <: CustomDrawableFactory[F[N2]]](val f: GenericContextualFactory[N, Top, F])
+		extends AnyVal with ContextualBackgroundAssignable[N, F[N]]
 	{
+		override def context: N = f.context
+		
 		/**
 		  * @param background Background color to apply to this component
 		  * @return Copy of this factory with background drawing and modified context
 		  */
-		def withBackground(background: Color): F[N] =
+		override def withBackground(background: Color): F[N] =
 			f.mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
-		/**
-		  * Applies the best background color for the current context
-		  * @param background Background color set to apply to this component
-		  * @param preferredShade The color shade that is preferred (default = Standard)
-		  * @return Copy of this factory with background drawing and modified context
-		  */
-		def withBackground(background: ColorSet, preferredShade: ColorLevel): F[N] =
-			withBackground(f.context.color.preferring(preferredShade)(background))
-		/**
-		  * Applies the best background color for the current context
-		  * @param background Background color set to apply to this component
-		  * @return Copy of this factory with background drawing and modified context
-		  */
-		def withBackground(background: ColorSet): F[N] = withBackground(background, Standard)
-		/**
-		  * Applies the best background color for the current context
-		  * @param background Role of the background color to apply to this component
-		  * @param preferredShade The color shade that is preferred (default = Standard)
-		  * @return Copy of this factory with background drawing and modified context
-		  */
-		def withBackground(background: ColorRole, preferredShade: ColorLevel): F[N] =
-			withBackground(f.context.color.preferring(preferredShade)(background))
-		/**
-		  * Applies the best background color for the current context
-		  * @param background Role of the background color to apply to this component
-		  * @return Copy of this factory with background drawing and modified context
-		  */
-		def withBackground(background: ColorRole): F[N] = withBackground(background, Standard)
 	}
 	
 	/*
@@ -100,14 +74,9 @@ object GenericContextualFactory
   * @tparam Top The type limit of accepted context parameters
   * @tparam Repr Implementation type of this factory (generic)
   */
-trait GenericContextualFactory[+N, Top, +Repr[N2 <: Top]]
+trait GenericContextualFactory[+N, Top, +Repr[N2 <: Top]] extends HasContext[N]
 {
 	// ABSTRACT	----------------------------
-	
-	/**
-	  * @return Component creation context used inside this factory
-	  */
-	def context: N
 	
 	/**
 	  * @param newContext A new component creation context

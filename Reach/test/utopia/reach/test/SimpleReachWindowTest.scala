@@ -15,7 +15,7 @@ object SimpleReachWindowTest extends App
 	import ReachTestContext._
 	
 	val window = ReachWindow.contentContextual.using(EmptyLabel) { (_, labelF) =>
-		labelF.withoutContext.apply(StackSize(StackLength(142, 245.9), StackLength(116, 189)))
+		labelF(StackSize(StackLength(142, 245.9), StackLength(116, 189)))
 	}
 	
 	window.display(centerOnParent = true)

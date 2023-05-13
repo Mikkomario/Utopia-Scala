@@ -7,6 +7,7 @@ import utopia.reach.component.input.text.TextField
 import utopia.reflection.reach.ReflectionReachCanvas
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack
@@ -26,14 +27,15 @@ object ReachWithinReflectionTest extends App
 	import utopia.reflection.test.TestContext._
 	import utopia.reach.test.TestCursors._
 	
+	val textPointer = new PointerWithEvents[String]("")
 	val background = colorScheme.gray.light
 	val canvas = ReflectionReachCanvas(Color.black.withAlpha(0.0), cursors) { hierarchy =>
 		TextField.withContext(hierarchy, baseContext.against(background).forTextComponents)
-			.forString(320.any, fieldNamePointer = Fixed("Test Field"))
+			.forString(320.any, fieldNamePointer = Fixed("Test Field"), textPointer = textPointer)
 	}
 	
 	val button = baseContext.against(background).forTextComponents.withBackground(Secondary).use { implicit c =>
-		TextButton.contextual("OK") { canvas.child.clear() }
+		TextButton.contextual("OK") { textPointer.value = "" }
 	}
 	println(button.component.isFocusable)
 	
