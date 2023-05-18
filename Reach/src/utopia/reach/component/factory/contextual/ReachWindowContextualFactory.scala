@@ -1,4 +1,4 @@
-package utopia.reach.component.factory
+package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.TextContext
 import utopia.reach.context.{ReachWindowContext, ReachWindowContextWrapper}

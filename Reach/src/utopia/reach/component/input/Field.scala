@@ -19,7 +19,8 @@ import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{FromGenericContextFactory, GenericContextualFactory, Mixed}
+import utopia.reach.component.factory.contextual.GenericContextualFactory
+import utopia.reach.component.factory.{FromGenericContextFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
 import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}

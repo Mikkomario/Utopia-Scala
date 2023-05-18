@@ -18,7 +18,8 @@ import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
+import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}

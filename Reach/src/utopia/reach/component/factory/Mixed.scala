@@ -2,6 +2,7 @@ package utopia.reach.component.factory
 
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
 object Mixed extends Cff[Mixed]

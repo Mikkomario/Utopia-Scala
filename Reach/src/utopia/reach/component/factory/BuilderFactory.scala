@@ -6,6 +6,7 @@ package utopia.reach.component.factory
   * @author Mikko Hilpinen
   * @since 11.10.2020, v0.1
   */
+@deprecated("Please use NonContextualContainerFactory or ContextualContainerFactory instead", "v1.1")
 trait BuilderFactory[+Builder[+_]]
 {
 	/**

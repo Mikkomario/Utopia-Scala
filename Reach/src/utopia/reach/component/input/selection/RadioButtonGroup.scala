@@ -17,7 +17,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.TextContextualFactory
+import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.check.RadioButtonLine
 import utopia.reach.component.template.ReachComponentWrapper

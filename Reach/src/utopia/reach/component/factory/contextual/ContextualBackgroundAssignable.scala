@@ -1,8 +1,9 @@
-package utopia.reach.component.factory
+package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.ColorContextLike
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorSet}
+import utopia.reach.component.factory.BackgroundAssignable
 
 /**
   * Common trait for context-based factories that allow custom background-assigning

@@ -11,7 +11,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.{FromContextFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
@@ -20,6 +20,7 @@ import utopia.reach.focus.FocusListener
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackInsets
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, GenericContextualFactory}
 
 object ViewImageButton extends Cff[ViewImageButtonFactory]
 {

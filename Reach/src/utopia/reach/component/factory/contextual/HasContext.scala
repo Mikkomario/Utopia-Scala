@@ -1,4 +1,4 @@
-package utopia.reach.component.factory
+package utopia.reach.component.factory.contextual
 
 /**
   * Common trait for component factories (and other classes) that wrap a component creation context

@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.GenericContextualFactory
+import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
 import utopia.reach.component.wrapper.Open
 

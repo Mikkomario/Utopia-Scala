@@ -10,7 +10,8 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{ColorContextualFactory, ContextualVariableBackgroundAssignable, FromContextFactory, VariableBackgroundAssignable}
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualVariableBackgroundAssignable}
+import utopia.reach.component.factory.{FromContextFactory, VariableBackgroundAssignable}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 

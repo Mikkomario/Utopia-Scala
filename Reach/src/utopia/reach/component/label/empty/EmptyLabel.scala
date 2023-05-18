@@ -7,7 +7,8 @@ import utopia.firmament.model.stack.StackSize
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{ContextualBackgroundAssignableFactory, ColorContextualFactory, FromContextFactory}
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
+import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 

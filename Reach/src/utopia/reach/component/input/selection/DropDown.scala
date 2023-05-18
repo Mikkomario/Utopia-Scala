@@ -20,7 +20,7 @@ import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.ReachContentWindowContextualFactory
+import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldWithSelectionPopup
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}

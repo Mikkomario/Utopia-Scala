@@ -13,7 +13,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.{ContextualBackgroundAssignableFactory, TextContextualFactory}
+import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 

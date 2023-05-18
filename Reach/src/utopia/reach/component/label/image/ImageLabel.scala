@@ -11,7 +11,8 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.transform.SizeAdjustable
-import utopia.reach.component.factory.{BackgroundAssignable, ColorContextualFactory, ComponentFactoryFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory, FramedFactory, FromContextFactory}
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 

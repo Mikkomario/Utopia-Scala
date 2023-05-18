@@ -8,7 +8,8 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, ComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{Open, OpenComponent}

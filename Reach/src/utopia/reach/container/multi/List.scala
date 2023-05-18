@@ -24,7 +24,8 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
+import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable

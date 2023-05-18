@@ -11,7 +11,8 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{BaseContextualFactory, FromContextFactory}
+import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.BaseContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent

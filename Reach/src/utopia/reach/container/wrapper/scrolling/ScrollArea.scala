@@ -14,7 +14,8 @@ import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.{Bounds, Size}
 import utopia.paradigm.shape.template.Dimensions
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}

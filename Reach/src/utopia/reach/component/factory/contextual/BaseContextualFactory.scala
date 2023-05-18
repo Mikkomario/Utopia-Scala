@@ -1,4 +1,4 @@
-package utopia.reach.component.factory
+package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.{BaseContext, BaseContextWrapper}
 import utopia.paradigm.color.Color

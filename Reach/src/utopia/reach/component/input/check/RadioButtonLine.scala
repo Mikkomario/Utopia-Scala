@@ -13,7 +13,8 @@ import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.{Mixed, TextContextualFactory}
+import utopia.reach.component.factory.Mixed
+import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.CursorDefining

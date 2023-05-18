@@ -10,7 +10,8 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{ContextualFramedFactory, FramedFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.contextual.ContextualFramedFactory
+import utopia.reach.component.factory.{FramedFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}

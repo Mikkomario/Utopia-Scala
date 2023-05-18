@@ -5,7 +5,8 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{FromGenericContextFactory, GenericContextualFactory}
+import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}

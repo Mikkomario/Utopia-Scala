@@ -36,7 +36,8 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Direction2D.Down
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.{GenericContextualFactory, Mixed}
+import utopia.reach.component.factory.Mixed
+import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.{SelectionList, SelectionListFactory}
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}

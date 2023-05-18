@@ -23,7 +23,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.TextContextualFactory
+import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.input.InputValidationResult.Default

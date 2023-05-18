@@ -23,7 +23,8 @@ import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, ReachContentWindowContextualFactory}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}

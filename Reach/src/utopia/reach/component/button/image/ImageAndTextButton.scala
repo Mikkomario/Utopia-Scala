@@ -14,7 +14,8 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, TextContextualFactory}
+import utopia.reach.component.factory.contextual.TextContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}

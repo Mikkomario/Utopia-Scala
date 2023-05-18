@@ -2,12 +2,13 @@
 
 ## v1.1 (in development)
 ### Breaking Changes
+- Renamed `utopia.reach.util` to `utopia.reach.drawing`
+- Moved some classes from the `factory` package to `factory.contextual`
 - Updated how containers are built
   - The `.build(...)(...)` function is now performed after specifying the other parameters. 
     These parameters are no longer included in this function.
   - The factories support incremental parameter definition. Multiple parameters may be defined using `.copy(...)`
 - Updated contextual constructors of various labels
-- Renamed `utopia.reach.util` to `utopia.reach.drawing`
 - Updated **InteractionWindowFactory** in following ways:
   - The abstract property `.windowContext` is now required to be of type **ReachContentWindowContext**
   - Removed `.standardContext`, which is now replaced by the `.windowContext`
@@ -29,6 +30,7 @@
 ### Deprecations
 - Deprecated existing constructors in various label classes
 - Deprecated **ImageLabelLike** in favor of **ImageLabel**
+- Deprecated **BuilderFactory** and **SimpleFilledBuilderFactory**
 ### New Features
 - **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
   (optional feature)

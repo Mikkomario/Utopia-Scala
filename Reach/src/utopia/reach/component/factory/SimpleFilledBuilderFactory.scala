@@ -11,6 +11,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
   * @author Mikko Hilpinen
   * @since 9.12.2020, v0.1
   */
+@deprecated("Deprecated for removal", "v1.1")
 trait SimpleFilledBuilderFactory[Builder[NC, F]]
 {
 	protected def makeBuilder[NC, F](background: Color, contentContext: NC,

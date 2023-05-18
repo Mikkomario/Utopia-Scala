@@ -29,7 +29,8 @@ import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{ColorContextualFactory, FromContextFactory}
+import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, ReachComponent, ReachComponentLike, ReachComponentWrapper}

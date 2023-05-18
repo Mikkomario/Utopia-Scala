@@ -18,7 +18,8 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.ColorShade.Light
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{FromContextFactory, TextContextualFactory}
+import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.AbstractSelectableTextLabel
 import utopia.reach.component.template.focus.MutableFocusable
