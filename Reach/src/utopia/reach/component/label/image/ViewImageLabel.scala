@@ -63,7 +63,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
                      insetsPointer: Changing[StackInsets], alignmentPointer: Changing[Alignment],
                      additionalCustomDrawers: Vector[CustomDrawer] = Vector(),
                      override val allowUpscaling: Boolean = true, override val useLowPrioritySize: Boolean = false)
-	extends CustomDrawReachComponent with ImageLabelLike
+	extends CustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	---------------------------------
 	

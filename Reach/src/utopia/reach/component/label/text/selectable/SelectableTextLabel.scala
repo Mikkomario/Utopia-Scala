@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -126,31 +126,149 @@ class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
 			focusListeners, allowLineBreaks, allowTextShrink)
 }
 
-case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFactory, context: TextContext)
+case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFactory, context: TextContext,
+                                                highlightColorPointer: Changing[ColorRole] = Fixed(Secondary),
+                                                customDrawers: Vector[CustomDrawer] = Vector(),
+                                                focusListeners: Vector[FocusListener] = Vector(),
+                                                caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+                                                customStylePointer: Option[Changing[TextDrawContext]] = None,
+                                                customSelectedTextColorPointer: Option[Changing[Color]] = None,
+                                                customSelectionBackgroundColorPointer: Option[Changing[Option[Color]]] = None,
+                                                customCaretColorPointer: Option[Changing[Color]] = None)
 	extends TextContextualFactory[ContextualSelectableTextLabelFactory]
 {
+	// COMPUTED -------------------------------
+	
+	private def stylePointer =
+		customStylePointer.getOrElse { Fixed(TextDrawContext.contextual(context)) }
+	
+	/**
+	  * @return Copy of this factory that doesn't draw a background for selected text
+	  */
+	def withoutSelectionBackground = withSelectionBackgroundPointer(Fixed(None))
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
 	override def self: ContextualSelectableTextLabelFactory = this
 	
 	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
+	
+	// OTHER    -------------------------------
+	
+	/**
+	  * @param p A pointer that contains the highlight color role to use
+	  * @return Copy of this factory that uses the specified pointer
+	  */
+	def withHighlightColorPointer(p: Changing[ColorRole]) =
+		copy(highlightColorPointer = p)
+	/**
+	  * @param c Highlighting color to use for selection
+	  * @return Copy of this factory with that highlighting color in place
+	  */
+	def withHighlightColor(c: ColorRole) = withHighlightColorPointer(Fixed(c))
+	
+	/**
+	  * @param listeners Focus listeners to use in this component
+	  * @return Copy of this factory that assigns the specified focus listeners (only)
+	  */
+	def withFocusListeners(listeners: Vector[FocusListener]) =
+		copy(focusListeners = listeners)
+	/**
+	  * @param listener A focus listener to assign to created components
+	  * @return Copy of this factory with the specified focus listener appended
+	  */
+	def withFocusListener(listener: FocusListener) =
+		withFocusListeners(focusListeners :+ listener)
+	
+	/**
+	  * @param interval Interval between caret visibility changes
+	  * @return Copy of this factory with specified blink frequency
+	  */
+	def withCaretBlinkFrequency(interval: Duration) = copy(caretBlinkFrequency = interval)
+	
+	/**
+	  * @param p A pointer that overrides normal text draw style
+	  * @return Copy of this factory that uses the specified text style pointer
+	  */
+	def withStylePointer(p: Changing[TextDrawContext]) =
+		copy(customStylePointer = Some(p))
+	def withStyle(s: TextDrawContext) = withStylePointer(Fixed(s))
+	def mapStyle(f: TextDrawContext => TextDrawContext) =
+		withStylePointer(stylePointer.map(f))
+	
+	/**
+	  * @param p Pointer that determines (overrides) the color of selected text
+	  * @return Copy of this factory that uses the specified pointer
+	  */
+	def withSelectedTextColorPointer(p: Changing[Color]) =
+		copy(customSelectedTextColorPointer = Some(p))
+	/**
+	  * @param c Color to use for selected text
+	  * @return Copy of this factory with the specified selected text color
+	  */
+	def withSelectedTextColor(c: Color) = withSelectedTextColorPointer(Fixed(c))
+	
+	/**
+	  * @param p A pointer that determines the (text) selection background color,
+	  *          containing None while there shall be no background drawn.
+	  * @return A copy of this factory that uses the specified pointer
+	  */
+	def withSelectionBackgroundPointer(p: Changing[Option[Color]]) =
+		copy(customSelectionBackgroundColorPointer = Some(p))
+	/**
+	  * @param c Background color for selected text
+	  * @return Copy of this factory that uses the specified background color
+	  */
+	def withSelectionBackground(c: Color) =
+		withSelectionBackgroundPointer(Fixed(Some(c)))
+	
+	/**
+	  * @param p Pointer that determines the caret color to use
+	  * @return Copy of this factory that uses the specified pointer
+	  */
+	def withCaretColorPointer(p: Changing[Color]) =
+		copy(customCaretColorPointer = Some(p))
+	/**
+	  * @param c Color for the caret
+	  * @return Copy of this factory with the specified caret color
+	  */
+	def withCaretColor(c: Color) = withCaretColorPointer(Fixed(c))
+	
 	/**
 	  * Creates a new selectable text label
 	  * @param textPointer Pointer to the displayed text content
-	  * @param caretBlinkFrequency How often caret visibility changes (default = global default)
-	  * @param customDrawers Custom drawers to assign to this label (default = empty)
-	  * @param focusListeners Focus listeners to assign to this label (default = empty)
 	  * @return A new selectable text label
 	  */
-	def apply(textPointer: Changing[LocalizedString],
-	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-	          customDrawers: Vector[CustomDrawer], focusListeners: Seq[FocusListener]) =
-	{
-		val selectionBackground = context.color.light.secondary
-		val caretColor = context.color.differentFrom(Secondary, selectionBackground)
-		factory(context.actorHandler, textPointer, Fixed(TextDrawContext.contextual(context)),
-			Fixed(selectionBackground.shade.defaultTextColor), Fixed(Some(selectionBackground)), Fixed(caretColor),
-			(context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, customDrawers, focusListeners,
-			context.allowTextShrink)
+	def apply(textPointer: Changing[LocalizedString]) = {
+		// Uses custom selection background, if specified
+		val selectionBgPointer = customSelectionBackgroundColorPointer.getOrElse {
+			// By default, highlights using the specified highlight color
+			highlightColorPointer.map { c => Some(context.color.light(c)) }
+		}
+		// Picks the selected text color based on the selection background
+		val selectedTextColorPointer = selectionBgPointer.mergeWith(highlightColorPointer)  { (bg, c) =>
+			bg match {
+				// Case: Selection background is colored => Uses black or white text
+				case Some(bg) => bg.shade.defaultTextColor
+				// Case: No selection background is used => Uses colored text
+				case None => context.color(c)
+			}
+		}
+		// Determines the caret color based on selection background
+		val caretColorPointer = customCaretColorPointer.getOrElse {
+			selectionBgPointer.mergeWith(highlightColorPointer) { (bg, c) =>
+				bg match {
+					// Case: Colored selection background => Uses a color that may be distinguished from the background
+					case Some(bg) => context.color.differentFrom(c, bg)
+					case None => context.color(c)
+				}
+			}
+		}
+		factory(context.actorHandler, textPointer, stylePointer, selectedTextColorPointer, selectionBgPointer,
+			caretColorPointer, (context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, customDrawers,
+			focusListeners, context.allowTextShrink)
 	}
 }
 

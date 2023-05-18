@@ -145,9 +145,12 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text:
 		def makeTextLabel(hierarchy: ComponentHierarchy) =
 			TextLabel(hierarchy).apply(text, font, textColor, alignment, textInsets, betweenLinesMargin,
 				allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
+		// TODO: Instead of listing all parameters here again, consider using a custom modify function
 		def makeImageLabel(hierarchy: ComponentHierarchy) =
-			ImageLabel(hierarchy).apply(image, imageInsets, alignment.opposite,
-				allowUpscaling = allowImageUpscaling, useLowPrioritySize = useLowPriorityImageSize)
+			ImageLabel(hierarchy)
+				.copy(insets = imageInsets, alignment = alignment.opposite,
+					allowsUpscaling = allowImageUpscaling, usesLowPrioritySize = useLowPriorityImageSize)
+				.apply(image)
 		
 		// If one of the provided items is empty, only creates one component
 		if (image.isEmpty)

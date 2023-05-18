@@ -41,10 +41,8 @@ object ReachComponentTest extends App
 		stackF.withoutMargin.build(Mixed) { factories =>
 			// 1: Framing (Secondary)
 			val (framing, label) = factories(Framing).withBackground(Secondary, Light)
-				.build(MutableTextLabel) { labelF =>
-					// Hello Label (Primary)
-					labelF.withHorizontallyCenteredText.withBackground("Hello!", Primary)
-				}.toTuple
+				// Hello Label (Primary)
+				.build(MutableTextLabel) { _.withHorizontallyCenteredText.withBackground(Primary)("Hello!") }.toTuple
 			// 2: Hello Label 2
 			val label2 = factories(TextLabel).withTextAlignment(Alignment.Center)
 				.apply("Hello 2\nThis label contains 2 lines")

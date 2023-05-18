@@ -2,18 +2,18 @@ package utopia.reach.component.label.text
 
 import utopia.firmament.component.text.{MutableTextComponent, TextComponent}
 import utopia.firmament.context.TextContext
-import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.text.Font
-import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.TextContextualFactory
+import utopia.reach.component.factory.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 
@@ -23,13 +23,26 @@ object MutableTextLabel extends Ccff[TextContext, ContextualMutableTextLabelFact
 		ContextualMutableTextLabelFactory(hierarchy, context)
 }
 
-case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+                                             customDrawers: Vector[CustomDrawer] = Vector.empty, isHint: Boolean = false)
 	extends TextContextualFactory[ContextualMutableTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[TextContext, ContextualMutableTextLabelFactory]
+		with CustomDrawableFactory[ContextualMutableTextLabelFactory]
 {
+	// COMPUTED --------------------------------------
+	
+	/**
+	  * @return Copy of this factory that creates hint labels
+	  */
+	def hint = copy(isHint = true)
+	
+	
 	// IMPLEMENTED	----------------------------------
 	
 	override def self: ContextualMutableTextLabelFactory = this
 	
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualMutableTextLabelFactory =
+		copy(customDrawers = drawers)
 	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
@@ -38,39 +51,34 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
 	/**
 	  * Creates a new text label utilizing contextual information
 	  * @param text Text displayed on this label
-	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @return A new label
 	  */
-	def apply(text: LocalizedString, isHint: Boolean = false) =
-		new MutableTextLabel(parentHierarchy, text, context.font,
+	def apply(text: LocalizedString) = {
+		val label = new MutableTextLabel(parentHierarchy, text, context.font,
 			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
 			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
-	
-	/**
-	  * Creates a new text label with solid background utilizing contextual information
-	  * @param text       Text displayed on this label
-	  * @param background Label background color
-	  * @param isHint     Whether this label should be considered a hint (affects text color)
-	  * @return A new label
-	  */
-	def withCustomBackground(text: LocalizedString, background: Color, isHint: Boolean = false) =
-	{
-		val label = mapContext { _.against(background) }(text, isHint)
-		label.addCustomDrawer(BackgroundDrawer(background))
+		customDrawers.foreach(label.addCustomDrawer)
 		label
 	}
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param text           Text displayed on this label
-	  * @param role           Label background color role
-	  * @param preferredShade Preferred color shade (default = standard)
-	  * @param isHint         Whether this label should be considered a hint (affects text color)
+	  * @param text       Text displayed on this label
+	  * @param background Label background color
 	  * @return A new label
 	  */
-	def withBackground(text: LocalizedString, role: ColorRole,
-	                   preferredShade: ColorLevel = Standard, isHint: Boolean = false) =
-		withCustomBackground(text, context.color.preferring(preferredShade)(role), isHint)
+	@deprecated("Please use .withBackground(Color).apply(LocalizedString) instead", "v1.1")
+	def withCustomBackground(text: LocalizedString, background: Color) =
+		withBackground(background)(text)
+	/**
+	  * Creates a new text label with solid background utilizing contextual information
+	  * @param text Text displayed on this label
+	  * @param role Label background color role
+	  * @return A new label
+	  */
+	@deprecated("Please use .withBackground(ColorRole).apply(LocalizedString) instead", "v1.1")
+	def withBackground(text: LocalizedString, role: ColorRole): MutableTextLabel =
+		withBackground(role).apply(text)
 }
 
 /**

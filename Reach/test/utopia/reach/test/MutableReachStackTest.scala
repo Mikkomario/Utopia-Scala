@@ -39,7 +39,7 @@ object MutableReachStackTest extends App
 	ContainerContentDisplayer.forStatelessItems(window.content, dataPointer) { i =>
 		implicit val c: ReachCanvas = window.canvas
 		Open.withContext(windowContext.withHorizontallyCenteredText)(MutableViewTextLabel) { labelF =>
-			labelF.withBackground(i, Secondary)
+			labelF.withBackground(Secondary)(i)
 		}
 	}
 	

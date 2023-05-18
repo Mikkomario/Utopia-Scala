@@ -483,8 +483,8 @@ class Field[C <: ReachComponentLike with Focusable]
 			ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.against),
 				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 		else
-			ImageLabel(hierarchy).apply(icon.against(contextBackgroundPointer.value),
-				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+			ImageLabel(hierarchy).withInsets(iconOutsideMargins.toInsets - noMarginSide).lowPriority
+				.apply(icon.against(contextBackgroundPointer.value))
 	}
 	
 	private def makeContentAndNameArea(fieldNamePointer: Changing[LocalizedString]) =

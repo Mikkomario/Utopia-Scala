@@ -39,7 +39,7 @@ class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
 class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initialImage: Image,
 						initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
 						override val allowUpscaling: Boolean = true, override val useLowPrioritySize: Boolean = false)
-	extends MutableCustomDrawReachComponent with ImageLabelLike
+	extends MutableCustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	--------------------------
 	
