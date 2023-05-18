@@ -1,6 +1,5 @@
 package utopia.reach.test
 
-import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -48,9 +47,8 @@ object ImageViewStackTest extends App
 				// The first label is static, but sometimes disappears
 				factories.next()(ImageLabel).withBackground(Color.green).apply(icon1) -> pointer1,
 				// The second label switches between two icons, disappearing based on pointer value
-				factories.next().withoutContext(ViewImageLabel)
-					.apply(pointer3.map { if (_) icon2 else icon3 },
-						customDrawers = Vector(BackgroundDrawer(Color.cyan))) -> pointer2
+				factories.next()(ViewImageLabel).withBackground(Color.cyan)
+					.apply(pointer3.map { if (_) icon2 else icon3 }) -> pointer2
 			)
 		}
 	}

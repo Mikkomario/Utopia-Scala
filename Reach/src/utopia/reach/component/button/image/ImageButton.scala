@@ -5,6 +5,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
@@ -132,9 +133,11 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 	
 	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
-	override protected val wrapped = ViewImageLabel(parentHierarchy).withStaticLayout(
-		_statePointer.map { state => images(state) }, insets, alignment, additionalDrawers, allowUpscaling,
-		useLowPrioritySize)
+	// TODO: Instead of listing again all the parameters, consider using a custom modify function
+	override protected val wrapped = ViewImageLabel(parentHierarchy)
+		.copy(insetsPointer = Fixed(insets), alignmentPointer = Fixed(alignment), customDrawers = additionalDrawers,
+			allowsUpscaling = allowUpscaling, usesLowPrioritySize = useLowPrioritySize)
+		.apply(_statePointer.map { state => images(state) })
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	
 	override val focusId = hashCode()

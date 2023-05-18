@@ -173,8 +173,8 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 	val imagePointer = baseImagePointer.mergeWith(enabledPointer) { (image, enabled) =>
 		if (enabled) image else image.timesAlpha(0.66) }
 	override protected val wrapped = ViewImageLabel(parentHierarchy)
-		.withStaticLayout(imagePointer, hoverRadius.downscaling.toInsets,
-			customDrawers = additionalDrawers :+ HoverDrawer)
+		.withInsets(hoverRadius.downscaling.toInsets).withCustomDrawers(additionalDrawers :+ HoverDrawer)
+		.apply(imagePointer)
 	
 	override val focusId = hashCode()
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners

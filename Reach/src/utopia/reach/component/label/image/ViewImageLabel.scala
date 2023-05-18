@@ -1,57 +1,148 @@
 package utopia.reach.component.label.image
 
+import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
-import utopia.reach.component.factory.ComponentFactoryFactory
+import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ImageViewDrawer
-import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.model.stack.StackInsets
+import utopia.firmament.image.SingleColorIcon
+import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
 
 object ViewImageLabel extends ComponentFactoryFactory[ViewImageLabelFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new ViewImageLabelFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = ViewImageLabelFactory(hierarchy)
 }
 
-class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
+trait ViewImageLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr] with FramedFactory[Repr]
+	with FromAlignmentFactory[Repr]
 {
-	/**
-	  * Creates a new image label
-	  * @param imagePointer Pointer to the drawn image
-	  * @param insetsPointer Pointer to the insets placed around the image (default = always 0)
-	  * @param alignmentPointer Pointer to the alignment used when positioning the image in this label
-	  *                         (default = always center)
-	  * @param customDrawers Additional custom drawers assigned to this label (default = empty)
-	  * @param allowUpscaling Whether the image should be allowed to scale up to its source resolution (default = true)
-	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
-	  * @return A new image label
-	  */
-	def apply(imagePointer: Changing[Image], insetsPointer: Changing[StackInsets] = Fixed(StackInsets.zero),
-	          alignmentPointer: Changing[Alignment] = Fixed(Alignment.Center),
-	          customDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
-	          useLowPrioritySize: Boolean = false) =
-		new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer, customDrawers,
-			allowUpscaling, useLowPrioritySize)
+	// ABSTRACT ------------------------------
+	
+	protected def parentHierarchy: ComponentHierarchy
+	
+	protected def insetsPointer: Changing[StackInsets]
+	protected def alignmentPointer: Changing[Alignment]
+	protected def allowsUpscaling: Boolean
+	protected def usesLowPrioritySize: Boolean
+	
+	def withInsetsPointer(p: Changing[StackInsets]): Repr
+	def withAlignmentPointer(p: Changing[Alignment]): Repr
+	// WET WET (from ImageLabelFactoryLike)
+	def withAllowsUpscaling(allow: Boolean): Repr
+	def withUseLowPrioritySize(lowPriority: Boolean): Repr
+	
+	
+	// COMPUTED ------------------------------
+	
+	def lowPriority = withUseLowPrioritySize(lowPriority = true)
+	def allowingUpscaling = withAllowsUpscaling(allow = true)
+	
+	
+	// IMPLEMENTED  --------------------------
+	
+	override protected def insets: StackInsets = insetsPointer.value
+	
+	override def withInsets(insets: StackInsetsConvertible): Repr = withInsetsPointer(Fixed(insets.toInsets))
+	override def mapInsets(f: StackInsets => StackInsetsConvertible) =
+		withInsetsPointer(insetsPointer.map { f(_).toInsets })
+	
+	override def apply(alignment: Alignment): Repr = withAlignmentPointer(Fixed(alignment))
+	
+	
+	// OTHER    ------------------------------
 	
 	/**
-	  * Creates a new image label
-	  * @param imagePointer Pointer to the drawn image
-	  * @param insets Insets placed around the image (default = always 0)
-	  * @param alignment Alignment used when positioning the image in this label (default = center)
-	  * @param customDrawers Additional custom drawers assigned to this label (default = empty)
-	  * @param allowUpscaling Whether the image should be allowed to scale up to its source resolution (default = true)
-	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
-	  * @return A new image label
+	  * @param imagePointer A pointer to an image
+	  * @return Copy of this label that uses the specified pointer
 	  */
-	def withStaticLayout(imagePointer: Changing[Image], insets: StackInsets = StackInsets.zero,
-	                     alignment: Alignment = Alignment.Center,
-	                     customDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
-	                     useLowPrioritySize: Boolean = false) =
-		apply(imagePointer, Fixed(insets), Fixed(alignment), customDrawers, allowUpscaling,
-			useLowPrioritySize)
+	def apply(imagePointer: Changing[Image]) =
+		new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer, customDrawers,
+			allowsUpscaling, usesLowPrioritySize)
+}
+
+case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
+                                 insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                                 alignmentPointer: Changing[Alignment] = Fixed(Center),
+                                 customDrawers: Vector[CustomDrawer] = Vector.empty,
+                                 allowsUpscaling: Boolean = false, usesLowPrioritySize: Boolean = false)
+	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
+		with FromContextFactory[ColorContext, ContextualViewImageLabelFactory]
+{
+	override def withInsetsPointer(p: Changing[StackInsets]): ViewImageLabelFactory = copy(insetsPointer = p)
+	override def withAlignmentPointer(p: Changing[Alignment]): ViewImageLabelFactory = copy(alignmentPointer = p)
+	override def withAllowsUpscaling(allow: Boolean): ViewImageLabelFactory = copy(allowsUpscaling = allow)
+	override def withUseLowPrioritySize(lowPriority: Boolean): ViewImageLabelFactory =
+		copy(usesLowPrioritySize = lowPriority)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageLabelFactory = copy(customDrawers = drawers)
+	
+	override def withBackground(background: Color): ViewImageLabelFactory = withCustomDrawer(BackgroundDrawer(background))
+	
+	override def withContext(context: ColorContext): ContextualViewImageLabelFactory =
+		ContextualViewImageLabelFactory(parentHierarchy, context, insetsPointer, alignmentPointer, customDrawers,
+			allowsUpscaling, usesLowPrioritySize)
+}
+
+case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+                                           insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                                           alignmentPointer: Changing[Alignment] = Fixed(Center),
+                                           customDrawers: Vector[CustomDrawer] = Vector.empty,
+                                           allowsUpscaling: Boolean = false, usesLowPrioritySize: Boolean = false)
+	extends ViewImageLabelFactoryLike[ContextualViewImageLabelFactory]
+		with ContextualFramedFactory[ContextualViewImageLabelFactory]
+		with ContextualBackgroundAssignableFactory[ColorContext, ContextualViewImageLabelFactory]
+		with ColorContextualFactory[ContextualViewImageLabelFactory]
+{
+	// IMPLEMENTED  ---------------------------
+	
+	override def self: ContextualViewImageLabelFactory = this
+	
+	override def withInsetsPointer(p: Changing[StackInsets]): ContextualViewImageLabelFactory = copy(insetsPointer = p)
+	override def withAlignmentPointer(p: Changing[Alignment]): ContextualViewImageLabelFactory = copy(alignmentPointer = p)
+	override def withAllowsUpscaling(allow: Boolean): ContextualViewImageLabelFactory = copy(allowsUpscaling = allow)
+	override def withUseLowPrioritySize(lowPriority: Boolean): ContextualViewImageLabelFactory =
+		copy(usesLowPrioritySize = lowPriority)
+	override def withContext(context: ColorContext): ContextualViewImageLabelFactory = copy(context = context)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewImageLabelFactory =
+		copy(customDrawers = drawers)
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	  * @param iconPointer A pointer to the icon to display
+	  * @param color Color (role) to use when drawing the icon (optional).
+	  *              If not specified, the icon will be drawn black or white.
+	  * @param preferredShade Preferred color shade to use, when color has been specified (default = Standard)
+	  * @return A new image label that displays the specified icon
+	  */
+	def iconPointer(iconPointer: Changing[SingleColorIcon], color: Option[ColorRole] = None,
+	             preferredShade: ColorLevel = Standard) =
+	{
+		implicit val ct: ColorContext = context
+		apply(color match {
+			case Some(c) => iconPointer.map { _.apply(c, preferredShade) }
+			case None => iconPointer.map { _.contextual }
+		})
+	}
+	/**
+	  * @param icon    The icon to display
+	  * @param color   Color (role) to use when drawing the icon (optional).
+	  *                If not specified, the icon will be drawn black or white.
+	  * @param preferredShade Preferred color shade to use, when color has been specified (default = Standard)
+	  * @return A new image label that displays the specified icon
+	  */
+	def icon(icon: SingleColorIcon, color: Option[ColorRole] = None, preferredShade: ColorLevel = Standard) =
+		iconPointer(Fixed(icon), color, preferredShade)
 }
 
 /**

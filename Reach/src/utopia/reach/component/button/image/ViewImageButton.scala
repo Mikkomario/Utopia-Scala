@@ -1,26 +1,26 @@
 package utopia.reach.component.button.image
 
 import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
-import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.{FromContextFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.stack.StackInsets
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.{ColorContextualFactory, GenericContextualFactory}
 
 object ViewImageButton extends Cff[ViewImageButtonFactory]
 {
@@ -149,9 +149,11 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	
 	override val statePointer = baseStatePointer
 		.mergeWith(enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
-	override protected val wrapped = ViewImageLabel(parentHierarchy).withStaticLayout(
-		statePointer.mergeWith(imagesPointer) { (state, images) => images(state) }, insets, alignment,
-		additionalDrawers, allowUpscaling, useLowPrioritySize)
+	// TODO: Instead of listing all parameters, consider using custom modify function (same as in ImageButton)
+	override protected val wrapped = ViewImageLabel(parentHierarchy)
+		.copy(insetsPointer = Fixed(insets), alignmentPointer = Fixed(alignment), customDrawers = additionalDrawers,
+			allowsUpscaling = allowUpscaling, usesLowPrioritySize = useLowPrioritySize)
+		.apply(statePointer.mergeWith(imagesPointer) { (state, images) => images(state) })
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	override val focusId = hashCode()
 	

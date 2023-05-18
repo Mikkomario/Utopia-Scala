@@ -470,10 +470,8 @@ class Field[C <: ReachComponentLike with Focusable]
 	
 	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[SingleColorIcon],
 	                               noMarginSide: Direction2D) =
-	{
-		ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { _ against _ },
-			iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
-	}
+		ViewImageLabel(hierarchy).lowPriority.withInsets(iconOutsideMargins.toInsets - noMarginSide)
+			.apply(pointer.mergeWith(innerBackgroundPointer) { _ against _ })
 	
 	private def makeOpenViewImageLabel(pointer: Changing[SingleColorIcon], noMarginSide: Direction2D) =
 		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.map { _.nonEmpty })
@@ -481,8 +479,8 @@ class Field[C <: ReachComponentLike with Focusable]
 	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
 	{
 		if (contextBackgroundPointer.isChanging)
-			ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.against),
-				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+			ViewImageLabel(hierarchy).lowPriority.withInsets(iconOutsideMargins.toInsets - noMarginSide)
+				.apply(innerBackgroundPointer.map(icon.against))
 		else
 			ImageLabel(hierarchy).withInsets(iconOutsideMargins.toInsets - noMarginSide).lowPriority
 				.apply(icon.against(contextBackgroundPointer.value))

@@ -250,14 +250,16 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 	override protected val wrapped = {
 		// Creates stack content (image and text label)
 		val openItems = Open { hierarchy =>
-			val imageLabel = ViewImageLabel(hierarchy).apply(imagePointer, imageInsetsPointer,
-				Fixed(alignment.opposite), allowUpscaling = allowImageUpscaling,
-				useLowPrioritySize = useLowPriorityImageSize)
+			val imageLabel = ViewImageLabel(hierarchy)
+				.copy(insetsPointer = imageInsetsPointer, alignmentPointer = Fixed(alignment.opposite),
+					allowsUpscaling = allowImageUpscaling, usesLowPrioritySize = useLowPriorityImageSize)
+				.apply(imagePointer)
 			val textLabel = ViewTextLabel(hierarchy).apply(itemPointer, stylePointer, displayFunction,
 				allowTextShrink = allowTextShrink)
 			Pair(imageLabel, textLabel)
 		}(parentHierarchy.top)
 		// Wraps the components in a stack
+		// TODO: Build instead of use Open (optional)
 		Stack(parentHierarchy).withoutMargin.withCustomDrawers(additionalDrawers)
 			.forPair(openItems, alignment, forceFitLayout = forceEqualBreadth)
 			.parent
