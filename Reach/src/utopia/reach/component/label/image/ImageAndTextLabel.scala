@@ -142,9 +142,12 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text:
 	// ATTRIBUTES	------------------------------
 	
 	override protected val wrapped = {
+		// TODO: Here also, consider using a modify function instead
 		def makeTextLabel(hierarchy: ComponentHierarchy) =
-			TextLabel(hierarchy).apply(text, font, textColor, alignment, textInsets, betweenLinesMargin,
-				allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
+			TextLabel(hierarchy)
+				.copy(alignment = alignment, insets = textInsets)
+				.apply(text, font, textColor, betweenLinesMargin,
+					allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
 		// TODO: Instead of listing all parameters here again, consider using a custom modify function
 		def makeImageLabel(hierarchy: ComponentHierarchy) =
 			ImageLabel(hierarchy)

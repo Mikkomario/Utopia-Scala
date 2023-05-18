@@ -6,14 +6,11 @@ import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFacto
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.{ContextualFramedFactory, FramedFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
@@ -25,48 +22,8 @@ object Framing extends Cff[FramingFactory]
 
 trait FramingFactoryLike[+Repr]
 	extends WrapperContainerFactory[Framing, ReachComponentLike] with CustomDrawableFactory[Repr]
+		with FramedFactory[Repr]
 {
-	// ABSTRACT -------------------------
-	
-	def insets: StackInsets
-	
-	/**
-	  * @param insets Insets to use in this framing
-	  * @return Copy of this factory that uses the specified insets
-	  */
-	def withInsets(insets: StackInsetsConvertible): Repr
-	
-	
-	// COMPUTED ------------------------
-	
-	/**
-	  * @return Copy of this factory without any horizontal insets applied
-	  */
-	def withoutHorizontalInsets = withoutInsetsAlong(X)
-	/**
-	  * @return Copy of this factory without any vertical insets applied
-	  */
-	def withoutVerticalInsets = withoutInsetsAlong(Y)
-	
-	/**
-	  * @return Copy of this factory where the horizontal insets expand easily (within limits)
-	  */
-	def expandingHorizontally = expandingAlong(X)
-	/**
-	  * @return Copy of this factory where the vertical insets expand easily (within limits)
-	  */
-	def expandingVertically = expandingAlong(Y)
-	
-	/**
-	  * @return Copy of this factory where the right side insets expand easily
-	  */
-	def expandingToRight = expandingTowards(Direction2D.Right)
-	/**
-	  * @return Copy of this factory where the left side insets expand easily
-	  */
-	def expandingToLeft = expandingTowards(Direction2D.Left)
-	
-	
 	// IMPLEMENTED  --------------------
 	
 	override def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R]): ComponentWrapResult[Framing, C, R] = {
@@ -74,24 +31,6 @@ trait FramingFactoryLike[+Repr]
 		// Closes the content
 		content.attachTo(framing)
 	}
-	
-	
-	// OTHER    ------------------------
-	
-	def mapInsets(f: StackInsets => StackInsetsConvertible) = withInsets(f(insets))
-	def mapInsetsAlong(axis: Axis2D)(f: StackLength => StackLength) =
-		mapInsets { _.mapDimension(axis) { _.map(f) } }
-	def mapInset(side: Direction2D)(f: StackLength => StackLength) = mapInsets { _.mapSide(side)(f) }
-	
-	def withInsetsAlong(axis: Axis2D, insets: Pair[StackLength]) = mapInsets { _.withDimension(axis, insets) }
-	def withInsetsAlong(axis: Axis2D, insets: StackLength): Repr = withInsetsAlong(axis, Pair.twice(insets))
-	def withoutInsetsAlong(axis: Axis2D) = mapInsets { _ - axis }
-	
-	def withInset(side: Direction2D, inset: StackLength) = mapInsets { _.withSide(side, inset) }
-	def withoutInset(side: Direction2D) = mapInsets { _ - side }
-	
-	def expandingAlong(axis: Axis2D) = mapInsetsAlong(axis) { _.expanding }
-	def expandingTowards(direction: Direction2D) = mapInset(direction) { _.expanding }
 }
 
 case class FramingFactory(parentHierarchy: ComponentHierarchy)
@@ -162,6 +101,7 @@ case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: Component
                                                       customInsets: Either[SizeCategory, StackInsets] = Left(Medium))
 	extends FramingFactoryLike[ContextualFramingFactory[N]]
 		with ContextualWrapperContainerFactory[N, BaseContext, Framing, ReachComponentLike, ContextualFramingFactory]
+		with ContextualFramedFactory[ContextualFramingFactory[N]]
 {
 	// COMPUTED ----------------------------
 	
@@ -194,18 +134,7 @@ case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: Component
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualFramingFactory[N] =
 		copy(customDrawers = drawers)
 	
-	
-	// OTHER	----------------------------
-	
-	/**
-	  * @param insetSize Size of the insets to apply on all sides
-	  * @return A copy of this factory with the specified symmetric insets
-	  */
-	def withInsets(insetSize: SizeCategory) = copy(customInsets = Left(insetSize))
-	def withInsetsAlong(axis: Axis2D, insetSize: SizeCategory): ContextualFramingFactory[N] =
-		withInsetsAlong(axis, context.scaledStackMargin(insetSize))
-	def withInset(side: Direction2D, insetSize: SizeCategory): ContextualFramingFactory[N] =
-		withInset(side, context.scaledStackMargin(insetSize))
+	override def withInsets(insetSize: SizeCategory) = copy(customInsets = Left(insetSize))
 }
 
 /**

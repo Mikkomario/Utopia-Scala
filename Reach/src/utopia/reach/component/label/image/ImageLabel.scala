@@ -6,13 +6,12 @@ import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFacto
 import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackSize}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D, FromAlignmentFactory}
+import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.transform.SizeAdjustable
-import utopia.reach.component.factory.{BackgroundAssignable, ColorContextualFactory, ComponentFactoryFactory, ContextualBackgroundAssignableFactory, FromContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, ColorContextualFactory, ComponentFactoryFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 
@@ -23,13 +22,13 @@ object ImageLabel extends ComponentFactoryFactory[ImageLabelFactory]
 
 trait ImageLabelFactoryLike[+Repr]
 	extends CustomDrawableFactory[Repr] with FromAlignmentFactory[Repr] with SizeAdjustable[Repr]
+		with FramedFactory[Repr]
 {
 	// ABSTRACT ---------------------------
 	
 	protected def parentHierarchy: ComponentHierarchy
 	
 	protected def imageScaling: Double
-	protected def insets: StackInsets
 	protected def alignment: Alignment
 	protected def colorOverlay: Option[Color]
 	protected def allowsUpscaling: Boolean
@@ -40,11 +39,6 @@ trait ImageLabelFactoryLike[+Repr]
 	  * @return Copy of this factory that scales the images by that amount
 	  */
 	def withImageScaling(scaling: Double): Repr
-	/**
-	  * @param insets Insets to place around the image
-	  * @return Copy of this factory with the specified insets
-	  */
-	def withInsets(insets: StackInsetsConvertible): Repr
 	/**
 	  * @param color Color overlay to place around the drawn images
 	  * @return Copy of this factory with the specified color overlay
@@ -65,19 +59,6 @@ trait ImageLabelFactoryLike[+Repr]
 	// COMPUTED ---------------------------
 	
 	/**
-	  * @return Copy of this factory that doesn't place any insets around the image
-	  */
-	def withoutInsets = withInsets(StackInsets.zero)
-	/**
-	  * @return Copy of this factory that doesn't place any horizontal insets around the image
-	  */
-	def withoutHorizontalInsets = withoutInsetsAlong(X)
-	/**
-	  * @return Copy of this factory that doesn't place any vertical insets around the image
-	  */
-	def withoutVerticalInsets = withoutInsetsAlong(Y)
-	
-	/**
 	  * @return Copy of this factory that allows image scaling beyond its original resolution
 	  */
 	def allowingImageUpscaling = withAllowUpscaling(allow = true)
@@ -88,12 +69,6 @@ trait ImageLabelFactoryLike[+Repr]
 	
 	
 	// OTHER    ---------------------------
-	
-	def mapInsets(f: StackInsets => StackInsetsConvertible) = withInsets(f(insets))
-	def mapInsetsAlong(axis: Axis2D)(f: StackLength => StackLength) = mapInsets { _.mapAxis(axis)(f) }
-	def mapInset(side: Direction2D)(f: StackLength => StackLength) = mapInsets { _.mapSide(side)(f) }
-	def withoutInsetsAlong(axis: Axis2D) = mapInsets { _ - axis }
-	def withoutInset(direction: Direction2D) = mapInsets { _ - direction }
 	
 	/**
 	  * Creates a new image label
@@ -169,6 +144,7 @@ case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, cont
 	extends ImageLabelFactoryLike[ContextualImageLabelFactory]
 		with ColorContextualFactory[ContextualImageLabelFactory]
 		with ContextualBackgroundAssignableFactory[ColorContext, ContextualImageLabelFactory]
+		with ContextualFramedFactory[ContextualImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------
 	
@@ -198,8 +174,6 @@ case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, cont
 	
 	
 	// OTHER    --------------------------------
-	
-	def withInsets(insetSize: SizeCategory) = copy(customInsets = Some(Right(insetSize)))
 	
 	def withColor(color: ColorSet): ContextualImageLabelFactory = withColor(context.color(color))
 	def withColor(color: ColorRole): ContextualImageLabelFactory = withColor(context.color(color))
