@@ -8,6 +8,7 @@ import utopia.coder.model.scala.Parameter
 import utopia.coder.model.scala.code.{CodeBuilder, CodePiece}
 import utopia.coder.model.scala.datatype.Reference
 import utopia.coder.model.scala.declaration.MethodDeclaration
+import Reference.Flow._
 
 /**
   * Used for constructing class-specific methods
@@ -31,7 +32,7 @@ object ClassMethodFactory
 	  */
 	def classFromModel(targetClass: Class, validatedModelCode: CodePiece,
 	                   methodName: String = "apply",
-	                   param: Parameter = Parameter("model", Reference.templateModel(Reference.property)))
+	                   param: Parameter = Parameter("model", templateModel(property)))
 	                  (propNamesInModel: Property => Vector[String])
 	                  (wrapAssignments: CodePiece => CodePiece)
 	                  (implicit naming: NamingRules) =
@@ -62,7 +63,7 @@ object ClassMethodFactory
 	  * @return A method declaration
 	  */
 	def classFromValidatedModel(targetClass: Class, methodName: String = "fromValidatedModel",
-	                            param: Parameter = Parameter("valid", Reference.model))
+	                            param: Parameter = Parameter("valid", model))
 	                           (propNamesInModel: Property => Vector[String])
 	                           (wrapAssignments: CodePiece => CodePiece) =
 	{

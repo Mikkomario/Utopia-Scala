@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.coder.model.data.NamingRules
-import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, VaultProjectSetup}
 import utopia.coder.model.scala.DeclarationDate
 import utopia.coder.model.scala.datatype.{Extension, Reference}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.coder.model.scala.declaration.{File, ObjectDeclaration}
+import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, VaultProjectSetup}
+import utopia.vault.coder.util.VaultReferences.Vault._
 
 import scala.io.Codec
 
@@ -52,7 +53,7 @@ object CombinedFactoryWriter
 					else
 						"childFactory.nonDeprecatedCondition"
 				}
-				Some(Extension(Reference.deprecatable) ->
+				Some(Extension(deprecatable) ->
 					ComputedProperty("nonDeprecatedCondition", isOverridden = true)(condition))
 			}
 			else
@@ -62,7 +63,7 @@ object CombinedFactoryWriter
 		// Utilizes the same indexing
 		val creation = {
 			if (data.combinationType.isOneToOne && data.parentClass.recordsIndexedCreationTime) {
-				val extension: Extension = Reference.fromRowFactoryWithTimestamps(references.combined)
+				val extension: Extension = fromRowFactoryWithTimestamps(references.combined)
 				val function = ComputedProperty("creationTimePropertyName", Set(parentFactoryRef),
 					isOverridden = true)(s"${parentFactoryRef.target}.creationTimePropertyName")
 				Some(extension -> function)

@@ -16,6 +16,7 @@ import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.template.{ScalaTypeConvertible, ValueConvertibleType}
+import Reference.Flow._
 
 import java.util.concurrent.TimeUnit
 
@@ -275,15 +276,15 @@ sealed trait BasicPropertyType extends ConcreteSingleColumnPropertyType
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def valueDataType = Reference.flowDataType/valueDataTypeName
+	override def valueDataType = dataType/valueDataTypeName
 	
 	override def yieldsTryFromValue = false
 	
 	override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.get${fromValuePropName.capitalize}")
-	override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
+	override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
 	
 	override def optionFromValueCode(valueCode: String) = s"$valueCode.$fromValuePropName"
-	override def optionToValueCode(optionCode: String) = CodePiece(optionCode, Set(Reference.valueConversions))
+	override def optionToValueCode(optionCode: String) = CodePiece(optionCode, Set(valueConversions))
 	
 	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 }
@@ -435,7 +436,7 @@ object BasicPropertyType
 		
 		override def scalaType = Reference.instant
 		
-		override def nonEmptyDefaultValue = Reference.now.targetCode
+		override def nonEmptyDefaultValue = now.targetCode
 		override def emptyValue = CodePiece.empty
 		
 		override def fromValuePropName = "instant"
@@ -453,7 +454,7 @@ object BasicPropertyType
 		
 		override def scalaType = Reference.localDate
 		
-		override def nonEmptyDefaultValue = Reference.today.targetCode
+		override def nonEmptyDefaultValue = today.targetCode
 		override def emptyValue = CodePiece.empty
 		
 		override def fromValuePropName = "localDate"
@@ -471,7 +472,7 @@ object BasicPropertyType
 		
 		override def scalaType = Reference.localTime
 		
-		override def nonEmptyDefaultValue = Reference.now.targetCode
+		override def nonEmptyDefaultValue = now.targetCode
 		override def emptyValue = CodePiece.empty
 		
 		override def fromValuePropName = "localTime"
@@ -631,7 +632,7 @@ object PropertyType
 		override lazy val sqlType = SqlPropertyType("TIMESTAMP", "CURRENT_TIMESTAMP", indexByDefault = true)
 		override lazy val defaultPropertyName = data.Name("created", "creationTimes", CamelCase.lower)
 		
-		override def valueDataType = Reference.instantType
+		override def valueDataType = instantType
 		override def supportsDefaultJsonValues = false
 		
 		override def scalaType = Reference.instant
@@ -639,13 +640,13 @@ object PropertyType
 		override def yieldsTryFromValue = false
 		
 		override def emptyValue = CodePiece.empty
-		override def nonEmptyDefaultValue = Reference.now.targetCode
+		override def nonEmptyDefaultValue = now.targetCode
 		
 		override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.getInstant")
-		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
+		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
 		override def optionFromValueCode(valueCode: String) = s"$valueCode.instant"
 		override def optionToValueCode(optionCode: String) =
-			CodePiece(optionCode, Set(Reference.valueConversions))
+			CodePiece(optionCode, Set(valueConversions))
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Time when this ${className.doc} was added to the database"
 	}
@@ -709,26 +710,26 @@ object PropertyType
 	case object DayCount extends ConcreteSingleColumnPropertyType
 	{
 		override val sqlType = SqlPropertyType("INT", "0", "days")
-		override lazy val nonEmptyDefaultValue = CodePiece("Days.zero", Set(Reference.days))
-		override lazy val valueDataType = Reference.flowDataType/"DaysType"
+		override lazy val nonEmptyDefaultValue = CodePiece("Days.zero", Set(days))
+		override lazy val valueDataType = dataType/"DaysType"
 		override def supportsDefaultJsonValues = true
 		
 		override def yieldsTryFromValue = false
 		
-		override def scalaType = Reference.days
+		override def scalaType = days
 		
 		override def emptyValue = CodePiece.empty
 		
 		override def defaultPropertyName = "duration"
 		
-		override def fromValueCode(valueCode: String) = CodePiece(s"Days($valueCode.getInt)", Set(Reference.days))
+		override def fromValueCode(valueCode: String) = CodePiece(s"Days($valueCode.getInt)", Set(days))
 		override def toValueCode(instanceCode: String) =
-			CodePiece(s"$instanceCode.length", Set(Reference.valueConversions))
+			CodePiece(s"$instanceCode.length", Set(valueConversions))
 		
 		override def optionFromValueCode(valueCode: String) =
-			CodePiece(s"$valueCode.int.map { Days(_) }", Set(Reference.days))
+			CodePiece(s"$valueCode.int.map { Days(_) }", Set(days))
 		override def optionToValueCode(optionCode: String) =
-			CodePiece(s"$optionCode.map { _.length }", Set(Reference.valueConversions))
+			CodePiece(s"$optionCode.map { _.length }", Set(valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -754,7 +755,7 @@ object PropertyType
 		}
 		
 		override def scalaType = ScalaType.string
-		override def valueDataType = Reference.stringType
+		override def valueDataType = stringType
 		override def supportsDefaultJsonValues = true
 		
 		override def emptyValue = Text.emptyValue
@@ -767,7 +768,7 @@ object PropertyType
 		override def yieldsTryFromValue = false
 		override def fromValueCode(valueCode: String) = s"$valueCode.getString"
 		override def fromValuesCode(valuesCode: String) = s"$valuesCode.flatMap { _.string }"
-		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
+		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -785,7 +786,7 @@ object PropertyType
 		// IMPLEMENTED  ------------------------
 		
 		override def scalaType = allowingEmpty.scalaType
-		override def valueDataType = Reference.stringType
+		override def valueDataType = stringType
 		override def sqlConversion: SqlTypeConversion = SqlConversion
 		
 		// Empty value is not allowed
@@ -831,14 +832,14 @@ object PropertyType
 	case class GenericValue(length: Int = 255) extends DirectlySqlConvertiblePropertyType
 	{
 		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)", isNullable = true)
-		override lazy val valueDataType = Reference.flowDataType/"AnyType"
+		override lazy val valueDataType = dataType/"AnyType"
 		
-		override def scalaType = Reference.value
+		override def scalaType = value
 		
 		override def yieldsTryFromValue = false
 		
 		override def nonEmptyDefaultValue = CodePiece.empty
-		override def emptyValue = CodePiece("Value.empty", Set(Reference.value))
+		override def emptyValue = CodePiece("Value.empty", Set(value))
 		override def supportsDefaultJsonValues = true
 		
 		override def concrete = this
@@ -857,7 +858,7 @@ object PropertyType
 	object TimeDuration
 	{
 		private val fromValueReferences = Set(Reference.timeUnit, Reference.finiteDuration)
-		private val toValueReferences = Set(Reference.valueConversions, Reference.timeUnit)
+		private val toValueReferences = Set(valueConversions, Reference.timeUnit)
 		
 		val millis = apply(TimeUnit.MILLISECONDS)
 		val seconds = apply(TimeUnit.SECONDS)
@@ -885,7 +886,7 @@ object PropertyType
 			case TimeUnit.DAYS => "days"
 			case _ => unit.toString.toLowerCase
 		})
-		override lazy val valueDataType = Reference.flowDataType/"DurationType"
+		override lazy val valueDataType = dataType/"DurationType"
 		override def supportsDefaultJsonValues = true
 		
 		private def unitConversionCode = s".toUnit(TimeUnit.${unit.name})"
@@ -1034,7 +1035,7 @@ object PropertyType
 			override def toValueCode(instanceCode: String) =
 				idType.toValueCode(s"e.${enumeration.idPropName.prop}")
 					.mapText { idToValue => s"$instanceCode.map { e => $idToValue }.getOrElse(Value.empty)" }
-					.referringTo(Reference.value)
+					.referringTo(value)
 			
 			override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 				EnumValue.this.writeDefaultDescription(className, propName)

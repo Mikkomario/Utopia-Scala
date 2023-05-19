@@ -8,6 +8,7 @@ import utopia.coder.model.scala.DeclarationDate
 import utopia.coder.model.scala.datatype.Reference
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.coder.model.scala.declaration.{File, ObjectDeclaration}
+import utopia.vault.coder.util.VaultReferences.Citadel._
 
 import scala.io.Codec
 
@@ -48,7 +49,7 @@ object DbDescriptionAccessWriter
 		// FIXME: Object naming is not complete, missing the "Descriptions" -suffix
 		File(setup.singleAccessPackage / descriptionLinkClass.packageName,
 			ObjectDeclaration(((accessPrefix +: descriptionLinkClass.name) + descriptionsSuffix).className,
-				Vector(Reference.linkedDescriptionAccess),
+				Vector(linkedDescriptionAccess),
 				properties = baseAccessProperties, author = descriptionLinkClass.author,
 				description = s"Used for accessing individual $baseClassName descriptions",
 				since = DeclarationDate.versionedToday
@@ -57,7 +58,7 @@ object DbDescriptionAccessWriter
 			// Finally writes the multiple descriptions access point
 			File(setup.manyAccessPackage / descriptionLinkClass.packageName,
 				ObjectDeclaration(((accessPrefix +: baseClassName) + descriptionsSuffix).pluralClassName,
-					Vector(Reference.linkedDescriptionsAccess), properties = baseAccessProperties,
+					Vector(linkedDescriptionsAccess), properties = baseAccessProperties,
 					author = descriptionLinkClass.author,
 					description = s"Used for accessing multiple $baseClassName descriptions at a time",
 					since = DeclarationDate.versionedToday

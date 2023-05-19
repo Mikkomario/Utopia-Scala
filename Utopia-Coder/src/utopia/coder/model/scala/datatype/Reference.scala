@@ -11,6 +11,8 @@ import scala.collection.StringOps
 
 object Reference
 {
+	// ATTRIBUTES   -------------------------
+	
 	import Package._
 	
 	// Java time
@@ -29,109 +31,13 @@ object Reference
 	
 	lazy val noSuchElementException = apply("java.util", "NoSuchElementException")
 	
-	// Extensions
 	
-	lazy val valueConversions = extensions(typeCasting, "ValueConversions")
-	lazy val valueUnwraps = extensions(typeCasting, "ValueUnwraps")
-	lazy val collectionExtensions = extensions(flow/"collection", "CollectionExtensions")
-	lazy val timeExtensions = extensions(flowTime, "TimeExtensions")
-	@deprecated("Deprecated in Vault", "v1.8.1")
-	lazy val sqlExtensions = extensions(sql, "SqlExtensions")
+	// COMPUTED -------------------------------
 	
-	// Flow
-	
-	lazy val value = apply(immutableGenericModels, "Value")
-	lazy val property = apply(genericModelTemplates, "Property")
-	lazy val constant = apply(immutableGenericModels, "Constant")
-	lazy val templateModel = apply(genericModelTemplates, "ModelLike")
-	lazy val model = apply(immutableGenericModels, "Model")
-	lazy val valueConvertible = apply(genericModelTemplates, "ValueConvertible")
-	lazy val modelConvertible = apply(genericModelTemplates, "ModelConvertible")
-	lazy val modelDeclaration = apply(immutableGenericModels, "ModelDeclaration")
-	lazy val propertyDeclaration = apply(immutableGenericModels, "PropertyDeclaration")
-	lazy val fromModelFactory = apply(flowGenerics/"factory", "FromModelFactory")
-	lazy val fromModelFactoryWithSchema = apply(flowGenerics/"factory", "FromModelFactoryWithSchema")
-	
-	lazy val flowDataType = apply(genericModels/"mutable", "DataType")
-	lazy val stringType = flowDataType/"StringType"
-	lazy val instantType = flowDataType/"InstantType"
-	
-	lazy val now = apply(flowTime, "Now")
-	lazy val today = apply(flowTime, "Today")
-	lazy val days = apply(flowTime, "Days")
-	
-	lazy val extender = apply(flow/"view"/"template", "Extender")
-	
-	// Vault
-	
-	lazy val connection = apply(database, "Connection")
-	lazy val table = apply(vaultModels/"immutable", "Table")
-	lazy val condition = apply(vault/"sql", "Condition")
-	
-	lazy val stored = apply(vaultModels/"template", "Stored")
-	lazy val storedModelConvertible = apply(vaultModels/"template", "StoredModelConvertible")
-	
-	lazy val indexed = apply(noSql/"template", "Indexed")
-	lazy val deprecatable = apply(noSql/"template", "Deprecatable")
-	lazy val nullDeprecatable = apply(deprecation, "NullDeprecatable")
-	lazy val deprecatableAfter = apply(deprecation, "DeprecatableAfter")
-	lazy val expiring = apply(deprecation, "Expiring")
-	
-	lazy val fromRowModelFactory = apply(fromRowFactories/"model", "FromRowModelFactory")
-	lazy val fromValidatedRowModelFactory = apply(fromRowFactories/"model", "FromValidatedRowModelFactory")
-	lazy val fromRowFactoryWithTimestamps = apply(fromRowFactories, "FromRowFactoryWithTimestamps")
-	lazy val combiningFactory = apply(singleLinkedFactories, "CombiningFactory")
-	lazy val possiblyCombiningFactory = apply(singleLinkedFactories, "PossiblyCombiningFactory")
-	lazy val multiCombiningFactory = apply(factories/"multi", "MultiCombiningFactory")
-	
-	lazy val storableWithFactory = apply(vaultModels/"immutable", "StorableWithFactory")
-	lazy val dataInserter = apply(noSql/"storable", "DataInserter")
-	
-	lazy val view = apply(viewAccess, "View")
-	lazy val subView = apply(viewAccess, "SubView")
-	lazy val unconditionalView = apply(viewAccess, "UnconditionalView")
-	lazy val nonDeprecatedView = apply(viewAccess, "NonDeprecatedView")
-	lazy val filterableView = apply(viewAccess, "FilterableView")
-	lazy val chronoRowFactoryView = apply(viewAccess, "ChronoRowFactoryView")
-	lazy val timeDeprecatableView = apply(viewAccess, "TimeDeprecatableView")
-	lazy val nullDeprecatableView = apply(viewAccess, "NullDeprecatableView")
-	
-	lazy val singleModelAccess = apply(Package.singleModelAccess, "SingleModelAccess")
-	lazy val singleRowModelAccess = apply(Package.singleModelAccess, "SingleRowModelAccess")
-	lazy val singleChronoRowModelAccess = apply(Package.singleModelAccess, "SingleChronoRowModelAccess")
-	lazy val manyModelAccess = apply(Package.manyModelAccess, "ManyModelAccess")
-	lazy val manyRowModelAccess = apply(Package.manyModelAccess, "ManyRowModelAccess")
-	lazy val distinctModelAccess = apply(access/"template.model", "DistinctModelAccess")
-	lazy val uniqueModelAccess = apply(Package.singleModelAccess/"distinct", "UniqueModelAccess")
-	lazy val singleIdModelAccess = apply(Package.singleModelAccess/"distinct", "SingleIdModelAccess")
-	lazy val singleIntIdModelAccess = apply(Package.singleModelAccess/"distinct", "SingleIntIdModelAccess")
-	
-	// Metropolis
-	
-	lazy val metropolisStoredModelConvertible = apply(metropolisModel/"stored", "StoredModelConvertible")
-	lazy val storedFromModelFactory = apply(metropolisModel/"stored", "StoredFromModelFactory")
-	lazy val descriptionRole = apply(description, "DescriptionRole")
-	lazy val linkedDescription = apply(combinedDescription, "LinkedDescription")
-	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")
-	lazy val simplyDescribed = apply(combinedDescription, "SimplyDescribed")
-	lazy val describedFactory = apply(combinedDescription, "DescribedFactory")
-	
-	// Citadel
-	
-	lazy val descriptionLinkTable = apply(citadel/"model.cached", "DescriptionLinkTable")
-	lazy val citadelTables = apply(citadelDatabase, "Tables")
-	lazy val descriptionLinkModelFactory = apply(citadelDatabase/"model.description", "DescriptionLinkModelFactory")
-	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
-	lazy val linkedDescriptionFactory = apply(citadelDatabase/"factory.description", "LinkedDescriptionFactory")
-	lazy val linkedDescriptionAccess = apply(descriptionAccess, "LinkedDescriptionAccess")
-	lazy val linkedDescriptionsAccess = apply(descriptionsAccess, "LinkedDescriptionsAccess")
-	@deprecated("Replaced with linkedDescriptionAccess", "v2.0")
-	lazy val descriptionLinkAccess = apply(descriptionAccess, "DescriptionLinkAccess")
-	@deprecated("Replaced with linkedDescriptionsAccess", "v2.0")
-	lazy val descriptionLinksAccess = apply(descriptionsAccess, "DescriptionLinksAccess")
-	lazy val singleIdDescribedAccess = apply(descriptionAccess, "SingleIdDescribedAccess")
-	lazy val manyDescribedAccess = apply(descriptionsAccess, "ManyDescribedAccess")
-	lazy val manyDescribedAccessByIds = apply(descriptionsAccess, "ManyDescribedAccessByIds")
+	/**
+	  * @return Access to Flow references
+	  */
+	def flow = Flow
 	
 	
 	// OTHER    -------------------------------
@@ -168,6 +74,41 @@ object Reference
 	  * @return A reference to the implicits in that file / object
 	  */
 	def extensions(packagePath: Package, target: String) = apply(packagePath, s"$target._")
+	
+	
+	// NESTED   ----------------------------
+	
+	object Flow
+	{
+		import Package.Flow._
+		
+		lazy val valueConversions = extensions(typeCasting, "ValueConversions")
+		lazy val valueUnwraps = extensions(typeCasting, "ValueUnwraps")
+		lazy val collectionExtensions = extensions(collection, "CollectionExtensions")
+		lazy val timeExtensions = extensions(time, "TimeExtensions")
+		
+		lazy val value = apply(immutableGenericModels, "Value")
+		lazy val property = apply(genericModelTemplates, "Property")
+		lazy val constant = apply(immutableGenericModels, "Constant")
+		lazy val templateModel = apply(genericModelTemplates, "ModelLike")
+		lazy val model = apply(immutableGenericModels, "Model")
+		lazy val valueConvertible = apply(genericModelTemplates, "ValueConvertible")
+		lazy val modelConvertible = apply(genericModelTemplates, "ModelConvertible")
+		lazy val modelDeclaration = apply(immutableGenericModels, "ModelDeclaration")
+		lazy val propertyDeclaration = apply(immutableGenericModels, "PropertyDeclaration")
+		lazy val fromModelFactory = apply(generics / "factory", "FromModelFactory")
+		lazy val fromModelFactoryWithSchema = apply(generics / "factory", "FromModelFactoryWithSchema")
+		
+		lazy val dataType = apply(genericModels / "mutable", "DataType")
+		lazy val stringType = dataType / "StringType"
+		lazy val instantType = dataType / "InstantType"
+		
+		lazy val now = apply(time, "Now")
+		lazy val today = apply(time, "Today")
+		lazy val days = apply(time, "Days")
+		
+		lazy val extender = apply(viewTemplate, "Extender")
+	}
 }
 
 /**

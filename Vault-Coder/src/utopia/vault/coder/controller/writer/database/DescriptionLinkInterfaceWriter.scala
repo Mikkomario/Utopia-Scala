@@ -1,13 +1,13 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.coder.model.data.NamingRules
-import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
-import utopia.coder.model.enumeration.NameContext.ObjectName
 import utopia.coder.model.scala.DeclarationDate
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.Reference
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.LazyValue
 import utopia.coder.model.scala.declaration.{File, ObjectDeclaration}
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.vault.coder.util.VaultReferences.Citadel._
 
 import scala.io.Codec
 import scala.util.{Success, Try}
@@ -40,7 +40,7 @@ object DescriptionLinkInterfaceWriter
 			// Each file contains a property for each described class
 			// First writes database models object
 			val modelProps = targets.map { case (base, desc) =>
-				tableWrappingPropertyFor(base, desc, tablesRef, Reference.descriptionLinkModelFactory,
+				tableWrappingPropertyFor(base, desc, tablesRef, descriptionLinkModelFactory,
 					s"Database interaction model factory for ${ base.name.doc } description links")
 			}
 			File(setup.dbModelPackage/"description",
@@ -52,7 +52,7 @@ object DescriptionLinkInterfaceWriter
 			).write().flatMap { modelsRef =>
 				// Next writes the description link factories object
 				val linkFactoryProps = targets.map { case (base, desc) =>
-					tableWrappingPropertyFor(base, desc, tablesRef, Reference.descriptionLinkFactory,
+					tableWrappingPropertyFor(base, desc, tablesRef, descriptionLinkFactory,
 						s"Factory for reading ${base.name} description links")
 				}
 				File(setup.factoryPackage/"description",
@@ -65,7 +65,7 @@ object DescriptionLinkInterfaceWriter
 					// Finally writes the linked description factories object
 					val descriptionFactoryProps = targets.zip(linkFactoryProps)
 						.map { case ((base, _), linkFactoryProp) =>
-							propertyFor(base, Reference.linkedDescriptionFactory,
+							propertyFor(base, linkedDescriptionFactory,
 								CodePiece(s"${linksRef.target}.${linkFactoryProp.name}", Set(linksRef)),
 								s"Factory for reading descriptions linked with ${base.name.pluralDoc}")
 						}

@@ -1,14 +1,15 @@
 package utopia.vault.coder.controller.writer.model
 
 import utopia.coder.model.data
-import utopia.coder.model.data.{Name, NamingRules}
-import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.data.NamingRules
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.Visibility.Protected
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter, Parameters}
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.vault.coder.util.VaultReferences.Metropolis._
 
 import scala.io.Codec
 
@@ -36,7 +37,7 @@ object DescribedModelWriter
 		val modelParamName = classToWrite.name.prop
 		
 		File(setup.combinedModelPackage/classToWrite.packageName,
-			ObjectDeclaration(className, Vector(Reference.describedFactory(modelRef, ScalaType.basic(className)))),
+			ObjectDeclaration(className, Vector(describedFactory(modelRef, ScalaType.basic(className)))),
 			// (not present in this version,
 			// because implementation requires data and stored models to have fromModel parsing)
 			/*
@@ -52,12 +53,12 @@ object DescribedModelWriter
 			ClassDeclaration(className,
 				constructionParams = Parameters(Parameter(modelParamName, modelRef,
 					description = s"${classToWrite.name} to wrap"),
-					Parameter("descriptions", ScalaType.set(Reference.linkedDescription),
+					Parameter("descriptions", ScalaType.set(linkedDescription),
 						description = s"Descriptions concerning the wrapped ${classToWrite.name}")),
-				extensions = Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
+				extensions = Vector(describedWrapper(modelRef), simplyDescribed),
 				properties = Vector(ComputedProperty("wrapped", isOverridden = true)(modelParamName)),
 				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true,
-					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))(
+					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(descriptionRole)))(
 					"wrapped.toModel")),
 				description = s"Combines ${ classToWrite.name.doc } with the linked descriptions",
 				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true

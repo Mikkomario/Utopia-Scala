@@ -15,6 +15,7 @@ import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.template.ValueConvertibleType
+import Reference.Flow._
 
 import scala.util.{Failure, Success}
 
@@ -46,11 +47,11 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 						val valueDataType = {
 							val code = model("value_data_type", "value_type", "data_type").getString
 							if (code.isEmpty)
-								Reference.flowDataType/"AnyType"
+								dataType/"AnyType"
 							else if (code.contains('.'))
 								Reference(code)
 							else
-								Reference.flowDataType/code
+								dataType/code
 						}
 						val default: CodePiece = model("default", "default_value")
 						// Handles the single-column use-case, if necessary
@@ -113,7 +114,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 					.filter { _.nonEmpty }.getOrElse(CodePiece.none)
 				apply(ScalaType(model("type")), sqlTypeFrom(model), model("extract"), model("extract_from_option"),
 					toValueInput.notEmpty
-						.getOrElse { CodePiece("$v", Set(Reference.valueConversions)) },
+						.getOrElse { CodePiece("$v", Set(valueConversions)) },
 					emptyValue)
 				}
 			}
@@ -121,7 +122,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 	
 	case class CustomPartConversion(midType: ScalaType, sqlType: SqlPropertyType, extractPart: CodePiece,
 	                                extractPartFromOption: CodePiece,
-	                                partToValue: CodePiece = CodePiece("$v", Set(Reference.valueConversions)),
+	                                partToValue: CodePiece = CodePiece("$v", Set(valueConversions)),
 	                                emptyMidValue: CodePiece = CodePiece.none)
 }
 
@@ -190,7 +191,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		case None =>
 			toValueCode("v")
 				.mapText { toValue => s"$optionCode.map { v => $toValue }.getOrElse(Value.empty)" }
-				.referringTo(Reference.value)
+				.referringTo(value)
 	}
 	
 	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =

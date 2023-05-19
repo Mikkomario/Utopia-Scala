@@ -1,11 +1,10 @@
 package utopia.vault.coder.test
 
 import utopia.coder.model.data.NamingRules
-import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.coder.model.data.{Enum, EnumerationValue}
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.datatype.PropertyType.{EnumValue, NonEmptyText, Text}
-import utopia.coder.model.scala.Package
+import utopia.vault.coder.util.VaultPackages
 
 /**
   * Tests data types
@@ -25,7 +24,7 @@ object TypeTest extends App
 	assert(t2 == NonEmptyText(5))
 	
 	val v = EnumerationValue("Test1", "1")
-	val e = Enum("Test", Package.vault, Vector(v), Some(v))
+	val e = Enum("Test", VaultPackages.vault.base, Vector(v), Some(v))
 	val et = EnumValue(e)
 	
 	println(et.defaultValue.text)

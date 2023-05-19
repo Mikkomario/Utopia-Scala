@@ -1,5 +1,8 @@
 # Utopia Vault Coder
 
+## v1.9.1 (in development)
+Separating modules
+
 ## v1.9 - 01.05.2023
 This update introduces a lot of bugfixes, as well as more extensive code-generation. 
 This update is intended to be used with **Vault v1.16** (or later).

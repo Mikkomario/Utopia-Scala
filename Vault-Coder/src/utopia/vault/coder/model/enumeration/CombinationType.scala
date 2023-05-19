@@ -6,6 +6,7 @@ import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.coder.model.scala.declaration.MethodDeclaration
 import utopia.coder.model.scala.{Parameter, Parameters}
+import utopia.vault.coder.util.VaultReferences.Vault._
 
 /**
   * Used for determining, how models should be combined with each other
@@ -106,7 +107,7 @@ object CombinationType
 	  */
 	case object Combined extends CombinationType
 	{
-		override def parentTraitRef = Reference.combiningFactory
+		override def parentTraitRef = combiningFactory
 		
 		override def shouldSpecifyWhetherAlwaysLinked = false
 		
@@ -121,7 +122,7 @@ object CombinationType
 	  */
 	case object PossiblyCombined extends CombinationType
 	{
-		override def parentTraitRef = Reference.possiblyCombiningFactory
+		override def parentTraitRef = possiblyCombiningFactory
 		
 		override def shouldSpecifyWhetherAlwaysLinked = false
 		
@@ -137,7 +138,7 @@ object CombinationType
 	  */
 	case object MultiCombined extends CombinationType
 	{
-		override def parentTraitRef = Reference.multiCombiningFactory
+		override def parentTraitRef = multiCombiningFactory
 		
 		override def shouldSpecifyWhetherAlwaysLinked = true
 		

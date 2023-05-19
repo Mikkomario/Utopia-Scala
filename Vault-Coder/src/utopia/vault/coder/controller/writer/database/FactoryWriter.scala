@@ -1,16 +1,17 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.coder.model.data
-import utopia.coder.model.data.{Name, NamingRules}
-import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.data.NamingRules
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Extension, Reference}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, datatype}
-import utopia.coder.model.scala.datatype.{Extension, Reference}
+import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
 import utopia.vault.coder.util.ClassMethodFactory
+import utopia.vault.coder.util.VaultReferences.Vault._
 
 import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
@@ -58,17 +59,17 @@ object FactoryWriter
 		
 		// If no enumerations are included, the inheritance is more specific (=> uses automatic validation)
 		if (classToWrite.fromDbModelConversionMayFail)
-			builder += Reference.fromRowModelFactory(modelRef)
+			builder += fromRowModelFactory(modelRef)
 		else
-			builder += Reference.fromValidatedRowModelFactory(modelRef)
+			builder += fromValidatedRowModelFactory(modelRef)
 		
 		// For tables which contain a creation time index, additional inheritance is added
 		if (classToWrite.recordsIndexedCreationTime)
-			builder += Reference.fromRowFactoryWithTimestamps(modelRef)
+			builder += fromRowFactoryWithTimestamps(modelRef)
 		
 		// If the class supports deprecation, it is reflected in this factory also
 		if (classToWrite.isDeprecatable)
-			builder += Reference.deprecatable
+			builder += deprecatable
 		
 		builder.result()
 	}

@@ -9,6 +9,7 @@ import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
 import utopia.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.vault.coder.util.VaultReferences._
 
 import scala.io.Codec
 import scala.util.Success
@@ -39,7 +40,7 @@ object TablesWriter
 			// Otherwise leaves the implementation to the user
 			val (applyImplementation, applyReferences) = {
 				if (classes.exists { _.isDescribed })
-					Vector("Tables(tableName)") -> Set[Reference](Reference.citadelTables)
+					Vector("Tables(tableName)") -> Set[Reference](citadel.tables)
 				else
 					Vector("// TODO: Refer to a tables instance of your choice",
 						"// If you're using the Citadel module, import utopia.citadel.database.Tables",
@@ -58,7 +59,7 @@ object TablesWriter
 					},
 					// Defines a private apply method but leaves the implementation open
 					methods = Set(MethodDeclaration("apply", applyReferences, visibility = Private,
-						explicitOutputType = Some(Reference.table), isLowMergePriority = true)(
+						explicitOutputType = Some(vault.table), isLowMergePriority = true)(
 						Parameter("tableName", ScalaType.string))(
 						applyImplementation.head, applyImplementation.tail: _*)),
 					description = "Used for accessing the database tables introduced in this project",
@@ -75,7 +76,7 @@ object TablesWriter
 	private def descriptionLinkTablePropertyFrom(c: Class)(implicit naming: NamingRules) =
 	{
 		val linkProp = c.properties.head
-		LazyValue(c.name.prop, Set(Reference.descriptionLinkTable),
+		LazyValue(c.name.prop, Set(citadel.descriptionLinkTable),
 			description = tablePropertyDescriptionFrom(c))(
 			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.prop.quoted})")
 	}

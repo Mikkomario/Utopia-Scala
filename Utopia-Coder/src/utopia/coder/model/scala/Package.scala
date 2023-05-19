@@ -32,57 +32,16 @@ object Package
 	// Utopia base packages
 	
 	lazy val utopia = apply("utopia")
-	lazy val flow = utopia/"flow"
-	lazy val vault = utopia/"vault"
-	lazy val metropolis = utopia/"metropolis"
-	lazy val citadel = utopia/"citadel"
-	
-	// Flow
-	
-	lazy val flowGenerics = flow/"generic"
-	lazy val typeCasting = flowGenerics/"casting"
-	lazy val genericModels = flowGenerics/"model"
-	lazy val immutableGenericModels = genericModels/"immutable"
-	lazy val genericModelTemplates = genericModels/"template"
-	lazy val flowTime = flow/"time"
-	lazy val flowUtils = flow/"util"
-	@deprecated
-	lazy val struct = flow/"datastructure"
-	
-	// Vault
-	
-	lazy val database = vault/"database"
-	lazy val vaultModels = vault/"model"
-	lazy val sql = vault/"sql"
-	lazy val noSql = vault/"nosql"
-	lazy val deprecation = noSql/"storable.deprecation"
-	
-	lazy val factories = noSql/"factory"
-	lazy val fromRowFactories = factories/".row"
-	lazy val singleLinkedFactories = fromRowFactories/"linked"
-	
-	lazy val access = noSql/"access"
-	lazy val viewAccess = noSql/"view"
-	lazy val singleModelAccess = access/"single.model"
-	lazy val manyModelAccess = access/"many.model"
-	
-	// Metropolis
-	
-	lazy val metropolisModel = metropolis/"model"
-	lazy val description = metropolisModel/"stored.description"
-	lazy val combinedDescription = metropolisModel/"combined.description"
-	
-	// Citadel
-	
-	lazy val citadelDatabase = citadel/"database"
-	lazy val citadelAccess = citadelDatabase/"access"
-	lazy val descriptionsAccess = citadelAccess/"many.description"
-	lazy val descriptionAccess = citadelAccess/"single.description"
 	
 	
 	// IMPLICIT -------------------------------
 	
 	implicit def stringToPackage(packagePath: String): Package = apply(packagePath)
+	
+	
+	// COMPUTED -------------------------------
+	
+	def flow = Flow
 	
 	
 	// OTHER    -------------------------------
@@ -93,6 +52,25 @@ object Package
 	  */
 	def apply(path: String): Package =
 		apply(path.split(separatorRegex).toVector.filter { s => (s: StringOps).nonEmpty })
+	
+	
+	// NESTED   -------------------------------
+	
+	object Flow
+	{
+		val base = utopia/"flow"
+		
+		lazy val collection = base/"collection"
+		lazy val generics = base / "generic"
+		lazy val typeCasting = generics / "casting"
+		lazy val genericModels = generics / "model"
+		lazy val immutableGenericModels = genericModels / "immutable"
+		lazy val genericModelTemplates = genericModels / "template"
+		lazy val time = base / "time"
+		lazy val view = base/"view"
+		lazy val viewTemplate = view/"template"
+		lazy val utils = base / "util"
+	}
 }
 
 /**

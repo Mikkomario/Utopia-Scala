@@ -11,6 +11,9 @@ import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.vault.coder.util.VaultReferences.Vault._
+import utopia.vault.coder.util.VaultReferences._
+import Reference._
 
 import _root_.scala.io.Codec
 
@@ -117,7 +120,7 @@ object DbModelWriter
 					MethodDeclaration("apply", isOverridden = true)(Parameter("data", dataRef))(
 						s"apply($applyParametersCode)"),
 					MethodDeclaration("complete", Set(modelRef), visibility = Protected, isOverridden = true)(
-						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
+						Vector(Parameter("id", flow.value), Parameter("data", dataRef)))(
 						s"${ modelRef.target }(id.get${ if (classToWrite.useLongId) "Long" else "Int" }, data)"),
 					MethodDeclaration("withId", returnDescription = "A model with that id")(
 						Parameter("id", classToWrite.idType.toScala, description = s"A ${ classToWrite.name.doc } id"))(
@@ -140,7 +143,7 @@ object DbModelWriter
 						Parameter(prop.name.prop, inputType.scalaType, defaultValue)
 					}.toVector,
 				// Extends StorableWithFactory[A]
-				extensions = Vector(Reference.storableWithFactory(modelRef)),
+				extensions = Vector(storableWithFactory(modelRef)),
 				// Implements the required properties: factory & valueProperties
 				properties = Vector(
 					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
@@ -160,7 +163,7 @@ object DbModelWriter
 		// The class itself doesn't need to be imported (same file)
 		val classType = ScalaType.basic(className)
 		// All factories extend the DataInserter trait
-		val dataInserter = Reference.dataInserter(classType, modelRef, dataRef)
+		val dataInserter = vault.dataInserter(classType, modelRef, dataRef)
 		// They may also extend a deprecation-related trait
 		deprecation match {
 			case Some(deprecation) => Vector(dataInserter, deprecation.extensionFor(classType))
@@ -173,14 +176,14 @@ object DbModelWriter
 	{
 		val quotedId = classToWrite.idDatabasePropName.quoted
 		if (classToWrite.properties.isEmpty)
-			ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
+			ComputedProperty("valueProperties", Set(flow.valueConversions), isOverridden = true)(
 				s"Vector($quotedId -> id)"
 			)
 		else {
 			val propsPart = classToWrite.dbProperties
 				.map { prop => prop.toValueCode.withPrefix(s"${ attNameFrom(prop) } -> ") }
 				.reduceLeft { _.append(_, ", ") }
-			ComputedProperty("valueProperties", propsPart.references + Reference.valueConversions, isOverridden = true)(
+			ComputedProperty("valueProperties", propsPart.references + flow.valueConversions, isOverridden = true)(
 				s"import $className._",
 				s"Vector($quotedId -> id, $propsPart)"
 			)
@@ -277,7 +280,7 @@ object DbModelWriter
 		// IMPLEMENTED  -----------------------------
 		
 		override def extensionFor(dbModelClass: ScalaType) =
-			(if (isDefault) Reference.deprecatableAfter else Reference.nullDeprecatable)(dbModelClass)
+			(if (isDefault) deprecatableAfter else nullDeprecatable)(dbModelClass)
 		
 		override def properties(implicit naming: NamingRules) =
 			if (isDefault) Vector() else Vector(
@@ -285,13 +288,13 @@ object DbModelWriter
 		// withDeprecatedAfter(...) must be provided separately for custom property names
 		override def methods = if (isDefault) Set() else Set(
 			MethodDeclaration("withDeprecatedAfter", isOverridden = true)(
-				Parameter("deprecationTime", Reference.instant))(s"with${ camelPropName.capitalize }(deprecationTime)")
+				Parameter("deprecationTime", instant))(s"with${ camelPropName.capitalize }(deprecationTime)")
 		)
 	}
 	
 	private case class Expires(prop: Property) extends DeprecationStyle
 	{
-		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring
+		override def extensionFor(dbModelClass: ScalaType) = expiring
 		
 		override def properties(implicit naming: NamingRules) =
 			Vector(ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbProperties.head.modelName.quoted))
@@ -301,10 +304,10 @@ object DbModelWriter
 	private case class CombinedDeprecation(expirationPropName: Name, deprecationPropName: Name)
 		extends DeprecationStyle
 	{
-		override def extensionFor(dbModelClass: ScalaType) = Reference.deprecatable
+		override def extensionFor(dbModelClass: ScalaType) = deprecatable
 		
 		override def properties(implicit naming: NamingRules) = Vector(
-			ComputedProperty("nonDeprecatedCondition", Set(Reference.valueConversions, Reference.now),
+			ComputedProperty("nonDeprecatedCondition", Set(flow.valueConversions, flow.now),
 				isOverridden = true)(
 				s"${columnNameFrom(deprecationPropName)}.isNull && ${columnNameFrom(expirationPropName)} > Now")
 		)

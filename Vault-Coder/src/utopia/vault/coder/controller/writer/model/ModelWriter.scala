@@ -12,6 +12,8 @@ import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedPro
 import utopia.coder.model.scala.declaration.{ClassDeclaration, File, ObjectDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter, declaration}
 import utopia.vault.coder.util.ClassMethodFactory
+import Reference.Flow._
+import utopia.vault.coder.util.VaultReferences._
 
 import scala.io.Codec
 
@@ -40,11 +42,11 @@ object ModelWriter
 			val propNameInModel = prop.jsonPropName.quoted
 			prop.toValueCode.withPrefix(s"$propNameInModel -> ")
 		}
-		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(Reference.model)) else
+		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(model)) else
 			propWrites.reduceLeft { _.append(_, ", ") }.withinParenthesis.withPrefix("Vector")
-				.withinParenthesis.withPrefix("Model").referringTo(Reference.model)
+				.withinParenthesis.withPrefix("Model").referringTo(model)
 		val fromModelMayFail = classToWrite.fromDbModelConversionMayFail
-		val modelDeclarationCode = Reference.modelDeclaration.targetCode +
+		val modelDeclarationCode = modelDeclaration.targetCode +
 			(CodePiece("Vector") +
 				classToWrite.properties.map(propertyDeclarationFrom).reduceLeftOption { _.append(_, ", ") }
 					.getOrElse(CodePiece.empty).withinParenthesis
@@ -52,9 +54,9 @@ object ModelWriter
 		val dataClassType = ScalaType.basic(dataClassName)
 		val dataFactoryExtension: Extension = {
 			if (fromModelMayFail)
-				Reference.fromModelFactory(dataClassType)
+				fromModelFactory(dataClassType)
 			else
-				Reference.fromModelFactoryWithSchema(dataClassType)
+				fromModelFactoryWithSchema(dataClassType)
 		}
 		// Writes the data model and the data object
 		File(dataClassPackage,
@@ -72,7 +74,7 @@ object ModelWriter
 						description = prop.description)
 				},
 				// Extends ModelConvertible
-				extensions = Vector(Reference.modelConvertible),
+				extensions = Vector(modelConvertible),
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
 					ComputedProperty("toModel", propWriteCode.references, isOverridden = true)(propWriteCode.text),
@@ -105,15 +107,15 @@ object ModelWriter
 				// Also, the Stored extension differs based on whether Vault-dependency is allowed
 				if (classToWrite.useLongId)
 					ClassDeclaration(classToWrite.name.className, constructionParams = constructionParams,
-						extensions = Vector(Reference.stored(dataClassRef, idType)),
+						extensions = Vector(vault.stored(dataClassRef, idType)),
 						properties = Vector(
-							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
+							ComputedProperty("toModel", Set(valueConversions, constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel"),
 						) ++ accessProperty, description = description, isCaseClass = true)
 				else
 				{
-					val parent = if (setup.modelCanReferToDB) Reference.storedModelConvertible(dataClassRef) else
-						Reference.metropolisStoredModelConvertible(dataClassRef)
+					val parent = if (setup.modelCanReferToDB) vault.storedModelConvertible(dataClassRef) else
+						metropolis.storedModelConvertible(dataClassRef)
 					declaration.ClassDeclaration(classToWrite.name.className, constructionParams = constructionParams,
 						extensions = Vector(parent), properties = accessProperty.toVector,
 						description = description, author = classToWrite.author, since = DeclarationDate.versionedToday,
@@ -126,7 +128,7 @@ object ModelWriter
 					None
 				else
 					Some(ObjectDeclaration(storedClass.name,
-						Vector(Reference.storedFromModelFactory(ScalaType.basic(storedClass.name), dataClassType)),
+						Vector(metropolis.storedFromModelFactory(ScalaType.basic(storedClass.name), dataClassType)),
 						properties = Vector(
 							ComputedProperty("dataFactory", Set(dataClassRef), isOverridden = true)(dataClassName)
 						)
@@ -154,7 +156,7 @@ object ModelWriter
 				classToWrite.expirationProperty match {
 					case Some(prop) =>
 						Vector(
-							ComputedProperty("hasExpired", Set(Reference.timeExtensions, Reference.now),
+							ComputedProperty("hasExpired", Set(timeExtensions, now),
 								description = s"Whether this ${
 									classToWrite.name
 								} is no longer valid because it has expired")(
@@ -192,7 +194,7 @@ object ModelWriter
 		if (prop.dataType.isOptional || !prop.dataType.supportsDefaultJsonValues)
 			paramsCode = paramsCode.append("isOptional = true", ", ")
 		
-		Reference.propertyDeclaration.targetCode + paramsCode.withinParenthesis
+		propertyDeclaration.targetCode + paramsCode.withinParenthesis
 	}
 	
 	private def fromModelFor(classToWrite: Class, dataClassName: String)(implicit naming: NamingRules) = {

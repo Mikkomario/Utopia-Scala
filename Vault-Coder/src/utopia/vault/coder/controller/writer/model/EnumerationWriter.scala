@@ -1,15 +1,16 @@
 package utopia.vault.coder.controller.writer.model
 
 import utopia.coder.model.data
-import utopia.coder.model.data.{Name, NamingRules}
-import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Enum, VaultProjectSetup}
+import utopia.coder.model.data.NamingRules
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.Reference.Flow._
 import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.data.{Enum, VaultProjectSetup}
 
 import scala.io.Codec
 
@@ -62,7 +63,7 @@ object EnumerationWriter
 			case None =>
 				CodePiece(s".toTry { new NoSuchElementException(s${
 					s"No value of ${ e.name.enumName } matches ${ e.idPropName.prop } '${ "$" + idPropName }'".quoted
-				}) }", Set(Reference.collectionExtensions, Reference.noSuchElementException)) ->
+				}) }", Set(collectionExtensions, Reference.noSuchElementException)) ->
 					". Failure if no matching value was found."
 		}
 		// NB: Current implementation doesn't really work for multi-column id types
@@ -78,7 +79,7 @@ object EnumerationWriter
 		File(e.packagePath,
 			// Writes the enumeration trait first
 			TraitDeclaration(enumName,
-				extensions = Vector(Reference.valueConvertible),
+				extensions = Vector(valueConvertible),
 				// Each value contains an id so that it can be referred from the database
 				properties = Vector(
 					PropertyDeclaration.newAbstract(idPropName, e.idType.toScala,
@@ -112,7 +113,7 @@ object EnumerationWriter
 					MethodDeclaration("fromValue", fromValueCode.references,
 						returnDescription = s"${ e.name.doc } matching the specified value, when the value is interpreted as an ${
 							e.name.doc } ${ e.idPropName.doc }$forIdDescriptionPostfix")(
-						Parameter("value", Reference.value,
+						Parameter("value", value,
 							description = s"A value representing an ${ e.name.doc } ${ e.idPropName.doc }"))(
 						fromValueCode.text)
 				),
