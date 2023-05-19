@@ -135,8 +135,9 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 	
 	// TODO: Instead of listing again all the parameters, consider using a custom modify function
 	override protected val wrapped = ViewImageLabel(parentHierarchy)
-		.copy(insetsPointer = Fixed(insets), alignmentPointer = Fixed(alignment), customDrawers = additionalDrawers,
-			allowsUpscaling = allowUpscaling, usesLowPrioritySize = useLowPrioritySize)
+		.copy(allowsUpscaling = allowUpscaling)
+		.mapSettings { _.copy(insetsPointer = Fixed(insets), alignmentPointer = Fixed(alignment),
+			customDrawers = additionalDrawers, usesLowPrioritySize = useLowPrioritySize) }
 		.apply(_statePointer.map { state => images(state) })
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	

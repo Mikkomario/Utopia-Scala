@@ -11,20 +11,23 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualVariableBackgroundAssignable}
-import utopia.reach.component.factory.{FromContextFactory, VariableBackgroundAssignable}
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, VariableBackgroundAssignable}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
-object ViewEmptyLabel extends Cff[ViewEmptyLabelFactory]
+object ViewEmptyLabel extends Cff[ViewEmptyLabelFactory] with ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup]
 {
+	override protected def settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default
+	
 	override def apply(hierarchy: ComponentHierarchy) = ViewEmptyLabelFactory(hierarchy)
+	
+	override protected def withSettings(settings: ViewEmptyLabelSettings): ViewEmptyLabelSetup =
+		ViewEmptyLabelSetup(settings)
 }
 
-trait ViewEmptyLabelFactoryLike[+Repr] extends VariableBackgroundAssignable[Repr]
+trait ViewEmptyLabelSettingsLike[+Repr] extends VariableBackgroundAssignable[Repr]
 {
-	// ABSTRACT --------------------------
-	
-	def parentHierarchy: ComponentHierarchy
+	// ABSTRACT ----------------------------
 	
 	protected def backgroundPointer: Option[Either[Color, Changing[Color]]]
 	protected def drawersPointer: Changing[Vector[CustomDrawer]]
@@ -36,6 +39,66 @@ trait ViewEmptyLabelFactoryLike[+Repr] extends VariableBackgroundAssignable[Repr
 	
 	def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = withCustomDrawers(Fixed(drawers))
 	def withCustomDrawer(drawer: CustomDrawer) = withCustomDrawers(drawersPointer.map { _ :+ drawer })
+}
+
+object ViewEmptyLabelSettings
+{
+	val default = apply()
+}
+
+case class ViewEmptyLabelSettings(backgroundPointer: Option[Either[Color, Changing[Color]]] = None,
+                                  drawersPointer: Changing[Vector[CustomDrawer]] = Fixed(Vector()))
+	extends ViewEmptyLabelSettingsLike[ViewEmptyLabelSettings]
+{
+	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): ViewEmptyLabelSettings =
+		copy(drawersPointer = drawersPointer)
+	override def withBackground(background: Either[Color, Changing[Color]]): ViewEmptyLabelSettings =
+		copy(backgroundPointer = Some(background))
+}
+
+trait ViewEmptyLabelSettingsWrapper[+Repr] extends ViewEmptyLabelSettingsLike[Repr]
+{
+	// ABSTRACT ----------------------------
+	
+	protected def settings: ViewEmptyLabelSettings
+	protected def withSettings(settings: ViewEmptyLabelSettings): Repr
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override protected def backgroundPointer: Option[Either[Color, Changing[Color]]] = settings.backgroundPointer
+	override protected def drawersPointer: Changing[Vector[CustomDrawer]] = settings.drawersPointer
+	
+	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): Repr =
+		mapSettings { _.withCustomDrawers(drawersPointer) }
+	override protected def withBackground(background: Either[Color, Changing[Color]]): Repr =
+		mapSettings { _.withBackground(background) }
+	
+	
+	// OTHER    --------------------------
+	
+	def mapSettings(f: ViewEmptyLabelSettings => ViewEmptyLabelSettings) = withSettings(f(settings))
+}
+
+case class ViewEmptyLabelSetup(settings: ViewEmptyLabelSettings)
+	extends ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup] with ComponentFactoryFactory[ViewEmptyLabelFactory]
+{
+	// IMPLEMENTED  -----------------------
+	
+	override def apply(hierarchy: ComponentHierarchy) = ViewEmptyLabelFactory(hierarchy, settings)
+	
+	override protected def withSettings(settings: ViewEmptyLabelSettings): ViewEmptyLabelSetup =
+		copy(settings = settings)
+}
+
+trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Repr]
+{
+	// ABSTRACT --------------------------
+	
+	def parentHierarchy: ComponentHierarchy
+	
+	
+	// OTHER    --------------------------
 	
 	/**
 	  * Creates a new empty label
@@ -70,19 +133,17 @@ trait ViewEmptyLabelFactoryLike[+Repr] extends VariableBackgroundAssignable[Repr
 }
 
 case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
-                                 drawersPointer: Changing[Vector[CustomDrawer]] = Fixed(Vector.empty),
-                                 backgroundPointer: Option[Either[Color, Changing[Color]]] = None)
+                                 settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ViewEmptyLabelFactory]
 		with FromContextFactory[ColorContext, ContextualViewEmptyLabelFactory]
 {
 	// IMPLEMENTED  ------------------------------
 	
-	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): ViewEmptyLabelFactory =
-		copy(drawersPointer = drawersPointer)
-	override protected def withBackground(background: Either[Color, Changing[Color]]): ViewEmptyLabelFactory =
-		copy(backgroundPointer = Some(background))
+	override protected def withSettings(settings: ViewEmptyLabelSettings): ViewEmptyLabelFactory =
+		copy(settings = settings)
 	
-	override def withContext(context: ColorContext) = ContextualViewEmptyLabelFactory(parentHierarchy, context)
+	override def withContext(context: ColorContext) =
+		ContextualViewEmptyLabelFactory(parentHierarchy, context, settings)
 	
 	
 	// OTHER    ----------------------------------
@@ -127,8 +188,7 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 }
 
 case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
-                                           drawersPointer: Changing[Vector[CustomDrawer]] = Fixed(Vector.empty),
-                                           backgroundPointer: Option[Either[Color, Changing[Color]]] = None)
+                                           settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ContextualViewEmptyLabelFactory]
 		with ColorContextualFactory[ContextualViewEmptyLabelFactory]
 		with ContextualVariableBackgroundAssignable[ColorContext, ContextualViewEmptyLabelFactory]
@@ -146,6 +206,9 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 	
 	override def self: ContextualViewEmptyLabelFactory = this
 	
+	override protected def withSettings(settings: ViewEmptyLabelSettings): ContextualViewEmptyLabelFactory =
+		copy(settings = settings)
+	
 	override def withBackground(background: Color) =
 		super[ContextualVariableBackgroundAssignable].withBackground(background)
 	override def withBackground(background: ColorSet, preferredShade: ColorLevel) =
@@ -158,9 +221,9 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 		super[ContextualVariableBackgroundAssignable].withBackground(background)
 	
 	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): ContextualViewEmptyLabelFactory =
-		copy(drawersPointer = drawersPointer)
+		mapSettings { _.copy(drawersPointer = drawersPointer) }
 	override protected def withBackground(background: Either[Color, Changing[Color]]): ContextualViewEmptyLabelFactory =
-		copy(backgroundPointer = Some(background))
+		mapSettings { _.copy(backgroundPointer = Some(background)) }
 	override def withContext(newContext: ColorContext) = copy(context = newContext)
 	
 	

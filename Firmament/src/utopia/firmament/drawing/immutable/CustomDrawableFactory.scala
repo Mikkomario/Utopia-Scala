@@ -29,4 +29,10 @@ trait CustomDrawableFactory[+Repr]
 	  * @return Copy of this factory with the specified drawer included
 	  */
 	def withCustomDrawer(drawer: CustomDrawer) = withCustomDrawers(customDrawers :+ drawer)
+	/**
+	  * @param drawers Custom drawers to add
+	  * @return Copy of this factory with the specified custom drawers included
+	  */
+	def withAdditionalCustomDrawers(drawers: IterableOnce[CustomDrawer]) =
+		withCustomDrawers(customDrawers ++ drawers)
 }

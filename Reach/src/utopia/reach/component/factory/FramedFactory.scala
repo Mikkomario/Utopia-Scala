@@ -77,4 +77,10 @@ trait FramedFactory[+Repr]
 	
 	def expandingAlong(axis: Axis2D) = mapInsetsAlong(axis) { _.expanding }
 	def expandingTowards(direction: Direction2D) = mapInset(direction) { _.expanding }
+	
+	/**
+	  * @param mod A scaling modifier to apply to insets
+	  * @return Copy of this factory with scaled insets
+	  */
+	def withInsetsScaledBy(mod: Double) = mapInsets { _ * mod }
 }

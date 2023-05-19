@@ -1,129 +1,164 @@
 package utopia.reach.component.button.image
 
 import utopia.firmament.context.TextContext
-import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackInsets
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.image.Image
-import utopia.genesis.text.Font
-import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.TextContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{FocusListenableFactory, FramedFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.image.ImageAndTextLabel
+import utopia.reach.component.label.image.{ImageAndTextLabel, ImageAndTextLabelSettings, ImageAndTextLabelSettingsWrapper}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
-object ImageAndTextButton extends ComponentFactoryFactory[ImageAndTextButtonFactory]
+trait ImageAndTextButtonSettingsLike[+Repr]
+	extends ImageAndTextLabelSettingsWrapper[Repr] with FramedFactory[Repr] with FocusListenableFactory[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new ImageAndTextButtonFactory(hierarchy)
-}
-
-class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualImageAndTextButtonFactory]
-{
-	override def withContext(context: TextContext) =
-		ContextualImageAndTextButtonFactory(this, context)
+	// ABSTRACT -----------------------
+	
+	protected def hotKeys: Set[HotKey]
 	
 	/**
-	  * Creates a new button with both image and text
-	  * @param image Image displayed on this button
-	  * @param text Text displayed on this button
-	  * @param color Button default background color
-	  * @param font Font used when drawing text
-	  * @param textColor Color used when drawing text (default = standard black)
-	  * @param alignment Text alignment (default = Left)
-	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
-	  * @param textInsets Insets placed around the text (default = any, preferring 0)
-	  * @param commonInsets Insets placed around both the image and the text (default = any, preferring 0)
-	  * @param borderWidth Width of the border in this button (default = 0 = no border)
-	  * @param betweenLinesMargin Vertical margin between text lines (default = 0)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned for this component (default = empty)
-	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
-	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
-	  * @param allowImageUpscaling Whether image should be allowed to scale up to its source resolution (default = true)
-	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the image and the text should be force to have equal breadth (default = false)
-	  * @param action Action called whenever this button is triggered
-	  * @return A new button
+	  * @param hotKeys Hotkeys that trigger this button
+	  * @return Copy of this factory with the specified hotkeys
 	  */
-	def apply(image: Image, text: LocalizedString, color: Color, font: Font, textColor: Color = Color.textBlack,
-			  alignment: Alignment = Alignment.Left, imageInsets: StackInsets = StackInsets.any,
-			  textInsets: StackInsets = StackInsets.any, commonInsets: StackInsets = StackInsets.any,
-			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-			  additionalDrawers: Vector[CustomDrawer] = Vector(),
-			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-			  allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-			  useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
-		new ImageAndTextButton(parentHierarchy, image, text, color, font, textColor, alignment, imageInsets,
-			textInsets, commonInsets, borderWidth, betweenLinesMargin, hotKeys, additionalDrawers,
-			additionalFocusListeners, allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize,
-			forceEqualBreadth)(action)
+	def withHotKeys(hotKeys: Set[HotKey]): Repr
+	
+	
+	// OTHER    -----------------------
+	
+	def withAdditionalHotKeys(keys: IterableOnce[HotKey]) = withHotKeys(hotKeys ++ keys)
+	def withHotKey(key: HotKey) = withHotKeys(hotKeys + key)
+	def triggeredByKeyWithIndex(keyIndex: Int) = withHotKey(HotKey.keyWithIndex(keyIndex))
+	def triggeredByCharKey(char: Char) = withHotKey(HotKey.character(char))
 }
 
-case class ContextualImageAndTextButtonFactory(factory: ImageAndTextButtonFactory, context: TextContext)
-	extends TextContextualFactory[ContextualImageAndTextButtonFactory]
+object ImageAndTextButtonSettings
 {
-	private implicit def c: TextContext = context
+	val default = apply()
+}
+case class ImageAndTextButtonSettings(settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
+                                      insets: StackInsets = StackInsets.any, hotKeys: Set[HotKey] = Set(),
+                                      focusListeners: Vector[FocusListener] = Vector())
+	extends ImageAndTextButtonSettingsLike[ImageAndTextButtonSettings]
+{
+	override def withHotKeys(hotKeys: Set[HotKey]): ImageAndTextButtonSettings = copy(hotKeys = hotKeys)
+	override def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextButtonSettings =
+		copy(settings = settings)
+	override def withFocusListeners(listeners: Vector[FocusListener]): ImageAndTextButtonSettings =
+		copy(focusListeners = listeners)
+	override def withInsets(insets: StackInsetsConvertible): ImageAndTextButtonSettings = copy(insets = insets.toInsets)
+}
+
+trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSettingsLike[Repr]
+{
+	// ABSTRACT --------------------------
+	
+	protected def buttonSettings: ImageAndTextButtonSettings
+	protected def withSettings(settings: ImageAndTextButtonSettings): Repr
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override protected def settings: ImageAndTextLabelSettings = buttonSettings.settings
+	override protected def hotKeys: Set[HotKey] = buttonSettings.hotKeys
+	override protected def focusListeners: Vector[FocusListener] = buttonSettings.focusListeners
+	override protected def insets: StackInsets = buttonSettings.insets
+	
+	override def withHotKeys(hotKeys: Set[HotKey]): Repr = mapButtonSettings { _.withHotKeys(hotKeys) }
+	override protected def withSettings(settings: ImageAndTextLabelSettings): Repr =
+		mapButtonSettings { _.withSettings(settings) }
+	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
+		mapButtonSettings { _.withFocusListeners(listeners) }
+	override def withInsets(insets: StackInsetsConvertible): Repr = mapButtonSettings { _.withInsets(insets) }
+	
+	
+	// OTHER    -------------------------
+	
+	def mapButtonSettings(f: ImageAndTextButtonSettings => ImageAndTextButtonSettings) =
+		withSettings(f(buttonSettings))
+}
+
+case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+                                               buttonSettings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
+	extends TextContextualFactory[ContextualImageAndTextButtonFactory]
+		with ImageAndTextButtonSettingsWrapper[ContextualImageAndTextButtonFactory]
+{
+	// IMPLEMENTED  ------------------------
 	
 	override def self: ContextualImageAndTextButtonFactory = this
 	
 	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
+	override protected def withSettings(settings: ImageAndTextButtonSettings): ContextualImageAndTextButtonFactory =
+		copy(buttonSettings = settings)
+	
+	
+	// OTHER    ----------------------------
+	
 	/**
 	  * Creates a new button with both image and text
-	  * @param image Image displayed on this button
-	  * @param text Text displayed on this button
-	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned for this component (default = empty)
-	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the image and the text should be force to have equal breadth (default = false)
+	  * @param image                    Image displayed on this button.
+	  *                                 Either Left: Image or Right: Icon
+	  * @param text                     Text displayed on this button
+	  * @param action                   Action called whenever this button is triggered
+	  * @return A new button
+	  */
+	def apply(image: Either[Image, SingleColorIcon], text: LocalizedString)(action: => Unit) =
+		new ImageAndTextButton(parentHierarchy, context, image, text, settings, insets, hotKeys, focusListeners)(action)
+	/**
+	  * Creates a new button with both image and text
+	  * @param image  Image displayed on this button
+	  * @param text   Text displayed on this button
 	  * @param action Action called whenever this button is triggered
 	  * @return A new button
 	  */
-	def apply(image: Image, text: LocalizedString, imageInsets: StackInsets = StackInsets.any,
-			  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-			  additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
-			  forceEqualBreadth: Boolean = false)(action: => Unit) =
-		factory(image, text, context.background, context.font, context.textColor, context.textAlignment, imageInsets,
-			context.textInsets / 2, context.textInsets / 2, context.buttonBorderWidth, context.betweenLinesMargin.optimal,
-			hotKeys, additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
-			context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)(action)
+	def apply(image: Image, text: LocalizedString)(action: => Unit): ImageAndTextButton =
+		apply(Left(image), text)(action)
+	/**
+	  * Creates a new button with both image and text
+	  * @param icon  Icon displayed on this button
+	  * @param text   Text displayed on this button
+	  * @param action Action called whenever this button is triggered
+	  * @return A new button
+	  */
+	def apply(icon: SingleColorIcon, text: LocalizedString)(action: => Unit): ImageAndTextButton =
+		apply(Right(icon), text)(action)
 	
 	/**
 	  * Creates a new button with both image and text
 	  * @param icon Icon displayed on this button
 	  * @param text Text displayed on this button
-	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned for this component (default = empty)
-	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the image and the text should be force to have equal breadth (default = false)
 	  * @param action Action called whenever this button is triggered
 	  * @return A new button
 	  */
-	def withIcon(icon: SingleColorIcon, text: LocalizedString, imageInsets: StackInsets = StackInsets.any,
-				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
-				 forceEqualBreadth: Boolean = false)(action: => Unit) =
-		apply(icon.contextual, text, imageInsets, hotKeys, additionalDrawers,
-			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
+	@deprecated("Please use .apply(SingleColorIcon, LocalizedString)(=> Unit) instead", "v1.1")
+	def withIcon(icon: SingleColorIcon, text: LocalizedString)(action: => Unit) =
+		apply(icon, text)(action)
+}
+
+case class ImageAndTextButtonSetup(buttonSettings: ImageAndTextButtonSettings)
+	extends ImageAndTextButtonSettingsWrapper[ImageAndTextButtonSetup]
+		with Ccff[TextContext, ContextualImageAndTextButtonFactory]
+{
+	override protected def withSettings(settings: ImageAndTextButtonSettings): ImageAndTextButtonSetup =
+		copy(buttonSettings = settings)
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext): ContextualImageAndTextButtonFactory =
+		ContextualImageAndTextButtonFactory(hierarchy, context, buttonSettings)
+}
+
+object ImageAndTextButton extends ImageAndTextButtonSetup(ImageAndTextButtonSettings.default)
+{
+	def apply(settings: ImageAndTextButtonSettings) = withSettings(settings)
 }
 
 /**
@@ -131,15 +166,11 @@ case class ContextualImageAndTextButtonFactory(factory: ImageAndTextButtonFactor
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text: LocalizedString, color: Color,
-						 font: Font, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-						 imageInsets: StackInsets = StackInsets.any, textInsets: StackInsets = StackInsets.any,
-						 commonInsets: StackInsets = StackInsets.zero, borderWidth: Double = 0.0,
-						 betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-						 additionalDrawers: Vector[CustomDrawer] = Vector(),
-						 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-						 allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-						 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit)
+class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextContext, image: Either[Image, SingleColorIcon],
+                         text: LocalizedString, settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
+                         commonInsets: StackInsets = StackInsets.zero,
+                         hotKeys: Set[HotKey] = Set(), additionalFocusListeners: Seq[FocusListener] = Vector())
+                        (action: => Unit)
 	extends ReachComponentWrapper with ButtonLike
 {
 	// ATTRIBUTES	-----------------------------
@@ -149,14 +180,15 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	override val focusId = hashCode()
 	
-	override protected val wrapped =
-	{
-		val actualImageInsets = imageInsets + commonInsets.withoutSides(alignment.opposite.directions) + borderWidth
-		val actualTextInsets = textInsets + commonInsets.withoutSides(alignment.directions) + borderWidth
-		new ImageAndTextLabel(parentHierarchy, image, text, font, textColor, alignment,
-			actualImageInsets, actualTextInsets, betweenLinesMargin,
-			ButtonBackgroundViewDrawer(Fixed(color), statePointer, borderWidth) +: additionalDrawers,
-			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
+	override protected val wrapped = {
+		val alignment = context.textAlignment
+		val borderWidth = context.buttonBorderWidth
+		val actualContext = context.mapTextInsets { _/2 + commonInsets.withoutSides(alignment.directions) + borderWidth }
+		ImageAndTextLabel(settings).mapImageInsets { _/2 + commonInsets.withoutSides(alignment.directions) + borderWidth }
+			.withContext(parentHierarchy, actualContext)
+			.withCustomDrawers(
+				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, borderWidth) +: settings.customDrawers)
+			.apply(image, text)
 	}
 	
 	
@@ -171,5 +203,5 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 	
 	override protected def trigger() = action
 	
-	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(color)
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.contextual(context)
 }

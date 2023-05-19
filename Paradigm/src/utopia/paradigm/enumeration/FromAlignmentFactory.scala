@@ -36,4 +36,9 @@ trait FromAlignmentFactory[+A] extends FromDirectionFactory[A]
 	override def right = apply(Alignment.Right)
 	
 	override def apply(direction: Direction2D): A = apply(Alignment.forDirection(direction))
+	
+	
+	// OTHER    -------------------
+	
+	def withAlignment(alignment: Alignment) = apply(alignment)
 }

@@ -262,7 +262,7 @@ trait InteractionWindowFactory[A]
 		val hotkeys = blueprint.hotkey.toSet ++ enterHotkey
 		val button = blueprint.icon.notEmpty match {
 			case Some(icon) =>
-				factories(ImageAndTextButton).withContext(context).withIcon(icon, blueprint.text, hotKeys = hotkeys) {
+				factories.withContext(context)(ImageAndTextButton).withHotKeys(hotkeys)(icon, blueprint.text) {
 					blueprint.pressAction(resultPromise)
 				}
 			case None =>

@@ -1,6 +1,7 @@
 package utopia.reach.component.label.text.selectable
 
 import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
@@ -13,8 +14,8 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextFactory
-import utopia.reach.component.factory.contextual.TextContextualFactory
+import utopia.reach.component.factory.{FocusListenableFactory, FromContextFactory}
+import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.focus.FocusListener
 
@@ -137,6 +138,9 @@ case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFact
                                                 customSelectionBackgroundColorPointer: Option[Changing[Option[Color]]] = None,
                                                 customCaretColorPointer: Option[Changing[Color]] = None)
 	extends TextContextualFactory[ContextualSelectableTextLabelFactory]
+		with FocusListenableFactory[ContextualSelectableTextLabelFactory]
+		with CustomDrawableFactory[ContextualSelectableTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[TextContext, ContextualSelectableTextLabelFactory]
 {
 	// COMPUTED -------------------------------
 	
@@ -155,6 +159,11 @@ case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFact
 	
 	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualSelectableTextLabelFactory =
+		copy(customDrawers = drawers)
+	override def withFocusListeners(listeners: Vector[FocusListener]) =
+		copy(focusListeners = listeners)
+	
 	
 	// OTHER    -------------------------------
 	
@@ -169,19 +178,6 @@ case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFact
 	  * @return Copy of this factory with that highlighting color in place
 	  */
 	def withHighlightColor(c: ColorRole) = withHighlightColorPointer(Fixed(c))
-	
-	/**
-	  * @param listeners Focus listeners to use in this component
-	  * @return Copy of this factory that assigns the specified focus listeners (only)
-	  */
-	def withFocusListeners(listeners: Vector[FocusListener]) =
-		copy(focusListeners = listeners)
-	/**
-	  * @param listener A focus listener to assign to created components
-	  * @return Copy of this factory with the specified focus listener appended
-	  */
-	def withFocusListener(listener: FocusListener) =
-		withFocusListeners(focusListeners :+ listener)
 	
 	/**
 	  * @param interval Interval between caret visibility changes

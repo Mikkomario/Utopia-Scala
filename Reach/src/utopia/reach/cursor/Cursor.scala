@@ -1,5 +1,6 @@
 package utopia.reach.cursor
 
+import utopia.firmament.context.ColorContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorShade.{Dark, Light}
@@ -92,6 +93,12 @@ trait Cursor
 	  * @return A darker version of this cursor suitable against light backgrounds
 	  */
 	def dark = apply(Dark)
+	
+	/**
+	  * @param context Current component context
+	  * @return Cursor suitable for that context
+	  */
+	def contextual(implicit context: ColorContext) = over(context.background)
 	
 	
 	// OTHER    --------------------------------
