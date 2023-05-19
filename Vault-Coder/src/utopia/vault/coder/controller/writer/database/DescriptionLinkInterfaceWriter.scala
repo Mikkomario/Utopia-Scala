@@ -1,12 +1,13 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NameContext.ObjectName
-import utopia.vault.coder.model.scala.DeclarationDate
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.Reference
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.LazyValue
-import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
+import utopia.coder.model.data.NamingRules
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.enumeration.NameContext.ObjectName
+import utopia.coder.model.scala.DeclarationDate
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.LazyValue
+import utopia.coder.model.scala.declaration.{File, ObjectDeclaration}
 
 import scala.io.Codec
 import scala.util.{Success, Try}
@@ -29,7 +30,7 @@ object DescriptionLinkInterfaceWriter
 	  *         None if there weren't any classes that used descriptions.
 	  */
 	def apply(classes: Vector[Class], tablesRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec,
+	         (implicit setup: VaultProjectSetup, codec: Codec,
 	          naming: NamingRules): Try[Option[(Reference, Reference, Reference)]] =
 	{
 		val targets = classes.flatMap { c => c.descriptionLinkClass.map { dc => (c, dc) } }

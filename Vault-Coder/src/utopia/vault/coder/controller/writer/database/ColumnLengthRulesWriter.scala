@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, NamingRules}
-import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
+import utopia.vault.coder.model.data.Class
+import utopia.coder.model.enumeration.NameContext.DatabaseName
 
 import java.nio.file.Path
 import scala.io.Codec

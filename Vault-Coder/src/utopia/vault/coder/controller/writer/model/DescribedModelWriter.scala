@@ -1,12 +1,14 @@
 package utopia.vault.coder.controller.writer.model
 
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala.Visibility.Protected
-import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Parameters}
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.Visibility.Protected
+import utopia.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, Parameter, Parameters}
 
 import scala.io.Codec
 
@@ -17,7 +19,7 @@ import scala.io.Codec
   */
 object DescribedModelWriter
 {
-	private val classPrefix = Name("Described", "Described", CamelCase.capitalized)
+	private val classPrefix = data.Name("Described", "Described", CamelCase.capitalized)
 	
 	/**
 	  * Writes a described model class for the specified class
@@ -28,7 +30,7 @@ object DescribedModelWriter
 	  * @return Reference to the written file. Failure if file writing failed.
 	  */
 	def apply(classToWrite: Class, modelRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
+	         (implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		val className = (classPrefix +: classToWrite.name).className
 		val modelParamName = classToWrite.name.prop

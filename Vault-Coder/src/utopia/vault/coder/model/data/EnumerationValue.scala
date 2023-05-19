@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.data
 
-import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.coder.model.data.Name
+import utopia.coder.model.scala.code.CodePiece
 
 /**
   * A class representing an enumeration value

@@ -1,5 +1,6 @@
 package utopia.vault.coder.main
 
+import utopia.coder.model.data.{Filter, NamingRules}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
@@ -15,9 +16,9 @@ import utopia.vault.coder.controller.reader
 import utopia.vault.coder.controller.writer.database._
 import utopia.vault.coder.controller.writer.documentation.DocumentationWriter
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
-import utopia.vault.coder.model.data.{Class, ClassReferences, CombinationData, Filter, NamingRules, ProjectData, ProjectPaths, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NameContext.FileName
-import utopia.vault.coder.model.scala.datatype.Reference
+import utopia.vault.coder.model.data.{Class, ClassReferences, CombinationData, ProjectData, ProjectPaths, VaultProjectSetup}
+import utopia.coder.model.enumeration.NameContext.FileName
+import utopia.coder.model.scala.datatype.Reference
 import utopia.vault.coder.util.Common._
 
 import java.nio.file.{Path, Paths}
@@ -416,7 +417,7 @@ object MainAppLogic extends AppLogic
 						else
 							Vector(mainMergeRoot, alternativeMergeRoot).flatten
 					}
-					implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
+					implicit val setup: VaultProjectSetup = VaultProjectSetup(data.projectName, data.modelPackage,
 						data.databasePackage, directory, mergePaths,
 						directory/mergeFileName, data.version, data.modelCanReferToDB, data.prefixColumnNames)
 					
@@ -435,7 +436,7 @@ object MainAppLogic extends AppLogic
 		}
 	}
 	
-	private def write(data: ProjectData)(implicit setup: ProjectSetup, naming: NamingRules): Try[Unit] =
+	private def write(data: ProjectData)(implicit setup: VaultProjectSetup, naming: NamingRules): Try[Unit] =
 	{
 		def path(fileType: String, parts: String*) = {
 			val fileNameBase = (setup.dbModuleName.inContext(FileName) ++ parts).fileName
@@ -475,7 +476,7 @@ object MainAppLogic extends AppLogic
 	
 	private def write(classToWrite: Class, tablesRef: Reference,
 	          descriptionLinkObjects: Option[(Reference, Reference, Reference)])
-	         (implicit setup: ProjectSetup, naming: NamingRules): Try[(Class, ClassReferences)] =
+	         (implicit setup: VaultProjectSetup, naming: NamingRules): Try[(Class, ClassReferences)] =
 	{
 		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
 			FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
@@ -512,7 +513,7 @@ object MainAppLogic extends AppLogic
 	}
 	
 	private def writeCombo(combination: CombinationData, classRefsMap: Map[Class, ClassReferences])
-	                      (implicit setup: ProjectSetup, naming: NamingRules) =
+	                      (implicit setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val parentRefs = classRefsMap(combination.parentClass)
 		val childRefs = classRefsMap(combination.childClass)

@@ -1,17 +1,19 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, VaultProjectSetup, Property}
 import utopia.vault.coder.model.datatype.PropertyType
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
-import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
-import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration._
-import utopia.vault.coder.model.scala.{DeclarationDate, Package, Parameter, Parameters}
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
+import utopia.coder.model.scala.Visibility.{Private, Protected}
+import utopia.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.coder.model.scala.declaration._
+import utopia.coder.model.scala.{DeclarationDate, Package, Parameter, Parameters}
 
 import scala.io.Codec
 import scala.util.Success
@@ -25,17 +27,17 @@ object AccessWriter
 {
 	// ATTRIBUTES   ------------------------------
 	
-	private val accessPrefix = Name("Db", "Db", CamelCase.capitalized)
+	private val accessPrefix = data.Name("Db", "Db", CamelCase.capitalized)
 	private val singleAccessPrefix = accessPrefix + "Single"
 	
-	private val manyPrefix = Name("Many", "Many", CamelCase.capitalized)
+	private val manyPrefix = data.Name("Many", "Many", CamelCase.capitalized)
 	
-	private val accessTraitSuffix = Name("Access", "Access", CamelCase.capitalized)
-	private val genericAccessSuffix = Name("Like", "Like", CamelCase.capitalized)
-	private val subViewSuffix = Name("SubView", "SubView", CamelCase.capitalized)
-	private val uniqueAccessPrefix = Name("Unique", "Unique", CamelCase.capitalized)
+	private val accessTraitSuffix = data.Name("Access", "Access", CamelCase.capitalized)
+	private val genericAccessSuffix = data.Name("Like", "Like", CamelCase.capitalized)
+	private val subViewSuffix = data.Name("SubView", "SubView", CamelCase.capitalized)
+	private val uniqueAccessPrefix = data.Name("Unique", "Unique", CamelCase.capitalized)
 	
-	private val newPrefix = Name("new", "new", CamelCase.lower)
+	private val newPrefix = data.Name("new", "new", CamelCase.lower)
 	
 	private lazy val connectionParam = Parameter("connection", Reference.connection)
 	
@@ -91,16 +93,16 @@ object AccessWriter
 	  * @param setup Project setup (implicit)
 	  * @return Package that contains singular access points for that class
 	  */
-	private def singleAccessPackageFor(c: Class)(implicit setup: ProjectSetup) =
+	private def singleAccessPackageFor(c: Class)(implicit setup: VaultProjectSetup) =
 		packageFor(setup.singleAccessPackage, c)
-	private def manyAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = packageFor(setup.manyAccessPackage, c)
+	private def manyAccessPackageFor(c: Class)(implicit setup: VaultProjectSetup) = packageFor(setup.manyAccessPackage, c)
 	
 	/**
 	  * @param c     A class
 	  * @param setup Project setup (implicit)
 	  * @return Reference to the access point for unique instances of that class based on their id
 	  */
-	def singleIdReferenceFor(c: Class)(implicit setup: ProjectSetup, naming: NamingRules) =
+	def singleIdReferenceFor(c: Class)(implicit setup: VaultProjectSetup, naming: NamingRules) =
 		Reference(singleAccessPackageFor(c), singleIdAccessNameFor(c.name))
 	
 	/**
@@ -118,7 +120,7 @@ object AccessWriter
 	  */
 	def apply(classToWrite: Class, modelRef: Reference, factoryRef: Reference, dbModelRef: Reference,
 	          descriptionReferences: Option[(Reference, Reference, Reference)])
-	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		// Standard access point properties (factory, model)
 		// are present in both single and many model access points
@@ -171,7 +173,7 @@ object AccessWriter
 	def writeComboAccessPoints(combo: CombinationData, genericUniqueAccessRef: Reference,
 	                           genericManyAccessRef: Reference, modelRef: Reference,
 	                           factoryRef: Reference, parentDbModelRef: Reference, childDbModelRef: Reference)
-	                          (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	                          (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		// Writes many & single accesses
 		writeManyComboAccesses(combo, genericManyAccessRef, modelRef, factoryRef, childDbModelRef)
@@ -187,7 +189,7 @@ object AccessWriter
 	                                descriptionReferences: Option[(Reference, Reference, Reference)],
 	                                modelProperty: PropertyDeclaration, factoryProperty: PropertyDeclaration,
 	                                deprecationMethod: Option[MethodDeclaration], rootViewExtension: Extension)
-	                               (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                               (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		val singleAccessPackage = singleAccessPackageFor(classToWrite)
 		writeUniqueAccess(classToWrite, modelRef, singleAccessPackage, modelProperty, factoryProperty, deprecationMethod)
@@ -205,7 +207,7 @@ object AccessWriter
 	private def writeSingleComboAccesses(combo: CombinationData, genericUniqueAccessTraitRef: Reference,
 	                                     combinedModelRef: Reference, combinedFactoryRef: Reference,
 	                                     parentDbModelRef: Reference, childDbModelRef: Reference)
-	                                    (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                                    (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		val singleAccessPackage = singleAccessPackageFor(combo.parentClass)
 		// Writes the unique access trait
@@ -305,7 +307,7 @@ object AccessWriter
 	private def writeUniqueAccess(classToWrite: Class, modelRef: Reference, singleAccessPackage: Package,
 	                              modelProperty: PropertyDeclaration,
 	                              factoryProperty: PropertyDeclaration, deprecationMethod: Option[MethodDeclaration])
-	                             (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                             (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		// TODO: WET WET (much of similar code at writeManyAccessTrait)
 		val uniqueAccessTraitName = uniqueAccessTraitNameFrom(classToWrite.name)
@@ -388,7 +390,7 @@ object AccessWriter
 	private def writeSingleIdAccess(classToWrite: Class, modelRef: Reference, uniqueAccessRef: Reference,
 	                                descriptionReferences: Option[(Reference, Reference, Reference)],
 	                                singleAccessPackage: Package)
-	                               (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                               (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		val (singleIdAccessParent, singleIdAccessParentProperties) = descriptionReferences match {
 			// Case: Class uses description => extends described access version with its properties
@@ -433,7 +435,7 @@ object AccessWriter
 	                                  singleIdAccessRef: Reference,
 	                                  singleAccessPackage: Package, baseProperties: Vector[PropertyDeclaration],
 	                                  rootViewExtension: Extension, author: String, isDeprecatable: Boolean = false)
-	                                 (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                                 (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		// Defines an .apply(id) method for accessing individual items
 		val applyDec = MethodDeclaration("apply", Set(singleIdAccessRef),
@@ -466,7 +468,7 @@ object AccessWriter
 	                              descriptionReferences: Option[(Reference, Reference, Reference)],
 	                              modelProperty: PropertyDeclaration, factoryProperty: PropertyDeclaration,
 	                              deprecationMethod: Option[MethodDeclaration])
-	                             (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                             (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		val manyAccessPackage = manyAccessPackageFor(classToWrite)
 		writeManyAccessTrait(classToWrite, modelRef, descriptionReferences, manyAccessPackage, modelProperty,
@@ -481,7 +483,7 @@ object AccessWriter
 	
 	private def writeManyComboAccesses(combo: CombinationData, genericManyAccessRef: Reference, modelRef: Reference,
 	                                   factoryRef: Reference, childDbModelRef: Reference)
-	                                  (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	                                  (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val packageName = manyAccessPackageFor(combo.parentClass)
 		val traitName = manyAccessTraitNameFrom(combo.name).pluralClassName
@@ -528,7 +530,7 @@ object AccessWriter
 	                                 manyAccessPackage: Package, modelProperty: PropertyDeclaration,
 	                                 factoryProperty: PropertyDeclaration,
 	                                 deprecationMethod: Option[MethodDeclaration])
-	                                (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                                (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		// Common part for all written trait names
 		val traitNameBase = manyAccessTraitNameFrom(classToWrite.name)
@@ -642,7 +644,7 @@ object AccessWriter
 	private def writeManyRootAccess(className: Name, modelRef: Reference, manyAccessTraitRef: Reference,
 	                                descriptionReferences: Option[(Reference, Reference, Reference)],
 	                                manyAccessPackage: Package, author: String, isDeprecatable: Boolean)
-	                               (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
+	                               (implicit naming: NamingRules, codec: Codec, setup: VaultProjectSetup) =
 	{
 		val pluralClassName = className.pluralClassName
 		// Writes the many model access point

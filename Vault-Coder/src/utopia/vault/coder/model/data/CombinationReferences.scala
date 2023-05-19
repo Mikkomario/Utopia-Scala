@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.vault.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.datatype.Reference
 
 /**
   * Contains references used when writing combined models

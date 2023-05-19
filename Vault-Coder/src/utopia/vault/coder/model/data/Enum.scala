@@ -1,10 +1,11 @@
 package utopia.vault.coder.model.data
 
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.enumeration.IntSize.Tiny
-import utopia.vault.coder.model.scala.Package
-import utopia.vault.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.Package
+import utopia.coder.model.scala.datatype.Reference
 
 /**
   * Represents a custom (user-defined) enumeration

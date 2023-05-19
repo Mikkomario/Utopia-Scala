@@ -1,11 +1,11 @@
 package utopia.vault.coder.controller.reader
 
+import utopia.coder.model.data.Name
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LocalTimeType, LongType, StringType}
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.Name
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.util.Common.exc
 import utopia.vault.coder.util.Common.connectionPool
 import utopia.vault.database.{References, Tables}

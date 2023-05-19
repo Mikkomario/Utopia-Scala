@@ -1,7 +1,7 @@
 package utopia.vault.coder.test
 
-import utopia.vault.coder.model.data.Name
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text, UnderScore}
+import utopia.coder.model.data.Name
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text, UnderScore}
 
 /**
   * Used for testing name conversion

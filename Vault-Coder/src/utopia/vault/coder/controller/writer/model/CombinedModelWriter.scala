@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.writer.model
 
+import utopia.coder.model.data.NamingRules
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.scala.DeclarationDate
-import utopia.vault.coder.model.scala.datatype.Reference
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
+import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, VaultProjectSetup}
+import utopia.coder.model.scala.DeclarationDate
+import utopia.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.coder.model.scala.declaration.{ClassDeclaration, File}
 
 import scala.io.Codec
 
@@ -27,7 +28,7 @@ object CombinedModelWriter
 	  * @return Combination related references. Failure if file writing failed.
 	  */
 	def apply(data: CombinationData, parentRef: Reference, parentDataRef: Reference, childRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
+	         (implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		val constructorParams = data.combinationType.applyParamsWith(data.parentName, data.childName,
 			parentRef, childRef)

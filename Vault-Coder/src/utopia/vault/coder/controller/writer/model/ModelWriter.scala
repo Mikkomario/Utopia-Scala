@@ -1,14 +1,16 @@
 package utopia.vault.coder.controller.writer.model
 
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.database.AccessWriter
-import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup, Property}
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, declaration}
+import utopia.vault.coder.model.data.{Class, DbProperty, VaultProjectSetup, Property}
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
+import utopia.coder.model.scala.declaration.{ClassDeclaration, File, ObjectDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, Parameter, declaration}
 import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.io.Codec
@@ -20,7 +22,7 @@ import scala.io.Codec
   */
 object ModelWriter
 {
-	private val dataClassAppendix = Name("Data", "Data", CamelCase.capitalized)
+	private val dataClassAppendix = data.Name("Data", "Data", CamelCase.capitalized)
 	
 	/**
 	  * Writes stored and partial model classes for a class template
@@ -30,7 +32,7 @@ object ModelWriter
 	  * @return Reference to the stored version, followed by a reference to the data version. Failure if writing failed.
 	  */
 	def apply(classToWrite: Class)
-	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val dataClassName = (classToWrite.name + dataClassAppendix).className
 		val dataClassPackage = setup.modelPackage / s"partial.${ classToWrite.packageName }"

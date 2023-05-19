@@ -1,8 +1,8 @@
 package utopia.vault.coder.model.datatype
 
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.ScalaType
-import utopia.vault.coder.model.scala.template.ValueConvertibleType
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.ScalaType
+import utopia.coder.model.scala.template.ValueConvertibleType
 
 object SqlTypeConversion
 {

@@ -1,14 +1,16 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, Named, NamingRules}
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, DbProperty, Name, Named, NamingRules, ProjectSetup, Property}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala
-import utopia.vault.coder.model.scala.Visibility.Protected
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.vault.coder.model.data.{Class, DbProperty, VaultProjectSetup, Property}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala
+import utopia.coder.model.scala.Visibility.Protected
+import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
+import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, Parameter}
 
 import _root_.scala.io.Codec
 
@@ -24,17 +26,17 @@ object DbModelWriter
 	/**
 	  * Suffix added to class name in order to make it a database model class name
 	  */
-	val classNameSuffix = Name("Model", "Models", CamelCase.capitalized)
+	val classNameSuffix = data.Name("Model", "Models", CamelCase.capitalized)
 	/**
 	  * Suffix added to class property names in order to make them property name attributes
 	  */
-	val attNameSuffix = Name("AttName", "AttNames", CamelCase.capitalized)
+	val attNameSuffix = data.Name("AttName", "AttNames", CamelCase.capitalized)
 	/**
 	  * Suffix added to class property names in order to make them column attributes
 	  */
-	val columnNameSuffix = Name("Column", "Columns", CamelCase.capitalized)
+	val columnNameSuffix = data.Name("Column", "Columns", CamelCase.capitalized)
 	
-	private val withMethodPrefix = Name("with", "with", CamelCase.lower)
+	private val withMethodPrefix = data.Name("with", "with", CamelCase.lower)
 	
 	
 	// OTHER    -----------------------------------------
@@ -75,7 +77,7 @@ object DbModelWriter
 	  * @return Reference to the generated class. Failure if writing failed.
 	  */
 	def apply(classToWrite: Class, modelRef: Reference, dataRef: Reference, factoryRef: Reference)
-	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val parentPackage = setup.dbModelPackage / classToWrite.packageName
 		val className = (classToWrite.name + classNameSuffix).className

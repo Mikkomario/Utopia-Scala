@@ -1,8 +1,9 @@
 package utopia.vault.coder.model.data
 
+import utopia.coder.model.data.{Name, Named, NamingRules}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.datatype.SqlTypeConversion
-import utopia.vault.coder.model.enumeration.NameContext.{ColumnName, DbModelPropName}
+import utopia.coder.model.enumeration.NameContext.{ColumnName, DbModelPropName}
 
 /**
   * A database-column matching property for a class. Some class properties may match to multiple database-column

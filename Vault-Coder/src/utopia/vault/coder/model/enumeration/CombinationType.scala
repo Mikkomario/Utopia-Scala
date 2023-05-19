@@ -1,10 +1,11 @@
 package utopia.vault.coder.model.enumeration
 
-import utopia.vault.coder.model.data.{CombinationReferences, Name, NamingRules}
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.MethodDeclaration
-import utopia.vault.coder.model.scala.{Parameter, Parameters}
+import utopia.coder.model.data.{Name, NamingRules}
+import utopia.vault.coder.model.data.CombinationReferences
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
+import utopia.coder.model.scala.declaration.MethodDeclaration
+import utopia.coder.model.scala.{Parameter, Parameters}
 
 /**
   * Used for determining, how models should be combined with each other

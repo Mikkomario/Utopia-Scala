@@ -1,7 +1,8 @@
 package utopia.vault.coder.test
 
-import utopia.vault.coder.model.data.{Name, NamingRules}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
 
 /**
   * Tests some name-related functions
@@ -12,8 +13,8 @@ object NameTest extends App
 {
 	implicit val naming: NamingRules = NamingRules.default
 	
-	private val manyPrefix = Name("Many", "Many", CamelCase.capitalized)
-	private val accessTraitSuffix = Name("Access", "Access", CamelCase.capitalized)
+	private val manyPrefix = data.Name("Many", "Many", CamelCase.capitalized)
+	private val accessTraitSuffix = data.Name("Access", "Access", CamelCase.capitalized)
 	
 	private def manyAccessTraitNameFrom(className: Name) = {
 		// The "Many" -prefix is ignored if the class name already starts with "Many"

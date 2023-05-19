@@ -10,6 +10,7 @@
         <element id="module-output" name="BunnyMunch" />
         <element id="module-output" name="Flow" />
         <element id="module-output" name="Vault" />
+        <element id="module-output" name="Utopia-Coder" />
       </element>
       <element id="file-copy" path="$PROJECT_DIR$/Vault-Coder/README.md" />
       <element id="library" level="application" name="scala-sdk-2.13.7" />

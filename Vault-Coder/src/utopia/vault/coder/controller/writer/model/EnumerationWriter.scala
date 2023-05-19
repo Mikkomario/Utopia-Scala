@@ -1,13 +1,15 @@
 package utopia.vault.coder.controller.writer.model
 
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Enum, Name, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
-import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.vault.coder.model.data.{Enum, VaultProjectSetup}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
+import utopia.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, Parameter}
 
 import scala.io.Codec
 
@@ -18,8 +20,8 @@ import scala.io.Codec
   */
 object EnumerationWriter
 {
-	lazy val findPrefix = Name("find", CamelCase.lower)
-	lazy val forPrefix = Name("for", CamelCase.lower)
+	lazy val findPrefix = data.Name("find", CamelCase.lower)
+	lazy val forPrefix = data.Name("for", CamelCase.lower)
 	
 	/**
 	  * @param e Enumeration
@@ -41,7 +43,7 @@ object EnumerationWriter
 	  * @param codec Codec to use (implicit)
 	  * @return Enum reference on success. Failure if writing failed.
 	  */
-	def apply(e: Enum)(implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
+	def apply(e: Enum)(implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		val enumName = e.name.enumName
 		val idPropName = e.idPropName.prop

@@ -1,13 +1,13 @@
 package utopia.vault.coder.util
 
+import utopia.coder.model.data.NamingRules
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.controller.writer.CodeBuilder
-import utopia.vault.coder.model.data.{Class, NamingRules, Property}
-import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
-import utopia.vault.coder.model.scala.Parameter
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.Reference
-import utopia.vault.coder.model.scala.declaration.MethodDeclaration
+import utopia.vault.coder.model.data.{Class, Property}
+import utopia.coder.model.scala.Visibility.{Protected, Public}
+import utopia.coder.model.scala.Parameter
+import utopia.coder.model.scala.code.{CodeBuilder, CodePiece}
+import utopia.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.declaration.MethodDeclaration
 
 /**
   * Used for constructing class-specific methods

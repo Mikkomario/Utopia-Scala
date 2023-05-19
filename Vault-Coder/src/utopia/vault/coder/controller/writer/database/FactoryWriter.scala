@@ -1,13 +1,15 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, datatype}
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference}
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, datatype}
+import utopia.coder.model.scala.datatype.{Extension, Reference}
 import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.collection.immutable.VectorBuilder
@@ -23,7 +25,7 @@ object FactoryWriter
 	/**
 	  * A suffix added to class names in order to make them factory class names
 	  */
-	val classNameSuffix = Name("Factory", "Factories", CamelCase.capitalized)
+	val classNameSuffix = data.Name("Factory", "Factories", CamelCase.capitalized)
 	
 	/**
 	  * Writes a factory used for processing database object data
@@ -36,7 +38,7 @@ object FactoryWriter
 	  * @return Reference to the new written factory object. Failure if writing failed.
 	  */
 	def apply(classToWrite: Class, tablesRef: Reference, modelRef: Reference, dataRef: Reference)
-	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val parentPackage = setup.factoryPackage / classToWrite.packageName
 		val objectName = (classToWrite.name + classNameSuffix).className
@@ -72,7 +74,7 @@ object FactoryWriter
 	}
 	
 	private def propertiesFor(classToWrite: Class, tablesRef: Reference)
-	                         (implicit setup: ProjectSetup, naming: NamingRules) =
+	                         (implicit setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val builder = new VectorBuilder[PropertyDeclaration]()
 		

@@ -1,15 +1,16 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.time.Today
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, DbProperty, VaultProjectSetup}
 import utopia.vault.coder.model.datatype.PropertyType
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue}
-import utopia.vault.coder.model.enumeration.NameContext.DatabaseName
+import utopia.coder.model.enumeration.NameContext.DatabaseName
 
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -33,7 +34,7 @@ object SqlWriter
 	  * @return Target path. Failure if writing failed.
 	  */
 	def apply(dbName: Option[Name], classes: Seq[Class], targetPath: Path)
-	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		// Doesn't write anything if no classes are included
 		if (classes.nonEmpty) {
@@ -83,7 +84,7 @@ object SqlWriter
 	private def writeClasses(writer: PrintWriter, initialsMap: Map[String, String],
 	                          classesByPackageAndTableName: Map[String, Map[String, Class]],
 	                          references: Map[String, Set[String]])
-	                        (implicit setup: ProjectSetup, naming: NamingRules): Unit =
+	                        (implicit setup: VaultProjectSetup, naming: NamingRules): Unit =
 	{
 		// Finds the classes which don't make any references to other remaining classes
 		val remainingTableNames = classesByPackageAndTableName.flatMap { _._2.keys }.toSet
@@ -135,7 +136,7 @@ object SqlWriter
 	@tailrec
 	private def writePossibleClasses(writer: PrintWriter, initialsMap: Map[String, String],
 	                                 classesByTableName: Map[String, Class], references: Map[String, Set[String]])
-	                                (implicit setup: ProjectSetup, naming: NamingRules): Map[String, Class] =
+	                                (implicit setup: VaultProjectSetup, naming: NamingRules): Map[String, Class] =
 	{
 		// Finds the classes which don't make any references to other remaining classes
 		val remainingTableNames = classesByTableName.keySet
@@ -160,7 +161,7 @@ object SqlWriter
 	}
 	
 	private def writeClass(writer: PrintWriter, classToWrite: Class, initialsMap: Map[String, String])
-	                      (implicit setup: ProjectSetup, naming: NamingRules): Unit =
+	                      (implicit setup: VaultProjectSetup, naming: NamingRules): Unit =
 	{
 		implicit val wr: PrintWriter = writer
 		

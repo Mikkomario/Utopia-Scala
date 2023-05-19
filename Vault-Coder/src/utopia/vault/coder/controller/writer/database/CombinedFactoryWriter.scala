@@ -1,10 +1,11 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.scala.DeclarationDate
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
+import utopia.coder.model.data.NamingRules
+import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, VaultProjectSetup}
+import utopia.coder.model.scala.DeclarationDate
+import utopia.coder.model.scala.datatype.{Extension, Reference}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.coder.model.scala.declaration.{File, ObjectDeclaration}
 
 import scala.io.Codec
 
@@ -27,7 +28,7 @@ object CombinedFactoryWriter
 	  */
 	def apply(data: CombinationData, references: CombinationReferences,
 	          parentFactoryRef: Reference, childFactoryRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
+	         (implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		// Some factory implementations require the isAlwaysLinked -property
 		val linkingProperty = {

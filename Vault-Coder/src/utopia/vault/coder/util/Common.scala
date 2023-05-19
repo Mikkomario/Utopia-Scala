@@ -17,8 +17,7 @@ import scala.concurrent.ExecutionContext
 object Common
 {
 	implicit val log: Logger = SysErrLogger
-	implicit val exc: ExecutionContext =
-		new ThreadPool("Vault-Coder", 2, 30, 20.seconds).executionContext
+	implicit val exc: ExecutionContext = new ThreadPool("Vault-Coder", 2, 30, 20.seconds)
 	implicit val connectionPool: ConnectionPool =
 		new ConnectionPool(20, 4, 10.seconds)
 	implicit val jsonParser: JsonParser = JsonBunny

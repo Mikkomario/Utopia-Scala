@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.datatype
 
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{ModelDeclaration, ModelValidationFailedException}
@@ -8,13 +9,12 @@ import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.parse.string.Regex
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Name, NamingRules}
 import utopia.vault.coder.model.datatype.CustomPropertyType.{pluralRegex, singularRegex, valueRegex}
 import utopia.vault.coder.model.datatype.CustomPropertyType.CustomPartConversion
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
-import utopia.vault.coder.model.scala.template.ValueConvertibleType
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.coder.model.scala.template.ValueConvertibleType
 
 import scala.util.{Failure, Success}
 

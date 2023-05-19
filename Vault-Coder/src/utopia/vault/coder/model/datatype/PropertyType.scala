@@ -1,19 +1,21 @@
 package utopia.vault.coder.model.datatype
 
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.model.EnumerationWriter
-import utopia.vault.coder.model.data.{Class, Enum, Name, NamingRules}
+import utopia.vault.coder.model.data.{Class, Enum}
 import utopia.vault.coder.model.datatype.BasicPropertyType.{DateTime, IntNumber}
 import utopia.vault.coder.model.datatype.PropertyType.TimeDuration.{fromValueReferences, toValueReferences}
 import utopia.vault.coder.model.enumeration.IntSize
 import utopia.vault.coder.model.enumeration.IntSize.Default
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
-import utopia.vault.coder.model.scala.template.{ScalaTypeConvertible, ValueConvertibleType}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.coder.model.scala.template.{ScalaTypeConvertible, ValueConvertibleType}
 
 import java.util.concurrent.TimeUnit
 
@@ -517,7 +519,7 @@ object BasicPropertyType
 		override def emptyValue = CodePiece.empty
 		
 		override def fromValuePropName = "int"
-		override def defaultPropertyName = Name("index", "indices", CamelCase.lower)
+		override def defaultPropertyName = data.Name("index", "indices", CamelCase.lower)
 	}
 }
 
@@ -627,7 +629,7 @@ object PropertyType
 	case object CreationTime extends ConcreteSingleColumnPropertyType
 	{
 		override lazy val sqlType = SqlPropertyType("TIMESTAMP", "CURRENT_TIMESTAMP", indexByDefault = true)
-		override lazy val defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
+		override lazy val defaultPropertyName = data.Name("created", "creationTimes", CamelCase.lower)
 		
 		override def valueDataType = Reference.instantType
 		override def supportsDefaultJsonValues = false
@@ -655,7 +657,7 @@ object PropertyType
 	{
 		override lazy val sqlConversion =
 			wrapped.sqlConversion.modifyTarget(defaultValue = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-		override lazy val defaultPropertyName = Name("lastUpdated", "lastUpdateTimes", CamelCase.lower)
+		override lazy val defaultPropertyName = data.Name("lastUpdated", "lastUpdateTimes", CamelCase.lower)
 		
 		override protected def wrapped = CreationTime
 		
@@ -673,7 +675,7 @@ object PropertyType
 	case object Deprecation extends SingleColumnPropertyTypeWrapper
 	{
 		override lazy val sqlConversion = wrapped.sqlConversion.modifyTarget(indexByDefault = true)
-		override lazy val defaultPropertyName = Name("deprecatedAfter", "deprecationTimes", CamelCase.lower)
+		override lazy val defaultPropertyName = data.Name("deprecatedAfter", "deprecationTimes", CamelCase.lower)
 		
 		protected def wrapped = DateTime.OptionWrapped
 		
@@ -690,7 +692,7 @@ object PropertyType
 	case object Expiration extends SingleColumnPropertyTypeWrapper
 	{
 		override lazy val sqlConversion = wrapped.sqlConversion.modifyTarget(indexByDefault = true)
-		override lazy val defaultPropertyName = Name("expires", "expirationTimes", CamelCase.lower)
+		override lazy val defaultPropertyName = data.Name("expires", "expirationTimes", CamelCase.lower)
 		
 		protected def wrapped = DateTime
 		

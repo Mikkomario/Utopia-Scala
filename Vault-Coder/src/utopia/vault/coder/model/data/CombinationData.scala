@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.data
 
+import utopia.coder.model.data.Name
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.enumeration.CombinationType
 

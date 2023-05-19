@@ -1,6 +1,8 @@
 package utopia.vault.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
@@ -8,17 +10,18 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, EnumerationValue, Instance, Name, NamingRules, ProjectData, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, EnumerationValue, Instance, ProjectData, Property}
 import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber
 import utopia.vault.coder.model.datatype.{CustomPropertyType, PropertyType}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue, Text}
-import utopia.vault.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, DatabaseName, EnumName, EnumValueName, Header, TableName}
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
-import utopia.vault.coder.model.enumeration.{CombinationType, IntSize, NamingConvention}
-import utopia.vault.coder.model.scala.Package
-import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, DatabaseName, EnumName, EnumValueName, Header, TableName}
+import utopia.coder.model.enumeration.NamingConvention
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
+import utopia.vault.coder.model.enumeration.{CombinationType, IntSize}
+import utopia.coder.model.scala.Package
+import utopia.coder.model.scala.code.CodePiece
 
 import java.nio.file.Path
 import scala.util.Try
@@ -70,7 +73,7 @@ object ClassReader
 							dbPackage.parent.parts.lastOption
 								.orElse { dbPackage.parts.lastOption }
 								.map { Name.interpret(_, CamelCase.lower) }
-								.getOrElse { Name("Project", CamelCase.capitalized) }
+								.getOrElse { data.Name("Project", CamelCase.capitalized) }
 					}
 				}
 			
@@ -149,7 +152,7 @@ object ClassReader
 							// Case: No name specified => Generates a name
 							case None =>
 								val childPart = childAlias.getOrElse(childClass.name)
-								val base = parentClass.name + Name("with", "with", CamelCase.lower)
+								val base = parentClass.name + data.Name("with", "with", CamelCase.lower)
 								// Case: There are multiple children => Plural child name is used in all name forms
 								// E.g. CarWithTires and CarsWithTires
 								if (combinationType.isOneToMany)
@@ -246,7 +249,7 @@ object ClassReader
 		// Uses table name as a backup for class name
 		val tableName = TableName.from(classModel, disableGeneric = true)
 		val name = ClassName.from(classModel).orElse(tableName)
-			.getOrElse { Name("Unnamed", naming(ClassName)) + packageName }
+			.getOrElse { data.Name("Unnamed", naming(ClassName)) + packageName }
 		
 		// Reads properties
 		val properties = classModel("properties", "props").getVector.flatMap { _.model }

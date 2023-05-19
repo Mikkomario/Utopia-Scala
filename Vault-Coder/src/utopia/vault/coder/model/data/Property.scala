@@ -1,9 +1,10 @@
 package utopia.vault.coder.model.data
 
+import utopia.coder.model.data.{Name, Named, NamingRules}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.coder.model.datatype.PropertyType.ClassReference
 import utopia.vault.coder.model.datatype.{PropertyType, SingleColumnPropertyType}
-import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.code.CodePiece
 
 object Property
 {

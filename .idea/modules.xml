@@ -27,6 +27,7 @@
       <module fileurl="file://$PROJECT_DIR$/Reflection/Reflection.iml" filepath="$PROJECT_DIR$/Reflection/Reflection.iml" />
       <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe.iml" filepath="$PROJECT_DIR$/Scribe/Scribe.iml" />
       <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Utopia-Coder/Utopia-Coder.iml" filepath="$PROJECT_DIR$/Utopia-Coder/Utopia-Coder.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault/Vault.iml" filepath="$PROJECT_DIR$/Vault/Vault.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault-Coder/Vault-Coder.iml" filepath="$PROJECT_DIR$/Vault-Coder/Vault-Coder.iml" />
     </modules>

@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.data
 
+import utopia.coder.model.data.Name
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.Uncertain
 

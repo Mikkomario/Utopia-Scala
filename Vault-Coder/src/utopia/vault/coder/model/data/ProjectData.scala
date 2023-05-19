@@ -1,9 +1,10 @@
 package utopia.vault.coder.model.data
 
+import utopia.coder.model.data.{Filter, Name, NamingRules}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.util.Version
-import utopia.vault.coder.model.scala.Package
+import utopia.coder.model.scala.Package
 
 /**
   * Contains project classes, enumerations etc.

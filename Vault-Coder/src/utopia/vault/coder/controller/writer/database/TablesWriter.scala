@@ -1,13 +1,14 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.coder.model.data.NamingRules
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.scala.Visibility.Private
-import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
-import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.scala.Visibility.Private
+import utopia.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
+import utopia.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, Parameter}
 
 import scala.io.Codec
 import scala.util.Success
@@ -26,7 +27,7 @@ object TablesWriter
 	  * @param setup   Target project -specific settings (implicit)
 	  * @return Reference to the written object. Failure if writing failed.
 	  */
-	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val objectName = (setup.dbModuleName + "Tables").objectName
 		// If there are no classes to write, omits this document (e.g. when only writing enumerations or something)

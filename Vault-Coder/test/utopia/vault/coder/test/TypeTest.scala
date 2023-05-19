@@ -1,10 +1,11 @@
 package utopia.vault.coder.test
 
+import utopia.coder.model.data.NamingRules
 import utopia.flow.generic.model.mutable.DataType
-import utopia.vault.coder.model.data.{Enum, EnumerationValue, NamingRules}
+import utopia.vault.coder.model.data.{Enum, EnumerationValue}
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.datatype.PropertyType.{EnumValue, NonEmptyText, Text}
-import utopia.vault.coder.model.scala.Package
+import utopia.coder.model.scala.Package
 
 /**
   * Tests data types

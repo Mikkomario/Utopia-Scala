@@ -1,10 +1,10 @@
 package utopia.vault.coder.test
 
+import utopia.coder.controller.parsing.scala.ScalaParser
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.controller.reader.ScalaParser
 
 import java.nio.file.Path
 import scala.io.{Codec, StdIn}

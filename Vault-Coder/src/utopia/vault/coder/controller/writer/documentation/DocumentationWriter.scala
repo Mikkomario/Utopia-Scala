@@ -1,14 +1,15 @@
 package utopia.vault.coder.controller.writer.documentation
 
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.time.Today
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectData}
+import utopia.vault.coder.model.data.{Class, ProjectData}
 import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
-import utopia.vault.coder.model.enumeration.NameContext.Header
-import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated}
+import utopia.coder.model.enumeration.NameContext.Header
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated}
 
 import java.nio.file.Path
 import scala.io.Codec

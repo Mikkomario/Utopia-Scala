@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.datatype
 
-import utopia.vault.coder.model.scala.template.ValueConvertibleType
+import utopia.coder.model.scala.template.ValueConvertibleType
 
 /**
   * A common trait for SQL type conversions that don't need an intermediate step because the original type already

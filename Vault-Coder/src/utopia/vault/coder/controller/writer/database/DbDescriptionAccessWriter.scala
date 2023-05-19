@@ -1,11 +1,13 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.scala.DeclarationDate
-import utopia.vault.coder.model.scala.datatype.Reference
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
+import utopia.coder.model.data
+import utopia.coder.model.data.{Name, NamingRules}
+import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
+import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.DeclarationDate
+import utopia.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.coder.model.scala.declaration.{File, ObjectDeclaration}
 
 import scala.io.Codec
 
@@ -16,8 +18,8 @@ import scala.io.Codec
   */
 object DbDescriptionAccessWriter
 {
-	private val accessPrefix = Name("Db", "Db", CamelCase.capitalized)
-	private val descriptionsSuffix = Name("Description", "Descriptions", CamelCase.capitalized)
+	private val accessPrefix = data.Name("Db", "Db", CamelCase.capitalized)
+	private val descriptionsSuffix = data.Name("Description", "Descriptions", CamelCase.capitalized)
 	
 	/**
 	  * Writes description-related database interaction objects
@@ -32,7 +34,7 @@ object DbDescriptionAccessWriter
 	  */
 	def apply(descriptionLinkClass: Class, baseClassName: Name, linkModelsRef: Reference,
 	          descriptionFactoriesRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
+	         (implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		val factoryPropertyName = baseClassName.prop
 		
