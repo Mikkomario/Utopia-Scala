@@ -173,6 +173,14 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 	// OTHER    ------------------------
 	
 	/**
+	  * @param firstTypeParameter First type parameter to append
+	  * @param moreTypeParameters More type parameters to append
+	  * @return Copy of this type that uses the specified generic type parameters
+	  */
+	def apply(firstTypeParameter: ScalaType, moreTypeParameters: ScalaType*) =
+		copy(typeParameters = firstTypeParameter +: moreTypeParameters.toVector)
+	
+	/**
 	  * @param parameterTypes A list of accepted parameter types
 	  * @return A functional data type that returns this data type
 	  */
@@ -182,6 +190,8 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 			ScalaType(Left(toScala.text), category = ScalaTypeCategory.Function(parameterTypes))
 		case _ => copy(category = ScalaTypeCategory.Function(parameterTypes))
 	}
+	def fromParameters(firstParameter: ScalaType, moreParameters: ScalaType*): ScalaType =
+		fromParameters(firstParameter +: moreParameters.toVector)
 	
 	/**
 	  * @param other Another type

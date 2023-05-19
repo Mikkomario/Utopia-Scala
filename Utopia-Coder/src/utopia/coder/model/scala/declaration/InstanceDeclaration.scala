@@ -8,7 +8,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.coder.model.scala.code.CodeBuilder
 import utopia.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.coder.model.scala.code.Code
-import utopia.coder.model.scala.datatype.{Extension, GenericType}
+import utopia.coder.model.scala.datatype.{Extension, GenericType, ScalaType}
 import utopia.coder.model.scala.doc.ScalaDocPart
 import utopia.coder.model.scala.{Annotation, DeclarationDate, Parameters, Visibility}
 import utopia.coder.model.scala.template.CodeConvertible
@@ -84,6 +84,15 @@ trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration
 	                       creationCode: Code, properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
 	                       nested: Set[InstanceDeclaration], annotations: Seq[Annotation], description: String,
 	                       author: String, headerComments: Vector[String], since: DeclarationDate): InstanceDeclaration
+	
+	
+	// COMPUTED ------------------------------
+	
+	/**
+	  * @return A basic type reference to the declared type.
+	  *         Won't contain a package reference and should therefore only be used within the same file.
+	  */
+	def toBasicType = ScalaType.basic(name)
 	
 	
 	// IMPLEMENTED  --------------------------
