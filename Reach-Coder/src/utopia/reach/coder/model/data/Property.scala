@@ -1,8 +1,8 @@
 package utopia.reach.coder.model.data
 
-import utopia.coder.model.data.{Name, Named}
+import utopia.coder.model.data.{Name, Named, NamingRules}
 import utopia.coder.model.scala.code.CodePiece
-import utopia.coder.model.scala.datatype.ScalaType
+import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 
 object Property
 {
@@ -17,7 +17,25 @@ object Property
 	  */
 	def simple(name: Name, dataType: ScalaType, defaultValue: CodePiece = CodePiece.empty, description: String = "",
 	           mappingEnabled: Boolean = false) =
-		apply(name, dataType, "with" + name, name, defaultValue, description, mappingEnabled)
+		apply(name, dataType, "with" + name, name, defaultValue, description = description,
+			mappingEnabled = mappingEnabled)
+	
+	/**
+	  * Creates a property that refers to settings from another component
+	  * @param factory Targeted component factory
+	  * @param prefix Prefix added to all referenced properties (default = empty = no prefix)
+	  * @param description Description of this property (default = empty)
+	  * @param naming Naming rules to apply
+	  * @return A new property
+	  */
+	def referringTo(factory: ComponentFactory, prefix: Name = "", description: String = "")
+	               (implicit naming: NamingRules) =
+	{
+		val name = prefix + "Settings"
+		val target = (factory.componentName + "Settings").className
+		apply(name, Reference(factory.pck, target), "with" +: name, "settings", s"$target.default",
+			Some(factory -> prefix), description, mappingEnabled = true)
+	}
 }
 
 /**
@@ -30,12 +48,13 @@ object Property
   * @param setterName Name of the setter used for modifying this property. E.g. "withProperty"
   * @param setterParamName Name of this property when it appears as the setter parameter. E.g. "prop"
   * @param defaultValue The default value used for this property in settings
+  * @param reference Referenced component factory, if applicable
   * @param description A description about the function of this property
   * @param mappingEnabled Whether mapping functions shall be used for this property
   */
 case class Property(name: Name, dataType: ScalaType, setterName: Name, setterParamName: Name,
-                    defaultValue: CodePiece = CodePiece.empty, description: String = "",
-                    mappingEnabled: Boolean = false)
+                    defaultValue: CodePiece = CodePiece.empty, reference: Option[(ComponentFactory, Name)] = None,
+                    description: String = "", mappingEnabled: Boolean = false)
 	extends Named
 {
 	/**

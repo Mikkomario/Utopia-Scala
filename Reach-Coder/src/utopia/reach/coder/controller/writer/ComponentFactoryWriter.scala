@@ -1,12 +1,13 @@
 package utopia.reach.coder.controller.writer
 
-import utopia.coder.model.data.{NamingRules, ProjectSetup}
+import utopia.coder.model.data.{Name, NamingRules, ProjectSetup}
 import utopia.coder.model.scala.Visibility.Protected
-import utopia.coder.model.scala.{DeclarationDate, Parameter}
-import utopia.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
 import utopia.coder.model.scala.datatype.TypeVariance.Covariance
+import utopia.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
+import utopia.coder.model.scala.{DeclarationDate, Parameter}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.reach.coder.model.data.ComponentFactory
 import utopia.reach.coder.model.enumeration.ContextType
@@ -82,6 +83,12 @@ object ComponentFactoryWriter
 	
 	// Declares the generic settings trait
 	private def settingsLike(factory: ComponentFactory)(implicit naming: NamingRules, setup: ProjectSetup) = {
+		// Adds additional properties and methods for nested settings
+		val (referencedProps, referencedMethods) = factory.properties.splitFlatMap { prop =>
+			prop.reference.iterator.splitFlatMap { case (factory, prefix) =>
+				referencedPropFunctionsFrom(factory, prefix)
+			}
+		}
 		TraitDeclaration(
 			name = (factory.componentName + "SettingsLike").className,
 			genericTypes = Vector(repr),
@@ -91,9 +98,8 @@ object ComponentFactoryWriter
 			properties = factory.properties.map { prop =>
 				PropertyDeclaration.newAbstract(prop.name.function, prop.dataType, description = prop.description,
 					isProtected = true)
-			},
+			} ++ referencedProps,
 			// Defines abstract property setters, as well as mapping functions based on each setter
-			// TODO: Also generate setters for nested properties from other settings
 			methods = factory.properties.flatMap { prop =>
 				val setterName = prop.setterName.function
 				val setter = MethodDeclaration.newAbstract(setterName, reprType,
@@ -112,7 +118,7 @@ object ComponentFactoryWriter
 				// Case: Mapping is disabled => Writes the setter only
 				else
 					Some(setter)
-			}.toSet,
+			}.toSet ++ referencedMethods,
 			description = s"Common trait for ${factory.componentName} factories and settings",
 			author = factory.author,
 			since = DeclarationDate.versionedToday
@@ -221,10 +227,13 @@ object ComponentFactoryWriter
 		val factoryType = ScalaType.basic(name)
 		ClassDeclaration(
 			name = name,
+			// Contains the standard (implemented) properties + non-context -specific properties
 			constructionParams = Vector(
 				Parameter("parentHierarchy", componentHierarchy),
 				Parameter("settings", settingsType, s"$settingsType.default")
-			),
+			) ++ factory.nonContextualProperties.map { prop =>
+				Parameter(prop.name.prop, prop.dataType, prop.defaultValue, description = prop.description)
+			},
 			extensions = factoryLikeType(factoryType) +:
 				// Enables context-appending, if specified
 				contextual.map[Extension] { case (contextual, context) =>
@@ -239,6 +248,13 @@ object ComponentFactoryWriter
 					MethodDeclaration("withContext", isOverridden = true)(
 						Parameter("context", context.reference))(
 						s"$contextual(parentHierarchy, context, settings)")
+				} ++
+				factory.nonContextualProperties.map { prop =>
+					val paramName = prop.setterParamName.prop
+					MethodDeclaration(prop.setterName.function,
+						returnDescription = s"Copy of this factory with the specified ${prop.name}")(
+						Parameter(paramName, prop.dataType, description = prop.description))(
+						s"copy(${prop.name.prop} = $paramName)")
 				},
 			description = s"Factory class that is used for constructing ${
 				factory.componentName.pluralDoc} without using contextual information",
@@ -257,11 +273,15 @@ object ComponentFactoryWriter
 		val contextParameter = Parameter("context", context.reference)
 		ClassDeclaration(
 			name = name,
+			// Contains the default parameters (parentHierarchy, context, settings),
+			// plus possible custom properties
 			constructionParams = Vector(
 				Parameter("parentHierarchy", componentHierarchy),
 				contextParameter,
 				Parameter("settings", settingsType, s"$settingsType.default")
-			),
+			) ++ factory.contextualProperties.map { prop =>
+				Parameter(prop.name.prop, prop.dataType, prop.defaultValue, description = prop.description)
+			},
 			// TODO: Add support for contextual ReachFactoryTrait variants
 			extensions = Vector(
 				factoryLikeType(factoryType),
@@ -272,7 +292,15 @@ object ComponentFactoryWriter
 				MethodDeclaration("withContext", isOverridden = true)(contextParameter)("copy(context = context)"),
 				MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
 					Parameter("settings", settingsType))("copy(settings = settings)")
-			),
+			) ++
+				// Also contains possible custom property setters
+				factory.contextualProperties.map { prop =>
+					val paramName = prop.setterParamName.prop
+					MethodDeclaration(prop.setterName.function,
+						returnDescription = s"Copy of this factory with the specified ${prop.name}")(
+						Parameter(paramName, prop.dataType, description = prop.description))(
+						s"copy(${prop.name.prop} = $paramName)")
+				},
 			description = s"Factory class used for constructing ${
 				factory.componentName.pluralDoc} using contextual component creation information",
 			author = factory.author,
@@ -334,5 +362,39 @@ object ComponentFactoryWriter
 			author = factory.author,
 			since = DeclarationDate.versionedToday
 		)
+	}
+	
+	private def referencedPropFunctionsFrom(target: ComponentFactory, prefix: Name)
+	                                       (implicit naming: NamingRules): (Vector[PropertyDeclaration], Vector[MethodDeclaration]) =
+	{
+		val base = (target.componentName + "Settings").prop
+		target.properties.splitFlatMap { prop =>
+			// Generates a getter
+			val propName = prefix + prop.name
+			val directGet = ComputedProperty(propName.prop, visibility = Protected,
+				description = s"${prop.name} from the wrapped ${target.componentName} settings")(
+				s"$base.${prop.name.prop}")
+			// Generates a setter
+			val paramName = prop.setterParamName.prop
+			val directSet = MethodDeclaration((prefix + prop.setterName).function,
+				returnDescription = s"Copy of this factory with the specified $propName")(
+				Parameter(paramName, prop.dataType, description = prop.description))(
+				s"$base.${prop.setterName.function}($paramName)")
+			// Generates a mapper, if enabled
+			val mapper = {
+				if (prop.mappingEnabled)
+					Some(MethodDeclaration(("map" +: propName).function)(
+						Parameter("f", prop.dataType.fromParameters(prop.dataType)))(
+						s"${directSet.name}(f(${directGet.name}))"))
+				else
+					None
+			}
+			// Recursively generates more properties if the reference goes deeper
+			val (moreProps, moreMethods) = prop.reference match {
+				case Some((deeperTarget, nextPrefix)) => referencedPropFunctionsFrom(deeperTarget, prefix + nextPrefix)
+				case None => Vector() -> Vector()
+			}
+			(directGet +: moreProps) -> ((directSet +: mapper.toVector) ++ moreMethods)
+		}
 	}
 }

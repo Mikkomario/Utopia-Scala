@@ -1,0 +1,41 @@
+{
+  "project": "Project Name",
+  "version": "v1.0",
+  "author": "Author Name (optional)",
+  "package": "com.company.project.components",
+  "packages": {
+    "packageAlias1": "com.company.project"
+  },
+  "references": {
+    "refAlias1": "packageAlias1/model.DataType1",
+    "refAlias2": "com.company.project2.model.DataType2"
+  },
+  "components": {
+    "subpackage1": {
+      "subpackage2.subPackage3": [
+        {
+          "name": "ComponentName",
+          "name_plural": "PluralComponentName",
+          "context": "base | color | text | window (optional)",
+          "parents": ["framed and/or customDrawable"],
+          "props": [
+            {
+              "name": "prop1",
+              "name_plural": "manyProp1s (optional)",
+              "type": "refAlias1 (optional for references)",
+              "ref": "OtherComponentName (optional)",
+              "default": {
+                "references": ["com.company.project.model.DataType3", "refAlias2"],
+                "code": "DataType3.default"
+              },
+              "doc": "Description of property function (optional)",
+              "mapping": true
+            }
+          ],
+          "nonContextualProps": [],
+          "contextualProps": []
+        }
+      ]
+    }
+  }
+}

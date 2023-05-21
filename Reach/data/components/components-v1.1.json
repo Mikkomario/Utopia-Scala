@@ -1,0 +1,131 @@
+{
+  "project": "Reach",
+  "version": "v1.1",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.reach.component",
+  "packages": {
+    "pointers": "utopia.flow.view",
+    "immutablePointers": "pointers/immutable.eventful",
+    "stackModels": "utopia.firmament.model.stack"
+  },
+  "references": {
+    "p": "pointers/template.eventful.Changing",
+    "fixed": "immutablePointers.Fixed",
+    "false!": "immutablePointers.AlwaysFalse",
+    "color": "utopia.paradigm.color.Color",
+    "align": "utopia.paradigm.enumeration.Alignment",
+    "insets": "stackModels/StackInsets"
+  },
+  "components": {
+    "label": {
+      "image": [
+        {
+          "name": "ViewImageLabel",
+          "context": "color",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "name": "insetsPointer",
+              "param": "p",
+              "type": "p[insets]",
+              "default": {
+                "ref": ["fixed"],
+                "code": "Fixed(StackInsets.any)"
+              },
+              "doc": "Pointer that determines the insets placed around the image",
+              "map": true
+            },
+            {
+              "name": "alignmentPointer",
+              "param": "p",
+              "type": "p[align]",
+              "default": {
+                "ref": ["fixed"],
+                "code": "Fixed(Alignment.Center)"
+              },
+              "doc": "Pointer that determines the image drawing location within this component",
+              "map": true
+            },
+            {
+              "name": "colorOverlayPointer",
+              "param": "p",
+              "type": "Option[p[color]]",
+              "default": "None",
+              "doc": "Pointer that, when defined, places a color overlay over the drawn image",
+              "map": true
+            },
+            {
+              "name": "imageScalingPointer",
+              "param": "p",
+              "type": "p[Double]",
+              "default": {
+                "ref": "fixed",
+                "code": "Fixed(1.0)"
+              },
+              "doc": "Pointer that determines image scaling, in addition to the original image scaling",
+              "map": true
+            }
+          ],
+          "nonContextualProps": [
+            {
+              "name": "allowsUpscaling",
+              "param": "allow",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether drawn images should be allowed to scale beyond their source resolution"
+            }
+          ]
+        },
+        {
+          "name": "ViewImageAndTextLabel",
+          "context": "text",
+          "nonContextual": false, 
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "ViewImageLabel",
+              "prefix": "image"
+            },
+            {
+              "name": "forceEqualBreadth",
+              "param": "force",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether the image and the text should be forced to have equal height or width (depending on the alignment used)"
+            }
+          ]
+        }
+      ],
+      "text": [
+        {
+          "name": "ViewTextLabel",
+          "context": "text",
+          "parents": ["customDrawable"],
+          "contextualProps": [
+            {
+              "name": "isHintPointer",
+              "param": "p",
+              "type": "p[Boolean]",
+              "default": {
+                "ref": "false!",
+                "code": "AlwaysFalse"
+              },
+              "map": true,
+              "doc": "Pointer that determines whether text will be drawn as a hint (i.e. partially transparent)"
+            }
+          ],
+          "nonContextualProps": [
+            {
+              "name": "allowsTextToShrink",
+              "param": "allow",
+              "setter": "withAllowTextShrinking",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether text should be allowed to shrink in order to conserve space"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
