@@ -122,6 +122,7 @@
       },
       {
         "name": "Issue",
+        "has_combos": true,
         "combo_index": ["severity", "context"],
         "doc": "Represents a type of problem or issue that may occur during a program's run",
         "props": [
@@ -146,6 +147,13 @@
       {
         "name": "IssueVariant",
         "doc": "Represents a specific setting where a problem or an issue occurred",
+        "combo": {
+          "name": "ContextualIssueVariant",
+          "child": "Issue",
+          "parent_alias": "variant",
+          "is_always_linked": true,
+          "doc": "Adds standard issue information to an issue variant"
+        },
         "combo_index": ["issueId", "version", "errorId"],
         "props": [
           {

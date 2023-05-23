@@ -91,6 +91,8 @@ object Reference
 		lazy val collectionExtensions = extensions(collection, "CollectionExtensions")
 		lazy val timeExtensions = extensions(time, "TimeExtensions")
 		
+		lazy val notEmpty = apply(utils, "NotEmpty")
+		
 		lazy val value = apply(immutableGenericModels, "Value")
 		lazy val property = apply(genericModelTemplates, "Property")
 		lazy val constant = apply(immutableGenericModels, "Constant")

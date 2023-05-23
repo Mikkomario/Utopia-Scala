@@ -3,6 +3,8 @@ package utopia.scribe.api.util
 import utopia.access.http.Status
 import utopia.flow.util.Version
 import utopia.flow.view.mutable.Pointer
+import utopia.scribe.api.controller.logging.Scribe
+import utopia.scribe.core.model.enumeration.Severity
 import utopia.vault.database.ConnectionPool
 
 import scala.concurrent.ExecutionContext
@@ -64,6 +66,16 @@ object ScribeContext
 	def setup(exc: ExecutionContext, cPool: ConnectionPool, databaseName: String = "utopia_scribe_db",
 	          version: Version = Version(1)) =
 		settingsPointer.value = Some(Settings(exc, cPool, databaseName, version))
+	
+	/**
+	  * Creates a new specific logger
+	  * @param context The context of this logger
+	  * @param severity The default severity of logged errors (optional)
+	  * @param details Default details for issue variants (optional)
+	  * @return A new logging implementation
+	  */
+	def logger(context: String, severity: Severity = Severity.default, details: String = "") =
+		Scribe(context, severity, details)
 	
 	
 	// NESTED   -------------------------

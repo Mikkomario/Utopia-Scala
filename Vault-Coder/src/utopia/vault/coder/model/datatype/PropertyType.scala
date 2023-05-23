@@ -1228,8 +1228,12 @@ object PropertyType
 		override def supportsDefaultJsonValues = true
 		
 		// Converts to json when storing to DB
-		override def toValueCode(instanceCode: String) =
-			toJsonValueCode(instanceCode).mapText { value => s"($value: Value).toJson" }.referringTo(value)
+		// Empty vectors are treated as empty values
+		override def toValueCode(instanceCode: String) = {
+			innerType.toJsonValueCode("v").mapText { itemToValue =>
+				s"NotEmpty($instanceCode) match { case Some(v) => ((v.map { v => $itemToValue }: Value).toJson): Value; case None => Value.empty }"
+			}.referringTo(Vector(valueConversions, notEmpty, value))
+		}
 		override def toJsonValueCode(instanceCode: String) =
 			innerType.toJsonValueCode("v").mapText { itemToValue =>
 				s"$instanceCode.map { v => $itemToValue }"

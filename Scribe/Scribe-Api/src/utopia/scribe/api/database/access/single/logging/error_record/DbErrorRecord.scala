@@ -52,7 +52,7 @@ object DbErrorRecord extends SingleRowModelAccess[ErrorRecord] with Unconditiona
 	  * @return Either an error that had already been recorded (Right) or a newly inserted error record (Left).
 	  *         Returns None in case no stack trace could be extracted from the specified error.
 	  */
-	def store(error: Throwable)(implicit connection: Connection) = {
+	def store(error: Throwable)(implicit connection: Connection): Option[Sided[ErrorRecordWithStackTrace]] = {
 		// Stores the errors from bottom to top
 		val bottomToTop = error.causesIterator.toVector.reverse :+ error
 		val errorsIterator = bottomToTop.iterator

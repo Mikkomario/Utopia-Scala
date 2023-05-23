@@ -2,6 +2,7 @@ package utopia.scribe.api.database.model.logging
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
@@ -111,8 +112,11 @@ case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = No
 	
 	override def valueProperties = {
 		import IssueOccurrenceModel._
-		Vector("id" -> id, caseIdAttName -> caseId, 
-			errorMessagesAttName -> (errorMessages.map { v => v }: Value).toJson, createdAttName -> created)
+		val messagesValue: Value = NotEmpty(errorMessages) match {
+			case Some(messages) => (messages.map { v => v }: Value).toJson
+			case None => Value.empty
+		}
+		Vector("id" -> id, caseIdAttName -> caseId, errorMessagesAttName -> messagesValue, createdAttName -> created)
 	}
 	
 	
