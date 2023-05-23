@@ -33,6 +33,15 @@ object Severity
 	  */
 	val values: Vector[Severity] = Vector(Debug, Info, Warning, Recoverable, Unrecoverable, Critical)
 	
+	/**
+	  * The smallest severity
+	  */
+	val min = Debug
+	/**
+	  * The largest severity
+	  */
+	val max = Critical
+	
 	
 	// COMPUTED	--------------------
 	
@@ -54,14 +63,27 @@ object Severity
 	  * @param level level matching a severity
 	  * @return severity matching that level, or the default severity (unrecoverable)
 	  */
-	def forLevel(level: Int) = findForLevel(level).getOrElse(default)
+	def forLevel(level: Int) = findForLevel(level).getOrElse {
+		// Case: Off-scale level => Uses largest available value
+		if (level > max.level)
+			max
+		// Case: Negative level => Treated as unknown => Uses default value
+		else if (level < 0)
+			default
+		// Case: 0 level => Uses minimum available value
+		else
+			min
+	}
 	
 	/**
 	  * @param value A value representing an severity level
 	  * @return severity matching the specified value, when the value is interpreted as an severity level, 
 	  * or the default severity (unrecoverable)
 	  */
-	def fromValue(value: Value) = forLevel(value.getInt)
+	def fromValue(value: Value) = value.int match {
+		case Some(level) => forLevel(level)
+		case None => default
+	}
 	
 	
 	// NESTED	--------------------

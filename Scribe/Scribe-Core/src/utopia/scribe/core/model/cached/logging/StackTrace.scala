@@ -2,9 +2,17 @@ package utopia.scribe.core.model.cached.logging
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.util.NotEmpty
 
-object StackTrace
+import scala.util.Try
+
+object StackTrace extends FromModelFactory[StackTrace]
 {
 	// TYPES    ---------------------
 	
@@ -12,6 +20,24 @@ object StackTrace
 	  * The Java version of the StackTraceElement class
 	  */
 	type JStackTraceElement = java.lang.StackTraceElement
+	
+	
+	// ATTRIBUTES   -----------------
+	
+	private lazy val schema = ModelDeclaration(
+		PropertyDeclaration("class", StringType, Vector("className", "class_name"), "CouldNotParse"),
+		PropertyDeclaration("method", StringType, Vector("methodName", "method_name", "function"), "couldNotParse"),
+		PropertyDeclaration("line", IntType, Vector("lineNumber", "line_number"), -1),
+		PropertyDeclaration("cause", ModelType, isOptional = true)
+	)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def apply(model: ModelLike[Property]): Try[StackTrace] =
+		schema.validate(model).toTry.map { model =>
+			apply(model("class"), model("method"), model("line"), model("cause").model.flatMap { apply(_).toOption })
+		}
 	
 	
 	// OTHER    --------------------
@@ -55,6 +81,7 @@ object StackTrace
   * @param cause Stack trace element / event that occurred before this element. None if this was the first occurrence.
   */
 case class StackTrace(className: String, methodName: String, lineNumber: Int, cause: Option[StackTrace] = None)
+	extends ModelConvertible
 {
 	// COMPUTED -------------------------
 	
@@ -74,4 +101,10 @@ case class StackTrace(className: String, methodName: String, lineNumber: Int, ca
 	  *         Always contains at least 1 element.
 	  */
 	def bottomToTop = topToBottom.reverse
+	
+	
+	// IMPLEMENTED  --------------------
+	
+	override def toModel: Model =
+		Model.from("class" -> className, "method" -> methodName, "line" -> lineNumber, "cause" -> cause)
 }
