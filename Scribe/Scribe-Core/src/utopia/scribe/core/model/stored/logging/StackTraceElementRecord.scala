@@ -1,13 +1,13 @@
 package utopia.scribe.core.model.stored.logging
 
 import utopia.scribe.core.model.stored.{StoredFromModelFactory, StoredModelConvertible}
-import utopia.scribe.core.model.partial.logging.StackTraceElementData
+import utopia.scribe.core.model.partial.logging.StackTraceElementRecordData
 
-object StackTraceElement extends StoredFromModelFactory[StackTraceElement, StackTraceElementData]
+object StackTraceElementRecord extends StoredFromModelFactory[StackTraceElementRecord, StackTraceElementRecordData]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def dataFactory = StackTraceElementData
+	override def dataFactory = StackTraceElementRecordData
 }
 
 /**
@@ -17,6 +17,6 @@ object StackTraceElement extends StoredFromModelFactory[StackTraceElement, Stack
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class StackTraceElement(id: Int, data: StackTraceElementData) 
-	extends StoredModelConvertible[StackTraceElementData]
+case class StackTraceElementRecord(id: Int, data: StackTraceElementRecordData)
+	extends StoredModelConvertible[StackTraceElementRecordData]
 

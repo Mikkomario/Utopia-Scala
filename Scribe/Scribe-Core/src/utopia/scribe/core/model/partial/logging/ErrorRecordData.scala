@@ -27,8 +27,7 @@ object ErrorRecordData extends FromModelFactoryWithSchema[ErrorRecordData]
   * Represents a single error or exception thrown during program runtime
   * @param exceptionType The name of this exception type. Typically the exception class name.
   * @param stackTraceId Id of the topmost stack trace element that corresponds to this error record
-  * 
-	@param causeId Id of the underlying error that caused this error/failure. None if this error represents the
+  * @param causeId Id of the underlying error that caused this error/failure. None if this error represents the
   *  root problem.
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1

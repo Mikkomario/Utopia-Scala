@@ -1,4 +1,4 @@
-package utopia.scribe.api.database.access.many.logging.stack_trace_element
+package utopia.scribe.api.database.access.many.logging.stack_trace_element_record
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.UnconditionalView
@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-object DbStackTraceElements extends ManyStackTraceElementsAccess with UnconditionalView
+object DbStackTraceElementRecords extends ManyStackTraceElementRecordsAccess with UnconditionalView
 {
 	// OTHER	--------------------
 	
@@ -16,12 +16,12 @@ object DbStackTraceElements extends ManyStackTraceElementsAccess with Unconditio
 	  * @param ids Ids of the targeted stack trace elements
 	  * @return An access point to stack trace elements with the specified ids
 	  */
-	def apply(ids: Set[Int]) = new DbStackTraceElementsSubset(ids)
+	def apply(ids: Set[Int]) = new DbStackTraceElementRecordsSubset(ids)
 	
 	
 	// NESTED	--------------------
 	
-	class DbStackTraceElementsSubset(targetIds: Set[Int]) extends ManyStackTraceElementsAccess
+	class DbStackTraceElementRecordsSubset(targetIds: Set[Int]) extends ManyStackTraceElementRecordsAccess
 	{
 		// IMPLEMENTED	--------------------
 		

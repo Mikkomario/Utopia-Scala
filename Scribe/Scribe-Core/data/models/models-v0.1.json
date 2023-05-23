@@ -67,7 +67,7 @@
   "classes": {
     "logging": [
       {
-        "name": "StackTraceElement",
+        "name": "StackTraceElementRecord",
         "doc": "Represents a single error stack trace line.\nA stack trace indicates how an error propagated through the program flow before it was recorded.",
         "combo_index": ["className", "methodName", "lineNumber"],
         "props": [
@@ -109,7 +109,7 @@
           },
           {
             "name": "stackTraceId",
-            "ref": "stack_trace_element",
+            "ref": "stack_trace_element_record",
             "doc": "Id of the topmost stack trace element that corresponds to this error record"
           },
           {

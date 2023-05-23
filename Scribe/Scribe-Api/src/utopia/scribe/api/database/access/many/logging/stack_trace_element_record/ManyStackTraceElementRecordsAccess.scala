@@ -1,20 +1,20 @@
-package utopia.scribe.api.database.access.many.logging.stack_trace_element
+package utopia.scribe.api.database.access.many.logging.stack_trace_element_record
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.scribe.api.database.factory.logging.StackTraceElementFactory
-import utopia.scribe.api.database.model.logging.StackTraceElementModel
-import utopia.scribe.core.model.stored.logging.StackTraceElement
+import utopia.scribe.api.database.factory.logging.StackTraceElementRecordFactory
+import utopia.scribe.api.database.model.logging.StackTraceElementRecordModel
+import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
-object ManyStackTraceElementsAccess
+object ManyStackTraceElementRecordsAccess
 {
 	// NESTED	--------------------
 	
-	private class ManyStackTraceElementsSubView(condition: Condition) extends ManyStackTraceElementsAccess
+	private class ManyStackTraceElementRecordsSubView(condition: Condition) extends ManyStackTraceElementRecordsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -27,8 +27,8 @@ object ManyStackTraceElementsAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait ManyStackTraceElementsAccess 
-	extends ManyRowModelAccess[StackTraceElement] with FilterableView[ManyStackTraceElementsAccess] 
+trait ManyStackTraceElementRecordsAccess
+	extends ManyRowModelAccess[StackTraceElementRecord] with FilterableView[ManyStackTraceElementRecordsAccess]
 		with Indexed
 {
 	// COMPUTED	--------------------
@@ -59,17 +59,17 @@ trait ManyStackTraceElementsAccess
 	/**
 	  * Factory used for constructing database the interaction models
 	  */
-	protected def model = StackTraceElementModel
+	protected def model = StackTraceElementRecordModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = StackTraceElementFactory
+	override def factory = StackTraceElementRecordFactory
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyStackTraceElementsAccess = 
-		new ManyStackTraceElementsAccess.ManyStackTraceElementsSubView(mergeCondition(filterCondition))
+	override def filter(filterCondition: Condition): ManyStackTraceElementRecordsAccess =
+		new ManyStackTraceElementRecordsAccess.ManyStackTraceElementRecordsSubView(mergeCondition(filterCondition))
 	
 	
 	// OTHER	--------------------

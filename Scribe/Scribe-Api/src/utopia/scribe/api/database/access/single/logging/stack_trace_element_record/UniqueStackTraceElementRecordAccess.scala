@@ -1,10 +1,10 @@
-package utopia.scribe.api.database.access.single.logging.stack_trace_element
+package utopia.scribe.api.database.access.single.logging.stack_trace_element_record
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.scribe.api.database.factory.logging.StackTraceElementFactory
-import utopia.scribe.api.database.model.logging.StackTraceElementModel
-import utopia.scribe.core.model.stored.logging.StackTraceElement
+import utopia.scribe.api.database.factory.logging.StackTraceElementRecordFactory
+import utopia.scribe.api.database.model.logging.StackTraceElementRecordModel
+import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
@@ -12,7 +12,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
-object UniqueStackTraceElementAccess
+object UniqueStackTraceElementRecordAccess
 {
 	// OTHER	--------------------
 	
@@ -20,13 +20,13 @@ object UniqueStackTraceElementAccess
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueStackTraceElementAccess =
-		 new _UniqueStackTraceElementAccess(condition)
+	def apply(condition: Condition): UniqueStackTraceElementRecordAccess =
+		 new _UniqueStackTraceElementRecordAccess(condition)
 	
 	
 	// NESTED	--------------------
 	
-	private class _UniqueStackTraceElementAccess(condition: Condition) extends UniqueStackTraceElementAccess
+	private class _UniqueStackTraceElementRecordAccess(condition: Condition) extends UniqueStackTraceElementRecordAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -39,9 +39,9 @@ object UniqueStackTraceElementAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait UniqueStackTraceElementAccess 
-	extends SingleRowModelAccess[StackTraceElement] with FilterableView[UniqueStackTraceElementAccess] 
-		with DistinctModelAccess[StackTraceElement, Option[StackTraceElement], Value] with Indexed
+trait UniqueStackTraceElementRecordAccess
+	extends SingleRowModelAccess[StackTraceElementRecord] with FilterableView[UniqueStackTraceElementRecordAccess]
+		with DistinctModelAccess[StackTraceElementRecord, Option[StackTraceElementRecord], Value] with Indexed
 {
 	// COMPUTED	--------------------
 	
@@ -57,13 +57,13 @@ trait UniqueStackTraceElementAccess
 	def methodName(implicit connection: Connection) = pullColumn(model.methodNameColumn).getString
 	
 	/**
-	  * 
+	  *
 		The code line number where this event was recorded. None if no stack trace element (or value) was found.
 	  */
 	def lineNumber(implicit connection: Connection) = pullColumn(model.lineNumberColumn).int
 	
 	/**
-	  * 
+	  *
 		Id of the stack trace element that originated this element. I.e. the element directly before this element.
 	  *  None if this is the root element.. None if no stack trace element (or value) was found.
 	  */
@@ -74,17 +74,17 @@ trait UniqueStackTraceElementAccess
 	/**
 	  * Factory used for constructing database the interaction models
 	  */
-	protected def model = StackTraceElementModel
+	protected def model = StackTraceElementRecordModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = StackTraceElementFactory
+	override def factory = StackTraceElementRecordFactory
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueStackTraceElementAccess = 
-		new UniqueStackTraceElementAccess._UniqueStackTraceElementAccess(mergeCondition(filterCondition))
+	override def filter(filterCondition: Condition): UniqueStackTraceElementRecordAccess =
+		new UniqueStackTraceElementRecordAccess._UniqueStackTraceElementRecordAccess(mergeCondition(filterCondition))
 	
 	
 	// OTHER	--------------------

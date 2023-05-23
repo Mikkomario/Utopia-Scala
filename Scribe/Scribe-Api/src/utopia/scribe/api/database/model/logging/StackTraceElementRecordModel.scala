@@ -2,20 +2,19 @@ package utopia.scribe.api.database.model.logging
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.scribe.api.database.factory.logging.StackTraceElementFactory
-import utopia.scribe.core.model.partial.logging.StackTraceElementData
-import utopia.scribe.core.model.stored.logging.StackTraceElement
+import utopia.scribe.api.database.factory.logging.StackTraceElementRecordFactory
+import utopia.scribe.core.model.partial.logging.StackTraceElementRecordData
+import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 
 /**
-  * 
-	Used for constructing StackTraceElementModel instances and for inserting stack trace elements to the database
+  * Used for constructing StackTraceElementModel instances and for inserting stack trace elements to the database
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-object StackTraceElementModel 
-	extends DataInserter[StackTraceElementModel, StackTraceElement, StackTraceElementData]
+object StackTraceElementRecordModel
+	extends DataInserter[StackTraceElementRecordModel, StackTraceElementRecord, StackTraceElementRecordData]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -65,25 +64,24 @@ object StackTraceElementModel
 	/**
 	  * The factory object used by this model type
 	  */
-	def factory = StackTraceElementFactory
+	def factory = StackTraceElementRecordFactory
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = factory.table
 	
-	override def apply(data: StackTraceElementData) = 
+	override def apply(data: StackTraceElementRecordData) =
 		apply(None, data.className, data.methodName, Some(data.lineNumber), data.causeId)
 	
-	override protected def complete(id: Value, data: StackTraceElementData) = StackTraceElement(id.getInt, 
+	override protected def complete(id: Value, data: StackTraceElementRecordData) = StackTraceElementRecord(id.getInt,
 		data)
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	  * 
-		@param causeId Id of the stack trace element that originated this element. I.e. the element directly before
+	  * @param causeId Id of the stack trace element that originated this element. I.e. the element directly before
 	  *  this element. None if this is the root element.
 	  * @return A model containing only the specified cause id
 	  */
@@ -120,16 +118,16 @@ object StackTraceElementModel
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class StackTraceElementModel(id: Option[Int] = None, className: String = "", methodName: String = "", 
-	lineNumber: Option[Int] = None, causeId: Option[Int] = None) 
-	extends StorableWithFactory[StackTraceElement]
+case class StackTraceElementRecordModel(id: Option[Int] = None, className: String = "", methodName: String = "",
+                                        lineNumber: Option[Int] = None, causeId: Option[Int] = None)
+	extends StorableWithFactory[StackTraceElementRecord]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def factory = StackTraceElementModel.factory
+	override def factory = StackTraceElementRecordModel.factory
 	
 	override def valueProperties = {
-		import StackTraceElementModel._
+		import StackTraceElementRecordModel._
 		Vector("id" -> id, classNameAttName -> className, methodNameAttName -> methodName, 
 			lineNumberAttName -> lineNumber, causeIdAttName -> causeId)
 	}
@@ -138,8 +136,7 @@ case class StackTraceElementModel(id: Option[Int] = None, className: String = ""
 	// OTHER	--------------------
 	
 	/**
-	  * 
-		@param causeId Id of the stack trace element that originated this element. I.e. the element directly before
+	  * @param causeId Id of the stack trace element that originated this element. I.e. the element directly before
 	  *  this element. None if this is the root element.
 	  * @return A new copy of this model with the specified cause id
 	  */

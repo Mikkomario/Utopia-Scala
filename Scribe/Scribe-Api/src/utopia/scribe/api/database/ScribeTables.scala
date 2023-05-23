@@ -37,7 +37,7 @@ object ScribeTables extends Tables(connectionPool)
 	  * Table that contains stack trace elements (Represents a single error stack trace line.
 	  * A stack trace indicates how an error propagated through the program flow before it was recorded.)
 	  */
-	def stackTraceElement = apply("stack_trace_element")
+	def stackTraceElementRecord = apply("stack_trace_element_record")
 	
 	
 	// OTHER	--------------------

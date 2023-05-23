@@ -27,6 +27,14 @@ import scala.util.{Failure, Random, Success, Try}
   * */
 object CollectionExtensions
 {
+	// TYPES    -----------------------------
+	
+	/**
+	  * Type where the item exists either on the Left or the Right side
+	  */
+	type Sided[+A] = Either[A, A]
+	
+	
 	// ITERABLE ONCE    ---------------------------------------
 	
 	class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
@@ -1964,6 +1972,14 @@ object CollectionExtensions
 			case Left(l) => l
 			case Right(r) => r
 		}
+		/**
+		  * @return The left or the right side value, plus the side from which the item was found.
+		  *         First represents the left side and Last represents the right side.
+		  */
+		def eitherAndSide: (A, End) = e match {
+			case Left(l) => l -> First
+			case Right(r) => r -> Last
+		}
 		
 		/**
 		  * @return A pair based on this either, where the non-occupied side receives None and the occupied side
@@ -1983,7 +1999,17 @@ object CollectionExtensions
 			case Left(l) => Left(f(l))
 			case Right(r) => Right(f(r))
 		}
-		
+		/**
+		  * Maps the value in this either, but only if the the value resides on the specified side
+		  * @param side The side to map (if applicable), where First represents left and Last represents Right
+		  * @param f A mapping function to use, if applicable
+		  * @tparam B Type of mapping result
+		  * @return Either this either, if the value resided on the opposite side, or a mapped copy of this either
+		  */
+		def mapSide[B >: A](side: End)(f: A => B) = e match {
+			case Left(l) => if (side == First) Left(f(l)) else e
+			case Right(r) => if (side == Last) Right(f(r)) else e
+		}
 		/**
 		  * @param f A mapping function
 		  * @tparam B Mapping result type

@@ -10,6 +10,9 @@
 ### New Methods
 - **Changing** (object)
   - Added `.completionOf(Future)`
+- **Either** (**CollectionExtensions**)
+  - Added `.eitherAndSide` for symmetric Eithers
+  - Added `.mapSide(End)(...)` for symmetric Eithers
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
 - **Pointer**
@@ -20,10 +23,14 @@
   - Added `.numeric(...)`
 - **SpanLike**
   - Added `.map(...)`
+- **Throwable** (**ErrorExtensions**)
+  - Added `.causesIterator`
 - **Try** (**CollectionExtensions**)
   - Added `.logToOption` and `.logToOptionWithMessage(String)`
 - **Year** (**TimeExtensions**)
   - Added `.dates`
+### Other
+- Added a **Sided[A]** type alias for **Either[A, A]** to **CollectionExtensions**
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

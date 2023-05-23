@@ -1,5 +1,7 @@
 package utopia.flow.error
 
+import utopia.flow.collection.mutable.iterator.OptionsIterator
+
 import java.io.{PrintWriter, StringWriter}
 
 /**
@@ -14,11 +16,16 @@ object ErrorExtensions
 		/**
 		  * @return The stack trace of this throwable item as a string
 		  */
-		def stackTraceString =
-		{
+		def stackTraceString = {
 			val writer = new StringWriter()
 			e.printStackTrace(new PrintWriter(writer))
 			writer.toString
 		}
+		
+		/**
+		  * @return An iterator that returns the underlying causes of this throwable (from top to root)
+		  */
+		def causesIterator =
+			OptionsIterator.iterate(Option(e.getCause)) { t => Option(t.getCause) }
 	}
 }

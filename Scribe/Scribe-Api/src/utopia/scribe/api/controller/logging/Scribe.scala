@@ -2,6 +2,7 @@ package utopia.scribe.api.controller.logging
 
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.scribe.api.controller.logging.Scribe.loggingQueue
+import utopia.scribe.api.database.access.single.logging.error_record.DbErrorRecord
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
 import utopia.vault.util.DatabaseActionQueue
@@ -34,11 +35,12 @@ case class Scribe(context: String, defaultSeverity: Severity = Unrecoverable) ex
 	// TODO: Add parameter for additional details (String)
 	def apply(error: Option[Throwable], message: String) = loggingQueue.push { implicit c =>
 		// TODO: Implement by
-		//  1) Extracting stack trace elements,
-		//  2) Storing them to the database (check for duplicates),
-		//  3) Storing the error to the database (check for duplicates),
 		//  4) Pulling for existing issue + variant (make combined model),
 		//  5) Inserting issues and variants where necessary,
 		//  6) Recording a new occurrence
+		// Extracts the stack trace elements from the error, if applicable,
+		// and saves them (and the error) to the database
+		val storedError = error.flatMap { DbErrorRecord.store(_) }
+		
 	}
 }
