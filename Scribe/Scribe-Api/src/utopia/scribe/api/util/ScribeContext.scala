@@ -1,6 +1,7 @@
 package utopia.scribe.api.util
 
 import utopia.access.http.Status
+import utopia.flow.util.Version
 import utopia.flow.view.mutable.Pointer
 import utopia.vault.database.ConnectionPool
 
@@ -35,6 +36,11 @@ object ScribeContext
 	  */
 	implicit def connectionPool: ConnectionPool = settings.cPool
 	
+	/**
+	  * @return Program version in use
+	  */
+	implicit def version: Version = settings.version
+	
 	
 	// COMPUTED -------------------------
 	
@@ -55,11 +61,12 @@ object ScribeContext
 	  * @param cPool The database connection pool to use
 	  * @param databaseName Name of the database used for Scribe features (default = utopia_scribe_db)
 	  */
-	def setup(exc: ExecutionContext, cPool: ConnectionPool, databaseName: String = "utopia_scribe_db") =
-		settingsPointer.value = Some(Settings(exc, cPool, databaseName))
+	def setup(exc: ExecutionContext, cPool: ConnectionPool, databaseName: String = "utopia_scribe_db",
+	          version: Version = Version(1)) =
+		settingsPointer.value = Some(Settings(exc, cPool, databaseName, version))
 	
 	
 	// NESTED   -------------------------
 	
-	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, dbName: String)
+	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, dbName: String, version: Version)
 }

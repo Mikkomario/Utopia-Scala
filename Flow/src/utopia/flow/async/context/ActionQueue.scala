@@ -38,20 +38,16 @@ class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext)
 	  */
 	def pushTry[A](operation: => Try[A]) = push(new UnsureAction(() => operation))
 	
-	private def push[A](action: Action[A]) =
-	{
+	private def push[A](action: Action[A]) = {
 		// Pushes the action to queue
 		queue :+= action
-		
 		// Starts additional handlers if possible
-		handleCompletions.update
-		{
-			current =>
-				val incomplete = current.filterNot { _.isCompleted }
-				if (incomplete.hasSize < maxWidth)
-					incomplete :+ Future { handle() }
-				else
-					incomplete
+		handleCompletions.update { current =>
+			val incomplete = current.filterNot { _.isCompleted }
+			if (incomplete.hasSize < maxWidth)
+				incomplete :+ Future { handle() }
+			else
+				incomplete
 		}
 		
 		action.future
@@ -59,13 +55,10 @@ class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext)
 	
 	private def next() = queue.pop()
 	
-	private def handle() =
-	{
+	private def handle() = {
 		// Handles actions as long as there are some available
 		var action = next()
-		
-		while (action.isDefined)
-		{
+		while (action.isDefined) {
 			action.get.run()
 			action = next()
 		}

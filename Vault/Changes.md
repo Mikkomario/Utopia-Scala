@@ -1,5 +1,9 @@
 # Utopia Vault - List of Changes
 
+## v1.16.1 (in development)
+### New Features
+- Added **DatabaseActionQueue** class
+
 ## v1.16 - 01.05.2023
 While this update focuses on adding new utility functions, 
 please note that you will need to perform some refactoring in order to migrate.
