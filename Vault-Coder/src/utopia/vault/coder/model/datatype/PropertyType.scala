@@ -1229,7 +1229,7 @@ object PropertyType
 		
 		// Converts to json when storing to DB
 		override def toValueCode(instanceCode: String) =
-			toJsonValueCode(instanceCode).mapText { value => s"($value: Value).toJson" }
+			toJsonValueCode(instanceCode).mapText { value => s"($value: Value).toJson" }.referringTo(value)
 		override def toJsonValueCode(instanceCode: String) =
 			innerType.toJsonValueCode("v").mapText { itemToValue =>
 				s"$instanceCode.map { v => $itemToValue }"

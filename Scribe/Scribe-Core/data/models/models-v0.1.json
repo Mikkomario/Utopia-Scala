@@ -1,9 +1,9 @@
 {
   "author": "Mikko Hilpinen",
   "project": "Scribe",
+  "version": "v0.1",
   "db_package": "utopia.scribe.api.database",
   "model_package": "utopia.scribe.core.model",
-  "version": "v0.1",
   "models_without_vault": true,
   "types": {
     "Version": {
@@ -34,6 +34,7 @@
     {
       "name": "Severity",
       "doc": "Represents the level of severity associated with some problem or error situation",
+      "id_name": "level",
       "default": "Unrecoverable",
       "values": [
         {
@@ -68,6 +69,7 @@
       {
         "name": "StackTraceElement",
         "doc": "Represents a single error stack trace line.\nA stack trace indicates how an error propagated through the program flow before it was recorded.",
+        "combo_index": ["className", "methodName", "lineNumber"],
         "props": [
           {
             "name": "className",
@@ -97,6 +99,7 @@
       {
         "name": "ErrorRecord",
         "doc": "Represents a single error or exception thrown during program runtime",
+        "combo_index": ["exceptionType", "stackTraceId"],
         "props": [
           {
             "name": "exceptionType",
@@ -143,6 +146,7 @@
       {
         "name": "IssueVariant",
         "doc": "Represents a specific setting where a problem or an issue occurred",
+        "combo_index": ["issueId", "version", "errorId"],
         "props": [
           {
             "ref": "issue",
@@ -160,7 +164,9 @@
           },
           {
             "name": "details",
+            "name_plural": "details",
             "type": "String(128)",
+            "crop": true,
             "limit": 2040,
             "doc": "Details about this case and/or setting."
           },
@@ -180,78 +186,15 @@
             "doc": "Id of the issue variant that occurred"
           },
           {
-            "name": "errorMessages"
+            "name": "errorMessages",
+            "name_plural": "errorMessages",
+            "type": "Vector[String]",
+            "limit": 6400,
+            "doc": "Error messages listed in the stack trace"
           },
           {
             "type": "creation",
             "doc": "Time when the issue occurred or was recorded"
-          }
-        ]
-      }
-    ],
-    "settings": [
-      {
-        "name": "SettingField",
-        "combos": [
-          {
-            "name": "AssignedSetting",
-            "child": "SettingValue",
-            "is_always_linked": true,
-            "parent_alias": "field",
-            "child_alias": "assignment"
-          },
-          {
-            "name": "SettingWithValues",
-            "children": "SettingValues",
-            "parent_alias": "field",
-            "child_alias": "assignments"
-          }
-        ],
-        "combo_index": ["category", "name"],
-        "doc": "Represents a field that specifies some program functionality",
-        "props": [
-          {
-            "name": "category",
-            "name_plural": "categories",
-            "length": 64,
-            "doc": "Name of the broader category where this field belongs"
-          },
-          {
-            "name": "name",
-            "length": 64
-          },
-          {
-            "name": "description",
-            "type": "Option[String]",
-            "length": 255
-          },
-          {
-            "type": "creation",
-            "doc": "Time when this field was introduced"
-          }
-        ]
-      },
-      {
-        "name": "SettingValue",
-        "doc": "Represents a single setting value assignment",
-        "props": [
-          {
-            "name": "fieldId",
-            "ref": "setting_field",
-            "doc": "Id of the field this value is for"
-          },
-          {
-            "name": "value",
-            "type": "Value",
-            "doc": "Value assigned for this field"
-          },
-          {
-            "type": "creation",
-            "doc": "Time when this value was specified"
-          },
-          {
-            "type": "deprecation",
-            "doc": "Time when this value was replaced with another"
           }
         ]
       }
