@@ -5,10 +5,10 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.util.Version
-import utopia.scribe.core.model.cached.logging.StackTrace
+import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -24,9 +24,8 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 		PropertyDeclaration("severityLevel", IntType, Vector("severity", "severity_level"), Severity.default.level),
 		PropertyDeclaration("variantDetails", StringType, Vector("variant", "details", "variant_details"),
 			isOptional = true),
-		PropertyDeclaration("errorMessages", VectorType,
-			Vector("errors", "messages", "error", "message", "error_messages"), isOptional = true),
-		PropertyDeclaration("stackTrace", ModelType, Vector("stack", "stack_trace"), isOptional = true),
+		PropertyDeclaration("error", ModelType, isOptional = true),
+		PropertyDeclaration("message", StringType, isOptional = true),
 		PropertyDeclaration("storeDuration", DurationType, Vector("history", "duration", "store_duration"),
 			Duration.Zero)
 	)
@@ -40,8 +39,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 			s"Specified version '$versionStr' can't be parsed into a version") }
 			.map { version =>
 				apply(version, model("context"), Severity.fromValue(model("severityLevel")), model("variantDetails"),
-					model("errorMessages").getVector.map { _.getString }.filter { _.nonEmpty }.distinct,
-					model("stackTrace").model.flatMap { StackTrace(_).toOption },
+					model("error").model.flatMap { RecordableError(_).toOption }, model("message"),
 					model("storeDuration"))
 			}
 	}
@@ -56,17 +54,16 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   * @param context Context of the issue logging location
   * @param severity Severity of this issue
   * @param variantDetails Details about this issue variant, to differentiate it from other issues in this context
-  * @param errorMessages Error messages associated with this issue. Should be distinct.
-  * @param stackTrace Stack trace of this issue, if applicable
+  * @param error The error that occurred, if applicable
+  * @param message Additional error message (optional)
   * @param storeDuration Duration how long this issue was stored locally before sending it to the server
   */
 case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: String,
-                       errorMessages: Vector[String], stackTrace: Option[StackTrace], storeDuration: FiniteDuration)
+                       error: Option[RecordableError], message: String, storeDuration: FiniteDuration)
 	extends ModelConvertible
 {
 	override def toModel: Model = Model.from(
 		"version" -> version.toString, "context" -> context, "severityLevel" -> severity.level,
-		"variantDetails" -> variantDetails, "errorMessages" -> errorMessages, "stackTrace" -> stackTrace,
-		"storeDuration" -> storeDuration
+		"variantDetails" -> variantDetails, "error" -> error, "message" -> message, "storeDuration" -> storeDuration
 	)
 }

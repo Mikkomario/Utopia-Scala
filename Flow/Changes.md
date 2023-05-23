@@ -31,6 +31,7 @@
   - Added `.dates`
 ### Other
 - Added a **Sided[A]** type alias for **Either[A, A]** to **CollectionExtensions**
+- Added a **Mutate[A]** type alias for **A => A** functions
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

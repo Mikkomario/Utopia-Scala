@@ -98,8 +98,7 @@ object ExodusContext
 	
 	
 	@throws[EnvironmentNotSetupException]("If .setup(...) hasn't been called yet")
-	private def get = data match
-	{
+	private def get = data match {
 		case Some(data) => data
 		case None => throw EnvironmentNotSetupException("ExodusContext.setup must be called before using this method")
 	}

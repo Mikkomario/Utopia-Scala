@@ -4,7 +4,9 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.scribe.api.controller.logging.Scribe.loggingQueue
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
 import utopia.scribe.api.util.ScribeContext._
+import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
+import utopia.scribe.core.model.post.logging.ClientIssue
 import utopia.vault.util.DatabaseActionQueue
 
 object Scribe
@@ -16,6 +18,16 @@ object Scribe
 		implicit val backupLogger: Logger = SysErrLogger
 		DatabaseActionQueue()
 	}
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * Records a client-side issue to the database (asynchronously)
+	  * @param issue The issue to record
+	  * @return Future resolving into the recorded issue
+	  */
+	def record(issue: ClientIssue) = loggingQueue.push { implicit c => DbIssue.store(issue) }
 }
 
 /**
@@ -39,7 +51,9 @@ case class Scribe(context: String, defaultSeverity: Severity = Severity.default,
 	
 	private def _apply(error: Option[Throwable], message: String,
 	                   severity: Severity = defaultSeverity, variantDetails: String = defaultDetails) =
-		loggingQueue.push { implicit c => DbIssue.store(context, error, message, severity, variantDetails) }
+		loggingQueue.push { implicit c =>
+			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails)
+		}
 	
 	/**
 	  * @param severity Level of severity applicable to this issue
