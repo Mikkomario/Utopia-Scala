@@ -62,8 +62,19 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
                        error: Option[RecordableError], message: String, storeDuration: FiniteDuration)
 	extends ModelConvertible
 {
+	// IMPLEMENTED  ---------------------
+	
 	override def toModel: Model = Model.from(
 		"version" -> version.toString, "context" -> context, "severityLevel" -> severity.level,
 		"variantDetails" -> variantDetails, "error" -> error, "message" -> message, "storeDuration" -> storeDuration
 	)
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * @param duration Duration how long this issue was stored since the previous store duration update
+	  * @return Copy of this issue with updated store duration
+	  */
+	def delayedBy(duration: FiniteDuration) = copy(storeDuration = storeDuration + duration)
 }

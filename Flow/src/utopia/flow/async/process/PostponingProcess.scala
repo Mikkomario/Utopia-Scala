@@ -1,15 +1,25 @@
 package utopia.flow.async.process
 
 import utopia.flow.async.process.ProcessState.Completed
+import utopia.flow.async.process.ShutdownReaction.Cancel
+import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
+import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object PostponingProcess
 {
+	// OTHER    ------------------------------
+	
 	/**
 	  * Creates a new process instance that reacts to changes in the specified wait target pointer by changing the
 	  * process delay and possibly by resetting itself.
@@ -32,6 +42,37 @@ object PostponingProcess
 	            (implicit exc: ExecutionContext, logger: Logger): PostponingProcess =
 		new FunctionalPostponingProcess(targetPointer, waitLock, shutdownReaction, isRestartable)(f)
 	
+	/**
+	  * Creates a new process that delays the specified action by a certain amount each time .runAsync() is called,
+	  * so that the action will only be performed once the process has not been touched after a while
+	  * (or the specified maximum time threshold is reached)
+	  * @param delayRange The delay between the first .runAsync() call and the actual process completion
+	  * @param shutDownReaction How this process should react to JVM shutdown. Default = cancel the process.
+	  * @param isRestartable Whether this process should be able to be run more than once (default = true)
+	  * @param action The action performed after the delay has completed
+	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation
+	  * @tparam U Arbitrary action result type
+	  * @return A new process
+	  */
+	def by[U](delayRange: HasEnds[FiniteDuration], shutDownReaction: ShutdownReaction = Cancel,
+	          isRestartable: Boolean = true)
+	         (action: => U)
+	         (implicit exc: ExecutionContext, log: Logger): Process =
+	{
+		// Case: No delay has been requested => Uses a non-delayed process
+		if (delayRange.start <= Duration.Zero)
+			Process(shutdownReaction = shutDownReaction, isRestartable = isRestartable) { _ => action }
+		// Case: There is no difference between the minimum and maximum delay => Uses a delayed process
+		else if (delayRange.start >= delayRange.end)
+			DelayedProcess(delayRange.start, shutdownReaction = Some(shutDownReaction),
+				isRestartable = isRestartable) { _ => action }
+		// Case: Default => Uses a postponing process
+		else
+			new RangePostponingRevalidationProcess(new PointerWithEvents[WaitTarget](UntilNotified),
+				delayRange.start, delayRange.end, Some(shutDownReaction), isRestartable)(action)
+	}
+	
 	
 	// NESTED   ----------------------------
 	
@@ -43,6 +84,42 @@ object PostponingProcess
 		extends PostponingProcess(targetPointer, waitLock, shutdownReaction)
 	{
 		override protected def afterDelay() = f(hurryPointer)
+	}
+	
+	private class RangePostponingRevalidationProcess(waitTargetPointer: PointerWithEvents[WaitTarget],
+	                                                 minRevalidationDelay: FiniteDuration,
+	                                                 maxRevalidationDelay: FiniteDuration,
+	                                                 shutdownReaction: Option[ShutdownReaction],
+	                                                 override val isRestartable: Boolean)
+	                                                (action: => Unit)
+	                                                (implicit exc: ExecutionContext, log: Logger)
+		extends PostponingProcess(waitTargetPointer, shutdownReaction = shutdownReaction)
+	{
+		// ATTRIBUTES   -----------------
+		
+		// Contains the latest allowed update time, which is first unfulfilled update request time + max wait duration
+		private val latestUpdateTimePointer = VolatileOption[Instant]()
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override protected def afterDelay(): Unit = {
+			// Resets the update request time now that the update completes
+			latestUpdateTimePointer.clear()
+			action
+		}
+		
+		
+		// OTHER    -------------------
+		
+		override def runAsync(loopIfRunning: Boolean) = {
+			val wasRunning = state.isRunning
+			// Delays the run
+			val maxUpdateTime = latestUpdateTimePointer.setOneIfEmpty(Now + maxRevalidationDelay)
+			waitTargetPointer.value = Until((Now + minRevalidationDelay) min maxUpdateTime)
+			// Starts this process, if not running already
+			super.runAsync(loopIfRunning && wasRunning)
+		}
 	}
 }
 

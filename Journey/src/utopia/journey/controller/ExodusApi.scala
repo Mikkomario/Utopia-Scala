@@ -4,7 +4,8 @@ import utopia.access.http.Status.Unauthorized
 import utopia.access.http.{Headers, Method}
 import utopia.annex.controller.Api
 import utopia.annex.model.error.UnauthorizedRequestException
-import utopia.annex.model.response.{NoConnection, RequestResult, Response}
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.StringBody
 import utopia.disciple.model.error.RequestFailedException
@@ -61,10 +62,10 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 						case Success(newKey) =>
 							super.makeRequest(method, path, timeout, body, params,
 								h => modHeaders(h.withBearerAuthorization(newKey)))
-						case Failure(error) => Future.successful(NoConnection(error))
+						case Failure(error) => Future.successful(RequestSendingFailed(error))
 					}
 				case None =>
-					Future.successful(NoConnection(
+					Future.successful(RequestSendingFailed(
 						new RequestFailedException("Device id not known, can't reacquire session key")))
 			}
 		}
@@ -95,7 +96,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 				else
 					Failure(new RequestFailedException(message.getOrElse(
 						s"Couldn't acquire a new session key. Response status: $status")))
-			case NoConnection(error) => Failure(new RequestFailedException("Couldn't access the server", error))
+			case failure: RequestFailure => Failure(new RequestFailedException("Couldn't access the server", failure.cause))
 		}
 	}
 	

@@ -76,15 +76,38 @@ sealed trait RequestFailure extends RequestResult
 }
 
 /**
-  * This request result is used when no response is received from the server
-  * @param cause An error associated with this failure
+  * A status used when a request is not sent for some reason
+  * @author Mikko Hilpinen
+  * @since 14.6.2020, v1
   */
-case class NoConnection(cause: Throwable) extends RequestFailure
+sealed trait RequestNotSent extends RequestFailure
 {
-	// COMPUTED ----------------------
+	/**
+	  * @return A throwable error based on this state
+	  */
+	@deprecated("Please use .cause instead", "v1.6")
+	def toException: Throwable = cause
+}
+
+object RequestNotSent
+{
+	/**
+	  * Status generated when request gets deprecated before it is successfully sent
+	  */
+	case object RequestWasDeprecated extends RequestNotSent
+	{
+		override def cause = new RequestFailedException("Request was deprecated")
+	}
 	
-	@deprecated("Please use .cause instead", "v1.4")
-	def error = cause
+	/**
+	  * Status used when request can't be sent due to some error in the request or the request system
+	  * @param cause Associated error
+	  */
+	case class RequestSendingFailed(cause: Throwable) extends RequestNotSent
+	{
+		@deprecated("Please use .cause instead", "v1.6")
+		def error = cause
+	}
 }
 
 /**

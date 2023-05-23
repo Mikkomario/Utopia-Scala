@@ -93,14 +93,19 @@ trait PersistingRequestQueue extends RequestQueue
 	// OTHER	------------------------
 	
 	/**
+	  * @return Saves the current request status locally
+	  */
+	def persistRequests() = requestContainer.saveStatus()
+	
+	/**
 	  * @param handlers Request handlers which are used for parsing persisted requests and handling their responses
 	  * @return A list of errors that occurred while parsing the requests
 	  */
 	protected def start(handlers: Iterable[PersistedRequestHandler]) = {
-		requestContainer.current.flatMap { requestModel =>
+		val persistedModels = requestContainer.current
+		val errors = persistedModels.flatMap { requestModel =>
 			handlers.view.filter { _.shouldHandle(requestModel) }.tryFindMap { h => h.factory(requestModel)
-				.map { r => h -> r } } match
-				{
+				.map { r => h -> r } } match {
 					case Success((handler, request)) =>
 						super.push(request).onComplete { result =>
 							// Once result is received, removes the persisted request and lets the handler
@@ -112,6 +117,10 @@ trait PersistingRequestQueue extends RequestQueue
 					case Failure(error) => Some(error)
 				}
 		}
+		// If some requests were removed from the container, saves its status immediately
+		if (persistedModels.nonEmpty)
+			persistRequests()
+		errors
 	}
 	
 	private def removePersistedRequest(request: Model) =

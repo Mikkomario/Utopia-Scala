@@ -1,7 +1,7 @@
 package utopia.annex.controller
 
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.{RequestNotSent, Response}
+import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 
@@ -29,5 +29,5 @@ trait PersistedRequestHandler
 	  * Handles a response received for a persisted request
 	  * @param result Result received for the persisted request
 	  */
-	def handle(result: Either[RequestNotSent, Response]): Unit
+	def handle(result: RequestResult): Unit
 }

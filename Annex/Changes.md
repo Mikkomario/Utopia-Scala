@@ -1,5 +1,11 @@
 # Utopia Annex - List of Changes
 
+## v1.6 (in development)
+### Breaking Changes
+- Moved **RequestNotSent** under **RequestResult**
+- **NoConnection** is now **RequestSendingFailed**
+- Functions that previously returned or accepted **Either[RequestNotSent, Response]** now use **RequestResult**
+
 ## v1.5 - 01.05.2023
 This update doesn't introduce many changes, but the change it introduces requires refactoring.
 ### Breaking Changes

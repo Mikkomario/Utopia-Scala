@@ -17,6 +17,8 @@
   - Added `.apply(...)` for converting functions into map accesses
 - **Pointer**
   - Added `.mutate(...)`, which behaves exactly like `.pop(...)` in **Volatile**
+- **PostponingProcess** (object)
+  - Added a new constructor
 - **Seq**
   - Added `.random`
 - **Span** (object)

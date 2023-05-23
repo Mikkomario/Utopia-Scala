@@ -1,24 +1,24 @@
 package utopia.journey.controller.user
 
-import java.time.Instant
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
 import utopia.annex.model.error.{RequestDeniedException, UnauthorizedRequestException}
 import utopia.annex.model.request.{GetRequest, PostRequest}
-import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
+import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
-import utopia.annex.model.response.{RequestNotSent, Response}
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.annex.model.schrodinger.CachedFindSchrodinger
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.time.Now
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.InvitationResponseSpirit
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DetailedInvitation, InvitationWithResponse}
 
+import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
@@ -103,31 +103,21 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		
 		// Sends the request, returns a modified version of the response
 		queue.push(PostRequest(InvitationResponseSpirit(invitationId, isAccepted, isBlocked))).map {
-			case Right(response) =>
-				response match
-				{
-					case _: Response.Success  =>
-						// Removes the invitation from locally cached data
-						cached.update { _.filterNot { _.id == invitationId } }
-						hiddenIds -= invitationId
-						Success(activeCached)
-					case Response.Failure(status, message, _) =>
-						status match {
-							case Unauthorized => Failure(new UnauthorizedRequestException(
-								message.getOrElse("Unauthorized to answer the invitation")))
-							case Forbidden => Failure(new RequestDeniedException(message.getOrElse(
-								"Invitation response was denied")))
-							case _ => Failure(new RequestFailedException(message.getOrElse(
-								s"Server responded with status $status")))
-						}
+			case _: Response.Success =>
+				// Removes the invitation from locally cached data
+				cached.update { _.filterNot { _.id == invitationId } }
+				hiddenIds -= invitationId
+				Success(activeCached)
+			case Response.Failure(status, message, _) =>
+				status match {
+					case Unauthorized => Failure(new UnauthorizedRequestException(
+						message.getOrElse("Unauthorized to answer the invitation")))
+					case Forbidden => Failure(new RequestDeniedException(message.getOrElse(
+						"Invitation response was denied")))
+					case _ => Failure(new RequestFailedException(message.getOrElse(
+						s"Server responded with status $status")))
 				}
-			case Left(notSent) =>
-				notSent match
-				{
-					case RequestFailed(error) => Failure(error)
-					case RequestWasDeprecated => Failure(
-						new RequestFailedException("Invitation response was deprecated before it could be sent"))
-				}
+			case failure: RequestFailure => failure.toFailure
 		}
 	}
 	
@@ -149,35 +139,27 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		override def shouldHandle(requestModel: Model) =
 			bodyFactory.isProbablyValidModel(requestModel)
 		
-		override def handle(result: Either[RequestNotSent, Response]) =
+		override def handle(result: RequestResult) =
 		{
 			result match {
-				case Right(response) =>
-					response match {
-						case Response.Success(status, body, _) =>
-							body match {
-								case c: Content =>
-									c.single(InvitationWithResponse).parsed match
-									{
-										case Success(invitation) =>
-											// Removes the invitation from the cache, as well as from among hidden ids
-											val invitationId = invitation.id
-											cached.update { _.filterNot { _.id == invitationId } }
-											hiddenIds -= invitationId
-										case Failure(error) => logger(error,
-											"Couldn't interpret response to invitation answer")
-									}
-								case Empty => logger(s"Invitation answer response didn't contain a body. Status: $status")
+				case Response.Success(status, body, _) =>
+					body match {
+						case c: Content =>
+							c.single(InvitationWithResponse).parsed match {
+								case Success(invitation) =>
+									// Removes the invitation from the cache, as well as from among hidden ids
+									val invitationId = invitation.id
+									cached.update { _.filterNot { _.id == invitationId } }
+									hiddenIds -= invitationId
+								case Failure(error) => logger(error,
+									"Couldn't interpret response to invitation answer")
 							}
-						case Response.Failure(status, message, _) => logger(new RequestFailedException(message.getOrElse(
-							s"Server rejected invitation answer. Status: $status")))
+						case Empty => logger(s"Invitation answer response didn't contain a body. Status: $status")
 					}
-				case Left(notSent) =>
-					notSent match
-					{
-						case RequestFailed(error) => logger(error, "Failed to send invitation answer")
-						case RequestWasDeprecated => () // Ignored
-					}
+				case Response.Failure(status, message, _) => logger(new RequestFailedException(message.getOrElse(
+					s"Server rejected invitation answer. Status: $status")))
+				case RequestWasDeprecated => () // Ignored
+				case failure: RequestFailure => logger(failure.cause, "Failed to send invitation answer")
 			}
 		}
 	}

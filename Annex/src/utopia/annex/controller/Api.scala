@@ -3,7 +3,8 @@ package utopia.annex.controller
 import utopia.access.http.Method.{Get, Post}
 import utopia.access.http.{Headers, Method}
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.{NoConnection, RequestResult, Response}
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.{RequestResult, Response}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -99,7 +100,7 @@ trait Api
 	def sendRequest(request: Request)(implicit exc: ExecutionContext) =
 		gateway.valueResponseFor(request).map {
 			case Success(response) => Response.from(response)
-			case Failure(error) => NoConnection(error)
+			case Failure(error) => RequestSendingFailed(error)
 		}
 	
 	/**

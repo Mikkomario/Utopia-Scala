@@ -2,8 +2,8 @@ package utopia.annex.model.schrodinger
 
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.model.error.{RequestDeniedException, UnauthorizedRequestException}
-import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
-import utopia.annex.model.response.{RequestNotSent, Response, ResponseBody}
+import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
 import utopia.disciple.model.error.RequestFailedException
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,29 +31,23 @@ class TryFindSchrodinger[I](localResult: Try[I]) extends Schrodinger[Try[I], Try
 	  * @param parse A function for parsing response body
 	  * @param exc Implicit execution context
 	  */
-	def completeWith(result: Future[Either[RequestNotSent, Response]])(parse: ResponseBody => Try[I])
-					(implicit exc: ExecutionContext) =
+	def completeWith(result: Future[RequestResult])(parse: ResponseBody => Try[I])
+	                (implicit exc: ExecutionContext) =
 	{
 		result.onComplete {
 			case Success(result) =>
 				result match {
-					case Right(response) =>
-						response match {
-							case Response.Success(_, body, _) => complete(parse(body))
-							case Response.Failure(status, message, _) =>
-								val errorMessage = message.getOrElse(s"Received a response with status $status")
-								val error = status match {
-									case Unauthorized => new UnauthorizedRequestException(errorMessage)
-									case Forbidden => new RequestDeniedException(errorMessage)
-									case _ => new RequestFailedException(errorMessage)
-								}
-								complete(Failure(error))
+					case Response.Success(_, body, _) => complete(parse(body))
+					case Response.Failure(status, message, _) =>
+						val errorMessage = message.getOrElse(s"Received a response with status $status")
+						val error = status match {
+							case Unauthorized => new UnauthorizedRequestException(errorMessage)
+							case Forbidden => new RequestDeniedException(errorMessage)
+							case _ => new RequestFailedException(errorMessage)
 						}
-					case Left(notSent) =>
-						notSent match {
-							case RequestFailed(error) => complete(Failure(error))
-							case RequestWasDeprecated => complete(localResult)
-						}
+						complete(Failure(error))
+					case RequestWasDeprecated => complete(localResult)
+					case f: RequestFailure => complete(f.toFailure)
 				}
 			case Failure(e) => complete(Failure(e))
 		}

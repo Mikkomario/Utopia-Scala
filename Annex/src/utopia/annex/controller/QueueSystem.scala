@@ -1,17 +1,17 @@
 package utopia.annex.controller
 
-import java.time.Instant
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
-import utopia.annex.model.response.{NoConnection, RequestNotSent, Response}
+import utopia.annex.model.response.RequestNotSent.{RequestSendingFailed, RequestWasDeprecated}
+import utopia.annex.model.response.{RequestNotSent, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.process.Wait
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.AbstractChanging
 
+import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -67,7 +67,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  * @param request Request to send to the api
 	  * @return Asynchronous response (Either Right: Response or Left: Request send failure)
 	  */
-	def push(request: ApiRequest): Future[Either[RequestNotSent, Response]] = {
+	def push(request: ApiRequest): Future[RequestResult] = {
 		// In online mode, performs the requests side by side
 		if (isOnline)
 			Future { sendSynchronous(request) }
@@ -82,7 +82,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  * @param request Request to send to the api
 	  * @return Asynchronous response (Either Right: Response or Left: Request send failure)
 	  */
-	def pushSynchronous(request: ApiRequest): Either[RequestNotSent, Response] = {
+	def pushSynchronous(request: ApiRequest): RequestResult = {
 		// In online mode, performs the requests side by side
 		if (isOnline)
 			sendSynchronous(request)
@@ -90,7 +90,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 		else {
 			offlineQueue.push { sendSynchronous(request, isOfflineMode = true) }.waitFor() match {
 				case Success(result) => result
-				case Failure(error) => Left(RequestFailed(error))
+				case Failure(error) => RequestSendingFailed(error)
 			}
 		}
 	}
@@ -106,7 +106,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 		}
 	}
 	
-	private def sendSynchronous(request: ApiRequest, isOfflineMode: Boolean = false): Either[RequestNotSent, Response] = {
+	private def sendSynchronous(request: ApiRequest, isOfflineMode: Boolean = false): RequestResult = {
 		// Delays the request when in offline mode
 		if (isOfflineMode && isOffline) {
 			// Doubles the delay between each consequent failed request
@@ -121,7 +121,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 		
 		// May skip request sending altogether if the request gets deprecated
 		if (request.isDeprecated)
-			Left(RequestWasDeprecated)
+			RequestWasDeprecated
 		else {
 			val resultFuture = api.sendRequest(request)
 			
@@ -136,19 +136,19 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 						// Case: Some result acquired
 						case Success(result) => Right(result)
 						// Case: No result acquired
-						case Failure(error) => Left(RequestFailed(error))
+						case Failure(error) => Left(RequestSendingFailed(error))
 					}
 			}
 			
 			result match {
-				case Left(failure) => Left(failure)
+				case Left(failure) => failure
 				case Right(result) =>
 					result match {
 						// Case: Response acquired => Returns
 						case response: Response =>
 							goOnline()
-							Right(response)
-						case _: NoConnection =>
+							response
+						case _: RequestNotSent =>
 							// On connection failure, tries again
 							goOffline()
 							if (isOfflineMode)
@@ -156,7 +156,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 							else
 								offlineQueue.push { sendSynchronous(request, isOfflineMode = true) }.waitFor() match {
 									case Success(result) => result
-									case Failure(error) => Left(RequestFailed(error))
+									case Failure(error) => RequestSendingFailed(error)
 								}
 					}
 			}
