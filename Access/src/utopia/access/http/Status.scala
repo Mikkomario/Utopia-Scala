@@ -154,7 +154,7 @@ object Status
      * the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
      * since this might change the conditions under which the request was issued.
      */
-    case object Found extends Status("Found", 302)
+    case object Found extends Status("Found", 302, isTemporary = true)
     
     /**
       * If the client has performed a conditional GET request and access is allowed, but the document

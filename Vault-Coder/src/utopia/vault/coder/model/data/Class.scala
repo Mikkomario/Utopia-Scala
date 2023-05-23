@@ -170,6 +170,10 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	  * @return Whether a conversion from a database-originated model may fail due to a property parsing failure
 	  */
 	def fromDbModelConversionMayFail = properties.exists { _.dataType.yieldsTryFromValue }
+	/**
+	  * @return Whether a conversion from a json model may fail due to a property parsing failure
+	  */
+	def fromJsonMayFail = properties.exists { _.dataType.yieldsTryFromJsonValue }
 	
 	/**
 	  * @return The property in this class which contains instance creation time. None if no such property is present.

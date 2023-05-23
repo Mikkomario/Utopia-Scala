@@ -1,7 +1,13 @@
 # Utopia Vault Coder
 
-## v1.9.1 (in development)
-Separating modules
+## v1.10 (in development)
+### Breaking Changes
+- Updated json conversion to convert certain data types (**FiniteDuration** & **Days**) using direct value conversions
+- Sql column prefixes are no longer applied to json properties
+- **Value** data type database model conversion now converts the value into json first
+### New Features
+- Standard and custom data types now support different from- & to-value conversion logic when dealing with json values
+  - See README on how to apply this support to custom data types
 
 ## v1.9 - 01.05.2023
 This update introduces a lot of bugfixes, as well as more extensive code-generation. 

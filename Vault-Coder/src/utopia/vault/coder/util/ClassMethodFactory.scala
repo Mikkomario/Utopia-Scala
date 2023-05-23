@@ -23,8 +23,8 @@ object ClassMethodFactory
 	  * @param validatedModelCode Code that provides a try containing a validated model based on the input parameter
 	  * @param methodName Name of this method
 	  * @param param (Model) parameter accepted by this method (default = template model named 'model')
-	  * @param propNamesInModel A function for determining the name(s) of the specified properties within the validated
-	  *                        model. The result(s) will be wrapped in double quotes.
+	  * @param isFromJson Whether the input model is from json (true) or from a database model (false).
+	  *                   Default = database model.
 	  * @param wrapAssignments A function that accepts assignments that provide enough data for a data instance
 	  *                        creation (e.g. "param1Value, param2Value, param3Value") and produces the code
 	  *                        resulting in the desired output type (like stored model, for example)
@@ -32,8 +32,8 @@ object ClassMethodFactory
 	  */
 	def classFromModel(targetClass: Class, validatedModelCode: CodePiece,
 	                   methodName: String = "apply",
-	                   param: Parameter = Parameter("model", templateModel(property)))
-	                  (propNamesInModel: Property => Vector[String])
+	                   param: Parameter = Parameter("model", templateModel(property)),
+	                   isFromJson: Boolean = false)
 	                  (wrapAssignments: CodePiece => CodePiece)
 	                  (implicit naming: NamingRules) =
 	{
@@ -42,10 +42,9 @@ object ClassMethodFactory
 			val code = wrapAssignments(CodePiece.empty)
 			MethodDeclaration(methodName, code.references, isOverridden = true)(param)(code.text)
 		}
-		// Case: Enumerations are used => has to process enumeration values separately in custom apply method
 		else
 			new MethodDeclaration(Public, methodName, Vector(), param,
-				tryApplyCode(targetClass, validatedModelCode)(propNamesInModel)(wrapAssignments), None, Vector(),
+				tryApplyCode(targetClass, validatedModelCode, isFromJson)(wrapAssignments), None, Vector(),
 				"", "", Vector(), isOverridden = true, isImplicit = false,
 				isLowMergePriority = false)
 	}
@@ -55,17 +54,18 @@ object ClassMethodFactory
 	  * @param targetClass Class being parsed
 	  * @param methodName Name of the method (default = fromValidatedModel)
 	  * @param param Parameter accepted by the method (default = model called "valid")
-	  * @param propNamesInModel A function for determining the name(s) of the specified properties within the validated
-	  *                        model. The result(s) will be wrapped in double quotes.
+	  * @param isFromJson Whether the input model is from json (true) or from a database model (false).
+	  *                   Default = database model.
 	  * @param wrapAssignments A function that accepts assignments that provide enough data for a data instance
 	  *                        creation (e.g. "param1Value, param2Value, param3Value") and produces the code
 	  *                        resulting in the desired output type (like stored model, for example)
+	  * @param naming Naming rules to apply
 	  * @return A method declaration
 	  */
 	def classFromValidatedModel(targetClass: Class, methodName: String = "fromValidatedModel",
-	                            param: Parameter = Parameter("valid", model))
-	                           (propNamesInModel: Property => Vector[String])
-	                           (wrapAssignments: CodePiece => CodePiece) =
+	                            param: Parameter = Parameter("valid", model), isFromJson: Boolean = false)
+	                           (wrapAssignments: CodePiece => CodePiece)
+	                           (implicit naming: NamingRules) =
 	{
 		// Case: Class contains no properties
 		if (targetClass.properties.isEmpty) {
@@ -76,15 +76,14 @@ object ClassMethodFactory
 		else {
 			val modelName = param.name
 			val dataCreation = targetClass.properties
-				.map { prop => propFromValidModelCode(prop, modelName)(propNamesInModel) }
+				.map { prop => propFromValidModelCode(prop, modelName, isFromJson) }
 				.reduceLeft { _.append(_, ", ") }
 			val code = wrapAssignments(dataCreation)
 			MethodDeclaration(methodName, code.references, visibility = Protected, isOverridden = true)(param)(code.text)
 		}
 	}
 	
-	private def tryApplyCode(classToWrite: Class, validatedModelCode: CodePiece)
-	                        (propNamesInModel: Property => Vector[String])
+	private def tryApplyCode(classToWrite: Class, validatedModelCode: CodePiece, isFromJson: Boolean)
 	                        (wrapAssignments: CodePiece => CodePiece)
 	                        (implicit naming: NamingRules) =
 	{
@@ -98,8 +97,8 @@ object ClassMethodFactory
 		builder += validatedModelCode + validateMapMethod + " { valid => "
 		builder.indent()
 		
-		declareTryProps(builder, tryProperties.dropRight(1), "flatMap")(propNamesInModel)
-		declareTryProps(builder, tryProperties.lastOption, "map")(propNamesInModel)
+		declareTryProps(builder, tryProperties.dropRight(1), "flatMap", isFromJson)
+		declareTryProps(builder, tryProperties.lastOption, "map", isFromJson)
 		val innerIndentCount = tryProperties.size + 1
 		
 		// Writes the instance creation now that the "try-properties" properties have been declared
@@ -109,7 +108,7 @@ object ClassMethodFactory
 				CodePiece(prop.name.prop)
 			// Case: Normal property / value => reads the value from the model
 			else
-				propFromValidModelCode(prop)(propNamesInModel)
+				propFromValidModelCode(prop, isFromJson = isFromJson)
 		}.reduceLeft { _.append(_, ", ") }
 		builder += wrapAssignments(assignments)
 		
@@ -121,16 +120,25 @@ object ClassMethodFactory
 	}
 	
 	// NB: Indents for each declared property
-	private def declareTryProps(builder: CodeBuilder, tryProps: Iterable[Property], mapMethod: String)
-	                           (propNamesInModel: Property => Vector[String])
+	private def declareTryProps(builder: CodeBuilder, tryProps: Iterable[Property], mapMethod: String,
+	                            isFromJson: Boolean)
 	                           (implicit naming: NamingRules) =
 		tryProps.foreach { prop =>
-			val fromValueCode = propFromValidModelCode(prop)(propNamesInModel)
+			val fromValueCode = propFromValidModelCode(prop, isFromJson = isFromJson)
 			builder += fromValueCode + s".$mapMethod { ${prop.name.prop} => "
 			builder.indent()
 		}
 	
-	private def propFromValidModelCode(prop: Property, modelName: String = "valid")
-	                                  (propNamesInModel: Property => Vector[String]) =
-		prop.dataType.fromValueCode(propNamesInModel(prop).map { name => s"$modelName(${name.quoted})" })
+	private def propFromValidModelCode(prop: Property, modelName: String = "valid", isFromJson: Boolean)
+	                                  (implicit naming: NamingRules) =
+	{
+		// Uses different property names based on whether parsing from json or from a database model
+		val propNames = {
+			if (isFromJson)
+				Vector(prop.jsonPropName)
+			else
+				prop.dbProperties.map { _.modelName }
+		}
+		prop.dataType.fromValueCode(propNames.map { name => s"$modelName(${name.quoted})" })
+	}
 }

@@ -12,6 +12,7 @@ object VaultReferences
 	// COMPUTED ---------------------------
 	
 	def vault = Vault
+	def bunnyMunch = BunnyMunch
 	def metropolis = Metropolis
 	def citadel = Citadel
 	
@@ -65,6 +66,13 @@ object VaultReferences
 		lazy val uniqueModelAccess = Reference(pck.singleModelAccess / "distinct", "UniqueModelAccess")
 		lazy val singleIdModelAccess = Reference(pck.singleModelAccess / "distinct", "SingleIdModelAccess")
 		lazy val singleIntIdModelAccess = Reference(pck.singleModelAccess / "distinct", "SingleIntIdModelAccess")
+	}
+	
+	object BunnyMunch
+	{
+		import VaultPackages.BunnyMunch._
+		
+		lazy val jsonBunny = Reference(jawn, "JsonBunny")
 	}
 	
 	object Metropolis

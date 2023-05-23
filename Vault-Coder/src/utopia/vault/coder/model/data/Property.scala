@@ -121,18 +121,17 @@ case class Property(name: Name, dataType: PropertyType, customDefaultValue: Code
 	  * @param naming Implicit naming rules
 	  * @return Name of this property in json models
 	  */
-	// TODO: If json value conversion changes at some point (to support models, for example),
-	//  this logic should be revisited
-	def jsonPropName(implicit naming: NamingRules) =
-		onlyDbVariant match {
-			case Some(variant) => variant.jsonPropName
-			case None => name.jsonProp
-		}
+	def jsonPropName(implicit naming: NamingRules) = name.jsonProp
 	
 	/**
-	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.
+	  * @return Code for this property converted to a value.
 	  */
 	def toValueCode(implicit naming: NamingRules): CodePiece = dataType.toValueCode(name.prop)
+	/**
+	  * @param naming Implicit naming rules to apply
+	  * @return Code that converts this property (properly named) into a value.
+	  */
+	def toJsonValueCode(implicit naming: NamingRules): CodePiece = dataType.toJsonValueCode(name.prop)
 	
 	/*
 	/**

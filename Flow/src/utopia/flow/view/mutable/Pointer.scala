@@ -115,7 +115,7 @@ object Pointer
 		/**
 		  * @return Removes and returns the first value in this pointer
 		  */
-		def pop(): Option[A] = p.pop { v =>
+		def pop(): Option[A] = p.mutate { v =>
 			if (v.isEmpty)
 				None -> v
 			else
@@ -124,7 +124,7 @@ object Pointer
 		/**
 		  * @return Removes and returns the last value in this pointer
 		  */
-		def popLast() = p.pop { v => v.lastOption -> v.dropRight(1) }
+		def popLast() = p.mutate { v => v.lastOption -> v.dropRight(1) }
 		
 		/**
 		  * Clears all items from this pointer
@@ -202,7 +202,7 @@ trait Pointer[A] extends View[A]
 	  * @tparam B Type of the additional result
 	  * @return The additional result returned by the mutator function
 	  */
-	private def pop[B](mutate: A => (B, A)) = {
+	def mutate[B](mutate: A => (B, A)) = {
 		val (result, newValue) = mutate(value)
 		value = newValue
 		result

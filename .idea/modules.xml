@@ -26,7 +26,8 @@
       <module fileurl="file://$PROJECT_DIR$/Reach-Coder/Reach-Coder.iml" filepath="$PROJECT_DIR$/Reach-Coder/Reach-Coder.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reach-in-Reflection/Reach-in-Reflection.iml" filepath="$PROJECT_DIR$/Reach-in-Reflection/Reach-in-Reflection.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reflection/Reflection.iml" filepath="$PROJECT_DIR$/Reflection/Reflection.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe.iml" filepath="$PROJECT_DIR$/Scribe/Scribe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe-Api/Scribe-Api.iml" filepath="$PROJECT_DIR$/Scribe/Scribe-Api/Scribe-Api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe-Core/Scribe-Core.iml" filepath="$PROJECT_DIR$/Scribe/Scribe-Core/Scribe-Core.iml" />
       <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />
       <module fileurl="file://$PROJECT_DIR$/Utopia-Coder/Utopia-Coder.iml" filepath="$PROJECT_DIR$/Utopia-Coder/Utopia-Coder.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault/Vault.iml" filepath="$PROJECT_DIR$/Vault/Vault.iml" />

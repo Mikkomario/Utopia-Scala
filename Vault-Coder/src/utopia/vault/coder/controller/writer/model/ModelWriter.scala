@@ -36,11 +36,12 @@ object ModelWriter
 	def apply(classToWrite: Class)
 	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
+		// Writes the data model and the data object
 		val dataClassName = (classToWrite.name + dataClassAppendix).className
 		val dataClassPackage = setup.modelPackage / s"partial.${ classToWrite.packageName }"
 		val propWrites = classToWrite.properties.map { prop =>
 			val propNameInModel = prop.jsonPropName.quoted
-			prop.toValueCode.withPrefix(s"$propNameInModel -> ")
+			prop.toJsonValueCode.withPrefix(s"$propNameInModel -> ")
 		}
 		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(model)) else
 			propWrites.reduceLeft { _.append(_, ", ") }.withinParenthesis.withPrefix("Vector")
@@ -58,7 +59,6 @@ object ModelWriter
 			else
 				fromModelFactoryWithSchema(dataClassType)
 		}
-		// Writes the data model and the data object
 		File(dataClassPackage,
 			ObjectDeclaration(dataClassName, Vector(dataFactoryExtension),
 				properties = Vector(
@@ -201,11 +201,10 @@ object ModelWriter
 		def _modelFromAssignments(assignments: CodePiece) =
 			assignments.withinParenthesis.withPrefix(dataClassName)
 		
-		if (classToWrite.fromDbModelConversionMayFail)
-			ClassMethodFactory.classFromModel(classToWrite, "schema.validate(model).toTry"){
-				_.dbProperties.map { _.jsonPropName } }(_modelFromAssignments)
+		if (classToWrite.fromJsonMayFail)
+			ClassMethodFactory.classFromModel(classToWrite, "schema.validate(model).toTry",
+				isFromJson = true)(_modelFromAssignments)
 		else
-			ClassMethodFactory.classFromValidatedModel(classToWrite){
-				_.dbProperties.map { _.jsonPropName } }(_modelFromAssignments)
+			ClassMethodFactory.classFromValidatedModel(classToWrite, isFromJson = true)(_modelFromAssignments)
 	}
 }

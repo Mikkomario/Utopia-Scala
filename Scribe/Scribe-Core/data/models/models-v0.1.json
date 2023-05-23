@@ -1,0 +1,260 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Scribe",
+  "db_package": "utopia.scribe.api.database",
+  "model_package": "utopia.scribe.core.model",
+  "version": "v0.1",
+  "models_without_vault": true,
+  "types": {
+    "Version": {
+      "type": "utopia.flow.util.Version",
+      "sql": "VARCHAR(48)",
+      "from_value": {
+        "code": "Version($v.getString)",
+        "references": ["utopia.flow.util.Version"]
+      },
+      "from_value_can_fail": false,
+      "option_from_value": {
+        "code": "$v.string.flatMap(Version.findFrom)",
+        "references": ["utopia.flow.util.Version"]
+      },
+      "to_value": {
+        "code": "$v.toString",
+        "references": ["utopia.flow.generic.casting.ValueConversions._"]
+      },
+      "option_to_value": {
+        "code": "$v.map { _.toString }",
+        "references": ["utopia.flow.generic.casting.ValueConversions._"]
+      },
+      "prop_name": "version",
+      "index": false
+    }
+  },
+  "enums": [
+    {
+      "name": "Severity",
+      "doc": "Represents the level of severity associated with some problem or error situation",
+      "default": "Unrecoverable",
+      "values": [
+        {
+          "name": "Debug",
+          "doc": "An entry used for debugging purposes only. Practically insignificant."
+        },
+        {
+          "name": "Info",
+          "doc": "Information about the application's state and/or behavior which may be of use. Doesn't necessarily indicate a real problem."
+        },
+        {
+          "name": "Warning",
+          "doc": "Information about the application's state and/or behavior which probably indicates a presence of a problem.\nDoesn't necessarily require action."
+        },
+        {
+          "name": "Recoverable",
+          "doc": "Indicates a process failure which is either partial or which may possibly be recovered from automatically.\nDoesn't require immediate action, but may be important to review and fix eventually."
+        },
+        {
+          "name": "Unrecoverable",
+          "doc": "Represents a failure that prematurely terminated some process in a way that progress or data was lost or halted.\nTypically the program performance is immediately affected by these kinds of problems."
+        },
+        {
+          "name": "Critical",
+          "doc": "Represents a failure that severely or entirely disables the program's intended behavior.\nShould be resolved as soon as possible."
+        }
+      ]
+    }
+  ],
+  "classes": {
+    "logging": [
+      {
+        "name": "StackTraceElement",
+        "doc": "Represents a single error stack trace line.\nA stack trace indicates how an error propagated through the program flow before it was recorded.",
+        "props": [
+          {
+            "name": "className",
+            "type": "NonEmptyString(48)",
+            "limit": 1048,
+            "doc": "The class where this event was recorded."
+          },
+          {
+            "name": "methodName",
+            "type": "NonEmptyString(48)",
+            "limit": 255,
+            "doc": "The name of the class method where this event was recorded"
+          },
+          {
+            "name": "lineNumber",
+            "type": "Int",
+            "doc": "The code line number where this event was recorded"
+          },
+          {
+            "name": "causeId",
+            "ref": "stack_trace_element",
+            "type": "Option[Int]",
+            "doc": "Id of the stack trace element that originated this element. I.e. the element directly before this element. None if this is the root element."
+          }
+        ]
+      },
+      {
+        "name": "ErrorRecord",
+        "doc": "Represents a single error or exception thrown during program runtime",
+        "props": [
+          {
+            "name": "exceptionType",
+            "type": "NonEmptyString(32)",
+            "limit": 255,
+            "doc": "The name of this exception type. Typically the exception class name."
+          },
+          {
+            "name": "stackTraceId",
+            "ref": "stack_trace_element",
+            "doc": "Id of the topmost stack trace element that corresponds to this error record"
+          },
+          {
+            "name": "causeId",
+            "ref": "error_record",
+            "type": "Option[Int]",
+            "doc": "Id of the underlying error that caused this error/failure. None if this error represents the root problem."
+          }
+        ]
+      },
+      {
+        "name": "Issue",
+        "combo_index": ["severity", "context"],
+        "doc": "Represents a type of problem or issue that may occur during a program's run",
+        "props": [
+          {
+            "name": "context",
+            "type": "NonEmptyString(96)",
+            "doc": "Program context where this issue occurred or was logged. Should be unique.",
+            "limit": 255
+          },
+          {
+            "name": "severity",
+            "name_plural": "severities",
+            "type": "Enum[Severity]",
+            "doc": "The estimated severity of this issue"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this issue first occurred or was first recorded"
+          }
+        ]
+      },
+      {
+        "name": "IssueVariant",
+        "doc": "Represents a specific setting where a problem or an issue occurred",
+        "props": [
+          {
+            "ref": "issue",
+            "doc": "Id of the issue that occurred"
+          },
+          {
+            "type": "Version",
+            "doc": "The program version in which this issue (variant) occurred"
+          },
+          {
+            "name": "errorId",
+            "ref": "error_record",
+            "type": "Option[Int]",
+            "doc": "Id of the error / exception that is associated with this issue (variant). None if not applicable."
+          },
+          {
+            "name": "details",
+            "type": "String(128)",
+            "limit": 2040,
+            "doc": "Details about this case and/or setting."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this case or variant was first encountered"
+          }
+        ]
+      },
+      {
+        "name": "IssueOccurrence",
+        "doc": "Represents a specific occurrence of a recorded issue",
+        "props": [
+          {
+            "name": "caseId",
+            "ref": "issue_variant",
+            "doc": "Id of the issue variant that occurred"
+          },
+          {
+            "name": "errorMessages"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when the issue occurred or was recorded"
+          }
+        ]
+      }
+    ],
+    "settings": [
+      {
+        "name": "SettingField",
+        "combos": [
+          {
+            "name": "AssignedSetting",
+            "child": "SettingValue",
+            "is_always_linked": true,
+            "parent_alias": "field",
+            "child_alias": "assignment"
+          },
+          {
+            "name": "SettingWithValues",
+            "children": "SettingValues",
+            "parent_alias": "field",
+            "child_alias": "assignments"
+          }
+        ],
+        "combo_index": ["category", "name"],
+        "doc": "Represents a field that specifies some program functionality",
+        "props": [
+          {
+            "name": "category",
+            "name_plural": "categories",
+            "length": 64,
+            "doc": "Name of the broader category where this field belongs"
+          },
+          {
+            "name": "name",
+            "length": 64
+          },
+          {
+            "name": "description",
+            "type": "Option[String]",
+            "length": 255
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this field was introduced"
+          }
+        ]
+      },
+      {
+        "name": "SettingValue",
+        "doc": "Represents a single setting value assignment",
+        "props": [
+          {
+            "name": "fieldId",
+            "ref": "setting_field",
+            "doc": "Id of the field this value is for"
+          },
+          {
+            "name": "value",
+            "type": "Value",
+            "doc": "Value assigned for this field"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this value was specified"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this value was replaced with another"
+          }
+        ]
+      }
+    ]
+  }
+}

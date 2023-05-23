@@ -12,6 +12,8 @@
   - Added `.completionOf(Future)`
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
+- **Pointer**
+  - Added `.mutate(...)`, which behaves exactly like `.pop(...)` in **Volatile**
 - **Seq**
   - Added `.random`
 - **Span** (object)

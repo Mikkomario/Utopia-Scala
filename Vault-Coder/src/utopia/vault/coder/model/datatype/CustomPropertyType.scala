@@ -56,11 +56,20 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 						val default: CodePiece = model("default", "default_value")
 						// Handles the single-column use-case, if necessary
 						val conversion = if (parts.isEmpty) Left(sqlTypeFrom(model, default)) else Right(parts)
-						Success(apply(ScalaType(model("type")), conversion, valueDataType, model("from_value"),
-							model("option_from_value"), model("to_value"), model("option_to_value"),
+						val fromValueYieldsTry = model("from_value_can_fail", "yields_try", "try").getBoolean
+						Success(apply(
+							ScalaType(model("type")), conversion, valueDataType,
+							model("from_value"), model("option_from_value"),
+							model("to_value"), model("to_json_value"),
+							model("option_to_value"), model("option_to_json_value"),
+							model("from_json_value"), model("option_from_json_value"),
 							model("empty", "empty_value"), default,
 							model("prop_name", "property_name", "default_prop_name", "default_name"),
-							model("description", "doc", "desc"), model("from_value_can_fail", "yields_try", "try")))
+							model("description", "doc", "desc"),
+							fromValueYieldsTry,
+							model("from_json_value_can_fail", "json_yields_try", "json_try")
+								.booleanOr(fromValueYieldsTry)
+						))
 					}
 					else
 						Failure(new ModelValidationFailedException(
@@ -140,8 +149,20 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
   * @param optionFromValue Code that takes a Value ($v) and returns an option containing an instance of this type.
   *                        For multi-column data types, the values are represented by $v1, $v2, $v3 and so on.
   * @param toValue Code that takes an instance of this type (represented by $v) and returns a Value
+  * @param toJsonValue Code that takes an instance of this type (represented by $v) and returns a Value.
+  *                    This variant is used when generating values for json conversion.
+  *                    Default = empty code = use 'toValue'
   * @param optionToValue Code that takes an option (with this instance) ($v) and returns a Value
   *                      (default = empty = autogenerate)
+  * @param optionToJsonValue Code that takes an option of this instance ($v) and returns a Value.
+  *                          This variant is used when creating values for json conversion.
+  *                          Default = empty = use 'optionToValue'
+  * @param fromJsonValue Code that accepts a Value ($v) and returns an instance of this type.
+  *                      This variant is used when parsing data from json.
+  *                      Default = empty = use 'fromValue'
+  * @param optionFromJsonValue Code that accepts a Value ($v) and yields an Option.
+  *                            This variant is used when parsing data from json.
+  *                            Default = empty = use 'optionFromValue'
   * @param emptyValue An "empty" value applicable to this type. Empty if there is no applicable value (default).
   * @param nonEmptyDefaultValue The default value for this data type within scala code, but only if different from
   *                             emptyValue (default = empty = no default value)
@@ -154,10 +175,13 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlPropertyType, Vector[CustomPartConversion]],
                               valueDataType: Reference,
                               fromValue: CodePiece, optionFromValue: CodePiece,
-                              toValue: CodePiece, optionToValue: CodePiece = CodePiece.empty,
+                              toValue: CodePiece, toJsonValue: CodePiece = CodePiece.empty,
+                              optionToValue: CodePiece = CodePiece.empty, optionToJsonValue: CodePiece = CodePiece.empty,
+                              fromJsonValue: CodePiece = CodePiece.empty, optionFromJsonValue: CodePiece = CodePiece.empty,
                               emptyValue: CodePiece = CodePiece.empty,
                               nonEmptyDefaultValue: CodePiece = CodePiece.empty, defaultPropName: Option[Name] = None,
-                              autoDescription: String = "", yieldsTryFromValue: Boolean = false)
+                              autoDescription: String = "", yieldsTryFromValue: Boolean = false,
+                              yieldsTryFromJsonValue: Boolean = false)
 	extends PropertyType
 {
 	// ATTRIBUTES   ----------------------------
@@ -177,21 +201,35 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		defaultPropName.getOrElse { Name.interpret(scalaType.toString, CamelCase.capitalized) }
 	override def supportsDefaultJsonValues = true
 	
+	override def toValueCode(instanceCode: String) = finalizeCode(toValue, instanceCode)
+	override def toJsonValueCode(instanceCode: String): CodePiece = toJsonValue.notEmpty match {
+		case Some(toValue) => finalizeCode(toValue, instanceCode)
+		case None => toValueCode(instanceCode)
+	}
+	private def optionToValueCode(optionCode: String, isToJson: Boolean = false) = {
+		val appliedOptionToValue = if (isToJson) optionToJsonValue.nonEmptyOrElse(optionToValue) else optionToValue
+		appliedOptionToValue.notEmpty match {
+			// Case: Using a user-defined conversion
+			case Some(toValue) => finalizeCode(toValue, optionCode)
+			// Case: No user-defined conversion available
+			case None =>
+				toValueCode("v")
+					.mapText { toValue => s"$optionCode.map { v => $toValue }.getOrElse(Value.empty)" }
+					.referringTo(value)
+		}
+	}
+	
 	override def fromValueCode(valueCodes: Vector[String]): CodePiece = fromValueCode(fromValue, valueCodes)
+	override def fromJsonValueCode(valueCode: String): CodePiece = fromJsonValue.notEmpty match {
+		case Some(fromValue) => fromValueCode(fromValue, Vector(valueCode))
+		case None => fromValueCode(Vector(valueCode))
+	}
 	// TODO: Current version doesn't support multi-column types, hence the Vector("v")
 	override def fromValuesCode(valuesCode: String) =
 		fromValueCode(Vector("v")).mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
-	override def toValueCode(instanceCode: String) = finalizeCode(toValue, instanceCode)
-	
-	private def optionFromValueCode(valueCodes: Vector[String]): CodePiece = fromValueCode(optionFromValue, valueCodes)
-	private def optionToValueCode(optionCode: String) = optionToValue.notEmpty match {
-		// Case: Using a user-defined conversion
-		case Some(toValue) => finalizeCode(toValue, optionCode)
-		// Case: No user-defined conversion available
-		case None =>
-			toValueCode("v")
-				.mapText { toValue => s"$optionCode.map { v => $toValue }.getOrElse(Value.empty)" }
-				.referringTo(value)
+	private def optionFromValueCode(valueCodes: Vector[String], isFromJson: Boolean = false): CodePiece = {
+		val appliedOptionFromValue = if (isFromJson) optionFromJsonValue.nonEmptyOrElse(optionFromValue) else optionFromValue
+		fromValueCode(appliedOptionFromValue, valueCodes)
 	}
 	
 	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
@@ -239,13 +277,18 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		
 		override def defaultPropertyName = CustomPropertyType.this.defaultPropertyName
 		
-		override def yieldsTryFromValue = false
-		
 		override def optional = this
 		override def concrete = CustomPropertyType.this
 		
+		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
+		
 		override def toValueCode(instanceCode: String) = optionToValueCode(instanceCode)
+		override def toJsonValueCode(instanceCode: String): CodePiece = optionToValueCode(instanceCode, isToJson = true)
+		
 		override def fromValueCode(valueCodes: Vector[String]) = optionFromValueCode(valueCodes)
+		override def fromJsonValueCode(valueCode: String): CodePiece =
+			optionFromValueCode(Vector(valueCode), isFromJson = true)
 		// TODO: No multi-column support exists here either
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode(Vector("v")).mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }

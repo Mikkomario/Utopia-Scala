@@ -32,16 +32,33 @@
         "references": ["com.company.project.custom.GenericDataType"]
       },
       "from_value_can_fail": false,
+      "from_json_value": {
+        "code": "GenericDataType.fromValue($v).getOrElse(GenericDataType.default) (optional)",
+        "references": ["com.company.project.custom.GenericDataType"]
+      },
+      "from_json_value_can_fail": false,
       "option_from_value": {
         "code": "GenericDataType.fromValue($v)",
+        "references": ["com.company.project.custom.GenericDataType"]
+      },
+      "option_from_json_value": {
+        "code": "GenericDataType.fromValue($v) (optional)",
         "references": ["com.company.project.custom.GenericDataType"]
       },
       "to_value": {
         "code": "$v.index",
         "references": ["utopia.flow.generic.casting.ValueConversions._"]
       },
+      "to_json_value": {
+        "code": "$v.index (optional)",
+        "references": ["utopia.flow.generic.casting.ValueConversions._"]
+      },
       "option_to_value": {
-        "code": "$v.map { _.index }",
+        "code": "$v.map { _.index } (optional)",
+        "references": ["utopia.flow.generic.casting.ValueConversions._"]
+      },
+      "option_to_json_value": {
+        "code": "$v.map { _.index } (optional)",
         "references": ["utopia.flow.generic.casting.ValueConversions._"]
       },
       "empty": {

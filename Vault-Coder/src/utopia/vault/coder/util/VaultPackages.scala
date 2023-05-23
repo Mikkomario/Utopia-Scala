@@ -12,6 +12,7 @@ object VaultPackages
 	// COMPUTED -------------------------
 	
 	def vault = Vault
+	def bunnyMunch = BunnyMunch
 	def metropolis = Metropolis
 	def citadel = Citadel
 	
@@ -37,6 +38,12 @@ object VaultPackages
 		lazy val singleModelAccess = access / "single.model"
 		lazy val manyModelAccess = access / "many.model"
 		lazy val modelTemplateAccess = access/"template.model"
+	}
+	object BunnyMunch
+	{
+		val base = utopia/"bunnymunch"
+		
+		lazy val jawn = base/"jawn"
 	}
 	object Metropolis
 	{

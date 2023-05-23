@@ -17,6 +17,7 @@ import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.template.{ScalaTypeConvertible, ValueConvertibleType}
 import Reference.Flow._
+import utopia.vault.coder.util.VaultReferences._
 
 import java.util.concurrent.TimeUnit
 
@@ -51,6 +52,11 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	  *         yields instances of Try instead of instances of this type.
 	  */
 	def yieldsTryFromValue: Boolean
+	/**
+	  * @return Whether the conversion from a json-originated Value may fail.
+	  *         If true, the code generated through .fromJsonValueCode(...) yields an instance of Try.
+	  */
+	def yieldsTryFromJsonValue: Boolean
 	
 	/**
 	  * @return An optional copy of this property type (one that accepts None or other such empty value)
@@ -73,11 +79,21 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	def supportsDefaultJsonValues: Boolean
 	
 	/**
-	  * Writes a code that reads this an instance of this type from a value or a sequence of values
+	  * @param instanceCode Code that represents the instance of this data type to convert to a value
+	  * @return Code that converts an instance of this type into a value that's suitable for json generation.
+	  */
+	def toJsonValueCode(instanceCode: String): CodePiece
+	
+	/**
+	  * Writes a code that reads an instance of this type from a value or a sequence of values
 	  * (which still represent a single instance).
+	  *
+	  * If 'yieldsTryFromValue' is true, the resulting code will yield a Try.
+	  * Otherwise the resulting code will yield a direct instance of this type.
+	  *
 	  * @param valueCodes Code for accessing the parameter values. The number of proposed values must match the number
 	  *                   of parts or components used by this type.
-	  * @return Code for accessing a value and converting it to this type (in scala)
+	  * @return Code for accessing a value and converting it to this type (in Scala)
 	  */
 	def fromValueCode(valueCodes: Vector[String]): CodePiece
 	/**
@@ -86,6 +102,12 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	  * @return Code for accessing the specified values and converting them to a vector of this type's instances in Scala
 	  */
 	def fromValuesCode(valuesCode: String): CodePiece
+	/**
+	  * Writes code that parses an instance of this type from a value acquired through json parsing
+	  * @param valueCode Code for accessing the value acquired through json parsing
+	  * @return Code that parses an instance of this type (or an instance of Try) from the specified value.
+	  */
+	def fromJsonValueCode(valueCode: String): CodePiece
 	
 	/**
 	  * Writes a default documentation / description for a property
@@ -127,6 +149,9 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	override def toScala = scalaType
 }
 
+/**
+  * Common trait for data types that may be represented using a single database column
+  */
 trait SingleColumnPropertyType extends PropertyType
 {
 	// ABSTRACT ------------------------
@@ -139,9 +164,10 @@ trait SingleColumnPropertyType extends PropertyType
 	/**
 	  * Writes a code that reads this an instance of this type from a value.
 	  * @param valueCode Code for accessing a value
+	  * @param isFromJson Whether the specified value code represents a value parsed from json (default = false)
 	  * @return Code for accessing a value and converting it to this type (in scala)
 	  */
-	def fromValueCode(valueCode: String): CodePiece
+	def fromValueCode(valueCode: String, isFromJson: Boolean = false): CodePiece
 	
 	
 	// IMPLEMENTED  --------------------
@@ -152,8 +178,15 @@ trait SingleColumnPropertyType extends PropertyType
 		case Some(valueCode) => fromValueCode(valueCode)
 		case None => emptyValue
 	}
+	override def fromJsonValueCode(valueCode: String): CodePiece = fromValueCode(valueCode, isFromJson = true)
 }
 
+/**
+  * Common trait for data types that don't have an intermediate state (in a database model) before they are converted
+  * to an sql-compatible value.
+  *
+  * Please note that wrapping an item in an Option is considered an intermediate state in this context.
+  */
 trait DirectlySqlConvertiblePropertyType extends SingleColumnPropertyType
 {
 	// ABSTRACT -----------------------
@@ -184,15 +217,18 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 	/**
 	  * Writes code that takes a Value and outputs an instance of this type within an Option
 	  * @param valueCode Reference to the value to convert
+	  * @param isFromJson Whether the specified value code represents a json-parsed value (default = false)
 	  * @return Code that converts that value into an Option
 	  */
-	def optionFromValueCode(valueCode: String): CodePiece
+	def optionFromValueCode(valueCode: String, isFromJson: Boolean = false): CodePiece
 	/**
 	  * Writes code that takes an Option (which may contain an instance of this type) and yields a Value
 	  * @param optionCode Reference to the option to convert
+	  * @param isToJson Whether the generated code is used in a setting where the value is then written to json
+	  *                 (default = false)
 	  * @return Code that converts an Option to a Value
 	  */
-	def optionToValueCode(optionCode: String): CodePiece
+	def optionToValueCode(optionCode: String, isToJson: Boolean = false): CodePiece
 	
 	
 	// IMPLEMENTED  --------------------
@@ -222,6 +258,7 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 		override def sqlType = ConcreteSingleColumnPropertyType.this.sqlType.copy(defaultValue = "", isNullable = true)
 		
 		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def nonEmptyDefaultValue = CodePiece.empty
 		override def emptyValue = CodePiece.none
@@ -236,11 +273,13 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			ConcreteSingleColumnPropertyType.this.writeDefaultDescription(className, propName)
 		
-		override def fromValueCode(valueCode: String) = optionFromValueCode(valueCode)
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) =
+			optionFromValueCode(valueCode, isFromJson)
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
 		
 		override def toValueCode(instanceCode: String) = optionToValueCode(instanceCode)
+		override def toJsonValueCode(instanceCode: String): CodePiece = optionToValueCode(instanceCode, isToJson = true)
 		
 		override def toString = s"Option[$concrete]"
 	}
@@ -279,12 +318,15 @@ sealed trait BasicPropertyType extends ConcreteSingleColumnPropertyType
 	override def valueDataType = dataType/valueDataTypeName
 	
 	override def yieldsTryFromValue = false
+	override def yieldsTryFromJsonValue: Boolean = false
 	
-	override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.get${fromValuePropName.capitalize}")
+	override def fromValueCode(valueCode: String, isFromJson: Boolean) =
+		CodePiece(s"$valueCode.get${fromValuePropName.capitalize}")
 	override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
+	override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
 	
-	override def optionFromValueCode(valueCode: String) = s"$valueCode.$fromValuePropName"
-	override def optionToValueCode(optionCode: String) = CodePiece(optionCode, Set(valueConversions))
+	override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = s"$valueCode.$fromValuePropName"
+	override def optionToValueCode(optionCode: String, isToJson: Boolean) = CodePiece(optionCode, Set(valueConversions))
 	
 	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 }
@@ -545,15 +587,22 @@ trait PropertyTypeWrapper extends PropertyType
 	override def sqlConversions = wrapped.sqlConversions
 	
 	override def yieldsTryFromValue = wrapped.yieldsTryFromValue
+	override def yieldsTryFromJsonValue: Boolean = wrapped.yieldsTryFromJsonValue
 	
 	override def emptyValue = wrapped.emptyValue
 	override def nonEmptyDefaultValue = wrapped.nonEmptyDefaultValue
 	
+	override def toValueCode(instanceCode: String) = wrapped.toValueCode(instanceCode)
+	override def toJsonValueCode(instanceCode: String): CodePiece = wrapped.toJsonValueCode(instanceCode)
+	
 	override def fromValueCode(valueCodes: Vector[String]) = wrapped.fromValueCode(valueCodes)
 	override def fromValuesCode(valuesCode: String) = wrapped.fromValuesCode(valuesCode)
-	override def toValueCode(instanceCode: String) = wrapped.toValueCode(instanceCode)
+	override def fromJsonValueCode(valueCode: String): CodePiece = wrapped.fromJsonValueCode(valueCode)
 }
 
+/**
+  * Common trait for properties which are based on another, single column property type
+  */
 trait SingleColumnPropertyTypeWrapper extends PropertyTypeWrapper with SingleColumnPropertyType
 {
 	// ABSTRACT --------------------------
@@ -566,7 +615,8 @@ trait SingleColumnPropertyTypeWrapper extends PropertyTypeWrapper with SingleCol
 	override def sqlConversion = wrapped.sqlConversion
 	override def sqlConversions = super[SingleColumnPropertyType].sqlConversions
 	
-	override def fromValueCode(valueCode: String) = wrapped.fromValueCode(valueCode)
+	override def fromValueCode(valueCode: String, isFromJson: Boolean) =
+		wrapped.fromValueCode(valueCode, isFromJson)
 }
 
 object PropertyType
@@ -638,14 +688,16 @@ object PropertyType
 		override def scalaType = Reference.instant
 		
 		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def emptyValue = CodePiece.empty
 		override def nonEmptyDefaultValue = now.targetCode
 		
-		override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.getInstant")
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = CodePiece(s"$valueCode.getInstant")
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
-		override def optionFromValueCode(valueCode: String) = s"$valueCode.instant"
-		override def optionToValueCode(optionCode: String) =
+		override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
+		override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = s"$valueCode.instant"
+		override def optionToValueCode(optionCode: String, isToJson: Boolean) =
 			CodePiece(optionCode, Set(valueConversions))
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Time when this ${className.doc} was added to the database"
@@ -715,6 +767,7 @@ object PropertyType
 		override def supportsDefaultJsonValues = true
 		
 		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def scalaType = days
 		
@@ -722,14 +775,29 @@ object PropertyType
 		
 		override def defaultPropertyName = "duration"
 		
-		override def fromValueCode(valueCode: String) = CodePiece(s"Days($valueCode.getInt)", Set(days))
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode.length", Set(valueConversions))
+		override def toJsonValueCode(instanceCode: String): CodePiece = CodePiece(instanceCode, Set(valueConversions))
+		override def optionToValueCode(optionCode: String, isToJson: Boolean) = {
+			if (isToJson)
+				CodePiece(optionCode, Set(valueConversions))
+			else
+				CodePiece(s"$optionCode.map { _.length }", Set(valueConversions))
+		}
 		
-		override def optionFromValueCode(valueCode: String) =
-			CodePiece(s"$valueCode.int.map { Days(_) }", Set(days))
-		override def optionToValueCode(optionCode: String) =
-			CodePiece(s"$optionCode.map { _.length }", Set(valueConversions))
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
+			// Json uses a direct value conversion
+			if (isFromJson)
+				CodePiece(s"$valueCode.getDays")
+			else
+				CodePiece(s"Days($valueCode.getInt)", Set(days))
+		}
+		override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = {
+			if (isFromJson)
+				CodePiece(s"$valueCode.days")
+			else
+				CodePiece(s"$valueCode.int.map { Days(_) }", Set(days))
+		}
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -766,9 +834,11 @@ object PropertyType
 		override def concrete = this
 		
 		override def yieldsTryFromValue = false
-		override def fromValueCode(valueCode: String) = s"$valueCode.getString"
-		override def fromValuesCode(valuesCode: String) = s"$valuesCode.flatMap { _.string }"
+		override def yieldsTryFromJsonValue: Boolean = false
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
+		override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = s"$valueCode.getString"
+		override def fromValuesCode(valuesCode: String) = s"$valuesCode.flatMap { _.string }"
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -800,11 +870,14 @@ object PropertyType
 		override def concrete = this
 		
 		override def yieldsTryFromValue = allowingEmpty.yieldsTryFromValue
+		override def yieldsTryFromJsonValue: Boolean = allowingEmpty.yieldsTryFromJsonValue
 		
 		// Delegates value conversion
-		override def fromValueCode(valueCode: String) = allowingEmpty.fromValueCode(valueCode)
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) =
+			allowingEmpty.fromValueCode(valueCode, isFromJson)
 		override def fromValuesCode(valuesCode: String) = allowingEmpty.fromValuesCode(valuesCode)
 		override def toValueCode(instanceCode: String) = allowingEmpty.toValueCode(instanceCode)
+		override def toJsonValueCode(instanceCode: String): CodePiece = allowingEmpty.toJsonValueCode(instanceCode)
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 		
@@ -837,6 +910,7 @@ object PropertyType
 		override def scalaType = value
 		
 		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def nonEmptyDefaultValue = CodePiece.empty
 		override def emptyValue = CodePiece("Value.empty", Set(value))
@@ -846,10 +920,23 @@ object PropertyType
 		
 		override def defaultPropertyName = "value"
 		
-		// TODO: Should parse from json
-		override def fromValueCode(valueCode: String) = valueCode
-		override def fromValuesCode(valuesCode: String) = valuesCode
-		override def toValueCode(instanceCode: String) = instanceCode
+		// Converts the value to a json string before converting it back to a value
+		override def toValueCode(instanceCode: String) =
+			CodePiece(s"$instanceCode.toJson", Set(valueConversions))
+		override def toJsonValueCode(instanceCode: String): CodePiece = instanceCode
+		
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
+			// When the value originates from the database, expects it to be represented as a json string,
+			// which still needs parsing
+			if (isFromJson)
+				valueCode
+			else
+				CodePiece(s"$valueCode.mapIfNotEmpty { v => JsonBunny.sureMunch(v.getString) }",
+					Set(bunnyMunch.jsonBunny))
+		}
+		// Expects a vector of json string values
+		override def fromValuesCode(valuesCode: String) =
+			fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Generic ${propName.doc} of this ${className.doc}"
@@ -873,6 +960,8 @@ object PropertyType
 	  */
 	case class TimeDuration(unit: TimeUnit) extends ConcreteSingleColumnPropertyType
 	{
+		// ATTRIBUTES   ------------------------
+		
 		override lazy val sqlType = SqlPropertyType(unit match {
 			case TimeUnit.NANOSECONDS | TimeUnit.MICROSECONDS | TimeUnit.MILLISECONDS => "BIGINT"
 			case _ => "INT"
@@ -887,27 +976,49 @@ object PropertyType
 			case _ => unit.toString.toLowerCase
 		})
 		override lazy val valueDataType = dataType/"DurationType"
-		override def supportsDefaultJsonValues = true
+		
+		
+		// COMPUTED ----------------------------
 		
 		private def unitConversionCode = s".toUnit(TimeUnit.${unit.name})"
 		
-		override def scalaType = Reference.finiteDuration
 		
-		override def yieldsTryFromValue = false
+		// IMPLEMENTED  ------------------------
+		
+		override def defaultPropertyName = "duration"
+		
+		override def supportsDefaultJsonValues = true
+		
+		override def scalaType = Reference.finiteDuration
 		
 		override def nonEmptyDefaultValue = CodePiece("Duration.Zero", Set(Reference.duration))
 		override def emptyValue = CodePiece.empty
 		
-		override def defaultPropertyName = "duration"
+		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
 		
-		override def fromValueCode(valueCode: String) =
-			CodePiece(s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})", fromValueReferences)
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode$unitConversionCode", toValueReferences)
-		override def optionFromValueCode(valueCode: String) =
-			CodePiece(s"$valueCode.long.map { FiniteDuration(_, TimeUnit.${unit.name}) }", fromValueReferences)
-		override def optionToValueCode(optionCode: String) =
-			CodePiece(s"$optionCode.map { _$unitConversionCode }", toValueReferences)
+		override def toJsonValueCode(instanceCode: String): CodePiece = CodePiece(instanceCode, Set(valueConversions))
+		override def optionToValueCode(optionCode: String, isToJson: Boolean) = {
+			if (isToJson)
+				CodePiece(optionCode, Set(valueConversions))
+			else
+				CodePiece(s"$optionCode.map { _$unitConversionCode }", toValueReferences)
+		}
+		
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
+			if (isFromJson)
+				s"$valueCode.getDuration"
+			else
+				CodePiece(s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})", fromValueReferences)
+		}
+		override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = {
+			if (isFromJson)
+				s"$valueCode.duration"
+			else
+				CodePiece(s"$valueCode.long.map { FiniteDuration(_, TimeUnit.${unit.name}) }", fromValueReferences)
+		}
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Duration of this ${className.doc}"
@@ -976,17 +1087,22 @@ object PropertyType
 		override def defaultPropertyName = enumeration.name
 		
 		override def yieldsTryFromValue = enumeration.hasNoDefault
+		override def yieldsTryFromJsonValue: Boolean = yieldsTryFromValue
+		
+		override def toValueCode(instanceCode: String) =
+			enumeration.idType.toValueCode(s"$instanceCode.${ enumeration.idPropName.prop }")
+		override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
+		
 		// NB: Doesn't support multi-column enumeration id types
 		override def fromValueCode(valueCodes: Vector[String]) =
 			CodePiece(s"${enumeration.name.enumName}.fromValue(${valueCodes.head})", Set(enumeration.reference))
+		override def fromJsonValueCode(valueCode: String): CodePiece = fromValueCode(Vector(valueCode))
 		override def fromValuesCode(valuesCode: String) = {
 			val idFromValueCode = enumeration.idType.fromValueCode(Vector("v"))
 			idFromValueCode.mapText { convertToId =>
 				s"$valuesCode.map { v => $convertToId }.flatMap($findForId)"
 			}.referringTo(enumeration.reference)
 		}
-		override def toValueCode(instanceCode: String) =
-			enumeration.idType.toValueCode(s"$instanceCode.${enumeration.idPropName.prop}")
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"${enumeration.name.doc.capitalize} of this ${className.doc}"
@@ -1010,6 +1126,13 @@ object PropertyType
 			override def concrete = EnumValue.this
 			
 			override def yieldsTryFromValue = false
+			override def yieldsTryFromJsonValue: Boolean = false
+			
+			override def toValueCode(instanceCode: String) =
+				idType.toValueCode(s"e.${ enumeration.idPropName.prop }")
+					.mapText { idToValue => s"$instanceCode.map { e => $idToValue }.getOrElse(Value.empty)" }
+					.referringTo(value)
+			override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
 			
 			override def fromValueCode(valueCodes: Vector[String]) =
 				idType.fromValueCode(valueCodes)
@@ -1028,14 +1151,11 @@ object PropertyType
 						}
 					}
 					.referringTo(enumeration.reference)
+			override def fromJsonValueCode(valueCode: String): CodePiece = fromValueCode(Vector(valueCode))
 			override def fromValuesCode(valuesCode: String) =
 				idType.fromValuesCode(valuesCode)
 					.mapText { ids => s"$ids.flatMap($findForId)" }
 					.referringTo(enumeration.reference)
-			override def toValueCode(instanceCode: String) =
-				idType.toValueCode(s"e.${enumeration.idPropName.prop}")
-					.mapText { idToValue => s"$instanceCode.map { e => $idToValue }.getOrElse(Value.empty)" }
-					.referringTo(value)
 			
 			override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 				EnumValue.this.writeDefaultDescription(className, propName)

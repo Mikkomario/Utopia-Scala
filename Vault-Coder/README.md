@@ -327,6 +327,18 @@ When specifying a custom data type object, you need to specify the following pro
 - **"option_to_value": Code (optional)** - Code that takes an option that may contain an instance of this type and 
   converts it to a value
   - If omitted or null, `$v.map { v => `to_value`(v) }.getOrElse(Value.empty)` will be used
+- **"to_json_value": Code (optional)** - Similar to` to_value`, 
+  except that this variant is used when creating json models.
+  - If omitted or null, `to_value` will be used instead.
+- **"option_to_json_value": Code (optional)** - Similar to `option_to_value`, 
+  except that this variant is used when creating json models.
+  - If omitted or null, `option_to_value` will be used instead
+- **"from_json_value": Code (optional)** - Similar to `from_value`, 
+  except that this variant is used when parsing json-originated values.
+  - If omitted or null, `from_value` will be used instead.
+- **"option_from_json_value": Code (optional)** - Similar to `option_from_value`, 
+  except that this variant is used when parsing json-originated values.
+  - If omitted or null, `option_from_value` will be used instead
 - **"empty" / "empty_value": Code (optional)** - An "empty" instance of this type. Omit if not applicable.
 - **"default" / "default_value": Code (optional)** - Default Scala-value for properties using this data type. 
   Omit if not applicable or if same as **"empty"**.
@@ -340,6 +352,9 @@ When specifying a custom data type object, you need to specify the following pro
 - **"from_value_can_fail" / "yields_try" / "try": Boolean (optional)** - Whether the code passed to `from_value` yields 
   an instance of **Try** instead of an instance of this type. I.e. Whether fromValue-conversion can fail. 
   (default = false)
+- **"from_json_value_can_fail" / "json_yields_try" / "json_try": Boolean (optional)** - Similar to `from_value_can_fail`, 
+  except that this setting applies to `from_json_value` function.
+  - If omitted or null, `from_value_can_fail` will be used.
 
 #### Multi-Column Data Types
 In the following examples, we're using an imaginary example data type **Weight** that consists of two parts:
