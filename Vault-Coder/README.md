@@ -211,7 +211,10 @@ Each property object should contain following properties:
     (default name: `"expires"`)
     - Enables (timed) item deprecation
     - Indexes by default
+  - **"value" / "val"** - Results in a generic `Value` type, which are stored in database as json strings
   - **"Option[X]"** - Results in `Option` / nullable type where the underlying type is determined by what `X` is
+  - **"Vector[X]"** - Results in `Vector` type where the underlying type is determined by what X is
+    - Vectors are store in the database as json strings
   - **"Enum[X]"** - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
     (must be specified in the "enumerations" -property). Uses the enumeration's name as the default property name.
     - Can be wrapped in option

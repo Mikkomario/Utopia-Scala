@@ -16,6 +16,7 @@ import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.template.{ScalaTypeConvertible, ValueConvertibleType}
+import Reference._
 import Reference.Flow._
 import utopia.vault.coder.util.VaultReferences._
 
@@ -642,13 +643,16 @@ object PropertyType
 			case "updated" | "modification" | "update" => Some(UpdateTime)
 			case "deprecation" | "deprecated" => Some(Deprecation)
 			case "expiration" | "expired" => Some(Expiration)
-			case "value" => Some(GenericValue(appliedLength))
+			case "value" | "val" => Some(GenericValue(appliedLength))
 			case "days" => Some(DayCount)
 			case _ =>
 				if (lowerTypeName.startsWith("text") || lowerTypeName.startsWith("string") || lowerTypeName.startsWith("varchar"))
 					Some(Text(appliedLength))
 				else if (lowerTypeName.startsWith("option"))
 					interpret(lowerTypeName.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
+				else if (lowerTypeName.startsWith("vector"))
+					interpret(lowerTypeName.afterFirst("[").untilLast("]"), length, propertyName)
+						.map { t => VectorType(t, appliedLength) }
 				else if (lowerTypeName.startsWith("duration"))
 					Some(typeName.afterFirst("[").untilLast("]") match {
 						case "s" | "second" | "seconds" => TimeDuration.seconds
@@ -808,8 +812,8 @@ object PropertyType
 	}
 	
 	// This text is never wrapped in an option. An empty string is considered an empty value.
-	case class Text(length: Int = 255) extends DirectlySqlConvertiblePropertyType {
-		
+	case class Text(length: Int = 255) extends DirectlySqlConvertiblePropertyType
+	{
 		override val sqlType = {
 			val typeName = {
 				if (length > 16777215)
@@ -1183,5 +1187,93 @@ object PropertyType
 			override def midConversion(originCode: String) =
 				idConversion.midConversion(s"$originCode.${enumeration.idPropName.prop}")
 		}
+	}
+	
+	/**
+	  * A data type which yields Vectors of a specific type
+	  * @param innerType The type of individual items in this vector
+	  * @param columnLength The maximum database column length used when storing this vector. Default = 255.
+	  */
+	case class VectorType(innerType: PropertyType, columnLength: Int = 255) extends DirectlySqlConvertiblePropertyType
+	{
+		// ATTRIBUTES   --------------------------
+		
+		override val scalaType = ScalaType.basic("Vector")(innerType.scalaType)
+		override val valueDataType = dataType/"VectorType"
+		override val sqlType: SqlPropertyType = {
+			// WET WET (from Text)
+			val typeName = {
+				if (columnLength > 16777215)
+					"LONGTEXT"
+				else if (columnLength > 65535)
+					"MEDIUMTEXT"
+				else
+					s"VARCHAR($columnLength)"
+			}
+			SqlPropertyType(typeName, isNullable = true)
+		}
+		
+		
+		// IMPLEMENTED  ---------------------------
+		
+		override def defaultPropertyName = "values"
+		
+		override def emptyValue = CodePiece("Vector.empty")
+		override def nonEmptyDefaultValue = CodePiece.empty
+		
+		override def concrete = this
+		
+		override def yieldsTryFromValue = innerType.yieldsTryFromJsonValue
+		override def yieldsTryFromJsonValue = innerType.yieldsTryFromJsonValue
+		override def supportsDefaultJsonValues = true
+		
+		// Converts to json when storing to DB
+		override def toValueCode(instanceCode: String) =
+			toJsonValueCode(instanceCode).mapText { value => s"($value: Value).toJson" }
+		override def toJsonValueCode(instanceCode: String) =
+			innerType.toJsonValueCode("v").mapText { itemToValue =>
+				s"$instanceCode.map { v => $itemToValue }"
+			}.referringTo(valueConversions)
+		
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
+			// Case: Parsing from json => Converts directly to a vector
+			if (isFromJson) {
+				// Case: Item parsing may fail => Vector parsing may fail as well
+				if (yieldsTryFromJsonValue)
+					innerType.fromJsonValueCode("v").mapText { itemFromValue =>
+						s"$valueCode.tryVectorWith { v => $itemFromValue }"
+					}
+				// Case: Item parsing always succeeds => Simply maps each item
+				else
+					innerType.fromJsonValueCode("v").mapText { itemFromValue =>
+						s"$valueCode.getVector.map { v => $itemFromValue }"
+					}
+			}
+			// Case: Parsing from a database model => Has to first parse the json into a vector
+			else {
+				// Case: Item parsing may fail => Vector and json parsing may fail as well
+				if (yieldsTryFromValue)
+					innerType.fromJsonValueCode("v").mapText { itemFromValue =>
+						s"$valueCode.notEmpty match { case Some(v) => JsonBunny.munch(v.getString).flatMap { v => v.tryVectorWith { v => $itemFromValue } }; case None => Success(Vector.empty) }"
+					}.referringTo(Vector(bunnyMunch.jsonBunny, success))
+				// Case: Item parsing always succeeds => Simply maps the parsed vector
+				else {
+					innerType.fromJsonValueCode("v").mapText { itemFromValue =>
+						s"$valueCode.notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => $itemFromValue }; case None => Vector.empty }"
+					}.referringTo(bunnyMunch.jsonBunny)
+				}
+			}
+		}
+		override def fromValuesCode(valuesCode: String) =
+			innerType.fromJsonValueCode("v").mapText { itemFromValue =>
+				// Case: Individual item parsing may fail => Ignores failures because has to succeed
+				if (innerType.yieldsTryFromJsonValue)
+					s"$valuesCode.flatMap { v => $itemFromValue.toOption }"
+				// Case: Individual item parsing always succeeds => Simply maps the input vector
+				else
+					s"$valuesCode.map { v => $itemFromValue }"
+			}
+		
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
 }

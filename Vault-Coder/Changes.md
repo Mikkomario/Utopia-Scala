@@ -6,6 +6,7 @@
 - Sql column prefixes are no longer applied to json properties
 - **Value** data type database model conversion now converts the value into json first
 ### New Features
+- Added support for **Vector** data type
 - Standard and custom data types now support different from- & to-value conversion logic when dealing with json values
   - See README on how to apply this support to custom data types
 

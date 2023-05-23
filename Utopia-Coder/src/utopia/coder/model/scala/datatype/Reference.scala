@@ -15,17 +15,21 @@ object Reference
 	
 	import Package._
 	
+	// Scala time
+	
+	lazy val duration = apply(scalaDuration, "Duration")
+	lazy val finiteDuration = apply(scalaDuration, "FiniteDuration")
+	
 	// Java time
 	
 	lazy val instant = apply(javaTime, "Instant")
 	lazy val localDate = apply(javaTime, "LocalDate")
 	lazy val localTime = apply(javaTime, "LocalTime")
-	lazy val timeUnit = apply(java/"util.concurrent", "TimeUnit")
+	lazy val timeUnit = apply(java / "util.concurrent", "TimeUnit")
 	
-	// Scala time
+	// Other Scala
 	
-	lazy val duration = apply(scalaDuration, "Duration")
-	lazy val finiteDuration = apply(scalaDuration, "FiniteDuration")
+	lazy val success = apply("scala.util", "Success")
 	
 	// Other Java
 	
