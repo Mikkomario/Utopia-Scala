@@ -93,6 +93,10 @@ object Reference
 		
 		lazy val notEmpty = apply(utils, "NotEmpty")
 		
+		lazy val pair = apply(immutableCollection, "Pair")
+		lazy val span = apply(ranges, "Span")
+		lazy val numericSpan = apply(ranges, "NumericSpan")
+		
 		lazy val value = apply(immutableGenericModels, "Value")
 		lazy val property = apply(genericModelTemplates, "Property")
 		lazy val constant = apply(immutableGenericModels, "Constant")
@@ -112,6 +116,7 @@ object Reference
 		lazy val now = apply(time, "Now")
 		lazy val today = apply(time, "Today")
 		lazy val days = apply(time, "Days")
+		lazy val dateRange = apply(time, "DateRange")
 		
 		lazy val extender = apply(viewTemplate, "Extender")
 	}

@@ -61,6 +61,8 @@ object Package
 		val base = utopia/"flow"
 		
 		lazy val collection = base/"collection"
+		lazy val immutableCollection = collection/"immutable"
+		lazy val ranges = immutableCollection/"range"
 		lazy val generics = base / "generic"
 		lazy val typeCasting = generics / "casting"
 		lazy val genericModels = generics / "model"

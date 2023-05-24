@@ -186,7 +186,7 @@
       },
       {
         "name": "IssueOccurrence",
-        "doc": "Represents a specific occurrence of a recorded issue",
+        "doc": "Represents one or more specific occurrences of a recorded issue",
         "props": [
           {
             "name": "caseId",
@@ -198,7 +198,7 @@
             "name_plural": "errorMessages",
             "type": "Vector[String]",
             "limit": 6400,
-            "doc": "Error messages listed in the stack trace"
+            "doc": "Error messages listed in the stack trace. \nIf multiple occurrences are represented, contains data from the latest occurrence."
           },
           {
             "type": "creation",

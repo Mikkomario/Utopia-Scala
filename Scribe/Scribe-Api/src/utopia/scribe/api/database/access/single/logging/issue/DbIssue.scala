@@ -119,9 +119,10 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @param connection Implicit DB connection
 	  * @return The recorded issue
 	  */
+	// FIXME: Store multiple instances/occurrences at once
 	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue =
 		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails,
-			Now - issue.storeDuration)(connection, issue.version)
+			Now - issue.storeDuration.start)(connection, issue.version)
 	/**
 	  * Stores an issue to the database. Avoids inserting duplicate information.
 	  * @param data The data to store, if new

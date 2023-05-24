@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.coder.model.data.{Name, NamingRules}
-import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber
+import utopia.vault.coder.model.datatype.StandardPropertyType.BasicPropertyType.IntNumber
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.enumeration.IntSize.Tiny
 import utopia.coder.model.scala.Package

@@ -1,13 +1,16 @@
 package utopia.scribe.core.model.post.logging
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, PairType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
-import utopia.flow.util.Version
+import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.util.{Mutate, Version}
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 
@@ -18,6 +21,11 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 {
 	// ATTRIBUTES   --------------------------
 	
+	implicit val areSimilar: EqualsFunction[ClientIssue] = (a, b) => {
+		a.context == b.context && a.severity == b.severity && a.variantDetails == b.variantDetails &&
+			 a.version == b.version && a.error.~==(b.error) { _ ~== _ }
+	}
+	
 	private lazy val schema: ModelDeclaration = ModelDeclaration(
 		PropertyDeclaration("version", StringType),
 		PropertyDeclaration("context", StringType),
@@ -27,7 +35,8 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 		PropertyDeclaration("error", ModelType, isOptional = true),
 		PropertyDeclaration("message", StringType, isOptional = true),
 		PropertyDeclaration("storeDuration", DurationType, Vector("history", "duration", "store_duration"),
-			Duration.Zero)
+			Duration.Zero),
+		PropertyDeclaration("instances", IntType, Vector("count"), 1)
 	)
 	
 	
@@ -38,9 +47,13 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 		Version.findFrom(versionStr).toTry { new ModelValidationFailedException(
 			s"Specified version '$versionStr' can't be parsed into a version") }
 			.map { version =>
+				val storeDuration = model("storeDurations").castTo(PairType, DurationType) match {
+					case Left(pairValue) => pairValue.getPair.map { _.getDuration }.sorted.toSpan
+					case Right(durationValue) => Span.singleValue(durationValue.getDuration)
+				}
 				apply(version, model("context"), Severity.fromValue(model("severityLevel")), model("variantDetails"),
 					model("error").model.flatMap { RecordableError(_).toOption }, model("message"),
-					model("storeDuration"))
+					storeDuration, model("instances"))
 			}
 	}
 }
@@ -56,25 +69,38 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   * @param variantDetails Details about this issue variant, to differentiate it from other issues in this context
   * @param error The error that occurred, if applicable
   * @param message Additional error message (optional)
-  * @param storeDuration Duration how long this issue was stored locally before sending it to the server
+  * @param storeDuration Duration how long this issue was stored locally before sending it to the server.
+  *                      If multiple issues are represented, contains a range of durations from
+  *                      the minimum to the maximum.
   */
 case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: String,
-                       error: Option[RecordableError], message: String, storeDuration: FiniteDuration)
-	extends ModelConvertible
+                       error: Option[RecordableError], message: String, storeDuration: Span[FiniteDuration],
+                       instances: Int)
+	extends ModelConvertible with ApproxSelfEquals[ClientIssue]
 {
 	// IMPLEMENTED  ---------------------
 	
+	override def self: ClientIssue = this
+	
+	override implicit def equalsFunction: EqualsFunction[ClientIssue] = ClientIssue.areSimilar
+	
 	override def toModel: Model = Model.from(
 		"version" -> version.toString, "context" -> context, "severityLevel" -> severity.level,
-		"variantDetails" -> variantDetails, "error" -> error, "message" -> message, "storeDuration" -> storeDuration
+		"variantDetails" -> variantDetails, "error" -> error, "message" -> message,
+		"storeDurations" -> storeDuration.toPair, "instances" -> instances
 	)
 	
 	
 	// OTHER    ------------------------
 	
 	/**
+	  * @param f A mapping function for the local storage durations of this issue
+	  * @return Copy of this issue with mapped storage durations
+	  */
+	def mapStoreDurations(f: Mutate[FiniteDuration]) = copy(storeDuration = storeDuration.mapEnds(f))
+	/**
 	  * @param duration Duration how long this issue was stored since the previous store duration update
 	  * @return Copy of this issue with updated store duration
 	  */
-	def delayedBy(duration: FiniteDuration) = copy(storeDuration = storeDuration + duration)
+	def delayedBy(duration: FiniteDuration) = mapStoreDurations { _ + duration }
 }

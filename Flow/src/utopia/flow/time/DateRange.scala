@@ -1,6 +1,7 @@
 package utopia.flow.time
 
 import TimeExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.IterableHasEnds
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
@@ -28,8 +29,7 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
 	  * @param last The last day to include
 	  * @return A new date range that includes both dates
 	  */
-	def inclusive(first: LocalDate, last: LocalDate) =
-	{
+	def inclusive(first: LocalDate, last: LocalDate) = {
 		if (last >= first)
 			apply(first, last + 1)
 		else
@@ -43,6 +43,12 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
 	  * @return A new date range
 	  */
 	def exclusive(start: LocalDate, end: LocalDate) = apply(start, end)
+	/**
+	  * Creates a new date range that doesn't include the end date
+	  * @param range The date range, where the second value is excluded
+	  * @return A new date range
+	  */
+	def exclusive(range: Pair[LocalDate]): DateRange = exclusive(range.first, range.second)
 	
 	/**
 	  * Creates a new date range that doesn't include either the start or the end date
@@ -50,8 +56,7 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
 	  * @param end The end day (exclusive)
 	  * @return A new date range that spans the dates between those two dates
 	  */
-	def between(start: LocalDate, end: LocalDate) =
-	{
+	def between(start: LocalDate, end: LocalDate) = {
 		if (end > start)
 			apply(start + 1, end)
 		else if (end < start)

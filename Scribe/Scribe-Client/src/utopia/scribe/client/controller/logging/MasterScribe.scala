@@ -7,8 +7,6 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.Timeout
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.PostponingProcess
 import utopia.flow.collection.CollectionExtensions._
@@ -19,7 +17,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
-import utopia.flow.parse.json.{JsonParser, JsonReader}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
@@ -40,13 +38,13 @@ object MasterScribe
 	
 	// TODO: Use a more sophisticated logging implementation
 	private implicit val backupLogger: Logger = SysErrLogger
-	
+	/*
 	private lazy val gateway = Gateway(
 		jsonParsers = Vector(JsonBunny, JsonReader),
 		maxConnectionsPerRoute = 1,
 		maxConnectionsTotal = 3,
 		maximumTimeout = Timeout(30.minutes, 30.minutes, 6.hours)
-	)
+	)*/
 	
 	/*
 	private object ApiAccess extends Api
@@ -80,7 +78,7 @@ class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String, issueB
 	
 	private val pendingIssuesPointer = VolatileList[(ClientIssue, Instant)]()
 	
-	private lazy val requestQueue = requestStoreLocation match {
+	private lazy val requestQueue: RequestQueue = requestStoreLocation match {
 		case Some(path) =>
 			val (queue, errors) = PersistingRequestQueue(queueSystem, path, Vector(RequestHandler),
 				saveLogic = OnlyOnTrigger)
@@ -189,7 +187,7 @@ class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String, issueB
 		private def deprecateOldIssues() = remainingIssuesPointer.updateAndGet {
 			_.filter { case (issue, lastUpdate) =>
 				issueDeprecationDurations.getOrElse(issue.severity, Duration.Inf).finite.forall { liveDuration =>
-					(Now - lastUpdate + issue.storeDuration) < liveDuration
+					(Now - lastUpdate + issue.storeDuration.start) < liveDuration
 				}
 			}
 		}

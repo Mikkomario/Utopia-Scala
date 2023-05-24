@@ -14,6 +14,14 @@ object Span
 	def apply[P](start: P, end: P)(implicit ordering: Ordering[P]): Span[P] = _Span[P](start, end)
 	
 	/**
+	  * @param value The singular value to wrap
+	  * @param ordering Ordering to use
+	  * @tparam P Type of the specified value
+	  * @return A span from the specified value to the specified value
+	  */
+	def singleValue[P](value: P)(implicit ordering: Ordering[P]) = apply(value, value)
+	
+	/**
 	 * @param start Starting point
 	 * @param end Ending point
 	 * @param n Numeric implementation for the end-points

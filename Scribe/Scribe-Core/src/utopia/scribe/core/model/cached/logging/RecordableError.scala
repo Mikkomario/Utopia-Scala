@@ -7,6 +7,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.operator.ApproxEquals
 
 import scala.util.Try
 
@@ -56,7 +57,7 @@ object RecordableError extends FromModelFactory[RecordableError]
   */
 case class RecordableError(className: String, stackTrace: StackTrace, cause: Option[RecordableError] = None,
                            message: String = "")
-	extends ModelConvertible
+	extends ModelConvertible with ApproxEquals[RecordableError]
 {
 	// COMPUTED ---------------------------
 	
@@ -88,6 +89,10 @@ case class RecordableError(className: String, stackTrace: StackTrace, cause: Opt
 	
 	
 	// IMPLEMENTED  -----------------------
+	
+	override def ~==(other: RecordableError): Boolean =
+		className == other.className && stackTrace == other.stackTrace &&
+			((cause.isEmpty && other.cause.isEmpty) || cause.exists { a => other.cause.exists { a ~== _ } })
 	
 	override def toModel: Model =
 		Model.from("className" -> className, "stackTrace" -> stackTrace, "message" -> message,

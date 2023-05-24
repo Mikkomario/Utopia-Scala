@@ -2,10 +2,10 @@ package utopia.vault.coder.model.data
 
 import utopia.coder.model.data
 import utopia.coder.model.data.{Name, NamingRules}
-import utopia.vault.coder.model.datatype.BasicPropertyType.{IntNumber, LongNumber}
+import utopia.vault.coder.model.datatype.StandardPropertyType.BasicPropertyType.{IntNumber, LongNumber}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration, UpdateTime}
+import utopia.vault.coder.model.datatype.StandardPropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration, UpdateTime}
 import utopia.coder.model.enumeration.NameContext.{ColumnName, DbModelPropName}
 
 object Class

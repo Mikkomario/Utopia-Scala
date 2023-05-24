@@ -11,11 +11,11 @@ import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, EnumerationValue, Instance, ProjectData, Property}
-import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber
-import utopia.vault.coder.model.datatype.{CustomPropertyType, PropertyType}
+import utopia.vault.coder.model.datatype.StandardPropertyType.BasicPropertyType.IntNumber
+import utopia.vault.coder.model.datatype.{CustomPropertyType, PropertyType, StandardPropertyType}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
-import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue, Text}
+import utopia.vault.coder.model.datatype.StandardPropertyType.{ClassReference, EnumValue, Text}
 import utopia.coder.model.enumeration.NameContext.{ClassName, ClassPropName, ColumnName, DatabaseName, EnumName, EnumValueName, Header, TableName}
 import utopia.coder.model.enumeration.NamingConvention
 import utopia.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
@@ -199,7 +199,7 @@ object ClassReader
 					}
 					val idType = model("index_type", "id_type", "type").string
 						.flatMap { custom =>
-							PropertyType.interpret(custom, model("id_length", "id_max", "length").int,
+							StandardPropertyType.interpret(custom, model("id_length", "id_max", "length").int,
 								Some(name.singular))
 						}
 						// The default ID type is integer, with size enough to fit all values (i.e. tiny)
@@ -366,7 +366,7 @@ object ClassReader
 							val baseType = EnumValue(enumType)
 							Some(if (lowerTypeName.contains("option")) baseType.optional else baseType)
 						// Case: Standard data type
-						case None => PropertyType.interpret(typeName, length, specifiedName)
+						case None => StandardPropertyType.interpret(typeName, length, specifiedName)
 					}
 			}
 		}

@@ -39,6 +39,14 @@ object NumericSpan
 	def apply[N](ends: Pair[N])(implicit n: Numeric[N]): NumericSpan[N] = apply(ends.first, ends.second)
 	
 	/**
+	  * @param value A single value to wrap as a span
+	  * @param n Implicit numeric implementation
+	  * @tparam N Type of numeric values used
+	  * @return A span that starts and ends at the specified value
+	  */
+	def singleValue[N](value: N)(implicit n: Numeric[N]) = apply(value, value)
+	
+	/**
 	  * @param span A span
 	  * @param n Implicit numeric implementation
 	  * @tparam N Type of numeric values used

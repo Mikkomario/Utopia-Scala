@@ -161,72 +161,78 @@ The following guide assumes a standard single-column data type. For multi-column
 see the additional instructions under [multi-column properties](#multi-column-properties).
 
 Each property object should contain following properties:
-- **"name": String (optional)** - Name of this property (e.g. `"testProperty"`)
+- `"name": String (optional)` - Name of this property (e.g. `"testProperty"`)
   - If not specified, column name will be parsed into a property name. 
     Alternatively the name is based on the data type used. 
     See data type list below for the default names.
-- **"name_plural": String (optional)** - The plural form of this property's name (e.g. `"testProperties"`). 
+- `"name_plural": String (optional)` - The plural form of this property's name (e.g. `"testProperties"`). 
   By default, `"s"` is added to the end of the standard property name in order to form the plural form.
-- **"references" / "ref": String (optional)** - Name of the database table referenced by this property.
+- `"references" / "ref": String (optional)` - Name of the database table referenced by this property.
   - Omit or leave empty if this property doesn't reference any other class.
   - You may specify the referenced column / property in parentheses after the table name. E.g. `"table_name(column_name)"`
     - If column prefixing is used, a prefix will automatically be added to the referenced column name
-- **"type": String (optional)** - The data type of this property. The following options are accepted:
-  - **"text" / "String" / "varchar"** - Results in a `String` / Varchar type (default name: `"text"`)
+- `"type": String (optional)` - The data type of this property. The following options are accepted:
+  - `"text" / "String" / "varchar"` - Results in a **String** / Varchar type (default name: `"text"`)
     - You may specify the maximum string length in either parentheses at the end of the type (e.g. `"String(32)"`) or 
       via the `"length"` property (optional feature).
     - These strings are expected to be valid when empty. They default to an empty string, 
       unless another default value is specified.
-  - **"nonEmptyString" / "requiredString" / "StringNotEmpty" / "textNotEmpty"** - 
-    Behaves like String, but doesn't allow empty values.
-  - **"Int"** - Results in `Int` numeric type (default name: `"index"`)
+  - `"nonEmptyString" / "requiredString" / "StringNotEmpty" / "textNotEmpty"` - 
+    Behaves like **String**, but doesn't allow empty values.
+  - `"Int"` - Results in **Int** numeric type (default name: `"index"`)
     - You may specify the maximum allowed value in either parentheses at the end of the type 
       (e.g. `"Int(tiny)"` OR `"Int(100)"`) (optional feature)
-  - **"Long" / "bigint" / "number"** - Results in `Long` numeric type (default name: `"number"`)
-  - **"Double"** - Results in `Double` numeric type (default name: `"amount"`)
-  - **"Boolean" / "flag"** - Results in `Boolean` type (true / false) (default name: `"flag"`)
-  - **"datetime" / "timestamp" / "Instant"** - Results in `Instant` / Datetime type (default name: `"timestamp"`)
-  - **"date" / "LocalDate"** - Results in `LocalDate` / Date type (default name: `"date"`)
-  - **"time" / "LocalTime"** - Results in `LocalTime` / Time type (default name: `"time"`)
-  - **"Days"** - Results in `Days` type (default name: `"duration"`)
-  - **"Duration[X]"** - Results in a `FiniteDuration` type (default name: `"duration"`)
-    - **X** determines the unit used when storing the duration to the database. Available options are:
-      - **h / hour / hours** - Stores as hours (int)
-      - **m / min / minute / minutes** - Stores as minutes (int)
-      - **s / second / seconds** - Stores as seconds (int)
-      - **ms** - Stores as milliseconds (bigint, default)
-  - **"creation" / "created"** - Results in `Instant` / Timestamp type and is used as the row creation time 
+  - `"Long" / "bigint" / "number"` - Results in **Long** numeric type (default name: `"number"`)
+  - `"Double"` - Results in **Double** numeric type (default name: `"amount"`)
+  - `"Boolean" / "flag"` - Results in **Boolean** type (true / false) (default name: `"flag"`)
+  - `"datetime" / "timestamp" / "Instant"` - Results in **Instant** / Datetime type (default name: `"timestamp"`)
+  - `"date" / "LocalDate"` - Results in **LocalDate** / Date type (default name: `"date"`)
+  - `"time" / "LocalTime"` - Results in **LocalTime** / Time type (default name: `"time"`)
+  - `"Days"` - Results in **Days** type (default name: `"duration"`)
+  - `"DateRange" / "dates"` - Results in **DateRange** data type
+  - `"Duration[X]"` - Results in a `FiniteDuration` type (default name: `"duration"`)
+    - `X` determines the unit used when storing the duration to the database. Available options are:
+      - `h / hour / hours` - Stores as hours (int)
+      - `m / min / minute / minutes` - Stores as minutes (int)
+      - `s / second / seconds` - Stores as seconds (int)
+      - `ms` - Stores as milliseconds (bigint, default)
+  - `"creation" / "created"` - Results in **Instant** / Timestamp type and is used as the row creation time 
     (default name: `"created"`)
     - Enables creation time -based indexing (if indexed)
     - Indexes by default
-  - **"updated"** - Results in `Instant` / Timestamp type that matches the last time a database row is modified. 
+  - `"updated"` - Results in **Instant** / Timestamp type that matches the last time a database row is modified. 
     Similar to `"created"`, except more suitable for mutable items.
     - Enables time-based indexing (if indexed)
     - Indexed by default
-  - **"deprecation" / "deprecated"** - Results in `Instant` / Timestamp type that is null / None while the item is 
+  - `"deprecation" / "deprecated"` - Results in **Instant** / Timestamp type that is null / None while the item is 
     active (default name: `"deprecatedAfter"`)
     - Enables item deprecation
     - Indexes by default
-  - **"expiration" / "expires"** - Results in `Instant` / Timestamp type that represents item expiration time 
+  - `"expiration" / "expires"` - Results in **Instant** / Timestamp type that represents item expiration time 
     (default name: `"expires"`)
     - Enables (timed) item deprecation
     - Indexes by default
-  - **"value" / "val"** - Results in a generic `Value` type, which are stored in database as json strings
-  - **"Option[X]"** - Results in `Option` / nullable type where the underlying type is determined by what `X` is
-  - **"Vector[X]"** - Results in `Vector` type where the underlying type is determined by what X is
+  - `"value" / "val"` - Results in a generic **Value** type, which are stored in database as json strings
+  - `"Option[X]"` - Results in **Option** / nullable type where the underlying type is determined by what `X` is
+  - `"Vector[X]"` - Results in **Vector** type where the underlying type is determined by what `X` is
     - Vectors are store in the database as json strings
-  - **"Enum[X]"** - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
-    (must be specified in the "enumerations" -property). Uses the enumeration's name as the default property name.
+  - `"Pair[X]"` - Results in **Pair** type (i.e. two values of same type) where the underlying type is determined by what `X` is
+  - `"Span[X]"` - Results in **Span** type that represents a range between two inclusive values
+    - `X` determines the span endpoint type
+    - If `X` is `Int`, `Double` or `Long`, uses **NumericSpan**
+  - `"Enum[X]"` - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
+    (must be specified in the `"enumerations"` -property). Uses the enumeration's name as the default property name.
     - Can be wrapped in option
-  - Any custom data type alias - Results in that custom data type being used
-  - If omitted or empty, defaults to `Int` for references and `String` if the `"length"` property is present
-- **"index" / "indexed": Boolean (optional)** - Set to true if you want to force indexing and false if you want 
+  - **Any custom data type alias** - Results in that custom data type being used
+  - If omitted or empty, defaults to `Int`, `String` if the `"length"` property is present
+    - Alternatively, the parser may interpret the property type based on the property name
+- `"index" / "indexed": Boolean (optional)` - Set to true if you want to force indexing and false if you want 
   to disable it
   - Omit or leave as null if you want the indexing to be determined by the data type
   - References will always create an index, regardless of this value
-- **"length": Int (optional)** - Determines maximum text length if `String` type is used
+- `"length": Int (optional)` - Determines maximum text length if `String` type is used
   - Also applies to `Int` type, in which case this property limits the number of digits in an integer
-- **"length_rule" / "limit" / "max_length" / "max": String / Int (optional)** - Rule to apply to situations where 
+- `"length_rule" / "limit" / "max_length" / "max": String / Int (optional)` - Rule to apply to situations where 
   the current column maximum length would be exceeded.
   - Available options are:
     - `"throw"` - Throws a runtime error
@@ -235,18 +241,18 @@ Each property object should contain following properties:
     - `"expand to X"` / `"to X"` - Expands the column maximum length until the specified limit `X`
     - `X` - Expands the column maximum length until the specified limit `X`
   - These are only applicable to `String` and `Int` types
-- **"allow_crop" / "crop": Boolean (optional)** - Whether "or crop" should be appended to the specified length rule. 
+- `"allow_crop" / "crop": Boolean (optional)` - Whether "or crop" should be appended to the specified length rule. 
   Default = false.
   - When true, this will make it so that the column is expanded to certain length, 
     but the input will be cropped if the length would exceed the specified limit.
-- **"default" / "def": Code (optional)** - The default value assigned for this property in the data model
+- `"default" / "def": Code (optional)` - The default value assigned for this property in the data model
   - See [Code Object Structure](#code-object-structure) for specifics
   - If empty or omitted, data type -specific default will be used, if there is one
-- **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database
+- `"sql_default" / "sql_def": String (optional)` - The default value assigned for this property in the database
   - If empty or omitted, data type -specific default will be used, if there is one. 
     - A specified default (code) value may also be used, provided it doesn't use any references and is a simple value 
       (such as a string literal, integer or a boolean value)
-- **"doc": String (optional)** - Description of this property (used in documentation)
+- `"doc": String (optional)` - Description of this property (used in documentation)
 
 ##### Multi-Column Properties
 There are certain situations where you want to use a data type that's represented using two or more columns within the 

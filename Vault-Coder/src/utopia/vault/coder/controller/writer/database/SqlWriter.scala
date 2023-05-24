@@ -9,7 +9,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, DbProperty, VaultProjectSetup}
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text}
-import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue}
+import utopia.vault.coder.model.datatype.StandardPropertyType.{ClassReference, EnumValue}
 import utopia.coder.model.enumeration.NameContext.DatabaseName
 
 import java.io.PrintWriter
