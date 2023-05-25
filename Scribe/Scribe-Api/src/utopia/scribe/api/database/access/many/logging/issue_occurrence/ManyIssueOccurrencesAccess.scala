@@ -2,13 +2,14 @@ package utopia.scribe.api.database.access.many.logging.issue_occurrence
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.ChronoRowFactoryView
+import utopia.vault.nosql.view.{ChronoRowFactoryView, FilterableView}
 import utopia.vault.sql.Condition
 
 import java.time.Instant
@@ -31,8 +32,7 @@ object ManyIssueOccurrencesAccess
   * @since 22.05.2023, v0.1
   */
 trait ManyIssueOccurrencesAccess 
-	extends ManyRowModelAccess[IssueOccurrence] 
-		with ChronoRowFactoryView[IssueOccurrence, ManyIssueOccurrencesAccess] with Indexed
+	extends ManyRowModelAccess[IssueOccurrence] with FilterableView[ManyIssueOccurrencesAccess] with Indexed
 {
 	// COMPUTED	--------------------
 	
@@ -48,10 +48,9 @@ trait ManyIssueOccurrencesAccess
 		pullColumn(model.errorMessagesColumn).map { v => v.getString }
 	
 	/**
-	  * creation times of the accessible issue occurrences
+	  * counts of the accessible issue occurrences
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def counts(implicit connection: Connection) = pullColumn(model.countColumn).map { v => v.getInt }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -81,12 +80,11 @@ trait ManyIssueOccurrencesAccess
 	def caseIds_=(newCaseId: Int)(implicit connection: Connection) = putColumn(model.caseIdColumn, newCaseId)
 	
 	/**
-	  * Updates the creation times of the targeted issue occurrences
-	  * @param newCreated A new created to assign
+	  * Updates the counts of the targeted issue occurrences
+	  * @param newCount A new count to assign
 	  * @return Whether any issue occurrence was affected
 	  */
-	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+	def counts_=(newCount: Int)(implicit connection: Connection) = putColumn(model.countColumn, newCount)
 	
 	/**
 	  * Updates the error messages of the targeted issue occurrences
@@ -94,6 +92,7 @@ trait ManyIssueOccurrencesAccess
 	  * @return Whether any issue occurrence was affected
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
-		putColumn(model.errorMessagesColumn, (newErrorMessages.map { v => v }: Value).toJson)
+		putColumn(model.errorMessagesColumn, 
+			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map { v => v }: Value).toJson): Value; case None => Value.empty })
 }
 

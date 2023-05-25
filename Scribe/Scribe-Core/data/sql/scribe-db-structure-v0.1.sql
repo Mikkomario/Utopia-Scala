@@ -72,16 +72,20 @@ CREATE TABLE `issue_variant`(
 	CONSTRAINT iv_er_error_ref_fk FOREIGN KEY iv_er_error_ref_idx (error_id) REFERENCES `error_record`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Represents a specific occurrence of a recorded issue
--- case_id:        Id of the issue variant that occurred
--- error_messages: Error messages listed in the stack trace
--- created:        Time when the issue occurred or was recorded
+-- Represents one or more specific occurrences of a recorded issue
+-- case_id:          Id of the issue variant that occurred
+-- error_messages:   Error messages listed in the stack trace.
+-- 		If multiple occurrences are represented, contains data from the latest occurrence.
+-- count:            Number of issue occurrences represented by this entry
+-- occurrence period (first_occurrence, last_occurrence): The first and last time this set of issues occurred
 CREATE TABLE `issue_occurrence`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`case_id` INT NOT NULL, 
-	`error_messages` VARCHAR(255), 
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX io_created_idx (`created`), 
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`case_id` INT NOT NULL,
+	`error_messages` VARCHAR(255),
+	`count` INT NOT NULL DEFAULT 1,
+	`first_occurrence` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`last_occurrence` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	INDEX io_combo_1_idx (last_occurrence, first_occurrence),
 	CONSTRAINT io_iv_case_ref_fk FOREIGN KEY io_iv_case_ref_idx (case_id) REFERENCES `issue_variant`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

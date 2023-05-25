@@ -72,10 +72,11 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   * @param storeDuration Duration how long this issue was stored locally before sending it to the server.
   *                      If multiple issues are represented, contains a range of durations from
   *                      the minimum to the maximum.
+  *                      Default = Zero
   */
-case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: String,
-                       error: Option[RecordableError], message: String, storeDuration: Span[FiniteDuration],
-                       instances: Int)
+case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: String = "",
+                       error: Option[RecordableError] = None, message: String = "",
+                       storeDuration: Span[FiniteDuration] = Span.singleValue(Duration.Zero), instances: Int = 1)
 	extends ModelConvertible with ApproxSelfEquals[ClientIssue]
 {
 	// IMPLEMENTED  ---------------------

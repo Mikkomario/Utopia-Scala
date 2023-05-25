@@ -1,5 +1,7 @@
 package utopia.flow.collection.immutable.range
 
+import utopia.flow.collection.immutable.Pair
+
 object Span
 {
 	// OTHER    -------------------------
@@ -12,6 +14,13 @@ object Span
 	  * @return A new span that covers the area from 'start' to 'end'
 	  */
 	def apply[P](start: P, end: P)(implicit ordering: Ordering[P]): Span[P] = _Span[P](start, end)
+	/**
+	  * @param ends Start and end point (inclusive)
+	  * @param ordering Implicit ordering to apply
+	  * @tparam P Type or points covered by this span
+	  * @return A new span that covers the area between the specified endpoints*
+	  */
+	def apply[P](ends: Pair[P])(implicit ordering: Ordering[P]): Span[P] = apply(ends.first, ends.second)
 	
 	/**
 	  * @param value The singular value to wrap

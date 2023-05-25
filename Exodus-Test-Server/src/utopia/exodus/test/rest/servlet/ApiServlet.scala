@@ -8,9 +8,8 @@ import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.nexus.http.{Path, ServerSettings}
 import utopia.nexus.rest.RequestHandler
@@ -42,7 +41,7 @@ class ApiServlet extends LogicWrappingServlet
 	
 	
 	private implicit val logger: Logger = SysErrLogger
-	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server").executionContext
+	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server")
 	private implicit val connectionPool: ConnectionPool = new ConnectionPool()
 	private implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	private implicit val jsonParser: JsonParser = JsonBunny

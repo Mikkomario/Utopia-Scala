@@ -3,13 +3,15 @@ package utopia.scribe.api.database.access.single.logging.issue_occurrence
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
+import utopia.vault.nosql.access.single.model.{SingleChronoRowModelAccess, SingleRowModelAccess}
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
 import java.time.Instant
@@ -41,7 +43,7 @@ object UniqueIssueOccurrenceAccess
   * @since 22.05.2023, v0.1
   */
 trait UniqueIssueOccurrenceAccess 
-	extends SingleChronoRowModelAccess[IssueOccurrence, UniqueIssueOccurrenceAccess] 
+	extends SingleRowModelAccess[IssueOccurrence] with FilterableView[UniqueIssueOccurrenceAccess]
 		with DistinctModelAccess[IssueOccurrence, Option[IssueOccurrence], Value] with Indexed
 {
 	// COMPUTED	--------------------
@@ -52,7 +54,9 @@ trait UniqueIssueOccurrenceAccess
 	def caseId(implicit connection: Connection) = pullColumn(model.caseIdColumn).int
 	
 	/**
-	  * Error messages listed in the stack trace. None if no issue occurrence (or value) was found.
+	  * Error messages listed in the stack trace. 
+	  * If multiple occurrences are represented, 
+	  * contains data from the latest occurrence.. None if no issue occurrence (or value) was found.
 	  */
 	def errorMessages(implicit connection: Connection) = 
 		pullColumn(model.errorMessagesColumn).notEmpty match {
@@ -60,9 +64,9 @@ trait UniqueIssueOccurrenceAccess
 			 case None => Vector.empty }
 	
 	/**
-	  * Time when the issue occurred or was recorded. None if no issue occurrence (or value) was found.
+	  * Number of issue occurrences represented by this entry. None if no issue occurrence (or value) was found.
 	  */
-	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
+	def count(implicit connection: Connection) = pullColumn(model.countColumn).int
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
@@ -92,12 +96,11 @@ trait UniqueIssueOccurrenceAccess
 	def caseId_=(newCaseId: Int)(implicit connection: Connection) = putColumn(model.caseIdColumn, newCaseId)
 	
 	/**
-	  * Updates the creation times of the targeted issue occurrences
-	  * @param newCreated A new created to assign
+	  * Updates the counts of the targeted issue occurrences
+	  * @param newCount A new count to assign
 	  * @return Whether any issue occurrence was affected
 	  */
-	def created_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+	def count_=(newCount: Int)(implicit connection: Connection) = putColumn(model.countColumn, newCount)
 	
 	/**
 	  * Updates the error messages of the targeted issue occurrences
@@ -105,6 +108,7 @@ trait UniqueIssueOccurrenceAccess
 	  * @return Whether any issue occurrence was affected
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
-		putColumn(model.errorMessagesColumn, (newErrorMessages.map { v => v }: Value).toJson)
+		putColumn(model.errorMessagesColumn, 
+			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map { v => v }: Value).toJson): Value; case None => Value.empty })
 }
 

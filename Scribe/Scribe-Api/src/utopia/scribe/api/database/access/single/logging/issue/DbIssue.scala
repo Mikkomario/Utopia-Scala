@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.access.single.logging.issue
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.End.{First, Last}
 import utopia.flow.time.Now
 import utopia.flow.util.StringExtensions._
@@ -64,18 +65,20 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @param severity The severity of this issue (default = Unrecoverable)
 	  * @param variantDetails Some details about this issue variant (optional).
 	  *                       Please note that different details result in different variants being stored.
-	  * @param time Time when this issue last occurred (default = Now)
+	  * @param occurrences The number of specific occurrences that are represented here (default = 1)
+	  * @param timeRange The time range within which this issue occurred (default = Now)
 	  * @param connection Implicit DB connection
 	  * @param version Applicable version (implicit)
 	  * @return Stored issue, including pulled or inserted information.
 	  *         Only contains information about this specific variant and occurrence.
 	  */
 	def store(context: String, error: Option[RecordableError] = None, message: String = "",
-	          severity: Severity = Unrecoverable, variantDetails: String = "", time: Instant = Now)
+	          severity: Severity = Unrecoverable, variantDetails: String = "", occurrences: Int = 1,
+	          timeRange: Span[Instant] = Span.singleValue(Now))
 	         (implicit connection: Connection, version: Version): DetailedIssue =
 	{
 		// Inserts or finds the matching issue
-		val issueResult = store(IssueData(context, severity, time))
+		val issueResult = store(IssueData(context, severity, timeRange.start))
 		// Extracts the stack trace elements from the error, if applicable,
 		// and saves them (and the error) to the database
 		val errorStoreResult = error.map { DbErrorRecord.store(_) }
@@ -89,7 +92,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 				}
 			case Left(newIssue) => Left(newIssue -> errorStoreResult.map { _.either })
 		}).eitherAndSide
-		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails, time)
+		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails, timeRange.start)
 		val variant = (variantDependenciesType match {
 			// Case: There is a chance that the variant already exists => Checks for duplicates before inserting
 			case Last => DbIssueVariant.findMatching(variantData).toRight { variantModel.insert(variantData) }
@@ -108,7 +111,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 			case None => Vector(message).filter { _.nonEmpty }
 		}
 		// Stores an issue occurrence
-		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages, time))
+		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages, occurrences, timeRange))
 		// Combines the data together and returns
 		DetailedIssue(issue, Vector(DetailedIssueVariant(variant, storedError, Vector(occurrence))))
 	}
@@ -121,8 +124,8 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  */
 	// FIXME: Store multiple instances/occurrences at once
 	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue =
-		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails,
-			Now - issue.storeDuration.start)(connection, issue.version)
+		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, issue.instances,
+			issue.storeDuration.map { Now - _ })(connection, issue.version)
 	/**
 	  * Stores an issue to the database. Avoids inserting duplicate information.
 	  * @param data The data to store, if new

@@ -45,8 +45,12 @@ trait Logger
 	 * @param error Error to log
 	 * @param message Message to log along with the error
 	 */
-	def apply(error: Throwable, message: String = ""): Unit = apply(Some(error), message)
-	
+	def apply(error: Throwable, message: String): Unit = apply(Some(error), message)
+	/**
+	  * Logs an error
+	  * @param error The error to log
+	  */
+	def apply(error: Throwable): Unit = apply(Some(error), "")
 	/**
 	 * Logs a (warning) message
 	 * @param message Message to log

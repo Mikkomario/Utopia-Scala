@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.model.logging
 
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.NotEmpty
@@ -31,9 +32,19 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	val errorMessagesAttName = "errorMessages"
 	
 	/**
-	  * Name of the property that contains issue occurrence created
+	  * Name of the property that contains issue occurrence count
 	  */
-	val createdAttName = "created"
+	val countAttName = "count"
+	
+	/**
+	  * Name of the property that contains issue occurrence earliest
+	  */
+	val earliestAttName = "firstOccurrence"
+	
+	/**
+	  * Name of the property that contains issue occurrence latest
+	  */
+	val latestAttName = "lastOccurrence"
 	
 	
 	// COMPUTED	--------------------
@@ -49,9 +60,19 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	def errorMessagesColumn = table(errorMessagesAttName)
 	
 	/**
-	  * Column that contains issue occurrence created
+	  * Column that contains issue occurrence count
 	  */
-	def createdColumn = table(createdAttName)
+	def countColumn = table(countAttName)
+	
+	/**
+	  * Column that contains issue occurrence earliest
+	  */
+	def earliestColumn = table(earliestAttName)
+	
+	/**
+	  * Column that contains issue occurrence latest
+	  */
+	def latestColumn = table(latestAttName)
 	
 	/**
 	  * The factory object used by this model type
@@ -64,7 +85,8 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	override def table = factory.table
 	
 	override def apply(data: IssueOccurrenceData) = 
-		apply(None, Some(data.caseId), data.errorMessages, Some(data.created))
+		apply(None, Some(data.caseId), data.errorMessages, Some(data.count), 
+			Some(data.occurrencePeriod.start), Some(data.occurrencePeriod.end))
 	
 	override protected def complete(id: Value, data: IssueOccurrenceData) = IssueOccurrence(id.getInt, data)
 	
@@ -78,13 +100,14 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	def withCaseId(caseId: Int) = apply(caseId = Some(caseId))
 	
 	/**
-	  * @param created Time when the issue occurred or was recorded
-	  * @return A model containing only the specified created
+	  * @param count Number of issue occurrences represented by this entry
+	  * @return A model containing only the specified count
 	  */
-	def withCreated(created: Instant) = apply(created = Some(created))
+	def withCount(count: Int) = apply(count = Some(count))
 	
 	/**
-	  * @param errorMessages Error messages listed in the stack trace
+	  * @param errorMessages Error messages listed in the stack trace. 
+	  * If multiple occurrences are represented, contains data from the latest occurrence.
 	  * @return A model containing only the specified error messages
 	  */
 	def withErrorMessages(errorMessages: Vector[String]) = apply(errorMessages = errorMessages)
@@ -94,6 +117,13 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	  * @return A model with that id
 	  */
 	def withId(id: Int) = apply(Some(id))
+	
+	/**
+	  * @param occurrencePeriod The first and last time this set of issues occurred
+	  * @return A model containing only the specified occurrence period (sets all 2 values)
+	  */
+	def withOccurrencePeriod(occurrencePeriod: Span[Instant]) = 
+		apply(earliest = Some(occurrencePeriod.start), latest = Some(occurrencePeriod.end))
 }
 
 /**
@@ -103,7 +133,8 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
   * @since 22.05.2023, v0.1
   */
 case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = None, 
-	errorMessages: Vector[String] = Vector.empty, created: Option[Instant] = None) 
+	errorMessages: Vector[String] = Vector.empty, count: Option[Int] = None, 
+	earliest: Option[Instant] = None, latest: Option[Instant] = None) 
 	extends StorableWithFactory[IssueOccurrence]
 {
 	// IMPLEMENTED	--------------------
@@ -112,11 +143,9 @@ case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = No
 	
 	override def valueProperties = {
 		import IssueOccurrenceModel._
-		val messagesValue: Value = NotEmpty(errorMessages) match {
-			case Some(messages) => (messages.map { v => v }: Value).toJson
-			case None => Value.empty
-		}
-		Vector("id" -> id, caseIdAttName -> caseId, errorMessagesAttName -> messagesValue, createdAttName -> created)
+		Vector("id" -> id, caseIdAttName -> caseId, 
+			errorMessagesAttName -> (NotEmpty(errorMessages) match { case Some(v) => (v.map[Value] { v => v }: Value).toJson: Value; case None => Value.empty }),
+			countAttName -> count, earliestAttName -> earliest, latestAttName -> latest)
 	}
 	
 	
@@ -129,15 +158,23 @@ case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = No
 	def withCaseId(caseId: Int) = copy(caseId = Some(caseId))
 	
 	/**
-	  * @param created Time when the issue occurred or was recorded
-	  * @return A new copy of this model with the specified created
+	  * @param count Number of issue occurrences represented by this entry
+	  * @return A new copy of this model with the specified count
 	  */
-	def withCreated(created: Instant) = copy(created = Some(created))
+	def withCount(count: Int) = copy(count = Some(count))
 	
 	/**
-	  * @param errorMessages Error messages listed in the stack trace
+	  * @param errorMessages Error messages listed in the stack trace. 
+	  * If multiple occurrences are represented, contains data from the latest occurrence.
 	  * @return A new copy of this model with the specified error messages
 	  */
 	def withErrorMessages(errorMessages: Vector[String]) = copy(errorMessages = errorMessages)
+	
+	/**
+	  * @param occurrencePeriod The first and last time this set of issues occurred
+	  * @return A new copy of this model with the specified occurrence period (sets all 2 values)
+	  */
+	def withOccurrencePeriod(occurrencePeriod: Span[Instant]) = 
+		copy(earliest = Some(occurrencePeriod.start), latest = Some(occurrencePeriod.end))
 }
 

@@ -10,7 +10,7 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.PostponingProcess
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -38,26 +38,6 @@ object MasterScribe
 	
 	// TODO: Use a more sophisticated logging implementation
 	private implicit val backupLogger: Logger = SysErrLogger
-	/*
-	private lazy val gateway = Gateway(
-		jsonParsers = Vector(JsonBunny, JsonReader),
-		maxConnectionsPerRoute = 1,
-		maxConnectionsTotal = 3,
-		maximumTimeout = Timeout(30.minutes, 30.minutes, 6.hours)
-	)*/
-	
-	/*
-	private object ApiAccess extends Api
-	{
-		override protected implicit def log: Logger = MasterScribe.backupLogger
-		
-		override protected def gateway: Gateway = MasterScribe.gateway
-		override protected def rootPath: String = apiPath
-		override protected def headers: Headers = headersView.value
-		
-		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
-	}
-	 */
 }
 
 /**
@@ -66,8 +46,10 @@ object MasterScribe
   * @author Mikko Hilpinen
   * @since 23.5.2023, v0.1
   */
-class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String, issueBundleDuration: HasEnds[FiniteDuration],
-                   requestStoreLocation: Option[Path], issueDeprecationDurations: Map[Severity, Duration])
+class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String,
+                   issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
+                   requestStoreLocation: Option[Path] = None,
+                   issueDeprecationDurations: Map[Severity, Duration] = Map())
                   (implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES   --------------------------

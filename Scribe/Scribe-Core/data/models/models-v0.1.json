@@ -187,6 +187,7 @@
       {
         "name": "IssueOccurrence",
         "doc": "Represents one or more specific occurrences of a recorded issue",
+        "combo_index": ["latest", "earliest"],
         "props": [
           {
             "name": "caseId",
@@ -201,8 +202,31 @@
             "doc": "Error messages listed in the stack trace. \nIf multiple occurrences are represented, contains data from the latest occurrence."
           },
           {
-            "type": "creation",
-            "doc": "Time when the issue occurred or was recorded"
+            "name": "count",
+            "type": "Int",
+            "default": 1,
+            "doc": "Number of issue occurrences represented by this entry"
+          },
+          {
+            "name": "occurrencePeriod",
+            "type": "Span[Instant]",
+            "doc": "The first and last time this set of issues occurred",
+            "default": {
+              "code": "Span.singleValue[Instant](Now)",
+              "references": ["utopia.flow.collection.immutable.range.Span", "utopia.flow.time.Now"]
+            },
+            "parts": [
+              {
+                "name": "earliest",
+                "column_name": "first_occurrence",
+                "sql_default": "CURRENT_TIMESTAMP"
+              },
+              {
+                "name": "latest",
+                "column_name": "last_occurrence",
+                "sql_default": "CURRENT_TIMESTAMP"
+              }
+            ]
           }
         ]
       }

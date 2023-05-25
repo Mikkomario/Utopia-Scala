@@ -1019,13 +1019,13 @@ object StandardPropertyType
 		// Empty vectors are treated as empty values
 		override def toValueCode(instanceCode: String) = {
 			innerType.toJsonValueCode("v").mapText { itemToValue =>
-				s"NotEmpty($instanceCode) match { case Some(v) => ((v.map { v => $itemToValue }: Value).toJson): Value; case None => Value.empty }"
+				s"NotEmpty($instanceCode) match { case Some(v) => ((v.map[Value] { v => $itemToValue }: Value).toJson): Value; case None => Value.empty }"
 			}.referringTo(Vector(valueConversions, notEmpty, value))
 		}
 		
 		override def toJsonValueCode(instanceCode: String) =
 			innerType.toJsonValueCode("v").mapText { itemToValue =>
-				s"$instanceCode.map { v => $itemToValue }"
+				s"$instanceCode.map[Value] { v => $itemToValue }"
 			}.referringTo(valueConversions)
 		
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {

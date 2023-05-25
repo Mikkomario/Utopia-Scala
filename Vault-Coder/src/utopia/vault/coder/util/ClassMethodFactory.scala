@@ -133,12 +133,10 @@ object ClassMethodFactory
 	                                  (implicit naming: NamingRules) =
 	{
 		// Uses different property names based on whether parsing from json or from a database model
-		val propNames = {
-			if (isFromJson)
-				Vector(prop.jsonPropName)
-			else
-				prop.dbProperties.map { _.modelName }
-		}
-		prop.dataType.fromValueCode(propNames.map { name => s"$modelName(${name.quoted})" })
+		if (isFromJson)
+			prop.dataType.fromJsonValueCode(s"$modelName(${prop.jsonPropName.quoted})")
+		else
+			prop.dataType.fromValueCode(
+				prop.dbProperties.map { _.modelName }.map { name => s"$modelName(${name.quoted})" })
 	}
 }
