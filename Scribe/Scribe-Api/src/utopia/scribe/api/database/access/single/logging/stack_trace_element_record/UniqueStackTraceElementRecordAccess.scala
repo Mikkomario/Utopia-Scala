@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.access.single.logging.stack_trace_element_record
 
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.scribe.api.database.factory.logging.StackTraceElementRecordFactory
@@ -63,9 +64,8 @@ trait UniqueStackTraceElementRecordAccess
 	def lineNumber(implicit connection: Connection) = pullColumn(model.lineNumberColumn).int
 	
 	/**
-	  *
-		Id of the stack trace element that originated this element. I.e. the element directly before this element.
-	  *  None if this is the root element.. None if no stack trace element (or value) was found.
+	  * Id of the stack trace element that originated this element. I.e. the element directly before this element.
+	  *  None if this is the root element. None if no stack trace element (or value) was found.
 	  */
 	def causeId(implicit connection: Connection) = pullColumn(model.causeIdColumn).int
 	
@@ -75,6 +75,15 @@ trait UniqueStackTraceElementRecordAccess
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = StackTraceElementRecordModel
+	
+	/**
+	  * @param c Implicit DB connection
+	  * @return An iterator that returns this stack, starting from this element
+	  */
+	def topToBottomIterator(implicit c: Connection) =
+		OptionsIterator.iterate(pull) { stack =>
+			stack.causeId.flatMap { DbStackTraceElementRecord(_).pull }
+		}
 	
 	
 	// IMPLEMENTED	--------------------

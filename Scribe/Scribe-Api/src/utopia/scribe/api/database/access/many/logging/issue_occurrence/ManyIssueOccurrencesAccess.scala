@@ -77,6 +77,23 @@ trait ManyIssueOccurrencesAccess
 	  * @return Access to instance occurrences after that time threshold
 	  */
 	def since(threshold: Instant) = filter(model.latestColumn > threshold)
+	/**
+	  * @param threshold A time threshold
+	  * @param includePartialRanges Whether those occurrences should be included,
+	  *                             where some but not all of them occurred before the specified time threshold
+	  *                             (default = false)
+	  * @return Access to instance occurrences before the specified time threshold
+	  */
+	def before(threshold: Instant, includePartialRanges: Boolean = false) = {
+		val condition = if (includePartialRanges) model.earliestColumn < threshold else model.latestColumn < threshold
+		filter(condition)
+	}
+	
+	/**
+	  * @param variantIds Ids of the targeted issue variants
+	  * @return Access to the occurrences of those variants
+	  */
+	def forVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
 	
 	/**
 	  * Updates the case ids of the targeted issue occurrences

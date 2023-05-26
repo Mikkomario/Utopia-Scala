@@ -122,9 +122,18 @@
       },
       {
         "name": "Issue",
-        "has_combos": true,
-        "combo_index": ["severity", "context"],
         "doc": "Represents a type of problem or issue that may occur during a program's run",
+        "has_combos": true,
+        "combos": [
+          {
+            "name": "VaryingIssue",
+            "children": "IssueVariant",
+            "child_alias": "variant",
+            "children_alias": "variants",
+            "doc": "Combines an issue with its different variants"
+          }
+        ],
+        "combo_index": ["severity", "context"],
         "props": [
           {
             "name": "context",

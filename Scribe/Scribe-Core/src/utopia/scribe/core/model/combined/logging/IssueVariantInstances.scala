@@ -1,6 +1,7 @@
 package utopia.scribe.core.model.combined.logging
 
 import utopia.flow.operator.CombinedOrdering
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.Extender
 import utopia.scribe.core.model.partial.logging.IssueVariantData
 import utopia.scribe.core.model.stored.logging.{IssueOccurrence, IssueVariant}
@@ -46,6 +47,20 @@ case class IssueVariantInstances(variant: IssueVariant, occurrences: Vector[Issu
 	  * @return Total number of issue occurrences represented by this instance
 	  */
 	def numberOfOccurrences = occurrences.iterator.map { _.count }.sum
+	/**
+	  * @return The average time interval between the recorded occurrences
+	  */
+	def averageOccurrenceInterval = {
+		val count = numberOfOccurrences
+		if (count > 1)
+			earliestOccurrence.flatMap { earliest =>
+				latestOccurrence.map { latest =>
+					(latest.lastOccurrence - earliest.firstOccurrence) / count
+				}
+			}
+		else
+			None
+	}
 	
 	
 	// IMPLEMENTED	--------------------

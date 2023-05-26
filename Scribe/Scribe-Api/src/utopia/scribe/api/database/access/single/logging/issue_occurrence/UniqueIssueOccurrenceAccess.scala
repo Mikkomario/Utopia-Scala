@@ -8,13 +8,11 @@ import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.{SingleChronoRowModelAccess, SingleRowModelAccess}
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-
-import java.time.Instant
 
 object UniqueIssueOccurrenceAccess
 {
@@ -109,6 +107,6 @@ trait UniqueIssueOccurrenceAccess
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
 		putColumn(model.errorMessagesColumn, 
-			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map { v => v }: Value).toJson): Value; case None => Value.empty })
+			NotEmpty(newErrorMessages) match { case Some(v) => (v.map { v => v }: Value).toJson: Value; case None => Value.empty })
 }
 

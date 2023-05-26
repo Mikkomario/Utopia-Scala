@@ -10,4 +10,3 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   */
 case class DbSingleErrorRecord(id: Int) 
 	extends UniqueErrorRecordAccess with SingleIntIdModelAccess[ErrorRecord]
-

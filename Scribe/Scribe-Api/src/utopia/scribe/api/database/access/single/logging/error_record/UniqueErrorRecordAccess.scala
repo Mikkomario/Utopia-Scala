@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.access.single.logging.error_record
 
+import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.scribe.api.database.factory.logging.ErrorRecordFactory
@@ -45,8 +46,7 @@ trait UniqueErrorRecordAccess
 	// COMPUTED	--------------------
 	
 	/**
-	  * 
-		The name of this exception type. Typically the exception class name.. None if no error record (or value)
+	  * The name of this exception type. Typically the exception class name.. None if no error record (or value)
 	  *  was found.
 	  */
 	def exceptionType(implicit connection: Connection) = pullColumn(model.exceptionTypeColumn).getString
@@ -58,8 +58,7 @@ trait UniqueErrorRecordAccess
 	def stackTraceId(implicit connection: Connection) = pullColumn(model.stackTraceIdColumn).int
 	
 	/**
-	  * 
-		Id of the underlying error that caused this error/failure. None if this error represents the root problem..
+	  * Id of the underlying error that caused this error/failure. None if this error represents the root problem..
 	  *  None if no error record (or value) was found.
 	  */
 	def causeId(implicit connection: Connection) = pullColumn(model.causeIdColumn).int
@@ -70,6 +69,15 @@ trait UniqueErrorRecordAccess
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = ErrorRecordModel
+	
+	/**
+	  * @param c Implicit DB connection - Should be kept open during the whole iteration
+	  * @return An iterator that returns this error and all the underlying errors
+	  */
+	def topToBottomIterator(implicit c: Connection) =
+		OptionsIterator.iterate(pull) { error =>
+			error.causeId.flatMap { DbErrorRecord(_).pull }
+		}
 	
 	
 	// IMPLEMENTED	--------------------

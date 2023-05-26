@@ -50,6 +50,16 @@ case class IssueInstances(issue: Issue, variants: Vector[IssueVariantInstances] 
 	  * @return The DB id of this issue
 	  */
 	def id = issue.id
+	/**
+	  * @return Ids of the included variants of this issue
+	  */
+	def variantIds = variants.map { _.id }
+	
+	/**
+	  * @return The latest version in which this issue appeared.
+	  *         None if there are no variants recorded.
+	  */
+	def latestVersion = variants.iterator.map { _.version }.maxOption
 	
 	/**
 	  * @return Whether there are recorded occurrences for this issue
@@ -81,6 +91,11 @@ case class IssueInstances(issue: Issue, variants: Vector[IssueVariantInstances] 
 		else
 			None
 	}
+	
+	/**
+	  * @return Copy of this model without issue occurrence information
+	  */
+	def withoutOccurrences = VaryingIssue(issue, variants.map { _.variant })
 	
 	
 	// IMPLEMENTED  ------------------
