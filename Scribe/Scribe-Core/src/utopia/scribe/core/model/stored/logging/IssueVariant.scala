@@ -6,6 +6,14 @@ import utopia.scribe.core.model.partial.logging.IssueVariantData
 
 object IssueVariant extends StoredFromModelFactory[IssueVariant, IssueVariantData]
 {
+	// ATTRIBUTES   --------------------
+	
+	/**
+	  * Ordering that orders by variant version and creation time
+	  */
+	implicit val ordering: Ordering[IssueVariant] = Ordering.by { _.data }
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def dataFactory = IssueVariantData

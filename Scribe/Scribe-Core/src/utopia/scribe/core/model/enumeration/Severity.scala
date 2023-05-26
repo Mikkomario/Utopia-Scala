@@ -4,13 +4,14 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.SelfComparable
 
 /**
   * Represents the level of severity associated with some problem or error situation
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-sealed trait Severity extends ValueConvertible
+sealed trait Severity extends ValueConvertible with SelfComparable[Severity]
 {
 	// ABSTRACT	--------------------
 	
@@ -22,7 +23,11 @@ sealed trait Severity extends ValueConvertible
 	
 	// IMPLEMENTED	--------------------
 	
+	override def self = this
+	
 	override def toValue = level
+	
+	override def compareTo(o: Severity) = level - o.level
 }
 
 object Severity

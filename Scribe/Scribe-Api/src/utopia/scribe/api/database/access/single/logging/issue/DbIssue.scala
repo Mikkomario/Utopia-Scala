@@ -13,6 +13,7 @@ import utopia.scribe.api.database.model.logging.{IssueModel, IssueOccurrenceMode
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.combined.logging.{DetailedIssue, DetailedIssueVariant}
 import utopia.scribe.core.model.enumeration.Severity
+import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
 import utopia.scribe.core.model.partial.logging.{IssueData, IssueOccurrenceData, IssueVariantData}
 import utopia.scribe.core.model.post.logging.ClientIssue
 import utopia.scribe.core.model.stored.logging.Issue
@@ -72,9 +73,9 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @return Stored issue, including pulled or inserted information.
 	  * Only contains information about this specific variant and occurrence.
 	  */
-	def store(context: String, error: Option[RecordableError] = None, message: String = "", 
-		severity: Severity = Unrecoverable, variantDetails: String = "", occurrences: Int = 1, 
-		timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection, 
+	def store(context: String, error: Option[RecordableError] = None, message: String = "",
+	          severity: Severity = Unrecoverable, variantDetails: String = "", occurrences: Int = 1,
+	          timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection,
 		version: Version): DetailedIssue = {
 		// Inserts or finds the matching issue
 		val issueResult = store(IssueData(context, severity, timeRange.start))
@@ -94,8 +95,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails, 
 			timeRange.start)
 		val variant = (variantDependenciesType match {
-			// 
-				Case: There is a chance that the variant already exists => Checks for duplicates before inserting
+			// Case: There is a chance that the variant already exists => Checks for duplicates before inserting
 			case Last => DbIssueVariant.findMatching(variantData).toRight { variantModel.insert(variantData) }
 			// Case: It's impossible that the variant would already exist => Inserts a new variant
 			case First => Left(variantModel.insert(variantData))

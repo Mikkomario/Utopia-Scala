@@ -7,6 +7,7 @@ import utopia.flow.generic.model.mutable.DataType.InstantType
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
@@ -16,6 +17,15 @@ import java.time.Instant
 object IssueData extends FromModelFactoryWithSchema[IssueData]
 {
 	// ATTRIBUTES	--------------------
+	
+	/**
+	  * Ordering that presents the least severe issues first
+	  */
+	implicit val ordering: Ordering[IssueData] = CombinedOrdering(
+		Ordering.by { i: IssueData => i.severity },
+		Ordering.by { i: IssueData => i.context },
+		Ordering.by { i: IssueData => i.created }
+	)
 	
 	override lazy val schema = 
 		ModelDeclaration(Vector(PropertyDeclaration("context", StringType), PropertyDeclaration("severity", 

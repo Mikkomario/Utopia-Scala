@@ -14,6 +14,11 @@ object IssueOccurrenceData extends FromModelFactoryWithSchema[IssueOccurrenceDat
 {
 	// ATTRIBUTES	--------------------
 	
+	/**
+	  * Ordering that lists issue occurrences by their latest occurrence time (ascending)
+	  */
+	implicit val chronoOrdering: Ordering[IssueOccurrenceData] = Ordering.by { _.lastOccurrence }
+	
 	override lazy val schema = ModelDeclaration(Vector(
 		PropertyDeclaration("caseId", IntType, Vector("case_id")),
 		PropertyDeclaration("errorMessages", VectorType, Vector("error_messages"), isOptional = true),
@@ -47,6 +52,18 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Vector[String] = Vect
 	occurrencePeriod: Span[Instant] = Span.singleValue(Now)) 
 	extends ModelConvertible
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return The first issue occurrence time covered by this instance
+	  */
+	def firstOccurrence = occurrencePeriod.start
+	/**
+	  * @return The last issue occurrence time covered by this instance
+	  */
+	def lastOccurrence = occurrencePeriod.end
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 

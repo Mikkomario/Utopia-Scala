@@ -47,6 +47,23 @@ trait ManyIssuesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wi
 	// OTHER	--------------------
 	
 	/**
+	  * @param minSeverity Smallest included issue severity
+	  * @return Access to issues that are of the specified severity level or higher
+	  */
+	def withSeverityAtLeast(minSeverity: Severity) = {
+		if (minSeverity == Severity.min)
+			self
+		else
+			filter(model.severityColumn >= minSeverity)
+	}
+	
+	/**
+	  * @param threshold A time threshold
+	  * @return Access to issues that appeared since the specified time threshold
+	  */
+	def appearedSince(threshold: Instant) = filter(model.createdColumn > threshold)
+	
+	/**
 	  * Updates the contexts of the targeted issues
 	  * @param newContext A new context to assign
 	  * @return Whether any issue was affected

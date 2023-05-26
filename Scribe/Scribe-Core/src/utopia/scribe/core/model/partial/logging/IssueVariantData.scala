@@ -8,6 +8,7 @@ import utopia.flow.generic.model.mutable.DataType.InstantType
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.flow.util.Version
 
@@ -16,6 +17,14 @@ import java.time.Instant
 object IssueVariantData extends FromModelFactoryWithSchema[IssueVariantData]
 {
 	// ATTRIBUTES	--------------------
+	
+	/**
+	  * Ordering that sorts by software version (primarily) and by variant creation time (secondarily)
+	  */
+	implicit val ord: Ordering[IssueVariantData] = CombinedOrdering(
+		Ordering.by { v: IssueVariantData => v.version },
+		Ordering.by { v: IssueVariantData => v.created }
+	)
 	
 	override lazy val schema = 
 		ModelDeclaration(Vector(PropertyDeclaration("issueId", IntType, Vector("issue_id")), 

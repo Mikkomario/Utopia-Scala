@@ -5,6 +5,14 @@ import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 
 object IssueOccurrence extends StoredFromModelFactory[IssueOccurrence, IssueOccurrenceData]
 {
+	// ATTRIBUTES   --------------------
+	
+	/**
+	  * Ordering that orders based on last occurrence time
+	  */
+	implicit val chronoOrdering: Ordering[IssueOccurrence] = Ordering.by { _.data }
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def dataFactory = IssueOccurrenceData

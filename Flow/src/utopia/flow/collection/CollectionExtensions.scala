@@ -1145,6 +1145,12 @@ object CollectionExtensions
 	implicit class RichSeqLike[A, CC[_], Repr](val seq: SeqOps[A, CC, Repr]) extends AnyVal
 	{
 		/**
+		  * @param ord Implicit ordering to use after it has been reversed
+		  * @return A copy of this collection that's implicitly ordered, but in reverse
+		  */
+		def reverseSorted(implicit ord: Ordering[A]) = seq.sorted(ord.reverse)
+		
+		/**
 		  * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
 		  *         collection, except the first and the last item. The first item will be presented once as the first
 		  *         argument. The last item will be presented once as the second argument. If this sequence
