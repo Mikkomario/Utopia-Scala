@@ -10,6 +10,8 @@ import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelT
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.{Mutate, Version}
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
@@ -90,6 +92,16 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 		"variantDetails" -> variantDetails, "error" -> error, "message" -> message,
 		"storeDurations" -> storeDuration.toPair, "instances" -> instances
 	)
+	
+	override def toString = {
+		val header = s"${storeDuration.toPair.map { d=> (Now - d).toLocalDateTime }}: $context${
+			variantDetails.mapIfNotEmpty { d => s"/$d" }} ($version)${message.mapIfNotEmpty { msg => s": $msg" }}${
+			if (instances > 1) s" ($instances instances)" else "" }"
+		error match {
+			case Some(error) => s"$header\n$error"
+			case None => header
+		}
+	}
 	
 	
 	// OTHER    ------------------------

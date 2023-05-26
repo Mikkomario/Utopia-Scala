@@ -1,18 +1,10 @@
 package utopia.scribe.api.database.access.single.logging.issue_variant
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.Version
 import utopia.scribe.api.database.factory.logging.IssueVariantFactory
-import utopia.scribe.api.database.model.logging.IssueVariantModel
 import utopia.scribe.core.model.stored.logging.IssueVariant
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
-import utopia.vault.nosql.access.template.model.DistinctModelAccess
-import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Condition
-
-import java.time.Instant
 
 object UniqueIssueVariantAccess
 {
@@ -41,7 +33,7 @@ object UniqueIssueVariantAccess
   * @since 22.05.2023, v0.1
   */
 trait UniqueIssueVariantAccess 
-	extends UniqueIssueVariantAccessLike[IssueVariant]
+	extends UniqueIssueVariantAccessLike[IssueVariant] 
 		with SingleChronoRowModelAccess[IssueVariant, UniqueIssueVariantAccess]
 {
 	// IMPLEMENTED	--------------------

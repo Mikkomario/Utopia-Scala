@@ -32,21 +32,13 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
-object MasterScribe
-{
-	// ATTRIBUTES   --------------------------
-	
-	// TODO: Use a more sophisticated logging implementation
-	private implicit val backupLogger: Logger = SysErrLogger
-}
-
 /**
   * Provides an interface for logging errors and other issues.
   * Sends the collected data to the server, periodically.
   * @author Mikko Hilpinen
   * @since 23.5.2023, v0.1
   */
-class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String,
+class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String, backupLogger: Logger = SysErrLogger,
                    issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
                    requestStoreLocation: Option[Path] = None,
                    issueDeprecationDurations: Map[Severity, Duration] = Map())
@@ -54,9 +46,8 @@ class MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String,
 {
 	// ATTRIBUTES   --------------------------
 	
-	import MasterScribe.backupLogger
-	
-	implicit val jsonParser: JsonParser = JsonBunny
+	private implicit val log: Logger = backupLogger
+	private implicit val jsonParser: JsonParser = JsonBunny
 	
 	private val pendingIssuesPointer = VolatileList[(ClientIssue, Instant)]()
 	

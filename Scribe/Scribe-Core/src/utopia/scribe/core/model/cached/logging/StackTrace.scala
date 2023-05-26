@@ -9,6 +9,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDec
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.util.NotEmpty
+import utopia.flow.view.immutable.MutatingOnce
 
 import scala.util.Try
 
@@ -86,6 +87,28 @@ case class StackTrace(className: String, methodName: String, lineNumber: Int, ca
 	// COMPUTED -------------------------
 	
 	/**
+	  * @return A string that represents this individual stack trace element
+	  */
+	def logLine = s"$className.$methodName (line $lineNumber)"
+	/**
+	  * @return An iterator that returns one line for each stack trace element in this stack
+	  */
+	def logLinesIterator = {
+		// Groups by class, then by method (consecutive only)
+		topToBottomIterator.groupBy { _.className }.flatMap { case (className, elements) =>
+			val prefix = MutatingOnce(className)("\t")
+			elements.iterator.groupBy { _.methodName }.map { case (methodName, elements) =>
+				// Groups multiple line number instances to a single set
+				val lineNumberStr = elements.oneOrMany match {
+					case Left(element) => element.lineNumber.toString
+					case Right(elements) => s"[${elements.map { _.lineNumber }.mkString(", ")}]"
+				}
+				s"${prefix.value}.$methodName: $lineNumberStr"
+			}
+		}
+	}
+	
+	/**
 	  * @return An iterator that returns stack trace (elements) from the top element (this) to the bottom element.
 	  *         Contains at least 1 item.
 	  */
@@ -104,6 +127,8 @@ case class StackTrace(className: String, methodName: String, lineNumber: Int, ca
 	
 	
 	// IMPLEMENTED  --------------------
+	
+	override def toString = logLinesIterator.mkString("\n")
 	
 	override def toModel: Model =
 		Model.from("class" -> className, "method" -> methodName, "line" -> lineNumber, "cause" -> cause)

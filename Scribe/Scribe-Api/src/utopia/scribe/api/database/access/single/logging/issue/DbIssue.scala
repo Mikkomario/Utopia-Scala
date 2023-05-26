@@ -13,7 +13,6 @@ import utopia.scribe.api.database.model.logging.{IssueModel, IssueOccurrenceMode
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.combined.logging.{DetailedIssue, DetailedIssueVariant}
 import utopia.scribe.core.model.enumeration.Severity
-import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
 import utopia.scribe.core.model.partial.logging.{IssueData, IssueOccurrenceData, IssueVariantData}
 import utopia.scribe.core.model.post.logging.ClientIssue
 import utopia.scribe.core.model.stored.logging.Issue
@@ -40,6 +39,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	protected def model = IssueModel
 	
 	private def variantModel = IssueVariantModel
+	
 	private def occurrenceModel = IssueOccurrenceModel
 	
 	
@@ -64,19 +64,18 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @param message A message concerning this issue (may be specific to this occurrence) (optional)
 	  * @param severity The severity of this issue (default = Unrecoverable)
 	  * @param variantDetails Some details about this issue variant (optional).
-	  *                       Please note that different details result in different variants being stored.
+	  * Please note that different details result in different variants being stored.
 	  * @param occurrences The number of specific occurrences that are represented here (default = 1)
 	  * @param timeRange The time range within which this issue occurred (default = Now)
 	  * @param connection Implicit DB connection
 	  * @param version Applicable version (implicit)
 	  * @return Stored issue, including pulled or inserted information.
-	  *         Only contains information about this specific variant and occurrence.
+	  * Only contains information about this specific variant and occurrence.
 	  */
-	def store(context: String, error: Option[RecordableError] = None, message: String = "",
-	          severity: Severity = Unrecoverable, variantDetails: String = "", occurrences: Int = 1,
-	          timeRange: Span[Instant] = Span.singleValue(Now))
-	         (implicit connection: Connection, version: Version): DetailedIssue =
-	{
+	def store(context: String, error: Option[RecordableError] = None, message: String = "", 
+		severity: Severity = Unrecoverable, variantDetails: String = "", occurrences: Int = 1, 
+		timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection, 
+		version: Version): DetailedIssue = {
 		// Inserts or finds the matching issue
 		val issueResult = store(IssueData(context, severity, timeRange.start))
 		// Extracts the stack trace elements from the error, if applicable,
@@ -92,9 +91,11 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 				}
 			case Left(newIssue) => Left(newIssue -> errorStoreResult.map { _.either })
 		}).eitherAndSide
-		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails, timeRange.start)
+		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails, 
+			timeRange.start)
 		val variant = (variantDependenciesType match {
-			// Case: There is a chance that the variant already exists => Checks for duplicates before inserting
+			// 
+				Case: There is a chance that the variant already exists => Checks for duplicates before inserting
 			case Last => DbIssueVariant.findMatching(variantData).toRight { variantModel.insert(variantData) }
 			// Case: It's impossible that the variant would already exist => Inserts a new variant
 			case First => Left(variantModel.insert(variantData))
@@ -111,10 +112,23 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 			case None => Vector(message).filter { _.nonEmpty }
 		}
 		// Stores an issue occurrence
-		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages, occurrences, timeRange))
+		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages, occurrences, 
+			timeRange))
 		// Combines the data together and returns
 		DetailedIssue(issue, Vector(DetailedIssueVariant(variant, storedError, Vector(occurrence))))
 	}
+	
+	/**
+	  * Stores an issue to the database. Avoids inserting duplicate information.
+	  * @param data The data to store, if new
+	  * @param connection Implicit DB Connection
+	  * @return Either Right: A matching issue that already existed in the database, 
+		or Left: A newly inserted issue
+	  */
+	def store(data: IssueData)(implicit connection: Connection) = 
+		find(model.withContext(data.context).withSeverity(data.severity).toCondition)
+			.toRight { model.insert(data) }
+	
 	/**
 	  * Stores a client-side issue to the database.
 	  * Avoids storing duplicate information.
@@ -123,17 +137,9 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @return The recorded issue
 	  */
 	// FIXME: Store multiple instances/occurrences at once
-	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue =
-		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, issue.instances,
-			issue.storeDuration.map { Now - _ })(connection, issue.version)
-	/**
-	  * Stores an issue to the database. Avoids inserting duplicate information.
-	  * @param data The data to store, if new
-	  * @param connection Implicit DB Connection
-	  * @return Either Right: A matching issue that already existed in the database, or Left: A newly inserted issue
-	  */
-	def store(data: IssueData)(implicit connection: Connection) =
-		find(model.withContext(data.context).withSeverity(data.severity).toCondition).toRight { model.insert(data) }
+	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue = 
+		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, 
+			issue.instances,issue.storeDuration.map { Now - _ })(connection, issue.version)
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield

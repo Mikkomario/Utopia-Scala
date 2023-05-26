@@ -67,13 +67,6 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 		}
 		filter(condition)
 	}
-	/**
-	  * @param issueId Id of the targeted issue
-	  * @param version Targeted version
-	  * @return Access to that issue's variants that occurred in the specified version
-	  */
-	def matching(issueId: Int, version: Version) =
-		filter(model.withId(issueId).withVersion(version).toCondition)
 	
 	/**
 	  * Updates the creation times of the targeted issue variants
@@ -106,6 +99,14 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	  */
 	def issueIds_=(newIssueId: Int)(implicit connection: Connection) = putColumn(model.issueIdColumn, 
 		newIssueId)
+	
+	/**
+	  * @param issueId Id of the targeted issue
+	  * @param version Targeted version
+	  * @return Access to that issue's variants that occurred in the specified version
+	  */
+	def matching(issueId: Int, 
+		version: Version) = filter(model.withId(issueId).withVersion(version).toCondition)
 	
 	/**
 	  * Updates the versions of the targeted issue variants

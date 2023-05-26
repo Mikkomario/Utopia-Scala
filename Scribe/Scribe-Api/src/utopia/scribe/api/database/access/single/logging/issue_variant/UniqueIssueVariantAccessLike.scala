@@ -27,7 +27,8 @@ trait UniqueIssueVariantAccessLike[+A]
 	def issueId(implicit connection: Connection) = pullColumn(model.issueIdColumn).int
 	
 	/**
-	  * The program version in which this issue (variant) occurred. None if no issue variant (or value) was found.
+	  * 
+		The program version in which this issue (variant) occurred. None if no issue variant (or value) was found.
 	  */
 	def version(implicit connection: Connection) = 
 		pullColumn(model.versionColumn).string.flatMap(Version.findFrom)

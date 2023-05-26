@@ -1,17 +1,12 @@
 package utopia.scribe.api.database.access.many.logging.issue_variant
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.util.Version
 import utopia.scribe.api.database.factory.logging.IssueVariantFactory
-import utopia.scribe.api.database.model.logging.IssueVariantModel
 import utopia.scribe.core.model.stored.logging.IssueVariant
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.ChronoRowFactoryView
 import utopia.vault.sql.Condition
-
-import java.time.Instant
 
 object ManyIssueVariantsAccess
 {
@@ -33,7 +28,7 @@ object ManyIssueVariantsAccess
 trait ManyIssueVariantsAccess 
 	extends ManyIssueVariantsAccessLike[IssueVariant, ManyIssueVariantsAccess] 
 		with ManyRowModelAccess[IssueVariant] 
-		with ChronoRowFactoryView[IssueVariant, ManyIssueVariantsAccess] with Indexed
+		with ChronoRowFactoryView[IssueVariant, ManyIssueVariantsAccess]
 {
 	// IMPLEMENTED	--------------------
 	

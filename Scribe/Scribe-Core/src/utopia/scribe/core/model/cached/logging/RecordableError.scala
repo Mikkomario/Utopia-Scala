@@ -62,6 +62,19 @@ case class RecordableError(className: String, stackTrace: StackTrace, cause: Opt
 	// COMPUTED ---------------------------
 	
 	/**
+	  * @return A single line that represents this error. Doesn't include stack trace.
+	  */
+	def logLine = s"$className${message.mapIfNotEmpty { msg => s": $msg" }}"
+	/**
+	  * @return An iterator that returns strings where each string represents either an error or a stack trace elements.
+	  *         Contains records for all errors and all stack trace elements within this error.
+	  */
+	def logLinesIterator = topToBottomIterator.zipWithIndex.flatMap { case (error, index) =>
+		Iterator.single(s"${if (index == 0) "" else "caused by " }${error.logLine}") ++
+			error.stackTrace.logLinesIterator.map { line => s"\t$line" }
+	}
+	
+	/**
 	  * @return An iterator that returns nested errors from the highest to the lowest (i.e. root cause),
 	  *         starting with this error.
 	  */
@@ -89,6 +102,8 @@ case class RecordableError(className: String, stackTrace: StackTrace, cause: Opt
 	
 	
 	// IMPLEMENTED  -----------------------
+	
+	override def toString = logLinesIterator.mkString("\n")
 	
 	override def ~==(other: RecordableError): Boolean =
 		className == other.className && stackTrace == other.stackTrace &&

@@ -2,6 +2,7 @@ package utopia.scribe.core.model.enumeration
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ValueConvertible
 
 /**
@@ -80,9 +81,22 @@ object Severity
 	  * @return severity matching the specified value, when the value is interpreted as an severity level, 
 	  * or the default severity (unrecoverable)
 	  */
-	def fromValue(value: Value) = value.int match {
-		case Some(level) => forLevel(level)
-		case None => default
+	def fromValue(value: Value) = {
+		// Expects Int (level) or String (name) type
+		value.castTo(IntType, StringType) match {
+			// Case: Int or empty
+			case Left(intV) =>
+				intV.int match {
+					// Case Int => Finds a match with level
+					case Some(level) => forLevel(level)
+					// Case: Empty => Uses the default value
+					case None => default
+				}
+			// Case String (name) type => Finds a match with name
+			case Right(strV) =>
+				val str = strV.getString.toLowerCase
+				values.reverseIterator.find { _.toString.toLowerCase.contains(str) }.getOrElse(default)
+		}
 	}
 	
 	

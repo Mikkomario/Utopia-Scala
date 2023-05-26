@@ -9,7 +9,7 @@ import utopia.scribe.core.model.stored.logging.IssueOccurrence
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{ChronoRowFactoryView, FilterableView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
 import java.time.Instant
@@ -73,6 +73,12 @@ trait ManyIssueOccurrencesAccess
 	// OTHER	--------------------
 	
 	/**
+	  * @param threshold A time threshold
+	  * @return Access to instance occurrences after that time threshold
+	  */
+	def since(threshold: Instant) = filter(model.latestColumn > threshold)
+	
+	/**
 	  * Updates the case ids of the targeted issue occurrences
 	  * @param newCaseId A new case id to assign
 	  * @return Whether any issue occurrence was affected
@@ -93,6 +99,6 @@ trait ManyIssueOccurrencesAccess
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
 		putColumn(model.errorMessagesColumn, 
-			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map { v => v }: Value).toJson): Value; case None => Value.empty })
+			NotEmpty(newErrorMessages) match { case Some(v) => (v.map { v => v }: Value).toJson: Value; case None => Value.empty })
 }
 
