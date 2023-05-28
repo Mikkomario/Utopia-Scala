@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.16.1 (in development)
+### Bugfixes
+- Fixed a bug in **ClearOldData** reference processing logic
 ### New Features
 - Added **DatabaseActionQueue** class
 

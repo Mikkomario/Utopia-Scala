@@ -738,6 +738,16 @@ object CollectionExtensions
 	implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
 	{
 		/**
+		  * @return The first and the last item from this collection
+		  */
+		@throws[IllegalStateException]("If this collection is empty")
+		def ends = Pair(t.head, t.last)
+		/**
+		  * @return The first and the last item from this collection. None if this collection is empty.
+		  */
+		def endsOption = if (t.isEmpty) Some(ends) else None
+		
+		/**
 		  * @return An instance used for testing the size of this collection against fixed values and
 		  *         sizes of other collections.
 		  *         This function allows more effective size comparisons, compared to using .size == ...
@@ -1401,6 +1411,28 @@ object CollectionExtensions
 		  */
 		def pollable = PollingIterator[A](i)
 		
+		/**
+		  * Retrieves the first and the last item from this iterator.
+		  * This consumes this whole iterator.
+		  * Will not terminate for infinite iterators.
+		  * @return The first and the last item from this iterator
+		  */
+		@throws[IllegalStateException]("If this iterator is empty")
+		def ends = {
+			val first = i.next()
+			if (i.hasNext)
+				Pair(first, i.last)
+			else
+				Pair.twice(first)
+		}
+		/**
+		  * Retrieves the first and the last item from this iterator.
+		  * This consumes this whole iterator.
+		  * Will not terminate for infinite iterators.
+		  * @return The first and the last item from this iterator.
+		  *         None if this iterator was empty.
+		  */
+		def endsOption = if (i.hasNext) Some(ends) else None
 		/**
 		  * Finds the minimum and the maximum values from this iterator.
 		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.

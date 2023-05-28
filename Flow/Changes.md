@@ -13,6 +13,8 @@
 - **Either** (**CollectionExtensions**)
   - Added `.eitherAndSide` for symmetric Eithers
   - Added `.mapSide(End)(...)` for symmetric Eithers
+- **Iterable** (**CollectionExtensions**)
+  - Added `.ends` and `.endsOption`
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
 - **Pointer**

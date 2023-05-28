@@ -70,8 +70,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	// ATTRIBUTES	---------------------------
 	
 	// Forms the actual deletion rules based on those provided + existing table references
-	private val finalRules =
-	{
+	private val finalRules = {
 		val nonEmptyRules =  rules.filter { _.nonEmpty }
 		nonEmptyRules.map { rule =>
 			// Checks if there exist any rules for tables referencing the table in question
@@ -80,7 +79,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 				tree.filterWithPaths { _.nav == childRule.targetTable }.map { childPath =>
 					// Converts the table path to a reference path
 					// Throws possible errors here (those would result from logic / programming error)
-					referencePathFrom(rule.targetTable, childPath.map { _.nav }).get
+					referencePathFrom(rule.targetTable, childPath.drop(1).map { _.nav }).get
 				}
 			}.toVector
 			// Creates the deletion rule for the primary table

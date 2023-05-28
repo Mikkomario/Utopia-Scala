@@ -55,11 +55,9 @@ object ScribeConsoleApp extends App
 	private val queuedVariantsPointer = Pointer(Vector.empty[IssueVariantInstances] -> 0)
 	private val queuedErrorIdPointer = Pointer.empty[Int]()
 	
-	
 	// Specifies some computed properties
 	
 	private def recent = Now - 7.days
-	
 	
 	// Sets up the commands for the console
 	
