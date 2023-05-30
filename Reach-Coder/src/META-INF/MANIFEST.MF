@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: utopia.reach.coder.controller.app.ReachCoderApp
+Class-Path: scala-library-2.13.7.jar scala-reflect-2.13.7.jar
+

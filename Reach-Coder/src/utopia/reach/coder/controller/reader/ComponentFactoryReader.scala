@@ -2,7 +2,7 @@ package utopia.reach.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.coder.model.data.{Name, NamingRules}
-import utopia.coder.model.enumeration.NameContext.{ClassName, ClassPropName}
+import utopia.coder.model.enumeration.NameContext.{ClassName, ClassPropName, FunctionName}
 import utopia.coder.model.enumeration.NamingConvention
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.Package
@@ -113,15 +113,16 @@ object ComponentFactoryReader
 		//      1) Another package object, or
 		//      2) An array of component factory objects
 		packagesModel.properties.foreach { prop =>
+			val pck = parentPackage/prop.name
 			prop.value.castTo(ModelType, VectorType) match {
 				// Case: Package model => Parses the model contents
 				case Left(packageModelV) =>
-					parseComponentFactoriesFrom(packageModelV.getModel, parentPackage/prop.name, builder, packageAliases,
+					parseComponentFactoriesFrom(packageModelV.getModel, pck, builder, packageAliases,
 						referenceAliases, projectAuthor)
 				// Case: An array of factory models => Parses the models and adds them to the builder
 				case Right(factoryArrayV) =>
 					factoryArrayV.getVector.foreach { v =>
-						val factory = componentFactoryFrom(v.getModel, parentPackage, packageAliases, referenceAliases,
+						val factory = componentFactoryFrom(v.getModel, pck, packageAliases, referenceAliases,
 							projectAuthor) { factoryName => builder.find { _.componentName ~== factoryName } }
 						builder += factory
 					}
@@ -191,10 +192,19 @@ object ComponentFactoryReader
 				}
 			// Case: Standard property
 			case None =>
-				Property.simple(ClassPropName.from(model).getOrElse { "unnamedProperty" },
-					scalaTypeFrom(model("type").getString, packageAliases, referenceAliases),
+				val name: Name = ClassPropName.from(model).getOrElse { "unnamedProperty" }
+				val setterName = model("setter").string match {
+					case Some(custom) => Name.interpret(custom, naming(FunctionName))
+					case None => "with" +: name
+				}
+				val paramName = model("param").string match {
+					case Some(custom) => Name.interpret(custom, naming(ClassPropName))
+					case None => name
+				}
+				Property(name, scalaTypeFrom(model("type").getString, packageAliases, referenceAliases),
+					setterName, paramName,
 					CodePiece.fromValue(model("default"), packageAliases, referenceAliases).getOrElse(CodePiece.empty),
-					description, model("mapping_enabled", "mapping", "map").getBoolean)
+					None, description, model("mapping_enabled", "mapping", "map").getBoolean)
 		}
 	}
 	

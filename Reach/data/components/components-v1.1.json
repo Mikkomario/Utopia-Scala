@@ -64,6 +64,14 @@
               },
               "doc": "Pointer that determines image scaling, in addition to the original image scaling",
               "map": true
+            },
+            {
+              "name": "usesLowPrioritySize",
+              "param": "lowPriority",
+              "setter": "withUseLowPrioritySize",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether this label should use low priority size constraints"
             }
           ],
           "non_contextual_props": [

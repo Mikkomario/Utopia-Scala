@@ -13,7 +13,7 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 2.11.2021
   */
-class FileBuilder(filePackage: Package, extraReferences: Set[Reference])
+class FileBuilder(fileName: String, filePackage: Package, extraReferences: Set[Reference])
 	extends mutable.Builder[InstanceDeclaration, File] with InstanceBuilderLike
 {
 	// ATTRIBUTES   -------------------------
@@ -25,7 +25,7 @@ class FileBuilder(filePackage: Package, extraReferences: Set[Reference])
 	
 	override def clear() = instancesBuilder.clear()
 	
-	override def result() = File(filePackage, instancesBuilder.result(), extraReferences)
+	override def result() = File(filePackage, instancesBuilder.result(), fileName, extraReferences)
 	
 	override def addOne(elem: InstanceDeclaration) = {
 		instancesBuilder += elem

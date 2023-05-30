@@ -1,6 +1,7 @@
 package utopia.reach.coder.controller.app
 
 import utopia.coder.controller.app.{AppLogic, CoderApp}
+import utopia.reach.coder.util.Common.jsonParser
 
 /**
   * The main application class for this project / module
@@ -10,4 +11,6 @@ import utopia.coder.controller.app.{AppLogic, CoderApp}
 object ReachCoderApp extends App with CoderApp
 {
 	override protected val logicOptions: Iterable[AppLogic] = Some(ReachCoderAppLogic)
+	
+	run(args)
 }

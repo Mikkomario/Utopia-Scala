@@ -1,10 +1,9 @@
 package utopia.vault.coder.test
 
 import utopia.coder.controller.parsing.scala.ScalaParser
-import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.console.ConsoleExtensions._
 
 import java.nio.file.Path
 import scala.io.{Codec, StdIn}
@@ -21,7 +20,7 @@ object CopyTest extends App
 	// Citadel\src\utopia\citadel\database\CitadelTables.scala
 	// Paradigm\src\utopia\paradigm\shape\template\VectorLike.scala
 	
-	// Vault-Coder/data/test/ManyAuthPreparationsAccess.scala
+	// Vault-Coder/data/test/Test.scala
 	
 	
 	implicit val codec: Codec = Codec.UTF8

@@ -134,7 +134,7 @@ object ModelWriter
 						)
 					))
 			}
-			File(storePackage, storedObject.toVector :+ storedClass, Set[Reference]())
+			File(storePackage, storedObject.toVector :+ storedClass, "", Set[Reference]())
 				.write().map { _ -> dataClassRef }
 		}
 	}

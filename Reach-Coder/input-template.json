@@ -24,6 +24,8 @@
               "name_plural": "manyProp1s (optional)",
               "type": "refAlias1 (optional for references)",
               "ref": "OtherComponentName (optional)",
+              "setter": "withProp1 (optional)",
+              "param": "prop1 (optional)",
               "default": {
                 "references": ["com.company.project.model.DataType3", "refAlias2"],
                 "code": "DataType3.default"

@@ -16,6 +16,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.builder.MultiMapBuilder
 import utopia.flow.collection.mutable.iterator.PollingIterator
 import utopia.flow.parse.string.{IterateLines, Regex}
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.MutatingOnce
 
@@ -65,8 +66,7 @@ object ScalaParser
 		(Regex.escape('\t') || Regex.whiteSpace).withinParenthesis.oneOrMoreTimes +
 		Regex.escape('-').oneOrMoreTimes
 	
-	def apply(path: Path) =
-	{
+	def apply(path: Path) = {
 		IterateLines.fromPath(path) { linesIter =>
 			val iter = linesIter.pollable /*linesIter.map { line =>
 				println("Reading: " + line)
@@ -74,8 +74,7 @@ object ScalaParser
 			}.pollable*/
 			
 			// Searches for package declaration first
-			val filePackageString = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply) match
-			{
+			val filePackageString = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply) match {
 				case Some(packageLine) =>
 					iter.skipPolled()
 					packageLine.afterFirst("package ")
@@ -89,8 +88,7 @@ object ScalaParser
 				.map { _.afterFirst("import ") }
 				.flatMap { importString =>
 					// println(s"Read import: $importString")
-					if (importString.contains('{'))
-					{
+					if (importString.contains('{')) {
 						val (basePart, endPart) = importString.splitAtFirst("{")
 						val trimmedBase = basePart.trim
 						val endItems = endPart.untilFirst("}").split(',').toVector.map { _.trim }
@@ -103,11 +101,9 @@ object ScalaParser
 				}
 			val separatedImportStatements = importStatements.map { importStatement =>
 				val (beginning, end) = importStatement.splitAtLast(".")
-				end.notEmpty match
-				{
+				end.notEmpty match {
 					case Some(end) =>
-						if (end == "_")
-						{
+						if (end == "_") {
 							val (packagePart, targetPrefix) = beginning.splitAtLast(".")
 							if (targetPrefix.isEmpty)
 								filePackageString -> importStatement
@@ -128,7 +124,7 @@ object ScalaParser
 			
 			// Finally, finds and processes the object and/or class statements
 			// Implicit references are included in the resulting file directly
-			val builder = new FileBuilder(Package(filePackageString),
+			val builder = new FileBuilder(path.fileNameWithoutExtension, Package(filePackageString),
 				referencesPerTarget.valuesIterator.filter { _.target.contains('_') }.toSet)
 			// println(s"Poll before mapping: ${iter.poll}")
 			val codeLineIterator = iter.map { line =>
@@ -700,13 +696,12 @@ object ScalaParser
 	}
 	
 	// Returns parsed type + remaining string
-	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) =
-	{
+	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) = {
 		// println(s"\nParsing scala type from: '$string'")
 		
 		// Case: Starts with parentheses => Leads to either tuple or function type
 		if (string.startsWith("(")) {
-			// println("Tuple type")
+			//println("Tuple type")
 			
 			val (parenthesisPart, remainingPart) = readOneLineParentheses(string.drop(1))
 			// Parses types within the parentheses
@@ -746,7 +741,14 @@ object ScalaParser
 				val (typesPart, afterTypes) = readOneLineBrackets(remaining.drop(1))
 				// println(s"Types part is '$typesPart' - remaining: $afterTypes")
 				val (types, _) = scalaTypesFrom(typesPart, refMap)
-				ScalaType(mainType, types, if (isCallByName) CallByName else Standard) -> afterTypes
+				// Checks for functional type
+				if (afterTypes.startsWith("=>")) {
+					val functionResultPart = afterTypes.afterFirst("=>").trim
+					val (resultType, afterResult) = scalaTypeFrom(functionResultPart, refMap)
+					resultType.fromParameters(Vector(ScalaType(mainType))) -> afterResult
+				}
+				else
+					ScalaType(mainType, types, if (isCallByName) CallByName else Standard) -> afterTypes
 			}
 			// Checks for functional type
 			else if (remaining.startsWith("=>")) {

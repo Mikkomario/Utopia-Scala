@@ -74,11 +74,12 @@ object ComponentFactoryWriter
 		}
 		val companionDec = setupDec.map { setupDec => companion(factory, settingsType, setupDec.toBasicType) }
 		
-		File(factory.pck,
+		File(
+			factory.pck,
 			Vector(settingsLikeDec, settingsCompanionDec, settingsDec, settingsWrapperDec, factoryLikeDec) ++
 				contextualDec.map { _._1 } ++ nonContextualDec ++ setupDec ++ companionDec,
-			Set[Reference]())
-			.write()
+			factory.componentName.className, Set[Reference]()
+		).write()
 	}
 	
 	// Declares the generic settings trait
@@ -322,7 +323,7 @@ object ComponentFactoryWriter
 		val (parent, apply) = factoryType match {
 			case Right(nonContextual) =>
 				cff(nonContextual) -> MethodDeclaration("apply", isOverridden = true)(
-					hierarchyParam)(s"$factoryType(hierarchy, settings)")
+					hierarchyParam)(s"$nonContextual(hierarchy, settings)")
 			case Left((contextual, context)) =>
 				ccff(context.reference, contextual) -> MethodDeclaration("withContext", isOverridden = true)(
 					Vector(hierarchyParam, Parameter("context", context.reference)))(
@@ -370,13 +371,13 @@ object ComponentFactoryWriter
 		val base = (target.componentName + "Settings").prop
 		target.properties.splitFlatMap { prop =>
 			// Generates a getter
-			val propName = prefix + prop.name
+			val propName = prefix +: prop.name
 			val directGet = ComputedProperty(propName.prop, visibility = Protected,
 				description = s"${prop.name} from the wrapped ${target.componentName} settings")(
 				s"$base.${prop.name.prop}")
 			// Generates a setter
 			val paramName = prop.setterParamName.prop
-			val directSet = MethodDeclaration((prefix + prop.setterName).function,
+			val directSet = MethodDeclaration(("with" +: propName).function,
 				returnDescription = s"Copy of this factory with the specified $propName")(
 				Parameter(paramName, prop.dataType, description = prop.description))(
 				s"$base.${prop.setterName.function}($paramName)")

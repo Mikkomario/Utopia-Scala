@@ -175,13 +175,13 @@ trait CoderAppLogic extends AppLogic
 				}
 		}
 		// Determines the target group and the filter
-		lazy val targetTypeIsSpecified = arguments("all").isDefined || arguments("type").isDefined
-		val targetsAllTypes = arguments("all").getBoolean || arguments("type").string.contains("all")
+		lazy val specificallyTargetedType = arguments("type").string.filterNot { _.isEmpty }
+		val targetsAllTypes = arguments("all").getBoolean || specificallyTargetedType.contains("all")
 		val filter = Lazy {
 			(arguments("filter").string match {
 				case Some(filter) => filter.notEmpty
 				case None =>
-					if (!targetsAllTypes && targetTypeIsSpecified)
+					if (!targetsAllTypes && specificallyTargetedType.isDefined)
 						StdIn.readNonEmptyLine(s"Please specify the ${
 							arguments("type").getString} filter to use (leave empty if you want to target all of them)")
 					else
@@ -189,7 +189,7 @@ trait CoderAppLogic extends AppLogic
 				// The filter may be more or less inclusive, based on the "single" flag
 			}).map { filterText => Filter(filterText, arguments("single").getBoolean) }
 		}
-		val targetType = if (targetsAllTypes) None else arguments("type").string
+		val targetType = if (targetsAllTypes) None else specificallyTargetedType
 		// Determines merge roots
 		val mergeRoots = Lazy {
 			val mainRoot = project.map { _.src }.orElse {
@@ -250,7 +250,14 @@ trait CoderAppLogic extends AppLogic
 			StdIn.ask("Do you want to save these settings to speed up program use next time?"))
 		{
 			println("What name do you want to give to this project?")
-			val defaultName = rootInput.map { input => input.afterLast("/").afterLast("\\") }
+			val defaultName = rootInput.map { input =>
+				if (input.contains('/'))
+					input.afterLast("/")
+				else if (input.contains('\\'))
+					input.afterLast("\\")
+				else
+					input
+			}
 			defaultName.foreach { i => println(s"Default: $i") }
 			StdIn.readNonEmptyLine().orElse(defaultName) match {
 				case Some(projectName) =>

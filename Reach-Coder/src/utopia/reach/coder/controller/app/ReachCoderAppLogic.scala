@@ -2,6 +2,7 @@ package utopia.reach.coder.controller.app
 
 import utopia.coder.controller.app.CoderAppLogic
 import utopia.coder.model.data.{Filter, NamingRules, ProjectSetup}
+import utopia.coder.model.enumeration.NameContext.FileName
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.Today
@@ -84,13 +85,16 @@ object ReachCoderAppLogic extends CoderAppLogic
 		ComponentFactoryReader(inputPath).flatMap { projectData =>
 			// Writes the new files
 			implicit val naming: NamingRules = NamingRules.default
-			val versionedProjectName = projectData.version match {
-				case Some(v) => projectData.name + v.toString
-				case None => projectData.name
+			val mergeConflictsFileName = {
+				val base = s"${(projectData.name.inContext(FileName) ++
+					Vector("merge", "conflicts", Today.toString)).fileName}"
+				projectData.version match {
+					case Some(version) => s"$base${naming(FileName).separator}$version.txt"
+					case None => s"$base.txt"
+				}
 			}
 			implicit val setup: ProjectSetup = ProjectSetup(
-				mergeConflictsFilePath = outputPath /
-					((versionedProjectName + "merge conflicts") + Today.toString).fileName,
+				mergeConflictsFilePath = outputPath/mergeConflictsFileName,
 				sourceRoot = outputPath,
 				mergeSourceRoots = mergeRoot.value.toVector,
 				version = projectData.version

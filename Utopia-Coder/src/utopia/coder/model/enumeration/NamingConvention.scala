@@ -181,7 +181,7 @@ object NamingConvention
 			}
 		}
 		
-		override def combine(beginning: String, end: String) = beginning + end.capitalize
+		override def combine(beginning: String, end: String) = s"$beginning${ end.capitalize }"
 		
 		override def split(camelName: String) =
 		{
@@ -293,7 +293,7 @@ object NamingConvention
 				case _ => originalStyle.split(string).map { _.toLowerCase }.mkString("_")
 			}
 		
-		override def combine(beginning: String, end: String) = beginning + "_" + end
+		override def combine(beginning: String, end: String) = s"${ beginning }_$end"
 		
 		override def split(string: String) = underscoreRegex.split(string)
 	}
@@ -391,7 +391,7 @@ object NamingConvention
 		
 		override def combine(beginning: String, end: String) = {
 			val casedEnd = if (capitalizeMore) end.capitalize else end.uncapitalize
-			beginning + " " + casedEnd
+			s"$beginning $casedEnd"
 		}
 		
 		override def split(string: String) = Regex.whiteSpace.split(string)

@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact name="utopia-reach-coder">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_reach_coder</output-path>
+    <root id="root">
+      <element id="archive" name="Reach-Coder.jar">
+        <element id="module-output" name="Reach-Coder" />
+        <element id="module-output" name="BunnyMunch" />
+        <element id="module-output" name="Flow" />
+        <element id="module-output" name="Utopia-Coder" />
+      </element>
+      <element id="library" level="application" name="scala-sdk-2.13.7" />
+    </root>
+  </artifact>
+</component>

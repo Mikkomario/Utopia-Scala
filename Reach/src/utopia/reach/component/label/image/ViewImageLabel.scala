@@ -20,38 +20,81 @@ import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, From
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
+/**
+  * Common trait for view image label factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
 trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr]
 {
-	// ABSTRACT ---------------------
+	// ABSTRACT	--------------------
 	
+	/**
+	  * Pointer that determines the insets placed around the image
+	  */
 	protected def insetsPointer: Changing[StackInsets]
+	/**
+	  * Pointer that determines the image drawing location within this component
+	  */
 	protected def alignmentPointer: Changing[Alignment]
+	/**
+	  * Pointer that, when defined, places a color overlay over the drawn image
+	  */
 	protected def colorOverlayPointer: Option[Changing[Color]]
+	/**
+	  * Pointer that determines image scaling, in addition to the original image scaling
+	  */
 	protected def imageScalingPointer: Changing[Double]
 	
-	def withInsetsPointer(p: Changing[StackInsets]): Repr
+	/**
+	  * Pointer that determines the image drawing location within this component
+	  * @return Copy of this factory with the specified alignment pointer
+	  */
 	def withAlignmentPointer(p: Changing[Alignment]): Repr
+	/**
+	  * Pointer that, when defined, places a color overlay over the drawn image
+	  * @return Copy of this factory with the specified color overlay pointer
+	  */
 	def withColorOverlayPointer(p: Option[Changing[Color]]): Repr
+	/**
+	  * Pointer that determines image scaling, in addition to the original image scaling
+	  * @return Copy of this factory with the specified image scaling pointer
+	  */
 	def withImageScalingPointer(p: Changing[Double]): Repr
+	/**
+	  * Pointer that determines the insets placed around the image
+	  * @return Copy of this factory with the specified insets pointer
+	  */
+	def withInsetsPointer(p: Changing[StackInsets]): Repr
 	
 	
-	// IMPLEMENTED  ----------------
+	// IMPLEMENTED	--------------------
 	
-	override protected def insets: StackInsets = insetsPointer.value
-	override protected def imageScaling: Double = imageScalingPointer.value
 	override protected def alignment: Alignment = alignmentPointer.value
 	override protected def colorOverlay = colorOverlayPointer.map { _.value }
+	override protected def imageScaling: Double = imageScalingPointer.value
+	override protected def insets: StackInsets = insetsPointer.value
 	
 	override def apply(alignment: Alignment): Repr = withAlignmentPointer(Fixed(alignment))
-	override def withImageScaling(scaling: Double): Repr = withImageScalingPointer(Fixed(scaling))
-	override def withColor(color: Option[Color]): Repr = withColorOverlayPointer(color.map(Fixed.apply))
 	
-	override def withInsets(insets: StackInsetsConvertible): Repr = withInsetsPointer(Fixed(insets.toInsets))
 	override def mapInsets(f: StackInsets => StackInsetsConvertible) =
 		withInsetsPointer(insetsPointer.map { f(_).toInsets })
 	
+	override def withColor(color: Option[Color]): Repr = withColorOverlayPointer(color.map(Fixed.apply))
+	override def withImageScaling(scaling: Double): Repr = withImageScalingPointer(Fixed(scaling))
+	override def withInsets(insets: StackInsetsConvertible): Repr = withInsetsPointer(Fixed(insets.toInsets))
 	
-	// OTHER    --------------------
+	
+	// OTHER	--------------------
+	
+	def mapAlignmentPointer(f: Changing[Alignment] => Changing[Alignment]) =
+		withAlignmentPointer(f(alignmentPointer))
+	def mapColorOverlayPointer(f: Option[Changing[Color]] => Option[Changing[Color]]) =
+		withColorOverlayPointer(f(colorOverlayPointer))
+	def mapImageScalingPointer(f: Changing[Double] => Changing[Double]) =
+		withImageScalingPointer(f(imageScalingPointer))
+	def mapInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) = withInsetsPointer(f(insetsPointer))
 	
 	def withColor(color: Changing[Color]): Repr = withColorOverlayPointer(Some(color))
 }
@@ -60,23 +103,37 @@ object ViewImageLabelSettings
 {
 	val default = apply()
 }
-case class ViewImageLabelSettings(insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-                                  alignmentPointer: Changing[Alignment] = Fixed(Center),
-                                  imageScalingPointer: Changing[Double] = Fixed(1.0),
+/**
+  * Combined settings used when constructing view image labels
+  * @param insetsPointer       Pointer that determines the insets placed around the image
+  * @param alignmentPointer    Pointer that determines the image drawing location within this component
+  * @param colorOverlayPointer Pointer that, when defined, places a color overlay over the drawn image
+  * @param imageScalingPointer Pointer that determines image scaling,
+  *                                                        in addition to the original image scaling
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
+case class ViewImageLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+                                  insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
+                                  alignmentPointer: Changing[Alignment] = Fixed(Alignment.Center),
                                   colorOverlayPointer: Option[Changing[Color]] = None,
-                                  customDrawers: Vector[CustomDrawer] = Vector.empty,
+                                  imageScalingPointer: Changing[Double] = Fixed(1.0),
                                   usesLowPrioritySize: Boolean = false)
 	extends ViewImageLabelSettingsLike[ViewImageLabelSettings]
 {
+	// IMPLEMENTED	--------------------
 	
-	override def withInsetsPointer(p: Changing[StackInsets]): ViewImageLabelSettings = copy(insetsPointer = p)
 	override def withAlignmentPointer(p: Changing[Alignment]): ViewImageLabelSettings = copy(alignmentPointer = p)
 	override def withColorOverlayPointer(p: Option[Changing[Color]]): ViewImageLabelSettings =
 		copy(colorOverlayPointer = p)
-	override def withImageScalingPointer(p: Changing[Double]): ViewImageLabelSettings = copy(imageScalingPointer = p)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageLabelSettings =
+		copy(customDrawers = drawers)
+	override def withImageScalingPointer(p: Changing[Double]): ViewImageLabelSettings =
+		copy(imageScalingPointer = p)
+	override def withInsetsPointer(p: Changing[StackInsets]): ViewImageLabelSettings = copy(insetsPointer = p)
+	
 	override def withUseLowPrioritySize(lowPriority: Boolean): ViewImageLabelSettings =
 		copy(usesLowPrioritySize = lowPriority)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageLabelSettings = copy(customDrawers = drawers)
 }
 
 trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Repr]

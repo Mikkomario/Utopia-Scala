@@ -17,7 +17,7 @@ object Property
 	  */
 	def simple(name: Name, dataType: ScalaType, defaultValue: CodePiece = CodePiece.empty, description: String = "",
 	           mappingEnabled: Boolean = false) =
-		apply(name, dataType, "with" + name, name, defaultValue, description = description,
+		apply(name, dataType, "with" +: name, name, defaultValue, description = description,
 			mappingEnabled = mappingEnabled)
 	
 	/**
