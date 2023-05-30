@@ -224,8 +224,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectio
 	  * @tparam R Type of consume function result
 	  * @return Consume function result
      */
-    def makeBlockingRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R) =
-    {
+    def makeBlockingRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R) = {
 	    // Intercepts the request, if appropriate
 	    val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
         Try {

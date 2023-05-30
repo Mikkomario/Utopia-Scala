@@ -26,6 +26,7 @@ object CodePiece extends FromValueFactory[CodePiece]
 	  * @param value A value
 	  * @return A code piece read from that value
 	  */
+	// TODO: Add support for aliases
 	def fromValue(value: Value) = value.model.filter { _.contains("code") } match {
 		case Some(model) =>
 			Some(apply(model("code").getString, model("references").getVector.flatMap { v => v.string }.toSet

@@ -17,6 +17,11 @@ object Name extends FromValueFactory[Name]
 	
 	private val vocals = Set('a', 'e', 'i', 'o', 'u', 'y')
 	
+	/**
+	  * An empty name
+	  */
+	val empty = Name("", "", CamelCase.lower)
+	
 	
 	// IMPLICIT -----------------------------
 	
@@ -26,7 +31,7 @@ object Name extends FromValueFactory[Name]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def default = Name("", "", CamelCase.lower)
+	override def default = empty
 	
 	override def fromValue(value: Value) =
 		value.model.filter { m => m.containsNonEmpty("singular") } match {

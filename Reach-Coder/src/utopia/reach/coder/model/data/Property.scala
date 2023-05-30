@@ -28,7 +28,7 @@ object Property
 	  * @param naming Naming rules to apply
 	  * @return A new property
 	  */
-	def referringTo(factory: ComponentFactory, prefix: Name = "", description: String = "")
+	def referringTo(factory: ComponentFactory, prefix: Name = Name.empty, description: String = "")
 	               (implicit naming: NamingRules) =
 	{
 		val name = prefix + "Settings"
