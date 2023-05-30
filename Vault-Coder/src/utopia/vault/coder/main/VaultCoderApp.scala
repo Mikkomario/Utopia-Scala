@@ -1,6 +1,6 @@
 package utopia.vault.coder.main
 
-import utopia.flow.util.console.CommandArguments
+import utopia.coder.controller.app.{AppLogic, CoderApp}
 import utopia.vault.coder.util.Common.jsonParser
 
 /**
@@ -9,28 +9,14 @@ import utopia.vault.coder.util.Common.jsonParser
   * @author Mikko Hilpinen
   * @since 4.9.2021, v0.1
   */
-object VaultCoderApp extends App
+object VaultCoderApp extends App with CoderApp
 {
-	// Determines the program / logic to run
-	val options = Vector(MainAppLogic, TableReadAppLogic)
-	val logicByCommand = args.headOption.flatMap { cName =>
-		val lower = cName.toLowerCase
-		options.find { _.name.toLowerCase == lower }
-	}
-	val logic = logicByCommand.getOrElse(options.head)
+	// IMPLEMENTED  ----------------------
 	
-	// Parses the arguments
-	val arguments = CommandArguments(logic.argumentSchema,
-		if (logicByCommand.isDefined) args.toVector.drop(1) else args.toVector)
-	// Writes hints and warnings
-	if (arguments.unrecognized.nonEmpty)
-		println(s"Warning! Following arguments were not recognized: ${arguments.unrecognized.mkString(", ")}")
-	if (arguments.values.isEmpty) {
-		println("Hint: This program supports following command line arguments:")
-		arguments.schema.arguments.foreach { arg => println(s"- $arg") }
-		println()
-	}
+	override protected def logicOptions: Iterable[AppLogic] = Vector(MainAppLogic, TableReadAppLogic)
 	
-	// Runs the program
-	logic(arguments)
+	
+	// APP CODE -------------------------
+	
+	run(args)
 }

@@ -1,5 +1,6 @@
 package utopia.vault.coder.main
 
+import utopia.coder.controller.app.AppLogic
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex

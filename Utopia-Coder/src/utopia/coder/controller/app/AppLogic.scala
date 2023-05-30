@@ -1,4 +1,4 @@
-package utopia.vault.coder.main
+package utopia.coder.controller.app
 
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 
