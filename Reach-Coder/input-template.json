@@ -32,8 +32,9 @@
               "mapping": true
             }
           ],
-          "nonContextualProps": [],
-          "contextualProps": []
+          "non_contextual_props": [],
+          "contextual_props": [],
+          "only_contextual": false
         }
       ]
     }

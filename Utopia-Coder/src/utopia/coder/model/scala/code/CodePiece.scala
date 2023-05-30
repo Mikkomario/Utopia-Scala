@@ -1,9 +1,11 @@
 package utopia.coder.model.scala.code
 
+import utopia.coder.model.scala.Package
 import utopia.flow.generic.factory.FromValueFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Combinable.SelfCombinable
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.util.StringExtensions._
 import utopia.coder.model.scala.datatype.Reference
 import utopia.coder.model.scala.template.Referencing
 
@@ -11,10 +13,18 @@ import scala.language.implicitConversions
 
 object CodePiece extends FromValueFactory[CodePiece]
 {
+	// ATTRIBUTES   ------------------------
+	
 	val empty = apply("")
 	val none = apply("None")
 	
+	
+	// IMPLICIT ---------------------------
+	
 	implicit def textToCode(text: String): CodePiece = apply(text)
+	
+	
+	// IMPLEMENTED  -----------------------
 	
 	override def default = empty
 	
@@ -26,13 +36,46 @@ object CodePiece extends FromValueFactory[CodePiece]
 	  * @param value A value
 	  * @return A code piece read from that value
 	  */
-	// TODO: Add support for aliases
-	def fromValue(value: Value) = value.model.filter { _.contains("code") } match {
-		case Some(model) =>
-			Some(apply(model("code").getString, model("references").getVector.flatMap { v => v.string }.toSet
-				.filterNot { _.isEmpty }.map(Reference.apply) ++ model("reference").string.map(Reference.apply)))
-		case None => value.string.map { apply(_) }
-	}
+	def fromValue(value: Value): Option[CodePiece] = fromValue(value, Map(), Map())
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * Converts a value into a code piece. The value may be either a model with properties 'code' and
+	  * 'references' or 'reference', or a string. The 'references' -property is expected to contain a vector or
+	  * references (as strings)
+	  * @param value A value
+	  * @param packageAliases Aliases used for packages. These may be referred to in the references-property.
+	  * @param referenceAliases Aliases used for references. These may be referred to in the references-property.
+	  * @return A code piece read from that value
+	  */
+	def fromValue(value: Value, packageAliases: Map[String, Package], referenceAliases: Map[String, Reference]) =
+		value.model.filter { _.contains("code") } match {
+			case Some(model) =>
+				val references = model("references", "refs", "reference", "ref").getVector.iterator
+					.flatMap { _.string.filterNot { _.isEmpty } }
+					.map { refStr =>
+						// Resolves the aliases from references, if appropriate
+						referenceAliases.getOrElse(refStr, {
+							// Checks whether package alias was used (signaled by '/')
+							if (refStr.contains('/')) {
+								val (packageRefPart, typePart) = refStr.splitAtFirst("/")
+								packageAliases.get(packageRefPart) match {
+									case Some(pck) => Reference(s"$pck.$typePart")
+									// Case: Package alias couldn't be resolved => Prints a warning
+									case None =>
+										println(s"Warning: Couldn't resolve package reference '$packageRefPart' in '$refStr'")
+										Reference(s"$packageRefPart.$typePart")
+								}
+							}
+							else
+								Reference(refStr)
+						})
+					}.toSet
+				Some(apply(model("code").getString, references))
+			case None => value.string.map { apply(_) }
+		}
 }
 
 /**

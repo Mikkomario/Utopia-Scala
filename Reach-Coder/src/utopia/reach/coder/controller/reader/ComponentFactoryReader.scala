@@ -1,19 +1,19 @@
 package utopia.reach.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.coder.model.data.{Name, NamingRules, ProjectSetup}
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.coder.model.enumeration.NameContext.{ClassName, ClassPropName}
 import utopia.coder.model.enumeration.NamingConvention
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.Package
-import utopia.coder.model.scala.datatype.Reference
+import utopia.coder.model.scala.code.CodePiece
+import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.flow.collection.mutable.builder.{CompoundingMapBuilder, CompoundingVectorBuilder}
-import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
-import utopia.flow.util.Version
 import utopia.flow.util.StringExtensions._
-import utopia.reach.coder.model.data.{ComponentFactory, Property}
+import utopia.flow.util.Version
+import utopia.reach.coder.model.data.{ComponentFactory, ProjectData, Property}
 import utopia.reach.coder.model.enumeration.{ContextType, ReachFactoryTrait}
 
 import java.nio.file.Path
@@ -25,7 +25,13 @@ import java.nio.file.Path
   */
 object ComponentFactoryReader
 {
+	/**
+	  * Parses project and component data from the specified path
+	  * @param path Path to the project json file
+	  * @return Parsed project data. Failure if json parsing failed.
+	  */
 	def apply(path: Path) = JsonBunny(path).map { rootV =>
+		implicit val naming: NamingRules = NamingRules.default
 		val root = rootV.getModel
 		// Parses standard project information
 		val projectName = root("project").stringOr("Project")
@@ -37,8 +43,11 @@ object ComponentFactoryReader
 		val referenceAliases = referenceAliasesFrom(root("reference_aliases", "references", "aliases").getModel,
 			packageAliases)
 		// Parses the component factories
+		val factoriesBuilder = new CompoundingVectorBuilder[ComponentFactory]()
+		parseComponentFactoriesFrom(root("components").getModel, basePackage, factoriesBuilder, packageAliases,
+			referenceAliases, author)
 		
-		???
+		ProjectData(projectName, factoriesBuilder.result(), version)
 	}
 	
 	private def packageAliasesFrom(aliases: Model) = {
@@ -94,26 +103,35 @@ object ComponentFactoryReader
 	}
 	
 	private def parseComponentFactoriesFrom(packagesModel: Model, parentPackage: Package,
+	                                        builder: CompoundingVectorBuilder[ComponentFactory],
 	                                        packageAliases: Map[String, Package],
-	                                        referenceAliases: Map[String, Reference]): Vector[ComponentFactory] =
+	                                        referenceAliases: Map[String, Reference], projectAuthor: String)
+	                                       (implicit naming: NamingRules): Unit =
 	{
 		// Each property is expected to represent a package
 		// Each property may either contain
 		//      1) Another package object, or
 		//      2) An array of component factory objects
-		packagesModel.properties.flatMap { prop =>
+		packagesModel.properties.foreach { prop =>
 			prop.value.castTo(ModelType, VectorType) match {
+				// Case: Package model => Parses the model contents
 				case Left(packageModelV) =>
-					parseComponentFactoriesFrom(packageModelV.getModel, parentPackage/prop.name, packageAliases,
-						referenceAliases)
+					parseComponentFactoriesFrom(packageModelV.getModel, parentPackage/prop.name, builder, packageAliases,
+						referenceAliases, projectAuthor)
+				// Case: An array of factory models => Parses the models and adds them to the builder
 				case Right(factoryArrayV) =>
-					factoryArrayV.getVector.map { v => ??? }
+					factoryArrayV.getVector.foreach { v =>
+						val factory = componentFactoryFrom(v.getModel, parentPackage, packageAliases, referenceAliases,
+							projectAuthor) { factoryName => builder.find { _.componentName ~== factoryName } }
+						builder += factory
+					}
 			}
 		}
 	}
 	
 	private def componentFactoryFrom(model: Model, parentPackage: Package, packageAliases: Map[String, Package],
 	                                 referenceAliases: Map[String, Reference], projectAuthor: String)
+	                                (factoryReferences: String => Option[ComponentFactory])
 	                                (implicit naming: NamingRules) =
 	{
 		ComponentFactory(
@@ -132,11 +150,14 @@ object ComponentFactoryReader
 					println(s"Warning: No Reach factory trait matches '$input'")
 				result
 			} },
-			properties = ???,
-			nonContextualProperties = ???,
-			contextualProperties = ???,
+			properties = model("properties", "props").getVector
+				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
+			nonContextualProperties = model("nonContextualProps", "non_contextual_props").getVector
+				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
+			contextualProperties = model("contextualProps", "contextual_props").getVector
+				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
 			author = model("author").stringOr(projectAuthor),
-			onlyContextual = !model("nonContextual").booleanOr(true)
+			onlyContextual = !model("nonContextual", "non_contextual").booleanOr(true)
 		)
 	}
 	
@@ -146,9 +167,12 @@ object ComponentFactoryReader
 	                        (implicit naming: NamingRules) =
 	{
 		val description = model("description", "doc").getString
+		// Checks whether the property refers to another component, or whether it is a standard property
 		model("reference", "ref", "factory", "settings").string match {
+			// Case: Reference property => Attempts to resolve the reference
 			case Some(reference) =>
 				factoryReferences(reference) match {
+					// Case: Reference resolved => Forms a property
 					case Some(factory) =>
 						val prefix = model("prefix").string match {
 							case Some(prefix) =>
@@ -160,18 +184,52 @@ object ComponentFactoryReader
 							case None => Name.empty
 						}
 						Property.referringTo(factory, prefix, description)
+					// Case: Reference couldn't be resolved => Warns and forms a placeholder property
 					case None =>
 						println(s"Couldn't resolve component factory reference '$reference'")
-						???
+						Property.simple(reference, ScalaType.basic(reference))
 				}
+			// Case: Standard property
 			case None =>
-				/*
-				(name: Name, dataType: ScalaType, defaultValue: CodePiece = CodePiece.empty, description: String = "",
-							mappingEnabled: Boolean = false)
-				 */
-				// TODO: Add support for aliases in code fromValue parsing
-				Property.simple(ClassPropName.from(model).getOrElse { "unnamedProperty" }, ???, ???, description,
-					model("mapping_enabled", "mapping", "map").getBoolean)
+				Property.simple(ClassPropName.from(model).getOrElse { "unnamedProperty" },
+					scalaTypeFrom(model("type").getString, packageAliases, referenceAliases),
+					CodePiece.fromValue(model("default"), packageAliases, referenceAliases).getOrElse(CodePiece.empty),
+					description, model("mapping_enabled", "mapping", "map").getBoolean)
 		}
+	}
+	
+	private def scalaTypeFrom(typeString: String, packageAliases: Map[String, Package],
+	                          referenceAliases: Map[String, Reference]): ScalaType =
+	{
+		// Case: Generic type => Parses the parent and the child types separately and then combines them
+		if (typeString.contains('[')) {
+			val (parentTypeString, childTypeString) = typeString.splitAtFirst("[")
+			scalaTypeFrom(parentTypeString, packageAliases, referenceAliases)(
+				scalaTypeFrom(childTypeString.untilLast("]"), packageAliases, referenceAliases))
+		}
+		// Case: Non-generic type
+		else
+			referenceAliases.get(typeString) match {
+				// Case: Alias used => Resolves the alias
+				case Some(reference) => reference
+				case None =>
+					// Case: Package alias used => Resolves the package alias and forms a complete reference
+					if (typeString.contains('/')) {
+						val (packageRefPart, typePart) = typeString.splitAtFirst("/")
+						packageAliases.get(packageRefPart) match {
+							case Some(parentPackage) => Reference(s"$parentPackage.$typePart")
+							// Case: Package alias couldn't be resolved => Warns the user
+							case None =>
+								println(s"Warning: Package reference '$packageRefPart' couldn't be resolved for type '$typeString'")
+								Reference(s"$packageRefPart.$typePart")
+						}
+					}
+					// Case: Reference type
+					else if (typeString.contains('.'))
+						Reference(typeString)
+					// Case: Basic scala type
+					else
+						ScalaType.basic(typeString)
+			}
 	}
 }
