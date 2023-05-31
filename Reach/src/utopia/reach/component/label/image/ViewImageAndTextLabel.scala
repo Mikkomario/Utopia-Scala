@@ -547,8 +547,8 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 			val imageLabel = ViewImageLabel(imageSettings)(hierarchy)
 				.copy(allowsUpscaling = allowImageUpscaling)
 				.apply(imagePointer)
-			val textLabel = ViewTextLabel(hierarchy).apply(itemPointer, stylePointer, displayFunction,
-				allowTextShrink = allowTextShrink)
+			val textLabel = ViewTextLabel(hierarchy).copy(allowsTextToShrink = allowTextShrink)
+				.apply(itemPointer, stylePointer, displayFunction)
 			Pair(imageLabel, textLabel)
 		}(parentHierarchy.top)
 		// Wraps the components in a stack

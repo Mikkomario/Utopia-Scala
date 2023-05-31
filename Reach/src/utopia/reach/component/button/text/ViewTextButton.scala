@@ -248,8 +248,8 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	override val focusId = hashCode()
 	override protected val wrapped = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
-		displayFunction, ButtonBackgroundViewDrawer(colorPointer.map { c => c: Color }, statePointer, borderWidth) +:
-			additionalDrawers, allowTextShrink)
+		Fixed(allowTextShrink), displayFunction, ButtonBackgroundViewDrawer(colorPointer.map { c => c: Color },
+			statePointer, borderWidth) +: additionalDrawers)
 	
 	
 	// INITIAL CODE	---------------------------------

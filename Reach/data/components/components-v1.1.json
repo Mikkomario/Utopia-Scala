@@ -109,6 +109,7 @@
         {
           "name": "ViewTextLabel",
           "context": "text",
+          "variable_context": true,
           "parents": ["customDrawable"],
           "contextual_props": [
             {

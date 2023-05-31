@@ -458,11 +458,10 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 						tc.textInsets * hintScaleFactor)
 				}
 				val textLengthPointer = textContentPointer.map { _.length }
-				Open.using(ViewTextLabel) { _.apply(
+				Open.using(ViewTextLabel) { _.allowingTextToShrink.apply(
 					textLengthPointer, countStylePointer,
 					DisplayFunction.functionToDisplayFunction[Int] { length =>
-						s"%i / %i".noLanguage.localized.interpolated(Vector(length, maxLength)) },
-					allowTextShrink = true)
+						s"%i / %i".noLanguage.localized.interpolated(Vector(length, maxLength)) })
 				}(parentHierarchy.top)
 			}
 		else

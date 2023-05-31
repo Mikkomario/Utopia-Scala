@@ -321,7 +321,8 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 		val p = pointer.mapLeft { _ -> contextPointer }
 		// Applies background color drawing, if appropriate
 		if (drawBackground) {
-			val label = withCustomDrawer(BackgroundViewDrawer(View { contextPointer.value.background }))._imageOrIcon(p)
+			val label = withCustomDrawers(BackgroundViewDrawer(View { contextPointer.value.background }) +: customDrawers)
+				._imageOrIcon(p)
 			// Repaints when background color changes
 			contextPointer.addContinuousListener { e =>
 				if (e.toPair.isAsymmetricBy { _.background })
@@ -427,8 +428,8 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 {
 	// ATTRIBUTES	---------------------------------
 	
-	val customDrawers = ImageViewDrawer(imagePointer, insetsPointer, alignmentPointer, useUpscaling = allowUpscaling) +:
-		additionalCustomDrawers
+	val customDrawers = additionalCustomDrawers :+
+		ImageViewDrawer(imagePointer, insetsPointer, alignmentPointer, useUpscaling = allowUpscaling)
 	
 	
 	// INITIAL CODE	---------------------------------

@@ -497,8 +497,8 @@ class Field[C <: ReachComponentLike with Focusable]
 				val nameShouldBeSeparatePointer = _focusPointer.mergeWith(isEmptyPointer) { _ || !_ }
 				val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
 				val nameStylePointer = contentColorPointer.map { makeHintStyle(_, !fillBackground) }
-				val nameLabel = factories.next()(ViewTextLabel).forText(fieldNamePointer, nameStylePointer,
-					allowTextShrink = true)
+				val nameLabel = factories.next()(ViewTextLabel).allowingTextToShrink
+					.forText(fieldNamePointer, nameStylePointer)
 				
 				// When displaying only the input, accommodates name label size increase into the vertical insets
 				// While displaying both, applies only half of the main text insets at top
@@ -595,7 +595,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	
 	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) =
-		factory.forText(textPointer, hintTextStylePointer, allowTextShrink = true)
+		factory.allowingTextToShrink.forText(textPointer, hintTextStylePointer)
 	
 	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) = {
 		val insets = {
