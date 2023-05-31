@@ -18,7 +18,7 @@ import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.image.ViewImageAndTextLabel
+import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageLabelSettings}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
@@ -307,10 +307,13 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 		}
 		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
 		val textColorPointer = colorPointer.map { _.shade.defaultTextColor }
-		new ViewImageAndTextLabel[A](parentHierarchy, contentPointer, imagePointer, fontPointer, textColorPointer,
-			actualImageInsetsPointer, actualTextInsetsPointer, alignment, displayFunction, betweenLinesMargin,
+		// TODO: Accept imageSettings as a parameter instead of passing every separate parameter
+		val imageSettings = ViewImageLabelSettings(insetsPointer = actualImageInsetsPointer,
+			alignmentPointer = Fixed(alignment.opposite), usesLowPrioritySize = useLowPriorityImageSize)
+		new ViewImageAndTextLabel[A](parentHierarchy, contentPointer, imagePointer, imageSettings, fontPointer,
+			textColorPointer, actualTextInsetsPointer, alignment, displayFunction, betweenLinesMargin,
 			ButtonBackgroundViewDrawer(colorPointer.map { c => c }, statePointer, borderWidth) +: additionalDrawers,
-			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
+			allowLineBreaks, allowImageUpscaling, allowTextShrink, forceEqualBreadth)
 	}
 	
 	

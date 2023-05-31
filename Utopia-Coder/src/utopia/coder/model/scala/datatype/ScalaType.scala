@@ -173,6 +173,11 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 	// OTHER    ------------------------
 	
 	/**
+	  * @param typeParameters The generic type parameters to assign to this type
+	  * @return A generic type that wraps the specified types
+	  */
+	def apply(typeParameters: Vector[ScalaType]) = copy(typeParameters = typeParameters)
+	/**
 	  * @param firstTypeParameter First type parameter to append
 	  * @param moreTypeParameters More type parameters to append
 	  * @return Copy of this type that uses the specified generic type parameters

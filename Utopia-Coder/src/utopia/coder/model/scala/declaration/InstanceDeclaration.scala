@@ -173,8 +173,7 @@ trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration
 	
 	override def matches(other: InstanceDeclaration): Boolean = name == other.name
 	
-	override def mergeWith(other: InstanceDeclaration) =
-	{
+	override def mergeWith(other: InstanceDeclaration) = {
 		val parties = Pair(this, other)
 		val conflictsBuilder = new VectorBuilder[MergeConflict]()
 		

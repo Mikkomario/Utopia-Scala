@@ -745,7 +745,7 @@ object ScalaParser
 				if (afterTypes.startsWith("=>")) {
 					val functionResultPart = afterTypes.afterFirst("=>").trim
 					val (resultType, afterResult) = scalaTypeFrom(functionResultPart, refMap)
-					resultType.fromParameters(Vector(ScalaType(mainType))) -> afterResult
+					resultType.fromParameters(Vector(ScalaType(mainType)(types))) -> afterResult
 				}
 				else
 					ScalaType(mainType, types, if (isCallByName) CallByName else Standard) -> afterTypes

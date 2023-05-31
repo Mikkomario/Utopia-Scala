@@ -9,7 +9,7 @@ import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDecla
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.reach.coder.model.data.ComponentFactory
+import utopia.reach.coder.model.data.{ComponentFactory, Property}
 import utopia.reach.coder.model.enumeration.ContextType
 import utopia.reach.coder.util.ReachReferences.Reach._
 
@@ -87,7 +87,7 @@ object ComponentFactoryWriter
 		// Adds additional properties and methods for nested settings
 		val (referencedProps, referencedMethods) = factory.properties.splitFlatMap { prop =>
 			prop.reference.iterator.splitFlatMap { case (factory, prefix) =>
-				referencedPropFunctionsFrom(factory, prefix)
+				referencedPropFunctionsFrom(prop, factory, prefix)
 			}
 		}
 		TraitDeclaration(
@@ -142,7 +142,7 @@ object ComponentFactoryWriter
 			},
 			extensions = Vector(settingsLikeType(settingsType)),
 			// Specifies a setter for each property
-			methods = factory.properties.map { prop =>
+			methods = factory.allProperties.map { prop =>
 				val paramName = prop.setterParamName.prop
 				MethodDeclaration(prop.setterName.function, isOverridden = true, isLowMergePriority = true)(
 					Parameter(paramName, prop.dataType))(
@@ -365,10 +365,10 @@ object ComponentFactoryWriter
 		)
 	}
 	
-	private def referencedPropFunctionsFrom(target: ComponentFactory, prefix: Name)
+	private def referencedPropFunctionsFrom(referenceProperty: Property, target: ComponentFactory, prefix: Name)
 	                                       (implicit naming: NamingRules): (Vector[PropertyDeclaration], Vector[MethodDeclaration]) =
 	{
-		val base = (target.componentName + "Settings").prop
+		val base = referenceProperty.name.prop
 		target.properties.splitFlatMap { prop =>
 			// Generates a getter
 			val propName = prefix +: prop.name
@@ -380,7 +380,7 @@ object ComponentFactoryWriter
 			val directSet = MethodDeclaration(("with" +: propName).function,
 				returnDescription = s"Copy of this factory with the specified $propName")(
 				Parameter(paramName, prop.dataType, description = prop.description))(
-				s"$base.${prop.setterName.function}($paramName)")
+				s"${referenceProperty.setterName.function}($base.${prop.setterName.function}($paramName))")
 			// Generates a mapper, if enabled
 			val mapper = {
 				if (prop.mappingEnabled)
@@ -392,7 +392,8 @@ object ComponentFactoryWriter
 			}
 			// Recursively generates more properties if the reference goes deeper
 			val (moreProps, moreMethods) = prop.reference match {
-				case Some((deeperTarget, nextPrefix)) => referencedPropFunctionsFrom(deeperTarget, prefix + nextPrefix)
+				case Some((deeperTarget, nextPrefix)) =>
+					referencedPropFunctionsFrom(prop, deeperTarget, prefix + nextPrefix)
 				case None => Vector() -> Vector()
 			}
 			(directGet +: moreProps) -> ((directSet +: mapper.toVector) ++ moreMethods)

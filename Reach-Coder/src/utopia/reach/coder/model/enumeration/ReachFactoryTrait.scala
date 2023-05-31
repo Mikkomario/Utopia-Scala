@@ -62,7 +62,8 @@ object ReachFactoryTrait
 	case object FramedFactory extends ReachFactoryTrait
 	{
 		override val keyword: String = "framed"
-		override val property: Property = Property.simple("insets", firmament.stackInsets)
+		override val property: Property = Property.simple("insets", firmament.stackInsets,
+			description = "Insets to place around this component")
 		
 		override def reference: Reference = framedFactory
 	}
@@ -73,7 +74,7 @@ object ReachFactoryTrait
 	{
 		override val keyword: String = "customDrawable"
 		override val property: Property = Property("customDrawers", ScalaType.vector(firmament.customDrawer),
-			"withCustomDrawers", "drawers", "Vector.empty")
+			"withCustomDrawers", "drawers", "Vector.empty", description = "Custom drawers to assign to this component")
 		
 		override def reference: Reference = customDrawableFactory
 	}

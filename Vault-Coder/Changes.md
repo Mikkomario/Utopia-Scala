@@ -5,6 +5,9 @@
 - Updated json conversion to convert certain data types (**FiniteDuration** & **Days**) using direct value conversions
 - Sql column prefixes are no longer applied to json properties
 - **Value** data type database model conversion now converts the value into json first
+### Bugfixes
+- Fixed a bug where function types using generic type parameters would not get 
+  interpreted properly in the merging process
 ### New Features
 - Added support for **Vector**, **Pair**, **Span** and **DateRange** data types
 - Standard and custom data types now support different from- & to-value conversion logic when dealing with json values

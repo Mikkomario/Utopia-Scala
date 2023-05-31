@@ -12,11 +12,10 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.transform.SizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
-import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
@@ -110,6 +109,7 @@ object ViewImageLabelSettings
   * @param colorOverlayPointer Pointer that, when defined, places a color overlay over the drawn image
   * @param imageScalingPointer Pointer that determines image scaling,
   *                                                        in addition to the original image scaling
+  * @param usesLowPrioritySize Whether this label should use low priority size constraints
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
@@ -131,46 +131,71 @@ case class ViewImageLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.e
 	override def withImageScalingPointer(p: Changing[Double]): ViewImageLabelSettings =
 		copy(imageScalingPointer = p)
 	override def withInsetsPointer(p: Changing[StackInsets]): ViewImageLabelSettings = copy(insetsPointer = p)
-	
 	override def withUseLowPrioritySize(lowPriority: Boolean): ViewImageLabelSettings =
 		copy(usesLowPrioritySize = lowPriority)
 }
 
+/**
+  * Common trait for factories that wrap a view image label settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
 trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Repr]
 {
-	// ABSTRACT ------------------------
+	// ABSTRACT	--------------------
 	
+	/**
+	  * Settings wrapped by this instance
+	  */
 	protected def settings: ViewImageLabelSettings
-	protected def withSettings(settings: ViewImageLabelSettings): Repr
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: ViewImageLabelSettings): Repr
 	
 	
-	// IMPLEMENTED  --------------------
+	// IMPLEMENTED	--------------------
 	
-	override protected def insetsPointer: Changing[StackInsets] = settings.insetsPointer
 	override protected def alignmentPointer: Changing[Alignment] = settings.alignmentPointer
 	override protected def colorOverlayPointer: Option[Changing[Color]] = settings.colorOverlayPointer
-	override protected def imageScalingPointer: Changing[Double] = settings.imageScalingPointer
-	override protected def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
 	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
+	override protected def imageScalingPointer: Changing[Double] = settings.imageScalingPointer
+	override protected def insetsPointer: Changing[StackInsets] = settings.insetsPointer
+	override protected def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
 	
+	override def withAlignmentPointer(p: Changing[Alignment]): Repr =
+		mapSettings { _.withAlignmentPointer(p) }
+	override def withColorOverlayPointer(p: Option[Changing[Color]]): Repr =
+		mapSettings { _.withColorOverlayPointer(p) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+		mapSettings { _.withCustomDrawers(drawers) }
+	override def withImageScalingPointer(p: Changing[Double]): Repr =
+		mapSettings { _.withImageScalingPointer(p) }
 	override def withInsetsPointer(p: Changing[StackInsets]): Repr = mapSettings { _.withInsetsPointer(p) }
-	override def withAlignmentPointer(p: Changing[Alignment]): Repr = mapSettings { _.withAlignmentPointer(p) }
-	override def withColorOverlayPointer(p: Option[Changing[Color]]): Repr = mapSettings { _.withColorOverlayPointer(p) }
-	override def withImageScalingPointer(p: Changing[Double]): Repr = mapSettings { _.withImageScalingPointer(p) }
-	override def withUseLowPrioritySize(lowPriority: Boolean): Repr = mapSettings { _.withUseLowPrioritySize(lowPriority) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	override def withUseLowPrioritySize(lowPriority: Boolean): Repr =
+		mapSettings { _.withUseLowPrioritySize(lowPriority) }
 	
 	
-	// OTHER    ----------------------
+	// OTHER	--------------------
 	
 	def mapSettings(f: ViewImageLabelSettings => ViewImageLabelSettings) = withSettings(f(settings))
 }
 
+/**
+  * Common trait for factories that are used for constructing view image labels
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
 trait ViewImageLabelFactoryLike[+Repr]
 	extends ViewImageLabelSettingsWrapper[Repr] with FramedFactory[Repr] with SizeAdjustable[Repr]
 {
 	// ABSTRACT ------------------------------
 	
+	/**
+	  * The component hierarchy, to which created view image labels will be attached
+	  */
 	protected def parentHierarchy: ComponentHierarchy
 	
 	protected def allowsUpscaling: Boolean
@@ -194,25 +219,11 @@ trait ViewImageLabelFactoryLike[+Repr]
 	def apply(image: Image): ViewImageLabel = apply(Fixed(image))
 }
 
-case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
-                                 settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
-                                 allowsUpscaling: Boolean = false)
-	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
-		with FromContextFactory[ColorContext, ContextualViewImageLabelFactory]
-{
-	override def self: ViewImageLabelFactory = this
-	
-	override protected def withSettings(settings: ViewImageLabelSettings): ViewImageLabelFactory =
-		copy(settings = settings)
-	
-	override def withBackground(background: Color): ViewImageLabelFactory = withCustomDrawer(BackgroundDrawer(background))
-	
-	override def withContext(context: ColorContext): ContextualViewImageLabelFactory =
-		ContextualViewImageLabelFactory(parentHierarchy, context, settings)
-	
-	override def *(mod: Double): ViewImageLabelFactory = withInsetsScaledBy(mod).withImageScaledBy(mod)
-}
-
+/**
+  * Factory class used for constructing view image labels using contextual component creation information
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
 case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
                                            settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
 	extends ViewImageLabelFactoryLike[ContextualViewImageLabelFactory]
@@ -227,7 +238,8 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 	override protected def allowsUpscaling: Boolean = context.allowImageUpscaling
 	
 	override def withContext(context: ColorContext): ContextualViewImageLabelFactory = copy(context = context)
-	override protected def withSettings(settings: ViewImageLabelSettings): ContextualViewImageLabelFactory =
+	
+	override def withSettings(settings: ViewImageLabelSettings): ContextualViewImageLabelFactory =
 		copy(settings = settings)
 	
 	
@@ -237,7 +249,9 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 		withInsetsPointer(sizePointer.map { context.scaledStackMargin(_).toInsets })
 	
 	def withColor(color: ColorSet): ContextualViewImageLabelFactory = withColor(context.color(color))
+	
 	def withColor(color: ColorRole): ContextualViewImageLabelFactory = withColor(context.color(color))
+	
 	def withColorPointer(colorPointer: Changing[ColorRole]) =
 		withColor(colorPointer.map(context.color.apply))
 	
@@ -252,8 +266,9 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 			case None => apply(iconPointer.map { _.contextual })
 		}
 	}
+	
 	/**
-	  * @param icon    The icon to display
+	  * @param icon The icon to display
 	  * @return A new image label that displays the specified icon
 	  */
 	def icon(icon: SingleColorIcon) = iconPointer(Fixed(icon))
@@ -262,22 +277,67 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 		case Right(ic) => icon(ic)
 		case Left(img) => apply(img)
 	}
+	
 	def pointer(p: Either[Changing[Image], Changing[SingleColorIcon]]) = p match {
 		case Right(p) => iconPointer(p)
 		case Left(p) => apply(p)
 	}
 }
 
-case class ViewImageLabelSetup(settings: ViewImageLabelSettings)
-	extends ViewImageLabelSettingsWrapper[ViewImageLabelSetup] with Cff[ViewImageLabelFactory]
+/**
+  * Factory class that is used for constructing view image labels without using contextual information
+  * @param allowsUpscaling Whether drawn images should be allowed to scale beyond their source resolution
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
+case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
+                                 settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
+                                 allowsUpscaling: Boolean = false)
+	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
+		with FromContextFactory[ColorContext, ContextualViewImageLabelFactory]
 {
-	override protected def withSettings(settings: ViewImageLabelSettings): ViewImageLabelSetup =
-		copy(settings = settings)
+	// IMPLEMENTED	--------------------
+	
+	override def self: ViewImageLabelFactory = this
+	
+	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelFactory = copy(settings = settings)
+	override def withBackground(background: Color): ViewImageLabelFactory =
+		withCustomDrawer(BackgroundDrawer(background))
+	override def withContext(context: ColorContext): ContextualViewImageLabelFactory =
+		ContextualViewImageLabelFactory(parentHierarchy, context, settings)
+	
+	override def *(mod: Double): ViewImageLabelFactory = withInsetsScaledBy(mod).withImageScaledBy(mod)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param allow Whether drawn images should be allowed to scale beyond their source resolution
+	  * @return Copy of this factory with the specified allows upscaling
+	  */
+	def withAllowsUpscaling(allow: Boolean) = copy(allowsUpscaling = allow)
+}
+
+/**
+  * Used for defining view image label creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 30.05.2023, v1.1
+  */
+case class ViewImageLabelSetup(settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
+	extends ViewImageLabelSettingsWrapper[ViewImageLabelSetup]
+		with Cff[ViewImageLabelFactory]
+{
+	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelSetup = copy(settings = settings)
 	
 	override def apply(hierarchy: ComponentHierarchy) = ViewImageLabelFactory(hierarchy, settings)
 }
 
-object ViewImageLabel extends ViewImageLabelSetup(ViewImageLabelSettings.default)
+object ViewImageLabel extends ViewImageLabelSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: ViewImageLabelSettings) = withSettings(settings)
+}
 
 /**
   * A pointer-based label that draws an image
