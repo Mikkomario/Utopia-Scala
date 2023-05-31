@@ -523,6 +523,8 @@ object ViewImageAndTextLabel extends Cff[ViewImageAndTextLabelFactory]
   * @since 9.11.2020, v0.1
   */
 // TODO: Alignment doesn't adjust to image alignment changes at this time
+// FIXME: Don't apply color overlay and scaling here, because they're applied in the underlying image label
+// TODO: Accept Image or Icon pointer
 class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPointer: Changing[A],
                                val imagePointer: Changing[Image], imageSettings: ViewImageLabelSettings,
                                fontPointer: Changing[Font], textColorPointer: Changing[Color] = Fixed(Color.textBlack),

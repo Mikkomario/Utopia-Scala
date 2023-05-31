@@ -22,6 +22,7 @@
         {
           "name": "ViewImageLabel",
           "context": "color",
+          "variable_context": true,
           "parents": ["customDrawable"],
           "props": [
             {

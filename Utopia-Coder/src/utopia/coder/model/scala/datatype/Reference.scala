@@ -118,6 +118,9 @@ object Reference
 		lazy val days = apply(time, "Days")
 		lazy val dateRange = apply(time, "DateRange")
 		
+		lazy val changing = apply(eventfulViewTemplate, "Changing")
+		lazy val fixed = apply(eventfulImmutableView, "Fixed")
+		
 		lazy val extender = apply(viewTemplate, "Extender")
 	}
 }

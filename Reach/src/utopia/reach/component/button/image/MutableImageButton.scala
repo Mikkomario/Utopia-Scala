@@ -16,6 +16,7 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.view.immutable.eventful.Fixed
 
 object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]
 {
@@ -108,7 +109,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Vector()
 	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer,
-		additionalDrawers, allowUpscaling, useLowPrioritySize)
+		Fixed(allowUpscaling), additionalDrawers, useLowPrioritySize)
 	
 	override val focusId = hashCode()
 	

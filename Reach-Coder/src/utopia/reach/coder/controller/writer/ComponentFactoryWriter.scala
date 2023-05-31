@@ -12,6 +12,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.reach.coder.model.data.{ComponentFactory, Property}
 import utopia.reach.coder.model.enumeration.ContextType
 import utopia.reach.coder.util.ReachReferences.Reach._
+import Reference._
 
 /**
   * Used for writing component factory classes
@@ -64,13 +65,12 @@ object ComponentFactoryWriter
 					contextualDec.map { case (contextual, context) => contextual.toBasicType -> context }))
 		}
 		
-		val setupDec = nonContextualDec match {
-			case Some(nonContextual) =>
-				Some(setupFactory(factory, settingsType, settingsWrapperType, Right(nonContextual.toBasicType)))
-			case None =>
-				contextualDec.map { case (contextual, context) =>
-					setupFactory(factory, settingsType, settingsWrapperType, Left(contextual.toBasicType -> context))
-				}
+		val setupDec = {
+			if (nonContextualDec.isEmpty && contextualDec.isEmpty)
+				None
+			else
+				Some(setupFactory(factory, settingsType, settingsWrapperType, nonContextualDec.map { _.toBasicType },
+					contextualDec.map { case (contextual, context) => (contextual.toBasicType, context) }))
 		}
 		val companionDec = setupDec.map { setupDec => companion(factory, settingsType, setupDec.toBasicType) }
 		
@@ -226,6 +226,20 @@ object ComponentFactoryWriter
 	{
 		val name = (factory.componentName + "Factory").className
 		val factoryType = ScalaType.basic(name)
+		// Creates the extension and function for contextual version -accessing, if appropriate
+		val contextualParentAndMethod = contextual.map { case (contextual, context) =>
+			// If variable (pointer) context type is used, extends a different trait
+			val (fromContextF, contextParamType) = {
+				if (factory.useVariableContext)
+					fromVariableContextFactory -> (flow.changing(context.reference): ScalaType)
+				else
+					fromContextFactory -> (context.reference: ScalaType)
+			}
+			val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(
+				Parameter("context", contextParamType))(
+				s"$contextual(parentHierarchy, context, settings)")
+			fromContextF(context.reference, contextual) -> withContextMethod
+		}
 		ClassDeclaration(
 			name = name,
 			// Contains the standard (implemented) properties + non-context -specific properties
@@ -237,19 +251,13 @@ object ComponentFactoryWriter
 			},
 			extensions = factoryLikeType(factoryType) +:
 				// Enables context-appending, if specified
-				contextual.map[Extension] { case (contextual, context) =>
-					fromContextFactory(context.reference, contextual)
-				}.toVector,
+				contextualParentAndMethod.map[Extension] { _._1 }.toVector,
 			methods = Set(
 				// Settings setter -function
 				MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
 					Parameter("settings", settingsType))("copy(settings = settings)")) ++
 				// Context append -function (optional)
-				contextual.map { case (contextual, context) =>
-					MethodDeclaration("withContext", isOverridden = true)(
-						Parameter("context", context.reference))(
-						s"$contextual(parentHierarchy, context, settings)")
-				} ++
+				contextualParentAndMethod.map { _._2 } ++
 				factory.nonContextualProperties.map { prop =>
 					val paramName = prop.setterParamName.prop
 					MethodDeclaration(prop.setterName.function,
@@ -271,7 +279,24 @@ object ComponentFactoryWriter
 	                             (implicit naming: NamingRules, setup: ProjectSetup) =
 	{
 		val factoryType = ScalaType.basic(name)
-		val contextParameter = Parameter("context", context.reference)
+		// If variable contexts are used, extends a different factory class,
+		// different constructor parameter and different withContext -function
+		val (contextualParent, contextParameter, withContextMethod) = {
+			if (factory.useVariableContext) {
+				val parentTrait = variableContextualFactory(context.reference, factoryType)
+				val parameter = Parameter("contextPointer", flow.changing(context.reference))
+				val withContextMethod = MethodDeclaration("withContextPointer", isOverridden = true)(parameter)(
+					"copy(contextPointer = contextPointer)")
+				(parentTrait, parameter, withContextMethod)
+			}
+			else {
+				val parentTrait = context.factory(factoryType)
+				val parameter = Parameter("context", context.reference)
+				val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(parameter)(
+					"copy(context = context)")
+				(parentTrait, parameter, withContextMethod)
+			}
+		}
 		ClassDeclaration(
 			name = name,
 			// Contains the default parameters (parentHierarchy, context, settings),
@@ -284,13 +309,10 @@ object ComponentFactoryWriter
 				Parameter(prop.name.prop, prop.dataType, prop.defaultValue, description = prop.description)
 			},
 			// TODO: Add support for contextual ReachFactoryTrait variants
-			extensions = Vector(
-				factoryLikeType(factoryType),
-				context.factory(factoryType)
-			),
+			extensions = Vector(factoryLikeType(factoryType), contextualParent),
 			// Implements the required setters
 			methods = Set(
-				MethodDeclaration("withContext", isOverridden = true)(contextParameter)("copy(context = context)"),
+				withContextMethod,
 				MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
 					Parameter("settings", settingsType))("copy(settings = settings)")
 			) ++
@@ -312,7 +334,8 @@ object ComponentFactoryWriter
 	
 	// Creates the outside-hierarchy setup class
 	private def setupFactory(factory: ComponentFactory, settingsType: ScalaType, settingsWrapperType: ScalaType,
-	                         factoryType: Either[(ScalaType, ContextType), ScalaType])
+	                         nonContextualFactoryType: Option[ScalaType],
+	                         contextualFactoryType: Option[(ScalaType, ContextType)])
 	                        (implicit naming: NamingRules, setup: ProjectSetup) =
 	{
 		val name = (factory.componentName + "Setup").className
@@ -320,29 +343,33 @@ object ComponentFactoryWriter
 		
 		// If non-contextual factory version is disabled, specifies different extension and methods
 		val hierarchyParam = Parameter("hierarchy", componentHierarchy)
-		val (parent, apply) = factoryType match {
-			case Right(nonContextual) =>
-				cff(nonContextual) -> MethodDeclaration("apply", isOverridden = true)(
-					hierarchyParam)(s"$nonContextual(hierarchy, settings)")
-			case Left((contextual, context)) =>
-				ccff(context.reference, contextual) -> MethodDeclaration("withContext", isOverridden = true)(
-					Vector(hierarchyParam, Parameter("context", context.reference)))(
-					s"$contextual(hierarchy, context, settings)")
+		val nonContextualParentAndMethod = nonContextualFactoryType.map { nonContextual =>
+			cff(nonContextual) -> MethodDeclaration("apply", isOverridden = true)(
+				hierarchyParam)(s"$nonContextual(hierarchy, settings)")
+		}
+		val contextualParentAndMethod = contextualFactoryType.map { case (contextual, context) =>
+			// If the accepted context is variable, this class still accepts a static context
+			val (methodImplementation, methodReferences) = {
+				if (factory.useVariableContext)
+					s"$contextual(hierarchy, Fixed(context), settings)" -> Set(flow.fixed)
+				else
+					s"$contextual(hierarchy, context, settings)" -> Set[Reference]()
+			}
+			ccff(context.reference, contextual) -> MethodDeclaration("withContext", methodReferences, isOverridden = true)(
+				Vector(hierarchyParam, Parameter("context", context.reference)))(
+				methodImplementation)
 		}
 		
 		ClassDeclaration(
 			name = (factory.componentName + "Setup").className,
 			constructionParams = Vector(Parameter("settings", settingsType, s"$settingsType.default")),
-			extensions = Vector(
-				settingsWrapperType(setupType),
-				parent
-			),
+			extensions = Vector[Extension](settingsWrapperType(setupType)) ++
+				nonContextualParentAndMethod.map[Extension] { _._1 } ++
+				contextualParentAndMethod.map[Extension] { _._1 },
 			// Implements the required methods
-			methods = Set(
-				MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
-					Parameter("settings", settingsType))("copy(settings = settings)"),
-				apply
-			),
+			methods = Set(MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
+				Parameter("settings", settingsType))("copy(settings = settings)")) ++
+				nonContextualParentAndMethod.map { _._2 } ++ contextualParentAndMethod.map { _._2 },
 			description = s"Used for defining ${
 				factory.componentName} creation settings outside of the component building process",
 			author = factory.author,

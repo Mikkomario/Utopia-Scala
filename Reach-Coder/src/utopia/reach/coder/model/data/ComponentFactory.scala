@@ -17,14 +17,16 @@ import utopia.reach.coder.model.enumeration.{ContextType, ReachFactoryTrait}
   * @param nonContextualProperties Properties that appear only in non-contextual factory variants
   * @param contextualProperties Properties that only appear in contextual factory variants
   * @param author Author of this component (may be empty)
-  * @param onlyContextual Whether only the contextual factories are used
+  * @param onlyContextual Whether only the contextual factories are used (default = false)
+  * @param useVariableContext Whether the component creation context should be specified as a pointer instead of a
+  *                           fixed value (default = false)
   */
 case class ComponentFactory(pck: Package, componentName: Name, contextType: Option[ContextType] = None,
                             parentTraits: Vector[ReachFactoryTrait] = Vector(),
                             properties: Vector[Property] = Vector(),
                             nonContextualProperties: Vector[Property] = Vector(),
                             contextualProperties: Vector[Property] = Vector(),
-                            author: String = "", onlyContextual: Boolean = false)
+                            author: String = "", onlyContextual: Boolean = false, useVariableContext: Boolean = false)
 {
 	/**
 	  * @return All properties declared / used by this factory

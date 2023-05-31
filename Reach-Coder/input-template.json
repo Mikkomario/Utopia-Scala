@@ -36,7 +36,8 @@
           ],
           "non_contextual_props": [],
           "contextual_props": [],
-          "only_contextual": false
+          "only_contextual": false,
+          "variable_context": false
         }
       ]
     }

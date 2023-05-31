@@ -71,6 +71,8 @@ object Package
 		lazy val time = base / "time"
 		lazy val view = base/"view"
 		lazy val viewTemplate = view/"template"
+		lazy val eventfulViewTemplate = viewTemplate/"eventful"
+		lazy val eventfulImmutableView = view/"immutable.eventful"
 		lazy val utils = base / "util"
 	}
 }

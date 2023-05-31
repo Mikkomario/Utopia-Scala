@@ -14,6 +14,7 @@ object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactor
 	override def apply(hierarchy: ComponentHierarchy) = new MutableImageLabelFactory(hierarchy)
 }
 
+// TODO: Use ImageLabelSettings here
 class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
 {
 	/**

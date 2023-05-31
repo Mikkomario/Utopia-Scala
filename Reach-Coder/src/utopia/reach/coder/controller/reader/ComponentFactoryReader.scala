@@ -158,7 +158,8 @@ object ComponentFactoryReader
 			contextualProperties = model("contextualProps", "contextual_props").getVector
 				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
 			author = model("author").stringOr(projectAuthor),
-			onlyContextual = model("onlyContextual", "only_contextual").getBoolean
+			onlyContextual = model("onlyContextual", "only_contextual").getBoolean,
+			useVariableContext = model("variable_context", "variableContext", "view", "variable").getBoolean
 		)
 	}
 	
