@@ -1,6 +1,8 @@
 package utopia.reach.component.button.text
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
@@ -26,7 +28,7 @@ import utopia.reach.cursor.Cursor
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-trait TextButtonFactoryLike[+Repr] extends ButtonSettingsWrapper[Repr]
+trait TextButtonFactoryLike[+Repr] extends ButtonSettingsWrapper[Repr] with CustomDrawableFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -58,7 +60,8 @@ trait TextButtonFactoryLike[+Repr] extends ButtonSettingsWrapper[Repr]
 	                     allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
 	                    (action: => Unit) =
 		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
-			betweenLinesMargin, allowLineBreaks), color, settings, borderWidth, allowTextShrink)(action)
+			betweenLinesMargin, allowLineBreaks), color, settings, borderWidth, customDrawers,
+			allowTextShrink)(action)
 }
 
 /**
@@ -67,7 +70,8 @@ trait TextButtonFactoryLike[+Repr] extends ButtonSettingsWrapper[Repr]
   * @since 31.05.2023, v1.1
   */
 case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
-                                       settings: ButtonSettings = ButtonSettings.default)
+                                       settings: ButtonSettings = ButtonSettings.default,
+                                       customDrawers: Vector[CustomDrawer] = Vector.empty)
 	extends TextButtonFactoryLike[ContextualTextButtonFactory]
 		with TextContextualFactory[ContextualTextButtonFactory]
 {
@@ -77,6 +81,8 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
 	
 	override def withContext(newContext: TextContext) = copy(context = newContext)
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualTextButtonFactory =
+		copy(customDrawers = drawers)
 	
 	
 	// OTHER	----------------------------------
@@ -99,7 +105,8 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
   * @since 31.05.2023, v1.1
   */
 case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
-                             settings: ButtonSettings = ButtonSettings.default)
+                             settings: ButtonSettings = ButtonSettings.default,
+                             customDrawers: Vector[CustomDrawer] = Vector.empty)
 	extends TextButtonFactoryLike[TextButtonFactory]
 		with FromContextFactory[TextContext, ContextualTextButtonFactory]
 {
@@ -109,6 +116,7 @@ case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
 		ContextualTextButtonFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): TextButtonFactory = copy(customDrawers = drawers)
 	
 	
 	// OTHER	-----------------------------------
@@ -170,6 +178,7 @@ object TextButton extends TextButtonSetup()
   */
 class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
                  color: Color, settings: ButtonSettings = ButtonSettings.default, borderWidth: Double = 0.0,
+                 customDrawers: Vector[CustomDrawer] = Vector.empty,
                  allowTextShrink: Boolean = false)(action: => Unit)
 	extends ButtonLike with ReachComponentWrapper
 {
@@ -182,7 +191,7 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	override val focusId = hashCode()
 	override protected val wrapped = new TextLabel(parentHierarchy, text, textDrawContext,
-		ButtonBackgroundViewDrawer(Fixed(color), statePointer, Fixed(borderWidth)) +: settings.customDrawers, allowTextShrink)
+		ButtonBackgroundViewDrawer(Fixed(color), statePointer, Fixed(borderWidth)) +: customDrawers, allowTextShrink)
 	
 	
 	// INITIAL CODE	-----------------------------

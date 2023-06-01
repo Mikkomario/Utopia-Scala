@@ -18,6 +18,7 @@ import utopia.reach.coder.util.ReachReferences.Reach._
   * @author Mikko Hilpinen
   * @since 19.5.2023, v1.0
   */
+// TODO: For reference properties that don't use prefix, one could/should automatically extend the appropriate SettingsLike trait
 object ComponentFactoryWriter
 {
 	// ATTRIBUTES -----------------------
@@ -91,6 +92,7 @@ object ComponentFactoryWriter
 	}
 	
 	// Declares the generic settings trait
+	// TODO: When implementing referenced properties, use correct setter names in cases where no prefix is defined
 	private def settingsLike(factory: ComponentFactory)(implicit naming: NamingRules, setup: ProjectSetup) = {
 		// Adds additional properties and methods for nested settings
 		val (referencedProps, referencedMethods) = factory.properties.splitFlatMap { prop =>

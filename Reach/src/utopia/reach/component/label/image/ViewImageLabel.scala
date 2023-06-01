@@ -10,7 +10,7 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.operator.LinearScalable
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
@@ -353,21 +353,28 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 
 /**
   * Factory class that is used for constructing view image labels without using contextual information
-  * @param allowsUpscaling Whether drawn images should be allowed to scale beyond their source resolution
+  * @param allowUpscalingPointer Pointer that determines whether drawn images should be allowed to scale
+  *                               beyond their source resolution
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
 case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
                                  settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
-                                 allowsUpscaling: Boolean = false)
+                                 allowUpscalingPointer: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
 		with FromVariableContextFactory[ColorContext, ContextualViewImageLabelFactory]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Copy of this factory that allows image upscaling
+	  */
+	def allowingUpscaling = withAllowUpscaling(allow = true)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def self: ViewImageLabelFactory = this
-	
-	override protected def allowUpscalingPointer: Changing[Boolean] = Fixed(allowsUpscaling)
 	
 	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelFactory = copy(settings = settings)
 	override def withBackground(background: Color): ViewImageLabelFactory =
@@ -384,7 +391,7 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	  * @param allow Whether drawn images should be allowed to scale beyond their source resolution
 	  * @return Copy of this factory with the specified allows upscaling
 	  */
-	def withAllowsUpscaling(allow: Boolean) = copy(allowsUpscaling = allow)
+	def withAllowUpscaling(allow: Boolean) = copy(allowUpscalingPointer = Fixed(allow))
 }
 
 /**

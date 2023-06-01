@@ -195,7 +195,6 @@
     "button": [
       {
         "name": "Button",
-        "parents": ["customDrawable"],
         "only_contextual": true,
         "props": [
           {
@@ -255,6 +254,23 @@
           },
           {
             "ref": "ImageLabel",
+            "prefix": "image",
+            "prefix_properties": false
+          }
+        ]
+      },
+      {
+        "name": "ViewImageButton",
+        "context": "color",
+        "variable_context": true,
+        "props": [
+          {
+            "ref": "Button",
+            "prefix": "button",
+            "prefix_properties": false
+          },
+          {
+            "ref": "ViewImageLabel",
             "prefix": "image",
             "prefix_properties": false
           }

@@ -1,7 +1,5 @@
 package utopia.reach.component.button
 
-import utopia.firmament.drawing.immutable.CustomDrawableFactory
-import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.HotKey
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
@@ -13,7 +11,7 @@ import utopia.reach.focus.FocusListener
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-trait ButtonSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
+trait ButtonSettingsLike[+Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -87,21 +85,18 @@ object ButtonSettings
 
 /**
   * Combined settings used when constructing buttons
-  * @param customDrawers  Custom drawers to assign to this component
   * @param enabledPointer A pointer that determines whether this button is interactive or not
   * @param hotKeys        The keys used for triggering this button even when it doesn't have focus
   * @param focusListeners Focus listeners that should receive focus events from this button
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ButtonSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
-                          enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
+case class ButtonSettings(enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
                           focusListeners: Vector[FocusListener] = Vector.empty)
 	extends ButtonSettingsLike[ButtonSettings]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
 	override def withEnabledPointer(p: Changing[Boolean]) = copy(enabledPointer = p)
 	override def withFocusListeners(listeners: Vector[FocusListener]) = copy(focusListeners = listeners)
 	override def withHotKeys(keys: Set[HotKey]) = copy(hotKeys = keys)
@@ -130,13 +125,10 @@ trait ButtonSettingsWrapper[+Repr] extends ButtonSettingsLike[Repr]
 	
 	// IMPLEMENTED	--------------------
 	
-	override def customDrawers = settings.customDrawers
 	override def enabledPointer = settings.enabledPointer
 	override def focusListeners = settings.focusListeners
 	override def hotKeys = settings.hotKeys
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
-		mapSettings { _.withCustomDrawers(drawers) }
 	override def withEnabledPointer(p: Changing[Boolean]) = mapSettings { _.withEnabledPointer(p) }
 	override def withFocusListeners(listeners: Vector[FocusListener]) =
 		mapSettings { _.withFocusListeners(listeners) }

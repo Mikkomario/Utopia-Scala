@@ -1,6 +1,7 @@
 package utopia.reach.component.button.image
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
@@ -29,7 +30,8 @@ import utopia.reach.focus.FocusListener
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-trait ViewImageAndTextButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr] with FramedFactory[Repr]
+trait ViewImageAndTextButtonSettingsLike[+Repr]
+	extends ButtonSettingsLike[Repr] with FramedFactory[Repr] with CustomDrawableFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -77,14 +79,11 @@ trait ViewImageAndTextButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr]
 	def enabledPointer = buttonSettings.enabledPointer
 	def hotKeys = buttonSettings.hotKeys
 	def focusListeners = buttonSettings.focusListeners
-	override def customDrawers: Vector[CustomDrawer] = buttonSettings.customDrawers
 	
 	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
 	def withFocusListeners(listeners: Vector[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
-		mapButtonSettings { _.withCustomDrawers(drawers) }
 	
 	
 	// OTHER	--------------------
@@ -149,7 +148,8 @@ object ViewImageAndTextButtonSettings
   */
 case class ViewImageAndTextButtonSettings(imageSettings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                           buttonSettings: ButtonSettings = ButtonSettings.default,
-                                          insets: StackInsets = StackInsets.any)
+                                          insets: StackInsets = StackInsets.any,
+                                          customDrawers: Vector[CustomDrawer] = Vector.empty)
 	extends ViewImageAndTextButtonSettingsLike[ViewImageAndTextButtonSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -158,6 +158,8 @@ case class ViewImageAndTextButtonSettings(imageSettings: ViewImageLabelSettings 
 	override def withImageSettings(settings: ViewImageLabelSettings) = copy(imageSettings = settings)
 	override def withInsets(insets: StackInsetsConvertible): ViewImageAndTextButtonSettings =
 		copy(insets = insets.toInsets)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageAndTextButtonSettings =
+		copy(customDrawers = drawers)
 }
 
 /**
@@ -186,11 +188,13 @@ trait ViewImageAndTextButtonSettingsWrapper[+Repr] extends ViewImageAndTextButto
 	override def buttonSettings = settings.buttonSettings
 	override def imageSettings = settings.imageSettings
 	override def insets: StackInsets = settings.insets
+	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
 	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
 	override def withImageSettings(settings: ViewImageLabelSettings) =
 		mapSettings { _.withImageSettings(settings) }
 	override def withInsets(insets: StackInsetsConvertible): Repr = mapSettings { _.withInsets(insets) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
 	
 	
 	// OTHER	--------------------

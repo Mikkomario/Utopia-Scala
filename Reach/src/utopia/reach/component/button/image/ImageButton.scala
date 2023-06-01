@@ -48,7 +48,7 @@ trait ImageButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr] with Image
 	
 	// IMPLEMENTED  ----------------
 	
-	def customDrawers = imageSettings.customDrawers ++ buttonSettings.customDrawers
+	def customDrawers = imageSettings.customDrawers
 	def enabledPointer = buttonSettings.enabledPointer
 	def hotKeys = buttonSettings.hotKeys
 	def focusListeners = buttonSettings.focusListeners
@@ -60,6 +60,8 @@ trait ImageButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr] with Image
 	
 	override def apply(alignment: Alignment): Repr = mapImageSettings { _.withAlignment(alignment) }
 	
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+		mapImageSettings { _.withCustomDrawers(drawers) }
 	def withColor(color: Option[Color]) = withImageSettings(imageSettings.withColor(color))
 	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
 	def withFocusListeners(listeners: Vector[FocusListener]) =
@@ -96,13 +98,6 @@ case class ImageButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.d
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
 	override def withImageSettings(settings: ImageLabelSettings) = copy(imageSettings = settings)
-	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageButtonSettings = {
-		copy(
-			buttonSettings = buttonSettings.withCustomDrawers(drawers.filterNot(imageSettings.customDrawers.contains)),
-			imageSettings = imageSettings.withCustomDrawers(imageSettings.customDrawers.filter(drawers.contains))
-		)
-	}
 }
 
 /**
@@ -317,8 +312,7 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, s
 	
 	override protected val wrapped = ViewImageLabel(parentHierarchy)
 		.withSettings(settings.imageSettings)
-		.withAdditionalCustomDrawers(settings.buttonSettings.customDrawers)
-		.copy(allowsUpscaling = allowUpscaling)
+		.withAllowUpscaling(allowUpscaling)
 		.apply(statePointer.map { state => images(state) })
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	
