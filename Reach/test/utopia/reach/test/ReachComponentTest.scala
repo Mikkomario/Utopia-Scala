@@ -2,7 +2,6 @@ package utopia.reach.test
 
 import utopia.firmament.component.Window
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.model.HotKey
 import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
@@ -57,16 +56,14 @@ object ReachComponentTest extends App
 						val buttonStack = factories(Stack).copy(axis = X, areRelated = true).build(Mixed) { factories =>
 							// 2.1: Clear Button
 							val clearButton = factories.mapContext { _ / Secondary }(TextButton)
-								.apply("Clear (F1)", Set(HotKey.keyWithIndex(KeyEvent.VK_F1)),
-									focusListeners = Vector(focusReporter("Clear Button"))) {
-									editableLabel.text = ""
-								}
+								.withFocusListener(focusReporter("Clear Button"))
+								.triggeredWithKeyIndex(KeyEvent.VK_F1)
+								.apply("Clear (F1)") { editableLabel.text = "" }
 							// 2.2: Close Button
 							val closeButton = factories.mapContext { _ / Primary }(TextButton)
-								.apply("Close (esc)", Set(HotKey.keyWithIndex(KeyEvent.VK_ESCAPE)),
-									focusListeners = Vector(focusReporter("Close Button"))) {
-									windowPointer.value.foreach { _.close() }
-								}
+								.withFocusListener(focusReporter("Close Button"))
+								.triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
+								.apply("Close (esc)") { windowPointer.value.foreach { _.close() } }
 							Vector(clearButton, closeButton)
 						}
 						Vector(editableLabel, buttonStack.parent)

@@ -8,6 +8,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -163,7 +164,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	setup(_statePointer, hotKeys)
 	
 	// Adds background drawing
-	wrapped.addCustomDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, borderWidth))
+	wrapped.addCustomDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)))
 	
 	
 	// COMPUTED	-------------------------------------

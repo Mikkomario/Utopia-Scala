@@ -185,7 +185,8 @@ object ComponentFactoryReader
 								}
 							case None => Name.empty
 						}
-						Property.referringTo(factory, prefix, description)
+						Property.referringTo(factory, prefix, description,
+							model("prefix_properties", "prefix_props").booleanOr(true))
 					// Case: Reference couldn't be resolved => Warns and forms a placeholder property
 					case None =>
 						println(s"Couldn't resolve component factory reference '$reference'")

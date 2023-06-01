@@ -6,266 +6,359 @@ import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
-import utopia.firmament.model.stack.StackInsets
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.Point
-import utopia.reach.component.factory.contextual.TextContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.{FramedFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageLabelSettings}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
-object ViewImageAndTextButton extends ComponentFactoryFactory[ViewImageAndTextButtonFactory]
+/**
+  * Common trait for view image and text button factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 31.05.2023, v1.1
+  */
+trait ViewImageAndTextButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr] with FramedFactory[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new ViewImageAndTextButtonFactory(hierarchy)
-}
-
-class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualViewImageAndTextButtonFactory]
-{
-	override def withContext(context: TextContext) =
-		ContextualViewImageAndTextButtonFactory(this, context)
+	// ABSTRACT	--------------------
+	
+	protected def imageSettings: ViewImageLabelSettings
+	protected def buttonSettings: ButtonSettings
 	
 	/**
-	  * Creates a new button with image and text
-	  * @param contentPointer Pointer to the displayed content, which determines text
-	  * @param imagesPointer Pointer to the displayed image set
-	  * @param colorPointer Pointer to button color
-	  * @param fontPointer Pointer to font used
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param imageInsetsPointer Pointer to insets placed around the image (default = any, preferring 0)
-	  * @param textInsetsPointer Pointer to insets placed around the text (default = any, preferring 0)
-	  * @param commonInsetsPointer Pointer to insets placed around this button (default = any, preferring 0)
-	  * @param borderWidth Width of the border in this button (default = 0 = no border)
-	  * @param alignment Alignment used for the text (default = Left)
-	  * @param displayFunction Function for converting content to text (default = toString)
-	  * @param betweenLinesMargin Vertical margin between text lines (default = 0)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
-	  * @param allowImageUpscaling Whether image should be allowed to scale up to its source resolution (default = true)
-	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
-	  * @param action Action performed when this button is pressed (accepts current content)
-	  * @tparam A Type of content in this button
+	  * @param settings New button settings to use.
+	  * @return Copy of this factory with the specified button settings
+	  */
+	def withButtonSettings(settings: ButtonSettings): Repr
+	/**
+	  * @param settings New image settings to use.
+	  * @return Copy of this factory with the specified image settings
+	  */
+	def withImageSettings(settings: ViewImageLabelSettings): Repr
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * insets pointer from the wrapped view image label settings
+	  */
+	def imageInsetsPointer = imageSettings.insetsPointer
+	/**
+	  * alignment pointer from the wrapped view image label settings
+	  */
+	def imageAlignmentPointer = imageSettings.alignmentPointer
+	/**
+	  * color overlay pointer from the wrapped view image label settings
+	  */
+	def imageColorOverlayPointer = imageSettings.colorOverlayPointer
+	/**
+	  * image scaling pointer from the wrapped view image label settings
+	  */
+	def imageImageScalingPointer = imageSettings.imageScalingPointer
+	/**
+	  * uses low priority size from the wrapped view image label settings
+	  */
+	def imageUsesLowPrioritySize = imageSettings.usesLowPrioritySize
+	
+	
+	// IMPLEMENTED  -----------------
+	
+	def enabledPointer = buttonSettings.enabledPointer
+	def hotKeys = buttonSettings.hotKeys
+	def focusListeners = buttonSettings.focusListeners
+	override def customDrawers: Vector[CustomDrawer] = buttonSettings.customDrawers
+	
+	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
+	def withFocusListeners(listeners: Vector[FocusListener]) =
+		withButtonSettings(buttonSettings.withFocusListeners(listeners))
+	def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+		mapButtonSettings { _.withCustomDrawers(drawers) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapButtonSettings(f: ButtonSettings => ButtonSettings) = withButtonSettings(f(buttonSettings))
+	
+	def mapImageAlignmentPointer(f: Changing[Alignment] => Changing[Alignment]) =
+		withImageAlignmentPointer(f(imageAlignmentPointer))
+	def mapImageColorOverlayPointer(f: Option[Changing[Color]] => Option[Changing[Color]]) =
+		withImageColorOverlayPointer(f(imageColorOverlayPointer))
+	def mapImageImageScalingPointer(f: Changing[Double] => Changing[Double]) =
+		withImageImageScalingPointer(f(imageImageScalingPointer))
+	def mapImageInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) =
+		withImageInsetsPointer(f(imageInsetsPointer))
+	
+	def mapImageSettings(f: ViewImageLabelSettings => ViewImageLabelSettings) =
+		withImageSettings(f(imageSettings))
+	
+	/**
+	  * @param p Pointer that determines the image drawing location within this component
+	  * @return Copy of this factory with the specified image alignment pointer
+	  */
+	def withImageAlignmentPointer(p: Changing[Alignment]) =
+		withImageSettings(imageSettings.withAlignmentPointer(p))
+	def withImageAlignment(alignment: Alignment) = withImageAlignmentPointer(Fixed(alignment))
+	/**
+	  * @param p Pointer that, when defined, places a color overlay over the drawn image
+	  * @return Copy of this factory with the specified image color overlay pointer
+	  */
+	def withImageColorOverlayPointer(p: Option[Changing[Color]]) =
+		withImageSettings(imageSettings.withColorOverlayPointer(p))
+	/**
+	  * @param p Pointer that determines image scaling, in addition to the original image scaling
+	  * @return Copy of this factory with the specified image image scaling pointer
+	  */
+	def withImageImageScalingPointer(p: Changing[Double]) =
+		withImageSettings(imageSettings.withImageScalingPointer(p))
+	/**
+	  * @param p Pointer that determines the insets placed around the image
+	  * @return Copy of this factory with the specified image insets pointer
+	  */
+	def withImageInsetsPointer(p: Changing[StackInsets]) = withImageSettings(imageSettings
+		.withInsetsPointer(p))
+	/**
+	  * @param lowPriority Whether this label should use low priority size constraints
+	  * @return Copy of this factory with the specified image uses low priority size
+	  */
+	def withImageUsesLowPrioritySize(lowPriority: Boolean) =
+		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
+}
+
+object ViewImageAndTextButtonSettings
+{
+	// ATTRIBUTES	--------------------
+	
+	val default = apply(ViewImageLabelSettings(alignmentPointer = Fixed(Alignment.Right)))
+}
+/**
+  * Combined settings used when constructing view image and text buttons
+  * @author Mikko Hilpinen
+  * @since 31.05.2023, v1.1
+  */
+case class ViewImageAndTextButtonSettings(imageSettings: ViewImageLabelSettings = ViewImageLabelSettings.default,
+                                          buttonSettings: ButtonSettings = ButtonSettings.default,
+                                          insets: StackInsets = StackInsets.any)
+	extends ViewImageAndTextButtonSettingsLike[ViewImageAndTextButtonSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
+	override def withImageSettings(settings: ViewImageLabelSettings) = copy(imageSettings = settings)
+	override def withInsets(insets: StackInsetsConvertible): ViewImageAndTextButtonSettings =
+		copy(insets = insets.toInsets)
+}
+
+/**
+  * Common trait for factories that wrap a view image and text button settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 31.05.2023, v1.1
+  */
+trait ViewImageAndTextButtonSettingsWrapper[+Repr] extends ViewImageAndTextButtonSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: ViewImageAndTextButtonSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: ViewImageAndTextButtonSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def buttonSettings = settings.buttonSettings
+	override def imageSettings = settings.imageSettings
+	override def insets: StackInsets = settings.insets
+	
+	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
+	override def withImageSettings(settings: ViewImageLabelSettings) =
+		mapSettings { _.withImageSettings(settings) }
+	override def withInsets(insets: StackInsetsConvertible): Repr = mapSettings { _.withInsets(insets) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: ViewImageAndTextButtonSettings => ViewImageAndTextButtonSettings) =
+		withSettings(f(settings))
+}
+
+/**
+  * Factory class used for constructing view image and text buttons using contextual component
+  * creation information
+  * @author Mikko Hilpinen
+  * @since 31.05.2023, v1.1
+  */
+case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy,
+                                                   contextPointer: Changing[TextContext],
+                                                   settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
+	extends ViewImageAndTextButtonSettingsWrapper[ContextualViewImageAndTextButtonFactory]
+		with VariableContextualFactory[TextContext, ContextualViewImageAndTextButtonFactory]
+		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory]
+{
+	// IMPLEMENTED  --------------------------
+	
+	override def withContextPointer(contextPointer: Changing[TextContext]) =
+		copy(contextPointer = contextPointer)
+	override def withSettings(settings: ViewImageAndTextButtonSettings) =
+		copy(settings = settings)
+	
+	override def apply(alignment: Alignment) = copy(
+		contextPointer = contextPointer.map { _.withTextAlignment(alignment) },
+		settings = settings.withImageAlignment(alignment.opposite)
+	)
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	  * Creates a new button
+	  * @param contentPointer (Textual) content to display on this button
+	  * @param imagesPointer Pointer to the displayed button images
+	  * @param displayFunction Function which converts the button content to text. Default = use .toString
+	  * @param action Action that should be performed when this button is pressed.
+	  *               Accepts the current content of this button.
+	  * @tparam A Type of button content
 	  * @return A new button
 	  */
 	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
-	             colorPointer: Changing[Color], fontPointer: Changing[Font],
-	             enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	             textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	             commonInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
-	             alignment: Alignment = Alignment.Left, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	             betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-	             additionalDrawers: Vector[CustomDrawer] = Vector(),
-	             additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-	             allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-	             useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: A => Unit) =
-		new ViewImageAndTextButton[A](parentHierarchy, contentPointer, imagesPointer, colorPointer, fontPointer,
-			enabledPointer, imageInsetsPointer, textInsetsPointer, commonInsetsPointer, borderWidth, alignment,
-			displayFunction, betweenLinesMargin, hotKeys, additionalDrawers, additionalFocusListeners,
-			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)(action)
+	             displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	            (action: A => Unit) =
+		new ViewImageAndTextButton[A](parentHierarchy, contextPointer, contentPointer, imagesPointer, settings,
+			displayFunction)(action)
 	
 	/**
-	  * Creates a new button with image and text
-	  * @param text Text displayed on this button
-	  * @param imagesPointer Pointer to the displayed image set
-	  * @param colorPointer Pointer to button color
-	  * @param fontPointer Pointer to font used
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param imageInsetsPointer Pointer to insets placed around the image (default = any, preferring 0)
-	  * @param textInsetsPointer Pointer to insets placed around the text (default = any, preferring 0)
-	  * @param commonInsetsPointer Pointer to insets placed around this button (default = any, preferring 0)
-	  * @param borderWidth Width of the border in this button (default = 0 = no border)
-	  * @param alignment Alignment used for the text (default = Left)
-	  * @param betweenLinesMargin Vertical margin between text lines (default = 0)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
-	  * @param allowImageUpscaling Whether image should be allowed to scale up to its source resolution (default = true)
-	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
-	  * @param action Action performed when this button is pressed (accepts current content)
+	  * Creates a new button
+	  * @param contentPointer  (Textual) content to display on this button
+	  * @param iconPointer Icon to display on this button
+	  * @param displayFunction Function which converts the button content to text. Default = use .toString
+	  * @param action          Action that should be performed when this button is pressed.
+	  *                        Accepts the current content of this button.
+	  * @tparam A Type of button content
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, imagesPointer: Changing[ButtonImageSet],
-	                   colorPointer: Changing[Color], fontPointer: Changing[Font],
-	                   enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                   imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	                   textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	                   commonInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
-	                   alignment: Alignment = Alignment.Left, betweenLinesMargin: Double = 0.0,
-	                   hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-	                   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-	                   allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-	                   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
-		apply[LocalizedString](Fixed(text), imagesPointer, colorPointer, fontPointer, enabledPointer,
-			imageInsetsPointer, textInsetsPointer, commonInsetsPointer, borderWidth, alignment,
-			DisplayFunction.identity, betweenLinesMargin, hotKeys, additionalDrawers,
-			additionalFocusListeners, allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize,
-			forceEqualBreadth) { _ => action }
-}
-
-case class ContextualViewImageAndTextButtonFactory(factory: ViewImageAndTextButtonFactory, context: TextContext)
-	extends TextContextualFactory[ContextualViewImageAndTextButtonFactory]
-{
-	private implicit def c: TextContext = context
-	
-	override def self: ContextualViewImageAndTextButtonFactory = this
-	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
-	
-	/**
-	  * Creates a new button with image and text
-	  * @param contentPointer Pointer to the displayed content, which determines text
-	  * @param imagesPointer Pointer to the displayed image set
-	  * @param colorPointer Pointer to button color (default = determined by context)
-	  * @param fontPointer Pointer to font used (default = determined by context)
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param imageInsetsPointer Pointer to insets placed around the image (default = determined by context)
-	  * @param textInsetsPointer Pointer to insets placed around the text (default = determined by context)
-	  * @param commonInsetsPointer Pointer to insets placed around this button (default = determined by context)
-	  * @param displayFunction Function for converting content to text (default = toString)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
-	  * @param action Action performed when this button is pressed (accepts current content)
-	  * @tparam A Type of content in this button
-	  * @return A new button
-	  */
-	def withChangingStyle[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
-	                         colorPointer: Changing[Color] = Fixed(context.background),
-	                         fontPointer: Changing[Font] = Fixed(context.font),
-	                         enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                         imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	                         textInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets / 2),
-	                         commonInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets / 2),
-	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-	                         additionalDrawers: Vector[CustomDrawer] = Vector(),
-	                         additionalFocusListeners: Seq[FocusListener] = Vector(),
-	                         useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
-							(action: A => Unit) =
-		factory[A](contentPointer, imagesPointer, colorPointer, fontPointer, enabledPointer, imageInsetsPointer,
-			textInsetsPointer, commonInsetsPointer, context.buttonBorderWidth, context.textAlignment, displayFunction,
-			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers, additionalFocusListeners,
-			context.allowLineBreaks, context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize,
-			forceEqualBreadth)(action)
-	
-	/**
-	  * Creates a new button with image and text
-	  * @param contentPointer Pointer to the displayed content, which determines text
-	  * @param imagesPointer Pointer to the displayed image set
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param displayFunction Function for converting content to text (default = toString)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
-	  * @param action Action performed when this button is pressed (accepts current content)
-	  * @tparam A Type of content in this button
-	  * @return A new button
-	  */
-	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
-	             enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-	             additionalDrawers: Vector[CustomDrawer] = Vector(),
-	             additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
-	             forceEqualBreadth: Boolean = false)(action: A => Unit) =
-		withChangingStyle[A](contentPointer, imagesPointer, enabledPointer = enabledPointer,
-			displayFunction = displayFunction, hotKeys = hotKeys,
-			additionalDrawers = additionalDrawers, additionalFocusListeners = additionalFocusListeners,
-			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)(action)
-	
-	/**
-	  * Creates a new button with image and text
-	  * @param contentPointer Pointer to the displayed content, which determines text
-	  * @param iconPointer A pointer to the icon displayed on this button
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param displayFunction Function for converting content to text (default = toString)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
-	  * @param action Action performed when this button is pressed (accepts current content)
-	  * @tparam A Type of content in this button
-	  * @return A new button
-	  */
+	def icon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
+	            displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	           (action: A => Unit) =
+		apply[A](contentPointer, iconPointer.mergeWith(contextPointer) { _.inButton.contextual(_) },
+			displayFunction)(action)
+	@deprecated("Please use .icon(...) instead", "v1.1")
 	def withIcon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	                enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-	                additionalDrawers: Vector[CustomDrawer] = Vector(),
-	                additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
-	                forceEqualBreadth: Boolean = false)(action: A => Unit) =
-		apply[A](contentPointer, iconPointer.map { _.inButton.contextual }, enabledPointer, displayFunction, hotKeys,
-			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize,
-			forceEqualBreadth)(action)
+	                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	               (action: A => Unit) =
+		icon[A](contentPointer, iconPointer, displayFunction)(action)
+	
+	/**
+	  * Creates a new button
+	  * @param textPointer Pointer to the text to display
+	  * @param imagesPointer Pointer to the button images to use
+	  * @param action Action to perform when this button is pressed
+	  * @tparam U Arbitrary action result type
+	  * @return A new button
+	  */
+	def text[U](textPointer: Changing[LocalizedString], imagesPointer: Changing[ButtonImageSet])
+	           (action: => U) =
+		apply[LocalizedString](textPointer, imagesPointer, DisplayFunction.identity) { _ => action }
+	/**
+	  * Creates a new button
+	  * @param textPointer   Pointer to the text to display
+	  * @param iconPointer Pointer to the icon to display on this button
+	  * @param action        Action to perform when this button is pressed
+	  * @tparam U Arbitrary action result type
+	  * @return A new button
+	  */
+	def textAndIcon[U](textPointer: Changing[LocalizedString], iconPointer: Changing[SingleColorIcon])
+	                         (action: => U) =
+		icon(textPointer, iconPointer, DisplayFunction.identity) { _ => action }
+	
+	/**
+	  * Creates a new button
+	  * @param text   Text to display
+	  * @param images Button images to use
+	  * @param action        Action to perform when this button is pressed
+	  * @tparam U Arbitrary action result type
+	  * @return A new button
+	  */
+	def fixedText[U](text: LocalizedString, images: ButtonImageSet)(action: => U) =
+		this.text(Fixed(text), Fixed(images))(action)
+	/**
+	  * Creates a new button
+	  * @param text   Text to display
+	  * @param icon Icon to display
+	  * @param action Action to perform when this button is pressed
+	  * @tparam U Arbitrary action result type
+	  * @return A new button
+	  */
+	def fixedTextAndIcon[U](text: LocalizedString, icon: SingleColorIcon)(action: => U) =
+		textAndIcon(Fixed(text), Fixed(icon))(action)
 	
 	/**
 	  * Creates a new button with image and text
 	  * @param text Text displayed on this button
 	  * @param imagesPointer Pointer to the displayed image set
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
 	  * @param action Action performed when this button is pressed (accepts current content)
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, imagesPointer: Changing[ButtonImageSet],
-	                   enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
-	                   additionalDrawers: Vector[CustomDrawer] = Vector(),
-	                   additionalFocusListeners: Seq[FocusListener] = Vector(),
-	                   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
-		apply[LocalizedString](Fixed(text), imagesPointer, enabledPointer, DisplayFunction.identity, hotKeys,
-			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth) { _ => action }
-	
+	@deprecated("Please use .fixedText or .text instead", "v1.1")
+	def withStaticText(text: LocalizedString, imagesPointer: Changing[ButtonImageSet])(action: => Unit) =
+		this.text(Fixed(text), imagesPointer)(action)
 	/**
 	  * Creates a new button with image and text
 	  * @param text Text displayed on this button
 	  * @param icon Icon displayed on this button
-	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
-	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
-	  *                                (default = false)
-	  * @param forceEqualBreadth Whether the text and the image should be forced to have equal breadth (default = false)
 	  * @param action Action performed when this button is pressed (accepts current content)
 	  * @return A new button
 	  */
-	def withStaticTextAndIcon(text: LocalizedString, icon: SingleColorIcon,
-	                          enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
-	                          additionalDrawers: Vector[CustomDrawer] = Vector(),
-	                          additionalFocusListeners: Seq[FocusListener] = Vector(),
-	                          useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
-							 (action: => Unit) =
-		withStaticText(text, Fixed(icon.inButton.contextual), enabledPointer, hotKeys, additionalDrawers,
-			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
+	@deprecated("Renamed to .fixedTextAndIcon(...)", "v1.1")
+	def withStaticTextAndIcon(text: LocalizedString, icon: SingleColorIcon)(action: => Unit) =
+		fixedTextAndIcon(text, icon)(action)
+}
+
+/**
+  * Used for defining view image and text button creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 31.05.2023, v1.1
+  */
+case class ViewImageAndTextButtonSetup(settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
+	extends ViewImageAndTextButtonSettingsWrapper[ViewImageAndTextButtonSetup]
+		with FromContextComponentFactoryFactory[TextContext, ContextualViewImageAndTextButtonFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualViewImageAndTextButtonFactory(hierarchy, Fixed(context), settings)
+	
+	override def withSettings(settings: ViewImageAndTextButtonSettings) =
+		copy(settings = settings)
+	
+	
+	// OTHER    ----------------------
+	
+	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
+		ContextualViewImageAndTextButtonFactory(hierarchy, context, settings)
+}
+
+object ViewImageAndTextButton extends ViewImageAndTextButtonSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: ViewImageAndTextButtonSettings) = withSettings(settings)
 }
 
 /**
@@ -273,47 +366,47 @@ case class ContextualViewImageAndTextButtonFactory(factory: ViewImageAndTextButt
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A],
-                                imagesPointer: Changing[ButtonImageSet], colorPointer: Changing[Color],
-                                fontPointer: Changing[Font],
-                                enabledPointer: Changing[Boolean] = AlwaysTrue,
-                                imageInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-                                textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-                                commonInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-                                borderWidth: Double = 0.0, alignment: Alignment = Alignment.Left,
-                                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-                                betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-                                additionalDrawers: Vector[CustomDrawer] = Vector(),
-                                additionalFocusListeners: Seq[FocusListener] = Vector(),
-                                allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
-                                allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
-                                forceEqualBreadth: Boolean = false)(action: A => Unit)
+class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+                                contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
+                                settings: ViewImageAndTextButtonSettings,
+                                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+                               (action: A => Unit)
 	extends ReachComponentWrapper with ButtonLike
 {
 	// ATTRIBUTES	-----------------------------
 	
 	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer
-		.mergeWith(enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
+		.mergeWith(settings.enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
+	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	override val focusId = hashCode()
 	
+	/**
+	  * A pointer that referers to this buttons main color
+	  */
+	val colorPointer = contextPointer.map { _.background }
+	
 	override protected val wrapped = {
-		val actualImageInsetsPointer = imageInsetsPointer.mergeWith(commonInsetsPointer) { (imageInsets, commonInsets) =>
-			imageInsets + commonInsets.withoutSides(alignment.opposite.directions) + borderWidth
+		// Adds additional text insets
+		val labelContextPointer = contextPointer.map { c =>
+			c.mapTextInsets { _ + settings.insets.withoutSides(c.textAlignment.directions) + c.buttonBorderWidth }
 		}
-		val actualTextInsetsPointer = textInsetsPointer.mergeWith(commonInsetsPointer) { (textInsets, commonInsets) =>
-			textInsets + commonInsets.withoutSides(alignment.directions) + borderWidth
-		}
+		// Adds additional image insets
+		val labelImageSettings = settings.imageSettings
+			.mapInsetsPointer { _.mergeWith(contextPointer) { (base, context) =>
+				base + settings.insets.withoutSides(context.textAlignment.opposite.directions) +
+					context.buttonBorderWidth
+			} }
+		
 		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
-		val textColorPointer = colorPointer.map { _.shade.defaultTextColor }
-		// TODO: Accept imageSettings as a parameter instead of passing every separate parameter
-		val imageSettings = ViewImageLabelSettings(insetsPointer = actualImageInsetsPointer,
-			alignmentPointer = Fixed(alignment.opposite), usesLowPrioritySize = useLowPriorityImageSize)
-		new ViewImageAndTextLabel[A](parentHierarchy, contentPointer, imagePointer, imageSettings, fontPointer,
-			textColorPointer, actualTextInsetsPointer, alignment, displayFunction, betweenLinesMargin,
-			ButtonBackgroundViewDrawer(colorPointer.map { c => c }, statePointer, borderWidth) +: additionalDrawers,
-			allowLineBreaks, allowImageUpscaling, allowTextShrink, forceEqualBreadth)
+		// TODO: Add forceEqualBreadth option (if needed)
+		ViewImageAndTextLabel.withContext(parentHierarchy, labelContextPointer).withImageSettings(labelImageSettings)
+			.withCustomDrawers(
+				ButtonBackgroundViewDrawer(colorPointer, statePointer,
+					contextPointer.map { _.buttonBorderWidth }
+				) +: settings.customDrawers
+			)
+			.apply(contentPointer, imagePointer, displayFunction)
 	}
 	
 	
@@ -327,7 +420,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 	
 	// INITIAL CODE	------------------------------
 	
-	setup(baseStatePointer, hotKeys)
+	setup(baseStatePointer, settings.hotKeys)
 	colorPointer.addContinuousAnyChangeListener { repaint() }
 	
 	

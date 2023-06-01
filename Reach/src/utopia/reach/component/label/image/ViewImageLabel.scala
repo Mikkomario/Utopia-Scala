@@ -3,23 +3,22 @@ package utopia.reach.component.label.image
 import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.view.{BackgroundViewDrawer, ImageViewDrawer}
+import utopia.firmament.drawing.view.ImageViewDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.operator.LinearScalable
-import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
+import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.transform.SizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromContextComponentFactoryFactory, FromVariableContextFactory, VariableBackgroundRoleAssignable}
+import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
+import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
@@ -271,8 +270,7 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
                                            settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                            drawBackground: Boolean = false)
 	extends ViewImageLabelFactoryLike[ContextualViewImageLabelFactory]
-		with VariableContextualFactory[ColorContext, ContextualViewImageLabelFactory]
-		with VariableBackgroundRoleAssignable[ContextualViewImageLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[ColorContext, ContextualViewImageLabelFactory]
 {
 	// IMPLEMENTED  ---------------------------
 	
@@ -284,15 +282,11 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 		copy(contextPointer = p)
 	override def withSettings(settings: ViewImageLabelSettings): ContextualViewImageLabelFactory =
 		copy(settings = settings)
-	override protected def withBackgroundPointer(pointer: Either[(Changing[ColorRole], ColorLevel), Changing[Color]]): ContextualViewImageLabelFactory =
-	{
-		val newContextPointer = pointer match {
-			case Left((rolePointer, preference)) =>
-				contextPointer.mergeWith(rolePointer) { _.withBackground(_, preference) }
-			case Right(colorPointer) => contextPointer.mergeWith(colorPointer) { _ against _ }
-		}
-		copy(contextPointer = newContextPointer, drawBackground = true)
-	}
+	
+	override protected def withVariableBackgroundContext(newContextPointer: Changing[ColorContext],
+	                                                     backgroundDrawer: CustomDrawer): ContextualViewImageLabelFactory =
+		copy(contextPointer = newContextPointer,
+			settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers), drawBackground = true)
 	
 	override def *(mod: Double): ContextualViewImageLabelFactory =
 		copy(contextPointer = contextPointer.map { _ * mod }, settings = settings * mod)
@@ -318,20 +312,14 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 	  * @return A label that displays the specified icon or image
 	  */
 	def iconOrImagePointer(pointer: Either[Changing[SingleColorIcon], Changing[Image]]) = {
-		val p = pointer.mapLeft { _ -> contextPointer }
-		// Applies background color drawing, if appropriate
-		if (drawBackground) {
-			val label = withCustomDrawers(BackgroundViewDrawer(View { contextPointer.value.background }) +: customDrawers)
-				._imageOrIcon(p)
-			// Repaints when background color changes
+		val label = _imageOrIcon(pointer.mapLeft { _ -> contextPointer })
+		// If background drawing is enabled, repaints when background color changes
+		if (drawBackground)
 			contextPointer.addContinuousListener { e =>
 				if (e.toPair.isAsymmetricBy { _.background })
 					label.repaint()
 			}
-			label
-		}
-		else
-			_imageOrIcon(p)
+		label
 	}
 	/**
 	  * @param i An icon (Left), or an image (Right)

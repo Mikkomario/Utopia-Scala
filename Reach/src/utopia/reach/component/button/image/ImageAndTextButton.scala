@@ -187,7 +187,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 		ImageAndTextLabel(settings).mapImageInsets { _/2 + commonInsets.withoutSides(alignment.directions) + borderWidth }
 			.withContext(parentHierarchy, actualContext)
 			.withCustomDrawers(
-				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, borderWidth) +: settings.customDrawers)
+				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, Fixed(borderWidth)) +: settings.customDrawers)
 			.apply(image, text)
 	}
 	

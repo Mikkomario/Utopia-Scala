@@ -24,6 +24,8 @@
               "name_plural": "manyProp1s (optional)",
               "type": "refAlias1 (optional for references)",
               "ref": "OtherComponentName (optional)",
+              "prefix": "(optional)",
+              "prefix_properties": true,
               "setter": "withProp1 (optional)",
               "param": "prop1 (optional)",
               "default": {
@@ -31,7 +33,7 @@
                 "code": "DataType3.default"
               },
               "doc": "Description of property function (optional)",
-              "mapping": true
+              "mapping": false
             }
           ],
           "non_contextual_props": [],

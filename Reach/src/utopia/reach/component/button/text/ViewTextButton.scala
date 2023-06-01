@@ -249,7 +249,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	override val focusId = hashCode()
 	override protected val wrapped = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
 		Fixed(allowTextShrink), displayFunction, ButtonBackgroundViewDrawer(colorPointer.map { c => c: Color },
-			statePointer, borderWidth) +: additionalDrawers)
+			statePointer, Fixed(borderWidth)) +: additionalDrawers)
 	
 	
 	// INITIAL CODE	---------------------------------

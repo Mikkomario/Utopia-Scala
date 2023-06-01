@@ -30,6 +30,13 @@ trait CustomDrawableFactory[+Repr]
 	  */
 	def withCustomDrawer(drawer: CustomDrawer) = withCustomDrawers(customDrawers :+ drawer)
 	/**
+	  * Attaches a new custom drawer to this factory.
+	  * The drawer will be applied before any drawer that has been introduced so far.
+	  * @param drawer A new drawer to assign
+	  * @return Copy of this factory with the specified drawer included
+	  */
+	def withCustomBackgroundDrawer(drawer: CustomDrawer) = withCustomDrawers(drawer +: customDrawers)
+	/**
 	  * @param drawers Custom drawers to add
 	  * @return Copy of this factory with the specified custom drawers included
 	  */

@@ -9,6 +9,7 @@
 - **StackLike** no longer extends **AreaOfItems**. Please use **StackItemAreas** instead.
 - The functions `.larger` and `.smaller` in **BaseContextLike** now require an implicit **Adjustment** parameter
 - **SingleColorIconCache** now requires an implicit **Logger** parameter
+- **ButtonBackgroundViewDrawer** now accepts the borderWidth as a pointer and not a static value
 ### Bug Fixes
 - The adjustment modifier in **Margins** didn't work as described in the documentary
 - Window didn't always properly update layout or repaint content - fixed

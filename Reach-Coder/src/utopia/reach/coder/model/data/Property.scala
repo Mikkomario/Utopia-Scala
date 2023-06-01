@@ -25,16 +25,19 @@ object Property
 	  * @param factory Targeted component factory
 	  * @param prefix Prefix added to all referenced properties (default = empty = no prefix)
 	  * @param description Description of this property (default = empty)
+	  * @param prefixDerivedProperties Whether derived (referenced) properties should be prefixed (default = true)
 	  * @param naming Naming rules to apply
 	  * @return A new property
 	  */
-	def referringTo(factory: ComponentFactory, prefix: Name = Name.empty, description: String = "")
+	def referringTo(factory: ComponentFactory, prefix: Name = Name.empty, description: String = "",
+	                prefixDerivedProperties: Boolean = true)
 	               (implicit naming: NamingRules) =
 	{
 		val name = prefix + "Settings"
 		val target = (factory.componentName + "Settings").className
 		apply(name, Reference(factory.pck, target), "with" +: name, "settings", s"$target.default",
-			Some(factory -> prefix), description, mappingEnabled = true)
+			Some(factory -> prefix), description, mappingEnabled = true,
+			prefixDerivedProperties = prefixDerivedProperties)
 	}
 }
 
@@ -51,10 +54,11 @@ object Property
   * @param reference Referenced component factory, if applicable
   * @param description A description about the function of this property
   * @param mappingEnabled Whether mapping functions shall be used for this property
+  * @param prefixDerivedProperties Whether derived (referenced) properties should be prefixed
   */
 case class Property(name: Name, dataType: ScalaType, setterName: Name, setterParamName: Name,
                     defaultValue: CodePiece = CodePiece.empty, reference: Option[(ComponentFactory, Name)] = None,
-                    description: String = "", mappingEnabled: Boolean = false)
+                    description: String = "", mappingEnabled: Boolean = false, prefixDerivedProperties: Boolean = false)
 	extends Named
 {
 	/**

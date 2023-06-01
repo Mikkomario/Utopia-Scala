@@ -19,6 +19,7 @@ import Reference._
   * @author Mikko Hilpinen
   * @since 19.5.2023, v1.0
   */
+// TODO: Getters should be public and not protected
 object ComponentFactoryWriter
 {
 	// ATTRIBUTES -----------------------
@@ -254,7 +255,7 @@ object ComponentFactoryWriter
 				contextualParentAndMethod.map[Extension] { _._1 }.toVector,
 			methods = Set(
 				// Settings setter -function
-				MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
+				MethodDeclaration("withSettings", isOverridden = true)(
 					Parameter("settings", settingsType))("copy(settings = settings)")) ++
 				// Context append -function (optional)
 				contextualParentAndMethod.map { _._2 } ++
@@ -274,6 +275,7 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the contextual factory variant
+	// TODO: If non-contextual version is not used, skip the parent factory trait and only write this variant
 	private def contextualFactory(factory: ComponentFactory, name: String, context: ContextType, settingsType: ScalaType,
 	                              factoryLikeType: ScalaType)
 	                             (implicit naming: NamingRules, setup: ProjectSetup) =
@@ -333,6 +335,7 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the outside-hierarchy setup class
+	// TODO: Add withContext variant that uses pointers (if applicable)
 	private def setupFactory(factory: ComponentFactory, settingsType: ScalaType, settingsWrapperType: ScalaType,
 	                         nonContextualFactoryType: Option[ScalaType],
 	                         contextualFactoryType: Option[(ScalaType, ContextType)])
@@ -367,7 +370,7 @@ object ComponentFactoryWriter
 				nonContextualParentAndMethod.map[Extension] { _._1 } ++
 				contextualParentAndMethod.map[Extension] { _._1 },
 			// Implements the required methods
-			methods = Set(MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
+			methods = Set(MethodDeclaration("withSettings", isOverridden = true)(
 				Parameter("settings", settingsType))("copy(settings = settings)")) ++
 				nonContextualParentAndMethod.map { _._2 } ++ contextualParentAndMethod.map { _._2 },
 			description = s"Used for defining ${
@@ -396,9 +399,9 @@ object ComponentFactoryWriter
 	                                       (implicit naming: NamingRules): (Vector[PropertyDeclaration], Vector[MethodDeclaration]) =
 	{
 		val base = referenceProperty.name.prop
-		target.properties.splitFlatMap { prop =>
+		target.allProperties.splitFlatMap { prop =>
 			// Generates a getter
-			val propName = prefix +: prop.name
+			val propName = if (referenceProperty.prefixDerivedProperties) prefix +: prop.name else prop.name
 			val directGet = ComputedProperty(propName.prop, visibility = Protected,
 				description = s"${prop.name} from the wrapped ${target.componentName} settings")(
 				s"$base.${prop.name.prop}")
@@ -420,7 +423,8 @@ object ComponentFactoryWriter
 			// Recursively generates more properties if the reference goes deeper
 			val (moreProps, moreMethods) = prop.reference match {
 				case Some((deeperTarget, nextPrefix)) =>
-					referencedPropFunctionsFrom(prop, deeperTarget, prefix + nextPrefix)
+					val appliedPrefix = if (referenceProperty.prefixDerivedProperties) prefix + nextPrefix else nextPrefix
+					referencedPropFunctionsFrom(prop, deeperTarget, appliedPrefix)
 				case None => Vector() -> Vector()
 			}
 			(directGet +: moreProps) -> ((directSet +: mapper.toVector) ++ moreMethods)

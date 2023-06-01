@@ -4,30 +4,22 @@ import utopia.firmament.component.stack.ConstrainableWrapper
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
-import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextFactory
-import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
+import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.Stack
-import utopia.reach.drawing.Priority.Low
 
 /**
   * Common trait for view image and text label factories and settings
@@ -185,7 +177,7 @@ object ViewImageAndTextLabelSettings
 {
 	// ATTRIBUTES	--------------------
 	
-	val default = apply()
+	val default = apply(imageSettings = ViewImageLabelSettings(alignmentPointer = Fixed(Alignment.Right)))
 }
 /**
   * Combined settings used when constructing view image and text labels
@@ -246,104 +238,29 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	def mapSettings(f: ViewImageAndTextLabelSettings => ViewImageAndTextLabelSettings) = withSettings(f(settings))
 }
 
-/**
-  * Common trait for factories that are used for constructing view image and text labels
-  * @tparam Repr Implementing factory/settings type
-  * @author Mikko Hilpinen
-  * @since 30.05.2023, v1.1
-  */
-trait ViewImageAndTextLabelFactoryLike[+Repr] extends ViewImageAndTextLabelSettingsWrapper[Repr]
+case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy,
+                                                  contextPointer: Changing[TextContext],
+                                                  settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default,
+                                                  drawBackground: Boolean = false)
+	extends ViewImageAndTextLabelSettingsWrapper[ContextualViewImageAndTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualViewImageAndTextLabelFactory]
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created view image and text labels will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
-	
-	
-	// OTHER    -------------------
-	
-	/**
-	  * Creates a new label which displays both image and text
-	  * @param itemPointer             A pointer to this label's (text-determining) content
-	  * @param imagePointer            A pointer to the image displayed on this label
-	  * @param fontPointer             A pointer to the font used in the text
-	  * @param alignment               Alignment used when placing the image next to the text.
-	  *                                I.e. Left alignment would place the image on the left side of the text.
-	  *                                (default = opposite to image alignment)
-	  * @param displayFunction         Display function used when converting the item to text (default = toString)
-	  * @param textColorPointer        A pointer to the color used when drawing text (default = always standard black)
-	  * @param textInsetsPointer       A pointer to insets placed around the text (default = any, preferring 0)
-	  * @param betweenLinesMargin      Vertical margin placed between text lines (default = 0)
-	  * @param allowLineBreaks         Whether text should be allowed to use line breaks (default = true)
-	  * @param allowImageUpscaling     Whether image should be allowed to scale up to its source resolution (default = true)
-	  * @param allowTextShrink         Whether text should be allowed to shrink to conserve space (default = false)
-	  * @tparam A Type of content in this label
-	  * @return A new label
-	  */
-	protected def _apply[A](itemPointer: Changing[A], imagePointer: Changing[Image],
-	                        fontPointer: Changing[Font], textColorPointer: Changing[Color] = Fixed(Color.textBlack),
-	                        textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	                        alignment: Alignment = imageSettings.alignmentPointer.value.opposite,
-	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	                        betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true,
-	                        allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
-	                        disableColorOverlay: Boolean = false) =
-	{
-		// Applies image scaling and coloring, if defined
-		val trueImagePointer = {
-			// Image coloring may be disabled (in which case it is already assumed to have been applied)
-			val colored = {
-				// Case: Coloring disabled
-				if (disableColorOverlay)
-					imagePointer
-				else
-					imageColorOverlayPointer match {
-						// Case: Coloring specified
-						case Some(colorPointer) => imagePointer.mergeWith(colorPointer) { _ withColorOverlay _ }
-						// Case: No coloring specified
-						case None => imagePointer
-					}
-			}
-			// Applies image scaling, also
-			colored.mergeWith(imageScalingPointer) { _ * _ }
-		}
-		new ViewImageAndTextLabel[A](parentHierarchy, itemPointer, trueImagePointer, imageSettings, fontPointer,
-			textColorPointer, textInsetsPointer, alignment, displayFunction, betweenLinesMargin, customDrawers,
-			allowLineBreaks, allowImageUpscaling, allowTextShrink, forceEqualBreadth)
-	}
-}
-
-case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
-                                                  settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
-	extends ViewImageAndTextLabelFactoryLike[ContextualViewImageAndTextLabelFactory]
-		with TextContextualFactory[ContextualViewImageAndTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[TextContext, ContextualViewImageAndTextLabelFactory]
-{
-	// COMPUTED ----------------------
-	
-	private implicit def c: TextContext = context
-	
-	/**
-	  * @return A copy of this factory that doesn't utilize component creation context
-	  */
-	def withoutContext = ViewImageAndTextLabelFactory(parentHierarchy, settings)
-	
-	
 	// IMPLEMENTED  ------------------
 	
-	override def self: ContextualViewImageAndTextLabelFactory = this
-	
-	override def withContext(newContext: TextContext) =
-		copy(context = newContext)
+	override def withContextPointer(p: Changing[TextContext]): ContextualViewImageAndTextLabelFactory =
+		copy(contextPointer = p)
 	override def withSettings(settings: ViewImageAndTextLabelSettings) =
 		copy(settings = settings)
 	
+	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	                                                     backgroundDrawer: CustomDrawer): ContextualViewImageAndTextLabelFactory =
+		copy(contextPointer = newContextPointer,
+			settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers), drawBackground = true)
+	
 	// When (text) alignment is changed, also changes the image alignment
 	override def apply(alignment: Alignment) =
-		copy(context = context.withTextAlignment(alignment), settings = settings.withImageAlignment(alignment.opposite))
-	override def withTextAlignment(alignment: Alignment) = apply(alignment)
+		copy(contextPointer = contextPointer.map { _.withTextAlignment(alignment) },
+			settings = settings.withImageAlignment(alignment.opposite))
 	
 	
 	// OTHER    ---------------------
@@ -354,16 +271,14 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	  * @return Copy of this factory that places a color overlay, according to the specified pointer
 	  */
 	def withImageColorRolePointer(p: Changing[ColorRole], preferredShade: ColorLevel = Standard) =
-		withImageColorOverlayPointer(p.map { r => context.color.preferring(preferredShade)(r) })
+		withImageColorOverlayPointer(contextPointer.mergeWith(p) { _.color.preferring(preferredShade)(_) })
 	/**
 	  * @param role The color role to use as image overlay color
 	  * @param preferredShade Preferred color shade to use (default = Standard)
 	  * @return Copy of this factory that places a color overlay over the drawn images
 	  */
-	def withImageColorOverlay(role: ColorRole, preferredShade: ColorLevel): ContextualViewImageAndTextLabelFactory = {
-		val color = context.color.preferring(preferredShade)(role)
-		withImageColorOverlay(color)
-	}
+	def withImageColorOverlay(role: ColorRole, preferredShade: ColorLevel): ContextualViewImageAndTextLabelFactory =
+		withImageColorRolePointer(Fixed(role), preferredShade)
 	/**
 	  * @param role           The color role to use as image overlay color
 	  * @return Copy of this factory that places a color overlay over the drawn images
@@ -372,38 +287,37 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 		withImageColorOverlay(role, Standard)
 	
 	/**
-	  * Creates a new label which displays both image and text.
-	  * Please note that this method won't support automatic adjustments to variable background color
+	  * Creates a new label which displays both image and text
 	  * @param itemPointer             A pointer to this label's (text-determining) content
-	  * @param imagePointer            A pointer to the image displayed on this label
-	  * @param fontPointer             A pointer to the font used in the text (default = determined by context)
-	  * @param textColorPointer        A pointer to the color used when drawing text (default = determined by context)
-	  * @param textInsetsPointer       A pointer to the insets placed around the text (default = determined by context)
+	  * @param imagePointer            A pointer to the image displayed on this label.
+	  *                                Left if displaying an icon, Right if displaying an image.
 	  * @param displayFunction         Display function used when converting the item to text (default = toString)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
-	def withChangingStyle[A](itemPointer: Changing[A], imagePointer: Changing[Image],
-	                         fontPointer: Changing[Font] = Fixed(context.font),
-	                         textColorPointer: Changing[Color] = Fixed(context.textColor),
-	                         textInsetsPointer: Changing[StackInsets] = Fixed(context.textInsets),
-	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		_apply[A](itemPointer, imagePointer, fontPointer, textColorPointer, textInsetsPointer,
-			context.textAlignment, displayFunction, context.betweenLinesMargin.optimal, context.allowLineBreaks,
-			context.allowImageUpscaling, context.allowTextShrink)
-	
+	def iconOrImage[A](itemPointer: Changing[A], imagePointer: Either[Changing[SingleColorIcon], Changing[Image]],
+	                          displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
+	{
+		val label = new ViewImageAndTextLabel[A](parentHierarchy, contextPointer, itemPointer, imagePointer,
+			imageSettings, displayFunction, customDrawers, forceEqualBreadth)
+		if (drawBackground)
+			contextPointer.addContinuousListener { e =>
+				if (e.toPair.isAsymmetricBy { _.background })
+					label.repaint()
+			}
+		label
+	}
 	/**
 	  * Creates a new label which displays both image and text
-	  * @param itemPointer             A pointer to this label's (text-determining) content
-	  * @param imagePointer            A pointer to the image displayed on this label
-	  * @param displayFunction         Display function used when converting the item to text (default = toString)
+	  * @param itemPointer     A pointer to this label's (text-determining) content
+	  * @param imagePointer    A pointer to the image displayed on this label.
+	  * @param displayFunction Display function used when converting the item to text (default = toString)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
 	def apply[A](itemPointer: Changing[A], imagePointer: Changing[Image],
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		withChangingStyle[A](itemPointer, imagePointer, displayFunction = displayFunction)
-	
+		iconOrImage(itemPointer, Right(imagePointer), displayFunction)
 	/**
 	  * Creates a new label that contains both an image and text
 	  * @param itemPointer             A pointer to this label's (text-determining) content
@@ -412,16 +326,8 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	  * @return A new label
 	  */
 	def icon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	                displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-	{
-		val imagePointer = imageColorOverlayPointer match {
-			case Some(colorPointer) => iconPointer.mergeWith(colorPointer) { _(_) }
-			case None => iconPointer.map { _.contextual }
-		}
-		_apply[A](itemPointer, imagePointer, Fixed(context.font), Fixed(context.textColor), Fixed(context.textInsets),
-			context.textAlignment, displayFunction, context.betweenLinesMargin.optimal, context.allowLineBreaks,
-			context.allowImageUpscaling, context.allowTextShrink, disableColorOverlay = true)
-	}
+	            displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
+		iconOrImage[A](itemPointer, Left(iconPointer), displayFunction)
 	@deprecated("Renamed to .icon(...)", "v1.1")
 	def withIcon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	                displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
@@ -448,73 +354,46 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	  * @param iconPointer             A pointer to the displayed icon
 	  * @param rolePointer             A pointer to the color role used in label background
 	  * @param preferredShade          Preferred color shade to use (default = standard)
-	  * @param imageInsets             Insets placed around the image (default = any, preferring 0)
 	  * @param displayFunction         Display function used when converting the item to text (default = toString)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
+	@deprecated("Please use .withBackgroundRolePointer(...).icon(...) instead", "v1.1")
 	def withIconAndChangingBackground[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	                                     rolePointer: Changing[ColorRole], preferredShade: ColorLevel = Standard,
-	                                     imageInsets: StackInsets = StackInsets.any,
 	                                     displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-	{
-		val backgroundPointer = rolePointer.map { context.color.preferring(preferredShade)(_) }
-		val backgroundDrawer = BackgroundViewDrawer(backgroundPointer.map { c => c })
-		val imagePointer = iconPointer.mergeWith(backgroundPointer) { _.against(_) }
-		val label = withCustomDrawer(backgroundDrawer)._apply(itemPointer, imagePointer, Fixed(context.font),
-			backgroundPointer.map { _.shade.defaultTextColor }, Fixed(context.textInsets), context.textAlignment,
-			displayFunction, context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowImageUpscaling,
-			context.allowTextShrink, disableColorOverlay = true)
-		// Repaints this component whenever background color changes
-		backgroundPointer.addContinuousAnyChangeListener { label.repaint(Low) }
-		label
-	}
+		withBackgroundRolePointer(rolePointer, preferredShade).icon(itemPointer, iconPointer, displayFunction)
 }
 
-case class ViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy,
-                                        settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
-	extends ViewImageAndTextLabelFactoryLike[ViewImageAndTextLabelFactory]
-		with FromContextFactory[TextContext, ContextualViewImageAndTextLabelFactory]
+/**
+  * Used for defining view image and text label creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 31.05.2023, v1.1
+  */
+case class ViewImageAndTextLabelSetup(settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
+	extends ViewImageAndTextLabelSettingsWrapper[ViewImageAndTextLabelSetup]
+		with FromContextComponentFactoryFactory[TextContext, ContextualViewImageAndTextLabelFactory]
 {
-	override def withSettings(settings: ViewImageAndTextLabelSettings): ViewImageAndTextLabelFactory =
+	// IMPLEMENTED	--------------------
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualViewImageAndTextLabelFactory(hierarchy, Fixed(context), settings)
+	
+	override def withSettings(settings: ViewImageAndTextLabelSettings) =
 		copy(settings = settings)
 	
-	override def withContext(context: TextContext) =
-		ContextualViewImageAndTextLabelFactory(parentHierarchy, context, settings)
 	
-	/**
-	  * Creates a new label which displays both image and text
-	  * @param itemPointer A pointer to this label's (text-determining) content
-	  * @param imagePointer A pointer to the image displayed on this label
-	  * @param fontPointer A pointer to the font used in the text
-	  * @param displayFunction Display function used when converting the item to text (default = toString)
-	  * @param textColorPointer A pointer to the color used when drawing text (default = always standard black)
-	  * @param textInsetsPointer A pointer to insets placed around the text (default = any, preferring 0)
-	  * @param alignment Alignment used for the <b>text</b> (the image will be placed with the opposite alignment,
-	  *                  so that the two form a close pair) (default = Left)
-	  * @param betweenLinesMargin Vertical margin placed between text lines (default = 0)
-	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
-	  * @param allowImageUpscaling Whether image should be allowed to scale up to its source resolution (default = true)
-	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
-	  * @tparam A Type of content in this label
-	  * @return A new label
-	  */
-	def apply[A](itemPointer: Changing[A], imagePointer: Changing[Image], fontPointer: Changing[Font],
-	             textColorPointer: Changing[Color] = Fixed(Color.textBlack),
-	             textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-	             alignment: Alignment = Alignment.Left,
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	             betweenLinesMargin: Double = 0.0,
-	             allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
-	             allowTextShrink: Boolean = false) =
-		_apply[A](itemPointer, imagePointer, fontPointer, textColorPointer,
-			textInsetsPointer, alignment, displayFunction, betweenLinesMargin, allowLineBreaks, allowImageUpscaling,
-			allowTextShrink)
+	// OTHER    ------------------------
+	
+	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
+		ContextualViewImageAndTextLabelFactory(hierarchy, context, settings)
 }
 
-object ViewImageAndTextLabel extends Cff[ViewImageAndTextLabelFactory]
+object ViewImageAndTextLabel extends ViewImageAndTextLabelSetup()
 {
-	override def apply(hierarchy: ComponentHierarchy) = ViewImageAndTextLabelFactory(hierarchy)
+	// OTHER	--------------------
+	
+	def apply(settings: ViewImageAndTextLabelSettings) = withSettings(settings)
 }
 
 /**
@@ -522,52 +401,28 @@ object ViewImageAndTextLabel extends Cff[ViewImageAndTextLabelFactory]
   * @author Mikko Hilpinen
   * @since 9.11.2020, v0.1
   */
-// TODO: Alignment doesn't adjust to image alignment changes at this time
-// FIXME: Don't apply color overlay and scaling here, because they're applied in the underlying image label
-// TODO: Accept Image or Icon pointer
-class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPointer: Changing[A],
-                               val imagePointer: Changing[Image], imageSettings: ViewImageLabelSettings,
-                               fontPointer: Changing[Font], textColorPointer: Changing[Color] = Fixed(Color.textBlack),
-                               textInsetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
-                               alignment: Alignment = Alignment.Left,
+class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+                               val itemPointer: Changing[A],
+                               imgPointer: Either[Changing[SingleColorIcon], Changing[Image]],
+                               imageSettings: ViewImageLabelSettings,
                                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-                               betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
-                               allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
-                               allowTextShrink: Boolean = false, forceEqualBreadth: Boolean = false)
+                               additionalDrawers: Vector[CustomDrawer] = Vector(),
+                               forceEqualBreadth: Boolean = false)
 	extends ReachComponentWrapper with ConstrainableWrapper
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val stylePointer = new PointerWithEvents[TextDrawContext](updatedStyle)
-	private val updateStyleListener: ChangeListener[Any] = _ => stylePointer.value = updatedStyle
-	
 	override protected val wrapped = {
-		// Creates stack content (image and text label)
-		val openItems = Open { hierarchy =>
-			val imageLabel = ViewImageLabel(imageSettings)(hierarchy)
-				.copy(allowsUpscaling = allowImageUpscaling)
-				.apply(imagePointer)
-			val textLabel = ViewTextLabel(hierarchy).copy(allowsTextToShrink = allowTextShrink)
-				.apply(itemPointer, stylePointer, displayFunction)
-			Pair(imageLabel, textLabel)
-		}(parentHierarchy.top)
-		// Wraps the components in a stack
-		// TODO: Build instead of use Open (optional)
-		Stack(parentHierarchy).withoutMargin.withCustomDrawers(additionalDrawers)
-			.forPair(openItems, alignment, forceFitLayout = forceEqualBreadth)
-			.parent
+		// TODO: Uses a static context here
+		Stack.withContext(parentHierarchy, contextPointer.value)
+			.withoutMargin.withCustomDrawers(additionalDrawers)
+			.buildPair(Mixed, contextPointer.value.textAlignment, forceFitLayout = forceEqualBreadth) { factories =>
+				val imageLabel = factories(ViewImageLabel).withContextPointer(contextPointer)
+					.withSettings(imageSettings)
+					.iconOrImagePointer(imgPointer)
+				val textLabel = factories(ViewTextLabel).withContextPointer(contextPointer)
+					.apply(itemPointer, displayFunction)
+				Pair(imageLabel, textLabel)
+			}
 	}
-	
-	
-	// INITIAL CODE	--------------------------------
-	
-	fontPointer.addListener(updateStyleListener)
-	textColorPointer.addListener(updateStyleListener)
-	textInsetsPointer.addListener(updateStyleListener)
-	
-	
-	// COMPUTED	-------------------------------------
-	
-	private def updatedStyle = TextDrawContext(fontPointer.value, textColorPointer.value, alignment,
-		textInsetsPointer.value, betweenLinesMargin, allowLineBreaks)
 }

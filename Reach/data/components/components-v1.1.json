@@ -6,14 +6,18 @@
   "packages": {
     "pointers": "utopia.flow.view",
     "immutablePointers": "pointers/immutable.eventful",
-    "stackModels": "utopia.firmament.model.stack"
+    "firmamentModels": "utopia.firmament.model",
+    "stackModels": "firmamentModels/stack",
+    "focus": "utopia.reach.focus"
   },
   "references": {
     "p": "pointers/template.eventful.Changing",
     "fixed": "immutablePointers.Fixed",
+    "true!": "immutablePointers.AlwaysTrue",
     "false!": "immutablePointers.AlwaysFalse",
     "color": "utopia.paradigm.color.Color",
     "align": "utopia.paradigm.enumeration.Alignment",
+    "hotkey": "firmamentModels/HotKey",
     "insets": "stackModels/StackInsets"
   },
   "components": {
@@ -89,6 +93,7 @@
           "name": "ViewImageAndTextLabel",
           "context": "text",
           "only_contextual": true,
+          "variable_context": true,
           "parents": ["customDrawable"],
           "props": [
             {
@@ -136,6 +141,76 @@
           ]
         }
       ]
-    }
+    },
+    "button": [
+      {
+        "name": "Button",
+        "parents": ["customDrawable"],
+        "only_contextual": true,
+        "props": [
+          {
+            "name": "enabledPointer",
+            "param": "p",
+            "type": "p[Boolean]",
+            "default": {
+              "code": "AlwaysTrue",
+              "ref": "true!"
+            },
+            "map": true,
+            "doc": "A pointer that determines whether this button is interactive or not"
+          },
+          {
+            "name": "hotKeys",
+            "name_plural": "hotKeys",
+            "param": "keys",
+            "type": "Set[hotkey]",
+            "default": "Set()",
+            "map": true,
+            "doc": "The keys used for triggering this button even when it doesn't have focus"
+          },
+          {
+            "name": "focusListeners",
+            "name_plural": "focusListeners",
+            "param": "listeners",
+            "type": "Vector[focus/FocusListener]",
+            "default": "Vector.empty",
+            "map": true,
+            "doc": "Focus listeners that should receive focus events from this button"
+          }
+        ]
+      }
+    ],
+    "button.text": [
+      {
+        "name": "TextButton",
+        "context": "text",
+        "props": [
+          {
+            "ref": "Button",
+            "prefix": "button",
+            "prefix_properties": false
+          }
+        ]
+      }
+    ],
+    "button.image": [
+      {
+        "name": "ViewImageAndTextButton",
+        "context": "text",
+        "variable_context": "true",
+        "only_contextual": true,
+        "props": [
+          {
+            "ref": "ViewImageLabel",
+            "prefix": "image"
+          },
+          {
+            "ref": "Button",
+            "prefix": "button",
+            "prefix_properties": false
+          }
+        ]
+      }
+    ]
   }
 }

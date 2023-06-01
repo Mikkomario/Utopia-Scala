@@ -266,7 +266,7 @@ trait InteractionWindowFactory[A]
 					blueprint.pressAction(resultPromise)
 				}
 			case None =>
-				factories(TextButton).withContext(context).apply(blueprint.text, hotkeys) {
+				factories(TextButton).withContext(context).withHotKeys(hotkeys)(blueprint.text) {
 					blueprint.pressAction(resultPromise)
 				}
 		}

@@ -5,19 +5,18 @@ import utopia.firmament.component.text.TextComponent
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.view.{BackgroundViewDrawer, TextViewDrawer}
+import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
-import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FromContextComponentFactoryFactory, FromVariableContextFactory, VariableBackgroundRoleAssignable}
+import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
+import utopia.reach.component.factory.{BackgroundAssignable, FromContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.drawing.Priority
@@ -26,8 +25,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
                                           customDrawers: Vector[CustomDrawer] = Vector(),
                                           isHintPointer: Changing[Boolean] = AlwaysFalse,
                                           drawBackground: Boolean = false)
-	extends VariableContextualFactory[TextContext, ContextualViewTextLabelFactory]
-		with VariableBackgroundRoleAssignable[ContextualViewTextLabelFactory]
+	extends VariableBackgroundRoleAssignableFactory[TextContext, ContextualViewTextLabelFactory]
 		with CustomDrawableFactory[ContextualViewTextLabelFactory]
 {
 	// COMPUTED ---------------------------------
@@ -53,15 +51,10 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewTextLabelFactory =
 		copy(customDrawers = drawers)
 	
-	override protected def withBackgroundPointer(pointer: Either[(Changing[ColorRole], ColorLevel), Changing[Color]]): ContextualViewTextLabelFactory =
-	{
-		val newContext: Changing[TextContext] = pointer match {
-			case Left((rolePointer, preference)) =>
-				contextPointer.mergeWith(rolePointer) { _.withBackground(_, preference) }
-			case Right(colorPointer) => contextPointer.mergeWith(colorPointer) { _ against _ }
-		}
-		copy(contextPointer = newContext, drawBackground = true)
-	}
+	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	                                                     backgroundDrawer: CustomDrawer): ContextualViewTextLabelFactory =
+		copy(contextPointer = newContextPointer, customDrawers = backgroundDrawer +: customDrawers,
+			drawBackground = true)
 	
 	
 	// OTHER	---------------------------------
@@ -80,15 +73,8 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
-		// Applies background drawing, if appropriate
-		val actualCustomDrawers = {
-			if (drawBackground)
-				BackgroundViewDrawer(View { contextPointer.value.background }) +: customDrawers
-			else
-				customDrawers
-		}
 		val label = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
-			contextPointer.map { _.allowTextShrink }, displayFunction, actualCustomDrawers)
+			contextPointer.map { _.allowTextShrink }, displayFunction, customDrawers)
 		// If background drawing is enabled, repaints when the background color changes
 		if (drawBackground)
 			contextPointer.addContinuousListener { e =>

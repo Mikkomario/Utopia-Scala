@@ -11,6 +11,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.factory.{FromContextFactory, Mixed}
@@ -62,6 +63,8 @@ trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	  */
 	def hint = withIsHint(isHint = true)
 	
+	def imageAlignment = imageSettings.alignment
+	
 	
 	// OTHER    ----------------------
 	
@@ -70,11 +73,13 @@ trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	def withImageColor(color: Color) = mapImageSettings { _.withColor(color) }
 	def withImageInsets(insets: StackInsetsConvertible) = mapImageSettings { _.withInsets(insets) }
 	def mapImageInsets(f: StackInsets => StackInsetsConvertible) = mapImageSettings { _.mapInsets(f) }
+	
+	def withImageAlignment(alignment: Alignment) = mapImageSettings { _.withAlignment(alignment) }
 }
 
 object ImageAndTextLabelSettings
 {
-	val default = apply()
+	val default = apply(ImageLabelSettings(alignment = Alignment.Right))
 }
 case class ImageAndTextLabelSettings(imageSettings: ImageLabelSettings = ImageLabelSettings.default,
                                      customDrawers: Vector[CustomDrawer] = Vector.empty,
@@ -120,6 +125,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	extends TextContextualFactory[ContextualImageAndTextLabelFactory]
 		with ImageAndTextLabelSettingsWrapper[ContextualImageAndTextLabelFactory]
 		with ContextualBackgroundAssignableFactory[TextContext, ContextualImageAndTextLabelFactory]
+		with FromAlignmentFactory[ContextualImageAndTextLabelFactory]
 {
 	// IMPLEMENTED  ----------------
 	
@@ -129,6 +135,13 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 		copy(settings = settings)
 	override def withContext(newContext: TextContext) =
 		copy(context = newContext)
+	
+	// By default, uses opposite alignments for text and image
+	override def apply(alignment: Alignment) = copy(
+		context = context.withTextAlignment(alignment),
+		settings = settings.withImageAlignment(alignment.opposite)
+	)
+	override def withTextAlignment(alignment: Alignment) = apply(alignment)
 	
 	
 	// OTHER    --------------------
