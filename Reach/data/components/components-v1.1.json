@@ -24,6 +24,56 @@
     "label": {
       "image": [
         {
+          "name": "ImageLabel",
+          "context": "color",
+          "parents": ["customDrawable", "framed"],
+          "props": [
+            {
+              "name": "alignment",
+              "type": "align",
+              "default": {
+                "ref": "align",
+                "code": "Alignment.Center"
+              },
+              "doc": "Alignment used when drawing the image within this label",
+              "map": true
+            },
+            {
+              "name": "imageScaling",
+              "param": "scaling",
+              "type": "Double",
+              "default": "1.0",
+              "doc": "Scaling applied to the drawn images",
+              "map": true
+            },
+            {
+              "name": "colorOverlay",
+              "param": "color",
+              "setter": "withColor",
+              "type": "Option[color]",
+              "default": "None",
+              "doc": "Color overlay applied over drawn images"
+            },
+            {
+              "name": "usesLowPrioritySize",
+              "param": "lowPriority",
+              "setter": "withUseLowPrioritySize",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether low priority size constraints should be used"
+            }
+          ],
+          "non_contextual_props": [
+            {
+              "name": "allowsUpscaling",
+              "param": "allow",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether the drawn image should be allowed to scale above its source resolution"
+            }
+          ]
+        },
+        {
           "name": "ViewImageLabel",
           "context": "color",
           "variable_context": true,
@@ -194,6 +244,22 @@
       }
     ],
     "button.image": [
+      {
+        "name": "ImageButton",
+        "context": "color",
+        "props": [
+          {
+            "ref": "Button",
+            "prefix": "button",
+            "prefix_properties": false
+          },
+          {
+            "ref": "ImageLabel",
+            "prefix": "image",
+            "prefix_properties": false
+          }
+        ]
+      },
       {
         "name": "ViewImageAndTextButton",
         "context": "text",

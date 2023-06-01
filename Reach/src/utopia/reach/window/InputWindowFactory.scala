@@ -182,7 +182,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			Framing(hierarchy).withContext(context.textContext).small.build(Stack) { stackF =>
 				stackF.centeredRow.build(Mixed) { factories =>
 					Vector(
-						factories(ImageButton).withIcon(closeIcon) { windowPointer.onceSet { _.close() } },
+						factories(ImageButton).icon(closeIcon) { windowPointer.onceSet { _.close() } },
 						factories(TextLabel)(message)
 					)
 				}

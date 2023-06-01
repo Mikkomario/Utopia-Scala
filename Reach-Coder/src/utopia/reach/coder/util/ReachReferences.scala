@@ -11,11 +11,19 @@ object ReachReferences
 {
 	// COMPUTED -------------------
 	
+	def paradigm = Paradigm
 	def firmament = Firmament
 	def reach = Reach
 	
 	
 	// NESTED   -------------------
+	
+	object Paradigm
+	{
+		import ReachPackages.Paradigm._
+		
+		lazy val alignment = Reference(enumerations, "Alignment")
+	}
 	
 	object Firmament
 	{
@@ -39,6 +47,7 @@ object ReachReferences
 		lazy val fromContextFactory = Reference(factories, "FromContextFactory")
 		lazy val fromVariableContextFactory = Reference(factories, "FromVariableContextFactory")
 		lazy val framedFactory = Reference(factories, "FramedFactory")
+		lazy val fromAlignmentFactory = Reference(factories, "FromAlignmentFactory")
 		lazy val customDrawableFactory = Reference(factories, "CustomDrawableFactory")
 		lazy val baseContextualFactory = Reference(contextualFactories, "BaseContextualFactory")
 		lazy val colorContextualFactory = Reference(contextualFactories, "ColorContextualFactory")

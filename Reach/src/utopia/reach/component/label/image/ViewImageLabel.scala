@@ -73,10 +73,10 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def alignment: Alignment = alignmentPointer.value
-	override protected def colorOverlay = colorOverlayPointer.map { _.value }
-	override protected def imageScaling: Double = imageScalingPointer.value
-	override protected def insets: StackInsets = insetsPointer.value
+	override def alignment: Alignment = alignmentPointer.value
+	override def colorOverlay = colorOverlayPointer.map { _.value }
+	override def imageScaling: Double = imageScalingPointer.value
+	override def insets: StackInsets = insetsPointer.value
 	
 	override def apply(alignment: Alignment): Repr = withAlignmentPointer(Fixed(alignment))
 	
@@ -105,6 +105,15 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 object ViewImageLabelSettings
 {
 	val default = apply()
+	
+	/**
+	  * @param staticSettings Fixed image settings
+	  * @return View image label settings based on those settings
+	  */
+	def apply(staticSettings: ImageLabelSettings): ViewImageLabelSettings =
+		apply(staticSettings.customDrawers, Fixed(staticSettings.insets), Fixed(staticSettings.alignment),
+			staticSettings.colorOverlay.map { Fixed(_) }, Fixed(staticSettings.imageScaling),
+			staticSettings.usesLowPrioritySize)
 }
 /**
   * Combined settings used when constructing view image labels
@@ -166,12 +175,12 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def alignmentPointer: Changing[Alignment] = settings.alignmentPointer
-	override protected def colorOverlayPointer: Option[Changing[Color]] = settings.colorOverlayPointer
+	override def alignmentPointer: Changing[Alignment] = settings.alignmentPointer
+	override def colorOverlayPointer: Option[Changing[Color]] = settings.colorOverlayPointer
 	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
-	override protected def imageScalingPointer: Changing[Double] = settings.imageScalingPointer
-	override protected def insetsPointer: Changing[StackInsets] = settings.insetsPointer
-	override protected def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
+	override def imageScalingPointer: Changing[Double] = settings.imageScalingPointer
+	override def insetsPointer: Changing[StackInsets] = settings.insetsPointer
+	override def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
 	
 	override def withAlignmentPointer(p: Changing[Alignment]): Repr =
 		mapSettings { _.withAlignmentPointer(p) }
@@ -189,6 +198,8 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
 	// OTHER	--------------------
 	
 	def mapSettings(f: ViewImageLabelSettings => ViewImageLabelSettings) = withSettings(f(settings))
+	
+	def withSettings(settings: ImageLabelSettings): Repr = withSettings(ViewImageLabelSettings(settings))
 }
 
 /**

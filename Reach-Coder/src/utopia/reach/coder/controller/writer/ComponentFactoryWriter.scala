@@ -1,7 +1,7 @@
 package utopia.reach.coder.controller.writer
 
 import utopia.coder.model.data.{Name, NamingRules, ProjectSetup}
-import utopia.coder.model.scala.Visibility.Protected
+import utopia.coder.model.scala.datatype.Reference._
 import utopia.coder.model.scala.datatype.TypeVariance.Covariance
 import utopia.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
@@ -12,14 +12,12 @@ import utopia.flow.collection.immutable.Pair
 import utopia.reach.coder.model.data.{ComponentFactory, Property}
 import utopia.reach.coder.model.enumeration.ContextType
 import utopia.reach.coder.util.ReachReferences.Reach._
-import Reference._
 
 /**
   * Used for writing component factory classes
   * @author Mikko Hilpinen
   * @since 19.5.2023, v1.0
   */
-// TODO: Getters should be public and not protected
 object ComponentFactoryWriter
 {
 	// ATTRIBUTES -----------------------
@@ -51,8 +49,17 @@ object ComponentFactoryWriter
 		val settingsWrapperDec = settingsWrapper(factory, settingsLikeType, settingsType)
 		val settingsWrapperType = settingsWrapperDec.toBasicType
 		
-		val factoryLikeDec = factoryLike(factory, settingsWrapperType)
-		val factoryLikeType = factoryLikeDec.toBasicType
+		// The FactoryLike trait is only written if there are two or more inheritors
+		val factoryLikeDec = {
+			if (factory.onlyContextual || factory.contextType.isEmpty)
+				None
+			else
+				Some(factoryLike(factory, settingsWrapperType))
+		}
+		val factoryLikeType = factoryLikeDec match {
+			case Some(f) => f.toBasicType
+			case None => settingsWrapperType
+		}
 		
 		val contextualDec = factory.contextType.map { context =>
 			contextualFactory(factory, ("Contextual" +: (factory.componentName + "Factory")).className, context,
@@ -77,7 +84,7 @@ object ComponentFactoryWriter
 		
 		File(
 			factory.pck,
-			Vector(settingsLikeDec, settingsCompanionDec, settingsDec, settingsWrapperDec, factoryLikeDec) ++
+			Vector(settingsLikeDec, settingsCompanionDec, settingsDec, settingsWrapperDec) ++ factoryLikeDec ++
 				contextualDec.map { _._1 } ++ nonContextualDec ++ setupDec ++ companionDec,
 			factory.componentName.className, Set[Reference]()
 		).write()
@@ -98,8 +105,7 @@ object ComponentFactoryWriter
 			extensions = factory.parentTraits.map { _.toExtension(reprType) },
 			// Defines abstract properties
 			properties = factory.properties.map { prop =>
-				PropertyDeclaration.newAbstract(prop.name.function, prop.dataType, description = prop.description,
-					isProtected = true)
+				PropertyDeclaration.newAbstract(prop.name.function, prop.dataType, description = prop.description)
 			} ++ referencedProps,
 			// Defines abstract property setters, as well as mapping functions based on each setter
 			methods = factory.properties.flatMap { prop =>
@@ -171,7 +177,7 @@ object ComponentFactoryWriter
 				// Also defines all property getters
 				factory.allProperties.map { prop =>
 					val propName = prop.name.prop
-					ComputedProperty(propName, visibility = Protected, isOverridden = true)(s"settings.$propName")
+					ComputedProperty(propName, isOverridden = true)(s"settings.$propName")
 				},
 			// Defines setters for each property
 			methods = factory.allProperties.map { prop =>
@@ -208,11 +214,6 @@ object ComponentFactoryWriter
 					description = s"The component hierarchy, to which created ${
 						factory.componentName.pluralDoc} will be attached",
 					isProtected = true)
-			),
-			// Defines an apply method stub without implementation
-			methods = Set(
-				MethodDeclaration("apply", description = s"Creates a new ${factory.componentName}",
-					returnDescription = s"A new ${factory.componentName}", isLowMergePriority = true)()("???")
 			),
 			description = s"Common trait for factories that are used for constructing ${factory.componentName.pluralDoc}",
 			author = factory.author,
@@ -275,7 +276,6 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the contextual factory variant
-	// TODO: If non-contextual version is not used, skip the parent factory trait and only write this variant
 	private def contextualFactory(factory: ComponentFactory, name: String, context: ContextType, settingsType: ScalaType,
 	                              factoryLikeType: ScalaType)
 	                             (implicit naming: NamingRules, setup: ProjectSetup) =
@@ -315,7 +315,7 @@ object ComponentFactoryWriter
 			// Implements the required setters
 			methods = Set(
 				withContextMethod,
-				MethodDeclaration("withSettings", visibility = Protected, isOverridden = true)(
+				MethodDeclaration("withSettings", isOverridden = true)(
 					Parameter("settings", settingsType))("copy(settings = settings)")
 			) ++
 				// Also contains possible custom property setters
@@ -335,7 +335,6 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the outside-hierarchy setup class
-	// TODO: Add withContext variant that uses pointers (if applicable)
 	private def setupFactory(factory: ComponentFactory, settingsType: ScalaType, settingsWrapperType: ScalaType,
 	                         nonContextualFactoryType: Option[ScalaType],
 	                         contextualFactoryType: Option[(ScalaType, ContextType)])
@@ -362,6 +361,18 @@ object ComponentFactoryWriter
 				Vector(hierarchyParam, Parameter("context", context.reference)))(
 				methodImplementation)
 		}
+		val fromContextPointerMethod = {
+			if (factory.useVariableContext)
+				contextualFactoryType.map { case (contextual, context) =>
+					MethodDeclaration("withContext",
+						returnDescription = s"A new ${
+							factory.componentName} factory that uses the specified (variable) context")(
+						Vector(hierarchyParam, Parameter("context", flow.changing(context.reference))))(
+						s"$contextual(hierarchy, context, settings)")
+				}
+			else
+				None
+		}
 		
 		ClassDeclaration(
 			name = (factory.componentName + "Setup").className,
@@ -372,7 +383,8 @@ object ComponentFactoryWriter
 			// Implements the required methods
 			methods = Set(MethodDeclaration("withSettings", isOverridden = true)(
 				Parameter("settings", settingsType))("copy(settings = settings)")) ++
-				nonContextualParentAndMethod.map { _._2 } ++ contextualParentAndMethod.map { _._2 },
+				nonContextualParentAndMethod.map { _._2 } ++ contextualParentAndMethod.map { _._2 } ++
+				fromContextPointerMethod,
 			description = s"Used for defining ${
 				factory.componentName} creation settings outside of the component building process",
 			author = factory.author,
@@ -402,7 +414,7 @@ object ComponentFactoryWriter
 		target.allProperties.splitFlatMap { prop =>
 			// Generates a getter
 			val propName = if (referenceProperty.prefixDerivedProperties) prefix +: prop.name else prop.name
-			val directGet = ComputedProperty(propName.prop, visibility = Protected,
+			val directGet = ComputedProperty(propName.prop,
 				description = s"${prop.name} from the wrapped ${target.componentName} settings")(
 				s"$base.${prop.name.prop}")
 			// Generates a setter

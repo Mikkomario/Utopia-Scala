@@ -1,5 +1,6 @@
 package utopia.reach.coder.model.enumeration
 
+import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.flow.util.StringExtensions._
 import utopia.reach.coder.model.data.Property
@@ -63,6 +64,7 @@ object ReachFactoryTrait
 	{
 		override val keyword: String = "framed"
 		override val property: Property = Property.simple("insets", firmament.stackInsets,
+			CodePiece("StackInsets.any", Set(firmament.stackInsets)),
 			description = "Insets to place around this component")
 		
 		override def reference: Reference = framedFactory
@@ -78,4 +80,12 @@ object ReachFactoryTrait
 		
 		override def reference: Reference = customDrawableFactory
 	}
+	/*
+	case object FromAlignmentFactory extends ReachFactoryTrait
+	{
+		override val keyword: String = "align"
+		override val property: Property = Property("alignment", paradigm.alignment, "apply", "alignment")
+		
+		override def reference: Reference = fromAlignmentFactory
+	}*/
 }

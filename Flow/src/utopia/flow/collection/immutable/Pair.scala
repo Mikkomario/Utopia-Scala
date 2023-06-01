@@ -131,7 +131,7 @@ object Pair
 		  *         The ordering of group 3 is dictated by the ordering in the second source collection.
 		  *         The ordering in groups 1 and 2 is lost (obviously).
 		  */
-		def separateMatching(implicit equals: EqualsFunction[A]) =
+		def separateMatching(implicit equals: EqualsFunction[A] = EqualsFunction.default) =
 			separateMatchingWith(equals.apply)
 		/**
 		  * Groups the collections in this pair to 3 groups:

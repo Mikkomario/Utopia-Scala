@@ -11,11 +11,19 @@ object ReachPackages
 {
 	// COMPUTED -----------------------
 	
+	def paradigm = Paradigm
 	def firmament = Firmament
 	def reach = Reach
 	
 	
 	// NESTED   -----------------------
+	
+	object Paradigm
+	{
+		val base = utopia/"paradigm"
+		
+		lazy val enumerations = base/"model.enumeration"
+	}
 	
 	object Firmament
 	{
