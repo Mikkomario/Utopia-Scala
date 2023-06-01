@@ -64,6 +64,11 @@ trait ButtonSettingsLike[+Repr]
 	  */
 	def withHotKey(hotKey: HotKey) = mapHotKeys { _ + hotKey }
 	/**
+	  * @param keys Additional hotkeys for triggering this button
+	  * @return Copy of this factory with the specified hotkeys assigned
+	  */
+	def withAdditionalHotKeys(keys: IterableOnce[HotKey]) = mapHotKeys { _ ++ keys }
+	/**
 	  * @param keyIndex An KeyIndex (see [[java.awt.event.KeyEvent]]) of the targeted key
 	  * @return Copy of this factory that uses the specified key as a hotkey
 	  */

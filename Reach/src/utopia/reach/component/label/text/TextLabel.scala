@@ -87,6 +87,12 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	// OTHER	---------------------------------
 	
 	/**
+	  * @param isHint Whether hint labels should be constructed
+	  * @return Copy of this factory with the specified setting
+	  */
+	def withIsHint(isHint: Boolean) = copy(isHint = isHint)
+	
+	/**
 	  * Creates a new text label utilizing contextual information
 	  * @param text Text displayed on this label
 	  * @return A new label

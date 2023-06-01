@@ -12,9 +12,8 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
-import utopia.reach.component.factory.{FromContextFactory, Mixed}
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
@@ -27,95 +26,198 @@ class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
 		ContextualImageAndTextLabelFactory(parentHierarchy, context)
 }
 
+/**
+  * Common trait for image and text label factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
 trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 {
-	// ABSTRACT -----------------------
-	
-	protected def imageSettings: ImageLabelSettings
-	protected def forceEqualBreadth: Boolean
-	protected def isHint: Boolean
+	// ABSTRACT	--------------------
 	
 	/**
-	  * @param settings New image settings to use
-	  * @return Copy of these settings with the specified underlying image settings
+	  * Settings that affect the wrapped image label
 	  */
-	def withImageSettings(settings: ImageLabelSettings): Repr
+	def imageSettings: ImageLabelSettings
+	
 	/**
+	  * Whether the text and image should be forced to have equal width or height, depending on the layout
+	  */
+	def forceEqualBreadth: Boolean
+	/**
+	  * Whether this factory constructs hint labels. Affects text opacity.
+	  */
+	def isHint: Boolean
+	
+	/**
+	  * Whether the text and image should be forced to have equal width or height, depending on the layout
 	  * @param force Whether Fit layout should be forced
 	  * @return Copy of this factory with specified setting
 	  */
 	def withForceEqualBreadth(force: Boolean): Repr
 	/**
+	  * Settings that affect the wrapped image label
+	  * @param settings New image settings to use
+	  * @return Copy of these settings with the specified underlying image settings
+	  */
+	def withImageSettings(settings: ImageLabelSettings): Repr
+	/**
+	  * Whether this factory constructs hint labels. Affects text opacity.
 	  * @param isHint Whether text should be drawn as a hint (partially transparent)
 	  * @return Copy of this factory with the specified setting
 	  */
 	def withIsHint(isHint: Boolean): Repr
 	
 	
-	// COMPUTED -----------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Copy of this factory that forces Fit layout
+	  * custom drawers from the wrapped image label settings
+	  */
+	def imageCustomDrawers = imageSettings.customDrawers
+	/**
+	  * insets from the wrapped image label settings
+	  */
+	def imageInsets = imageSettings.insets
+	/**
+	  * alignment from the wrapped image label settings
+	  */
+	def imageAlignment = imageSettings.alignment
+	/**
+	  * image scaling from the wrapped image label settings
+	  */
+	def imageScaling = imageSettings.imageScaling
+	/**
+	  * color overlay from the wrapped image label settings
+	  */
+	def imageColorOverlay = imageSettings.colorOverlay
+	/**
+	  * uses low priority size from the wrapped image label settings
+	  */
+	def imageUsesLowPrioritySize = imageSettings.usesLowPrioritySize
+	
+	/**
+	  * Copy of this factory that forces Fit layout
 	  */
 	def forcingEqualBreadth = withForceEqualBreadth(force = true)
 	/**
-	  * @return Copy of this factory that draws text as a hint
+	  * Copy of this factory that draws text as a hint
 	  */
 	def hint = withIsHint(isHint = true)
 	
-	def imageAlignment = imageSettings.alignment
 	
+	// OTHER	--------------------
 	
-	// OTHER    ----------------------
-	
-	def mapImageSettings(f: ImageLabelSettings => ImageLabelSettings) = withImageSettings(f(imageSettings))
-	
-	def withImageColor(color: Color) = mapImageSettings { _.withColor(color) }
-	def withImageInsets(insets: StackInsetsConvertible) = mapImageSettings { _.withInsets(insets) }
 	def mapImageInsets(f: StackInsets => StackInsetsConvertible) = mapImageSettings { _.mapInsets(f) }
+	def mapImageSettings(f: ImageLabelSettings => ImageLabelSettings) = withImageSettings(f(imageSettings))
+	def mapImageAlignment(f: Alignment => Alignment) = withImageAlignment(f(imageAlignment))
+	def mapImageScaling(f: Double => Double) = withImageScaling(f(imageScaling))
 	
-	def withImageAlignment(alignment: Alignment) = mapImageSettings { _.withAlignment(alignment) }
+	/**
+	  * @param alignment Alignment used when drawing the image within this label
+	  * @return Copy of this factory with the specified image alignment
+	  */
+	def withImageAlignment(alignment: Alignment) = withImageSettings(imageSettings.withAlignment(alignment))
+	/**
+	  * @param color Color overlay applied over drawn images
+	  * @return Copy of this factory with the specified image color overlay
+	  */
+	def withImageColorOverlay(color: Option[Color]) = withImageSettings(imageSettings.withColor(color))
+	/**
+	  * @param drawers Custom drawers to assign to created components
+	  * @return Copy of this factory with the specified image custom drawers
+	  */
+	def withImageCustomDrawers(drawers: Vector[CustomDrawer]) =
+		withImageSettings(imageSettings.withCustomDrawers(drawers))
+	/**
+	  * @param scaling Scaling applied to the drawn images
+	  * @return Copy of this factory with the specified image image scaling
+	  */
+	def withImageScaling(scaling: Double) = withImageSettings(imageSettings.withImageScaling(scaling))
+	/**
+	  * @param insets Insets to place around created components
+	  * @return Copy of this factory with the specified image insets
+	  */
+	def withImageInsets(insets: StackInsets) = withImageSettings(imageSettings.withInsets(insets))
+	/**
+	  * @param lowPriority Whether low priority size constraints should be used
+	  * @return Copy of this factory with the specified image uses low priority size
+	  */
+	def withImageUsesLowPrioritySize(lowPriority: Boolean) =
+		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
 }
 
 object ImageAndTextLabelSettings
 {
-	val default = apply(ImageLabelSettings(alignment = Alignment.Right))
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
 }
-case class ImageAndTextLabelSettings(imageSettings: ImageLabelSettings = ImageLabelSettings.default,
-                                     customDrawers: Vector[CustomDrawer] = Vector.empty,
-                                     forceEqualBreadth: Boolean = false, isHint: Boolean = false)
+/**
+  * Combined settings used when constructing image and text labels
+  * @param customDrawers     Custom drawers to assign to created components
+  * @param imageSettings     Settings that affect the wrapped image label
+  * @param forceEqualBreadth Whether the text and image should be forced to have equal width or height,
+  *                          depending on the layout
+  * @param isHint            Whether this factory constructs hint labels. Affects text opacity.
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+                                     imageSettings: ImageLabelSettings = ImageLabelSettings.default,
+                                     forceEqualBreadth: Boolean = false,
+                                     isHint: Boolean = false)
 	extends ImageAndTextLabelSettingsLike[ImageAndTextLabelSettings]
 {
-	override def withForceEqualBreadth(force: Boolean): ImageAndTextLabelSettings = copy(forceEqualBreadth = force)
-	override def withIsHint(isHint: Boolean): ImageAndTextLabelSettings = copy(isHint = isHint)
-	override def withImageSettings(settings: ImageLabelSettings): ImageAndTextLabelSettings =
-		copy(imageSettings = settings)
+	// IMPLEMENTED	--------------------
+	
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageAndTextLabelSettings =
 		copy(customDrawers = customDrawers)
+	override def withForceEqualBreadth(force: Boolean): ImageAndTextLabelSettings =
+		copy(forceEqualBreadth = force)
+	override def withImageSettings(settings: ImageLabelSettings): ImageAndTextLabelSettings =
+		copy(imageSettings = settings)
+	override def withIsHint(isHint: Boolean): ImageAndTextLabelSettings = copy(isHint = isHint)
 }
 
+/**
+  * Common trait for factories that wrap a image and text label settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
 trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsLike[Repr]
 {
-	// ABSTRACT ---------------------
+	// ABSTRACT	--------------------
 	
+	/**
+	  * Settings wrapped by this instance
+	  */
 	protected def settings: ImageAndTextLabelSettings
-	protected def withSettings(settings: ImageAndTextLabelSettings): Repr
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: ImageAndTextLabelSettings): Repr
 	
 	
-	// IMPLEMENTED  ----------------
+	// IMPLEMENTED	--------------------
 	
-	override protected def imageSettings: ImageLabelSettings = settings.imageSettings
-	override protected def forceEqualBreadth: Boolean = settings.forceEqualBreadth
-	override protected def isHint: Boolean = settings.isHint
 	override def customDrawers = settings.customDrawers
+	override def forceEqualBreadth: Boolean = settings.forceEqualBreadth
+	override def imageSettings: ImageLabelSettings = settings.imageSettings
+	override def isHint: Boolean = settings.isHint
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+		mapSettings { _.withCustomDrawers(drawers) }
 	override def withForceEqualBreadth(force: Boolean): Repr = mapSettings { _.withForceEqualBreadth(force) }
+	override def withImageSettings(settings: ImageLabelSettings): Repr =
+		mapSettings { _.withImageSettings(settings) }
 	override def withIsHint(isHint: Boolean): Repr = mapSettings { _.withIsHint(isHint) }
-	override def withImageSettings(settings: ImageLabelSettings): Repr = mapSettings { _.withImageSettings(settings) }
 	
 	
-	// OTHER    --------------------
+	// OTHER	--------------------
 	
 	def mapSettings(f: ImageAndTextLabelSettings => ImageAndTextLabelSettings) = withSettings(f(settings))
 }
@@ -131,7 +233,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	
 	override def self: ContextualImageAndTextLabelFactory = this
 	
-	override protected def withSettings(settings: ImageAndTextLabelSettings): ContextualImageAndTextLabelFactory =
+	override def withSettings(settings: ImageAndTextLabelSettings): ContextualImageAndTextLabelFactory =
 		copy(settings = settings)
 	override def withContext(newContext: TextContext) =
 		copy(context = newContext)
@@ -161,7 +263,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return A new label
 	  */
 	def apply(image: Either[Image, SingleColorIcon], text: LocalizedString) =
-		new ImageAndTextLabel(parentHierarchy, context, image, text, imageSettings, customDrawers, forceEqualBreadth)
+		new ImageAndTextLabel(parentHierarchy, context, image, text, settings)
 	/**
 	  * Creates a new label that contains both an image and text
 	  * @param image Image displayed on this label
@@ -199,19 +301,29 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 		mapImageSettings { _.withColor(context.color.preferring(preferredShade)(role)) }.apply(icon, text)
 }
 
-case class ImageAndTextLabelSetup(settings: ImageAndTextLabelSettings)
-	extends Ccff[TextContext, ContextualImageAndTextLabelFactory]
-		with ImageAndTextLabelSettingsWrapper[ImageAndTextLabelSetup]
+/**
+  * Used for defining image and text label creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+case class ImageAndTextLabelSetup(settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
+	extends ImageAndTextLabelSettingsWrapper[ImageAndTextLabelSetup]
+		with FromContextComponentFactoryFactory[TextContext, ContextualImageAndTextLabelFactory]
 {
-	override protected def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextLabelSetup =
-		copy(settings = settings)
+	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext): ContextualImageAndTextLabelFactory =
+	override def withContext(hierarchy: ComponentHierarchy,
+	                         context: TextContext): ContextualImageAndTextLabelFactory =
 		ContextualImageAndTextLabelFactory(hierarchy, context, settings)
+	
+	override def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextLabelSetup =
+		copy(settings = settings)
 }
 
-object ImageAndTextLabel extends ImageAndTextLabelSetup(ImageAndTextLabelSettings.default)
+object ImageAndTextLabel extends ImageAndTextLabelSetup()
 {
+	// OTHER	--------------------
+	
 	def apply(settings: ImageAndTextLabelSettings) = withSettings(settings)
 }
 
@@ -222,8 +334,7 @@ object ImageAndTextLabel extends ImageAndTextLabelSetup(ImageAndTextLabelSetting
   */
 class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContext,
                         image: Either[Image, SingleColorIcon], text: LocalizedString,
-                        imageSettings: ImageLabelSettings = ImageLabelSettings.default,
-                        additionalDrawers: Vector[CustomDrawer] = Vector(), forceEqualBreadth: Boolean = false)
+                        settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
 	extends ReachComponentWrapper
 {
 	// ATTRIBUTES	------------------------------
@@ -231,18 +342,22 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContex
 	override protected val wrapped = {
 		// If one of the provided items is empty, only creates one component
 		if (image.either.isEmpty)
-			TextLabel(parentHierarchy).withContext(context).withAdditionalCustomDrawers(additionalDrawers).apply(text)
+			TextLabel(parentHierarchy).withContext(context)
+				.withIsHint(settings.isHint).withAdditionalCustomDrawers(settings.customDrawers)
+				.apply(text)
 		else if (text.isEmpty)
-			ImageLabel.withSettings(imageSettings)
-				.withAlignment(context.textAlignment.opposite).withAdditionalCustomDrawers(additionalDrawers)
-				.apply(parentHierarchy).withContext(context).apply(image)
+			ImageLabel.withSettings(settings.imageSettings)
+				.withAdditionalCustomDrawers(settings.customDrawers)
+				.apply(parentHierarchy).withContext(context)
+				.apply(image)
 		else
 			// Wraps the components in a stack
-			Stack(parentHierarchy).withContext(context).withCustomDrawers(additionalDrawers)
-				.buildPair(Mixed, context.textAlignment, forceEqualBreadth) { factories =>
+			Stack(parentHierarchy).withContext(context)
+				.withCustomDrawers(settings.customDrawers)
+				.buildPair(Mixed, context.textAlignment, settings.forceEqualBreadth) { factories =>
 					Pair(
-						factories(TextLabel)(text),
-						factories(ImageLabel.withSettings(imageSettings))(image))
+						factories(TextLabel).withIsHint(settings.isHint)(text),
+						factories(ImageLabel.withSettings(settings.imageSettings))(image))
 				}
 				.parent
 	}

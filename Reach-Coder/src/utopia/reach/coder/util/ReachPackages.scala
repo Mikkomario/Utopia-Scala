@@ -43,5 +43,6 @@ object ReachPackages
 		lazy val hierarchies = components/"hierarchy"
 		lazy val factories = components/"factory"
 		lazy val contextualFactories = factories/"contextual"
+		lazy val focus = base/"focus"
 	}
 }

@@ -140,6 +140,33 @@
           ]
         },
         {
+          "name": "ImageAndTextLabel",
+          "context": "text",
+          "only_contextual": true,
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "ImageLabel",
+              "prefix": "image",
+              "doc": "Settings that affect the wrapped image label"
+            },
+            {
+              "name": "forceEqualBreadth",
+              "param": "force",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the text and image should be forced to have equal width or height, depending on the layout"
+            },
+            {
+              "name": "isHint",
+              "param": "hint",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether this factory constructs hint labels. Affects text opacity."
+            }
+          ]
+        },
+        {
           "name": "ViewImageAndTextLabel",
           "context": "text",
           "only_contextual": true,
@@ -273,6 +300,26 @@
             "ref": "ViewImageLabel",
             "prefix": "image",
             "prefix_properties": false
+          }
+        ]
+      },
+      {
+        "name": "ImageAndTextButton",
+        "context": "text",
+        "only_contextual": true,
+        "parents": ["framed"],
+        "props": [
+          {
+            "ref": "Button",
+            "prefix": "button",
+            "prefix_props": false,
+            "doc": "Wrapped general button settings"
+          },
+          {
+            "ref": "ImageAndTextLabel",
+            "prefix": "label",
+            "prefix_props": false,
+            "doc": "Wrapped settings for label construction"
           }
         ]
       },

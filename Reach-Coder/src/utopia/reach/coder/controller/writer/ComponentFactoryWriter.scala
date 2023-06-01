@@ -18,7 +18,6 @@ import utopia.reach.coder.util.ReachReferences.Reach._
   * @author Mikko Hilpinen
   * @since 19.5.2023, v1.0
   */
-// TODO: For reference properties that don't use prefix, one could/should automatically extend the appropriate SettingsLike trait
 object ComponentFactoryWriter
 {
 	// ATTRIBUTES -----------------------
@@ -92,7 +91,6 @@ object ComponentFactoryWriter
 	}
 	
 	// Declares the generic settings trait
-	// TODO: When implementing referenced properties, use correct setter names in cases where no prefix is defined
 	private def settingsLike(factory: ComponentFactory)(implicit naming: NamingRules, setup: ProjectSetup) = {
 		// Adds additional properties and methods for nested settings
 		val (referencedProps, referencedMethods) = factory.properties.splitFlatMap { prop =>
@@ -104,7 +102,7 @@ object ComponentFactoryWriter
 			name = (factory.componentName + "SettingsLike").className,
 			genericTypes = Vector(repr),
 			// Allows custom extensions
-			extensions = factory.parentTraits.map { _.toExtension(reprType) },
+			extensions = factory.parentTraits.map { _.toExtension(reprType) } ++ referenceExtensionsIteratorFor(factory),
 			// Defines abstract properties
 			properties = factory.properties.map { prop =>
 				PropertyDeclaration.newAbstract(prop.name.function, prop.dataType, description = prop.description)
@@ -409,25 +407,44 @@ object ComponentFactoryWriter
 		)
 	}
 	
+	// Extensions are only enabled for reference properties that don't use prefixed properties
+	private def referenceExtensionsIteratorFor(factory: ComponentFactory)(implicit naming: NamingRules): Iterator[Extension] = {
+		factory.properties.iterator.flatMap { prop =>
+			if (prop.prefixDerivedProperties)
+				Iterator.empty
+			else
+				prop.reference.iterator.flatMap { case (factory, _) =>
+					val ref: Extension = Reference(factory.pck,
+						(factory.componentName + "SettingsLike").className)(reprType)
+					ref +: referenceExtensionsIteratorFor(factory)
+				}
+		}
+	}
+	
 	private def referencedPropFunctionsFrom(referenceProperty: Property, target: ComponentFactory, prefix: Name)
 	                                       (implicit naming: NamingRules): (Vector[PropertyDeclaration], Vector[MethodDeclaration]) =
 	{
+		val usePrefixes = referenceProperty.prefixDerivedProperties
 		val base = referenceProperty.name.prop
 		target.allProperties.splitFlatMap { prop =>
 			// Generates a getter
-			val propName = if (referenceProperty.prefixDerivedProperties) prefix +: prop.name else prop.name
+			val propName = if (usePrefixes) prefix +: prop.name else prop.name
 			val directGet = ComputedProperty(propName.prop,
-				description = s"${prop.name} from the wrapped ${target.componentName} settings")(
+				description = if (usePrefixes) s"${prop.name} from the wrapped ${target.componentName} settings" else "",
+				isOverridden = !usePrefixes)(
 				s"$base.${prop.name.prop}")
 			// Generates a setter
 			val paramName = prop.setterParamName.prop
-			val directSet = MethodDeclaration(("with" +: propName).function,
-				returnDescription = s"Copy of this factory with the specified $propName")(
-				Parameter(paramName, prop.dataType, description = prop.description))(
+			val setterName = if (usePrefixes) "with" +: propName else prop.setterName
+			val directSet = MethodDeclaration(setterName.function,
+				returnDescription = if (usePrefixes) s"Copy of this factory with the specified $propName" else "",
+				isOverridden = !usePrefixes)(
+				Parameter(paramName, prop.dataType, description = if (usePrefixes) prop.description else ""))(
 				s"${referenceProperty.setterName.function}($base.${prop.setterName.function}($paramName))")
 			// Generates a mapper, if enabled
+			// Non-prefixed properties don't need a mapper because of inheritance
 			val mapper = {
-				if (prop.mappingEnabled)
+				if (usePrefixes && prop.mappingEnabled)
 					Some(MethodDeclaration(("map" +: propName).function)(
 						Parameter("f", prop.dataType.fromParameters(prop.dataType)))(
 						s"${directSet.name}(f(${directGet.name}))"))
@@ -437,7 +454,7 @@ object ComponentFactoryWriter
 			// Recursively generates more properties if the reference goes deeper
 			val (moreProps, moreMethods) = prop.reference match {
 				case Some((deeperTarget, nextPrefix)) =>
-					val appliedPrefix = if (referenceProperty.prefixDerivedProperties) prefix + nextPrefix else nextPrefix
+					val appliedPrefix = if (usePrefixes) prefix + nextPrefix else nextPrefix
 					referencedPropFunctionsFrom(prop, deeperTarget, appliedPrefix)
 				case None => Vector() -> Vector()
 			}

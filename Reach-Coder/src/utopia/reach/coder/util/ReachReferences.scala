@@ -47,6 +47,7 @@ object ReachReferences
 		lazy val fromContextFactory = Reference(factories, "FromContextFactory")
 		lazy val fromVariableContextFactory = Reference(factories, "FromVariableContextFactory")
 		lazy val framedFactory = Reference(factories, "FramedFactory")
+		lazy val focusListenableFactory = Reference(factories, "FocusListenableFactory")
 		lazy val fromAlignmentFactory = Reference(factories, "FromAlignmentFactory")
 		lazy val customDrawableFactory = Reference(factories, "CustomDrawableFactory")
 		lazy val baseContextualFactory = Reference(contextualFactories, "BaseContextualFactory")
@@ -54,5 +55,6 @@ object ReachReferences
 		lazy val textContextualFactory = Reference(contextualFactories, "TextContextualFactory")
 		lazy val contentWindowContextualFactory = Reference(contextualFactories, "ReachContentWindowContextualFactory")
 		lazy val variableContextualFactory = Reference(contextualFactories, "VariableContextualFactory")
+		lazy val focusListener = Reference(focus, "FocusListener")
 	}
 }

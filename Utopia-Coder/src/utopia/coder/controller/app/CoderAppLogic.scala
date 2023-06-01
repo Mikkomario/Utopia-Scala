@@ -24,6 +24,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 4.9.2021, v0.1
   */
+// FIXME: The -N argument is not working at this time
 trait CoderAppLogic extends AppLogic
 {
 	// ABSTRACT ------------------------------

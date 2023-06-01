@@ -62,10 +62,10 @@ object ReachFactoryTrait
 	  */
 	case object FramedFactory extends ReachFactoryTrait
 	{
-		override val keyword: String = "framed"
-		override val property: Property = Property.simple("insets", firmament.stackInsets,
+		override val keyword: String = "frame"
+		override lazy val property: Property = Property.simple("insets", firmament.stackInsets,
 			CodePiece("StackInsets.any", Set(firmament.stackInsets)),
-			description = "Insets to place around this component")
+			description = "Insets to place around created components")
 		
 		override def reference: Reference = framedFactory
 	}
@@ -74,11 +74,21 @@ object ReachFactoryTrait
 	  */
 	case object CustomDrawableFactory extends ReachFactoryTrait
 	{
-		override val keyword: String = "customDrawable"
-		override val property: Property = Property("customDrawers", ScalaType.vector(firmament.customDrawer),
-			"withCustomDrawers", "drawers", "Vector.empty", description = "Custom drawers to assign to this component")
+		override val keyword: String = "draw"
+		override lazy val property: Property = Property("customDrawers", ScalaType.vector(firmament.customDrawer),
+			"withCustomDrawers", "drawers", "Vector.empty",
+			description = "Custom drawers to assign to created components")
 		
 		override def reference: Reference = customDrawableFactory
+	}
+	case object FocusListenableFactory extends ReachFactoryTrait
+	{
+		override val keyword: String = "focus"
+		override lazy val property: Property = Property("focusListeners", ScalaType.vector(focusListener),
+			"withFocusListeners", "listeners", "Vector.empty",
+			description = "Focus listeners to assign to created components")
+		
+		override def reference: Reference = focusListenableFactory
 	}
 	/*
 	case object FromAlignmentFactory extends ReachFactoryTrait

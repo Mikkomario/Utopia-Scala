@@ -1,7 +1,8 @@
 package utopia.reach.coder.model.data
 
-import utopia.coder.model.data.Name
+import utopia.coder.model.data.{Name, NamingRules}
 import utopia.coder.model.scala.Package
+import utopia.coder.model.scala.datatype.Reference
 import utopia.reach.coder.model.enumeration.{ContextType, ReachFactoryTrait}
 
 /**
@@ -28,6 +29,12 @@ case class ComponentFactory(pck: Package, componentName: Name, contextType: Opti
                             contextualProperties: Vector[Property] = Vector(),
                             author: String = "", onlyContextual: Boolean = false, useVariableContext: Boolean = false)
 {
+	/**
+	  * @param naming Naming rules to apply
+	  * @return Reference to this component
+	  */
+	def reference(implicit naming: NamingRules) = Reference(pck, componentName.className)
+	
 	/**
 	  * @return All properties declared / used by this factory
 	  */
