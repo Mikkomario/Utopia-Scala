@@ -3,7 +3,6 @@ package utopia.reach.component.input.check
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
@@ -11,7 +10,6 @@ import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole}
-import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.TextContextualFactory
@@ -65,15 +63,16 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 	             backgroundColorPointer: Changing[Color] = Fixed(context.background),
 	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 	{
-		Stack(parentHierarchy).withContext(context).copy(axis = X, layout = Center, customDrawers = customDrawers)
+		Stack(parentHierarchy).withContext(context).centeredRow.withCustomDrawers(customDrawers)
 			.build(Mixed) { factories =>
+				// TODO: Refactor using creation settings
 				val radioButton = factories(RadioButton).apply(selectedValuePointer, value, selectedColorRole,
 					enabledPointer, backgroundColorPointer, focusListeners = focusListeners)
 				// Text color may vary
 				val textColorPointer = backgroundColorPointer.mergeWith(enabledPointer) { (background, enabled) =>
 					if (enabled) background.shade.defaultTextColor else background.shade.defaultHintTextColor
 				}
-				val label = factories(ViewTextLabel).withoutContext.forText(Fixed(labelText),
+				val label = factories(ViewTextLabel).withoutContext.text(Fixed(labelText),
 					textColorPointer.map { color => context.textDrawContext.copy(color = color) })
 				label.addMouseButtonListener(MouseButtonStateListener.onLeftPressedInside { label.bounds } { _ =>
 					radioButton.select()

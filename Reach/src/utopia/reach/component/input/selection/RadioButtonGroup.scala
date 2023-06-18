@@ -99,6 +99,7 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
   * @author Mikko Hilpinen
   * @since 9.3.2021, v0.1
   */
+// TODO: Refactor to utilize radio button (and stack?) settings
 class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(A, LocalizedString)],
                           override val valuePointer: PointerWithEvents[A],
                           backgroundColorPointer: Changing[Color], direction: Axis2D = Y,
@@ -112,7 +113,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	
 	private val (_wrapped, buttons) = Stack(parentHierarchy)
 		.withContext(if (direction == Y) context.withTextExpandingToRight else context)
-		.copy(axis = direction, customDrawers = customDrawers, areRelated = true)
+		.withAxis(direction).withCustomDrawers(customDrawers).related
 		.build(RadioButtonLine) { lineF =>
 			// Creates a line for each option
 			val lines = options.map { case (item, text) =>

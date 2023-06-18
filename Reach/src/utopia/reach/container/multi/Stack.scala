@@ -12,7 +12,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
-import utopia.paradigm.enumeration.{Alignment, Axis2D}
+import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
@@ -24,52 +24,59 @@ import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 
-object Stack extends Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
+/**
+  * Common trait for stack factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait StackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 {
-	// IMPLEMENTED  ----------------------
+	// ABSTRACT	--------------------
 	
-	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
-	
-	override def withContext[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
-		ContextualStackFactory(parentHierarchy, context)
-}
-
-trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
-	extends CombiningContainerFactory[Stack, ReachComponentLike] with CustomDrawableFactory[Repr]
-{
-	// ABSTRACT --------------------------
-	
+	/**
+	  * The axis along which the items in the stacks are placed.
+	  * Y yields columns and X yields rows.
+	  */
 	def axis: Axis2D
+	/**
+	  * Layout that determines how the components are sized perpendicular to stack axis.
+	  * E.g. for columns, this property defines horizontal component placement and width.
+	  */
 	def layout: StackLayout
-	def margin: StackLength
+	/**
+	  * Specifies the margin placed at each end of the created stacks
+	  */
 	def cap: StackLength
 	
 	/**
-	  * @param axis New axis, along which this stack places the components.
-	  *             X = horizontal stack (row) & Y = vertical stack (column)
-	  * @return A copy of this factory with the specified axis
+	  * The axis along which the items in the stacks are placed.
+	  * Y yields columns and X yields rows.
+	  * @param axis New axis to use.
+	  *             The axis along which the items in the stacks are placed.
+	  *             Y yields columns and X yields rows.
+	  * @return Copy of this factory with the specified axis
 	  */
 	def withAxis(axis: Axis2D): Repr
 	/**
-	  * @param layout The layout to use in this stack. Affects the breadth of the placed components.
-	  * @return A copy of this factory with the specified layout.
-	  */
-	def withLayout(layout: StackLayout): Repr
-	/**
-	  * @param margin Margin to place between the items in this stack
-	  * @return A copy of this factory with the specified margin
-	  */
-	def withMargin(margin: StackLength): Repr
-	/**
-	  * @param cap The cap to place at each end of this stack
-	  * @return A copy of this factory with the specified cap
+	  * Specifies the margin placed at each end of the created stacks
+	  * @param cap New cap to use.
+	  *            Specifies the margin placed at each end of the created stacks
+	  * @return Copy of this factory with the specified cap
 	  */
 	def withCap(cap: StackLength): Repr
+	/**
+	  * Layout that determines how the components are sized perpendicular to stack axis.
+	  * E.g. for columns, this property defines horizontal component placement and width.
+	  * @param layout New layout to use.
+	  *               Layout that determines how the components are sized perpendicular to stack axis.
+	  *               E.g. for columns, this property defines horizontal component placement and width.
+	  * @return Copy of this factory with the specified layout
+	  */
+	def withLayout(layout: StackLayout): Repr
 	
-	def withAxisAndLayout(axis: Axis2D, layout: StackLayout): Repr
 	
-	
-	// COMPUTED ------------------------------
+	// COMPUTED -----------------------
 	
 	/**
 	  * @return A copy of this factory that builds columns
@@ -81,19 +88,127 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	def row = withAxis(X)
 	
 	/**
-	  * @return A copy of this factory that doesn't allow any margins
-	  */
-	def withoutMargin = withMargin(StackLength.fixedZero)
-	
-	/**
 	  * @return A copy of this factory with center layout
 	  */
 	def centered = withLayout(Center)
+	def leading = withLayout(Leading)
+	def trailing = withLayout(Trailing)
+	
+	
+	// OTHER	--------------------
+	
+	def mapCap(f: StackLength => StackLength) = withCap(f(cap))
+}
+
+object StackSettings
+{
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
+}
+/**
+  * Combined settings used when constructing stacks
+  * @param customDrawers Custom drawers to assign to created components
+  * @param axis          The axis along which the items in the stacks are placed.
+  *                      Y yields columns and X yields rows.
+  * @param layout        Layout that determines how the components are sized perpendicular to stack axis.
+  *                      E.g. for columns, this property defines horizontal component placement and width.
+  * @param cap           Specifies the margin placed at each end of the created stacks
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class StackSettings(customDrawers: Vector[CustomDrawer] = Vector.empty, axis: Axis2D = Axis.Y,
+                         layout: StackLayout = StackLayout.Fit, cap: StackLength = StackLength.fixedZero)
+	extends StackSettingsLike[StackSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withAxis(axis: Axis2D) = copy(axis = axis)
+	override def withCap(cap: StackLength) = copy(cap = cap)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withLayout(layout: StackLayout) = copy(layout = layout)
+}
+
+/**
+  * Common trait for factories that wrap a stack settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait StackSettingsWrapper[+Repr] extends StackSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: StackSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: StackSettings): Repr
+	
+	
+	// COMPUTED ------------------------
 	
 	/**
 	  * @return A copy of this factory that builds centered rows
 	  */
 	def centeredRow = withAxisAndLayout(X, Center)
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def axis = settings.axis
+	override def cap = settings.cap
+	override def customDrawers = settings.customDrawers
+	override def layout = settings.layout
+	
+	override def withAxis(axis: Axis2D) = mapSettings { _.withAxis(axis) }
+	override def withCap(cap: StackLength) = mapSettings { _.withCap(cap) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		mapSettings { _.withCustomDrawers(drawers) }
+	override def withLayout(layout: StackLayout) = mapSettings { _.withLayout(layout) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: StackSettings => StackSettings) = withSettings(f(settings))
+	
+	def withAxisAndLayout(axis: Axis2D, layout: StackLayout): Repr =
+		mapSettings { _.copy(axis = axis, layout = layout) }
+}
+
+/**
+  * Common trait for factories that are used for constructing stacks
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
+	extends StackSettingsWrapper[Repr] with CombiningContainerFactory[Stack, ReachComponentLike]
+{
+	// ABSTRACT --------------------------
+	
+	/**
+	  * @return Margin to place between the items in created stacks
+	  */
+	def margin: StackLength
+	
+	/**
+	  * @param margin Margin to place between the items in this stack
+	  * @return A copy of this factory with the specified margin
+	  */
+	def withMargin(margin: StackLength): Repr
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return A copy of this factory that doesn't allow any margins
+	  */
+	def withoutMargin = withMargin(StackLength.fixedZero)
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -172,27 +287,25 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	}
 }
 
-case class StackFactory(parentHierarchy: ComponentHierarchy, axis: Axis2D = Y, layout: StackLayout = Fit,
-                        margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
-                        customDrawers: Vector[CustomDrawer] = Vector())
+/**
+  * Factory class that is used for constructing stacks without using contextual information
+  * @param margin Amount of empty space between adjacent items in the created stacks
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
+                        margin: StackLength = StackLength.any)
 	extends StackFactoryLike[StackFactory]
-		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
 		with FromGenericContextFactory[BaseContext, ContextualStackFactory]
+		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
 {
 	// IMPLEMENTED  ------------------------
 	
 	override def withContext[N <: BaseContext](context: N): ContextualStackFactory[N] =
-		ContextualStackFactory(parentHierarchy, context, axis, layout, cap, customDrawers)
+		ContextualStackFactory(parentHierarchy, context, settings)
 	
-	override def withAxis(axis: Axis2D): StackFactory = copy(axis = axis)
-	override def withLayout(layout: StackLayout): StackFactory = copy(layout = layout)
+	override def withSettings(settings: StackSettings): StackFactory = copy(settings = settings)
 	override def withMargin(margin: StackLength): StackFactory = copy(margin = margin)
-	override def withCap(cap: StackLength): StackFactory = copy(cap = cap)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): StackFactory =
-		copy(customDrawers = drawers)
-	
-	override def withAxisAndLayout(axis: Axis2D, layout: StackLayout): StackFactory =
-		copy(axis = axis, layout = layout)
 	
 	
 	// OTHER    ---------------------------
@@ -243,12 +356,18 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, axis: Axis2D = Y, l
 		forPair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
 }
 
+/**
+  * Factory class used for constructing stacks using contextual component creation information
+  * @param areRelated Whether the items in the created stacks should be considered closely related to each other,
+  *                   resulting in a smaller margin placed between them.
+  * @tparam N Type of context used and passed along by this factory
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
 case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                    axis: Axis2D = Y, layout: StackLayout = Fit,
-                                                    cap: StackLength = StackLength.fixedZero,
-                                                    customDrawers: Vector[CustomDrawer] = Vector(),
-                                                    customMargin: Option[StackLength] = None,
-                                                    areRelated: Boolean = false)
+                                                     settings: StackSettings = StackSettings.default,
+                                                     customMargin: Option[StackLength] = None,
+                                                     areRelated: Boolean = false)
 	extends StackFactoryLike[ContextualStackFactory[N]]
 		with ContextualCombiningContainerFactory[N, BaseContext, Stack, ReachComponentLike, ContextualStackFactory]
 {
@@ -270,19 +389,11 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 		if (areRelated) context.smallStackMargin else context.stackMargin
 	}
 	
+	override def withSettings(settings: StackSettings): ContextualStackFactory[N] = copy(settings = settings)
 	override def withContext[N2 <: BaseContext](newContext: N2): ContextualStackFactory[N2] =
 		copy(context = newContext)
-	
-	override def withAxis(axis: Axis2D) = copy(axis = axis)
-	override def withLayout(layout: StackLayout) = copy(layout = layout)
 	override def withMargin(margin: StackLength) =
 		copy(customMargin = Some(margin))
-	override def withCap(cap: StackLength) = copy(cap = cap)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
-		copy(customDrawers = drawers)
-	
-	override def withAxisAndLayout(axis: Axis2D, layout: StackLayout) =
-		copy(axis = axis, layout = layout)
 	
 	
 	// OTHER    -----------------------------
@@ -342,6 +453,31 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 	                                             forceFitLayout: Boolean = false)
 	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
 		forPair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
+}
+
+/**
+  * Used for defining stack creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class StackSetup(settings: StackSettings = StackSettings.default)
+	extends StackSettingsWrapper[StackSetup] with Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy, settings)
+	
+	override def withContext[N <: BaseContext](hierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
+		ContextualStackFactory(hierarchy, context, settings)
+	
+	override def withSettings(settings: StackSettings) = copy(settings = settings)
+}
+
+object Stack extends StackSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: StackSettings) = withSettings(settings)
 }
 
 /**

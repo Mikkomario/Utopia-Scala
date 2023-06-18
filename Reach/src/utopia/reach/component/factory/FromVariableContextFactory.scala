@@ -23,7 +23,7 @@ object FromVariableContextFactory
 	
 	private class _FromVariableContextFactory[-N, +A](f: Changing[N] => A) extends FromVariableContextFactory[N, A]
 	{
-		override def withContext(context: Changing[N]): A = f(context)
+		override def withContextPointer(p: Changing[N]): A = f(p)
 	}
 }
 
@@ -32,9 +32,18 @@ object FromVariableContextFactory
   * @author Mikko Hilpinen
   * @since 31.5.2023, v1.1
   */
-trait FromVariableContextFactory[-N, +A] extends FromContextFactory[Changing[N], A]
+trait FromVariableContextFactory[-N, +A] extends FromContextFactory[N, A]
 {
-	// OTHER    -------------------------
+	// ABSTRACT -------------------------
 	
-	def withStaticContext(context: N): A = withContext(Fixed(context))
+	/**
+	  * @param p A variable context pointer
+	  * @return A new item based on the specified (variable) context
+	  */
+	def withContextPointer(p: Changing[N]): A
+	
+	
+	// IMPLEMENTED    -------------------
+	
+	override def withContext(context: N): A = withContextPointer(Fixed(context))
 }

@@ -92,9 +92,9 @@ trait ViewStackFactoryLike[+Repr]
 		{
 			// Removes content that will never be visible
 			val remainingContent = content.filter { _.result.value }
-			val stackF = Stack(parentHierarchy)
-				.copy(axis = axisPointer.value, layout = layoutPointer.value,
-					margin = marginPointer.value, cap = capPointer.value, customDrawers = customDrawers)
+			val fixedSettings = StackSettings(axis = axisPointer.value, layout = layoutPointer.value,
+				cap = capPointer.value, customDrawers = customDrawers)
+			val stackF = Stack(parentHierarchy).withSettings(fixedSettings).withMargin(marginPointer.value)
 			// Uses segmentation if available
 			val stack = segmentGroup match {
 				// Case: Segmentation used

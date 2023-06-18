@@ -14,8 +14,8 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
-import utopia.reach.component.factory.contextual.{ContextualFramedFactory, VariableContextualFactory}
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings, ViewImageLabelSettingsLike}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
@@ -317,7 +317,7 @@ case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	
 	override def self: ViewImageButtonFactory = this
 	
-	override def withContext(context: Changing[ColorContext]) =
+	override def withContextPointer(context: Changing[ColorContext]) =
 		ContextualViewImageButtonFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
@@ -333,7 +333,7 @@ case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 case class ViewImageButtonSetup(settings: ViewImageButtonSettings = ViewImageButtonSettings.default)
 	extends ViewImageButtonSettingsWrapper[ViewImageButtonSetup]
 		with ComponentFactoryFactory[ViewImageButtonFactory]
-		with FromContextComponentFactoryFactory[ColorContext, ContextualViewImageButtonFactory]
+		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -341,8 +341,9 @@ case class ViewImageButtonSetup(settings: ViewImageButtonSettings = ViewImageBut
 	
 	override def apply(hierarchy: ComponentHierarchy) = ViewImageButtonFactory(hierarchy, settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
-		ContextualViewImageButtonFactory(hierarchy, Fixed(context), settings)
+	override def withContextPointer(hierarchy: ComponentHierarchy,
+	                                context: Changing[ColorContext]): ContextualViewImageButtonFactory =
+		ContextualViewImageButtonFactory(hierarchy, context, settings)
 	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
 	
 	override def *(mod: Double): ViewImageButtonSetup = mapSettings { _ * mod }

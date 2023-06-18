@@ -18,7 +18,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.transform.SizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
@@ -379,7 +379,7 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelFactory = copy(settings = settings)
 	override def withBackground(background: Color): ViewImageLabelFactory =
 		withCustomDrawer(BackgroundDrawer(background))
-	override def withContext(context: Changing[ColorContext]) =
+	override def withContextPointer(context: Changing[ColorContext]) =
 		ContextualViewImageLabelFactory(parentHierarchy, context, settings)
 	
 	override def *(mod: Double): ViewImageLabelFactory = withInsetsScaledBy(mod).withImageScaledBy(mod)
@@ -402,14 +402,14 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
 case class ViewImageLabelSetup(settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
 	extends ViewImageLabelSettingsWrapper[ViewImageLabelSetup]
 		with Cff[ViewImageLabelFactory]
-		with FromContextComponentFactoryFactory[ColorContext, ContextualViewImageLabelFactory]
+		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualViewImageLabelFactory]
 {
 	override def self: ViewImageLabelSetup = this
 	override def *(mod: Double): ViewImageLabelSetup = mapSettings { _ * mod }
 	
+	override def withContextPointer(hierarchy: ComponentHierarchy, context: Changing[ColorContext]): ContextualViewImageLabelFactory =
+		ContextualViewImageLabelFactory(hierarchy, context, settings)
 	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelSetup = copy(settings = settings)
-	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
-		ContextualViewImageLabelFactory(hierarchy, Fixed(context), settings)
 	override def apply(hierarchy: ComponentHierarchy) = ViewImageLabelFactory(hierarchy, settings)
 }
 

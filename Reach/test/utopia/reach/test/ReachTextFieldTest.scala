@@ -2,11 +2,9 @@ package utopia.reach.test
 
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.model.enumeration.StackLayout.Trailing
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.paradigm.enumeration.Axis.X
+import utopia.flow.collection.immutable.range.Span
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default
@@ -43,7 +41,7 @@ object ReachTextFieldTest extends App
 				// Each row contains a text field and a value label
 				def makeRow[A](displayFunction: DisplayFunction[A])(makeField: ContextualTextFieldFactory => TextField[A]) =
 				{
-					rowF.copy(axis = X, layout = Trailing, areRelated = true).build(Mixed) { row =>
+					rowF.related.row.trailing.build(Mixed) { row =>
 						val field = makeField(row(TextField))
 						val summary = row(ViewTextLabel)(field.valuePointer, displayFunction)
 						Vector(field, summary)
@@ -53,22 +51,22 @@ object ReachTextFieldTest extends App
 				// Contains 5 rows
 				Vector(
 					makeRow[String](DisplayFunction.raw) {
-						_.forString(320.any, Fixed("Text"), maxLength = Some(32),
-							inputValidation = Some(in =>
-								if (in.isEmpty) InputValidationResult.Warning("Should not be empty") else Default),
-							showCharacterCount = true)
+						_.withFieldName("Text").withMaxLength(32).displayingCharacterCount
+							.validatedString(320.any) { in =>
+								if (in.isEmpty) InputValidationResult.Warning("Should not be empty") else Default
+							}
 					},
 					makeRow[String](DisplayFunction.raw) {
-						_.forString(StackLength(160, 320), Fixed("Text"), maxLength = Some(32), fillBackground = false)
+						_.withFieldName("Text").withMaxLength(32).outlined
+							.string(StackLength(160, 320))
 					},
-					makeRow[Option[Int]](DisplayFunction.rawOption) { _.forInt(Fixed("Int"), fillBackground = false) },
+					makeRow[Option[Int]](DisplayFunction.rawOption) { _.withFieldName("Int").outlined.int() },
 					makeRow[Option[Int]](DisplayFunction.rawOption) {
-						_.forInt(Fixed("Int+"),
-							minValue = 0, maxValue = 10, fillBackground = false)
+						_.withFieldName("Int+").outlined.int(Span.numeric(0, 10))
 					},
 					makeRow[Option[Double]](DisplayFunction.rawOption) {
-						_.forDouble(0.0, 1.0,
-							Fixed("Double"), Fixed("0.".noLanguageLocalizationSkipped), proposedNumberOfDecimals = 2)
+						_.withFieldName("Double").withPrompt("0.".noLanguageLocalizationSkipped)
+							.double(Span.numeric(0.0, 1.0), expectedNumberOfDecimals = 2)
 					}
 				)
 			}

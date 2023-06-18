@@ -3,12 +3,10 @@ package utopia.reach.container.multi
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
-import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
@@ -17,69 +15,66 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 
-object MutableStack extends Cff[MutableStackFactory]
-{
-	override def apply(hierarchy: ComponentHierarchy) = new MutableStackFactory(hierarchy)
-}
-
-class MutableStackFactory(hierarchy: ComponentHierarchy)
+case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
+                               margin: StackLength = StackLength.any)
 	extends FromContextFactory[BaseContext, ContextualMutableStackFactory]
+		with StackSettingsWrapper[MutableStackFactory]
 {
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Copy of this factory without any margin between items
+	  */
+	def withoutMargin = withMargin(StackLength.fixedZero)
+	
+	
 	// IMPLEMENTED	---------------------------------
 	
-	override def withContext(context: BaseContext) = ContextualMutableStackFactory(hierarchy, context)
+	override def withSettings(settings: StackSettings): MutableStackFactory = copy(settings = settings)
+	
+	override def withContext(context: BaseContext) = ContextualMutableStackFactory(hierarchy, context, settings)
 	
 	
 	// OTHER	-------------------------------------
 	
 	/**
+	  * @param margin Margin to place between the items in this stack
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withMargin(margin: StackLength) = copy(margin = margin)
+	
+	/**
 	  * Creates a new stack
-	  * @param direction Direction along which the components are "stacked" (X = row, Y = column (default))
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param margin Margin placed between components (default = any, preferring 0)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
 	  * @tparam C Type of components within this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
-									   margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero) =
-		new MutableStack[C](hierarchy, direction, layout, margin, cap)
-	
-	/**
-	  * Creates a new horizontal stack
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param margin Margin placed between components (default = any, preferring 0)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
-	  * @tparam C Type of components within this stack
-	  * @return A new stack
-	  */
-	def row[C <: ReachComponentLike](layout: StackLayout = Fit, margin: StackLength = StackLength.any,
-									 cap: StackLength = StackLength.fixedZero) =
-		apply[C](X, layout, margin, cap)
-	
-	/**
-	  * Creates a new vertical stack
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param margin Margin placed between components (default = any, preferring 0)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
-	  * @tparam C Type of components within this stack
-	  * @return A new stack
-	  */
-	def column[C <: ReachComponentLike](layout: StackLayout = Fit, margin: StackLength = StackLength.any,
-										cap: StackLength = StackLength.fixedZero) =
-		apply[C](Y, layout, margin, cap)
+	def apply[C <: ReachComponentLike]() =
+		new MutableStack[C](hierarchy, axis, layout, margin, cap)
 }
 
-case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context: BaseContext)
+case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context: BaseContext,
+                                         settings: StackSettings = StackSettings.default, areRelated: Boolean = false)
 	extends BaseContextualFactory[ContextualMutableStackFactory]
+		with StackSettingsWrapper[ContextualMutableStackFactory]
 {
+	// COMPUTED ----------------------
+	
+	/**
+	  * @return Copy of this stack factory that places items closer to each other
+	  */
+	def related = copy(areRelated = true)
+	
+	/**
+	  * @return Copy of this factory that places no margin between the items
+	  */
+	def withoutMargin = mapContext { _.withoutStackMargin }
+	
+	
 	// IMPLEMENTED	-------------------------------
 	
 	override def self: ContextualMutableStackFactory = this
 	
+	override def withSettings(settings: StackSettings): ContextualMutableStackFactory = copy(settings = settings)
 	override def withContext(newContext: BaseContext) = copy(context = newContext)
 	
 	
@@ -87,60 +82,17 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 	
 	/**
 	  * Creates a new stack
-	  * @param direction Direction along which the components are "stacked" (X = row, Y = column (default))
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
-	  * @param areRelated Whether the stacked items should be considered closely related (affects margin)
-	  *                   (default = false)
 	  * @tparam C Type of components within this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
-									   cap: StackLength = StackLength.fixedZero, areRelated: Boolean = false) =
-		new MutableStack[C](hierarchy, direction, layout,
+	def apply[C <: ReachComponentLike]() =
+		new MutableStack[C](hierarchy, axis, layout,
 			if (areRelated) context.smallStackMargin else context.stackMargin, cap)
-	
-	/**
-	  * Creates a new stack with no margin between items
-	  * @param direction Direction along which the components are "stacked" (X = row, Y = column (default))
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
-	  * @tparam C Type of components within this stack
-	  * @return A new stack
-	  */
-	def withoutMargin[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
-											   cap: StackLength = StackLength.fixedZero) =
-		new MutableStack[C](hierarchy, direction, layout, StackLength.fixedZero, cap)
-	
-	/**
-	  * Creates a new horizontal stack
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
-	  * @param areRelated Whether the stacked items should be considered closely related (affects margin)
-	  *                   (default = false)
-	  * @tparam C Type of components within this stack
-	  * @return A new stack
-	  */
-	def row[C <: ReachComponentLike](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-									 areRelated: Boolean = false) =
-		apply[C](X, layout, cap, areRelated)
-	
-	/**
-	  * Creates a new vertical stack
-	  * @param layout Layout used when determining component length perpendicular to stack direction
-	  *               (default = Fit = All components have same length)
-	  * @param cap Margin placed at each end of this stack (default = always 0)
-	  * @param areRelated Whether the stacked items should be considered closely related (affects margin)
-	  *                   (default = false)
-	  * @tparam C Type of components within this stack
-	  * @return A new stack
-	  */
-	def column[C <: ReachComponentLike](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-									 areRelated: Boolean = false) =
-		apply[C](Y, layout, cap, areRelated)
+}
+
+object MutableStack extends Cff[MutableStackFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = MutableStackFactory(hierarchy)
 }
 
 /**

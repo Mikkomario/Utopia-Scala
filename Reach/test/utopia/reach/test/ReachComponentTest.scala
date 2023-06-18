@@ -9,7 +9,6 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.text.EditableTextLabel
@@ -50,10 +49,10 @@ object ReachComponentTest extends App
 					// Column (Centered)
 					stackF.centered.build(Mixed) { factories =>
 						// 1: Editable text label
-						val editableLabel = factories(EditableTextLabel)(new PointerWithEvents("Type Here"))
-						editableLabel.addFocusListener(focusReporter("Label"))
+						val editableLabel = factories(EditableTextLabel)
+							.withFocusListener(focusReporter("Label"))(new PointerWithEvents("Type Here"))
 						// 2: Button Row
-						val buttonStack = factories(Stack).copy(axis = X, areRelated = true).build(Mixed) { factories =>
+						val buttonStack = factories(Stack).related.row.build(Mixed) { factories =>
 							// 2.1: Clear Button
 							val clearButton = factories.mapContext { _ / Secondary }(TextButton)
 								.withFocusListener(focusReporter("Clear Button"))

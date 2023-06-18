@@ -42,7 +42,7 @@ object ReachSwitchTest extends App
 				
 				// Creates a single row with 1) name label, 2) switch and 3) switch value label
 				def makeRow(fieldName: LocalizedString)(makeSwitch: ContextualSwitchFactory => Switch) = {
-					rowF.copy(layout = Center, areRelated = true).buildSegmented(Mixed, rowGroup) { factories =>
+					rowF.centered.related.buildSegmented(Mixed, rowGroup) { factories =>
 						// 1: Name label
 						val nameLabel = factories.next().mapContext {
 							_.forTextComponents.withTextAlignment(Alignment.Right)

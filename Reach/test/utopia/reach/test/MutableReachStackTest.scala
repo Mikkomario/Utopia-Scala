@@ -31,7 +31,7 @@ object MutableReachStackTest extends App
 	
 	// Creates content stack and the window
 	val window = ReachWindow.contentContextual.using(MutableStack) { (_, stackF) =>
-		stackF.column[MutableViewTextLabel[Int]](cap = margins.aroundMedium)
+		stackF.column.apply[MutableViewTextLabel[Int]]()
 	}
 	
 	// Adds stack content management

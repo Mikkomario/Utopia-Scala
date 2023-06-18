@@ -191,7 +191,7 @@ trait InteractionWindowFactory[A]
 			// Case: More than one button
 			if (blueprints.size > 1)
 				factories(AlignFrame)(alignment).build(Stack) { stackF =>
-					stackF.copy(axis = X, margin = nonScalingMargin).build(Mixed) { factories =>
+					stackF.row.withMargin(nonScalingMargin).build(Mixed) { factories =>
 						val buttons = blueprints.map { blueprint =>
 							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
 						}
@@ -228,11 +228,11 @@ trait InteractionWindowFactory[A]
 									resultPromise: Promise[A],
 									defaultActionEnabled: => Boolean): (Stack, Vector[ButtonLike]) =
 	{
-		factory.copy(axis = X, margin = scalingMargin).build(Mixed) { factories =>
+		factory.row.withMargin(scalingMargin).build(Mixed) { factories =>
 			val (components, buttons) = buttonGroups.splitMap { group =>
 				// If there are multiple buttons in a group, places them in a stack
 				if (group.size > 1) {
-					factories(Stack).copy(axis = X, margin = nonScalingMargin).build(Mixed) { factories =>
+					factories(Stack).row.withMargin(nonScalingMargin).build(Mixed) { factories =>
 						val buttons = group.map { blueprint =>
 							actualize(factories, blueprint, resultPromise, defaultActionEnabled)
 						}

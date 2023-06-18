@@ -3,7 +3,7 @@ package utopia.reach.coder.controller.writer
 import utopia.coder.model.data.{Name, NamingRules, ProjectSetup}
 import utopia.coder.model.scala.datatype.Reference._
 import utopia.coder.model.scala.datatype.TypeVariance.Covariance
-import utopia.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
+import utopia.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType, TypeRequirement}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
@@ -37,6 +37,8 @@ object ComponentFactoryWriter
 	  * @return Reference to the generated file. Failure if writing failed.
 	  */
 	def apply(factory: ComponentFactory)(implicit naming: NamingRules, setup: ProjectSetup) = {
+		val componentType = ScalaType.basic(factory.componentName.className)
+		
 		val settingsName = (factory.componentName + "Settings").className
 		
 		val settingsLikeDec = settingsLike(factory)
@@ -54,7 +56,7 @@ object ComponentFactoryWriter
 			if (factory.onlyContextual || factory.contextType.isEmpty)
 				None
 			else
-				Some(factoryLike(factory, settingsWrapperType))
+				Some(factoryLike(factory, componentType, settingsWrapperType))
 		}
 		val factoryLikeType = factoryLikeDec match {
 			case Some(f) => f.toBasicType
@@ -63,13 +65,13 @@ object ComponentFactoryWriter
 		
 		val contextualDec = factory.contextType.map { context =>
 			contextualFactory(factory, ("Contextual" +: (factory.componentName + "Factory")).className, context,
-				settingsType, factoryLikeType) -> context
+				componentType, settingsType, factoryLikeType) -> context
 		}
 		val nonContextualDec = {
 			if (factory.onlyContextual)
 				None
 			else
-				Some(nonContextualFactory(factory, settingsType, factoryLikeType,
+				Some(nonContextualFactory(factory, componentType, settingsType, factoryLikeType,
 					contextualDec.map { case (contextual, context) => contextual.toBasicType -> context }))
 		}
 		
@@ -201,20 +203,29 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the common component factory trait
-	private def factoryLike(factory: ComponentFactory, settingsWrapperType: ScalaType)
+	private def factoryLike(factory: ComponentFactory, componentType: ScalaType, settingsWrapperType: ScalaType)
 	                       (implicit naming: NamingRules, setup: ProjectSetup) =
 	{
+		// Defines the abstract parentHierarchy property, but only for regular components
+		val props = {
+			if (factory.isContainer)
+				Vector()
+			else
+				Vector(
+					PropertyDeclaration.newAbstract("parentHierarchy", componentHierarchy,
+						description = s"The component hierarchy, to which created ${
+							factory.componentName.pluralDoc
+						} will be attached",
+						isProtected = true)
+				)
+		}
 		TraitDeclaration(
 			name = (factory.componentName + "FactoryLike").className,
 			genericTypes = Vector(repr),
-			extensions = Vector(settingsWrapperType(reprType)),
-			// Defines the abstract parentHierarchy property
-			properties = Vector(
-				PropertyDeclaration.newAbstract("parentHierarchy", componentHierarchy,
-					description = s"The component hierarchy, to which created ${
-						factory.componentName.pluralDoc} will be attached",
-					isProtected = true)
-			),
+			extensions = settingsWrapperType(reprType) +:
+				factory.containerType.map[Extension] { _.factoryTrait(componentType, componentLike) }.toVector,
+			
+			properties = props,
 			description = s"Common trait for factories that are used for constructing ${factory.componentName.pluralDoc}",
 			author = factory.author,
 			since = DeclarationDate.versionedToday
@@ -222,8 +233,8 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the non-contextual factory variant
-	private def nonContextualFactory(factory: ComponentFactory, settingsType: ScalaType, factoryLikeType: ScalaType,
-	                                 contextual: Option[(ScalaType, ContextType)] = None)
+	private def nonContextualFactory(factory: ComponentFactory, componentType: ScalaType, settingsType: ScalaType,
+	                                 factoryLikeType: ScalaType, contextual: Option[(ScalaType, ContextType)] = None)
 	                                (implicit naming: NamingRules, setup: ProjectSetup) =
 	{
 		val name = (factory.componentName + "Factory").className
@@ -231,16 +242,29 @@ object ComponentFactoryWriter
 		// Creates the extension and function for contextual version -accessing, if appropriate
 		val contextualParentAndMethod = contextual.map { case (contextual, context) =>
 			// If variable (pointer) context type is used, extends a different trait
-			val (fromContextF, contextParamType) = {
-				if (factory.useVariableContext)
-					fromVariableContextFactory -> (flow.changing(context.reference): ScalaType)
-				else
-					fromContextFactory -> (context.reference: ScalaType)
+			// Containers also use different traits and methods
+			if (factory.isContainer) {
+				val parent = fromGenericContextFactory(context.reference, contextual)
+				val method = MethodDeclaration("withContext",
+					genericTypes = Vector(
+						GenericType("N", Some(TypeRequirement.childOf(context.reference)))
+					), isOverridden = true)(
+					Parameter("context", ScalaType.basic("N")))(
+					s"$contextual(parentHierarchy, context, settings)")
+				(parent, method)
 			}
-			val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(
-				Parameter("context", contextParamType))(
-				s"$contextual(parentHierarchy, context, settings)")
-			fromContextF(context.reference, contextual) -> withContextMethod
+			else {
+				val (fromContextF, contextParamType) = {
+					if (factory.useVariableContext)
+						fromVariableContextFactory -> (flow.changing(context.reference): ScalaType)
+					else
+						fromContextFactory -> (context.reference: ScalaType)
+				}
+				val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(
+					Parameter("context", contextParamType))(
+					s"$contextual(parentHierarchy, context, settings)")
+				fromContextF(context.reference, contextual) -> withContextMethod
+			}
 		}
 		ClassDeclaration(
 			name = name,
@@ -251,9 +275,10 @@ object ComponentFactoryWriter
 			) ++ factory.nonContextualProperties.map { prop =>
 				Parameter(prop.name.prop, prop.dataType, prop.defaultValue, description = prop.description)
 			},
-			extensions = factoryLikeType(factoryType) +:
+			extensions = ((factoryLikeType(factoryType): Extension) +:
 				// Enables context-appending, if specified
-				contextualParentAndMethod.map[Extension] { _._1 }.toVector,
+				contextualParentAndMethod.map[Extension] { _._1 }.toVector) ++
+				factory.containerType.map[Extension] { _.nonContextualFactoryTrait(componentType, componentLike) },
 			methods = Set(
 				// Settings setter -function
 				MethodDeclaration("withSettings", isOverridden = true)(
@@ -276,31 +301,54 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the contextual factory variant
-	private def contextualFactory(factory: ComponentFactory, name: String, context: ContextType, settingsType: ScalaType,
-	                              factoryLikeType: ScalaType)
+	// TODO: In container classes, the "Repr" contains [N]
+	private def contextualFactory(factory: ComponentFactory, name: String, context: ContextType,
+	                              componentType: ScalaType, settingsType: ScalaType, factoryLikeType: ScalaType)
 	                             (implicit naming: NamingRules, setup: ProjectSetup) =
 	{
 		val factoryType = ScalaType.basic(name)
 		// If variable contexts are used, extends a different factory class,
 		// different constructor parameter and different withContext -function
+		// These properties are also different for containers
 		val (contextualParent, contextParameter, withContextMethod) = {
-			if (factory.useVariableContext) {
-				val parentTrait = variableContextualFactory(context.reference, factoryType)
-				val parameter = Parameter("contextPointer", flow.changing(context.reference))
-				val withContextMethod = MethodDeclaration("withContextPointer", isOverridden = true)(parameter)(
-					"copy(contextPointer = contextPointer)")
-				(parentTrait, parameter, withContextMethod)
+			factory.containerType match {
+				case Some(containerType) =>
+					val genericContextType = ScalaType.basic("N")
+					val parent = containerType.contextualFactoryTrait(genericContextType, context.reference,
+						componentType, componentLike, factoryType)
+					val parameter = Parameter("context", genericContextType)
+					val method = MethodDeclaration("withContext",
+						genericTypes = Vector(GenericType("N2", Some(TypeRequirement.childOf(context.reference)))),
+						isOverridden = true)(parameter)("copy(context = context)")
+					(parent, parameter, method)
+				case None =>
+					if (factory.useVariableContext) {
+						val parentTrait = variableContextualFactory(context.reference, factoryType)
+						val parameter = Parameter("contextPointer", flow.changing(context.reference))
+						val withContextMethod = MethodDeclaration("withContextPointer", isOverridden = true)(parameter)(
+							"copy(contextPointer = contextPointer)")
+						(parentTrait, parameter, withContextMethod)
+					}
+					else {
+						val parentTrait = context.factory(factoryType)
+						val parameter = Parameter("context", context.reference)
+						val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(parameter)(
+							"copy(context = context)")
+						(parentTrait, parameter, withContextMethod)
+					}
 			}
-			else {
-				val parentTrait = context.factory(factoryType)
-				val parameter = Parameter("context", context.reference)
-				val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(parameter)(
-					"copy(context = context)")
-				(parentTrait, parameter, withContextMethod)
-			}
+		}
+		// Factories use generic context
+		val genericTypes = {
+			if (factory.isContainer)
+				Vector(GenericType("N", Some(TypeRequirement.childOf(context.reference)), Covariance,
+					description = "Type of context used and passed along by this factory"))
+			else
+				Vector()
 		}
 		ClassDeclaration(
 			name = name,
+			genericTypes = genericTypes,
 			// Contains the default parameters (parentHierarchy, context, settings),
 			// plus possible custom properties
 			constructionParams = Vector(
@@ -335,6 +383,7 @@ object ComponentFactoryWriter
 	}
 	
 	// Creates the outside-hierarchy setup class
+	// TODO: Containers need different parents and methods
 	private def setupFactory(factory: ComponentFactory, settingsType: ScalaType, settingsWrapperType: ScalaType,
 	                         nonContextualFactoryType: Option[ScalaType],
 	                         contextualFactoryType: Option[(ScalaType, ContextType)])
@@ -421,10 +470,11 @@ object ComponentFactoryWriter
 		}
 	}
 	
-	private def referencedPropFunctionsFrom(referenceProperty: Property, target: ComponentFactory, prefix: Name)
+	private def referencedPropFunctionsFrom(referenceProperty: Property, target: ComponentFactory, prefix: Name,
+	                                        allowNonPrefixed: Boolean = true)
 	                                       (implicit naming: NamingRules): (Vector[PropertyDeclaration], Vector[MethodDeclaration]) =
 	{
-		val usePrefixes = referenceProperty.prefixDerivedProperties
+		val usePrefixes = allowNonPrefixed && referenceProperty.prefixDerivedProperties
 		val base = referenceProperty.name.prop
 		target.allProperties.splitFlatMap { prop =>
 			// Generates a getter
@@ -455,7 +505,7 @@ object ComponentFactoryWriter
 			val (moreProps, moreMethods) = prop.reference match {
 				case Some((deeperTarget, nextPrefix)) =>
 					val appliedPrefix = if (usePrefixes) prefix + nextPrefix else nextPrefix
-					referencedPropFunctionsFrom(prop, deeperTarget, appliedPrefix)
+					referencedPropFunctionsFrom(prop, deeperTarget, appliedPrefix, allowNonPrefixed = !usePrefixes)
 				case None => Vector() -> Vector()
 			}
 			(directGet +: moreProps) -> ((directSet +: mapper.toVector) ++ moreMethods)

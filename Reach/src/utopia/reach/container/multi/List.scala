@@ -72,6 +72,8 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of additional result created
 	  * @return A new list (wrap result)
 	  */
+	// TODO: Refactor using settings and variable context
+	// TODO: Look for overlap with Collection
 	def apply[R](group: SegmentGroup, contextBackgroundPointer: Changing[Color],
 	             insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
 	             columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
@@ -94,8 +96,8 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 			content.iterator.map { rowContent =>
 				val wrappedRowComponents = new OpenComponent(rowContent.components.iterator.toVector,
 					rowContent.context.parentHierarchy)
-				val row = rowF.copy(axis = rowDirection, layout = insideRowLayout, margin = columnMargin,
-					cap = rowCap)(wrappedRowComponents)
+				val row = rowF.withAxis(rowDirection).withLayout(insideRowLayout).withMargin(columnMargin)
+					.withCap(rowCap)(wrappedRowComponents)
 					.parent: ReachComponentLike
 				row -> rowContent
 			}.splitMap { p => p }
@@ -109,9 +111,8 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val keyPressedPointer = Pointer(false)
 		val stackPointer = SettableOnce[Stack]()
 		val selector = new Selector(stackPointer, contextBackgroundPointer, selectedComponentPointer, keyPressedPointer)
-		val stackCreation = Stack(parentHierarchy)
-			.copy(axis = rowDirection.perpendicular, layout = Fit, margin = rowMargin, cap = mainStackCap,
-				customDrawers = selector +: customDrawers)(mainStackContent)
+		val stackCreation = Stack(parentHierarchy).withAxis(rowDirection.perpendicular).withMargin(rowMargin)
+			.withCap(mainStackCap).withCustomDrawers(selector +: customDrawers)(mainStackContent)
 		if (rowsWithResults.nonEmpty) {
 			val stack = stackCreation.parent
 			stackPointer.value = Some(stack)

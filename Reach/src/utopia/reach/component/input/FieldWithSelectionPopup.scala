@@ -3,20 +3,21 @@ package utopia.reach.component.input
 import utopia.firmament.component.Window
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectionWithPointers
-import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext, TextContext}
+import utopia.firmament.context.{ScrollingContext, TextContext}
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout
-import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.DetachmentChoice
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.End.First
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{End, EqualsFunction, Identity}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
@@ -29,84 +30,353 @@ import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.paradigm.color.{Color, ColorRole}
-import utopia.paradigm.enumeration.Alignment.Bottom
-import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.enumeration.Direction2D.Down
-import utopia.paradigm.shape.shape2d.Size
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.Mixed
-import utopia.reach.component.factory.contextual.GenericContextualFactory
+import utopia.paradigm.color.ColorRole
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
+import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.input.selection.{SelectionList, SelectionListFactory}
+import utopia.reach.component.input.selection.{SelectionList, SelectionListFactory, SelectionListSettings}
+import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.container.multi.ViewStack
+import utopia.reach.container.multi.{StackSettings, ViewStack}
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
+import utopia.reach.context.ReachContentWindowContext
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
-object FieldWithSelectionPopup extends Gccff[ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+/**
+  * Common trait for field with selection popup factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 {
-	override def withContext[N <: ReachContentWindowContext](parentHierarchy: ComponentHierarchy, context: N) =
-		ContextualFieldWithSelectionPopupFactory[N](parentHierarchy, context)
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Wrapped more generic field settings
+	  */
+	def fieldSettings: FieldSettings
+	/**
+	  * Settings that apply to the opened selection list
+	  */
+	def listSettings: SelectionListSettings
+	
+	/**
+	  * The expand (first) and the collapse icon (second) that should be displayed at the right side of the
+	  * created fields.
+	  * Please note that a non-empty right-side icon will override these values.
+	  */
+	def expandAndCollapseIcon: Pair[SingleColorIcon]
+	/**
+	  * Additional key-indices that open the pop-up when they are pressed while this field is in focus.
+	  * By default, only the appropriate arrow key opens the pop-up.
+	  */
+	def activationKeys: Set[Int]
+	/**
+	  * @return A function used for modifying the pop-up context from that accepted by this factory
+	  */
+	def popupContextMod: ReachContentWindowContext => ReachContentWindowContext
+	/**
+	  * A function used for constructing a view to display when no options are selectable
+	  */
+	def noOptionsViewConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike]
+	/**
+	  * A function used for constructing an additional selectable view to display
+	  */
+	def extraOptionConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike]
+	/**
+	  * The location where the extra option should be placed, if one has been specified
+	  */
+	def extraOptionLocation: End
+	
+	/**
+	  * Additional key-indices that open the pop-up when they are pressed while this field is in focus.
+	  * By default, only the appropriate arrow key opens the pop-up.
+	  * @param keys New activation keys to use.
+	  *             Additional key-indices that open the pop-up when they are pressed while this field is in focus.
+	  *             By default, only the appropriate arrow key opens the pop-up.
+	  * @return Copy of this factory with the specified activation keys
+	  */
+	def withActivationKeys(keys: Set[Int]): Repr
+	/**
+	  * The expand (first) and the collapse icon (second) that should be displayed at the right side of the
+	  * created fields.
+	  * Please note that a non-empty right-side icon will override these values.
+	  * @param icons New expand and collapse icon to use.
+	  *              The expand (first) and the collapse icon (second) that should be displayed at the right side of the
+	  *              created fields.
+	  *              Please note that a non-empty right-side icon will override these values.
+	  * @return Copy of this factory with the specified expand and collapse icon
+	  */
+	def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]): Repr
+	/**
+	  * @param f A function used for modifying the pop-up context from that accepted by this factory
+	  * @return Copy of this factory that uses the specified modifying function
+	  */
+	def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): Repr
+	/**
+	  * A function used for constructing an additional selectable view to display
+	  * @param f New extra option constructor to use.
+	  *          A function used for constructing an additional selectable view to display
+	  * @return Copy of this factory with the specified extra option constructor
+	  */
+	def withExtraOptionConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr
+	/**
+	  * The location where the extra option should be placed, if one has been specified
+	  * @param location New extra option location to use.
+	  *                 The location where the extra option should be placed, if one has been specified
+	  * @return Copy of this factory with the specified extra option location
+	  */
+	def withExtraOptionLocation(location: End): Repr
+	/**
+	  * Wrapped more generic field settings
+	  * @param settings New field settings to use.
+	  *                 Wrapped more generic field settings
+	  * @return Copy of this factory with the specified field settings
+	  */
+	def withFieldSettings(settings: FieldSettings): Repr
+	/**
+	  * Settings that apply to the opened selection list
+	  * @param settings New list settings to use.
+	  *                 Settings that apply to the opened selection list
+	  * @return Copy of this factory with the specified list settings
+	  */
+	def withListSettings(settings: SelectionListSettings): Repr
+	/**
+	  * A function used for constructing a view to display when no options are selectable
+	  * @param f New no options view constructor to use.
+	  *          A function used for constructing a view to display when no options are selectable
+	  * @return Copy of this factory with the specified no options view constructor
+	  */
+	def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * stack settings from the wrapped selection list settings
+	  */
+	def listStackSettings = listSettings.stackSettings
+	/**
+	  * highlight modifier from the wrapped selection list settings
+	  */
+	def listHighlightModifier = listSettings.highlightModifier
+	
+	def listAxis = listStackSettings.axis
+	def listLayout = listStackSettings.layout
+	def listCap = listStackSettings.cap
+	def listCustomDrawers = listStackSettings.customDrawers
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def errorMessagePointer = fieldSettings.errorMessagePointer
+	override def fieldNamePointer = fieldSettings.fieldNamePointer
+	override def fillBackground = fieldSettings.fillBackground
+	override def focusColorRole = fieldSettings.focusColorRole
+	override def highlightPointer = fieldSettings.highlightPointer
+	override def hintPointer = fieldSettings.hintPointer
+	override def hintScaleFactor = fieldSettings.hintScaleFactor
+	override def iconPointers = fieldSettings.iconPointers
+	override def imageSettings = fieldSettings.imageSettings
+	override def promptPointer = fieldSettings.promptPointer
+	
+	override def withErrorMessagePointer(p: Changing[LocalizedString]) =
+		withFieldSettings(fieldSettings.withErrorMessagePointer(p))
+	override def withFieldNamePointer(p: Changing[LocalizedString]) =
+		withFieldSettings(fieldSettings.withFieldNamePointer(p))
+	override def withFillBackground(fill: Boolean) = withFieldSettings(fieldSettings.withFillBackground(fill))
+	override def withFocusColorRole(color: ColorRole) = withFieldSettings(fieldSettings.withFocusColorRole(color))
+	override def withHighlightPointer(p: Changing[Option[ColorRole]]) =
+		withFieldSettings(fieldSettings.withHighlightPointer(p))
+	override def withHintPointer(p: Changing[LocalizedString]) =
+		withFieldSettings(fieldSettings.withHintPointer(p))
+	override def withHintScaleFactor(scaling: Double) =
+		withFieldSettings(fieldSettings.withHintScaleFactor(scaling))
+	override def withIconPointers(pointers: Pair[Changing[SingleColorIcon]]) =
+		withFieldSettings(fieldSettings.withIconPointers(pointers))
+	override def withImageSettings(settings: ViewImageLabelSettings) =
+		withFieldSettings(fieldSettings.withImageSettings(settings))
+	override def withPromptPointer(p: Changing[LocalizedString]) =
+		withFieldSettings(fieldSettings.withPromptPointer(p))
+	
+	
+	// OTHER	--------------------
+	
+	def mapActivationKeys(f: Set[Int] => Set[Int]) = withActivationKeys(f(activationKeys))
+	def mapExpandAndCollapseIcon(f: Pair[SingleColorIcon] => Pair[SingleColorIcon]) =
+		withExpandAndCollapseIcon(f(expandAndCollapseIcon))
+	def mapFieldSettings(f: FieldSettings => FieldSettings) = withFieldSettings(f(fieldSettings))
+	def mapListHighlightModifier(f: Double => Double) = withListHighlightModifier(f(listHighlightModifier))
+	def mapListSettings(f: SelectionListSettings => SelectionListSettings) = withListSettings(f(listSettings))
+	def mapListStackSettings(f: StackSettings => StackSettings) = withListStackSettings(f(listStackSettings))
+	
+	/**
+	  * @param modifier A modifier that is applied to the color highlighting used in this component.
+	  *                 1.0 signifies the default color highlighting.
+	  * @return Copy of this factory with the specified list highlight modifier
+	  */
+	def withListHighlightModifier(modifier: Double) =
+		withListSettings(listSettings.withHighlightModifier(modifier))
+	/**
+	  * @param settings Settings that affect the stack layout of this list
+	  * @return Copy of this factory with the specified list stack settings
+	  */
+	def withListStackSettings(settings: StackSettings) =
+		withListSettings(listSettings.withStackSettings(settings))
+	
+	def withListAxis(axis: Axis2D) = mapListStackSettings { _.withAxis(axis) }
+	def withListLayout(layout: StackLayout) = mapListStackSettings { _.withLayout(layout) }
+	def withListCap(cap: StackLength) = mapListStackSettings { _.withCap(cap) }
+	def withListCustomDrawers(drawers: Vector[CustomDrawer]) = mapListStackSettings { _.withCustomDrawers(drawers) }
+	
+	def withAdditionalActivationKeys(keys: IterableOnce[Int]) = mapActivationKeys { _ ++ keys }
+	def activatedWithKey(keyIndex: Int) = mapActivationKeys { _ + keyIndex }
 }
 
-case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowContext](parentHierarchy: ComponentHierarchy,
-                                                                                     context: N)
-	extends GenericContextualFactory[N, ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+object FieldWithSelectionPopupSettings
 {
-	private implicit val c: ReachContentWindowContext = context
+	// ATTRIBUTES	--------------------
 	
-	override def withContext[N2 <: ReachContentWindowContext](newContext: N2) =
-		copy(context = newContext)
+	val default = apply()
+}
+
+/**
+  * Combined settings used when constructing field with selection popups
+  * @param fieldSettings            Wrapped more generic field settings
+  * @param listSettings             Settings that apply to the opened selection list
+  * @param expandAndCollapseIcon    The expand (first) and the collapse icon (second) that should be displayed at the
+  *                                 right side of the created fields.
+  *                                 Please note that a non-empty right-side icon will override these values.
+  * @param activationKeys           Additional key-indices that open the pop-up when they are pressed while this field is
+  *                                 in focus.
+  *                                 By default, only the appropriate arrow key opens the pop-up.
+  * @param noOptionsViewConstructor A function used for constructing a view to display when no
+  *                                 options are selectable
+  * @param extraOptionConstructor   A function used for constructing an additional selectable view to display
+  * @param extraOptionLocation      The location where the extra option should be placed, if one has been specified
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldSettings.default,
+                                           listSettings: SelectionListSettings = SelectionListSettings.default,
+                                           expandAndCollapseIcon: Pair[SingleColorIcon] = Pair.twice(SingleColorIcon.empty),
+                                           activationKeys: Set[Int] = Set[Int](),
+                                           popupContextMod: ReachContentWindowContext => ReachContentWindowContext = Identity,
+                                           noOptionsViewConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
+                                           extraOptionConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
+                                           extraOptionLocation: End = End.Last)
+	extends FieldWithSelectionPopupSettingsLike[FieldWithSelectionPopupSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withActivationKeys(keys: Set[Int]) = copy(activationKeys = keys)
+	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) = copy(expandAndCollapseIcon = icons)
+	override def withExtraOptionLocation(location: End) = copy(extraOptionLocation = location)
+	override def withFieldSettings(settings: FieldSettings) = copy(fieldSettings = settings)
+	override def withListSettings(settings: SelectionListSettings) = copy(listSettings = settings)
+	override def withExtraOptionConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): FieldWithSelectionPopupSettings =
+		copy(extraOptionConstructor = Some(f))
+	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): FieldWithSelectionPopupSettings =
+		copy(noOptionsViewConstructor = Some(f))
+	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): FieldWithSelectionPopupSettings =
+		copy(popupContextMod = f)
+}
+
+/**
+  * Common trait for factories that wrap a field with selection popup settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPopupSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: FieldWithSelectionPopupSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: FieldWithSelectionPopupSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def activationKeys = settings.activationKeys
+	override def expandAndCollapseIcon = settings.expandAndCollapseIcon
+	override def extraOptionConstructor = settings.extraOptionConstructor
+	override def extraOptionLocation = settings.extraOptionLocation
+	override def fieldSettings = settings.fieldSettings
+	override def listSettings = settings.listSettings
+	override def noOptionsViewConstructor = settings.noOptionsViewConstructor
+	override def popupContextMod: ReachContentWindowContext => ReachContentWindowContext = settings.popupContextMod
+	
+	override def withActivationKeys(keys: Set[Int]) = mapSettings { _.withActivationKeys(keys) }
+	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) =
+		mapSettings { _.withExpandAndCollapseIcon(icons) }
+	override def withExtraOptionLocation(location: End) = mapSettings { _.withExtraOptionLocation(location) }
+	override def withFieldSettings(settings: FieldSettings) = mapSettings { _.withFieldSettings(settings) }
+	override def withListSettings(settings: SelectionListSettings) =
+		mapSettings { _.withListSettings(settings) }
+	override def withExtraOptionConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr =
+		mapSettings { _.withExtraOptionConstructor(f) }
+	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr =
+		mapSettings { _.withNoOptionsViewConstructor(f) }
+	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): Repr =
+		mapSettings { _.withPopupContextMod(f) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: FieldWithSelectionPopupSettings => FieldWithSelectionPopupSettings) =
+		withSettings(f(settings))
+}
+
+/**
+  * Factory class used for constructing field
+  * with selection popups using contextual component creation information
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy,
+                                                    contextPointer: Changing[ReachContentWindowContext],
+                                                    settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
+	extends FieldWithSelectionPopupSettingsWrapper[ContextualFieldWithSelectionPopupFactory]
+		with VariableContextualFactory[ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContextPointer(contextPointer: Changing[ReachContentWindowContext]) =
+		copy(contextPointer = contextPointer)
+	override def withSettings(settings: FieldWithSelectionPopupSettings) =
+		copy(settings = settings)
+	
+	
+	// OTHER    ------------------------
 	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
 	  * @param isEmptyPointer A pointer that contains true when the wrapped field is empty (of text)
 	  * @param contentPointer Pointer to the available options in this field
 	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
-	  * @param rightExpandIcon Icon indicating that this selection may be expanded (optional)
-	  * @param rightCollapseIcon Icon indicating that this selection may be collapsed (optional)
-	  * @param fieldNamePointer A pointer to the displayed name of this field (default = always empty)
-	  * @param promptPointer A pointer to the prompt displayed on this field (default = always empty)
-	  * @param hintPointer A pointer to the hint displayed under this field (default = always empty)
-	  * @param errorMessagePointer A pointer to the error message displayed on this field (default = always empty)
-	  * @param leftIconPointer A pointer to the icon displayed on the left side of this component (default = always None)
-	  * @param listLayout Stack layout used in the selection list (default = Fit)
-	  * @param listCap Cap placed at each end of the selection list (default = always 0)
-	  * @param makeNoOptionsView   An optional function used for constructing the view to display,
-	 *                             when no options are available.
-	 *                             Accepts 3 parameters:
-	 *                             1) Component hierarchy,
-	 *                             2) Component creation context, and
-	 *                             3) Background color pointer
-	 * @param makeAdditionalOption An optional function used for constructing an additional view that is presented
-	 *                             under the main selection list. May be used, for example, for providing an "add" option.
-	 *                             Accepts 3 parameters:
-	 *                             1) Component hierarchy,
-	 *                             2) Component creation context, and
-	 *                             3) Background color pointer
-	  * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
-	  * @param focusColorRole Color role used when this field has focus (default = Secondary)
-	  * @param additionalActivationKeys Additional key-indices that should activate the pop-up.
-	  *                                 By default, only the down arrow activates the pop-up.
-	  *                                 Default = empty.
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
-	  * @param fillBackground Whether filled field style should be used (default = global default)
-	  * @param makeField A function for creating the component inside teh main field.
-	  *                  Accepts contextual data (specific context and context of this factory).
+	  * @param makeField A function for creating the component inside the main field.
+	  *                  Accepts contextual data.
 	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
-	 *                     Accepts four values:
+	 *                     Accepts three values:
 	 *                     1) A component hierarchy,
-	 *                     2) Component creation context,
-	 *                     3) Background color pointer
+	 *                     2) Component creation context (pointer)
 	 *                     4) Item to display initially
 	 *                     Returns a properly initialized display
 	  * @param makeRightHintLabel – A function for producing an additional right edge hint field.
@@ -123,113 +393,70 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: ReachContentWindowCont
 	  */
 	def apply[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
 		P <: Changing[Vector[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
-	                              valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-	                              rightExpandIcon: SingleColorIcon = SingleColorIcon.empty,
-	                              rightCollapseIcon: SingleColorIcon = SingleColorIcon.empty,
-	                              fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
-	                              promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
-	                              hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
-	                              errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
-	                              leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty,
-	                              listLayout: StackLayout = Fit, listCap: StackLength = StackLength.fixedZero,
-	                              makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
-	                              makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
-	                              highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None),
-	                              focusColorRole: ColorRole = Secondary,
-	                              additionalActivationKeys: Set[Int] = Set(),
-	                              sameItemCheck: Option[EqualsFunction[A]] = None,
-	                              fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-	                             (makeField: (FieldCreationContext, N) => C)
-	                             (makeDisplay: (ComponentHierarchy, TextContext, Changing[Color], A) => D)
-	                             (makeRightHintLabel: (ExtraFieldCreationContext[C], N) =>
+	                              valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
+	                              sameItemCheck: Option[EqualsFunction[A]] = None)
+	                             (makeField: FieldCreationContext => C)
+	                             (makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
+	                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
 	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
-		new FieldWithSelectionPopup[A, C, D, P, N](parentHierarchy, context, isEmptyPointer, contentPointer,
-			valuePointer, rightExpandIcon, rightCollapseIcon, fieldNamePointer, promptPointer, hintPointer,
-			errorMessagePointer, leftIconPointer, listLayout, listCap, makeNoOptionsView, makeAdditionalOption,
-			highlightStylePointer, focusColorRole, additionalActivationKeys, sameItemCheck,
-			fillBackground)(makeField)(makeDisplay)(makeRightHintLabel)
+		new FieldWithSelectionPopup[A, C, D, P](parentHierarchy, contextPointer, isEmptyPointer, contentPointer,
+			valuePointer, settings, sameItemCheck)(makeField)(makeDisplay)(makeRightHintLabel)
+}
+
+/**
+  * Used for defining field with selection popup creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
+	extends FieldWithSelectionPopupSettingsWrapper[FieldWithSelectionPopupSetup]
+		with FromContextComponentFactoryFactory[ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: ReachContentWindowContext) =
+		ContextualFieldWithSelectionPopupFactory(hierarchy, Fixed(context), settings)
+	
+	override def withSettings(settings: FieldWithSelectionPopupSettings) = copy(settings = settings)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @return A new field with selection popup factory that uses the specified (variable) context
+	  */
+	def withContext(hierarchy: ComponentHierarchy, context: Changing[ReachContentWindowContext]) =
+		ContextualFieldWithSelectionPopupFactory(hierarchy, context, settings)
+}
+
+object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: FieldWithSelectionPopupSettings) = withSettings(settings)
 }
 
 /**
   * A field wrapper class that displays a selection pop-up when it receives focus
   * @author Mikko Hilpinen
   * @since 22.12.2020, v0.1
-  * @param parentHierarchy Component hierarchy this component will be attached to
-  * @param context field creation context
-  * @param isEmptyPointer A pointer that contains true when the wrapped field is empty (of text)
-  * @param contentPointer Pointer to the available options in this field
-  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
-  * @param rightExpandIcon Icon indicating that this selection may be expanded (optional)
-  * @param rightCollapseIcon Icon indicating that this selection may be collapsed (optional)
-  * @param fieldNamePointer A pointer to the displayed name of this field (default = always empty)
-  * @param promptPointer A pointer to the prompt displayed on this field (default = always empty)
-  * @param hintPointer A pointer to the hint displayed under this field (default = always empty)
-  * @param errorMessagePointer A pointer to the error message displayed on this field (default = always empty)
-  * @param leftIconPointer A pointer to the icon displayed on the left side of this component (default = always None)
-  * @param listLayout Stack layout used in the selection list (default = Fit)
-  * @param listCap Cap placed at each end of the selection list (default = always 0)
-  * @param makeNoOptionsView An optional function used for constructing the view to display,
- *                          when no options are available.
- *                          Accepts 3 parameters:
- *                              1) Component hierarchy,
- *                              2) Component creation context, and
- *                              3) Background color pointer
-  * @param makeAdditionalOption An optional function used for constructing an additional view that is presented
- *                             under the main selection list. May be used, for example, for providing an "add" option.
- *                              Accepts 3 parameters:
- *                                  1) Component hierarchy,
- *                                  2) Component creation context, and
- *                                  3) Background color pointer
- * @param highlightStylePointer A pointer to an additional highlighting style applied to this field (default = always None)
-  * @param focusColorRole Color role used when this field has focus (default = Secondary)
-  * @param additionalActivationKeys Additional key-indices that should activate the pop-up.
-  *                                 By default, only the down arrow activates the pop-up.
-  *                                 Default = empty.
-  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
-  *                      Should only be specified when equality function (==) shouldn't be used.
-  * @param fillBackground Whether filled field style should be used (default = global default)
-  * @param makeField          A function for creating the component inside teh main field.
-  *                           Accepts contextual data (specific context and context of this factory).
-  * @param makeDisplay       A function for constructing new item option fields in the pop-up selection list.
- *                           Accepts four values:
- *                              1) A component hierarchy,
- *                              2) Component creation context,
- *                              3) Background color pointer
- *                              4) Item to display initially
- *                            Returns a properly initialized display
-  * @param makeRightHintLabel – A function for producing an additional right edge hint field.
-  *                           Accepts created main field and component creation context.
-  *                           Returns an open component or None if no label should be placed.
-  * @param popupContext       Context that is used for the created pop-up windows.
-  * @param scrollingContext   Context used for the created scroll view
-  * @param exc                Context used for parallel operations
-  * @param log                Logger for various errors
   * @tparam A Type of selectable item
   * @tparam C Type of component inside the field
   * @tparam D Type of component to display a selectable item
   * @tparam P Type of content pointer used
   */
 class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
-	+P <: Changing[Vector[A]], +N <: TextContext]
-(parentHierarchy: ComponentHierarchy, context: N, isEmptyPointer: Changing[Boolean], override val contentPointer: P,
- override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
- rightExpandIcon: SingleColorIcon = SingleColorIcon.empty, rightCollapseIcon: SingleColorIcon = SingleColorIcon.empty,
- fieldNamePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
- promptPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
- hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
- errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
- leftIconPointer: Changing[SingleColorIcon] = SingleColorIcon.alwaysEmpty, listLayout: StackLayout = Fit,
- listCap: StackLength = StackLength.fixedZero,
- makeNoOptionsView: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
- makeAdditionalOption: Option[(ComponentHierarchy, TextContext, Changing[Color]) => ReachComponentLike] = None,
- highlightStylePointer: Changing[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
- additionalActivationKeys: Set[Int] = Set(), sameItemCheck: Option[EqualsFunction[A]] = None,
- fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
-(makeField: (FieldCreationContext, N) => C)
-(makeDisplay: (ComponentHierarchy, TextContext, Changing[Color], A) => D)
-(makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]])
-(implicit popupContext: ReachWindowContext, scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
+	+P <: Changing[Vector[A]]]
+(parentHierarchy: ComponentHierarchy, contextPointer: Changing[ReachContentWindowContext],
+ isEmptyPointer: Changing[Boolean], override val contentPointer: P,
+ override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
+ settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default,
+ sameItemCheck: Option[EqualsFunction[A]] = None)
+(makeField: FieldCreationContext => C)
+(makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
+(makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
+(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
 {
@@ -250,35 +477,53 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		case None => AlwaysFalse
 	}
 	// Merges the expand and the collapse icons, if necessary
-	private val rightIconPointer: Changing[SingleColorIcon] = rightExpandIcon.notEmpty match {
-		case Some(expandIcon) =>
-			rightCollapseIcon.notEmpty match {
-				case Some(collapseIcon) =>
-					// Makes sure both icons have the same size
-					if (expandIcon.size == collapseIcon.size)
-						popUpVisiblePointer.map { visible => if (visible) collapseIcon else expandIcon }
-					else {
-						val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
-						val targetSize = smaller.size
-						val shrankIcon = SingleColorIcon(
-							larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize), larger.standardSize)
-						
-						val (newExpandIcon, newCollapseIcon) =
-							if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
-						popUpVisiblePointer.map { visible => if (visible) newCollapseIcon else newExpandIcon }
-					}
-				case None => Fixed(expandIcon)
+	private val rightIconPointer: Changing[SingleColorIcon] = {
+		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
+		// => Uses only the right-side icon from settings
+		if (settings.rightIconPointer.existsFixed { _.nonEmpty } || settings.expandAndCollapseIcon.forall { _.isEmpty })
+			settings.rightIconPointer
+		// Case: Expand and/or collapse icon defined => Uses those icons, and possibly right-side icon also
+		else
+			settings.expandAndCollapseIcon.merge { (expand, collapse) =>
+				expand.notEmpty match {
+					case Some(expandIcon) =>
+						val expandOrCollapsePointer = collapse.notEmpty match {
+							// Case: Both icons are specified => merges them
+							case Some(collapseIcon) =>
+								// Makes sure both icons have the same size
+								if (expandIcon.size == collapseIcon.size)
+									popUpVisiblePointer.map { visible => if (visible) collapseIcon else expandIcon }
+								else {
+									val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
+									val targetSize = smaller.size
+									val shrankIcon = SingleColorIcon(
+										larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize), larger.standardSize)
+									
+									val (newExpandIcon, newCollapseIcon) =
+										if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
+									popUpVisiblePointer.map { visible => if (visible) newCollapseIcon else newExpandIcon }
+								}
+							// Case: Only expand icon is defined => Doesn't use collapse icon
+							case None => Fixed(expandIcon)
+						}
+						// The settings-specified right-side icon still overrides the expand/collapse icon, when present
+						settings.rightIconPointer.mergeWith(expandOrCollapsePointer) { _.nonEmptyOrElse(_) }
+					// Case: Only collapse icon defined => Uses that when no other icon is present
+					case None => settings.rightIconPointer.map { _.nonEmptyOrElse(collapse) }
+				}
 			}
-		case None => Fixed(rightCollapseIcon)
 	}
 	
 	/**
 	  * Field wrapped by this field
 	  */
-	val field = Field(parentHierarchy).withContext(context)
-		.apply(isEmptyPointer, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, leftIconPointer,
-			rightIconPointer, highlightStylePointer = highlightStylePointer, focusColorRole = focusColorRole,
-			fillBackground = fillBackground)(makeField)(makeRightHintLabel)
+	val field = Field.withContext(parentHierarchy, contextPointer)
+		.withSettings(settings.fieldSettings.withRightIconPointer(rightIconPointer))
+		.apply(isEmptyPointer)(makeField)(makeRightHintLabel)
+	
+	private lazy val popUpContextPointer = contextPointer.mergeWith(field.innerBackgroundPointer) { (context, bg) =>
+		settings.popupContextMod(context.withBackground(bg))
+	}
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -345,34 +590,34 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	private def createPopup(): Window = {
 		// Creates the pop-up
-		val popup = field.createOwnedWindow(Bottom, matchEdgeLength = true) { hierarchy =>
+		implicit val windowContext: ReachContentWindowContext = popUpContextPointer.value
+		val popup = field.createOwnedWindow(Alignment.forDirection(settings.listAxis(Positive)), matchEdgeLength = true) { hierarchy =>
 			// The pop-up content resides in a scroll view with custom background drawing
-			ScrollView(hierarchy).withScrollBarMargin(context.margins.small, listCap.optimal).limitedToContentSize
+			ScrollView(hierarchy).withAxis(settings.listAxis)
+				.withScrollBarMargin(windowContext.margins.small, settings.listCap.optimal)
+				.limitedToContentSize
 				.withCustomDrawer(BackgroundViewDrawer(field.innerBackgroundPointer))
 				.build(Mixed) { factories =>
 					// The scrollable content consists of either:
 					//  1) Main content + additional view, or
 					//  2) Main content only
 					def makeOptionsList(factory: SelectionListFactory) =
-						factory.apply(context.actorHandler, field.innerBackgroundPointer, contentPointer, valuePointer, Y,
-							listLayout, context.stackMargin, listCap, 1.0, sameItemCheck) { (hierarchy, item) =>
-							makeDisplay(hierarchy, context.against(field.innerBackgroundPointer.value),
-								field.innerBackgroundPointer, item)
+						factory.withContextPointer(popUpContextPointer).withSettings(settings.listSettings)
+							.apply(contentPointer, valuePointer, sameItemCheck) { (hierarchy, item) =>
+							makeDisplay(hierarchy, popUpContextPointer, item)
 						}
 					def makeMainContent(factories: Mixed) = {
 						// The main content is either:
 						//   1) Switchable between options and no-options -view
 						//   2) Only the options view
-						makeNoOptionsView match {
+						settings.noOptionsViewConstructor match {
 							// Case: No options -view used => Switches between the two views
 							case Some(makeNoOptionsView) =>
 								factories(CachingViewSwapper).build(Mixed)
 									.generic(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
 										// Case: No options -view constructor
 										if (isEmpty)
-											makeNoOptionsView(factories.parentHierarchy,
-												context.against(field.innerBackgroundPointer.value),
-												field.innerBackgroundPointer)
+											makeNoOptionsView(factories.parentHierarchy, popUpContextPointer)
 										// Case: List constructor
 										else
 											makeOptionsList(factories(SelectionList))
@@ -381,18 +626,28 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 							case None => makeOptionsList(factories(SelectionList))
 						}
 					}
-					makeAdditionalOption match {
-						// Case: Additional view used => Places it below the main content
+					settings.extraOptionConstructor match {
+						// Case: Additional view used => Places it above or below the main content
 						case Some(makeAdditionalOption) =>
 							factories(ViewStack).withoutMargin.build(Mixed) { factories =>
-								val mainContent = makeMainContent(factories.next())
-								val additional = makeAdditionalOption(factories.next().parentHierarchy,
-									context.against(field.innerBackgroundPointer.value), field.innerBackgroundPointer)
 								// The main content may be hidden, if empty
 								val mainContentVisiblePointer = {
-									if (makeNoOptionsView.isDefined) AlwaysTrue else contentPointer.map { _.nonEmpty }
+									if (settings.noOptionsViewConstructor.isDefined)
+										AlwaysTrue
+									else
+										contentPointer.map { _.nonEmpty }
 								}
-								Vector(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+								// Orders the components based on settings
+								val topAndBottomFactories = Pair.fill(factories.next())
+								val mainContent = makeMainContent(topAndBottomFactories(
+									settings.extraOptionLocation.opposite))
+								val additional = makeAdditionalOption(
+									topAndBottomFactories(settings.extraOptionLocation).parentHierarchy,
+									popUpContextPointer)
+								if (settings.extraOptionLocation == First)
+									Vector(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)
+								else
+									Vector(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
 							}
 						// CAse: No additional view used => Always displays the main content
 						case None => makeMainContent(factories)
@@ -451,8 +706,8 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// Listens to down arrow presses
 		// Also supports additional key-strokes (based on the 'additionalActivationKeys' parameter)
 		override val keyStateEventFilter = {
-			val arrowFilter = KeyStateEvent.arrowKeyFilter(Down)
-			val keyFilter = NotEmpty(additionalActivationKeys) match {
+			val arrowFilter = KeyStateEvent.arrowKeyFilter(settings.listAxis(Positive))
+			val keyFilter = NotEmpty(settings.activationKeys) match {
 				case Some(keys) => arrowFilter || { e: KeyStateEvent => keys.exists(e.keyStatus.apply) }
 				case None => arrowFilter
 			}

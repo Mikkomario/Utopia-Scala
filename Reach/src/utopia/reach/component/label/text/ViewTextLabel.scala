@@ -16,7 +16,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FromContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.drawing.Priority
@@ -88,8 +88,16 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	  * @param contentPointer Pointer to the text displayed on this label
 	  * @return A new label
 	  */
-	def forText(contentPointer: Changing[LocalizedString]) =
+	def text(contentPointer: Changing[LocalizedString]) =
 		apply[LocalizedString](contentPointer, DisplayFunction.identity)
+	/**
+	  * Creates a label that displays static text
+	  * @param content Text to display on this label
+	  * @return A new label
+	  */
+	def text(content: LocalizedString): ViewTextLabel[LocalizedString] = text(Fixed(content))
+	@deprecated("Renamed to .text(Changing)", "v1.1")
+	def forText(contentPointer: Changing[LocalizedString]) = text(contentPointer)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
@@ -127,7 +135,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	override def withBackground(background: Color): ViewTextLabelFactory =
 		withCustomDrawer(BackgroundDrawer(background))
 	
-	override def withContext(context: Changing[TextContext]): ContextualViewTextLabelFactory =
+	override def withContextPointer(context: Changing[TextContext]): ContextualViewTextLabelFactory =
 		ContextualViewTextLabelFactory(parentHierarchy, context, customDrawers)
 	
 	
@@ -168,12 +176,15 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	
 	/**
 	  * Creates a new text label
-	  * @param contentPointer  Pointer to the text displayed on this label
-	  * @param stylePointer    A pointer to this label's styling information
+	  * @param contentPointer Pointer to the text displayed on this label
+	  * @param stylePointer   A pointer to this label's styling information
 	  * @return A new label
 	  */
-	def forText(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext]) =
+	def text(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext]) =
 		apply[LocalizedString](contentPointer, stylePointer, DisplayFunction.identity)
+	@deprecated("Renamed to .text(...)", "v1.1")
+	def forText(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext]) =
+		text(contentPointer, stylePointer)
 	
 	/**
 	  * Creates a new text label
@@ -186,21 +197,39 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	  * @param allowLineBreaks    Whether line breaks within the text should be respected and applied (default = true)
 	  * @return A new label
 	  */
-	def forTextWithStaticStyle(contentPointer: Changing[LocalizedString], font: Font,
+	def textWithStaticStyle(contentPointer: Changing[LocalizedString], font: Font,
 	                           textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 	                           insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
 	                           allowLineBreaks: Boolean = true) =
 		withStaticStyle[LocalizedString](contentPointer, font, DisplayFunction.identity, textColor, alignment, insets,
 			betweenLinesMargin, allowLineBreaks)
+	/**
+	  * Creates a new text label
+	  * @param contentPointer     Pointer to the text displayed on this label
+	  * @param font               Font used when drawing the text
+	  * @param textColor          Color used when drawing the text (default = standard black)
+	  * @param alignment          Text alignment (default = left)
+	  * @param insets             Insets around the text (default = any insets, preferring zero)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0)
+	  * @param allowLineBreaks    Whether line breaks within the text should be respected and applied (default = true)
+	  * @return A new label
+	  */
+	@deprecated("Renamed to .textWithStaticStyle", "v1.1")
+	def forTextWithStaticStyle(contentPointer: Changing[LocalizedString], font: Font,
+	                           textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+	                           insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+	                           allowLineBreaks: Boolean = true) =
+		textWithStaticStyle(contentPointer, font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)
 }
 
 object ViewTextLabel extends Cff[ViewTextLabelFactory]
-	with FromContextComponentFactoryFactory[TextContext, ContextualViewTextLabelFactory]
+	with FromVariableContextComponentFactoryFactory[TextContext, ContextualViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextLabelFactory(hierarchy)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
-		ContextualViewTextLabelFactory(hierarchy, Fixed(context))
+	override def withContextPointer(hierarchy: ComponentHierarchy,
+	                                context: Changing[TextContext]): ContextualViewTextLabelFactory =
+		ContextualViewTextLabelFactory(hierarchy, context)
 }
 
 /**

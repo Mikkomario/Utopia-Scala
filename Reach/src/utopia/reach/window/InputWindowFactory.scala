@@ -281,7 +281,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				segmentGroup match {
 					// Case segmented grouping is used
 					case Some(segmentGroup) =>
-						factories(Stack).copy(layout = Center, areRelated = true)
+						factories(Stack).centered.related
 							.buildSegmented(Mixed, segmentGroup) { factories =>
 								createHorizontalFieldAndNameRow(factories.next(), blueprint, fieldsBuilder)
 							}.parentAndResult
@@ -299,7 +299,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 					case Far => Trailing
 					case Middle => if (blueprint.isScalable) Fit else Center
 				}
-				factories(Stack).copy(layout = horizontalLayout, areRelated = true).build(Mixed) { factories =>
+				factories(Stack).withLayout(horizontalLayout).related.build(Mixed) { factories =>
 					createFieldAndName(factories, blueprint, fieldsBuilder,
 						blueprint.fieldAlignment.vertical != Close, horizontalLayout == Fit)
 				}.parentAndResult

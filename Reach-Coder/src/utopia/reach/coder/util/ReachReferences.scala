@@ -41,20 +41,36 @@ object ReachReferences
 		import ReachPackages.Reach._
 		
 		lazy val contentWindowContext = Reference(context, "ReachContentWindowContext")
+		
+		lazy val componentLike = Reference(components/"template", "ReachComponentLike")
 		lazy val componentHierarchy = Reference(hierarchies, "ComponentHierarchy")
+		
 		lazy val cff = Reference(factories, "ComponentFactoryFactory")
 		lazy val ccff = Reference(factories, "FromContextComponentFactoryFactory")
 		lazy val fromContextFactory = Reference(factories, "FromContextFactory")
 		lazy val fromVariableContextFactory = Reference(factories, "FromVariableContextFactory")
+		lazy val fromGenericContextFactory = Reference(factories, "FromGenericContextFactory")
 		lazy val framedFactory = Reference(factories, "FramedFactory")
 		lazy val focusListenableFactory = Reference(factories, "FocusListenableFactory")
 		lazy val fromAlignmentFactory = Reference(factories, "FromAlignmentFactory")
 		lazy val customDrawableFactory = Reference(factories, "CustomDrawableFactory")
+		
 		lazy val baseContextualFactory = Reference(contextualFactories, "BaseContextualFactory")
 		lazy val colorContextualFactory = Reference(contextualFactories, "ColorContextualFactory")
 		lazy val textContextualFactory = Reference(contextualFactories, "TextContextualFactory")
 		lazy val contentWindowContextualFactory = Reference(contextualFactories, "ReachContentWindowContextualFactory")
 		lazy val variableContextualFactory = Reference(contextualFactories, "VariableContextualFactory")
+		
+		lazy val wrapperContainerFactory = Reference(wrapperContainers, "WrapperContainerFactory")
+		lazy val contextualWrapperContainerFactory = Reference(wrapperContainers, "ContextualWrapperContainerFactory")
+		lazy val nonContextualWrapperContainerFactory = Reference(wrapperContainers, "NonContextualWrapperContainerFactory")
+		lazy val combiningContainerFactory = Reference(multiContainers, "CombiningContainerFactory")
+		lazy val contextualCombiningContainerFactory = Reference(multiContainers, "ContextualCombiningContainerFactory")
+		lazy val nonContextualCombiningContainerFactory = Reference(multiContainers, "NonContextualCombiningContainerFactory")
+		lazy val viewContainerFactory = Reference(multiContainers, "ViewContainerFactory")
+		lazy val contextualViewContainerFactory = Reference(multiContainers, "ContextualViewContainerFactory")
+		lazy val nonContextualViewContainerFactory = Reference(multiContainers, "NonContextualViewContainerFactory")
+		
 		lazy val focusListener = Reference(focus, "FocusListener")
 	}
 }

@@ -20,10 +20,10 @@ import utopia.paradigm.enumeration.Axis.X
 case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePointer: View[TextDrawContext],
                                     selectedRangesPointer: Changing[Iterable[Range]] = Fixed(Vector()),
                                     caretPositionPointer: Changing[Option[Int]] = Fixed(None),
-                                    highlightedTextColorPointer: View[Color] = View(Color.textBlack),
-                                    highlightedBackgroundPointer: View[Option[Color]] = View(None),
-                                    caretColorPointer: View[Color] = Fixed(Color.textBlack),
-                                    caretWidth: Double = 1.0,
+                                    highlightedTextColorPointer: View[Color] = View.fixed(Color.textBlack),
+                                    highlightedBackgroundPointer: View[Option[Color]] = View.fixed(None),
+                                    caretColorPointer: View[Color] = View.fixed(Color.textBlack),
+                                    caretWidthPointer: View[Double] = View.fixed(1.0),
                                     override val drawLevel: DrawLevel = Normal)
 	extends SelectableTextDrawerLike
 {
@@ -41,7 +41,7 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 	val caretPointer = textPointer.lazyMergeWith(caretPositionPointer) { (text, caretPosition) =>
 		caretPosition.map { caretPosition =>
 			val caretLine = text.caretAt(caretPosition)
-			Bounds.between(caretLine.start, caretLine.end + X(caretWidth))
+			Bounds.between(caretLine.start, caretLine.end + X(caretWidthPointer.value))
 		}
 	}
 	
@@ -49,20 +49,13 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 	// IMPLEMENTED	------------------------------
 	
 	override def text = textPointer.value
-	
 	override def drawTargets = drawTargetsPointer.value
-	
 	override def caret = caretPointer.value
 	
 	override def font = stylePointer.value.font
-	
 	override def insets = stylePointer.value.insets
-	
 	override def normalTextColor = stylePointer.value.color
-	
 	override def highlightedTextColor = highlightedTextColorPointer.value
-	
 	override def highlightedTextBackground = highlightedBackgroundPointer.value
-	
 	override def caretColor = caretColorPointer.value
 }

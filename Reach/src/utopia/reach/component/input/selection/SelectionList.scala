@@ -9,7 +9,6 @@ import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDra
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.StackLayout
-import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.EqualsFunction
@@ -25,45 +24,290 @@ import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.{Color, ColorShade}
-import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextFactory
-import utopia.reach.component.factory.contextual.ColorContextualFactory
+import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.MutableStack
+import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsLike}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
-import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reach.drawing.Priority.High
+import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
-object SelectionList extends Cff[SelectionListFactory]
+/**
+  * Common trait for selection list factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait SelectionListSettingsLike[+Repr] extends StackSettingsLike[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new SelectionListFactory(hierarchy)
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings that affect the stack layout of this list
+	  */
+	def stackSettings: StackSettings
+	/**
+	  * A modifier that is applied to the color highlighting used in this component.
+	  * 1.0 signifies the default color highlighting.
+	  */
+	def highlightModifier: Double
+	
+	/**
+	  * A modifier that is applied to the color highlighting used in this component.
+	  * 1.0 signifies the default color highlighting.
+	  * @param modifier New highlight modifier to use.
+	  *                 A modifier that is applied to the color highlighting used in this component.
+	  *                 1.0 signifies the default color highlighting.
+	  * @return Copy of this factory with the specified highlight modifier
+	  */
+	def withHighlightModifier(modifier: Double): Repr
+	/**
+	  * Settings that affect the stack layout of this list
+	  * @param settings New stack settings to use.
+	  *                 Settings that affect the stack layout of this list
+	  * @return Copy of this factory with the specified stack settings
+	  */
+	def withStackSettings(settings: StackSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def axis = stackSettings.axis
+	override def cap = stackSettings.cap
+	override def customDrawers = stackSettings.customDrawers
+	override def layout = stackSettings.layout
+	
+	override def withAxis(axis: Axis2D) = withStackSettings(stackSettings.withAxis(axis))
+	override def withCap(cap: StackLength) = withStackSettings(stackSettings.withCap(cap))
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		withStackSettings(stackSettings.withCustomDrawers(drawers))
+	override def withLayout(layout: StackLayout) = withStackSettings(stackSettings.withLayout(layout))
+	
+	
+	// OTHER	--------------------
+	
+	def mapHighlightModifier(f: Double => Double) = withHighlightModifier(f(highlightModifier))
+	def mapStackSettings(f: StackSettings => StackSettings) = withStackSettings(f(stackSettings))
 }
 
-class SelectionListFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[ColorContext, ContextualSelectionListFactory]
+object SelectionListSettings
 {
-	override def withContext(context: ColorContext) =
-		ContextualSelectionListFactory(this, context)
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
+}
+/**
+  * Combined settings used when constructing selection lists
+  * @param stackSettings     Settings that affect the stack layout of this list
+  * @param highlightModifier A modifier that is applied to the color highlighting used in this component.
+  *                          1.0 signifies the default color highlighting.
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class SelectionListSettings(stackSettings: StackSettings = StackSettings.default,
+                                 highlightModifier: Double = 1.0)
+	extends SelectionListSettingsLike[SelectionListSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withHighlightModifier(modifier: Double) = copy(highlightModifier = modifier)
+	override def withStackSettings(settings: StackSettings) = copy(stackSettings = settings)
+}
+
+/**
+  * Common trait for factories that wrap a selection list settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait SelectionListSettingsWrapper[+Repr] extends SelectionListSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: SelectionListSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: SelectionListSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def highlightModifier = settings.highlightModifier
+	override def stackSettings = settings.stackSettings
+	
+	override def withHighlightModifier(modifier: Double) = mapSettings { _.withHighlightModifier(modifier) }
+	override def withStackSettings(settings: StackSettings) = mapSettings { _.withStackSettings(settings) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: SelectionListSettings => SelectionListSettings) = withSettings(f(settings))
+}
+
+/**
+  * Common trait for factories that are used for constructing selection lists
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * The component hierarchy, to which created selection lists will be attached
+	  */
+	protected def parentHierarchy: ComponentHierarchy
+	
+	/**
+	  * @return Pointer that determines the margin placed between selectable items
+	  */
+	protected def marginPointer: Changing[StackLength]
+	/**
+	  * @param p A pointer that determines the size of margins placed between selectable items
+	  * @return Copy of this factory with the specified margins pointer
+	  */
+	def withMarginPointer(p: Changing[StackLength]): Repr
+	
+	
+	// COMPUTED -------------------
+	
+	/**
+	  * @return Copy of this factory that doesn't place any margin between the selectable items
+	  */
+	def withoutMargin = withMargin(StackLength.fixedZero)
+	
+	
+	// OTHER    -------------------
+	
+	/**
+	  * @param margin Margin to place between the items in the stacks
+	  * @return Copy of this factory with specified margin
+	  */
+	def withMargin(margin: StackLength) = withMarginPointer(Fixed(margin))
 	
 	/**
 	  * Creates a new list
-	  * @param actorHandler Actor handler that will deliver action events for arrow key handling
+	  * @param actorHandler             Actor handler that will deliver action events for arrow key handling
 	  * @param contextBackgroundPointer A pointer to the background color of this list's container / context
+	  * @param contentPointer           A pointer to the selection options displayed on this list
+	  * @param valuePointer             A pointer to the currently selected value (default = new empty pointer)
+	  * @param sameItemCheck            A function for testing whether two items should be considered equal
+	  *                                 (specify only if equals method should <b>not</b> be used) (default = None)
+	  * @param alternativeKeyCondition  A function that returns true in cases where selection key events should be
+	  *                                 enabled. Key events are always enabled while this list is in focus.
+	  *                                 Default = false = Key events are received only while in focus.
+	  * @param makeDisplay              A function for creating a new display component. Accepts parent component hierarchy and
+	  *                                 the initially displayed item.
+	  * @tparam A Type of displayed / selected value
+	  * @tparam C Type of display component
+	  * @tparam P Type of selection pool pointer
+	  * @return A new list
+	  */
+	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
+	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
+	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
+	(makeDisplay: (ComponentHierarchy, A) => C) =
+		new SelectionList[A, C, P](parentHierarchy, actorHandler, contextBackgroundPointer, contentPointer,
+			valuePointer, settings, marginPointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
+}
+
+/**
+  * Factory class that is used for constructing selection lists without using contextual information
+  * @param marginPointer A pointer that determines the size of margins placed between selectable items
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
+                                settings: SelectionListSettings = SelectionListSettings.default,
+                                marginPointer: Changing[StackLength] = Fixed(StackLength.any))
+	extends SelectionListFactoryLike[SelectionListFactory]
+		with FromVariableContextFactory[ColorContext, ContextualSelectionListFactory]
+{
+	// IMPLEMENTED  ----------------------
+	
+	override def withContextPointer(p: Changing[ColorContext]): ContextualSelectionListFactory =
+		ContextualSelectionListFactory(parentHierarchy, p, settings)
+	
+	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
+	def withMarginPointer(p: Changing[StackLength]) = copy(marginPointer = p)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * Creates a new list
+	  * @param actorHandler             Actor handler that will deliver action events for arrow key handling
+	  * @param contextBackgroundPointer A pointer to the background color of this list's container / context
+	  * @param contentPointer           A pointer to the selection options displayed on this list
+	  * @param valuePointer             A pointer to the currently selected value (default = new empty pointer)
+	  * @param sameItemCheck            A function for testing whether two items should be considered equal
+	  *                                 (specify only if equals method should <b>not</b> be used) (default = None)
+	  * @param alternativeKeyCondition  A function that returns true in cases where selection key events should be
+	  *                                 enabled. Key events are always enabled while this list is in focus.
+	  *                                 Default = false = Key events are received only while in focus.
+	  * @param makeDisplay              A function for creating a new display component. Accepts parent component hierarchy and
+	  *                                 the initially displayed item.
+	  * @tparam A Type of displayed / selected value
+	  * @tparam C Type of display component
+	  * @tparam P Type of selection pool pointer
+	  * @return A new list
+	  */
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
+	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
+	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
+	(makeDisplay: (ComponentHierarchy, A) => C) =
+		_apply[A, C, P](actorHandler, contextBackgroundPointer, contentPointer, valuePointer, sameItemCheck,
+			alternativeKeyCondition)(makeDisplay)
+}
+
+/**
+  * Factory class used for constructing selection lists using contextual component creation information
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
+                                          contextPointer: Changing[ColorContext],
+                                          settings: SelectionListSettings = SelectionListSettings.default,
+                                          customMarginPointer: Option[Changing[StackLength]] = None)
+	extends SelectionListFactoryLike[ContextualSelectionListFactory]
+		with VariableContextualFactory[ColorContext, ContextualSelectionListFactory]
+{
+	// ATTRIBUTES   -------------------------
+	
+	override protected lazy val marginPointer: Changing[StackLength] = contextPointer.map { _.stackMargin }
+	
+	
+	// IMPLEMENTED  -------------------------
+	
+	override def withContextPointer(contextPointer: Changing[ColorContext]) =
+		copy(contextPointer = contextPointer)
+	
+	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
+	override def withMarginPointer(p: Changing[StackLength]) =
+		copy(customMarginPointer = Some(p))
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * Creates a new list
 	  * @param contentPointer A pointer to the selection options displayed on this list
 	  * @param valuePointer A pointer to the currently selected value (default = new empty pointer)
-	  * @param direction Direction along which the selection items are laid (default = Y = vertical)
-	  * @param layout Stack layout used for determining display breadth (default = Fit = all have same breadth)
-	  * @param margin Margin placed between selectable items (default = any, preferring 0)
-	  * @param cap Cap placed at both ends of this list (default = always 0)
-	  * @param highlightModifier A modifier applied for selection and focus color highlights (default = 1.0)
 	  * @param sameItemCheck A function for testing whether two items should be considered equal
 	  *                      (specify only if equals method should <b>not</b> be used) (default = None)
 	  * @param alternativeKeyCondition A function that returns true in cases where selection key events should be
@@ -77,49 +321,47 @@ class SelectionListFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new list
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
-	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), direction: Axis2D = Y,
-	 layout: StackLayout = Fit, margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
-	 highlightModifier: Double = 1.0, sameItemCheck: Option[EqualsFunction[A]] = None,
-	 alternativeKeyCondition: => Boolean = false)
-	(makeDisplay: (ComponentHierarchy, A) => C) =
-		new SelectionList[A, C, P](parentHierarchy, actorHandler, contextBackgroundPointer, contentPointer,
-			valuePointer, direction, layout, margin, cap, highlightModifier, sameItemCheck,
-			alternativeKeyCondition)(makeDisplay)
-}
-
-case class ContextualSelectionListFactory(factory: SelectionListFactory, context: ColorContext)
-	extends ColorContextualFactory[ContextualSelectionListFactory]
-{
-	override def self: ContextualSelectionListFactory = this
-	
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
-	
-	/**
-	  * Creates a new list
-	  * @param contentPointer A pointer to the selection options displayed on this list
-	  * @param valuePointer A pointer to the currently selected value (default = new empty pointer)
-	  * @param direction Direction along which the selection items are laid (default = Y = vertical)
-	  * @param layout Stack layout used for determining display breadth (default = Fit = all have same breadth)
-	  * @param margin Margin placed between selectable items (default = determined by context)
-	  * @param cap Cap placed at both ends of this list (default = always 0)
-	  * @param sameItemCheck A function for testing whether two items should be considered equal
-	  *                      (specify only if equals method should <b>not</b> be used) (default = None)
-	  * @param makeDisplay A function for creating a new display component. Accepts parent component hierarchy and
-	  *                    the initially displayed item.
-	  * @tparam A Type of displayed / selected value
-	  * @tparam C Type of display component
-	  * @tparam P Type of selection pool pointer
-	  * @return A new list
-	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-	 direction: Axis2D = Y, layout: StackLayout = Fit, margin: StackLength = context.stackMargin,
-	 cap: StackLength = StackLength.fixedZero,  highlightModifier: Double = 1.0,
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
-		factory(context.actorHandler, Fixed(context.background), contentPointer, valuePointer, direction,
-			layout, margin, cap, highlightModifier, sameItemCheck, alternativeKeyCondition)(makeDisplay)
+		_apply[A, C, P](contextPointer.value.actorHandler, contextPointer.map { _.background }, contentPointer,
+			valuePointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
+}
+
+/**
+  * Used for defining selection list creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 02.06.2023, v1.1
+  */
+case class SelectionListSetup(settings: SelectionListSettings = SelectionListSettings.default)
+	extends SelectionListSettingsWrapper[SelectionListSetup]
+		with ComponentFactoryFactory[SelectionListFactory]
+		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualSelectionListFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def apply(hierarchy: ComponentHierarchy) = SelectionListFactory(hierarchy, settings)
+	
+	override def withContextPointer(hierarchy: ComponentHierarchy,
+	                                context: Changing[ColorContext]): ContextualSelectionListFactory =
+		ContextualSelectionListFactory(hierarchy, context, settings)
+	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @return A new selection list factory that uses the specified (variable) context
+	  */
+	def withContext(hierarchy: ComponentHierarchy, context: Changing[ColorContext]) =
+		ContextualSelectionListFactory(hierarchy, context, settings)
+}
+
+object SelectionList extends SelectionListSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: SelectionListSettings) = withSettings(settings)
 }
 
 /**
@@ -129,9 +371,10 @@ case class ContextualSelectionListFactory(factory: SelectionListFactory, context
   */
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
- override val contentPointer: P, override val valuePointer: PointerWithEvents[Option[A]], direction: Axis2D,
- layout: StackLayout, margin: StackLength, cap: StackLength, highlightModifier: Double,
- sameItemCheck: Option[EqualsFunction[A]], alternativeKeyCondition: => Boolean)
+ override val contentPointer: P, override val valuePointer: PointerWithEvents[Option[A]],
+ settings: SelectionListSettings = SelectionListSettings.default,
+ marginPointer: Changing[StackLength] = Fixed(StackLength.any), sameItemCheck: Option[EqualsFunction[A]],
+ alternativeKeyCondition: => Boolean)
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P] with CursorDefining
@@ -144,7 +387,9 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	private val focusTracker = new FocusStateTracker(false)
 	override var focusListeners: Seq[FocusListener] = Vector(focusTracker)
 	
-	private val stack = MutableStack(parentHierarchy)[C](direction, layout, margin, cap)
+	private val stack = MutableStack(parentHierarchy)
+		.withSettings(settings.stackSettings)
+		.withMargin(marginPointer.value)[C]()
 	private val locationTracker = new StackItemAreas[C](stack, stack.componentsPointer)
 	private val manager = sameItemCheck match {
 		case Some(check) => ContainerSingleSelectionManager.forImmutableStates(stack, contentPointer,
@@ -166,11 +411,15 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	} }
 	
 	private val keyListener = SelectionKeyListener
-		.along(direction, hasFocus || alternativeKeyCondition)(manager.moveSelection)
+		.along(settings.axis, hasFocus || alternativeKeyCondition)(manager.moveSelection)
+	
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
-		Bounds.aroundOption(e.values.flatten).foreach { area => repaintArea(area.enlarged(direction(margin.optimal)), High) }
+		Bounds.aroundOption(e.values.flatten).foreach { area =>
+			repaintArea(area.enlarged(settings.axis(marginPointer.value.optimal)), High)
+		}
 		true
 	}
+	private val revalidateListener = ChangeListener.continuousOnAnyChange { stack.revalidate() }
 	
 	
 	// INITIAL CODE	--------------------------------
@@ -181,6 +430,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			GlobalMouseEventHandler += GlobalMouseReleaseListener
 			actorHandler += keyListener
 			addCustomDrawer(SelectionDrawer)
+			marginPointer.addListenerAndSimulateEvent(stack.margin)(revalidateListener)
 			selectedAreaPointer.addListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.addListener(repaintAreaListener)
 			canvas.cursorManager.foreach { _ += this }
@@ -191,6 +441,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			GlobalMouseEventHandler -= GlobalMouseReleaseListener
 			actorHandler -= keyListener
 			removeCustomDrawer(SelectionDrawer)
+			marginPointer.removeListener(revalidateListener)
 			selectedAreaPointer.removeListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.removeListener(repaintAreaListener)
 			canvas.cursorManager.foreach { _ -= this }
@@ -347,7 +598,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			def draw(pointer: View[Option[Bounds]], highlightLevel: Double) =
 				pointer.value.foreach { area =>
 					drawer.draw(area + bounds.position)(
-						DrawSettings.onlyFill(bg.highlightedBy(highlightLevel * highlightModifier)))
+						DrawSettings.onlyFill(bg.highlightedBy(highlightLevel * settings.highlightModifier)))
 				}
 			
 			// Checks whether currently selected area and the mouse area overlap

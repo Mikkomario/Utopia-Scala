@@ -42,7 +42,7 @@ object SelectionListTest extends App
 					framingF.withBackground(Primary, Light).small.build(SelectionList) { listF =>
 						// Selection list
 						listF.apply(contentPointer, valuePointer, alternativeKeyCondition = true) { (hierarchy, item: Int) =>
-							MutableViewTextLabel(hierarchy).withContext(listF.context)
+							MutableViewTextLabel(hierarchy).withContext(listF.contextPointer.value)
 								.mapTextInsets { _.mapRight { _ + margins.large } }
 								.apply(item, DisplayFunction.interpolating("Label %s"))
 						}

@@ -8,15 +8,19 @@ import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.Package
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.builder.{CompoundingMapBuilder, CompoundingVectorBuilder}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
 import utopia.reach.coder.model.data.{ComponentFactory, ProjectData, Property}
-import utopia.reach.coder.model.enumeration.{ContextType, ReachFactoryTrait}
+import utopia.reach.coder.model.enumeration.{ContainerStyle, ContextType, ReachFactoryTrait}
 
 import java.nio.file.Path
+import scala.annotation.tailrec
+import scala.collection.immutable.VectorBuilder
+import scala.util.{Failure, Success}
 
 /**
   * Used for reading component factory data from json
@@ -43,35 +47,35 @@ object ComponentFactoryReader
 		val referenceAliases = referenceAliasesFrom(root("reference_aliases", "references", "aliases").getModel,
 			packageAliases)
 		// Parses the component factories
-		val factoriesBuilder = new CompoundingVectorBuilder[ComponentFactory]()
-		parseComponentFactoriesFrom(root("components").getModel, basePackage, factoriesBuilder, packageAliases,
+		val factories = componentFactoriesFrom(root("components").getModel, basePackage, packageAliases,
 			referenceAliases, author)
 		
-		ProjectData(projectName, factoriesBuilder.result(), version)
+		ProjectData(projectName, factories, version)
 	}
 	
 	private def packageAliasesFrom(aliases: Model) = {
 		val builder = new CompoundingMapBuilder[String, Package]()
 		// Each property represents a single package alias
-		aliases.properties.foreach { prop =>
-			val name = prop.name
-			val pck = prop.value.getString
-			// Case: / is used to refer to another package alias
-			if (pck.contains('/')) {
-				val (referred, afterRef) = pck.splitAtFirst("/")
-				val fullPackage = builder.get(referred) match {
-					// Case: Referred alias could be discerned from previously specified aliases
-					case Some(parent) => parent/afterRef
-					// Case: Referred alias couldn't be discerned => Prints a warning
-					case None =>
-						println(s"Warning: Reference '$referred' couldn't be determined for package alias '$name'")
-						Package(s"$referred.$afterRef")
+		resolveReferences(aliases.properties) { (props, unresolvedBuilder) =>
+			props.foreach { prop =>
+				val name = prop.name
+				val pck = prop.value.getString
+				// Case: / is used to refer to another package alias
+				if (pck.contains('/')) {
+					val (referred, afterRef) = pck.splitAtFirst("/")
+					builder.get(referred) match {
+						// Case: Referred alias could be discerned from previously specified aliases
+						case Some(parent) => builder += (name -> (parent / afterRef))
+						// Case: Referred alias couldn't be discerned => Unresolved
+						case None =>
+							unresolvedBuilder +=
+								(prop -> s"Reference '$referred' couldn't be determined for package alias '$name'")
+					}
 				}
-				builder += (name -> fullPackage)
+				// Case: This alias doesn't make references
+				else
+					builder += (name -> Package(pck))
 			}
-			// Case: This alias doesn't make references
-			else
-				builder += (name -> Package(pck))
 		}
 		builder.result()
 	}
@@ -102,30 +106,40 @@ object ComponentFactoryReader
 		}.toMap
 	}
 	
-	private def parseComponentFactoriesFrom(packagesModel: Model, parentPackage: Package,
-	                                        builder: CompoundingVectorBuilder[ComponentFactory],
-	                                        packageAliases: Map[String, Package],
-	                                        referenceAliases: Map[String, Reference], projectAuthor: String)
-	                                       (implicit naming: NamingRules): Unit =
+	private def componentFactoriesFrom(componentsModel: Model, basePackage: Package,
+	                                   packageAliases: Map[String, Package],
+	                                   referenceAliases: Map[String, Reference], projectAuthor: String)
+	                                  (implicit naming: NamingRules) =
 	{
+		val builder = new CompoundingVectorBuilder[ComponentFactory]()
+		// Reads all models and packages and then converts them to component factories
+		resolveReferences(componentModelsIteratorFrom(componentsModel, basePackage).toVector) { (models, unresolvedBuilder) =>
+			models.foreach { case (model, pck) =>
+				componentFactoryFrom(model, pck, packageAliases, referenceAliases, projectAuthor) { cName =>
+					builder.find { _.componentName ~== cName } } match
+				{
+					// Case: Conversion succeeded => Saves the factory
+					case Success(factory) => builder += factory
+					// Case: Conversion failed (missing reference) => Records as unresolved (tries again later)
+					case Failure(error) => unresolvedBuilder += ((model -> pck) -> error.getMessage)
+				}
+			}
+		}
+		builder.result()
+	}
+	
+	private def componentModelsIteratorFrom(packagesModel: Model, parentPackage: Package): Iterator[(Model, Package)] = {
 		// Each property is expected to represent a package
 		// Each property may either contain
 		//      1) Another package object, or
 		//      2) An array of component factory objects
-		packagesModel.properties.foreach { prop =>
-			val pck = parentPackage/prop.name
+		packagesModel.properties.iterator.flatMap { prop =>
+			val pck = parentPackage / prop.name
 			prop.value.castTo(ModelType, VectorType) match {
-				// Case: Package model => Parses the model contents
-				case Left(packageModelV) =>
-					parseComponentFactoriesFrom(packageModelV.getModel, pck, builder, packageAliases,
-						referenceAliases, projectAuthor)
-				// Case: An array of factory models => Parses the models and adds them to the builder
-				case Right(factoryArrayV) =>
-					factoryArrayV.getVector.foreach { v =>
-						val factory = componentFactoryFrom(v.getModel, pck, packageAliases, referenceAliases,
-							projectAuthor) { factoryName => builder.find { _.componentName ~== factoryName } }
-						builder += factory
-					}
+				// Case: Package model => Extracts models from the package
+				case Left(packageModelV) => componentModelsIteratorFrom(packageModelV.getModel, pck)
+				// Case: An array of factory models => Extracts the models
+				case Right(factoryArrayV) => factoryArrayV.getVector.iterator.map { _.getModel -> pck }
 			}
 		}
 	}
@@ -135,47 +149,59 @@ object ComponentFactoryReader
 	                                (factoryReferences: String => Option[ComponentFactory])
 	                                (implicit naming: NamingRules) =
 	{
-		ComponentFactory(
-			pck = parentPackage,
-			componentName = ClassName.from(model)
-				.getOrElse(Name.interpret("UnnamedComponent", CamelCase.capitalized)),
-			contextType = model("context").string.flatMap { input =>
-				val result = ContextType(input)
-				if (result.isEmpty)
-					println(s"Warning: No context type matches '$input'")
-				result
-			},
-			parentTraits = model("parents", "parent").getVector.flatMap { _.string.flatMap { input =>
-				val result = ReachFactoryTrait(input)
-				if (input.isEmpty)
-					println(s"Warning: No Reach factory trait matches '$input'")
-				result
-			} },
-			properties = model("properties", "props").getVector
-				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
-			nonContextualProperties = model("nonContextualProps", "non_contextual_props").getVector
-				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
-			contextualProperties = model("contextualProps", "contextual_props").getVector
-				.flatMap { _.model.map { propertyFrom(_, packageAliases, referenceAliases)(factoryReferences) } },
-			author = model("author").stringOr(projectAuthor),
-			onlyContextual = model("onlyContextual", "only_contextual").getBoolean,
-			useVariableContext = model("variable_context", "variableContext", "view", "variable").getBoolean
-		)
+		def propsFrom(propName: String, moreNames: String*) =
+			model(propName +: moreNames).getVector
+				.tryMap { v => propertyFrom(v.getModel, packageAliases, referenceAliases)(factoryReferences) }
+		
+		// Makes sure the property references can be resolved first
+		propsFrom("properties", "props").flatMap { props =>
+			propsFrom("nonContextualProps", "non_contextual_props")
+				.flatMap { nonContextualProps =>
+					propsFrom("contextualProps", "contextual_props").map { contextualProps =>
+						ComponentFactory(
+							pck = parentPackage,
+							componentName = ClassName.from(model)
+								.getOrElse(Name.interpret("UnnamedComponent", CamelCase.capitalized)),
+							contextType = model("context").string.flatMap { input =>
+								val result = ContextType(input)
+								if (result.isEmpty)
+									println(s"Warning: No context type matches '$input'")
+								result
+							},
+							parentTraits = model("parents", "parent").getVector.flatMap {
+								_.string.flatMap { input =>
+									val result = ReachFactoryTrait(input)
+									if (input.isEmpty)
+										println(s"Warning: No Reach factory trait matches '$input'")
+									result
+								}
+							},
+							containerType = model("container_type", "container").string.flatMap(ContainerStyle.apply),
+							properties = props,
+							nonContextualProperties = nonContextualProps,
+							contextualProperties = contextualProps,
+							author = model("author").stringOr(projectAuthor),
+							onlyContextual = model("onlyContextual", "only_contextual").getBoolean,
+							useVariableContext = model("variable_context", "variableContext", "view", "variable").getBoolean
+						)
+					}
+				}
+		}
 	}
 	
 	private def propertyFrom(model: Model, packageAliases: Map[String, Package],
-	                         referenceAliases: Map[String, Reference])
-	                        (factoryReferences: String => Option[ComponentFactory])
-	                        (implicit naming: NamingRules) =
+	                          referenceAliases: Map[String, Reference])
+	                         (factoryReferences: String => Option[ComponentFactory])
+	                         (implicit naming: NamingRules) =
 	{
 		val description = model("description", "doc").getString
 		// Checks whether the property refers to another component, or whether it is a standard property
 		model("reference", "ref", "factory", "settings").string match {
 			// Case: Reference property => Attempts to resolve the reference
 			case Some(reference) =>
-				factoryReferences(reference) match {
-					// Case: Reference resolved => Forms a property
-					case Some(factory) =>
+				factoryReferences(reference)
+					.toTry { new NoSuchElementException(s"Couldn't resolve component factory reference '$reference'") }
+					.map { factory =>
 						val prefix = model("prefix").string match {
 							case Some(prefix) =>
 								model("prefix_plural").string match {
@@ -187,11 +213,7 @@ object ComponentFactoryReader
 						}
 						Property.referringTo(factory, prefix, description,
 							model("prefix_properties", "prefix_props").booleanOr(true))
-					// Case: Reference couldn't be resolved => Warns and forms a placeholder property
-					case None =>
-						println(s"Couldn't resolve component factory reference '$reference'")
-						Property.simple(reference, ScalaType.basic(reference))
-				}
+					}
 			// Case: Standard property
 			case None =>
 				val name: Name = ClassPropName.from(model).getOrElse { "unnamedProperty" }
@@ -203,10 +225,10 @@ object ComponentFactoryReader
 					case Some(custom) => Name.interpret(custom, naming(ClassPropName))
 					case None => name
 				}
-				Property(name, scalaTypeFrom(model("type").getString, packageAliases, referenceAliases),
+				Success(Property(name, scalaTypeFrom(model("type").getString, packageAliases, referenceAliases),
 					setterName, paramName,
 					CodePiece.fromValue(model("default"), packageAliases, referenceAliases).getOrElse(CodePiece.empty),
-					None, description, model("mapping_enabled", "mapping", "map").getBoolean)
+					None, description, model("mapping_enabled", "mapping", "map").getBoolean))
 		}
 	}
 	
@@ -243,5 +265,28 @@ object ComponentFactoryReader
 					else
 						ScalaType.basic(typeString)
 			}
+	}
+	
+	// Used for resolving references, reattempting the cases where the references couldn't be resolved
+	@tailrec
+	private def resolveReferences[A](input: Vector[A])(processInput: (Vector[A], VectorBuilder[(A, String)]) => Unit): Unit =
+	{
+		if (input.nonEmpty) {
+			// Collects the unresolved cases
+			val unresolvedBuilder = new VectorBuilder[(A, String)]()
+			processInput(input, unresolvedBuilder)
+			val unresolved = unresolvedBuilder.result()
+			// Case: Some cases were unresolved
+			if (unresolved.nonEmpty) {
+				// Case: None of the input cases were resolved => Fails
+				if (unresolved.hasSize == input) {
+					println(s"Failed to resolve ${unresolved.size} references:")
+					unresolved.foreach { case (_, message) => println(s"\t- $message") }
+				}
+				// Case: Some of the input cases were resolved => Attempts again
+				else
+					resolveReferences(unresolved.map { _._1 })(processInput)
+			}
+		}
 	}
 }

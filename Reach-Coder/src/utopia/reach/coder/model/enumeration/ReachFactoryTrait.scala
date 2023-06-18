@@ -43,7 +43,7 @@ object ReachFactoryTrait
 {
 	// ATTRIBUTES   --------------------
 	
-	val values = Vector[ReachFactoryTrait](FramedFactory, CustomDrawableFactory)
+	val values = Vector[ReachFactoryTrait](FramedFactory, CustomDrawableFactory, FocusListenableFactory)
 	
 	
 	// OTHER    ------------------------
@@ -81,6 +81,9 @@ object ReachFactoryTrait
 		
 		override def reference: Reference = customDrawableFactory
 	}
+	/**
+	  * Common factory for components that support focus-listening
+	  */
 	case object FocusListenableFactory extends ReachFactoryTrait
 	{
 		override val keyword: String = "focus"

@@ -18,7 +18,7 @@ import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
 import utopia.reach.container.ReachCanvas
-import utopia.reach.container.multi.Stack
+import utopia.reach.container.multi.{Stack, StackSettings}
 import utopia.reach.container.wrapper.Framing
 
 import scala.language.implicitConversions
@@ -351,8 +351,8 @@ object OpenComponent
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 			   (implicit context: BaseContext, canvas: ReachCanvas) =
 			Open.withContext(context).apply(Stack) { sf =>
-				val stack = sf.copy(axis = direction, layout = layout, cap = cap, customDrawers = customDrawers,
-					areRelated = areRelated)(c)
+				val settings = StackSettings(axis = direction, layout = layout, cap = cap, customDrawers = customDrawers)
+				val stack = sf.copy(settings = settings, areRelated = areRelated)(c)
 				stack.parent -> stack.result
 			}
 		

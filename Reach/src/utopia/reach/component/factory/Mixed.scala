@@ -1,5 +1,6 @@
 package utopia.reach.component.factory
 
+import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.factory.contextual.GenericContextualFactory
@@ -16,6 +17,7 @@ case class Mixed(parentHierarchy: ComponentHierarchy)
 	extends FromGenericContextFactory[Any, ContextualMixed]
 {
 	override def withContext[N](context: N) = ContextualMixed(parentHierarchy, context)
+	def withContextPointer[N](p: Changing[N]) = VariableContextualMixed(parentHierarchy, p)
 	
 	/**
 	  * @param factoryFactory A component factory factory
@@ -55,4 +57,17 @@ case class ContextualMixed[N](parentHierarchy: ComponentHierarchy, context: N)
 	  * @return A contextual component factory from the specified factory that uses the context from this item
 	  */
 	def apply[F](ff: FromContextComponentFactoryFactory[N, F]) = ff.withContext(parentHierarchy, context)
+}
+
+case class VariableContextualMixed[N](parentHierarchy: ComponentHierarchy, contextPointer: Changing[N])
+{
+	def withoutContext = Mixed(parentHierarchy)
+	
+	def withContextPointer[N2](p: Changing[N2]) = copy(contextPointer = p)
+	def withContext[N2](context: N2) = ContextualMixed(parentHierarchy, context)
+	
+	def apply[F](ff: FromVariableContextComponentFactoryFactory[N, F]) =
+		ff.withContextPointer(parentHierarchy, contextPointer)
+	def static[F](ff: FromContextComponentFactoryFactory[N, F]) =
+		ff.withContext(parentHierarchy, contextPointer.value)
 }

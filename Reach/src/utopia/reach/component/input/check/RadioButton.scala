@@ -119,6 +119,7 @@ case class ContextualRadioButtonFactory(factory: RadioButtonFactory, context: Co
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
+// TODO: Add radio button creation settings
 class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
                      representing: A, backgroundColorPointer: Changing[Color],
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,

@@ -16,6 +16,9 @@ object Regex
 	
 	val anySingle = Regex(".")
 	val any = anySingle.anyTimes
+	/**
+	  * Accepts individual digits [0-9]
+	  */
 	val digit = Regex("\\d")
 	val nonDigit = Regex("\\D")
 	val whiteSpace = Regex("\\s")
@@ -33,15 +36,42 @@ object Regex
 	
 	val lowerCaseLetter = Regex("[a-zåäö]")
 	val upperCaseLetter = Regex("[A-ZÅÄÖ]")
+	/**
+	  * Accepts lower- and upper-case letters
+	  */
 	val alpha = Regex("[a-zA-ZåäöÅÄÖ]")
+	/**
+	  * Accepts any positive integer
+	  */
 	val numericPositive = digit.oneOrMoreTimes
+	/**
+	  * Accepts any integer (positive or negative)
+	  */
 	val numeric = Regex("\\-").noneOrOnce + numericPositive
+	/**
+	  * Accepts digits and characters
+	  */
 	val alphaNumeric = (alpha || digit).withinParenthesis
+	/**
+	  * Accepts positive integers and decimal numbers
+	  */
 	val decimalPositive = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParenthesis.noneOrOnce
+	/**
+	  * Accepts any integer or decimal number
+	  */
 	val decimal = Regex("\\-").noneOrOnce + decimalPositive
 	
+	/**
+	  * Accepts any character that appears in a decimal number
+	  */
 	val decimalParts = Regex("[-\\d,\\.]")
+	/**
+	  * Accepts any character that accepts in a positive decimal number
+	  */
 	val decimalPositiveParts = Regex("[\\d,\\.]")
+	/**
+	  * Accepts any character that appears in an integer (positive or negative)
+	  */
 	val numericParts = Regex("[-\\d]")
 	
 	/**

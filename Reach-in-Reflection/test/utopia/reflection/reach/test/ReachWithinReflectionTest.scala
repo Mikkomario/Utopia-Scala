@@ -1,17 +1,16 @@
 package utopia.reflection.reach.test
 
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.input.text.TextField
-import utopia.reflection.reach.ReflectionReachCanvas
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
+import utopia.reflection.reach.ReflectionReachCanvas
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -24,14 +23,15 @@ object ReachWithinReflectionTest extends App
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	ParadigmDataType.setup()
-	import utopia.reflection.test.TestContext._
 	import utopia.reach.test.TestCursors._
+	import utopia.reflection.test.TestContext._
 	
 	val textPointer = new PointerWithEvents[String]("")
 	val background = colorScheme.gray.light
 	val canvas = ReflectionReachCanvas(Color.black.withAlpha(0.0), cursors) { hierarchy =>
 		TextField.withContext(hierarchy, baseContext.against(background).forTextComponents)
-			.forString(320.any, fieldNamePointer = Fixed("Test Field"), textPointer = textPointer)
+			.withFieldName("Test Field")
+			.string(320.any, textPointer = textPointer)
 	}
 	
 	val button = baseContext.against(background).forTextComponents.withBackground(Secondary).use { implicit c =>

@@ -4,175 +4,90 @@ import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.TextDrawContext
-import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorRole}
-import utopia.paradigm.color.ColorRole.Secondary
-import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.{FocusListenableFactory, FromContextFactory}
-import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
+import utopia.paradigm.color.ColorRole
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
+import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.focus.FocusListener
 
 import scala.concurrent.duration.Duration
 
-object SelectableTextLabel extends Cff[SelectableTextLabelFactory]
+/**
+  * Common trait for selectable text label factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+trait SelectableTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with FocusListenableFactory[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new SelectableTextLabelFactory(hierarchy)
-}
-
-class SelectableTextLabelFactory(hierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualSelectableTextLabelFactory]
-{
-	override def withContext(context: TextContext) = ContextualSelectableTextLabelFactory(this, context)
+	// ABSTRACT	--------------------
 	
 	/**
-	  * Creates a new text label with text selection enabled
-	  * @param actorHandler Actor handler that is used for blinking the caret
-	  * @param textPointer A pointer to the displayed text
-	  * @param stylePointer A pointer to the style the text is displayed with
-	  * @param selectedTextColorPointer A pointer to the color to use on selected text (default = always black)
-	  * @param selectionBackgroundColorPointer A pointer that contains the
-	  *                                        current selection area background color to use (if present,
-	  *                                        default = always none)
-	  * @param caretColorPointer A pointer that determines caret color (default = always black)
-	  * @param caretWidth Caret width in pixels (default = 1 px)
-	  * @param caretBlinkFrequency How often caret visibility changes (default = global default)
-	  * @param customDrawers Custom drawers to assign to this label (default = empty)
-	  * @param focusListeners Focus listeners to assign to this label (default = empty)
-	  * @param allowTextShrink Whether text should be allowed to be shrunk
-	  *                        to conserve space when necessary (default = false)
-	  * @return A new selectable text label
+	  * A pointer that determines the color used when highlighting selected text
 	  */
-	def apply(actorHandler: ActorHandler, textPointer: Changing[LocalizedString],
-	          stylePointer: Changing[TextDrawContext],
-	          selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
-	          selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
-	          caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
-	          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector(),
-	          allowTextShrink: Boolean = false) =
-		new SelectableTextLabel(hierarchy, actorHandler, textPointer, stylePointer, selectedTextColorPointer,
-			selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency, customDrawers,
-			focusListeners, allowTextShrink)
+	def highlightColorPointer: Changing[ColorRole]
+	/**
+	  * A pointer that, if defined, determines the color of the caret when drawn
+	  */
+	def customCaretColorPointer: Option[Changing[ColorRole]]
+	/**
+	  * Interval between caret visibility changes
+	  */
+	def caretBlinkFrequency: Duration
+	/**
+	  * Whether selected area background should be highlighted.
+	  * If false, only highlights selected text.
+	  */
+	def drawsSelectionBackground: Boolean
 	
 	/**
-	  * Creates a new selectable text label with fixed style settings
-	  * @param actorHandler Actor handler that is used for blinking the caret
-	  * @param textPointer A pointer to the displayed text
-	  * @param font Font used when drawing text
-	  * @param textColor Color used when drawing non-selected text (default = black)
-	  * @param selectedTextColor Color used when drawing selected text (default = black)
-	  * @param selectionBackgroundColor Selected area background color (optional)
-	  * @param caretColor Color used when drawing the caret (default = black)
-	  * @param caretWidth Width of the caret in pixels (default = 1 px)
-	  * @param insets Insets placed around the text (default = any, preferring 0)
-	  * @param betweenLinesMargin Margin placed between text when there are multiple lines (default = 0 px)
-	  * @param alignment Text alignment to use (default = Left)
-	  * @param caretBlinkFrequency How often caret visibility changes (default = global default)
-	  * @param customDrawers Custom drawers to assign to this label (default = empty)
-	  * @param focusListeners Focus listeners to assign to this label (default = empty)
-	  * @param allowLineBreaks Whether line breaks should be allowed within the text (default = true)
-	  * @param allowTextShrink Whether text should be allowed to be shrunk
-	  *                        to conserve space when necessary (default = false)
-	  * @return A new selectable text label
+	  * A pointer that, if defined, determines the color of the caret when drawn
+	  * @param p New custom caret color pointer to use.
+	  *          A pointer that, if defined, determines the color of the caret when drawn
+	  * @return Copy of this factory with the specified custom caret color pointer
 	  */
-	def withStaticStyle(actorHandler: ActorHandler, textPointer: Changing[LocalizedString], font: Font,
-	                    textColor: Color = Color.textBlack, selectedTextColor: Color = Color.textBlack,
-	                    selectionBackgroundColor: Option[Color] = None, caretColor: Color = Color.textBlack,
-	                    caretWidth: Double = 1.0, insets: StackInsets = StackInsets.any,
-	                    betweenLinesMargin: Double = 0.0, alignment: Alignment = Alignment.Left,
-	                    caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-	                    customDrawers: Vector[CustomDrawer], focusListeners: Seq[FocusListener],
-	                    allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		apply(actorHandler, textPointer,
-			Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)),
-			Fixed(selectedTextColor), Fixed(selectionBackgroundColor), Fixed(caretColor), caretWidth,
-			caretBlinkFrequency, customDrawers, focusListeners, allowTextShrink)
-	
+	def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]): Repr
 	/**
-	  * Creates a new selectable text label with fixed content and style
-	  * @param actorHandler Actor handler that is used for blinking the caret
-	  * @param text Text to display on this label
-	  * @param font Font used when drawing text
-	  * @param textColor Color used when drawing non-selected text (default = black)
-	  * @param selectedTextColor Color used when drawing selected text (default = black)
-	  * @param selectionBackgroundColor Selected area background color (optional)
-	  * @param caretColor Color used when drawing the caret (default = black)
-	  * @param caretWidth Width of the caret in pixels (default = 1 px)
-	  * @param insets Insets placed around the text (default = any, preferring 0)
-	  * @param betweenLinesMargin Margin placed between text when there are multiple lines (default = 0 px)
-	  * @param alignment Text alignment to use (default = Left)
-	  * @param caretBlinkFrequency How often caret visibility changes (default = global default)
-	  * @param customDrawers Custom drawers to assign to this label (default = empty)
-	  * @param focusListeners Focus listeners to assign to this label (default = empty)
-	  * @param allowLineBreaks Whether line breaks should be allowed within the text (default = true)
-	  * @param allowTextShrink Whether text should be allowed to be shrunk
-	  *                        to conserve space when necessary (default = false)
-	  * @return A new selectable text label
+	  * Interval between caret visibility changes
+	  * @param frequency New caret blink frequency to use.
+	  *                  Interval between caret visibility changes
+	  * @return Copy of this factory with the specified caret blink frequency
 	  */
-	def static(actorHandler: ActorHandler, text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
-	           selectedTextColor: Color = Color.textBlack, selectionBackgroundColor: Option[Color] = None,
-	           caretColor: Color = Color.textBlack, caretWidth: Double = 1.0, insets: StackInsets = StackInsets.any,
-	           betweenLinesMargin: Double = 0.0, alignment: Alignment = Alignment.Left,
-	           caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-	           customDrawers: Vector[CustomDrawer], focusListeners: Seq[FocusListener],
-	           allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		withStaticStyle(actorHandler, Fixed(text), font, textColor, selectedTextColor, selectionBackgroundColor,
-			caretColor, caretWidth, insets, betweenLinesMargin, alignment, caretBlinkFrequency, customDrawers,
-			focusListeners, allowLineBreaks, allowTextShrink)
-}
-
-case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFactory, context: TextContext,
-                                                highlightColorPointer: Changing[ColorRole] = Fixed(Secondary),
-                                                customDrawers: Vector[CustomDrawer] = Vector(),
-                                                focusListeners: Vector[FocusListener] = Vector(),
-                                                caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-                                                customStylePointer: Option[Changing[TextDrawContext]] = None,
-                                                customSelectedTextColorPointer: Option[Changing[Color]] = None,
-                                                customSelectionBackgroundColorPointer: Option[Changing[Option[Color]]] = None,
-                                                customCaretColorPointer: Option[Changing[Color]] = None)
-	extends TextContextualFactory[ContextualSelectableTextLabelFactory]
-		with FocusListenableFactory[ContextualSelectableTextLabelFactory]
-		with CustomDrawableFactory[ContextualSelectableTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[TextContext, ContextualSelectableTextLabelFactory]
-{
-	// COMPUTED -------------------------------
+	def withCaretBlinkFrequency(frequency: Duration): Repr
+	/**
+	  * Whether selected area background should be highlighted.
+	  * If false, only highlights selected text.
+	  * @param drawBackground New draws selection background to use.
+	  *                       Whether selected area background should be highlighted.
+	  *                       If false, only highlights selected text.
+	  * @return Copy of this factory with the specified draws selection background
+	  */
+	def withDrawSelectionBackground(drawBackground: Boolean): Repr
+	/**
+	  * A pointer that determines the color used when highlighting selected text
+	  * @param p New highlight color pointer to use.
+	  *          A pointer that determines the color used when highlighting selected text
+	  * @return Copy of this factory with the specified highlight color pointer
+	  */
+	def withHighlightColorPointer(p: Changing[ColorRole]): Repr
 	
-	private def stylePointer =
-		customStylePointer.getOrElse { Fixed(TextDrawContext.contextual(context)) }
+	
+	// COMPUTED --------------------
 	
 	/**
 	  * @return Copy of this factory that doesn't draw a background for selected text
 	  */
-	def withoutSelectionBackground = withSelectionBackgroundPointer(Fixed(None))
+	def withoutSelectionBackground = withDrawSelectionBackground(false)
 	
 	
-	// IMPLEMENTED  ---------------------------
+	// OTHER	--------------------
 	
-	override def self: ContextualSelectableTextLabelFactory = this
+	def mapCaretBlinkFrequency(f: Duration => Duration) = withCaretBlinkFrequency(f(caretBlinkFrequency))
+	def mapHighlightColorPointer(f: Changing[ColorRole] => Changing[ColorRole]) =
+		withHighlightColorPointer(f(highlightColorPointer))
 	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
-	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualSelectableTextLabelFactory =
-		copy(customDrawers = drawers)
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
-		copy(focusListeners = listeners)
-	
-	
-	// OTHER    -------------------------------
-	
-	/**
-	  * @param p A pointer that contains the highlight color role to use
-	  * @return Copy of this factory that uses the specified pointer
-	  */
-	def withHighlightColorPointer(p: Changing[ColorRole]) =
-		copy(highlightColorPointer = p)
 	/**
 	  * @param c Highlighting color to use for selection
 	  * @return Copy of this factory with that highlighting color in place
@@ -180,58 +95,137 @@ case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFact
 	def withHighlightColor(c: ColorRole) = withHighlightColorPointer(Fixed(c))
 	
 	/**
-	  * @param interval Interval between caret visibility changes
-	  * @return Copy of this factory with specified blink frequency
-	  */
-	def withCaretBlinkFrequency(interval: Duration) = copy(caretBlinkFrequency = interval)
-	
-	/**
-	  * @param p A pointer that overrides normal text draw style
-	  * @return Copy of this factory that uses the specified text style pointer
-	  */
-	def withStylePointer(p: Changing[TextDrawContext]) =
-		copy(customStylePointer = Some(p))
-	def withStyle(s: TextDrawContext) = withStylePointer(Fixed(s))
-	def mapStyle(f: TextDrawContext => TextDrawContext) =
-		withStylePointer(stylePointer.map(f))
-	
-	/**
-	  * @param p Pointer that determines (overrides) the color of selected text
-	  * @return Copy of this factory that uses the specified pointer
-	  */
-	def withSelectedTextColorPointer(p: Changing[Color]) =
-		copy(customSelectedTextColorPointer = Some(p))
-	/**
-	  * @param c Color to use for selected text
-	  * @return Copy of this factory with the specified selected text color
-	  */
-	def withSelectedTextColor(c: Color) = withSelectedTextColorPointer(Fixed(c))
-	
-	/**
-	  * @param p A pointer that determines the (text) selection background color,
-	  *          containing None while there shall be no background drawn.
-	  * @return A copy of this factory that uses the specified pointer
-	  */
-	def withSelectionBackgroundPointer(p: Changing[Option[Color]]) =
-		copy(customSelectionBackgroundColorPointer = Some(p))
-	/**
-	  * @param c Background color for selected text
-	  * @return Copy of this factory that uses the specified background color
-	  */
-	def withSelectionBackground(c: Color) =
-		withSelectionBackgroundPointer(Fixed(Some(c)))
-	
-	/**
 	  * @param p Pointer that determines the caret color to use
 	  * @return Copy of this factory that uses the specified pointer
 	  */
-	def withCaretColorPointer(p: Changing[Color]) =
-		copy(customCaretColorPointer = Some(p))
+	def withCaretColorPointer(p: Changing[ColorRole]) =
+		withCustomCaretColorPointer(Some(p))
 	/**
 	  * @param c Color for the caret
 	  * @return Copy of this factory with the specified caret color
 	  */
-	def withCaretColor(c: Color) = withCaretColorPointer(Fixed(c))
+	def withCaretColor(c: ColorRole) = withCaretColorPointer(Fixed(c))
+}
+
+object SelectableTextLabelSettings
+{
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
+}
+
+/**
+  * Combined settings used when constructing selectable text labels
+  * @param customDrawers            Custom drawers to assign to created components
+  * @param focusListeners           Focus listeners to assign to created components
+  * @param highlightColorPointer    A pointer that determines the color used when highlighting selected text
+  * @param customCaretColorPointer  A pointer that, if defined, determines the color of the caret when drawn
+  * @param caretBlinkFrequency      Interval between caret visibility changes
+  * @param drawsSelectionBackground Whether selected area background should be highlighted.
+  *                                 If false, only highlights selected text.
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+case class SelectableTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+                                       focusListeners: Vector[FocusListener] = Vector.empty,
+                                       highlightColorPointer: Changing[ColorRole] = Fixed(ColorRole.Secondary),
+                                       customCaretColorPointer: Option[Changing[ColorRole]] = None,
+                                       caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+                                       drawsSelectionBackground: Boolean = true)
+	extends SelectableTextLabelSettingsLike[SelectableTextLabelSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withFocusListeners(listeners: Vector[FocusListener]): SelectableTextLabelSettings =
+		copy(focusListeners = listeners)
+	override def withCaretBlinkFrequency(frequency: Duration) =
+		copy(caretBlinkFrequency = frequency)
+	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
+		copy(customCaretColorPointer = p)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		copy(customDrawers = drawers)
+	override def withDrawSelectionBackground(drawBackground: Boolean) =
+		copy(drawsSelectionBackground = drawBackground)
+	override def withHighlightColorPointer(p: Changing[ColorRole]) =
+		copy(highlightColorPointer = p)
+}
+
+/**
+  * Common trait for factories that wrap a selectable text label settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+trait SelectableTextLabelSettingsWrapper[+Repr] extends SelectableTextLabelSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: SelectableTextLabelSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: SelectableTextLabelSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def caretBlinkFrequency = settings.caretBlinkFrequency
+	override def customCaretColorPointer = settings.customCaretColorPointer
+	override def customDrawers = settings.customDrawers
+	override def drawsSelectionBackground = settings.drawsSelectionBackground
+	override def highlightColorPointer = settings.highlightColorPointer
+	override protected def focusListeners: Vector[FocusListener] = settings.focusListeners
+	
+	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
+		mapSettings { _.withFocusListeners(listeners) }
+	override def withCaretBlinkFrequency(frequency: Duration) =
+		mapSettings { _.withCaretBlinkFrequency(frequency) }
+	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
+		mapSettings { _.withCustomCaretColorPointer(p) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		mapSettings { _.withCustomDrawers(drawers) }
+	override def withDrawSelectionBackground(drawBackground: Boolean) =
+		mapSettings { _.withDrawSelectionBackground(drawBackground) }
+	override def withHighlightColorPointer(p: Changing[ColorRole]) =
+		mapSettings { _.withHighlightColorPointer(p) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: SelectableTextLabelSettings => SelectableTextLabelSettings) = withSettings(f(settings))
+}
+
+/**
+  * Factory class used for constructing selectable text labels using contextual component creation information
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierarchy,
+                                                contextPointer: Changing[TextContext],
+                                                settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
+                                                drawsBackground: Boolean = false)
+	extends SelectableTextLabelSettingsWrapper[ContextualSelectableTextLabelFactory]
+		with VariableContextualFactory[TextContext, ContextualSelectableTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualSelectableTextLabelFactory]
+{
+	// IMPLEMENTED  ---------------------------
+	
+	override def withContextPointer(contextPointer: Changing[TextContext]) =
+		copy(contextPointer = contextPointer)
+	override def withSettings(settings: SelectableTextLabelSettings) =
+		copy(settings = settings)
+	
+	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	                                                     backgroundDrawer: CustomDrawer): ContextualSelectableTextLabelFactory =
+		copy(contextPointer = newContextPointer, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
+			drawsBackground = true)
+	
+	
+	// OTHER    -------------------------------
 	
 	/**
 	  * Creates a new selectable text label
@@ -239,34 +233,46 @@ case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFact
 	  * @return A new selectable text label
 	  */
 	def apply(textPointer: Changing[LocalizedString]) = {
-		// Uses custom selection background, if specified
-		val selectionBgPointer = customSelectionBackgroundColorPointer.getOrElse {
-			// By default, highlights using the specified highlight color
-			highlightColorPointer.map { c => Some(context.color.light(c)) }
+		val label = new SelectableTextLabel(parentHierarchy, contextPointer, textPointer, settings)
+		contextPointer.addContinuousListener { e =>
+			if (e.toPair.isAsymmetricBy { _.background })
+				label.repaint()
 		}
-		// Picks the selected text color based on the selection background
-		val selectedTextColorPointer = selectionBgPointer.mergeWith(highlightColorPointer)  { (bg, c) =>
-			bg match {
-				// Case: Selection background is colored => Uses black or white text
-				case Some(bg) => bg.shade.defaultTextColor
-				// Case: No selection background is used => Uses colored text
-				case None => context.color(c)
-			}
-		}
-		// Determines the caret color based on selection background
-		val caretColorPointer = customCaretColorPointer.getOrElse {
-			selectionBgPointer.mergeWith(highlightColorPointer) { (bg, c) =>
-				bg match {
-					// Case: Colored selection background => Uses a color that may be distinguished from the background
-					case Some(bg) => context.color.differentFrom(c, bg)
-					case None => context.color(c)
-				}
-			}
-		}
-		factory(context.actorHandler, textPointer, stylePointer, selectedTextColorPointer, selectionBgPointer,
-			caretColorPointer, (context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, customDrawers,
-			focusListeners, context.allowTextShrink)
+		label
 	}
+}
+
+/**
+  * Used for defining selectable text label creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 01.06.2023, v1.1
+  */
+case class SelectableTextLabelSetup(settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default)
+	extends SelectableTextLabelSettingsWrapper[SelectableTextLabelSetup]
+		with FromContextComponentFactoryFactory[TextContext, ContextualSelectableTextLabelFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+		ContextualSelectableTextLabelFactory(hierarchy, Fixed(context), settings)
+	
+	override def withSettings(settings: SelectableTextLabelSettings) = copy(settings = settings)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @return A new selectable text label factory that uses the specified (variable) context
+	  */
+	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
+		ContextualSelectableTextLabelFactory(hierarchy, context, settings)
+}
+
+object SelectableTextLabel extends SelectableTextLabelSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: SelectableTextLabelSettings) = withSettings(settings)
 }
 
 /**
@@ -274,24 +280,10 @@ case class ContextualSelectableTextLabelFactory(factory: SelectableTextLabelFact
   * @author Mikko Hilpinen
   * @since 14.5.2021, v0.3
   */
-class SelectableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-                          val textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
-                          selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
-                          selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
-                          caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
-                          caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-                          additionalCustomDrawers: Vector[CustomDrawer], additionalFocusListeners: Seq[FocusListener],
-                          allowTextShrink: Boolean = false)
-	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler, textPointer,
-		stylePointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColorPointer, caretWidth,
-		caretBlinkFrequency, allowTextShrink)
+class SelectableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+                          val textPointer: Changing[LocalizedString], settings: SelectableTextLabelSettings)
+	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer, textPointer, settings)
 {
-	// ATTRIBUTES   --------------------------------
-	
-	override val customDrawers = mainDrawer +: additionalCustomDrawers
-	override val focusListeners = FocusHandler +: additionalFocusListeners
-	
-	
 	// COMPUTED ------------------------------
 	
 	def text = textPointer.value

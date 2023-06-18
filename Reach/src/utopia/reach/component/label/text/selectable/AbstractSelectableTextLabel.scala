@@ -1,32 +1,32 @@
 package utopia.reach.component.label.text.selectable
 
-import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.component.text.TextComponent
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.view.SelectableTextViewDrawer
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.StringExtensions._
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling._
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.paradigm.shape.shape2d.Point
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
-import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.drawing.Priority.VeryHigh
-import utopia.firmament.drawing.view.SelectableTextViewDrawer
-import utopia.firmament.component.text.TextComponent
-import utopia.firmament.localization.LocalizedString
+import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
 
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, StringSelection, Transferable}
@@ -36,19 +36,15 @@ import scala.util.Try
 
 /**
   * Displays text in a label while also allowing focus and text selection. Doesn't provide edit features.
-  * The subclasses should register FocusHandler (inner object) as a focus listener.
   * @author Mikko Hilpinen
   * @since 30.10.2020, v0.3
   */
 // TODO: Create a password mode where text is not displayed nor copyable
-abstract class AbstractSelectableTextLabel
-(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
- textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
- selectedTextColorPointer: Changing[Color] = Fixed(Color.textBlack),
- selectionBackgroundColorPointer: Changing[Option[Color]] = Fixed(None),
- caretColorPointer: Changing[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
- caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
- override val allowTextShrink: Boolean = false)
+abstract class AbstractSelectableTextLabel(override val parentHierarchy: ComponentHierarchy,
+                                           contextPointer: Changing[TextContext],
+                                           textPointer: Changing[LocalizedString],
+                                           settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
+                                           enabledPointer: Changing[Boolean] = AlwaysTrue)
 	extends CustomDrawReachComponent with TextComponent with Focusable with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
@@ -56,6 +52,10 @@ abstract class AbstractSelectableTextLabel
 	private var draggingMouse = false
 	
 	override val focusId = hashCode()
+	private val stylePointer = contextPointer.mergeWith(enabledPointer) { (context, enabled) =>
+		val base = TextDrawContext.contextual(context)
+		if (enabled) base else base.mapColor { _.timesAlpha(0.66) }
+	}
 	/**
 	  * A pointer to this label's measured text information
 	  */
@@ -70,15 +70,42 @@ abstract class AbstractSelectableTextLabel
 	// Selected range is in caret indices
 	private val selectedRangePointer = new PointerWithEvents[Option[(Int, Int)]](None)
 	
+	private val (selectionBgPointer, selectedTextColorPointer, caretColorPointer) = {
+		// Case: Draws text selection background => Other colors are also affected
+		if (settings.drawsSelectionBackground) {
+			// Highlights using the specified highlight color
+			val selectionBgPointer = contextPointer.mergeWith(settings.highlightColorPointer) { _.color.light(_) }
+			// Picks the selected text color based on the selection background
+			val selectedTextColorPointer = selectionBgPointer.map { _.shade.defaultTextColor }
+			// Determines the caret color based on selection background
+			val caretColorPointer = settings.customCaretColorPointer.getOrElse(settings.highlightColorPointer)
+				.mergeWith(selectionBgPointer, contextPointer) { (role, selectionBg, context) =>
+					context.color.differentFrom(role, selectionBg)
+				}
+			(Some(selectionBgPointer), selectedTextColorPointer, caretColorPointer)
+		}
+		// Case: Doesn't draw selection background => Highlights with colored text
+		else {
+			val selectionColorPointer = contextPointer.mergeWith(settings.highlightColorPointer) { _.color(_) }
+			val caretColorPointer = settings.customCaretColorPointer match {
+				case Some(custom) => contextPointer.mergeWith(custom) { _.color(_) }
+				case None => selectionColorPointer
+			}
+			(None, selectionColorPointer, caretColorPointer)
+		}
+	}
 	/**
 	  * The drawer that paints the contents of this component.
-	  * Needs to be registered as a custom drawer to this component.
 	  */
-	protected val mainDrawer = SelectableTextViewDrawer(measuredTextPointer, stylePointer,
+	private val mainDrawer = SelectableTextViewDrawer(measuredTextPointer, stylePointer,
 		selectedRangePointer.map { _.map { case (start, end) => if (start < end) start to end else end to start } },
-		drawnCaretPointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColorPointer, caretWidth)
+		drawnCaretPointer, selectedTextColorPointer, View { selectionBgPointer.map { _.value } }, caretColorPointer,
+		View { caretWidth })
 	private val repaintListener = ChangeListener.onAnyChange { repaint() }
 	private val showCaretListener = ChangeListener.onAnyChange { if (hasFocus) CaretBlinker.show() }
+	
+	override val focusListeners: Seq[FocusListener] = FocusHandler +: settings.focusListeners
+	override val customDrawers: Vector[CustomDrawer] = mainDrawer +: settings.customDrawers
 	
 	
 	// ABSTRACT -----------------------------------
@@ -125,31 +152,32 @@ abstract class AbstractSelectableTextLabel
 	
 	private def _text = textPointer.value.string
 	
+	private def caretWidth = (contextPointer.value.margins.verySmall * 0.66) max 1.0
+	
 	
 	// IMPLEMENTED	-------------------------------
 	
 	override def updateLayout() = ()
 	
 	override def measuredText = measuredTextPointer.value
-	
 	override def textDrawContext = stylePointer.value
 	
 	override def allowsFocusEnter = selectable
+	override def allowTextShrink: Boolean = contextPointer.value.allowTextShrink
 	
 	override def cursorType = if (selectable) Text else Default
-	
 	override def cursorBounds = boundsInsideTop
 	
 	override def cursorToImage(cursor: Cursor, position: Point) = {
 		// If hovering over a selected area, bases cursor color on that
 		// Otherwise proposes standard text color
-		selectionBackgroundColorPointer.value match {
-			case Some(selectedAreaBackground) =>
+		selectionBgPointer match {
+			case Some(bgPointer) =>
 				val highlightAreas = mainDrawer.drawTargets._2
 				lazy val positionInTextBounds = ((this.position + position) -
 					mainDrawer.lastDrawPosition) * mainDrawer.lastDrawScaling
 				if (highlightAreas.nonEmpty && highlightAreas.exists { _._3.contains(positionInTextBounds) })
-					cursor.over(selectedAreaBackground)
+					cursor.over(bgPointer.value)
 				else
 					cursor.proposing(textColor)
 			case None => cursor.proposing(textColor)
@@ -165,6 +193,7 @@ abstract class AbstractSelectableTextLabel
 	  */
 	protected def setup() = {
 		// Registers some listeners only while attached to top hierarchy
+		lazy val actorHandler = contextPointer.value.actorHandler
 		addHierarchyListener { isAttached =>
 			if (isAttached) {
 				enableFocusHandling()
@@ -201,7 +230,7 @@ abstract class AbstractSelectableTextLabel
 		caretColorPointer.addListener(repaintListener)
 		selectedRangePointer.addListener(repaintListener)
 		selectedTextColorPointer.addListener(repaintListener)
-		selectionBackgroundColorPointer.addListener(repaintListener)
+		selectionBgPointer.foreach { _.addListener(repaintListener) }
 		
 		// Whenever text changes or caret position is updated, shows the caret
 		caretIndexPointer.addListener(showCaretListener)
@@ -341,7 +370,7 @@ abstract class AbstractSelectableTextLabel
 		
 		override def act(duration: FiniteDuration) = {
 			passedDuration += duration
-			if (passedDuration >= caretBlinkFrequency) {
+			if (passedDuration >= settings.caretBlinkFrequency) {
 				resetCounter()
 				caretVisibilityPointer.update { !_ }
 			}

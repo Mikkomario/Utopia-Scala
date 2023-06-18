@@ -22,7 +22,7 @@ object ReachFramingTest extends App
 		framingF.expandingToRight.build(ViewTextLabel) { _.withBackground(Secondary)(pointer) }
 	}
 	
-	window.visible = true
+	window.display(centerOnParent = true)
 	start()
 	
 	Loop.regularly(4.seconds, waitFirst = true) {

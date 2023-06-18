@@ -11,7 +11,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
@@ -79,8 +79,8 @@ object InputWindowTest extends App
 				val displayErrorPointer = nameErrorPointer.mergeWith(textPointer) { (error, text) =>
 					if (text.isEmpty) error else LocalizedString.empty
 				}
-				val field = fieldF.forString(defaultFieldWidth, Fixed("First Name"),
-					errorMessagePointer = displayErrorPointer, textPointer = textPointer)
+				val field = fieldF.withErrorMessagePointer(displayErrorPointer).withFieldName("First Name")
+					.string(defaultFieldWidth, textPointer = textPointer)
 				field.validateWith { s =>
 					if (s.isEmpty) {
 						nameErrorPointer.value = "Required Field"
@@ -92,13 +92,13 @@ object InputWindowTest extends App
 			}
 			
 			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) {
-				_.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional")) }
+				_.withFieldName("Last Name").withHint("Optional").string(defaultFieldWidth) }
 			
 			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex",
 				Alignment.BottomLeft) { _(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female")) }
 			
 			val durationField = InputRowBlueprint.using(DurationField, "durationSeconds",
-				"Login Duration") { _.apply(maxValue = 24.hours).convertWith { _.toSeconds }
+				"Login Duration") { _.withMaxValue(24.hours).apply().convertWith { _.toSeconds }
 			}
 			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
 				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
