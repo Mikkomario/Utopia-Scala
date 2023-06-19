@@ -131,7 +131,10 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	override def customDrawers = labelSettings.customDrawers
 	override def drawsSelectionBackground = labelSettings.drawsSelectionBackground
 	override def highlightColorPointer = labelSettings.highlightColorPointer
+	override def focusListeners: Vector[FocusListener] = labelSettings.focusListeners
 	
+	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
+		mapLabelSettings { _.withFocusListeners(listeners) }
 	override def withCaretBlinkFrequency(frequency: Duration) =
 		withLabelSettings(labelSettings.withCaretBlinkFrequency(frequency))
 	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
@@ -178,7 +181,6 @@ object EditableTextLabelSettings
   * @param inputFilter                  Filter that determines what input strings are recognized.
   *                                     This filter is used to test individual characters.
   * @param maxLength                    Longest allowed input length. None if no maximum is defined.
-  * @param focusListeners               Focus listeners to assign to created components
   * @param allowsSelectionWhileDisabled Whether text selection should be allowed while the editing
   *                                     features are disabled
   * @author Mikko Hilpinen
@@ -186,7 +188,7 @@ object EditableTextLabelSettings
   */
 case class EditableTextLabelSettings(labelSettings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                      enabledPointer: Changing[Boolean] = AlwaysTrue, inputFilter: Option[Regex] = None,
-                                     maxLength: Option[Int] = None, focusListeners: Vector[FocusListener] = Vector.empty,
+                                     maxLength: Option[Int] = None,
                                      allowsSelectionWhileDisabled: Boolean = true)
 	extends EditableTextLabelSettingsLike[EditableTextLabelSettings]
 {
@@ -198,8 +200,6 @@ case class EditableTextLabelSettings(labelSettings: SelectableTextLabelSettings 
 	override def withInputFilter(filter: Option[Regex]) = copy(inputFilter = filter)
 	override def withLabelSettings(settings: SelectableTextLabelSettings) = copy(labelSettings = settings)
 	override def withMaxLength(max: Option[Int]) = copy(maxLength = max)
-	override def withFocusListeners(listeners: Vector[FocusListener]): EditableTextLabelSettings =
-		copy(focusListeners = listeners)
 }
 
 /**
@@ -230,10 +230,7 @@ trait EditableTextLabelSettingsWrapper[+Repr] extends EditableTextLabelSettingsL
 	override def inputFilter = settings.inputFilter
 	override def labelSettings = settings.labelSettings
 	override def maxLength = settings.maxLength
-	override protected def focusListeners: Vector[FocusListener] = settings.focusListeners
 	
-	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
-		mapSettings { _.withFocusListeners(listeners) }
 	override def withAllowsSelectionWhileDisabled(allow: Boolean) =
 		mapSettings { _.withAllowsSelectionWhileDisabled(allow) }
 	override def withEnabledPointer(p: Changing[Boolean]) = mapSettings { _.withEnabledPointer(p) }

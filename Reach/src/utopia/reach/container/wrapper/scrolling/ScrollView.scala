@@ -186,7 +186,12 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	// WET WET (from ScrollArea)
 	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
 		case Some(clip) =>
-			clip.overlapWith(bounds).foreach { c => super.paintWith(drawer.clippedToBounds(c), Some(c)) }
-		case None => super.paintWith(drawer.clippedToBounds(bounds), Some(bounds))
+			clip.overlapWith(bounds).foreach { c =>
+				println(s"Clipping from $clip to $c")
+				super.paintWith(drawer.clippedToBounds(c), Some(c))
+			}
+		case None =>
+			println("Clipping to scroll bounds")
+			super.paintWith(drawer.clippedToBounds(bounds), Some(bounds))
 	}
 }

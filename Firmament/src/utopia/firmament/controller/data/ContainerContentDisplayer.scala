@@ -74,10 +74,24 @@ object ContainerContentDisplayer
 											  (makeDisplay: A => W) =
 		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
+			
+	def apply[A, W, Display <: Refreshable[A] with Component, P <: Changing[Vector[A]]](container: MutableMultiContainer[W, Display],
+	                                                                                    contentPointer: P,
+	                                                                                    sameItemCheck: EqualsFunction[A] = EqualsFunction.default,
+	                                                                                    equalsCheck: Option[EqualsFunction[A]] = None)
+	                                                                                   (makeItem: A => W) =
+	{
+		val displayer = new ContainerContentDisplayer[A, W, Display, P](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)
+		displayer.setup()
+		displayer
+	}
 }
 
 /**
   * This content manager reflects content changes on a container
+  *
+  * Note for subclasses: Please call setup() after all attributes have been initialized.
+  *
   * @author Mikko Hilpinen
   * @since 9.5.2020, Reflection v1.2
   * @tparam A The type of content displayed in the container
@@ -93,20 +107,17 @@ object ContainerContentDisplayer
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
-class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component, +P <: Changing[Vector[A]]]
-(protected val container: MutableMultiContainer[W, Display], override val contentPointer: P,
- sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
-(makeItem: A => W)
+class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component,
+	+P <: Changing[Vector[A]]] protected(protected val container: MutableMultiContainer[W, Display],
+                                         override val contentPointer: P,
+                                         sameItemCheck: EqualsFunction[A] = EqualsFunction.default,
+                                         equalsCheck: Option[EqualsFunction[A]] = None)
+                                        (makeItem: A => W)
 	extends ContentDisplayer[A, Display, P]
 {
 	// ATTRIBUTES   -----------------------
 	
 	private val capacity = Volatile(Set[Display]())
-	
-	
-	// INITIAL CODE	-----------------------
-	
-	setup()
 	
 	
 	// IMPLEMENTED	-----------------------

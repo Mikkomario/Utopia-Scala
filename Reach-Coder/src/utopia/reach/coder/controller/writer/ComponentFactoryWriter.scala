@@ -253,17 +253,17 @@ object ComponentFactoryWriter
 					s"$contextual(parentHierarchy, context, settings)")
 				(parent, method)
 			}
+			else if (factory.useVariableContext) {
+				val method = MethodDeclaration("withContextPointer", isOverridden = true)(
+					Parameter("p", flow.changing(context.reference)))(
+					s"$contextual(parentHierarchy, p, settings)")
+				fromVariableContextFactory(context.reference, contextual) -> method
+			}
 			else {
-				val (fromContextF, contextParamType) = {
-					if (factory.useVariableContext)
-						fromVariableContextFactory -> (flow.changing(context.reference): ScalaType)
-					else
-						fromContextFactory -> (context.reference: ScalaType)
-				}
 				val withContextMethod = MethodDeclaration("withContext", isOverridden = true)(
-					Parameter("context", contextParamType))(
+					Parameter("context", context.reference))(
 					s"$contextual(parentHierarchy, context, settings)")
-				fromContextF(context.reference, contextual) -> withContextMethod
+				fromContextFactory(context.reference, contextual) -> withContextMethod
 			}
 		}
 		ClassDeclaration(
@@ -399,28 +399,19 @@ object ComponentFactoryWriter
 				hierarchyParam)(s"$nonContextual(hierarchy, settings)")
 		}
 		val contextualParentAndMethod = contextualFactoryType.map { case (contextual, context) =>
-			// If the accepted context is variable, this class still accepts a static context
-			val (methodImplementation, methodReferences) = {
-				if (factory.useVariableContext)
-					s"$contextual(hierarchy, Fixed(context), settings)" -> Set(flow.fixed)
-				else
-					s"$contextual(hierarchy, context, settings)" -> Set[Reference]()
+			// Variable context specifies a different method and parent
+			if (factory.useVariableContext) {
+				val method = MethodDeclaration("withContextPointer", isOverridden = true)(
+					Vector(hierarchyParam, Parameter("p", flow.changing(context.reference))))(
+					s"$contextual(hierarchy, p, settings)")
+				vccff(context.reference, contextual) -> method
 			}
-			ccff(context.reference, contextual) -> MethodDeclaration("withContext", methodReferences, isOverridden = true)(
-				Vector(hierarchyParam, Parameter("context", context.reference)))(
-				methodImplementation)
-		}
-		val fromContextPointerMethod = {
-			if (factory.useVariableContext)
-				contextualFactoryType.map { case (contextual, context) =>
-					MethodDeclaration("withContext",
-						returnDescription = s"A new ${
-							factory.componentName} factory that uses the specified (variable) context")(
-						Vector(hierarchyParam, Parameter("context", flow.changing(context.reference))))(
-						s"$contextual(hierarchy, context, settings)")
-				}
-			else
-				None
+			else {
+				val method = MethodDeclaration("withContext", isOverridden = true)(
+					Vector(hierarchyParam, Parameter("context", context.reference)))(
+					s"$contextual(hierarchy, context, settings)")
+				ccff(context.reference, contextual) -> method
+			}
 		}
 		
 		ClassDeclaration(
@@ -432,8 +423,7 @@ object ComponentFactoryWriter
 			// Implements the required methods
 			methods = Set(MethodDeclaration("withSettings", isOverridden = true)(
 				Parameter("settings", settingsType))("copy(settings = settings)")) ++
-				nonContextualParentAndMethod.map { _._2 } ++ contextualParentAndMethod.map { _._2 } ++
-				fromContextPointerMethod,
+				nonContextualParentAndMethod.map { _._2 } ++ contextualParentAndMethod.map { _._2 },
 			description = s"Used for defining ${
 				factory.componentName} creation settings outside of the component building process",
 			author = factory.author,

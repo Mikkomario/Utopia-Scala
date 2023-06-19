@@ -145,6 +145,11 @@ trait DurationFieldSettingsLike[+Repr]
 	  */
 	def withVisibleFieldNames = withShowsLabels(show = true)
 	
+	/**
+	  * @return Copy of this factory that doesn't place a separator between the individual duration fields
+	  */
+	def withoutSeparator = withSeparator(LocalizedString.empty)
+	
 	
 	// IMPLEMENTED	--------------------
 	

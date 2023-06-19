@@ -33,6 +33,7 @@
     "cRole": "color.ColorRole",
     "align": "pEnum/Alignment",
     "axis": "pEnum/Axis2D",
+    "sizeC": "pEnum/SizeCategory",
     "icon": "firmament/image.SingleColorIcon",
     "hotkey": "firmamentModels/HotKey",
     "localized": "localization/LocalizedString",
@@ -544,6 +545,16 @@
               },
               "map": true,
               "doc": "The expand (first) and the collapse icon (second) that should be displayed at the right side of the created fields.\nPlease note that a non-empty right-side icon will override these values."
+            },
+            {
+              "name": "listMargin",
+              "param": "margin",
+              "type": "Option[sizeC]",
+              "default": {
+                "code": "Some(SizeCategory.Small)",
+                "ref": "sizeC"
+              },
+              "doc": "Size of the margins to place between the selectable items in the pop-up. \nNone if no margin should be placed."
             },
             {
               "name": "activationKeys",

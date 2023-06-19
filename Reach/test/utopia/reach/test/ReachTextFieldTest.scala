@@ -53,6 +53,7 @@ object ReachTextFieldTest extends App
 					makeRow[String](DisplayFunction.raw) {
 						_.withFieldName("Text").withMaxLength(32).displayingCharacterCount
 							.validatedString(320.any) { in =>
+								println(s"Validating input '$in'")
 								if (in.isEmpty) InputValidationResult.Warning("Should not be empty") else Default
 							}
 					},

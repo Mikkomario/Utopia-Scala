@@ -8,7 +8,7 @@ import utopia.firmament.controller.data.{ContainerSingleSelectionManager, Select
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.EqualsFunction
@@ -289,7 +289,8 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 {
 	// ATTRIBUTES   -------------------------
 	
-	override protected lazy val marginPointer: Changing[StackLength] = contextPointer.map { _.stackMargin }
+	override protected lazy val marginPointer: Changing[StackLength] =
+		customMarginPointer.getOrElse(contextPointer.map { _.smallStackMargin })
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -303,6 +304,21 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	
 	
 	// OTHER    -----------------------------
+	
+	/**
+	  * @param margin Margin size to use
+	  * @return Copy of this factory that places the specified sized margin between list items.
+	  */
+	def withMargin(margin: SizeCategory) =
+		withMarginPointer(contextPointer.map { _.scaledStackMargin(margin) })
+	/**
+	  * @param margin Margin size to use. None if no margin should be placed.
+	  * @return Copy of this factory that uses the specified margin between list items.
+	  */
+	def withMargin(margin: Option[SizeCategory]): ContextualSelectionListFactory = margin match {
+		case Some(m) => withMargin(m)
+		case None => withoutMargin
+	}
 	
 	/**
 	  * Creates a new list
@@ -392,10 +408,13 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		.withMargin(marginPointer.value)[C]()
 	private val locationTracker = new StackItemAreas[C](stack, stack.componentsPointer)
 	private val manager = sameItemCheck match {
-		case Some(check) => ContainerSingleSelectionManager.forImmutableStates(stack, contentPointer,
-			valuePointer)(check) { item => Open { makeDisplay(_, item) } }
-		case None => ContainerSingleSelectionManager.forStatelessItems(stack, contentPointer, valuePointer) { item =>
-			Open { makeDisplay(_, item) } }
+		case Some(check) =>
+			ContainerSingleSelectionManager.forImmutableStates(stack, contentPointer,
+				valuePointer)(check) { item => Open { makeDisplay(_, item) } }
+		case None =>
+			ContainerSingleSelectionManager.forStatelessItems(stack, contentPointer, valuePointer) { item =>
+				Open { makeDisplay(_, item) }
+			}
 	}
 	
 	/**
@@ -415,6 +434,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
 		Bounds.aroundOption(e.values.flatten).foreach { area =>
+			println(s"Repainting area $area")
 			repaintArea(area.enlarged(settings.axis(marginPointer.value.optimal)), High)
 		}
 		true

@@ -47,6 +47,7 @@ object ReachReferences
 		
 		lazy val cff = Reference(factories, "ComponentFactoryFactory")
 		lazy val ccff = Reference(factories, "FromContextComponentFactoryFactory")
+		lazy val vccff = Reference(factories, "FromVariableContextComponentFactoryFactory")
 		lazy val fromContextFactory = Reference(factories, "FromContextFactory")
 		lazy val fromVariableContextFactory = Reference(factories, "FromVariableContextFactory")
 		lazy val fromGenericContextFactory = Reference(factories, "FromGenericContextFactory")

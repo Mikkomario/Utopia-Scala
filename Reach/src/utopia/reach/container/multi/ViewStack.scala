@@ -3,7 +3,7 @@ package utopia.reach.container.multi
 import utopia.firmament.context.BaseContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout.{Center, Fit}
+import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
@@ -73,6 +73,8 @@ trait ViewStackFactoryLike[+Repr]
 	  * @return Copy of this factory where items are centered
 	  */
 	def centered = withLayout(Center)
+	def leading = withLayout(Leading)
+	def trailing = withLayout(Trailing)
 	
 	/**
 	  * @return Copy of this factory that doesn't allow for any stack margins
@@ -98,12 +100,15 @@ trait ViewStackFactoryLike[+Repr]
 			// Uses segmentation if available
 			val stack = segmentGroup match {
 				// Case: Segmentation used
-				case Some(group) => stackF.withSegments(content, group)
+				case Some(group) => stackF.segmented(content, group)
 				// Case: No segmentation used
 				case None =>
 					// Merges the content under a single OpenComponent & ComponentHierarchy instance
 					val mergedContent = NotEmpty(remainingContent) match {
-						case Some(content) => new OpenComponent(content.map { _.component }, content.head.hierarchy)
+						case Some(content) =>
+							val commonHierarchy = content.head.hierarchy
+							content.tail.foreach { _.hierarchy.replaceWith(commonHierarchy) }
+							new OpenComponent(content.map { _.component }, commonHierarchy)
 						case None => new OpenComponent(Vector[C](), new SeedHierarchyBlock(parentHierarchy.top))
 					}
 					stackF(mergedContent)
@@ -161,6 +166,12 @@ trait ViewStackFactoryLike[+Repr]
 	  * @return Copy of this factory with the specified cap
 	  */
 	def withCap(cap: StackLength) = withCapPointer(Fixed(cap))
+	
+	/**
+	  * @param f A mapping function applied to stack margins
+	  * @return Copy of this factory with mapped margin pointer
+	  */
+	def mapMargin(f: StackLength => StackLength) = withMarginPointer(marginPointer.map(f))
 }
 
 case class ViewStackFactory(parentHierarchy: ComponentHierarchy,

@@ -264,10 +264,27 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	override protected val wrapped = {
 		val alignment = context.textAlignment
 		val borderWidth = context.buttonBorderWidth
-		val actualContext = context.mapTextInsets { _/2 + settings.insets.withoutSides(alignment.directions) + borderWidth }
+		val actualContext = context.mapTextInsets { original =>
+			val smallDirections = context.textAlignment.directions
+			original.mapWithDirection { (side, len) =>
+				if (smallDirections.contains(side))
+					len/2
+				else
+					len + borderWidth + settings.insets(side)
+			}
+		}
+		// val actualContext = context.mapTextInsets { _/2 + settings.insets.withoutSides(alignment.directions) + borderWidth }
 		ImageAndTextLabel(settings.labelSettings)
-			.mapImageInsets { _/2 + settings.insets.withoutSides(alignment.directions) + borderWidth }
 			.withContext(parentHierarchy, actualContext)
+			.mapImageInsets { original =>
+				val smallDirections = context.textAlignment.opposite.directions
+				original.mapWithDirection { (side, len) =>
+					if (smallDirections.contains(side))
+						len/2
+					else
+						len + borderWidth + settings.insets(side)
+				}
+			}
 			.withCustomBackgroundDrawer(
 				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, Fixed(borderWidth)))
 			.apply(image, text)

@@ -32,7 +32,7 @@ object DropDownTest extends App
 	val shrinkIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
 		.getOrElse(SingleColorIcon.empty)
 	val baseDdf = DropDown.withExpandAndCollapseIcon(Pair(expandIcon, shrinkIcon))
-		.withPromptPointer(Fixed("Select One"))
+		.withPromptPointer(Fixed("Select One")).withoutListMargin
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
@@ -42,8 +42,6 @@ object DropDownTest extends App
 				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.build(baseDdf) { ddF =>
 					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
 					val selectedItemPointer = new PointerWithEvents[Option[String]](None)
-					
-					selectedItemPointer.addListener { e => println(e) }
 					
 					Vector(
 						ddF.withFieldName("Category")
@@ -71,9 +69,6 @@ object DropDownTest extends App
 				}
 			}
 	}
-	
-	// AwtEventThread.debugMode = true
-	// Loop.regularly(2.seconds) { println(AwtEventThread.debugString) }
 	
 	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)

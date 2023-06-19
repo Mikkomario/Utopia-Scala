@@ -20,21 +20,31 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	// ATTRIBUTES	--------------------------
 	
 	private var foundParent: Option[Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)]] = None
+	// Set when this block is replaced with another block
+	private var replacement: Option[ComponentHierarchy] = None
 	
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def parent = foundParent.getOrElse(Left(top))
-	
-	override def linkPointer: Changing[Boolean] = LinkManager
-	
-	override def isThisLevelLinked = LinkManager.isThisLevelLinked
+	override def parent = replacement match {
+		case Some(r) => r.parent
+		case None => foundParent.getOrElse(Left(top))
+	}
+	override def linkPointer: Changing[Boolean] = replacement match {
+		case Some(replacement) => replacement.linkPointer
+		case None => LinkManager
+	}
+	override def isThisLevelLinked = replacement match {
+		case Some(r) => r.isThisLevelLinked
+		case None => LinkManager.isThisLevelLinked
+	}
 	
 	override def complete(parent: ReachComponentLike): Unit = complete(parent, AlwaysTrue)
 	
 	
 	// OTHER	------------------------------
 	
+	// TODO: Add IllegalStateException throwing if completing after replacing
 	/**
 	  * Completes this component hierarchy by attaching it to a parent component
 	  * @param parent Parent component to connect to
@@ -59,7 +69,6 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 				LinkManager.onParentFound(parentHierarchy.linkPointer, switchConditionPointer)
 		}
 	}
-	
 	/**
 	  * Completes this component hierarchy by attaching it directly to the canvas at the top
 	  * @param switchConditionPointer An additional link condition pointer. Default = always linked.
@@ -77,6 +86,21 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			foundParent = Some(Left(top))
 			// Also informs the link manager
 			LinkManager.onLinkedToCanvas(switchConditionPointer)
+	}
+	/**
+	  * @param other Another hierarchy block that will effectively replace this one
+	  * @throws IllegalStateException If already completed or replaced before
+	  */
+	@throws[IllegalStateException]("If already connected or replaced previously")
+	def replaceWith(other: ComponentHierarchy) = foundParent match {
+		case Some(_) => throw new IllegalStateException("Already attached")
+		case None =>
+			if (replacement.nonEmpty)
+				throw new IllegalStateException("Already replaced")
+			else {
+				replacement = Some(other)
+				LinkManager.onReplacement(other)
+			}
 	}
 	
 	
@@ -143,6 +167,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		def onLinkedToCanvas(additionalConditionPointer: Changing[Boolean]) =
 			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer)
+		
+		def onReplacement(replacement: ComponentHierarchy) = specifyFinalPointer(replacement.linkPointer)
 		
 		private def specifyFinalPointer(pointer: Changing[Boolean]) = {
 			// Updates the pointer(s)

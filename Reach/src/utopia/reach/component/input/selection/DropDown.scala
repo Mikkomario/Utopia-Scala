@@ -4,18 +4,20 @@ import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.{ScrollingContext, TextContext}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.flow.operator.EqualsFunction
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorShade
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.input.selection.FieldFocusMouseListener.visibilityChangeThreshold
 import utopia.reach.component.input.{FieldWithSelectionPopup, FieldWithSelectionPopupSettings, FieldWithSelectionPopupSettingsWrapper}
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
 import utopia.reach.component.template.focus.Focusable
@@ -29,15 +31,13 @@ import scala.concurrent.ExecutionContext
 
 case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetup]
-		with Ccff[ReachContentWindowContext, ContextualDropDownFactory]
+		with Vccff[ReachContentWindowContext, ContextualDropDownFactory]
 {
 	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetup = copy(settings = settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: ReachContentWindowContext) =
-		ContextualDropDownFactory(hierarchy, Fixed(context))
-	
-	def withContext(hierarchy: ComponentHierarchy, contextPointer: Changing[ReachContentWindowContext]) =
-		ContextualDropDownFactory(hierarchy, contextPointer)
+	override def withContextPointer(hierarchy: ComponentHierarchy,
+	                                context: Changing[ReachContentWindowContext]): ContextualDropDownFactory =
+		ContextualDropDownFactory(hierarchy, context, settings)
 }
 
 /**
@@ -101,6 +101,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				sameItemCheck)
 				{ fieldContext =>
+					// FIXME: This label acquires way too large vertical margins at some point
 					val label = ViewTextLabel
 						.withContextPointer(fieldContext.parentHierarchy, fieldContext.contextPointer)
 						.mapContext { _.withHorizontallyExpandingText }
@@ -163,6 +164,11 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	// TODO: Add a variant that also displays an icon
 }
 
+private object FieldFocusMouseListener
+{
+	// Time before pop-up visibility may be swapped
+	private val visibilityChangeThreshold = 0.2.seconds
+}
 private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]) extends MouseButtonStateListener
 {
 	// ATTRIBUTES	-------------------
@@ -173,10 +179,9 @@ private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]
 	
 	// IMPLEMENTED	-------------------
 	
-	override def onMouseButtonState(event: MouseButtonStateEvent) =
-	{
-		// Requests focus or opens the field
-		if (field.field.hasFocus)
+	override def onMouseButtonState(event: MouseButtonStateEvent) = {
+		// Requests focus or opens the field, except when the pop-up was just closed
+		if (field.field.hasFocus && field.popUpVisibilityLastChangedPointer.value < Now - visibilityChangeThreshold)
 			field.openPopup()
 		else
 			field.requestFocus()

@@ -12,11 +12,13 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.End
 import utopia.flow.operator.End.{First, Last}
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.{Color, ColorRole}
+import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.Insets
 import utopia.reach.component.factory.contextual.VariableContextualFactory
@@ -46,10 +48,16 @@ case class FieldCreationContext(parentHierarchy: ComponentHierarchy, contextPoin
 /**
   * A set of context variables provided when creating an additional right side label
   * @param content           Field content
-  * @param contextPointer    Pointer to the context prevalent in this area
+  * @param lazyContextPointer    Pointer to the context prevalent in this area (lazy)
   * @tparam C Type of field contents
   */
-case class ExtraFieldCreationContext[C](content: C, contextPointer: Changing[TextContext])
+case class ExtraFieldCreationContext[C](content: C, lazyContextPointer: Lazy[Changing[TextContext]])
+{
+	/**
+	  * @return Pointer to the context prevalent in this area
+	  */
+	def contextPointer = lazyContextPointer.value
+}
 
 /**
   * Common trait for field factories and settings
@@ -532,7 +540,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 			// Hint text is smaller and has smaller insets
 			.mapTextInsets { original =>
 				val midInsets = original.expandingHorizontallyAccordingTo(context.textAlignment)
-					.mapVertical { _ * settings.hintScaleFactor }
+					.mapVertical { _ * settings.hintScaleFactor }//.mapBottom { _ / 2 }
 				if (settings.fillBackground)
 					midInsets
 				// Additional horizontal insets are added in outlined style
@@ -765,7 +773,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 					contentContextPointer, FocusTracker, Vector(namePromptDrawer) ++ promptDrawer))
 				
 				// Displays one or both of the items
-				Vector(ComponentCreationResult(nameLabel,nameVisibilityPointer),
+				Vector(ComponentCreationResult(nameLabel, nameVisibilityPointer),
 					ComponentCreationResult(wrappedField, AlwaysTrue)) -> wrappedField
 			}
 		}
@@ -795,20 +803,27 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponentLike, Changing[Boolean]]] = {
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
-		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, hintContextPointer)) match {
+		// The right side hint label expands to the left and not right
+		val rightContextPointer = Lazy { hintContextPointer.map { context =>
+			context.mapTextInsets { _.mapRight { _.withDefaultPriority }.mapLeft { _.expanding } }
+				.withHorizontalTextAlignment(Far)
+		} }
+		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, rightContextPointer)) match {
 			case Some(rightComponent) =>
 				actualHintTextPointer match {
 					// Case: Hints are sometimes displayed
 					case Some(hintTextPointer) =>
 						// Places caps to stack equal to horizontal content margin
+						// Removed 19.6.2023, because seemed to look better without - Add back or modify if necessary
+						/*
 						val capPointer = hintContextPointer.map { context =>
 							(context.textInsets.horizontal / 2 +
 								(if (settings.fillBackground) 0 else defaultBorderWidthFrom(context)))
 								.notExpanding
-						}
+						}*/
 						val hintLabel = Open.using(ViewTextLabel) { _.withContextPointer(hintContextPointer)(hintTextPointer) }
 						val stack = Open.using(ViewStack) {
-							_.row.withCapPointer(capPointer)
+							_.row
 								.apply(Vector(
 									hintLabel.withResult(hintVisibilityPointer),
 									rightComponent.withResult(AlwaysTrue)

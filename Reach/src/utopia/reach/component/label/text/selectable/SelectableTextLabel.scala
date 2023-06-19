@@ -138,6 +138,7 @@ case class SelectableTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vec
 	
 	override def withFocusListeners(listeners: Vector[FocusListener]): SelectableTextLabelSettings =
 		copy(focusListeners = listeners)
+	
 	override def withCaretBlinkFrequency(frequency: Duration) =
 		copy(caretBlinkFrequency = frequency)
 	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =

@@ -5,6 +5,7 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.SizeCategory.VerySmall
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
@@ -173,7 +174,7 @@ case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vecto
 	// IMPLEMENTED	--------------------
 	
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageAndTextLabelSettings =
-		copy(customDrawers = customDrawers)
+		copy(customDrawers = drawers)
 	override def withForceEqualBreadth(force: Boolean): ImageAndTextLabelSettings =
 		copy(forceEqualBreadth = force)
 	override def withImageSettings(settings: ImageLabelSettings): ImageAndTextLabelSettings =
@@ -235,6 +236,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	
 	override def withSettings(settings: ImageAndTextLabelSettings): ContextualImageAndTextLabelFactory =
 		copy(settings = settings)
+	
 	override def withContext(newContext: TextContext) =
 		copy(context = newContext)
 	
@@ -264,6 +266,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  */
 	def apply(image: Either[Image, SingleColorIcon], text: LocalizedString) =
 		new ImageAndTextLabel(parentHierarchy, context, image, text, settings)
+	
 	/**
 	  * Creates a new label that contains both an image and text
 	  * @param image Image displayed on this label
@@ -314,7 +317,7 @@ case class ImageAndTextLabelSetup(settings: ImageAndTextLabelSettings = ImageAnd
 	
 	override def withContext(hierarchy: ComponentHierarchy,
 	                         context: TextContext): ContextualImageAndTextLabelFactory =
-		ContextualImageAndTextLabelFactory(hierarchy, context, settings)
+		ContextualImageAndTextLabelFactory(hierarchy, context, settings.withImageAlignment(context.textAlignment.opposite))
 	
 	override def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextLabelSetup =
 		copy(settings = settings)
@@ -350,15 +353,19 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContex
 				.withAdditionalCustomDrawers(settings.customDrawers)
 				.apply(parentHierarchy).withContext(context)
 				.apply(image)
-		else
+		else {
 			// Wraps the components in a stack
+			println(s"image alignment is ${settings.imageAlignment}")
 			Stack(parentHierarchy).withContext(context)
-				.withCustomDrawers(settings.customDrawers)
+				// TODO: Add option to customize stack margin
+				.withCustomDrawers(settings.customDrawers).withoutMargin
 				.buildPair(Mixed, context.textAlignment, settings.forceEqualBreadth) { factories =>
 					Pair(
-						factories(TextLabel).withIsHint(settings.isHint)(text),
-						factories(ImageLabel.withSettings(settings.imageSettings))(image))
+						factories(ImageLabel.withSettings(settings.imageSettings))(image),
+						factories(TextLabel).withIsHint(settings.isHint)(text)
+					)
 				}
 				.parent
+		}
 	}
 }

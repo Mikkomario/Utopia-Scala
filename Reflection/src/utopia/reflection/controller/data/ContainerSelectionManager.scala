@@ -173,6 +173,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 	
 	container.addCustomDrawer(SelectionDrawer)
 	selectedDisplayPointer.addContinuousAnyChangeListener { container.repaint() }
+	setup()
 	
 	
 	// IMPLEMENTED	--------------------

@@ -58,13 +58,12 @@ trait SelectionManager[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 		if (amount != 0) {
 			val displays = this.displays
 			if (displays.nonEmpty) {
-				val oldIndices = selectedDisplay.flatMap{ displays.optionIndexOf(_) }
+				val oldIndices = selectedDisplay.flatMap { displays.optionIndexOf(_) }
 				
 				if (oldIndices.nonEmpty) {
 					val oldIndex = if (amount < 0) oldIndices.min else oldIndices.max
 					// Moves the selection by one
 					val newIndex = (oldIndex + amount) % displays.size
-					
 					if (newIndex < 0)
 						value = itemToSelection(displays(newIndex + displays.size).content)
 					else

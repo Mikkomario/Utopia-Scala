@@ -176,6 +176,10 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  */
 	def withLowPriority = withPriority(Low)
 	/**
+	  * @return A version of this stack length that has normal priority
+	  */
+	def withDefaultPriority = withPriority(Normal)
+	/**
 	  * @return A copy of this length with a priority that allows easier shrinking
 	  */
 	def shrinking = if (priority.shrinksFirst) this else withPriority(Shrinking)

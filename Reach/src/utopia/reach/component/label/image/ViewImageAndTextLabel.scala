@@ -414,6 +414,7 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, contextPoint
 	
 	override protected val wrapped = {
 		// TODO: Uses a static context here
+		// TODO: Allow margin customization
 		Stack.withContext(parentHierarchy, contextPointer.value)
 			.withoutMargin.withCustomDrawers(additionalDrawers)
 			.buildPair(Mixed, contextPointer.value.textAlignment, forceFitLayout = forceEqualBreadth) { factories =>

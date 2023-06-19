@@ -99,14 +99,32 @@ class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Comp
 {
 	// ATTRIBUTES	----------------------------
 	
-	// Updates the display value every time content is updated, because the display may change or be not found anymore
-	override lazy val selectedDisplayPointer =
-		valuePointer.mergeWith(contentPointer) { (selected, _) => selected.flatMap(displayFor) }
+	private val _selectedDisplayPointer = new PointerWithEvents[Iterable[Display]](None)
+	
+	
+	// INITIAL CODE ----------------------------
+	
+	// When selected value changes, updates selected display status as well
+	valuePointer.addContinuousListener { e =>
+		_selectedDisplayPointer.value = e.newValue.flatMap(displayFor)
+	}
+	setup()
+	
+	
+	// COMPUTED --------------------------------
+	
+	override def selectedDisplayPointer: Changing[Iterable[Display]] = _selectedDisplayPointer.view
 	
 	
 	// IMPLEMENTED	----------------------------
 	
 	override protected def itemToSelection(item: A) = Some(item)
-	
 	override protected def itemInSelection(item: A, selection: Option[A]) = itemToSelection(item)
+	
+	override protected def finalizeRefresh() = {
+		super.finalizeRefresh()
+		// Updates the selected display at the end of refresh
+		// (this is the first place where displays are up-to-date after a content update)
+		_selectedDisplayPointer.value = valuePointer.value.flatMap(displayFor)
+	}
 }

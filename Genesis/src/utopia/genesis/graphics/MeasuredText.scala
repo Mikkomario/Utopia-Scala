@@ -159,8 +159,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param position A position relative to the text top left position
 	  * @return The index of the closest text line and the index of the closest caret on that line
 	  */
-	def caretIndexClosestTo(position: Point) =
-	{
+	def caretIndexClosestTo(position: Point) = {
 		if (isEmpty)
 			0 -> 0
 		else {
@@ -201,14 +200,12 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param direction Vertical direction sign towards which the caret is moved
 	  * @return The next caret index. None if there are no lines in that direction
 	  */
-	def caretIndexParallelTo(caretIndex: Int, direction: Sign): Option[Int] =
-	{
+	def caretIndexParallelTo(caretIndex: Int, direction: Sign): Option[Int] = {
 		val (lineIndex, indexOnLine) = mapCaretIndex(caretIndex)
 		caretIndexParallelTo(lineIndex, indexOnLine, direction).map { case (lineIndex, indexOnLine) =>
 			mapCaretIndex(lineIndex, indexOnLine)
 		}
 	}
-	
 	/**
 	  * Finds the caret index that is above or below a specified caret index
 	  * @param lineIndex Index of the targeted line
@@ -216,13 +213,11 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param direction Vertical direction sign towards which the caret is moved
 	  * @return The next line and relative caret index. None if there are no lines in that direction
 	  */
-	def caretIndexParallelTo(lineIndex: Int, indexOnLine: Int, direction: Sign) =
-	{
+	def caretIndexParallelTo(lineIndex: Int, indexOnLine: Int, direction: Sign) = {
 		val nextLineIndex = lineIndex + 1 * direction.modifier
 		if (nextLineIndex < 0 || nextLineIndex > lines.size - 1)
 			None
-		else
-		{
+		else {
 			val x = caretX(lineIndex, indexOnLine)
 			carets(nextLineIndex).minOptionIndexBy { c => (c.start.x - x).abs }.map { nextLineIndex -> _ }
 		}
@@ -255,16 +250,13 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  *                             caret at the beginning of that character should be returned (default)
 	  * @return A line index and a relative caret index
 	  */
-	def stringIndexToCaretIndex(stringIndex: Int, targetEndOfCharacter: Boolean = false) =
-	{
+	def stringIndexToCaretIndex(stringIndex: Int, targetEndOfCharacter: Boolean = false) = {
 		if (stringIndex < 0)
 			0 -> 0
-		else
-		{
+		else {
 			// Iterates through the lines, advancing a simulated cursor
 			lines.indices.foldLeft[Either[Int, (Int, Int)]](Left(stringIndex)) { (previous, lineIndex) =>
-				previous match
-				{
+				previous match {
 					case result: Right[Int, (Int, Int)] => result
 					case Left(remaining) =>
 						val line = lines(lineIndex)
@@ -280,8 +272,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 						else
 							Left(remaining - lineLength - 1) // Also skips the line break character
 				}
-			} match
-			{
+			} match {
 				case Right(result) => result
 				// Case: Out of bounds
 				case Left(_) =>
@@ -331,12 +322,10 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param index A string index
 	  * @return Index of the targeted line + caret index on that line
 	  */
-	def mapCaretIndex(index: Int) =
-	{
+	def mapCaretIndex(index: Int) = {
 		if (index < 0 || lines.isEmpty)
 			0 -> index
-		else
-		{
+		else {
 			// Finds the correct line first
 			val lineIndex = lastLineCaretIndices.indexWhereOption { _ >= index }.getOrElse(lines.size - 1)
 			lineIndex -> (index - firstLineCaretIndices(lineIndex))
@@ -348,8 +337,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param indexOnLine Relative caret index on the specified line
 	  * @return A caret index
 	  */
-	def mapCaretIndex(lineIndex: Int, indexOnLine: Int) =
-	{
+	def mapCaretIndex(lineIndex: Int, indexOnLine: Int) = {
 		if (isEmpty || lineIndex < 0)
 			0
 		else if (lineIndex >= lines.size)
@@ -362,13 +350,11 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param highlightedCaretRanges Areas within this text to highlight
 	  * @return Standard draw targets + highlight draw targets (which include bounds)
 	  */
-	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()): (Vector[(String, Point)], Vector[(String, Point, Bounds)]) =
-	{
+	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()): (Vector[(String, Point)], Vector[(String, Point, Bounds)]) = {
 		// If there aren't any highlighted ranges, uses the cached values
 		if (highlightedCaretRanges.isEmpty || isEmpty)
 			defaultDrawTargets -> Vector()
-		else
-		{
+		else {
 			// Converts the ranges to { line index: Character ranges } -map
 			val ranges = highlightedCaretRanges.iterator.flatMap { range =>
 				val (startLineIndex, startIndexOnLine) = mapCaretIndex(range.head)
@@ -377,8 +363,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 				if (startLineIndex == endLineIndex)
 					Vector(startLineIndex -> (startIndexOnLine -> Some(endIndexOnLine)))
 				// Case: Range spans multiple lines
-				else
-				{
+				else {
 					// Adds the end of the starting line
 					val startLine = startLineIndex -> (startIndexOnLine -> None)
 					// Adds the beginning of the ending line
@@ -397,8 +382,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			val highlightedStringsBuffer = new VectorBuilder[(String, Point, Bounds)]
 			lines.indices.foreach { lineIndex =>
 				// Case: Highlights concern this line
-				if (ranges.contains(lineIndex))
-				{
+				if (ranges.contains(lineIndex)) {
 					val (string, position) = defaultDrawTargets(lineIndex)
 					val affectingHighlights = ranges(lineIndex).sortBy { _._1 }
 					
@@ -411,8 +395,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 								normalStringsBuffer += (string.substring(lastEndIndex, startIndex) -> lastEndPosition)
 						}
 						val startCaret = caretAt(lineIndex, startIndex)
-						endIndex match
-						{
+						endIndex match {
 							// Case: Highlight doesn't span the whole line
 							case Some(endIndex) =>
 								val endCaret = caretAt(lineIndex, endIndex)
@@ -450,8 +433,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  *         All coordinates are relative to a (0,0) anchor position,
 	  *         which is determined by text area size and alignment.
 	  */
-	private def boundsOf(lines: Seq[String]): (Bounds, Vector[(Bounds, Point)]) =
-	{
+	private def boundsOf(lines: Seq[String]): (Bounds, Vector[(Bounds, Point)]) = {
 		val numberOfLines = lines.size
 		
 		// In case there is only 0-1 line(s) of text, skips the more complex calculations

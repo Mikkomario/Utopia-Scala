@@ -321,7 +321,7 @@ trait ReachComponentLike extends Stackable
 	  */
 	def createWindow[C <: ReachComponentLike, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
 	                                             title: LocalizedString = LocalizedString.empty,
-	                                             matchEdgeLength: Boolean = false,keepAnchored: Boolean = true,
+	                                             matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                             display: Boolean = false)
 	                                            (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
 	                                            (implicit context: ReachWindowContext, exc: ExecutionContext,

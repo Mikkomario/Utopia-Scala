@@ -13,7 +13,6 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
@@ -185,11 +184,11 @@ trait InteractionWindowFactory[A]
 		
 		val buttonsByLocation = buttons.groupBy { _.location.onlyHorizontal }
 		// Case: Items only on one side
-		if (buttonsByLocation.size == 1)
-		{
+		if (buttonsByLocation.size == 1) {
 			val (alignment, blueprints) = buttonsByLocation.head
 			// Case: More than one button
-			if (blueprints.size > 1)
+			if (blueprints.size > 1) {
+				println(s"Constructing ${blueprints.size} buttons")
 				factories(AlignFrame)(alignment).build(Stack) { stackF =>
 					stackF.row.withMargin(nonScalingMargin).build(Mixed) { factories =>
 						val buttons = blueprints.map { blueprint =>
@@ -198,15 +197,14 @@ trait InteractionWindowFactory[A]
 						buttons -> buttons
 					}.parentAndResult
 				}.parentAndResult
-			// Case: Only one button
+			} // Case: Only one button
 			else
 				factories(AlignFrame)(alignment).build(Mixed) { factories =>
 					val button = actualize(factories, blueprints.head, resultPromise, defaultActionEnabled)
 					button -> Vector(button)
 				}.parentAndResult
 		}
-		else
-		{
+		else {
 			val scalingMargin = baseMargin.upscaling.expanding
 			val buttonGroups = Vector(Alignment.Left, Alignment.Center, Alignment.Right).flatMap(buttonsByLocation.get)
 			

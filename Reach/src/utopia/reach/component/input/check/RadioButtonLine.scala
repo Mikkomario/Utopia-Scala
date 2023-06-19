@@ -63,7 +63,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 	             backgroundColorPointer: Changing[Color] = Fixed(context.background),
 	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 	{
-		Stack(parentHierarchy).withContext(context).centeredRow.withCustomDrawers(customDrawers)
+		Stack(parentHierarchy).withContext(context).centeredRow.withCustomDrawers(customDrawers).withoutMargin
 			.build(Mixed) { factories =>
 				// TODO: Refactor using creation settings
 				val radioButton = factories(RadioButton).apply(selectedValuePointer, value, selectedColorRole,

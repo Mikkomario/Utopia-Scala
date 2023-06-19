@@ -230,7 +230,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def withSegments[C <: ReachComponentLike, R](content: Vector[OpenComponent[C, R]], group: SegmentGroup) = {
+	def segmented[C <: ReachComponentLike, R](content: Vector[OpenComponent[C, R]], group: SegmentGroup) = {
 		// Wraps the components in segments first
 		val wrapped = Open { hierarchy =>
 			val wrapResult = group.wrapUnderSingle(hierarchy, content)
@@ -241,6 +241,9 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		// Returns with the original components as children (even though the segments are the real children)
 		stack.withChild(content.map { _.component })
 	}
+	@deprecated("Renamed to .segmented(...)", "v1.1")
+	def withSegments[C <: ReachComponentLike, R](content: Vector[OpenComponent[C, R]], group: SegmentGroup) =
+		segmented(content, group)
 	
 	/**
 	  * Creates a new stack that contains two items
@@ -261,8 +264,8 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                         forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Vector[C], R] =
+	def pair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
+	                                     forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Vector[C], R] =
 	{
 		// Specifies stack axis, layout and item order based on the alignment
 		// The first item always goes to the direction of the alignment
@@ -285,6 +288,10 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		// Creates the stack
 		withAxisAndLayout(axis, if (forceFitLayout) Fit else layout)(orderedContent)
 	}
+	@deprecated("Renamed to .pair(...)", "v1.1")
+	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
+	                                        forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Vector[C], R] =
+		pair(content, alignment, forceFitLayout)
 }
 
 /**
@@ -327,7 +334,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
 	                                                 (fill: Iterator[F] => ComponentsResult[C, R]) =
 	{
 		val content = Open.manyUsing(contentFactory) { fill(_) }
-		withSegments(content.component, group).withResult(content.result)
+		segmented(content.component, group).withResult(content.result)
 	}
 	
 	/**
@@ -353,7 +360,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
 	def buildPair[F, C <: ReachComponentLike, R](contentFactory: Cff[F], alignment: Alignment = Alignment.Left,
 	                                             forceFitLayout: Boolean = false)
 	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
-		forPair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
+		pair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
 }
 
 /**
@@ -426,7 +433,7 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 	                                                 (fill: Iterator[F] => ComponentsResult[C, R]) =
 	{
 		val content = Open.withContext(context).many(contentFactory) { fill(_) }
-		withSegments(content.component, group).withResult(content.result)
+		segmented(content.component, group).withResult(content.result)
 	}
 	
 	/**
@@ -452,7 +459,7 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 	def buildPair[F, C <: ReachComponentLike, R](contentFactory: Ccff[N, F], alignment: Alignment = Alignment.Left,
 	                                             forceFitLayout: Boolean = false)
 	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
-		forPair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
+		pair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
 }
 
 /**

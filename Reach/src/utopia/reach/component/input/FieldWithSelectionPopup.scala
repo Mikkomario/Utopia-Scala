@@ -8,7 +8,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
@@ -18,6 +18,7 @@ import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.operator.End.First
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{End, EqualsFunction, Identity}
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
@@ -94,6 +95,11 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  * The location where the extra option should be placed, if one has been specified
 	  */
 	def extraOptionLocation: End
+	/**
+	  * Size of the margins to place between the selectable items in the pop-up.
+	  * None if no margin should be placed.
+	  */
+	def listMargin: Option[SizeCategory]
 	
 	/**
 	  * Additional key-indices that open the pop-up when they are pressed while this field is in focus.
@@ -155,6 +161,15 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  * @return Copy of this factory with the specified no options view constructor
 	  */
 	def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr
+	/**
+	  * Size of the margins to place between the selectable items in the pop-up.
+	  * None if no margin should be placed.
+	  * @param margin New list margin to use.
+	  *               Size of the margins to place between the selectable items in the pop-up.
+	  *               None if no margin should be placed.
+	  * @return Copy of this factory with the specified list margin
+	  */
+	def withListMargin(margin: Option[SizeCategory]): Repr
 	
 	
 	// COMPUTED	--------------------
@@ -172,6 +187,11 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	def listLayout = listStackSettings.layout
 	def listCap = listStackSettings.cap
 	def listCustomDrawers = listStackSettings.customDrawers
+	
+	/**
+	  * @return Copy of this factory that doesn't place any margin between the list items
+	  */
+	def withoutListMargin = withListMargin(None)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -238,6 +258,8 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	
 	def withAdditionalActivationKeys(keys: IterableOnce[Int]) = mapActivationKeys { _ ++ keys }
 	def activatedWithKey(keyIndex: Int) = mapActivationKeys { _ + keyIndex }
+	
+	def withListMargin(margin: SizeCategory): Repr = withListMargin(Some(margin))
 }
 
 object FieldWithSelectionPopupSettings
@@ -254,6 +276,8 @@ object FieldWithSelectionPopupSettings
   * @param expandAndCollapseIcon    The expand (first) and the collapse icon (second) that should be displayed at the
   *                                 right side of the created fields.
   *                                 Please note that a non-empty right-side icon will override these values.
+  * @param listMargin Size of the margins to place between the selectable items in the pop-up.
+  *                   None if no margin should be placed.
   * @param activationKeys           Additional key-indices that open the pop-up when they are pressed while this field is
   *                                 in focus.
   *                                 By default, only the appropriate arrow key opens the pop-up.
@@ -267,6 +291,7 @@ object FieldWithSelectionPopupSettings
 case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldSettings.default,
                                            listSettings: SelectionListSettings = SelectionListSettings.default,
                                            expandAndCollapseIcon: Pair[SingleColorIcon] = Pair.twice(SingleColorIcon.empty),
+                                           listMargin: Option[SizeCategory] = Some(SizeCategory.Small),
                                            activationKeys: Set[Int] = Set[Int](),
                                            popupContextMod: ReachContentWindowContext => ReachContentWindowContext = Identity,
                                            noOptionsViewConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
@@ -287,6 +312,7 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
 		copy(noOptionsViewConstructor = Some(f))
 	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): FieldWithSelectionPopupSettings =
 		copy(popupContextMod = f)
+	override def withListMargin(margin: Option[SizeCategory]) = copy(listMargin = margin)
 }
 
 /**
@@ -320,7 +346,9 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 	override def listSettings = settings.listSettings
 	override def noOptionsViewConstructor = settings.noOptionsViewConstructor
 	override def popupContextMod: ReachContentWindowContext => ReachContentWindowContext = settings.popupContextMod
+	override def listMargin: Option[SizeCategory] = settings.listMargin
 	
+	override def withListMargin(margin: Option[SizeCategory]): Repr = mapSettings { _.withListMargin(margin) }
 	override def withActivationKeys(keys: Set[Int]) = mapSettings { _.withActivationKeys(keys) }
 	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) =
 		mapSettings { _.withExpandAndCollapseIcon(icons) }
@@ -472,10 +500,14 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	private val popUpVisiblePointer = lazyPopup.stateView.flatMap {
+	val popUpVisiblePointer = lazyPopup.stateView.flatMap {
 		case Some(window) => window.fullyVisibleFlag
 		case None => AlwaysFalse
 	}
+	/**
+	  * A pointer that contains a timestamp of the latest pop-up visibility change event
+	  */
+	val popUpVisibilityLastChangedPointer = popUpVisiblePointer.map { _ => Now.toInstant }
 	// Merges the expand and the collapse icons, if necessary
 	private val rightIconPointer: Changing[SingleColorIcon] = {
 		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
@@ -586,7 +618,10 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * Displays the selection pop-up
 	  */
-	def openPopup() = lazyPopup.value.display()
+	def openPopup() = {
+		if (lazyPopup.current.forall { _.isNotFullyVisible })
+			lazyPopup.value.display()
+	}
 	
 	private def createPopup(): Window = {
 		// Creates the pop-up
@@ -603,6 +638,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 					//  2) Main content only
 					def makeOptionsList(factory: SelectionListFactory) =
 						factory.withContextPointer(popUpContextPointer).withSettings(settings.listSettings)
+							.withMargin(settings.listMargin)
 							.apply(contentPointer, valuePointer, sameItemCheck) { (hierarchy, item) =>
 							makeDisplay(hierarchy, popUpContextPointer, item)
 						}
@@ -735,6 +771,8 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// IMPLEMENTED	-------------------------
 		
 		override def onKeyState(event: KeyStateEvent) = {
+			// Stores the selected value, if applicable
+			// TODO:
 			// Hides the pop-up
 			popup.visible = false
 			// On tabulator press, yields focus afterwards
