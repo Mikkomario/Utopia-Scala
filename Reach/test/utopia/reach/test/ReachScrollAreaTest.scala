@@ -33,7 +33,7 @@ object ReachScrollAreaTest extends App
 	// Settings and data
 	val blockSize = StackSize.any(Size(96, 96))
 	val altBlockSize = blockSize * 0.75
-	val colorIterator = Iterator.continually { Hsl(Angle.ofDegrees(math.random() * 360), 1, 0.5) }
+	val colorIterator = Iterator.continually { Hsl(Angle.ofDegrees(math.random() * 360)) }
 	val bg = colors.gray.light
 	
 	val isAltSizeFlag = ResettableFlag()

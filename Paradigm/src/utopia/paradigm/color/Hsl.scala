@@ -46,12 +46,11 @@ object Hsl extends FromModelFactoryWithSchema[Hsl]
 	/**
 	  * Creates a new HSL color
 	  * @param hue Color hue [0, 360[ where 0 is red, 120 is green and 240 is blue
-	  * @param saturation Saturation [0, 1] where 0 is grayscale and 1 is fully saturated
-	  * @param luminosity Luminosity [0, 1] where 0 is black and 1 is white
+	  * @param saturation Saturation [0, 1] where 0 is grayscale and 1 is fully saturated (default = 1.0)
+	  * @param luminosity Luminosity [0, 1] where 0 is black and 1 is white (default = 0.5)
 	  * @return A new HSL color
 	  */
-	def apply(hue: Angle, saturation: Double, luminosity: Double): Hsl =
-	{
+	def apply(hue: Angle, saturation: Double = 1.0, luminosity: Double = 0.5): Hsl = {
 		val s = 0.0 max saturation min 1.0
 		val l = 0.0 max luminosity min 1.0
 		

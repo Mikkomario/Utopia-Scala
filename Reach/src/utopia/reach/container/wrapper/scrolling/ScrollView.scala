@@ -4,8 +4,10 @@ import utopia.firmament.component.container.single.ScrollViewLike
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.flow.event.listener.ChangeListener
-import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.paradigm.angular.Angle
+import utopia.paradigm.color.{Color, Hsl}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -184,14 +186,14 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	// IMPLEMENTED	----------------------------
 	
 	// WET WET (from ScrollArea)
-	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match {
-		case Some(clip) =>
-			clip.overlapWith(bounds).foreach { c =>
-				println(s"Clipping from $clip to $c")
-				super.paintWith(drawer.clippedToBounds(c), Some(c))
-			}
-		case None =>
-			println("Clipping to scroll bounds")
-			super.paintWith(drawer.clippedToBounds(bounds), Some(bounds))
+	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = {
+		implicit val ds: DrawSettings = StrokeSettings(Hsl(Angle.ofDegrees(math.random() * 360)))
+		clipZone match {
+			case Some(clip) =>
+				clip.overlapWith(bounds).foreach { c =>
+					super.paintWith(drawer.clippedToBounds(c), Some(c))
+				}
+			case None => super.paintWith(drawer.clippedToBounds(bounds), Some(bounds))
+		}
 	}
 }

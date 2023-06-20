@@ -13,6 +13,5 @@ import utopia.firmament.drawing.template.DrawLevel.Background
 case class BackgroundViewDrawer(backgroundPointer: View[Color]) extends BackgroundDrawerLike
 {
 	override def drawLevel = Background
-	
 	override def color = backgroundPointer.value
 }

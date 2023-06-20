@@ -31,6 +31,7 @@
 - **SingleColorIcon** (object)
   - Added `.alwaysEmpty`
 ### Other Changes
+- **Window** mouse move events are now only fired while the window has focus, except in windows that can't gain focus.
 - **SingleColorIconCache** now logs errors and appends ".png" to file names in case the file extension is not specified
 - **SingleColorIcon** now extends **MayBeEmpty**
 

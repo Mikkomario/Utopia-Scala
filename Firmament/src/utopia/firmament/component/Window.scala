@@ -422,12 +422,19 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			// Starts mouse listening (which is active only while visible)
 			val mouseEventGenerator = new MouseEventGenerator(container)
 			eventActorHandler += mouseEventGenerator
+			// Mouse movement events are only enabled while this window is in focus (unless not focusable)
+			val mouseMoveEventsEnabledFilter: Filter[Any] = {
+				if (isFocusable)
+					_ => isFullyVisible && isFocused
+				else
+					_ => isFullyVisible
+			}
 			val whileVisibleFilter: Filter[Any] = _ => isFullyVisible
 			mouseEventGenerator.buttonHandler += MouseButtonStateListener(whileVisibleFilter) { e =>
 				content.distributeMouseButtonEvent(e)
 				None
 			}
-			mouseEventGenerator.moveHandler += MouseMoveListener(whileVisibleFilter)(content.distributeMouseMoveEvent)
+			mouseEventGenerator.moveHandler += MouseMoveListener(mouseMoveEventsEnabledFilter)(content.distributeMouseMoveEvent)
 			mouseEventGenerator.wheelHandler += MouseWheelListener(whileVisibleFilter)(content.distributeMouseWheelEvent)
 			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
 			

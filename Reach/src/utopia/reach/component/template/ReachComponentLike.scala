@@ -219,8 +219,8 @@ trait ReachComponentLike extends Stackable
 	  *                 The clip zone coordinate system matches that of the drawer (0,0) is at the top-left corner of
 	  *                 this component's parent.
 	  */
-	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit =
-	{
+	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit = {
+		println(s"Painting ${getClass.getSimpleName} with clip zone $clipZone; bounds = $bounds")
 		// Calculates new clipping zone and drawer origin
 		val childClipZone = clipZone.map { _ - position }
 		val components = children
@@ -238,13 +238,13 @@ trait ReachComponentLike extends Stackable
 		
 		// Paints child components (only those that overlap with the clipping bounds)
 		if (components.nonEmpty) {
-			val remainingComponents = childClipZone match {
-				case Some(zone) => components.filter { _.bounds.overlapsWith(zone) }
-				case None => components
+			val drawTargetsIterator = childClipZone match {
+				case Some(zone) => components.iterator.filter { _.bounds.overlapsWith(zone) }
+				case None => components.iterator
 			}
-			if (remainingComponents.nonEmpty)
+			if (drawTargetsIterator.hasNext)
 				drawer.translated(position).use { d =>
-					remainingComponents.foreach { c => c.paintWith(d, childClipZone) }
+					drawTargetsIterator.foreach { c => c.paintWith(d, childClipZone) }
 				}
 		}
 		// Paints foreground

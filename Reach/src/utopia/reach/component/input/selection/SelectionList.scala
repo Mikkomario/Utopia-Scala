@@ -434,7 +434,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
 		Bounds.aroundOption(e.values.flatten).foreach { area =>
-			println(s"Repainting area $area")
 			repaintArea(area.enlarged(settings.axis(marginPointer.value.optimal)), High)
 		}
 		true
@@ -580,8 +579,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		// OTHER	---------------------------------
 		
-		def release() =
-		{
+		def release() = {
 			val result = pressedDisplay.filter(currentDisplayUnderCursor.contains).map { d =>
 				manager.selectDisplay(d)
 				ConsumeEvent(s"Selected $d")
