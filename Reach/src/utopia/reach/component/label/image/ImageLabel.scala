@@ -320,6 +320,6 @@ trait ImageLabel extends ReachComponentLike with CustomDrawable with CachingStac
 			else
 				StackSize.downscaling(image.size.ceil)
 		}
-		if (useLowPrioritySize) raw.shrinking else raw
+		(if (useLowPrioritySize) raw.shrinking else raw) + insets
 	}
 }

@@ -601,6 +601,33 @@
           ]
         }
       ],
+      "input.check": [
+        {
+          "name": "CheckBox",
+          "context": "color",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Settings that affect the button aspects of these check boxes"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "selectedColorRole",
+              "param": "role",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color (role) of the hover effects in check boxes while selected"
+            }
+          ]
+        }
+      ],
       "input.text": [
         {
           "name": "EditableTextLabel",

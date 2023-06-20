@@ -220,7 +220,6 @@ trait ReachComponentLike extends Stackable
 	  *                 this component's parent.
 	  */
 	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit = {
-		println(s"Painting ${getClass.getSimpleName} with clip zone $clipZone; bounds = $bounds")
 		// Calculates new clipping zone and drawer origin
 		val childClipZone = clipZone.map { _ - position }
 		val components = children

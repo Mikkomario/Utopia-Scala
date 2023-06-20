@@ -1,5 +1,6 @@
 package utopia.reach.test
 
+import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -8,6 +9,7 @@ import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.image.Image
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
@@ -45,7 +47,7 @@ object ImageViewStackTest extends App
 		stackF.row.centered.build(Mixed) { factories =>
 			Vector(
 				// The first label is static, but sometimes disappears
-				factories.next()(ImageLabel).withBackground(Color.green).apply(icon1) -> pointer1,
+				factories.next()(ImageLabel).withBackground(Color.green).withColor(Secondary).withInsets(Medium).apply(icon1) -> pointer1,
 				// The second label switches between two icons, disappearing based on pointer value
 				factories.next()(ViewImageLabel).withBackground(Color.cyan)
 					.apply(pointer3.map { if (_) icon2 else icon3 }) -> pointer2

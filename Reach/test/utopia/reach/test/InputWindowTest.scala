@@ -6,6 +6,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{RowGroup, RowGroups}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
@@ -46,7 +47,6 @@ object InputWindowTest extends App
 	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
 	val selectedBoxIcon = icons("check-box-selected.png")
 	val unselectedBoxIcon = icons("check-box-empty.png")
-	println(selectedBoxIcon.size)
 	
 	object TestWindows extends InputWindowFactory[Model, Unit]
 	{
@@ -103,7 +103,7 @@ object InputWindowTest extends App
 			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
 				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
 				isScalable = false) {
-					_(selectedBoxIcon, unselectedBoxIcon).validateWith {
+					_.icons(Pair(unselectedBoxIcon, selectedBoxIcon)).validateWith {
 						if (_) LocalizedString.empty else "You must accept the terms and conditions to continue"
 					}
 			}
