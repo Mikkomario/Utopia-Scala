@@ -61,7 +61,7 @@ object ReachSwitchTest extends App
 				
 				// Contains 2 rows:
 				// 1) Main switch row and
-				val mainRow = makeRow("Switch") { _.apply(enabledPointer = enabledPointer) }
+				val mainRow = makeRow("Switch") { _.withEnabledPointer(enabledPointer).apply() }
 				// 2) a switch row which controls enabled state of the first switch
 				val enabledRow = makeRow("Enabled") { _.apply(valuePointer = enabledPointer) }
 				

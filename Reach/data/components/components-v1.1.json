@@ -659,6 +659,32 @@
               "doc": "Scaling modifier applied to the size of the created radio buttons"
             }
           ]
+        },
+        {
+          "name": "Switch",
+          "context": "color",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Settings that apply to switch functionality"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "colorRole",
+              "setter": "withColor",
+              "param": "color",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Switch color when activated"
+            }
+          ]
         }
       ],
       "input.text": [

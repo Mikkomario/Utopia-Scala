@@ -2,12 +2,12 @@ package utopia.reach.component.input.check
 
 import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.{StackLength, StackSize}
-import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.KeyStateEvent
@@ -18,105 +18,280 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
-import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.ColorContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
-import utopia.reach.focus.FocusListener
 import utopia.reach.drawing.Priority.VeryHigh
+import utopia.reach.focus.FocusListener
 
 import java.awt.event.KeyEvent
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
-object Switch extends Cff[SwitchFactory]
+/**
+  * Common trait for switch factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+trait SwitchSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with ButtonSettingsLike[Repr]
 {
-	// ATTRIBUTES	--------------------------------
+	// ABSTRACT	--------------------
 	
-	private val shadowDs = DrawSettings.onlyFill(Color.black.withAlpha(0.15))
+	/**
+	  * Settings that apply to switch functionality
+	  */
+	def buttonSettings: ButtonSettings
+	
+	/**
+	  * Settings that apply to switch functionality
+	  * @param settings New button settings to use.
+	  *                 Settings that apply to switch functionality
+	  * @return Copy of this factory with the specified button settings
+	  */
+	def withButtonSettings(settings: ButtonSettings): Repr
 	
 	
-	// IMPLEMENTED	--------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def apply(hierarchy: ComponentHierarchy) = new SwitchFactory(hierarchy)
+	override def enabledPointer = buttonSettings.enabledPointer
+	override def focusListeners = buttonSettings.focusListeners
+	override def hotKeys = buttonSettings.hotKeys
+	
+	override def withEnabledPointer(p: Changing[Boolean]) =
+		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withFocusListeners(listeners: Vector[FocusListener]) =
+		withButtonSettings(buttonSettings.withFocusListeners(listeners))
+	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
+	
+	
+	// OTHER	--------------------
+	
+	def mapButtonSettings(f: ButtonSettings => ButtonSettings) = withButtonSettings(f(buttonSettings))
 }
 
-class SwitchFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[ColorContext, ContextualSwitchFactory]
+object SwitchSettings
 {
-	// IMPLEMENTED	--------------------------------
+	// ATTRIBUTES	--------------------
 	
-	override def withContext(context: ColorContext) = ContextualSwitchFactory(this, context)
+	val default = apply()
 	
 	
-	// OTHER	-------------------------------------
+	// IMPLICIT ------------------------
+	
+	implicit def wrap(buttonSettings: ButtonSettings): SwitchSettings = apply(buttonSettings = buttonSettings)
+}
+/**
+  * Combined settings used when constructing switchs
+  * @param customDrawers  Custom drawers to assign to created components
+  * @param buttonSettings Settings that apply to switch functionality
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class SwitchSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+                          buttonSettings: ButtonSettings = ButtonSettings.default)
+	extends SwitchSettingsLike[SwitchSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+}
+
+/**
+  * Common trait for factories that wrap a switch settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+trait SwitchSettingsWrapper[+Repr] extends SwitchSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: SwitchSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: SwitchSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def buttonSettings = settings.buttonSettings
+	override def customDrawers = settings.customDrawers
+	
+	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		mapSettings { _.withCustomDrawers(drawers) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: SwitchSettings => SwitchSettings) = withSettings(f(settings))
+}
+
+/**
+  * Common trait for factories that are used for constructing switchs
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * The component hierarchy, to which created switchs will be attached
+	  */
+	protected def parentHierarchy: ComponentHierarchy
+	
+	
+	// OTHER    -------------------
 	
 	/**
 	  * Creates a new switch
-	  * @param actorHandler Actor handler that will deliver action events for animations
-	  * @param color Switch activation color
-	  * @param knobDiameter Diameter (2*r) used in the knob of this switch
-	  * @param hoverExtraRadius Additional radius applied for the hover effect (default = 0)
-	  * @param knobShadowOffset Offset applied for the knob shadow effect (default = 1px left and down)
-	  * @param valuePointer A mutable pointer to this switches pointer (default = new pointer)
-	  * @param enabledPointer A pointer containing the enabled status of this switch (default = always enabled)
-	  * @param shade The shade of this switch (dark or light). Call-by-name.
-	  *              Use a value suitable against the current background.
-	  *              Default = Light.
+	  * @param actorHandler      Actor handler that will deliver action events for animations
+	  * @param color             Switch activation color
+	  * @param knobDiameter      Diameter (2*r) used in the knob of this switch
+	  * @param hoverExtraRadius  Additional radius applied for the hover effect (default = 0)
+	  * @param knobShadowOffset  Offset applied for the knob shadow effect (default = 1px left and down)
+	  * @param valuePointer      A mutable pointer to this switches pointer (default = new pointer)
+	  * @param shade             The shade of this switch (dark or light). Call-by-name.
+	  *                          Use a value suitable against the current background.
+	  *                          Default = Light.
 	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
-	  * @param customDrawers Custom drawers applied to this switch (default = empty)
-	  * @param focusListeners Focus listeners applied to this switch (default = empty)
 	  * @return A new switch
 	  */
-	def apply(actorHandler: ActorHandler, color: Color,
-	          knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-	          enabledPointer: Changing[Boolean] = AlwaysTrue, shade: => ColorShade = Light,
-	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
+	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
+	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
+	                     valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+	                     shade: => ColorShade = Light,
+	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 		new Switch(parentHierarchy, actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset,
-			valuePointer, enabledPointer, shade, animationDuration, customDrawers, focusListeners)
+			valuePointer, settings, shade, animationDuration)
 }
 
-case class ContextualSwitchFactory(factory: SwitchFactory, context: ColorContext)
-	extends ColorContextualFactory[ContextualSwitchFactory]
+/**
+  * Factory class used for constructing switches using contextual component creation information
+  * @param colorRole Switch color when activated
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+                                   settings: SwitchSettings = SwitchSettings.default, colorRole: ColorRole = ColorRole.Secondary)
+	extends SwitchFactoryLike[ContextualSwitchFactory] with ColorContextualFactory[ContextualSwitchFactory]
 {
 	// IMPLEMENTED	---------------------------------
 	
 	override def self: ContextualSwitchFactory = this
 	
 	override def withContext(newContext: ColorContext) = copy(context = newContext)
+	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
+	
+	
+	// OTHER	-------------------------------------
+	
+	/**
+	  * @param color Switch color when activated
+	  * @return Copy of this factory with the specified color role
+	  */
+	def withColor(color: ColorRole) = copy(colorRole = color)
+	
+	/**
+	  * Creates a new switch
+	  * @param valuePointer   A mutable pointer to this switches pointer (default = new pointer)
+	  * @return A new switch
+	  */
+	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false))
+	         (implicit animationContext: AnimationContext) =
+	{
+		val knobR = context.margins.medium
+		val xOffset = (knobR * 0.2) min 1.0
+		val yOffset = (knobR * 0.3) min 2.0
+		val shade = context.background.shade.opposite
+		_apply(animationContext.actorHandler, context.color(colorRole), knobR * 2, knobR * 0.75,
+			Vector2D(-xOffset, yOffset), valuePointer, shade, animationContext.animationDuration)
+	}
+}
+
+/**
+  * Factory class that is used for constructing switchs without using contextual information
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class SwitchFactory(parentHierarchy: ComponentHierarchy,
+                         settings: SwitchSettings = SwitchSettings.default)
+	extends SwitchFactoryLike[SwitchFactory] with FromContextFactory[ColorContext, ContextualSwitchFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContext(context: ColorContext) = ContextualSwitchFactory(parentHierarchy, context, settings)
+	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
 	
 	
 	// OTHER	-------------------------------------
 	
 	/**
 	  * Creates a new switch
-	  * @param valuePointer A mutable pointer to this switches pointer (default = new pointer)
-	  * @param enabledPointer A pointer containing the enabled status of this switch (default = always enabled)
-	  * @param colorRole Color role used in this switch when active (default = Secondary)
-	  * @param customDrawers Custom drawers applied to this switch (default = empty)
-	  * @param focusListeners Focus listeners applied to this switch (default = empty)
+	  * @param actorHandler      Actor handler that will deliver action events for animations
+	  * @param color             Switch activation color
+	  * @param knobDiameter      Diameter (2*r) used in the knob of this switch
+	  * @param hoverExtraRadius  Additional radius applied for the hover effect (default = 0)
+	  * @param knobShadowOffset  Offset applied for the knob shadow effect (default = 1px left and down)
+	  * @param valuePointer      A mutable pointer to this switches pointer (default = new pointer)
+	  * @param shade             The shade of this switch (dark or light). Call-by-name.
+	  *                          Use a value suitable against the current background.
+	  *                          Default = Light.
+	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
 	  * @return A new switch
 	  */
-	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-	          enabledPointer: Changing[Boolean] = AlwaysTrue, colorRole: ColorRole = Secondary,
-	          customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
-			 (implicit animationContext: AnimationContext) =
-	{
-		val knobR = context.margins.medium
-		val xOffset = (knobR * 0.2) min 1.0
-		val yOffset = (knobR * 0.3) min 2.0
-		val shade = context.background.shade.opposite
-		factory(animationContext.actorHandler, context.color(colorRole), knobR * 2, knobR * 0.75,
-			Vector2D(-xOffset, yOffset), valuePointer, enabledPointer, shade, animationContext.animationDuration,
-			customDrawers, focusListeners)
-	}
+	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
+	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
+	                     valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+	                     shade: => ColorShade = Light,
+	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
+		_apply(actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset, valuePointer, shade,
+			animationDuration)
+}
+
+/**
+  * Used for defining switch creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class SwitchSetup(settings: SwitchSettings = SwitchSettings.default)
+	extends SwitchSettingsWrapper[SwitchSetup] with ComponentFactoryFactory[SwitchFactory]
+		with FromContextComponentFactoryFactory[ColorContext, ContextualSwitchFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def apply(hierarchy: ComponentHierarchy) = SwitchFactory(hierarchy, settings)
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
+		ContextualSwitchFactory(hierarchy, context, settings)
+	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
+}
+
+object Switch extends SwitchSetup()
+{
+	// ATTRIBUTES	--------------------
+	
+	private val shadowDs = DrawSettings.onlyFill(Color.black.withAlpha(0.15))
+	
+	
+	// OTHER	--------------------
+	
+	def apply(settings: SwitchSettings) = withSettings(settings)
 }
 
 /**
@@ -127,17 +302,15 @@ case class ContextualSwitchFactory(factory: SwitchFactory, context: ColorContext
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-             enabledPointer: Changing[Boolean] = AlwaysTrue, shade: => ColorShade = Light,
-             animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-             additionalDrawers: Vector[CustomDrawer] = Vector(),
-             additionalFocusListeners: Seq[FocusListener] = Vector())
+             settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
+             animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends CustomDrawReachComponent with ButtonLike with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	--------------------------------
 	
 	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
-	override val statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
+	override val statePointer = baseStatePointer.mergeWith(settings.enabledPointer) { (state, enabled) =>
 		state + (Disabled -> !enabled) }
 	
 	// The "bar" is exactly two knobs wide and 70% knob high
@@ -150,14 +323,14 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 			standardWidth * 2 + hoverExtraRadius * 2), StackLength(knobDiameter, optimalHeight, optimalHeight * 1.5))
 	}
 	
-	override val customDrawers = SwitchDrawer +: additionalDrawers
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
+	override val customDrawers = SwitchDrawer +: settings.customDrawers
+	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	override val focusId = hashCode()
 	
 	
 	// INITIAL CODE	--------------------------------
 	
-	setup(baseStatePointer)
+	setup(baseStatePointer, settings.hotKeys)
 	valuePointer.addContinuousListener { event => SwitchDrawer.updateTarget(event.newValue) }
 	addHierarchyListener { isAttached =>
 		if (isAttached) {
