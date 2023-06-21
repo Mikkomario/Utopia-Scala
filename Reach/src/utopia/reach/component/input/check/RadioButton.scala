@@ -1,41 +1,254 @@
 package utopia.reach.component.input.check
 
 import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.firmament.model.{GuiElementStatus, HotKey, StandardSizeAdjustable}
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextFactory
-import utopia.reach.component.factory.contextual.ColorContextualFactory
+import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
-import utopia.reach.focus.FocusListener
 import utopia.reach.drawing.Priority.High
+import utopia.reach.focus.FocusListener
 
-object RadioButton extends Cff[RadioButtonFactory]
+import scala.language.implicitConversions
+
+/**
+  * Common trait for radio button factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+trait RadioButtonSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with ButtonSettingsLike[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new RadioButtonFactory(hierarchy)
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings that affect the functionality of the created radio buttons
+	  */
+	def buttonSettings: ButtonSettings
+	/**
+	  * Color role used when highlighting the selected state in created radio buttons
+	  */
+	def selectedColorRole: ColorRole
+	
+	/**
+	  * Settings that affect the functionality of the created radio buttons
+	  * @param settings New button settings to use.
+	  *                 Settings that affect the functionality of the created radio buttons
+	  * @return Copy of this factory with the specified button settings
+	  */
+	def withButtonSettings(settings: ButtonSettings): Repr
+	/**
+	  * Color role used when highlighting the selected state in created radio buttons
+	  * @param role New selected color role to use.
+	  *             Color role used when highlighting the selected state in created radio buttons
+	  * @return Copy of this factory with the specified selected color role
+	  */
+	def withSelectedColorRole(role: ColorRole): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def enabledPointer = buttonSettings.enabledPointer
+	override def focusListeners = buttonSettings.focusListeners
+	override def hotKeys = buttonSettings.hotKeys
+	
+	override def withEnabledPointer(p: Changing[Boolean]) =
+		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withFocusListeners(listeners: Vector[FocusListener]) =
+		withButtonSettings(buttonSettings.withFocusListeners(listeners))
+	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
+	
+	
+	// OTHER	--------------------
+	
+	def mapButtonSettings(f: ButtonSettings => ButtonSettings) = withButtonSettings(f(buttonSettings))
 }
 
-class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[ColorContext, ContextualRadioButtonFactory]
+object RadioButtonSettings
 {
-	// IMPLEMENTED  ------------------------------------
+	// ATTRIBUTES	--------------------
 	
-	override def withContext(context: ColorContext) =
-		ContextualRadioButtonFactory(this, context)
+	val default = apply()
+	
+	
+	// IMPLICIT ------------------------
+	
+	// Implicitly converts button settings to radio button settings
+	implicit def wrap(buttonSettings: ButtonSettings): RadioButtonSettings = apply(buttonSettings = buttonSettings)
+}
+/**
+  * Combined settings used when constructing radio buttons
+  * @param customDrawers     Custom drawers to assign to created components
+  * @param buttonSettings    Settings that affect the functionality of the created radio buttons
+  * @param selectedColorRole Color role used when highlighting the selected state in created radio buttons
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class RadioButtonSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+                               buttonSettings: ButtonSettings = ButtonSettings.default,
+                               selectedColorRole: ColorRole = ColorRole.Secondary)
+	extends RadioButtonSettingsLike[RadioButtonSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withSelectedColorRole(role: ColorRole) = copy(selectedColorRole = role)
+}
+
+/**
+  * Common trait for factories that wrap a radio button settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+trait RadioButtonSettingsWrapper[+Repr] extends RadioButtonSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: RadioButtonSettings
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: RadioButtonSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def buttonSettings = settings.buttonSettings
+	override def customDrawers = settings.customDrawers
+	override def selectedColorRole = settings.selectedColorRole
+	
+	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+		mapSettings { _.withCustomDrawers(drawers) }
+	override def withSelectedColorRole(role: ColorRole) = mapSettings { _.withSelectedColorRole(role) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: RadioButtonSettings => RadioButtonSettings) = withSettings(f(settings))
+}
+
+/**
+  * Common trait for factories that are used for constructing radio buttons
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * The component hierarchy, to which created radio buttons will be attached
+	  */
+	protected def parentHierarchy: ComponentHierarchy
+	
+	
+	// OTHER    -------------------
+	
+	/**
+	  * Creates a new radio button
+	  * @param selectedValuePointer   A mutable pointer to the currently selected value
+	  * @param value                  Value represented by this radio button
+	  * @param backgroundColorPointer A pointer to the current background color
+	  * @param diameter               The diameter (2 * radius) of this button
+	  * @param hoverExtraRadius       Added radius for the hover effect
+	  * @param ringWidth              Width of the outer ring in this button
+	  * @param colorScheme            Color scheme used (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new radio button
+	  */
+	protected def _apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
+	             backgroundColorPointer: Changing[Color], diameter: Double,
+	             hoverExtraRadius: Double, ringWidth: Double)
+	            (implicit colorScheme: ColorScheme) =
+		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
+			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, settings)
+}
+
+/**
+  * Factory class used for constructing radio buttons using contextual component creation information
+  * @param scaling Scaling modifier applied to the size of the created radio buttons
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
+                                        contextPointer: Changing[ColorContext],
+                                        settings: RadioButtonSettings = RadioButtonSettings.default,
+                                        scaling: Double = 1.0)
+	extends RadioButtonFactoryLike[ContextualRadioButtonFactory]
+		with VariableContextualFactory[ColorContext, ContextualRadioButtonFactory]
+		with StandardSizeAdjustable[ContextualRadioButtonFactory]
+{
+	// IMPLEMENTED  --------------------------
+	
+	override def self: ContextualRadioButtonFactory = this
+	override protected def relativeToStandardSize: Double = scaling
+	
+	override def withContextPointer(contextPointer: Changing[ColorContext]) =
+		copy(contextPointer = contextPointer)
+	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
+	
+	override def *(mod: Double): ContextualRadioButtonFactory = copy(scaling = scaling * mod)
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	  * Creates a new radio button
+	  * @param selectedValuePointer   A mutable pointer to the currently selected value
+	  * @param value                  Value represented by this radio button
+	  * @tparam A Type of selected value
+	  * @return A new radio button
+	  */
+	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A) = {
+		// Uses a static size after creation
+		val context = contextPointer.value
+		// TODO: Creates unnecessary mappings
+		val bgPointer = contextPointer.map { _.background }
+		val sizeMod = ComponentCreationDefaults.radioButtonScalingFactor * scaling
+		_apply[A](selectedValuePointer, value, bgPointer,
+			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
+			(context.margins.medium * 0.4 * sizeMod).round.toDouble,
+			((context.margins.medium * 0.22 * sizeMod) max 1.0).round.toDouble)(context.colors)
+	}
+}
+
+/**
+  * Factory class that is used for constructing radio buttons without using contextual information
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class RadioButtonFactory(parentHierarchy: ComponentHierarchy,
+                              settings: RadioButtonSettings = RadioButtonSettings.default)
+	extends RadioButtonFactoryLike[RadioButtonFactory]
+		with FromVariableContextFactory[ColorContext, ContextualRadioButtonFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContextPointer(p: Changing[ColorContext]) =
+		ContextualRadioButtonFactory(parentHierarchy, p, settings)
+	
+	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
 	
 	
 	// OTHER    ----------------------------------------
@@ -48,70 +261,41 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 	 * @param diameter The diameter (2 * radius) of this button
 	 * @param hoverExtraRadius Added radius for the hover effect
 	 * @param ringWidth Width of the outer ring in this button (default = 1 px)
-	 * @param selectedColorRole Color role that represents the selected state (default = Secondary)
-	 * @param enabledPointer A pointer that contains the enabled status of this button (default = always enabled)
-	 * @param customDrawers Custom drawers to assign to this button (default = empty)
-	 * @param focusListeners Focus listeners to assign to this button (default = empty)
 	 * @param colorScheme Color scheme used (implicit)
 	 * @tparam A Type of selected value
 	 * @return A new radio button
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
 	             backgroundColorPointer: Changing[Color], diameter: Double,
-	             hoverExtraRadius: Double, ringWidth: Double = 1.0, selectedColorRole: ColorRole = ColorRole.Secondary,
-	             enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             customDrawers: Vector[CustomDrawer] = Vector(),
-	             focusListeners: Seq[FocusListener] = Vector())(implicit colorScheme: ColorScheme) =
-		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
-			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, selectedColorRole, enabledPointer, customDrawers,
-			focusListeners)
+	             hoverExtraRadius: Double, ringWidth: Double = 1.0)
+	            (implicit colorScheme: ColorScheme) =
+		_apply[A](selectedValuePointer, value, backgroundColorPointer, diameter, hoverExtraRadius, ringWidth)
 }
 
-case class ContextualRadioButtonFactory(factory: RadioButtonFactory, context: ColorContext)
-	extends ColorContextualFactory[ContextualRadioButtonFactory]
+/**
+  * Used for defining radio button creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 21.06.2023, v1.1
+  */
+case class RadioButtonSetup(settings: RadioButtonSettings = RadioButtonSettings.default)
+	extends RadioButtonSettingsWrapper[RadioButtonSetup] with ComponentFactoryFactory[RadioButtonFactory]
+		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualRadioButtonFactory]
 {
-	// IMPLICIT ------------------------------
+	// IMPLEMENTED	--------------------
 	
-	private implicit def colorScheme: ColorScheme = context.colors
+	override def apply(hierarchy: ComponentHierarchy) = RadioButtonFactory(hierarchy, settings)
 	
+	override def withContextPointer(hierarchy: ComponentHierarchy, p: Changing[ColorContext]) =
+		ContextualRadioButtonFactory(hierarchy, p, settings)
 	
-	// IMPLEMENTED  --------------------------
+	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
+}
+
+object RadioButton extends RadioButtonSetup()
+{
+	// OTHER	--------------------
 	
-	override def self: ContextualRadioButtonFactory = this
-	
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
-	
-	
-	// OTHER    ------------------------------
-	
-	/**
-	 * Creates a new radio button
-	 * @param selectedValuePointer A mutable pointer to the currently selected value
-	 * @param value Value represented by this radio button
-	 * @param selectedColorRole Color role that represents the selected state (default = Secondary)
-	 * @param enabledPointer A pointer that contains the enabled status of this button (default = always enabled)
-	 * @param backgroundColorPointer A pointer to the current background color (default = determined by context (fixed))
-	  * @param sizeModifier A modifier applied to this button's size (default = global default)
-	 * @param customDrawers Custom drawers to assign to this button (default = empty)
-	 * @param focusListeners Focus listeners to assign to this button (default = empty)
-	 * @tparam A Type of selected value
-	 * @return A new radio button
-	 */
-	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
-	             selectedColorRole: ColorRole = ColorRole.Secondary,
-	             enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             backgroundColorPointer: Changing[Color] = Fixed(context.background),
-	             sizeModifier: Double = ComponentCreationDefaults.radioButtonScalingFactor,
-	             customDrawers: Vector[CustomDrawer] = Vector(),
-	             focusListeners: Seq[FocusListener] = Vector()) =
-	{
-		val sizeMod = ComponentCreationDefaults.radioButtonScalingFactor
-		factory(selectedValuePointer, value, backgroundColorPointer,
-			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
-			(context.margins.medium * 0.4 * sizeMod).round.toDouble,
-			((context.margins.medium * 0.22 * sizeMod) max 1.0).round.toDouble,
-			selectedColorRole, enabledPointer, customDrawers, focusListeners)
-	}
+	def apply(settings: RadioButtonSettings) = withSettings(settings)
 }
 
 /**
@@ -119,13 +303,10 @@ case class ContextualRadioButtonFactory(factory: RadioButtonFactory, context: Co
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
-// TODO: Add radio button creation settings
 class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
                      representing: A, backgroundColorPointer: Changing[Color],
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
-                     selectedColorRole: ColorRole = Secondary, enabledPointer: Changing[Boolean] = AlwaysTrue,
-                     additionalDrawers: Vector[CustomDrawer] = Vector(),
-                     additionalFocusListeners: Seq[FocusListener] = Vector())
+                     settings: RadioButtonSettings = RadioButtonSettings.default)
                     (implicit colorScheme: ColorScheme)
 	extends CustomDrawReachComponent with ButtonLike
 {
@@ -133,10 +314,10 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	
 	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
 	override val statePointer = {
-		if (enabledPointer.isAlwaysTrue)
+		if (settings.enabledPointer.isAlwaysTrue)
 			baseStatePointer.view
 		else
-			baseStatePointer.mergeWith(enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
+			baseStatePointer.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	}
 	
 	/**
@@ -152,14 +333,15 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	}
 	
 	override val focusId = hashCode()
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
+	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	
 	private val colorPointer = backgroundColorPointer
-		.mergeWith(selectedPointer, enabledPointer) { (background, isSelected, isEnabled) =>
+		.mergeWith(selectedPointer, settings.enabledPointer) { (background, isSelected, isEnabled) =>
 			// While disabled or unselected, uses either black or white, with certain opacity
 			// Otherwise uses the selection color
 			if (isSelected && isEnabled)
-				colorScheme(selectedColorRole).against(background, minimumContrast = Minimum.defaultMinimumContrast)
+				colorScheme(settings.selectedColorRole)
+					.against(background, minimumContrast = Minimum.defaultMinimumContrast)
 			else {
 				val base = background.shade.defaultTextColor
 				if (isEnabled) base.withAlpha(0.72) else base.withAlpha(0.5)
@@ -169,7 +351,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 		color.timesAlpha(state.hoverAlpha)
 	}
 	
-	override val customDrawers = RadioButtonDrawer +: additionalDrawers
+	override val customDrawers = RadioButtonDrawer +: settings.customDrawers
 	
 	
 	// INITIAL CODE ---------------------------------

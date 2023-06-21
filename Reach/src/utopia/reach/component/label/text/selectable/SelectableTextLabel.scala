@@ -235,10 +235,11 @@ case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierar
 	  */
 	def apply(textPointer: Changing[LocalizedString]) = {
 		val label = new SelectableTextLabel(parentHierarchy, contextPointer, textPointer, settings)
-		contextPointer.addContinuousListener { e =>
-			if (e.toPair.isAsymmetricBy { _.background })
-				label.repaint()
-		}
+		if (drawsBackground)
+			contextPointer.addContinuousListener { e =>
+				if (e.values.isAsymmetricBy { _.background })
+					label.repaint()
+			}
 		label
 	}
 }

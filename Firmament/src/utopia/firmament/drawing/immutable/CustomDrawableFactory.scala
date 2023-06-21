@@ -22,6 +22,14 @@ trait CustomDrawableFactory[+Repr]
 	def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr
 	
 	
+	// COMPUTED ---------------------
+	
+	/**
+	  * @return Copy of this factory without any of the previously assigned custom drawers
+	  */
+	def withoutCustomDrawers = withCustomDrawers(Vector())
+	
+	
 	// OTHER    ---------------------
 	
 	/**

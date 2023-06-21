@@ -302,7 +302,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 			imageSettings, displayFunction, customDrawers, forceEqualBreadth)
 		if (drawBackground)
 			contextPointer.addContinuousListener { e =>
-				if (e.toPair.isAsymmetricBy { _.background })
+				if (e.values.isAsymmetricBy { _.background })
 					label.repaint()
 			}
 		label

@@ -78,7 +78,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 		// If background drawing is enabled, repaints when the background color changes
 		if (drawBackground)
 			contextPointer.addContinuousListener { e =>
-				if (e.toPair.isAsymmetricBy { _.background })
+				if (e.values.isAsymmetricBy { _.background })
 					label.repaint()
 			}
 		label

@@ -626,6 +626,39 @@
               "doc": "Color (role) of the hover effects in check boxes while selected"
             }
           ]
+        },
+        {
+          "name": "RadioButton",
+          "context": "color",
+          "variable_context": true,
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Settings that affect the functionality of the created radio buttons"
+            },
+            {
+              "name": "selectedColorRole",
+              "param": "role",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color role used when highlighting the selected state in created radio buttons"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "scaling",
+              "type": "Double",
+              "default": "1.0",
+              "map": true,
+              "doc": "Scaling modifier applied to the size of the created radio buttons"
+            }
+          ]
         }
       ],
       "input.text": [
@@ -788,6 +821,29 @@
         }
       ],
       "input.selection": [
+        {
+          "name": "RadioButtonGroup",
+          "context": "text",
+          "variable_context": true,
+          "only_contextual": true,
+          "props": [
+            {
+              "ref": "Stack",
+              "prefix": "stack",
+              "prefix_props": false
+            },
+            {
+              "name": "selectedColorRole",
+              "param": "role",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color role used for highlighting the selected radio button"
+            }
+          ]
+        },
         {
           "name": "SelectionList",
           "context": "color",

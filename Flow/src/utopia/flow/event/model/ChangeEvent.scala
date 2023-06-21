@@ -39,6 +39,7 @@ case class ChangeEvent[+A](values: Pair[A])
 	  *         - 1: The old value
 	  *         - 2: The new value
 	  */
+	@deprecated("Please use .values instead", "v2.2")
 	def toPair = values
 	
 	

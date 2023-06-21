@@ -3,6 +3,8 @@
 ## v2.2 (in development)
 ### Breaking Changes
 - **IterableOnce**`.toTryCatch` now returns a **TryCatch** instead of a **Try**
+### Deprecations
+- Deprecated `.toPair` in **ChangeEvent** because the name implied conversion
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 ### New Features

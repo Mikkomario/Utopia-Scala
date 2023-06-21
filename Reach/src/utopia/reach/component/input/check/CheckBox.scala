@@ -37,7 +37,7 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 20.06.2023, v1.1
   */
-// TODO: Add scaling
+// TODO: Add scaling support
 trait CheckBoxSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with ButtonSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------

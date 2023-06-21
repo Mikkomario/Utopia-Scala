@@ -23,8 +23,7 @@ object ReachRadioButtonsTest extends App
 		// Framing
 		framingF.build(RadioButtonGroup) { btnF =>
 			// Radio buttons
-			btnF.withPointer(Vector[(Int, LocalizedString)](1 -> "First", 2 -> "Second", 3 -> "Third Option"),
-				valuePointer)
+			btnF(Vector[(Int, LocalizedString)](1 -> "First", 2 -> "Second", 3 -> "Third Option"), valuePointer)
 		}
 	}
 	
