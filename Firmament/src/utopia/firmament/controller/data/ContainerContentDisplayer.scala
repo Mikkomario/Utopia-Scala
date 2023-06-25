@@ -33,7 +33,7 @@ object ContainerContentDisplayer
 	                                             contentPointer: P[A],
 	                                             equalsCheck: EqualsFunction[A] = EqualsFunction.default)
 												(makeDisplay: A => W) =
-		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, equalsCheck)(makeDisplay)
+		apply[A, W, Display, P[A]](container, contentPointer, equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content displayer for immutable items that represent a state of some other object
@@ -52,8 +52,7 @@ object ContainerContentDisplayer
 	def forImmutableStates[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A])
 												 (sameItemCheck: EqualsFunction[A])
 												 (makeDisplay: A => W) =
-		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
-			Some((a: A, b: A) => a == b))(makeDisplay)
+		apply[A, W, Display, P[A]](container, contentPointer, sameItemCheck, Some((a: A, b: A) => a == b))(makeDisplay)
 	
 	/**
 	  * Creates a content displayer for mutable / mutating items. Please note that the items may not always update
@@ -72,8 +71,7 @@ object ContainerContentDisplayer
 	def forMutableItems[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A])
 											  (sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])
 											  (makeDisplay: A => W) =
-		new ContainerContentDisplayer[A, W, Display, P[A]](container, contentPointer, sameItemCheck,
-			Some(equalsCheck))(makeDisplay)
+		apply[A, W, Display, P[A]](container, contentPointer, sameItemCheck, Some(equalsCheck))(makeDisplay)
 			
 	def apply[A, W, Display <: Refreshable[A] with Component, P <: Changing[Vector[A]]](container: MutableMultiContainer[W, Display],
 	                                                                                    contentPointer: P,
@@ -129,8 +127,7 @@ class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component,
 	
 	override def displays = container.components.toVector
 	
-	override protected def addDisplaysFor(values: Vector[A], index: Int) =
-	{
+	override protected def addDisplaysFor(values: Vector[A], index: Int) = {
 		// Uses stored backup components if possible
 		val existingSlots = capacity.pop { current =>
 			if (current.isEmpty)

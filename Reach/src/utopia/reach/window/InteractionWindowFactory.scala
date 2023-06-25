@@ -186,7 +186,6 @@ trait InteractionWindowFactory[A]
 			val (alignment, blueprints) = buttonsByLocation.head
 			// Case: More than one button
 			if (blueprints.size > 1) {
-				println(s"Constructing ${blueprints.size} buttons")
 				factories(AlignFrame)(alignment).build(Stack) { stackF =>
 					stackF.row.withMargin(nonScalingMargin).build(Mixed) { factories =>
 						val buttons = blueprints.map { blueprint =>

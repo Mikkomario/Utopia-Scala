@@ -99,8 +99,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override protected def createContent(factories: ContextualMixed[TextContext]) =
-	{
+	override protected def createContent(factories: ContextualMixed[TextContext]) = {
 		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
 		val (template, dialogContext) = inputTemplate
 		val (nameContext, fieldContext) = contentContext

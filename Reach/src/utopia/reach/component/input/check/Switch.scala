@@ -177,8 +177,12 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr]
 	                     valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
 	                     shade: => ColorShade = Light,
 	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
-		new Switch(parentHierarchy, actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset,
+	{
+		val scaling = ComponentCreationDefaults.switchScalingFactor
+		new Switch(parentHierarchy, actorHandler, color, math.round(knobDiameter * scaling),
+			math.round(hoverExtraRadius * scaling), knobShadowOffset.map { o => math.round(o * scaling) },
 			valuePointer, settings, shade, animationDuration)
+	}
 }
 
 /**
@@ -219,7 +223,7 @@ case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context:
 		val xOffset = (knobR * 0.2) min 1.0
 		val yOffset = (knobR * 0.3) min 2.0
 		val shade = context.background.shade.opposite
-		_apply(animationContext.actorHandler, context.color(colorRole), knobR * 2, knobR * 0.75,
+		_apply(animationContext.actorHandler, context.withEnhancedColorContrast.color(colorRole), knobR * 2, knobR * 0.75,
 			Vector2D(-xOffset, yOffset), valuePointer, shade, animationContext.animationDuration)
 	}
 }

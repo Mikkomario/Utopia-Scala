@@ -355,7 +355,6 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContex
 				.apply(image)
 		else {
 			// Wraps the components in a stack
-			println(s"image alignment is ${settings.imageAlignment}")
 			Stack(parentHierarchy).withContext(context)
 				// TODO: Add option to customize stack margin
 				.withCustomDrawers(settings.customDrawers).withoutMargin

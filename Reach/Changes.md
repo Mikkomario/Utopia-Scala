@@ -28,7 +28,7 @@
   - This was added in order to automatically optimize between the **ViewStack** and the **Stack** options
 - **ImageLabel** is now a trait
 - Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
-- Rewrote most of component constructors
+- Rewrote most component constructors
 ### Deprecations
 - Deprecated existing constructors in various label classes
 - Deprecated **ImageLabelLike** in favor of **ImageLabel**
@@ -36,10 +36,11 @@
 ### New Features
 - **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
   (optional feature)
-- Added new constructor style to various label factories
+- Added new constructor style to various component factories
 - Added easier methods for adding background drawing to certain components and containers
   - In containers, the new `.withBackground(...)` functions are available implicitly (see **GenericContextualFactory**)
   - In component factories, these become available after importing **ContextualBackgroundAssignableFactory**
+- **Switches** can now be commonly scaled by modifying `ComponentCreationDefaults.switchScalingFactor`
 ### New Methods
 - **CachingViewSwapper** (factory)
   - Added the missing `.build(...)` method
@@ -47,6 +48,7 @@
   - Added a new `.withContext(ReachContentWindowContext)` -variant
 ### Other Changes
 - **ViewStack** constructors now optimize resources by constructing a **Stack** if the content is static
+- **Switches** now require a higher color contrast against the background
 
 ## v1.0 - 01.05.2023
 This is intended as the initial release of the full version of **Reach**, which is, from this version onwards, 
