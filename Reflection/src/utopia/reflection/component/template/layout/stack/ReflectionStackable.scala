@@ -288,8 +288,7 @@ trait ReflectionStackable extends Stackable with ReflectionComponentLike
 	  * @param parent Parent for this stackable to register under.
 	  */
 	def attachToStackHierarchyUnder(parent: ReflectionStackable) = {
-		if (parent.isAttachedToMainHierarchy)
-		{
+		if (parent.isAttachedToMainHierarchy) {
 			StackHierarchyManager.registerConnection(parent, this)
 			isAttachedToMainHierarchy = true
 			// Revalidates this item upon attachment since it may be that some revalidations were skipped in the meanwhile

@@ -271,56 +271,59 @@ object StackHierarchyManager
 	  * @param parent A parent element
 	  * @param child A child element
 	  */
-	def registerConnection(parent: ReflectionStackable, child: ReflectionStackable) =
-	{
-		// If the child already had a parent, makes the child a master (top level component) first
-		ids.get(child.stackId).foreach { childId =>
-			childId.parentId.foreach { parentId =>
-				// Disconnects the child from the parent, also updates all id numbers
-				nodeOptionForId(parentId).foreach { parentNode =>
-					val childIndex = childId.last
-					(parentNode/childIndex).headOption.foreach { childNode =>
-						// Disconnects the child node
-						parentNode.disconnectDirect(childNode)
-						// Updates the ids of grandchildren (and their children) to not include the removed old parent's id
-						childNode.allNodesIterator.foreach { c =>
-							val grandChildStackId = c.value.stackId
-							ids.get(grandChildStackId).foreach { grandChildId =>
-								ids(grandChildStackId) = grandChildId.dropUntil(childIndex)
+	def registerConnection(parent: ReflectionStackable, child: ReflectionStackable) = {
+		// Checks whether the child is already connected to the specified parent
+		val childId = ids.get(child.stackId)
+		val oldParentId = childId.flatMap { _.parentId }
+		if (oldParentId.forall { _.last != parent.stackId }) {
+			// If the child already had a parent, makes the child a master (top level component) first
+			childId.foreach { childId =>
+				oldParentId.foreach { parentId =>
+					// Disconnects the child from the parent, also updates all id numbers
+					nodeOptionForId(parentId).foreach { parentNode =>
+						val childIndex = childId.last
+						(parentNode / childIndex).headOption.foreach { childNode =>
+							// Disconnects the child node
+							parentNode.disconnectDirect(childNode)
+							// Updates the ids of grandchildren (and their children) to not include the removed old parent's id
+							childNode.allNodesIterator.foreach { c =>
+								val grandChildStackId = c.value.stackId
+								ids.get(grandChildStackId).foreach { grandChildId =>
+									ids(grandChildStackId) = grandChildId.dropUntil(childIndex)
+								}
 							}
+							
+							// Makes the child a master
+							graph(childIndex) = childNode
 						}
-						
-						// Makes the child a master
-						graph(childIndex) = childNode
 					}
 				}
 			}
-		}
-		
-		// Makes sure that the parent is already registered
-		val newParentId = parentId(parent)
-		// If, for some reason, the parent's node was removed before or during this method call, will not finish
-		// the node creation
-		nodeOptionForId(newParentId).foreach { newParentNode =>
-			// If the child (master) already exists, attaches it to the new parent
-			ids.get(child.stackId) match
-			{
-				case Some(oldChildId) =>
-					val childIndex = oldChildId.last
-					// If the child node was removed from this hierarchy before or during this operation,
-					// will not modify or insert it
-					graph.get(childIndex).foreach { childNode =>
-						// Updates all child ids
-						childNode.allNodesIterator.foreach { n => ids(n.value.stackId) = newParentId + ids(n.value.stackId) }
-						// Removes the child from master nodes and attaches it to the new parent
-						graph -= childIndex
-						newParentNode.connect(childNode, childIndex)
-					}
-				case None =>
-					// Otherwise adds the child as a new id + node
-					val newChildId = newParentId + indexCounter.next()
-					ids(child.stackId) = newChildId
-					newParentNode.connect(new Node(child), newChildId.last)
+			
+			// Makes sure that the parent is already registered
+			val newParentId = parentId(parent)
+			// If, for some reason, the parent's node was removed before or during this method call, will not finish
+			// the node creation
+			nodeOptionForId(newParentId).foreach { newParentNode =>
+				// If the child (master) already exists, attaches it to the new parent
+				ids.get(child.stackId) match {
+					case Some(oldChildId) =>
+						val childIndex = oldChildId.last
+						// If the child node was removed from this hierarchy before or during this operation,
+						// will not modify or insert it
+						graph.get(childIndex).foreach { childNode =>
+							// Updates all child ids
+							childNode.allNodesIterator.foreach { n => ids(n.value.stackId) = newParentId + ids(n.value.stackId) }
+							// Removes the child from master nodes and attaches it to the new parent
+							graph -= childIndex
+							newParentNode.connect(childNode, childIndex)
+						}
+					case None =>
+						// Otherwise adds the child as a new id + node
+						val newChildId = newParentId + indexCounter.next()
+						ids(child.stackId) = newChildId
+						newParentNode.connect(new Node(child), newChildId.last)
+				}
 			}
 		}
 	}

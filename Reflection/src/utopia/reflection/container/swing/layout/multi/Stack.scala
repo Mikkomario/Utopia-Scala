@@ -221,9 +221,8 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     override def visible_=(isVisible: Boolean) = super[CachingReflectionStackable].visible_=(isVisible)
     
-    protected def add(component: C, index: Int) = panel.insert(component, index)
-    
-    protected def remove(component: C) = panel -= component
+    override protected def addToContainer(component: C, index: Int): Unit = panel.insert(component, index)
+    override protected def removeFromContainer(component: C): Unit = panel -= component
     
     
     // OTHER    -----------------------
@@ -245,8 +244,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
         override def drawLevel = DrawLevel.Background
     
-        override def draw(drawer: Drawer, bounds: Bounds) =
-        {
+        override def draw(drawer: Drawer, bounds: Bounds) = {
             if (count > 1) {
                 val settings = colors.map(DrawSettings.onlyFill).repeatingIterator()
     

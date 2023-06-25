@@ -70,27 +70,14 @@ trait ReflectionStackLike[C <: ReflectionStackable]
     
     override def components = _components map { _.source }
     
-    override def insert(component: C, index: Int) = {
+    // Possibly these overrides should target addToContainer etc. and add new method variants instead
+    override def add(component: C, index: Int) = {
         _components = _components.inserted(new StackItem[C](component), index)
-        super.insert(component, index)
+        super.add(component, index)
     }
-    
-    override def insertMany(components: IterableOnce[C], index: Int) = {
-        val newComps = Vector.from(components)
-        _components = _components.take(index) ++ newComps.map { new StackItem[C](_) } ++ _components.drop(index)
-        super.insertMany(newComps, index)
-    }
-    
-    override def addBack(component: C, index: Int): Unit = add(component, index)
-    override def addBack(components: IterableOnce[C], index: Int): Unit = add(components, index)
-    
-    override protected def add(components: IterableOnce[C], index: Int): Unit =
-        Vector.from(components).reverseIterator.foreach { add(_, index) }
-    override protected def remove(components: IterableOnce[C]): Unit = components.iterator.foreach(remove)
-    
-    override def -=(component: C) = {
+    override def remove(component: C) = {
         _components = _components.filterNot { _.source == component }
-        super.-=(component)
+        super.remove(component)
     }
     
     def calculatedStackSize = Stacker.calculateStackSize(

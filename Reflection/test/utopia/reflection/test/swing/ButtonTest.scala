@@ -61,6 +61,7 @@ object ButtonTest extends App
 		val bar = new ProgressBar(actorHandler, 160.any x 12.downscaling, Color.gray(0.7), Color.magenta,
 			progressPointer)
 		val content = row.columnWith(Vector(bar), margin = 16.downscaling)
+		content.background = Color.cyan
 
 		// Creates the frame and displays it
 		val actionLoop = new ActorLoop(actorHandler)
@@ -73,6 +74,11 @@ object ButtonTest extends App
 		StackHierarchyManager.startRevalidationLoop()
 		frame.startEventGenerators(actorHandler)
 		frame.visible = true
+		
+		println(s"Content bounds are: ${ content.bounds }")
+		content.children.foreach { c =>
+			println(s"\t- Child bounds: ${ c.bounds } (${ c.isAttachedToMainHierarchy })")
+		}
 	}
 
 	run()

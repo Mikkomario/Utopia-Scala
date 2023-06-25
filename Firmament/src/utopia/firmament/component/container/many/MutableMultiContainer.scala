@@ -113,8 +113,7 @@ trait MutableMultiContainer[-A, C <: Component] extends MultiContainer[C]
 	  * @param range Range of indices to remove
 	  * @return Components that were removed from this container
 	  */
-	def removeComponentsIn(range: Range) =
-	{
+	def removeComponentsIn(range: Range) = {
 		val componentsToRemove = components.slice(range)
 		remove(componentsToRemove)
 		componentsToRemove
