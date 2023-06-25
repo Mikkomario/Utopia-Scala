@@ -1,20 +1,20 @@
 package utopia.annex.controller
 
-import java.time.Instant
 import utopia.access.http.Status
 import utopia.access.http.Status.NotModified
-import utopia.annex.model.response.{Response, ResponseBody}
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.LoopingProcess
-import utopia.flow.parse.file.container.FileContainer
-import utopia.flow.time.Now
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.container.FileContainer
+import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * A looping background process used for requesting up-to-date container data
@@ -42,7 +42,7 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	  * @param timeThreshold Update time threshold to use. None if all data should be included
 	  * @return Eventual request results
 	  */
-	protected def makeRequest(timeThreshold: Option[Instant]): Future[Try[Response]]
+	protected def makeRequest(timeThreshold: Option[Instant]): Future[RequestResult]
 	
 	/**
 	  * @param oldData Old container content
@@ -61,15 +61,14 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	
 	override protected def isRestartable = true
 	
-	override def iteration() =
-	{
+	override def iteration() = {
 		val newRequestTime = Now.toInstant
 		val lastRequestTime = requestTimeContainer.current
 		
 		// Prepares and performs the request
-		val waitModifier = makeRequest(lastRequestTime).waitForResult() match {
-			case Success(response) =>
-				response match {
+		val waitModifier = makeRequest(lastRequestTime).waitFor() match {
+			case Success(result) =>
+				result match {
 					case Response.Success(status, body, headers) =>
 						// Updates last update time locally
 						// Reads the update time from the response headers, if available
@@ -82,6 +81,7 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 					case Response.Failure(status, message, _) =>
 						handleFailureResponse(status, message)
 						Left(if (status.isTemporary) 5 else 15)
+					case _: RequestFailure => Left(2)
 				}
 			case Failure(_) => Left(2)
 		}

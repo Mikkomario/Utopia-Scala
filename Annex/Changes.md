@@ -5,6 +5,10 @@
 - Moved **RequestNotSent** under **RequestResult**
 - **NoConnection** is now **RequestSendingFailed**
 - Functions that previously returned or accepted **Either[RequestNotSent, Response]** now use **RequestResult**
+- Renamed Manifest to Manifestation because of Scala naming conflicts
+### New Methods
+- **Schrodinger**
+  - Added utility functions for adding manifest and result listeners
 
 ## v1.5 - 01.05.2023
 This update doesn't introduce many changes, but the change it introduces requires refactoring.

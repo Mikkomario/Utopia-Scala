@@ -1,5 +1,7 @@
 package utopia.reach.focus
 
+import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
+
 import scala.language.implicitConversions
 
 object FocusListener
@@ -17,12 +19,52 @@ object FocusListener
 	  * @param f A function
 	  * @return A focus listener
 	  */
-	def apply(f: FocusEvent => Unit): FocusListener = new FunctionalFocusListener(f)
+	def apply[U](f: FocusEvent => U): FocusListener = new FunctionalFocusListener(f)
+	
+	/**
+	  * @param f A function called when the listened item gains focus
+	  * @tparam U Arbitrary function result type
+	  * @return A new focus listener that only reacts to focus gained -events
+	  */
+	def onFocusGained[U](f: => U) = apply {
+		case FocusGained => f
+		case _ => ()
+	}
+	/**
+	  * @param f A function called when the listened item loses focus
+	  * @tparam U Arbitrary function result type
+	  * @return A new focus listener that only reacts to focus lost -events
+	  */
+	def onFocusLost[U](f: => U) = apply {
+		case FocusLost => f
+		case _ => ()
+	}
+	/**
+	  * @param f A function called when the listened item gains or loses focus.
+	  *          Accepts a focus change event (i.e. FocusGained or FocusLost)
+	  * @tparam U Arbitrary function result type
+	  * @return A new focus listener that only reacts to focus change events
+	  */
+	def onFocusChanged[U](f: FocusChangeEvent => U) = apply {
+		case FocusGained => f(FocusGained)
+		case FocusLost => f(FocusLost)
+		case _ => ()
+	}
+	/**
+	  * @param f A function called when the listened item is about to gain or to lose focus.
+	  *          Accepts true for FocusEntering events and false for FocusLeaving events
+	  * @tparam U Arbitrary function result type
+	  * @return A new focus listener
+	  */
+	def beforeFocusChange[U](f: Boolean => U) = apply {
+		case FocusEntering => f(true)
+		case FocusLeaving => f(false)
+	}
 	
 	
 	// NESTED	-----------------------------
 	
-	private class FunctionalFocusListener(f: FocusEvent => Unit) extends FocusListener
+	private class FunctionalFocusListener[U](f: FocusEvent => U) extends FocusListener
 	{
 		override def onFocusEvent(event: FocusEvent) = f(event)
 	}

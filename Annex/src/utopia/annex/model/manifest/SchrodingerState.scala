@@ -39,6 +39,17 @@ sealed trait SchrodingerState
 	  * @return Whether this state has a positive or negative expectancy
 	  */
 	def isSigned = signOption.isDefined
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	  * Wraps an item, forming a manifestation with this state
+	  * @param item The item to wrap/manifest
+	  * @tparam A Type of the wrapped item
+	  * @return A new manifestation having this state
+	  */
+	def apply[A](item: A) = Manifestation(item, this)
 }
 
 object SchrodingerState

@@ -3,13 +3,13 @@ package utopia.annex.model.manifest
 import utopia.flow.view.template.Extender
 
 /**
-  * Manifests are forms in which Schrödinger items appear, covering both the Flux, Alive and Dead states.
+  * Manifestations are forms in which Schrödinger items appear, covering both the Flux, Alive and Dead states.
   * Providing a Manifest will allow the client to operate with some appearance of an item,
   * regardless of the Schrödinger's state.
   * @author Mikko Hilpinen
   * @since 20.11.2022, v1.4
   */
-case class Manifest[+A](wrapped: A, state: SchrodingerState) extends Extender[A] with HasSchrodingerState
+case class Manifestation[+A](wrapped: A, state: SchrodingerState) extends Extender[A] with HasSchrodingerState
 {
 	// OTHER    ------------------------
 	

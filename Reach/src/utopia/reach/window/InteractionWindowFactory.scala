@@ -1,6 +1,5 @@
 package utopia.reach.window
 
-import utopia.firmament.component.Window
 import utopia.firmament.context.TextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
@@ -17,7 +16,7 @@ import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
-import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.component.wrapper.WindowCreationResult
 import utopia.reach.container.multi.{Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.context.ReachContentWindowContext
@@ -109,8 +108,7 @@ trait InteractionWindowFactory[A]
 	  *         2: a future of the closing of the window, with a selected result (or default if none was selected),
 	  *         as an additional result
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None): ComponentCreationResult[Window, Future[A]] =
-	{
+	def display(parentWindow: Option[java.awt.Window] = None): WindowCreationResult[ReachComponentLike, Future[A]] = {
 		implicit val wc: ReachContentWindowContext = windowContext
 		implicit val exc: ExecutionContext = executionContext
 		implicit val log: Logger = this.log
@@ -173,7 +171,7 @@ trait InteractionWindowFactory[A]
 		resultFuture.onComplete { _ => window.close() }
 		window.closeFuture.onComplete { _ => if (!resultPromise.isCompleted) resultPromise.trySuccess(defaultResult) }
 		
-		ComponentCreationResult(window, resultFuture)
+		window.withResult(resultFuture)
 	}
 	
 	private def buttonRow(factories: Mixed, buttons: Vector[WindowButtonBlueprint[A]],

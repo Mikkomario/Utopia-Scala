@@ -39,11 +39,25 @@ sealed trait TryCatch[+A]
 	 */
 	def logToTry(implicit log: Logger): Try[A]
 	/**
+	  * Logs non-critical failures that were encountered and returns a Try
+	  * @param message Message to add to the logging entry (call-by-name)
+	  * @param log Implicit logging implementation
+	  * @return Success if this operation was at least partially successful, Failure otherwise
+	  */
+	def logToTryWithMessage(message: => String)(implicit log: Logger): Try[A]
+	/**
 	 * Logs critical and non-critical failures that were encountered and returns an Option
 	 * @param log Implicit logging implementation
 	 * @return Some on success, None on failure
 	 */
 	def logToOption(implicit log: Logger): Option[A]
+	/**
+	  * Logs critical and non-critical failures that were encountered and returns an Option
+	  * @param message Message to add to the logging entry
+	  * @param log Implicit logging implementation
+	  * @return Some on success, None on failure
+	  */
+	def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A]
 }
 
 object TryCatch
@@ -87,9 +101,8 @@ object TryCatch
 		 * Logs the non-critical failures that were encountered
 		 * @param log Implicit logging implementation
 		 */
-		def logFailures(implicit log: Logger) = failures.headOption.foreach { error =>
-			log(error, s"Encountered ${failures.size} non-critical errors")
-		}
+		def logFailures(message: => String = s"Encountered ${failures.size} non-critical errors")(implicit log: Logger) =
+			failures.headOption.foreach { log(_, message) }
 		
 		
 		// IMPLEMENTED  ------------------------
@@ -100,11 +113,19 @@ object TryCatch
 		override def anyFailure: Option[Throwable] = failures.headOption
 		
 		override def logToTry(implicit log: Logger) = {
-			logFailures
+			logFailures()
 			toTry
 		}
 		override def logToOption(implicit log: Logger) = {
-			logFailures
+			logFailures()
+			Some(value)
+		}
+		override def logToTryWithMessage(message: => String)(implicit log: Logger): Try[A] = {
+			logFailures(message)
+			toTry
+		}
+		override def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A] = {
+			logFailures(message)
 			Some(value)
 		}
 	}
@@ -124,6 +145,11 @@ object TryCatch
 		override def logToTry(implicit log: Logger) = toTry
 		override def logToOption(implicit log: Logger) = {
 			log(cause)
+			None
+		}
+		override def logToTryWithMessage(message: => String)(implicit log: Logger): Try[A] = toTry
+		override def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A] = {
+			log(cause, message)
 			None
 		}
 	}

@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-scribe-api">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_scribe_api</output-path>
+    <root id="archive" name="utopia-scribe-api.jar">
+      <element id="module-output" name="Scribe-Api" />
+      <element id="module-source" name="Scribe-Api" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Scribe/Scribe-Api/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

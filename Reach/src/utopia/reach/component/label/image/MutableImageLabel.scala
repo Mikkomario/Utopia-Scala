@@ -9,11 +9,6 @@ import utopia.firmament.drawing.view.ImageViewDrawer
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.StackInsets
 
-object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactory]
-{
-	override def apply(hierarchy: ComponentHierarchy) = new MutableImageLabelFactory(hierarchy)
-}
-
 // TODO: Use ImageLabelSettings here
 class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
 {
@@ -30,6 +25,11 @@ class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	def apply(image: Image, insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 			  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false) =
 		new MutableImageLabel(parentHierarchy, image, insets, alignment, allowUpscaling, useLowPrioritySize)
+}
+
+object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = new MutableImageLabelFactory(hierarchy)
 }
 
 /**

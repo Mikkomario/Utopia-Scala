@@ -13,6 +13,7 @@
   - The abstract property `.windowContext` is now required to be of type **ReachContentWindowContext**
   - Removed `.standardContext`, which is now replaced by the `.windowContext`
   - `.createContent(...)` now accepts **TextContext** instead of **ColorContext**
+  - `.display(...)` now returns a **WindowCreationResult** instead of a **ComponentCreationResult**
 - Updated **InputWindowFactory** in following ways:
   - Replaced `.fieldCreationContext` and `.makeFieldNameAndFieldContext(ColorContext)` with `.contentContext`
   - `.buildLayout(...)` now accepts **TextContext** instead of **ColorContext**
@@ -27,6 +28,7 @@
   - This was added in order to automatically optimize between the **ViewStack** and the **Stack** options
 - **ImageLabel** is now a trait
 - Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
+- Rewrote most of component constructors
 ### Deprecations
 - Deprecated existing constructors in various label classes
 - Deprecated **ImageLabelLike** in favor of **ImageLabel**

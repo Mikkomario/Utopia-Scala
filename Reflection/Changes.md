@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 
+## v2.0.1 (in development)
+Supports latest changes in Firmament v1.1
+
 ## v2.0 - 01.05.2023
 This release completes the separation of the **Reach** and **Reflection** modules, and removes much of the 
 previously accumulated overlapping code.

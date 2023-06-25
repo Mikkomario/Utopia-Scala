@@ -24,6 +24,8 @@
   - Added multiple utility functions that utilize the new **SizeCategory** class
 - **DisplayFunction** (object)
   - Added `.option(DisplayFunction, LocalizedString)`
+- **FocusListener** (object)
+  - Added new constructors
 - **LocalizedString** (object)
   - Added `.alwaysEmpty`
 - **Margins**

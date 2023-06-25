@@ -119,7 +119,7 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	/**
 	  * @return Button border width to use by default
 	  */
-	def buttonBorderWidth = margins.verySmall
+	def buttonBorderWidth = (margins.verySmall / 2.0).round.toInt
 	
 	/**
 	  * @return A copy of this context that uses bold font

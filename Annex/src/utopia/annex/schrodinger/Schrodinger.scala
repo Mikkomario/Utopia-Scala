@@ -1,9 +1,10 @@
 package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux}
-import utopia.annex.model.manifest.{HasSchrodingerState, Manifest, SchrodingerState}
+import utopia.annex.model.manifest.{HasSchrodingerState, Manifestation, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.operator.Identity
 import utopia.flow.operator.MaybeEmpty.HasIsEmpty
@@ -165,12 +166,13 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) 
 	/**
 	  * @return A pointer to the current manifest form of the Schrödinger item
 	  */
-	lazy val manifestPointer: Changing[Manifest[M]] = fullStatePointer.map { case (m, _, state) => Manifest(m, state) }
+	lazy val manifestPointer: Changing[Manifestation[M]] =
+		fullStatePointer.map { case (m, _, state) => Manifestation(m, state) }
 	/**
 	  * @return A pointer to the currently tracked server response / result.
 	  */
-	lazy val resultPointer: Changing[Manifest[R]] =
-		fullStatePointer.map { case (_, r, state) => Manifest(r, state) }
+	lazy val resultPointer: Changing[Manifestation[R]] =
+		fullStatePointer.map { case (_, r, state) => Manifestation(r, state) }
 	/**
 	  * A pointer to the current state of this schrödinger item, whether it be alive or dead, or flux
 	  */
@@ -184,7 +186,7 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) 
 	  * @return A future that will contain the final state of the tracked Schrödinger
 	  *         (based on server result, or irrecoverable lack thereof)
 	  */
-	lazy val finalManifestFuture: Future[Manifest[M]] = manifestPointer.futureWhere { _.isFinal }
+	lazy val finalManifestFuture: Future[Manifestation[M]] = manifestPointer.futureWhere { _.isFinal }
 	
 	
 	// COMPUTED ---------------------------
@@ -226,4 +228,29 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) 
 	  */
 	def waitForManifest(timeout: Duration = Duration.Inf)(implicit exc: ExecutionContext) =
 		finalManifestFuture.waitFor(timeout).getOrElse(manifest)
+	
+	/**
+	  * Adds a new listener that will be informed whenever the manifestation of this Schrödinger changes
+	  * @param simulatedOldValue The manifest that is considered the initial state.
+	  *                          Used for creating the immediate change event
+	  *                          (provided that the current manifest differs from the specified value)
+	  * @param listener A listener to assign to this Schrödinger
+	  * @tparam M2 Type of listened manifest value
+	  */
+	def addManifestListenerAndSimulateEvent[M2 >: M](simulatedOldValue: M2)
+	                                                (listener: => ChangeListener[Manifestation[M2]]) =
+		manifestPointer.addListenerAndSimulateEvent(
+			Manifestation(simulatedOldValue, Some(state).filter { _.isFlux }.getOrElse(Flux)))(listener)
+	/**
+	  * Adds a new listener that will be informed whenever (i.e. once) the result of this Schrödinger changes
+	  * @param simulatedOldValue The placeholder result that is considered the initial state.
+	  *                          Used for creating the immediate change event
+	  *                          (provided that the currently acquired result or placeholder
+	  *                          differs from the specified value)
+	  * @param listener          A listener to assign to this Schrödinger
+	  * @tparam R2 Type of listened result value
+	  */
+	def addResultListenerAndSimulateEvent[R2 >: R](simulatedOldValue: R2)(listener: ChangeListener[Manifestation[R2]]) =
+		resultPointer.addListenerAndSimulateEvent(
+			Manifestation(simulatedOldValue, Some(state).filter { _.isFlux }.getOrElse(Flux)))(listener)
 }
