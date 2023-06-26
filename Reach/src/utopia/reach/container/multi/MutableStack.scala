@@ -171,7 +171,9 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		val newComps = components.iterator.filterNot { c => contains(c.component) }.toVector
 		if (newComps.nonEmpty) {
 			_componentsPointer.update { old => old.take(index) ++ newComps.map { _.component } ++ old.drop(index) }
-			newComps.foreach(updatePointerFor)
+			newComps.foreach { c =>
+				updatePointerFor(c)
+			}
 			revalidate()
 		}
 	}

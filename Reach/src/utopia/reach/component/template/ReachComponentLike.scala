@@ -174,6 +174,12 @@ trait ReachComponentLike extends Stackable
 		resetCachedSize()
 		parentHierarchy.revalidateAndThen(Vector(this))(f)
 	}
+	/**
+	  * Resets the cached stack size of this component and all the children of this component.
+	  * Typically this is not required, but might be necessary after connecting this component to the component
+	  * hierarchy, in case some revalidate() requests have been ignored.
+	  */
+	def resetEveryCachedStackSize() = toTree.bottomToTopNodesIterator.foreach { _.nav.resetCachedSize() }
 	
 	/**
 	  * Paints this component again

@@ -31,6 +31,8 @@
   - Added `.map(...)`
 - **Throwable** (**ErrorExtensions**)
   - Added `.causesIterator`
+- **TreeLike**
+  - Added `.bottomToTopNodesIterator`
 - **Try** (**CollectionExtensions**)
   - Added `.logToOption` and `.logToOptionWithMessage(String)`
 - **Year** (**TimeExtensions**)

@@ -23,8 +23,7 @@ trait AlignFrameLike[+C <: Stackable] extends CachingStackable with SingleContai
 	// IMPLEMENTED	------------------
 	
 	// Aligns the component and fits it into this container's area
-	override def updateLayout() =
-	{
+	override def updateLayout() = {
 		// Calculates new size
 		val mySize = size
 		val targetSize = content.stackSize.optimal.croppedToFitWithin(mySize)
@@ -36,15 +35,13 @@ trait AlignFrameLike[+C <: Stackable] extends CachingStackable with SingleContai
 		content.bounds = Bounds(targetPosition, targetSize)
 	}
 	
-	override def calculatedStackSize =
-	{
+	override def calculatedStackSize = {
 		// Uses content's stack size as base, but doesn't have a maximum limit on alignable axis / axes
 		// May also use low priority for said axis
 		val align = alignment
 		if (align == Center)
 			content.stackSize.withNoMax.expanding
-		else
-		{
+		else {
 			content.stackSize.map { (axis, length) =>
 				if (align(axis).movesItems)
 					length.noMax.expanding

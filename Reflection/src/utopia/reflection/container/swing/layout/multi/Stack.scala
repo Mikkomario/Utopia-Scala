@@ -221,8 +221,8 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     override def visible_=(isVisible: Boolean) = super[CachingReflectionStackable].visible_=(isVisible)
     
-    override protected def addToContainer(component: C, index: Int): Unit = panel.insert(component, index)
-    override protected def removeFromContainer(component: C): Unit = panel -= component
+    override protected def addToWrapped(component: C, index: Int): Unit = panel.insert(component, index)
+    override protected def removeFromWrapped(component: C): Unit = panel -= component
     
     
     // OTHER    -----------------------

@@ -166,11 +166,6 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	extends CheckBoxFactoryLike[ContextualCheckBoxFactory]
 		with ColorContextualFactory[ContextualCheckBoxFactory]
 {
-	// ATTRIBUTES   ---------------------
-	
-	private implicit val c: ColorContext = context
-	
-	
 	// IMPLEMENTED  ---------------------
 	
 	override def self: ContextualCheckBoxFactory = this
@@ -195,6 +190,9 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	def iconsOrImages(images: Either[Pair[SingleColorIcon], Pair[Image]],
 	                  valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false)) =
 	{
+		// Requires high contrast because of low alpha values
+		implicit val c: ColorContext = context.withEnhancedColorContrast
+		
 		// Converts the icons to images, if specified
 		val appliedImages = images.rightOrMap { icons =>
 			icons.mapWithSides { (icon, side) =>

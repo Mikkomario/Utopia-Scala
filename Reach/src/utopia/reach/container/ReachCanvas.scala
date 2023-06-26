@@ -289,6 +289,8 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	attachmentPointer.addListener { event =>
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
 		if (event.newValue) {
+			// TODO: Do we need to reset every stack size or just the top level?
+			currentContent.foreach { _.resetEveryCachedStackSize() }
 			layoutUpdateQueue.clear()
 			updateWholeLayout(size)
 			// Listens to tabulator key events for manual focus handling

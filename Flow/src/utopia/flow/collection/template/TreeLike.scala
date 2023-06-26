@@ -1,7 +1,7 @@
 package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.iterator.{OrderedDepthIterator, PollableOnce}
+import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDepthIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.{EqualsFunction, MaybeEmpty}
 
@@ -132,6 +132,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         of the children of this node, then the children of the grandchildren, and so on.
 	  *         The nodes returned by this iterator are returned in an order
 	  *         from top to bottom (primary) and left to right (secondary).
+	  *
 	  *         If the ordering of the children is not as important, one should rather call .allNodesIterator,
 	  *         as it is more memory-efficient.
 	  */
@@ -141,6 +142,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         of those children, then the children of the grandchildren, and so on.
 	  *         The nodes returned by this iterator are returned in an order
 	  *         from top to bottom (primary) and left to right (secondary).
+	  *
 	  *         If the ordering of the children is not as important, one should rather call .nodesBelowIterator,
 	  *         as it is more memory-efficient.
 	  */
@@ -153,11 +155,19 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  */
 	def topDownNodesBelow: Vector[Repr] = topDownNodesBelowIterator.toVector
 	/**
+	  * @return An iterator that returns this node and all the children of this node,
+	  *         returning leaf nodes before the rest of the branches.
+	  *         I.e. A node is not returned until all of its children have been returned first.
+	  *
+	  *         If the ordering of the items is not important, please call [[nodesBelowIterator]] instead,
+	  *         as that implementation is more more efficient in terms of memory and speed.
+	  */
+	def bottomToTopNodesIterator: Iterator[Repr] = BottomToTopIterator(self) { _.children }
+	/**
 	  * @return All nodes below this node, ordered based on depth (primary) and horizontal index (secondary)
 	  */
 	@deprecated("Please use .topDownNodesBelow instead", "v2.0")
-	def nodesBelowOrdered: Vector[Repr] =
-	{
+	def nodesBelowOrdered: Vector[Repr] = {
 		val resultBuilder = new VectorBuilder[Repr]()
 		var nextNodes = children
 		while (nextNodes.nonEmpty) {
@@ -259,8 +269,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         the depth of each vector matches the length of each branch, including that leaf.
 	  */
 	@deprecated("Please use .branchesBelow instead", "v2.0")
-	def allBranches: Iterable[Vector[A]] =
-	{
+	def allBranches: Iterable[Vector[A]] = {
 		// Lists branches starting from each of this tree's children (includes children in the branches they found)
 		children.flatMap { child =>
 			// Leaves form the ends of the branches

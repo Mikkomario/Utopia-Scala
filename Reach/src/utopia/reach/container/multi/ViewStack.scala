@@ -285,6 +285,7 @@ class ViewStack(override val parentHierarchy: ComponentHierarchy,
 {
 	// ATTRIBUTES	-------------------------------
 	
+	// TODO: Reset cached stack sizes of added components, because they may have been updated previously
 	private val activeComponentsCache = ResettableLazy {
 		componentData.flatMap { case (component, pointer) =>
 			if (pointer.value) Some(component) else None

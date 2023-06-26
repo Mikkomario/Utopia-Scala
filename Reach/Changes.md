@@ -33,6 +33,8 @@
 - Deprecated existing constructors in various label classes
 - Deprecated **ImageLabelLike** in favor of **ImageLabel**
 - Deprecated **BuilderFactory** and **SimpleFilledBuilderFactory**
+### Bugfixes
+- `.isThisLevelLinked` in **SeedHierarchyBlock** didn't always return the correct value (fixed)
 ### New Features
 - **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
   (optional feature)

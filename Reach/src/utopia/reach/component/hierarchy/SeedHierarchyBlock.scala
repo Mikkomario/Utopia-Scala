@@ -2,6 +2,7 @@ package utopia.reach.component.hierarchy
 
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
@@ -112,6 +113,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// Contains final link status (will be set once hierarchy completes)
 		private var finalManagedPointer: Option[Changing[Boolean]] = None
+		// Contains "this level linked" -status after connected to a parent
+		private var finalLinkConditionPointer: Option[View[Boolean]] = None
 		
 		// Holds listeners temporarily while there is no pointer to receive them yet
 		private var queuedListeners = Vector[ChangeListener[Boolean]]()
@@ -120,7 +123,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// COMPUTED	--------------------------
 		
-		def isThisLevelLinked = finalManagedPointer.exists { _.value }
+		def isThisLevelLinked = finalLinkConditionPointer.exists { _.value }
 		
 		
 		// IMPLEMENTED	----------------------
@@ -163,16 +166,18 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		def onParentFound(defaultPointer: Changing[Boolean],
 		                  additionalConditionPointer: Changing[Boolean]) =
-			specifyFinalPointer(defaultPointer && additionalConditionPointer)
+			specifyFinalPointer(defaultPointer && additionalConditionPointer, additionalConditionPointer)
 		
 		def onLinkedToCanvas(additionalConditionPointer: Changing[Boolean]) =
-			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer)
+			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer, additionalConditionPointer)
 		
-		def onReplacement(replacement: ComponentHierarchy) = specifyFinalPointer(replacement.linkPointer)
+		def onReplacement(replacement: ComponentHierarchy) =
+			specifyFinalPointer(replacement.linkPointer, View { replacement.isThisLevelLinked })
 		
-		private def specifyFinalPointer(pointer: Changing[Boolean]) = {
+		private def specifyFinalPointer(pointer: Changing[Boolean], thisLevelPointer: View[Boolean]) = {
 			// Updates the pointer(s)
 			finalManagedPointer = Some(pointer)
+			finalLinkConditionPointer = Some(thisLevelPointer)
 			
 			// Transfers dependencies, if any were queued
 			val afterEffects = {

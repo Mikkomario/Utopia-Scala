@@ -196,7 +196,7 @@ case class ViewImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = V
 	override def withForceEqualBreadth(force: Boolean) = copy(forceEqualBreadth = force)
 	override def withImageSettings(settings: ViewImageLabelSettings) = copy(imageSettings = settings)
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageAndTextLabelSettings =
-		copy(customDrawers = customDrawers)
+		copy(customDrawers = drawers)
 }
 
 /**

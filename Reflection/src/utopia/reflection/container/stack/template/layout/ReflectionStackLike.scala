@@ -44,6 +44,18 @@ trait ReflectionStackLike[C <: ReflectionStackable]
       */
     def cap: StackLength
     
+    /**
+      * Adds a component to the wrapped panel or other container
+      * @param component Component to add
+      * @param index Index where the component should be placed
+      */
+    protected def addToWrapped(component: C, index: Int): Unit
+    /**
+      * Removes a component from the wrapped panel or other container
+      * @param component Component to remove
+      */
+    protected def removeFromWrapped(component: C): Unit
+    
     
     // COMPUTED    ----------------------
     
@@ -70,14 +82,13 @@ trait ReflectionStackLike[C <: ReflectionStackable]
     
     override def components = _components map { _.source }
     
-    // Possibly these overrides should target addToContainer etc. and add new method variants instead
-    override def add(component: C, index: Int) = {
+    override protected def addToContainer(component: C, index: Int): Unit = {
         _components = _components.inserted(new StackItem[C](component), index)
-        super.add(component, index)
+        addToWrapped(component, index)
     }
-    override def remove(component: C) = {
+    override protected def removeFromContainer(component: C): Unit = {
         _components = _components.filterNot { _.source == component }
-        super.remove(component)
+        removeFromWrapped(component)
     }
     
     def calculatedStackSize = Stacker.calculateStackSize(

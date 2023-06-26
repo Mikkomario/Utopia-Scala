@@ -61,8 +61,7 @@ object Image
 	  *                  Leave to None when reading files outside program resources. (Default = None)
 	  * @return The read image wrapped in Try
 	  */
-	def readFrom(path: Path, readClass: Option[Class[_]] = None) =
-	{
+	def readFrom(path: Path, readClass: Option[Class[_]] = None) = {
 		// Checks that file exists (not available with class read method)
 		if (readClass.isDefined || Files.exists(path))
 		{
@@ -88,8 +87,7 @@ object Image
 	  *                  Leave to None when reading files outside program resources. (Default = None)
 	 * @return Read image, which may be empty
 	 */
-	def readOrEmpty(path: Path, readClass: Option[Class[_]] = None) = readFrom(path, readClass) match
-	{
+	def readOrEmpty(path: Path, readClass: Option[Class[_]] = None) = readFrom(path, readClass) match {
 		case Success(img) => img
 		case Failure(_) => empty
 	}
@@ -99,8 +97,7 @@ object Image
 	  * @param awtImage An awt image (buffered images are preferred because they can be simply wrapped)
 	  * @return A genesis image
 	  */
-	def from(awtImage: java.awt.Image) =
-	{
+	def from(awtImage: java.awt.Image) = {
 		awtImage match {
 			case bufferedImage: BufferedImage => apply(bufferedImage) // Uses buffered image as is
 			case otherType: java.awt.Image =>
@@ -124,8 +121,7 @@ object Image
 	  * @tparam U Arbitrary result type
 	  * @return Drawn image
 	  */
-	def paint[U](size: Size)(draw: Drawer => U) =
-	{
+	def paint[U](size: Size)(draw: Drawer => U) = {
 		// If some of the dimensions were 0, simply creates an empty image
 		if (size.isPositive)
 		{
