@@ -51,6 +51,7 @@ object StandardPropertyType
 			case "deprecation" | "deprecated" => Some(Deprecation)
 			case "expiration" | "expired" => Some(Expiration)
 			case "value" | "val" => Some(GenericValue(appliedLength))
+			case "model" | "values" => Some(GenericModel(appliedLength))
 			case "days" => Some(DayCount)
 			case "daterange" | "dates" => Some(DateRange)
 			case _ =>
@@ -668,13 +669,10 @@ object StandardPropertyType
 		override def scalaType = value
 		
 		override def yieldsTryFromValue = false
-		
 		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def nonEmptyDefaultValue = CodePiece.empty
-		
 		override def emptyValue = CodePiece("Value.empty", Set(value))
-		
 		override def supportsDefaultJsonValues = true
 		
 		override def concrete = this
@@ -684,9 +682,7 @@ object StandardPropertyType
 		// Converts the value to a json string before converting it back to a value
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode.toJson", Set(valueConversions))
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = instanceCode
-		
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
 			// When the value originates from the database, expects it to be represented as a json string,
 			// which still needs parsing
@@ -696,13 +692,52 @@ object StandardPropertyType
 				CodePiece(s"$valueCode.mapIfNotEmpty { v => JsonBunny.sureMunch(v.getString) }",
 					Set(bunnyMunch.jsonBunny))
 		}
-		
 		// Expects a vector of json string values
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Generic ${ propName.doc } of this ${ className.doc }"
+	}
+	
+	// WET WET (from GenericValue)
+	case class GenericModel(length: Int = 255) extends DirectlySqlConvertiblePropertyType
+	{
+		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)", isNullable = true)
+		override lazy val valueDataType = dataType / "ModelType"
+		
+		override def scalaType = model
+		
+		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece("Model.empty", Set(model))
+		
+		override def supportsDefaultJsonValues = true
+		
+		override def concrete = this
+		
+		override def defaultPropertyName = "values"
+		
+		// Converts the value to a json string before converting it back to a value
+		override def toValueCode(instanceCode: String) = CodePiece(s"$instanceCode.toJson", Set(valueConversions))
+		override def toJsonValueCode(instanceCode: String): CodePiece = instanceCode
+		
+		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
+			// When the value originates from the database, expects it to be represented as a json string,
+			// which still needs parsing
+			if (isFromJson)
+				valueCode
+			else
+				CodePiece(s"$valueCode.mapIfNotEmpty { v => JsonBunny.sureMunch(v.getString).getModel }",
+					Set(bunnyMunch.jsonBunny))
+		}
+		// Expects a vector of json string values
+		override def fromValuesCode(valuesCode: String) =
+			fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
+		
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
 	
 	object TimeDuration

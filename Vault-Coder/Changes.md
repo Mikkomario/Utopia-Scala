@@ -9,7 +9,7 @@
 - Fixed a bug where function types using generic type parameters would not get 
   interpreted properly in the merging process
 ### New Features
-- Added support for **Vector**, **Pair**, **Span** and **DateRange** data types
+- Added support for **Vector**, **Pair**, **Span**, **DateRange** and **Model** data types
 - Standard and custom data types now support different from- & to-value conversion logic when dealing with json values
   - See README on how to apply this support to custom data types
 
