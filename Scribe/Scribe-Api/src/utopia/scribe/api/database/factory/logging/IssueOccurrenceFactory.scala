@@ -6,7 +6,6 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.scribe.api.database.ScribeTables
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
-import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -24,10 +23,8 @@ object IssueOccurrenceFactory extends FromValidatedRowModelFactory[IssueOccurren
 	
 	override protected def fromValidatedModel(valid: Model) = 
 		IssueOccurrence(valid("id").getInt, IssueOccurrenceData(valid("caseId").getInt, 
-			valid("errorMessages").notEmpty match {
-				case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString }
-				case None => Vector.empty
-			},
+			valid("errorMessages").notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString }; case None => Vector.empty }, 
+			valid("details").notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }, 
 			valid("count").getInt, Span(valid("firstOccurrence").getInstant, 
 			valid("lastOccurrence").getInstant)))
 }

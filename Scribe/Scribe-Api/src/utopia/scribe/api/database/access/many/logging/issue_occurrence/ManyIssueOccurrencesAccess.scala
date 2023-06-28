@@ -1,7 +1,8 @@
 package utopia.scribe.api.database.access.many.logging.issue_occurrence
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
@@ -48,6 +49,13 @@ trait ManyIssueOccurrencesAccess
 		pullColumn(model.errorMessagesColumn).map { v => v.getString }
 	
 	/**
+	  * details of the accessible issue occurrences
+	  */
+	def details(implicit connection: Connection) = 
+		pullColumn(model.detailsColumn).map { v => v.notEmpty match {
+			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty } }
+	
+	/**
 	  * counts of the accessible issue occurrences
 	  */
 	def counts(implicit connection: Connection) = pullColumn(model.countColumn).map { v => v.getInt }
@@ -74,26 +82,16 @@ trait ManyIssueOccurrencesAccess
 	
 	/**
 	  * @param threshold A time threshold
-	  * @return Access to instance occurrences after that time threshold
-	  */
-	def since(threshold: Instant) = filter(model.latestColumn > threshold)
-	/**
-	  * @param threshold A time threshold
 	  * @param includePartialRanges Whether those occurrences should be included,
-	  *                             where some but not all of them occurred before the specified time threshold
-	  *                             (default = false)
+	  * where some but not all of them occurred before the specified time threshold
+	  * (default = false)
 	  * @return Access to instance occurrences before the specified time threshold
 	  */
 	def before(threshold: Instant, includePartialRanges: Boolean = false) = {
-		val condition = if (includePartialRanges) model.earliestColumn < threshold else model.latestColumn < threshold
+		val condition = if (includePartialRanges) model.earliestColumn <
+			 threshold else model.latestColumn < threshold
 		filter(condition)
 	}
-	
-	/**
-	  * @param variantIds Ids of the targeted issue variants
-	  * @return Access to the occurrences of those variants
-	  */
-	def forVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
 	
 	/**
 	  * Updates the case ids of the targeted issue occurrences
@@ -110,12 +108,32 @@ trait ManyIssueOccurrencesAccess
 	def counts_=(newCount: Int)(implicit connection: Connection) = putColumn(model.countColumn, newCount)
 	
 	/**
+	  * Updates the details of the targeted issue occurrences
+	  * @param newDetails A new details to assign
+	  * @return Whether any issue occurrence was affected
+	  */
+	def details_=(newDetails: Model)(implicit connection: Connection) = 
+		putColumn(model.detailsColumn, newDetails.notEmpty.map { _.toJson })
+	
+	/**
 	  * Updates the error messages of the targeted issue occurrences
 	  * @param newErrorMessages A new error messages to assign
 	  * @return Whether any issue occurrence was affected
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
 		putColumn(model.errorMessagesColumn, 
-			NotEmpty(newErrorMessages) match { case Some(v) => (v.map { v => v }: Value).toJson: Value; case None => Value.empty })
+			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map[Value] { v => v }: Value).toJson): Value; case None => Value.empty })
+	
+	/**
+	  * @param variantIds Ids of the targeted issue variants
+	  * @return Access to the occurrences of those variants
+	  */
+	def forVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
+	
+	/**
+	  * @param threshold A time threshold
+	  * @return Access to instance occurrences after that time threshold
+	  */
+	def since(threshold: Instant) = filter(model.latestColumn > threshold)
 }
 

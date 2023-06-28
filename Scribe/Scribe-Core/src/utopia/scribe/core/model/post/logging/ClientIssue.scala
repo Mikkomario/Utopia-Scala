@@ -32,10 +32,10 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 		PropertyDeclaration("version", StringType),
 		PropertyDeclaration("context", StringType),
 		PropertyDeclaration("severityLevel", IntType, Vector("severity", "severity_level"), Severity.default.level),
-		PropertyDeclaration("variantDetails", ModelType, Vector("variant", "details", "variant_details"),
-			isOptional = true),
+		PropertyDeclaration("variantDetails", ModelType, Vector("variant_details", "variant"), isOptional = true),
 		PropertyDeclaration("error", ModelType, isOptional = true),
 		PropertyDeclaration("message", StringType, isOptional = true),
+		PropertyDeclaration("occurrenceDetails", ModelType, Vector("occurrence_details", "details"), isOptional = true),
 		PropertyDeclaration("storeDuration", DurationType, Vector("history", "duration", "store_duration"),
 			Duration.Zero),
 		PropertyDeclaration("instances", IntType, Vector("count"), 1)
@@ -56,7 +56,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 				apply(version, model("context"), Severity.fromValue(model("severityLevel")),
 					model("variantDetails").getModel,
 					model("error").model.flatMap { RecordableError(_).toOption }, model("message"),
-					storeDuration, model("instances"))
+					model("occurrenceDetails").getModel, storeDuration, model("instances"))
 			}
 	}
 }
@@ -72,6 +72,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   * @param variantDetails Details about this issue variant, to differentiate it from other issues in this context
   * @param error The error that occurred, if applicable
   * @param message Additional error message (optional)
+  * @param occurrenceDetails Details about this issue occurrence (optional)
   * @param storeDuration Duration how long this issue was stored locally before sending it to the server.
   *                      If multiple issues are represented, contains a range of durations from
   *                      the minimum to the maximum.
@@ -80,6 +81,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   */
 case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: Model = Model.empty,
                        error: Option[RecordableError] = None, message: String = "",
+                       occurrenceDetails: Model = Model.empty,
                        storeDuration: Span[FiniteDuration] = Span.singleValue(Duration.Zero), instances: Int = 1)
 	extends ModelConvertible with ApproxSelfEquals[ClientIssue]
 {
@@ -134,10 +136,37 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	  * @param value Detail value
 	  * @return Copy of this issue with additional variant detail
 	  */
-	def withDetail(key: String, value: Value) = copy(variantDetails = variantDetails + (key -> value))
+	def withVariantDetail(key: String, value: Value) =
+		copy(variantDetails = variantDetails + (key -> value))
 	/**
 	  * @param details Additional variant details
+	  * @return Copy of this issue with the specified variant details added
+	  */
+	def withAdditionalVariantDetails(details: Model) = copy(variantDetails = variantDetails ++ details)
+	
+	/**
+	  * @param key   Detail key
+	  * @param value Detail value
+	  * @param newVariant Whether this details should result in a new issue variant
+	  *                   (default = false = details are specific to this occurrence)
+	  * @return Copy of this issue with additional variant detail
+	  */
+	def withDetail(key: String, value: Value, newVariant: Boolean = false) = {
+		if (newVariant)
+			withVariantDetail(key, value)
+		else
+			copy(occurrenceDetails = occurrenceDetails + (key -> value))
+	}
+	/**
+	  * @param details Additional variant details
+	  * @param newVariant Whether these details should result in a new issue variant
+	  *                   (default = false = details are specific to this occurrence)
 	  * @return Copy of this issue with the specified details added
 	  */
-	def withAdditionalDetails(details: Model) = copy(variantDetails = variantDetails ++ details)
+	def withAdditionalDetails(details: Model, newVariant: Boolean = false) = {
+		if (newVariant)
+			withAdditionalVariantDetails(details)
+		else
+			copy(occurrenceDetails = occurrenceDetails ++ details)
+	}
 }

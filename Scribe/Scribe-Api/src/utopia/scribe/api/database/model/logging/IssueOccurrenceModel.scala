@@ -2,7 +2,7 @@ package utopia.scribe.api.database.model.logging
 
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
@@ -30,6 +30,11 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	  * Name of the property that contains issue occurrence error messages
 	  */
 	val errorMessagesAttName = "errorMessages"
+	
+	/**
+	  * Name of the property that contains issue occurrence details
+	  */
+	val detailsAttName = "details"
 	
 	/**
 	  * Name of the property that contains issue occurrence count
@@ -60,6 +65,11 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	def errorMessagesColumn = table(errorMessagesAttName)
 	
 	/**
+	  * Column that contains issue occurrence details
+	  */
+	def detailsColumn = table(detailsAttName)
+	
+	/**
 	  * Column that contains issue occurrence count
 	  */
 	def countColumn = table(countAttName)
@@ -85,7 +95,7 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	override def table = factory.table
 	
 	override def apply(data: IssueOccurrenceData) = 
-		apply(None, Some(data.caseId), data.errorMessages, Some(data.count), 
+		apply(None, Some(data.caseId), data.errorMessages, data.details, Some(data.count), 
 			Some(data.occurrencePeriod.start), Some(data.occurrencePeriod.end))
 	
 	override protected def complete(id: Value, data: IssueOccurrenceData) = IssueOccurrence(id.getInt, data)
@@ -104,6 +114,13 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	  * @return A model containing only the specified count
 	  */
 	def withCount(count: Int) = apply(count = Some(count))
+	
+	/**
+	  * @param details Additional details concerning these issue occurrences.
+	  * In case of multiple occurrences, contains only the latest entry for each detail.
+	  * @return A model containing only the specified details
+	  */
+	def withDetails(details: Model) = apply(details = details)
 	
 	/**
 	  * @param errorMessages Error messages listed in the stack trace. 
@@ -133,7 +150,7 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
   * @since 22.05.2023, v0.1
   */
 case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = None, 
-	errorMessages: Vector[String] = Vector.empty, count: Option[Int] = None, 
+	errorMessages: Vector[String] = Vector.empty, details: Model = Model.empty, count: Option[Int] = None, 
 	earliest: Option[Instant] = None, latest: Option[Instant] = None) 
 	extends StorableWithFactory[IssueOccurrence]
 {
@@ -145,7 +162,8 @@ case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = No
 		import IssueOccurrenceModel._
 		Vector("id" -> id, caseIdAttName -> caseId, 
 			errorMessagesAttName -> (NotEmpty(errorMessages) match { case Some(v) => (v.map[Value] { v => v }: Value).toJson: Value; case None => Value.empty }),
-			countAttName -> count, earliestAttName -> earliest, latestAttName -> latest)
+			detailsAttName -> details.notEmpty.map { _.toJson }, countAttName -> count, 
+			earliestAttName -> earliest, latestAttName -> latest)
 	}
 	
 	
@@ -162,6 +180,13 @@ case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = No
 	  * @return A new copy of this model with the specified count
 	  */
 	def withCount(count: Int) = copy(count = Some(count))
+	
+	/**
+	  * @param details Additional details concerning these issue occurrences.
+	  * In case of multiple occurrences, contains only the latest entry for each detail.
+	  * @return A new copy of this model with the specified details
+	  */
+	def withDetails(details: Model) = copy(details = details)
 	
 	/**
 	  * @param errorMessages Error messages listed in the stack trace. 

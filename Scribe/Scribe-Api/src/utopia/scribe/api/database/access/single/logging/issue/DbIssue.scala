@@ -66,7 +66,10 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @param message A message concerning this issue (may be specific to this occurrence) (optional)
 	  * @param severity The severity of this issue (default = Unrecoverable)
 	  * @param variantDetails Some details about this issue variant (optional).
-	  * Please note that different details result in different variants being stored.
+	  *                       Please note that different details result in different variants being stored.
+	  * @param occurrenceDetails Details about this or these specific issue occurrences.
+	  *                          Different details will not result in different issue variants.
+	  *                          Default = empty.
 	  * @param occurrences The number of specific occurrences that are represented here (default = 1)
 	  * @param timeRange The time range within which this issue occurred (default = Now)
 	  * @param connection Implicit DB connection
@@ -75,7 +78,8 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * Only contains information about this specific variant and occurrence.
 	  */
 	def store(context: String, error: Option[RecordableError] = None, message: String = "",
-	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty, occurrences: Int = 1,
+	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty,
+	          occurrenceDetails: Model = Model.empty, occurrences: Int = 1,
 	          timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection,
 		version: Version): DetailedIssue = {
 		// Inserts or finds the matching issue
@@ -113,8 +117,8 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 			case None => Vector(message).filter { _.nonEmpty }
 		}
 		// Stores an issue occurrence
-		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages, occurrences, 
-			timeRange))
+		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages,
+			occurrenceDetails.sorted, occurrences, timeRange))
 		// Combines the data together and returns
 		DetailedIssue(issue, Vector(DetailedIssueVariant(variant, storedError, Vector(occurrence))))
 	}
@@ -138,7 +142,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @return The recorded issue
 	  */
 	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue = 
-		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, 
+		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, issue.occurrenceDetails,
 			issue.instances,issue.storeDuration.map { Now - _ })(connection, issue.version)
 	
 	/**

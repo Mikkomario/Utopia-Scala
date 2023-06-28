@@ -45,10 +45,11 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * Logs an error
 	  * @param error Error to log (optional)
 	  * @param message Message to record (optional)
+	  * @param occurrenceDetails Details about this issue occurrence (optional)
 	  * @param severity Issue severity level
 	  * @param variantDetails Details about this issue variant
 	  */
-	protected def _apply(error: Option[Throwable] = None, message: String = "",
+	protected def _apply(error: Option[Throwable] = None, message: String = "", occurrenceDetails: Model = Model.empty,
 	                     severity: Severity = defaultSeverity, variantDetails: Model = details): Unit
 	
 	
@@ -87,10 +88,14 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * Logs an error
 	  * @param error The error to log
 	  * @param message Additional error message to record (optional)
+	  * @param details Details about this specific issue occurrence (optional)
 	  * @param severity Error severity (default = default severity of this instance)
+	  * @param variantDetails Details about this issue variant / issue type (optional).
+	  *                       Please note that different values will be recorded as different issue variants.
 	  */
-	def apply(error: Throwable, message: String = "", severity: Severity = defaultSeverity) =
-		_apply(Some(error), message, severity, details)
+	def apply(error: Throwable, message: String = "", details: Model = Model.empty,
+	          severity: Severity = defaultSeverity, variantDetails: Model = Model.empty) =
+		_apply(Some(error), message, details, severity, this.details ++ variantDetails)
 	/**
 	  * Logs an error
 	  * @param error Error to log

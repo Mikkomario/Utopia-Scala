@@ -2,7 +2,7 @@ package utopia.scribe.api.database.access.single.logging.issue_occurrence
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
@@ -41,7 +41,7 @@ object UniqueIssueOccurrenceAccess
   * @since 22.05.2023, v0.1
   */
 trait UniqueIssueOccurrenceAccess 
-	extends SingleRowModelAccess[IssueOccurrence] with FilterableView[UniqueIssueOccurrenceAccess]
+	extends SingleRowModelAccess[IssueOccurrence] with FilterableView[UniqueIssueOccurrenceAccess] 
 		with DistinctModelAccess[IssueOccurrence, Option[IssueOccurrence], Value] with Indexed
 {
 	// COMPUTED	--------------------
@@ -62,7 +62,17 @@ trait UniqueIssueOccurrenceAccess
 			 case None => Vector.empty }
 	
 	/**
-	  * Number of issue occurrences represented by this entry. None if no issue occurrence (or value) was found.
+	  * Additional details concerning these issue occurrences.
+	  * In case of multiple occurrences, 
+	  * contains only the latest entry for each detail.. None if no issue occurrence (or value) was found.
+	  */
+	def details(implicit connection: Connection) = 
+		pullColumn(model.detailsColumn).notEmpty match {
+			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }
+	
+	/**
+	  * 
+		Number of issue occurrences represented by this entry. None if no issue occurrence (or value) was found.
 	  */
 	def count(implicit connection: Connection) = pullColumn(model.countColumn).int
 	
@@ -101,12 +111,20 @@ trait UniqueIssueOccurrenceAccess
 	def count_=(newCount: Int)(implicit connection: Connection) = putColumn(model.countColumn, newCount)
 	
 	/**
+	  * Updates the details of the targeted issue occurrences
+	  * @param newDetails A new details to assign
+	  * @return Whether any issue occurrence was affected
+	  */
+	def details_=(newDetails: Model)(implicit connection: Connection) = 
+		putColumn(model.detailsColumn, newDetails.notEmpty.map { _.toJson })
+	
+	/**
 	  * Updates the error messages of the targeted issue occurrences
 	  * @param newErrorMessages A new error messages to assign
 	  * @return Whether any issue occurrence was affected
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
 		putColumn(model.errorMessagesColumn, 
-			NotEmpty(newErrorMessages) match { case Some(v) => (v.map { v => v }: Value).toJson: Value; case None => Value.empty })
+			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map[Value] { v => v }: Value).toJson): Value; case None => Value.empty })
 }
 

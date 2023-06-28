@@ -52,8 +52,9 @@ case class Scribe(context: String, defaultSeverity: Severity = Severity.default,
 	override def apply(details: Model, severity: Severity) =
 		copy(details = details, defaultSeverity = severity)
 	
-	override protected def _apply(error: Option[Throwable], message: String, severity: Severity, variantDetails: Model) =
+	override protected def _apply(error: Option[Throwable], message: String, details: Model, severity: Severity,
+	                              variantDetails: Model) =
 		loggingQueue.push { implicit c =>
-			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails)
+			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails, details)
 		}
 }

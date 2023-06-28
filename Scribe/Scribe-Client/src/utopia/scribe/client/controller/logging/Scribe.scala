@@ -37,7 +37,8 @@ case class Scribe(master: MasterScribe, context: String, version: Version, detai
 	
 	def apply(details: Model, severity: Severity) = copy(details = details, defaultSeverity = severity)
 	
-	override protected def _apply(error: Option[Throwable], message: String, severity: Severity, variantDetails: Model) =
+	override protected def _apply(error: Option[Throwable], message: String, occurrenceDetails: Model, severity: Severity,
+	                              variantDetails: Model) =
 		master.accept(ClientIssue(version, context, severity, variantDetails, error.flatMap { RecordableError(_) },
-			message))
+			message, occurrenceDetails))
 }

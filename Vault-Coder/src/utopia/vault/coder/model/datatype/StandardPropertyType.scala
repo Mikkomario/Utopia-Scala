@@ -730,7 +730,7 @@ object StandardPropertyType
 			// When the value originates from the database, expects it to be represented as a json string,
 			// which still needs parsing
 			if (isFromJson)
-				valueCode
+				s"$valueCode.getModel"
 			else
 				CodePiece(s"$valueCode.notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }",
 					Set(bunnyMunch.jsonBunny, model))

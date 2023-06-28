@@ -222,6 +222,13 @@
             "doc": "Error messages listed in the stack trace. \nIf multiple occurrences are represented, contains data from the latest occurrence."
           },
           {
+            "name": "details",
+            "name_plural": "details",
+            "type": "model(128)",
+            "limit": 4096,
+            "doc": "Additional details concerning these issue occurrences.\nIn case of multiple occurrences, contains only the latest entry for each detail."
+          },
+          {
             "name": "count",
             "type": "Int",
             "default": 1,

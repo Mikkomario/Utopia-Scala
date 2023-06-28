@@ -148,7 +148,12 @@ class Model private(override val propertyMap: Map[String, Constant],
      * Creates a new model that contains properties from both of these models.
       * The resulting model will still use this model's property factory.
      */
-    def ++(other: ModelLike[Constant]): Model = this ++ other.properties
+    def ++(other: ModelLike[Constant]): Model = {
+        if (other.isEmpty)
+            this
+        else
+            this ++ other.properties
+    }
     
     /**
      * Creates a new model without the exact specified property
@@ -172,7 +177,12 @@ class Model private(override val propertyMap: Map[String, Constant],
     /**
      * Creates a new model without any properties listed in the specified model (with the exact same values)
      */
-    def --(other: ModelLike[Constant]): Model = withoutProperties(other.properties.toSet)
+    def --(other: ModelLike[Constant]): Model = {
+        if (other.isEmpty)
+            this
+        else
+            withoutProperties(other.properties.toSet)
+    }
     
     
     // OTHER METHODS    ------
