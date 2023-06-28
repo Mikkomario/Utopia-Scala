@@ -75,6 +75,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   *                      If multiple issues are represented, contains a range of durations from
   *                      the minimum to the maximum.
   *                      Default = Zero
+  * @param instances The number of issue occurrences represented by this instance/entry
   */
 case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: String = "",
                        error: Option[RecordableError] = None, message: String = "",
@@ -116,4 +117,14 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	  * @return Copy of this issue with updated store duration
 	  */
 	def delayedBy(duration: FiniteDuration) = mapStoreDurations { _ + duration }
+	
+	/**
+	  * Creates a copy of this issue that has been repeated n times recently
+	  * @param times The number of times the issue was repeated
+	  * @param overDuration The duration over which the issue was repeated
+	  *                     (i.e. duration since the last storeDuration value update)
+	  * @return Copy of this issue that has been marked as being repeated 'times' times
+	  */
+	def repeated(times: Int, overDuration: FiniteDuration) =
+		copy(storeDuration = storeDuration.mapEnds { _ + overDuration }, instances = instances + times)
 }
