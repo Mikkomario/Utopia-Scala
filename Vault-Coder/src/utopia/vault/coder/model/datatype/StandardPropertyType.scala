@@ -721,7 +721,9 @@ object StandardPropertyType
 		override def defaultPropertyName = "values"
 		
 		// Converts the value to a json string before converting it back to a value
-		override def toValueCode(instanceCode: String) = CodePiece(s"$instanceCode.toJson", Set(valueConversions))
+		// Empty models are not represented by json, are empty
+		override def toValueCode(instanceCode: String) =
+			CodePiece(s"$instanceCode.notEmpty.map { _.toJson }", Set(valueConversions))
 		override def toJsonValueCode(instanceCode: String): CodePiece = instanceCode
 		
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
@@ -730,8 +732,8 @@ object StandardPropertyType
 			if (isFromJson)
 				valueCode
 			else
-				CodePiece(s"$valueCode.mapIfNotEmpty { v => JsonBunny.sureMunch(v.getString).getModel }",
-					Set(bunnyMunch.jsonBunny))
+				CodePiece(s"$valueCode.notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }",
+					Set(bunnyMunch.jsonBunny, model))
 		}
 		// Expects a vector of json string values
 		override def fromValuesCode(valuesCode: String) =

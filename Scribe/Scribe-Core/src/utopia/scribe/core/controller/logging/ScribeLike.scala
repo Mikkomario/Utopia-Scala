@@ -1,5 +1,6 @@
 package utopia.scribe.core.controller.logging
 
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.ScopeUsable
 import utopia.flow.util.logging.Logger
 import utopia.scribe.core.model.enumeration.Severity
@@ -29,7 +30,7 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @return Details used for differentiating between issue variants,
 	  *         such as the name of the specific location or function where the logging is performed.
 	  */
-	protected def details: String
+	protected def details: Model
 	
 	/**
 	  * Creates a copy of this Scribe that serves in a specific sub-context
@@ -38,7 +39,7 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @param severity Appropriate level of severity for this sub-context
 	  * @return Copy of this instance that serves in the specified sub-context
 	  */
-	def apply(details: String, severity: Severity): Repr
+	def apply(details: Model, severity: Severity): Repr
 	
 	/**
 	  * Logs an error
@@ -48,7 +49,7 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @param variantDetails Details about this issue variant
 	  */
 	protected def _apply(error: Option[Throwable] = None, message: String = "",
-	                     severity: Severity = defaultSeverity, variantDetails: String = details): Unit
+	                     severity: Severity = defaultSeverity, variantDetails: Model = details): Unit
 	
 	
 	// COMPUTED -----------------------------
@@ -103,8 +104,18 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  */
 	def apply(severity: Severity): Repr = apply(details, severity)
 	/**
-	  * @param details Details that separate this issue variant from the others
+	  * Creates a new variant of this instance with additional details
+	  * @param details Details that separate this issue variant from the others.
+	  *                These details are appended to the existing details in this Scribe instance.
 	  * @return Copy of this logger that logs the specified issue variant
 	  */
-	def variant(details: String) = apply(details, defaultSeverity)
+	def variant(details: Model) = apply(this.details ++ details, defaultSeverity)
+	/**
+	  * Creates a new variant of this instance with an additional detail.
+	  * Please note that different details result in different issue variants.
+	  * @param key The detail key to assign
+	  * @param detail Value to assign for that detail (key)
+	  * @return Copy of this logger that includes the specified detail in logging entries
+	  */
+	def variant(key: String, detail: Value) = apply(details + (key -> detail), defaultSeverity)
 }

@@ -95,6 +95,11 @@ class Model private(override val propertyMap: Map[String, Constant],
     }
     
     /**
+      * @return Copy of this model where the properties appear in alphabetical order
+      */
+    def sorted = new Model(propertyMap, propertyOrder.sorted, propFactory)
+    
+    /**
       * @return A mutable copy of this model
       */
     def mutableCopy: mutable.MutableModel[Variable] = mutableCopyUsing(PropertyFactory.forVariables)
@@ -240,6 +245,16 @@ class Model private(override val propertyMap: Map[String, Constant],
       * @return A copy of this model with that one property renamed
       */
     def renamed(oldName: String, newName: String): Model = renamed(Vector(oldName -> newName))
+    
+    /**
+      * Creates a copy of this model with sorted property order
+      * @param f A mapping function that accepts a property and returns the value to sort by
+      * @param ord Implicit ordering to use
+      * @tparam A Type of sorting key
+      * @return A sorted copy of this model
+      */
+    def sortPropertiesBy[A](f: Constant => A)(implicit ord: Ordering[A]) =
+        new Model(propertyMap, propertyOrder.sortBy { propName => f(propertyMap(propName.toLowerCase)) }, propFactory)
     
     /**
       * Maps the properties within this model

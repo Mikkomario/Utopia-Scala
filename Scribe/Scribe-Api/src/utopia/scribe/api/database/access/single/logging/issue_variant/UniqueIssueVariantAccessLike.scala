@@ -1,7 +1,8 @@
 package utopia.scribe.api.database.access.single.logging.issue_variant
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.Version
 import utopia.scribe.api.database.model.logging.IssueVariantModel
 import utopia.vault.database.Connection
@@ -27,8 +28,7 @@ trait UniqueIssueVariantAccessLike[+A]
 	def issueId(implicit connection: Connection) = pullColumn(model.issueIdColumn).int
 	
 	/**
-	  * 
-		The program version in which this issue (variant) occurred. None if no issue variant (or value) was found.
+	  * The program version in which this issue (variant) occurred. None if no issue variant (or value) was found.
 	  */
 	def version(implicit connection: Connection) = 
 		pullColumn(model.versionColumn).string.flatMap(Version.findFrom)
@@ -42,7 +42,8 @@ trait UniqueIssueVariantAccessLike[+A]
 	/**
 	  * Details about this case and/or setting.. None if no issue variant (or value) was found.
 	  */
-	def details(implicit connection: Connection) = pullColumn(model.detailsColumn).getString
+	def details(implicit connection: Connection) = 
+		pullColumn(model.detailsColumn).mapIfNotEmpty { v => JsonBunny.sureMunch(v.getString).getModel }
 	
 	/**
 	  * Time when this case or variant was first encountered. None if no issue variant (or value) was found.
@@ -72,8 +73,8 @@ trait UniqueIssueVariantAccessLike[+A]
 	  * @param newDetails A new details to assign
 	  * @return Whether any issue variant was affected
 	  */
-	def details_=(newDetails: String)(implicit connection: Connection) = 
-		putColumn(model.detailsColumn, newDetails)
+	def details_=(newDetails: Model)(implicit connection: Connection) = 
+		putColumn(model.detailsColumn, newDetails.notEmpty.map { _.toJson })
 	
 	/**
 	  * Updates the error ids of the targeted issue variants

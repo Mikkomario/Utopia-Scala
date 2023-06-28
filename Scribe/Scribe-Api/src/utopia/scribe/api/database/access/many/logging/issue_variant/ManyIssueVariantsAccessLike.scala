@@ -1,6 +1,8 @@
 package utopia.scribe.api.database.access.many.logging.issue_variant
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
 import utopia.scribe.api.database.model.logging.IssueVariantModel
 import utopia.vault.database.Connection
@@ -38,7 +40,9 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	/**
 	  * details of the accessible issue variants
 	  */
-	def details(implicit connection: Connection) = pullColumn(model.detailsColumn).flatMap { _.string }
+	def details(implicit connection: Connection) = 
+		pullColumn(model.detailsColumn)
+			.map { v => v.mapIfNotEmpty { v => JsonBunny.sureMunch(v.getString).getModel } }
 	
 	/**
 	  * creation times of the accessible issue variants
@@ -81,8 +85,8 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	  * @param newDetails A new details to assign
 	  * @return Whether any issue variant was affected
 	  */
-	def details_=(newDetails: String)(implicit connection: Connection) = 
-		putColumn(model.detailsColumn, newDetails)
+	def details_=(newDetails: Model)(implicit connection: Connection) = 
+		putColumn(model.detailsColumn, newDetails.notEmpty.map { _.toJson })
 	
 	/**
 	  * Updates the error ids of the targeted issue variants

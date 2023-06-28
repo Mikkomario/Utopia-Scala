@@ -16,11 +16,12 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.NotEmpty
+import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.Pointer
 import utopia.scribe.core.model.enumeration.Severity
@@ -55,6 +56,11 @@ object MasterScribe
 	  *                                  necessary to send to the server.
 	  *                                  A different value may be configured for each severity level.
 	  *                                  By default, the issues will not deprecate.
+	  * @param modifyIssue               A function called for each recorded issue,
+	  *                                  which may modify them before logging.
+	  *                                  The function may, for example, append client environment information to
+	  *                                  issue variant details.
+	  *                                  By default, no modifications are made.
 	  * @param exc Implicit execution system for asynchronous processes
 	  *            (such as request sending and local file handling)
 	  * @return A new master scribe interface instance
@@ -62,10 +68,10 @@ object MasterScribe
 	def apply(queueSystem: QueueSystem, loggingEndpointPath: String, backupLogger: Logger = SysErrLogger,
 	          issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
 	          requestStoreLocation: Option[Path] = None,
-	          issueDeprecationDurations: Map[Severity, Duration] = Map())
+	          issueDeprecationDurations: Map[Severity, Duration] = Map(), modifyIssue: Mutate[ClientIssue] = Identity)
 	         (implicit exc: ExecutionContext): MasterScribe =
 		new _MasterScribe(queueSystem, loggingEndpointPath, backupLogger, issueBundleDuration, requestStoreLocation,
-			issueDeprecationDurations)
+			issueDeprecationDurations, modifyIssue)
 	
 	/**
 	  * Creates a new master scribe backup implementation that never sends data to the server,
@@ -87,31 +93,13 @@ object MasterScribe
 	  * Sends the collected data to the server, periodically.
 	  * @author Mikko Hilpinen
 	  * @since 23.5.2023, v0.1
-	  *
-	  * @constructor Creates a new master scribe instance
-	  * @param queueSystem               The request queue system used for sending the logging entries
-	  * @param loggingEndpointPath       Path on the server to the logging end-point (for POST requests)
-	  * @param backupLogger              Logging implementation to use when this scribe logging system fails
-	  *                                  (default = print to sys-err)
-	  * @param issueBundleDuration       The minimum and the maximum duration,
-	  *                                  how long issues should be collected before sending them all to the server at once.
-	  *                                  Default = 0s = No bundling will be performed.
-	  * @param requestStoreLocation      Path to a json file where queued requests should be stored in case of a
-	  *                                  continuous offline event.
-	  *                                  None if requests shouldn't be persisted on the file system.
-	  *                                  None will cause the logging data to be lost in case the software is closed during
-	  *                                  an offline period.
-	  *                                  Default = None.
-	  * @param issueDeprecationDurations Durations that determine the time period after which an issue is no longer
-	  *                                  necessary to send to the server.
-	  *                                  A different value may be configured for each severity level.
-	  *                                  By default, the issues will not deprecate.
 	  */
 	private class _MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String, backupLogger: Logger = SysErrLogger,
-	                   issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
-	                   requestStoreLocation: Option[Path] = None,
-	                   issueDeprecationDurations: Map[Severity, Duration] = Map())
-	                  (implicit exc: ExecutionContext)
+	                            issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
+	                            requestStoreLocation: Option[Path] = None,
+	                            issueDeprecationDurations: Map[Severity, Duration] = Map(),
+	                            modifyIssue: Mutate[ClientIssue] = Identity)
+	                           (implicit exc: ExecutionContext)
 		extends MasterScribe
 	{
 		// ATTRIBUTES   --------------------------
@@ -149,22 +137,25 @@ object MasterScribe
 		}
 		
 		
-		// OTHER    ----------------------------
+		// IMPLEMENTED  ------------------------
 		
 		/**
 		  * Requests for an issue to be recorded and sent to the server
 		  * @param issue An issue to record
 		  */
-		def accept(issue: ClientIssue) = pendingIssuesPointer.update { pending =>
+		override def accept(issue: ClientIssue) = pendingIssuesPointer.update { pending =>
 			// Adds a new pending issue
 			// If there already was a similar pending issue,
 			// merges them together instead of adding a new entry altogether
 			val now = Now.toInstant
-			val newItem = issue -> now
-			pending.mergeOrAppend(newItem) { _._1 ~== issue } { case ((existing, previousRecording), _) =>
-				existing.repeated(issue.instances, now - previousRecording) -> now
+			val modified = modifyIssue(issue)
+			pending.mergeOrAppend(modified -> now) { _._1 ~== issue } { case ((existing, previousRecording), _) =>
+				existing.repeated(modified.instances, now - previousRecording) -> now
 			}
 		}
+		
+		
+		// OTHER    ----------------------------
 		
 		private def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()).foreach { issues =>
 			requestQueue.push(new PostIssuesRequest(issues))

@@ -1,6 +1,7 @@
 package utopia.scribe.api.util
 
 import utopia.access.http.Status
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.Pointer
@@ -80,7 +81,7 @@ object ScribeContext
 	  * @param details Default details for issue variants (optional)
 	  * @return A new logging implementation
 	  */
-	def scribe(context: String, severity: Severity = Severity.default, details: String = "") =
+	def scribe(context: String, severity: Severity = Severity.default, details: Model = Model.empty) =
 		Scribe(context, severity, details)
 	
 	private def settingOr[A](extract: Settings => A)(default: => A) = settingsPointer.value match {

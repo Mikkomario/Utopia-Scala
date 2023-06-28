@@ -1,7 +1,7 @@
 package utopia.scribe.api.database.model.logging
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.Version
 import utopia.scribe.api.database.factory.logging.IssueVariantFactory
 import utopia.scribe.core.model.partial.logging.IssueVariantData
@@ -101,7 +101,7 @@ object IssueVariantModel extends DataInserter[IssueVariantModel, IssueVariant, I
 	  * @param details Details about this case and/or setting.
 	  * @return A model containing only the specified details
 	  */
-	def withDetails(details: String) = apply(details = details)
+	def withDetails(details: Model) = apply(details = details)
 	
 	/**
 	  * @param errorId Id of the error / exception that is associated 
@@ -136,7 +136,7 @@ object IssueVariantModel extends DataInserter[IssueVariantModel, IssueVariant, I
   * @since 22.05.2023, v0.1
   */
 case class IssueVariantModel(id: Option[Int] = None, issueId: Option[Int] = None, 
-	version: Option[Version] = None, errorId: Option[Int] = None, details: String = "", 
+	version: Option[Version] = None, errorId: Option[Int] = None, details: Model = Model.empty, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[IssueVariant]
 {
@@ -147,7 +147,7 @@ case class IssueVariantModel(id: Option[Int] = None, issueId: Option[Int] = None
 	override def valueProperties = {
 		import IssueVariantModel._
 		Vector("id" -> id, issueIdAttName -> issueId, versionAttName -> version.map { _.toString }, 
-			errorIdAttName -> errorId, detailsAttName -> details, createdAttName -> created)
+			errorIdAttName -> errorId, detailsAttName -> details.notEmpty.map { _.toJson }, createdAttName -> created)
 	}
 	
 	
@@ -163,7 +163,7 @@ case class IssueVariantModel(id: Option[Int] = None, issueId: Option[Int] = None
 	  * @param details Details about this case and/or setting.
 	  * @return A new copy of this model with the specified details
 	  */
-	def withDetails(details: String) = copy(details = details)
+	def withDetails(details: Model) = copy(details = details)
 	
 	/**
 	  * @param errorId Id of the error / exception that is associated 

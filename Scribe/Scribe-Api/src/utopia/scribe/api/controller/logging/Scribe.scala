@@ -1,5 +1,6 @@
 package utopia.scribe.api.controller.logging
 
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.scribe.api.controller.logging.Scribe.loggingQueue
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
@@ -37,20 +38,21 @@ object Scribe
   * @since 22.5.2023, v0.1
   * @param context A string representation of the context in which this logger serves
   * @param defaultSeverity The default level of [[Severity]] recorded by this logger (default = Unrecoverable)
+  * @param details Details that are included in the logging entries. Result in different issue variants.
   */
 // TODO: Add logToConsole and logToFile -options (to ScribeContext) once the basic features have been implemented
 // TODO: Once basic features have been added, consider adding an email integration or other trigger-actions
-case class Scribe(context: String, defaultSeverity: Severity = Severity.default, details: String = "")
+case class Scribe(context: String, defaultSeverity: Severity = Severity.default, details: Model = Model.empty)
 	extends ScribeLike[Scribe]
 {
 	// IMPLEMENTED  -------------------------
 	
 	override def self = this
 	
-	override def apply(details: String, severity: Severity) =
+	override def apply(details: Model, severity: Severity) =
 		copy(details = details, defaultSeverity = severity)
 	
-	override protected def _apply(error: Option[Throwable], message: String, severity: Severity, variantDetails: String) =
+	override protected def _apply(error: Option[Throwable], message: String, severity: Severity, variantDetails: Model) =
 		loggingQueue.push { implicit c =>
 			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails)
 		}

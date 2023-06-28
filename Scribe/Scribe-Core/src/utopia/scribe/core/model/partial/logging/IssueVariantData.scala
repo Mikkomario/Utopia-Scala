@@ -3,10 +3,7 @@ package utopia.scribe.core.model.partial.logging
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.DataType.AnyType
-import utopia.flow.generic.model.mutable.DataType.InstantType
-import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.mutable.DataType.StringType
+import utopia.flow.generic.model.mutable.DataType.{AnyType, InstantType, IntType, ModelType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Now
@@ -18,26 +15,27 @@ object IssueVariantData extends FromModelFactoryWithSchema[IssueVariantData]
 {
 	// ATTRIBUTES	--------------------
 	
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("issueId", IntType, Vector("issue_id")),
+		PropertyDeclaration("version", AnyType),
+		PropertyDeclaration("errorId", IntType, Vector("error_id"), isOptional = true),
+		PropertyDeclaration("details", ModelType, isOptional = true),
+		PropertyDeclaration("created", InstantType, isOptional = true)
+	))
+	
 	/**
 	  * Ordering that sorts by software version (primarily) and by variant creation time (secondarily)
 	  */
-	implicit val ord: Ordering[IssueVariantData] = CombinedOrdering(
-		Ordering.by { v: IssueVariantData => v.version },
-		Ordering.by { v: IssueVariantData => v.created }
-	)
-	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("issueId", IntType, Vector("issue_id")), 
-			PropertyDeclaration("version", AnyType), PropertyDeclaration("errorId", IntType, 
-			Vector("error_id"), isOptional = true), PropertyDeclaration("details", StringType, 
-			isOptional = true), PropertyDeclaration("created", InstantType, isOptional = true)))
+	implicit val ord: Ordering[IssueVariantData] = 
+		CombinedOrdering(Ordering.by { v: IssueVariantData => v.version },
+			Ordering.by { v: IssueVariantData => v.created })
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override protected def fromValidatedModel(valid: Model) = 
 		IssueVariantData(valid("issueId").getInt, Version(valid("version").getString), valid("errorId").int, 
-			valid("details").getString, valid("created").getInstant)
+			valid("details").getModel, valid("created").getInstant)
 }
 
 /**
@@ -52,7 +50,7 @@ object IssueVariantData extends FromModelFactoryWithSchema[IssueVariantData]
   * @since 22.05.2023, v0.1
   */
 case class IssueVariantData(issueId: Int, version: Version, errorId: Option[Int] = None, 
-	details: String = "", created: Instant = Now) 
+	details: Model = Model.empty, created: Instant = Now) 
 	extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------

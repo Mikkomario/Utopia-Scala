@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.factory.logging
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
 import utopia.scribe.api.database.ScribeTables
@@ -24,7 +25,8 @@ object IssueVariantFactory
 	
 	override protected def fromValidatedModel(valid: Model) = 
 		IssueVariant(valid("id").getInt, IssueVariantData(valid("issueId").getInt, 
-			Version(valid("version").getString), valid("errorId").int, valid("details").getString, 
+			Version(valid("version").getString), valid("errorId").int, 
+			valid("details").notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty },
 			valid("created").getInstant))
 }
 

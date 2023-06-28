@@ -2,6 +2,7 @@ package utopia.scribe.api.database.access.single.logging.issue
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.Span
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.End.{First, Last}
 import utopia.flow.time.Now
 import utopia.flow.util.StringExtensions._
@@ -74,7 +75,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * Only contains information about this specific variant and occurrence.
 	  */
 	def store(context: String, error: Option[RecordableError] = None, message: String = "",
-	          severity: Severity = Unrecoverable, variantDetails: String = "", occurrences: Int = 1,
+	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty, occurrences: Int = 1,
 	          timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection,
 		version: Version): DetailedIssue = {
 		// Inserts or finds the matching issue
@@ -92,7 +93,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 				}
 			case Left(newIssue) => Left(newIssue -> errorStoreResult.map { _.either })
 		}).eitherAndSide
-		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails, 
+		val variantData = IssueVariantData(issue.id, version, storedError.map { _.id }, variantDetails.sorted,
 			timeRange.start)
 		val variant = (variantDependenciesType match {
 			// Case: There is a chance that the variant already exists => Checks for duplicates before inserting
@@ -136,7 +137,6 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @param connection Implicit DB connection
 	  * @return The recorded issue
 	  */
-	// FIXME: Store multiple instances/occurrences at once
 	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue = 
 		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, 
 			issue.instances,issue.storeDuration.map { Now - _ })(connection, issue.version)

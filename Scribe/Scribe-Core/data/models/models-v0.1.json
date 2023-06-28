@@ -194,8 +194,7 @@
           {
             "name": "details",
             "name_plural": "details",
-            "type": "String(128)",
-            "crop": true,
+            "type": "Model(128)",
             "limit": 2040,
             "doc": "Details about this case and/or setting."
           },

@@ -241,7 +241,12 @@ object ScribeConsoleApp extends App
 			case Some(variant) =>
 				println(s"Variant of issue ${variant.issueId}")
 				println(s"- Version: ${variant.version}")
-				variant.details.notEmpty.foreach { details => println(s"- Details: $details") }
+				variant.details.notEmpty.foreach { details =>
+					println(s"- Details:")
+					details.properties.foreach { detail =>
+						println(s"\t- ${detail.name.capitalize}: ${detail.value}")
+					}
+				}
 				println(s"- First appeared at ${timeDescription(variant.created)}")
 				variant.latestOccurrence.foreach { last =>
 					println(s"- Last appeared at ${timeDescription(last.lastOccurrence)}")

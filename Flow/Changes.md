@@ -8,7 +8,8 @@
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 ### New Features
-- Added new **TryCatch** utility class for handling situations that included non-critical failures 
+- Added new **TryCatch** utility class for handling situations that included non-critical failures
+- Added sorting support to immutable **Models**
 ### New Methods
 - **Changing** (object)
   - Added `.completionOf(Future)`

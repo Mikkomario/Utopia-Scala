@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, PairType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.operator.EqualsExtensions._
@@ -32,7 +32,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 		PropertyDeclaration("version", StringType),
 		PropertyDeclaration("context", StringType),
 		PropertyDeclaration("severityLevel", IntType, Vector("severity", "severity_level"), Severity.default.level),
-		PropertyDeclaration("variantDetails", StringType, Vector("variant", "details", "variant_details"),
+		PropertyDeclaration("variantDetails", ModelType, Vector("variant", "details", "variant_details"),
 			isOptional = true),
 		PropertyDeclaration("error", ModelType, isOptional = true),
 		PropertyDeclaration("message", StringType, isOptional = true),
@@ -53,7 +53,8 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 					case Left(pairValue) => pairValue.getPair.map { _.getDuration }.sorted.toSpan
 					case Right(durationValue) => Span.singleValue(durationValue.getDuration)
 				}
-				apply(version, model("context"), Severity.fromValue(model("severityLevel")), model("variantDetails"),
+				apply(version, model("context"), Severity.fromValue(model("severityLevel")),
+					model("variantDetails").getModel,
 					model("error").model.flatMap { RecordableError(_).toOption }, model("message"),
 					storeDuration, model("instances"))
 			}
@@ -77,7 +78,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
   *                      Default = Zero
   * @param instances The number of issue occurrences represented by this instance/entry
   */
-case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: String = "",
+case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: Model = Model.empty,
                        error: Option[RecordableError] = None, message: String = "",
                        storeDuration: Span[FiniteDuration] = Span.singleValue(Duration.Zero), instances: Int = 1)
 	extends ModelConvertible with ApproxSelfEquals[ClientIssue]
@@ -127,4 +128,16 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	  */
 	def repeated(times: Int, overDuration: FiniteDuration) =
 		copy(storeDuration = storeDuration.mapEnds { _ + overDuration }, instances = instances + times)
+	
+	/**
+	  * @param key Detail key
+	  * @param value Detail value
+	  * @return Copy of this issue with additional variant detail
+	  */
+	def withDetail(key: String, value: Value) = copy(variantDetails = variantDetails + (key -> value))
+	/**
+	  * @param details Additional variant details
+	  * @return Copy of this issue with the specified details added
+	  */
+	def withAdditionalDetails(details: Model) = copy(variantDetails = variantDetails ++ details)
 }
