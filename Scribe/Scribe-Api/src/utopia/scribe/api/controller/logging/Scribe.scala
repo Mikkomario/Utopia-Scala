@@ -43,7 +43,7 @@ object Scribe
 // TODO: Add logToConsole and logToFile -options (to ScribeContext) once the basic features have been implemented
 // TODO: Once basic features have been added, consider adding an email integration or other trigger-actions
 case class Scribe(context: String, defaultSeverity: Severity = Severity.default, details: Model = Model.empty)
-	extends ScribeLike[Scribe]
+	extends ScribeLike[Scribe] with utopia.scribe.core.controller.logging.Scribe
 {
 	// IMPLEMENTED  -------------------------
 	

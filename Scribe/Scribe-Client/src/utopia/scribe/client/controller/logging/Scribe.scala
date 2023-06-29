@@ -29,7 +29,7 @@ object Scribe
   * @since 24.5.2023, v0.1
   */
 case class Scribe(master: MasterScribe, context: String, version: Version, details: Model, defaultSeverity: Severity)
-	extends ScribeLike[Scribe]
+	extends ScribeLike[Scribe] with utopia.scribe.core.controller.logging.Scribe
 {
 	// IMPLEMENTED  ------------------------
 	

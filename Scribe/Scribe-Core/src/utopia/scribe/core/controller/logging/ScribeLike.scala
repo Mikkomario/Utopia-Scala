@@ -102,6 +102,17 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @param severity Error severity
 	  */
 	def apply(error: Throwable, severity: Severity) = _apply(Some(error), severity = severity)
+	/**
+	  * Logs a message with details
+	  * @param message Message to log
+	  * @param details Details to include
+	  */
+	def apply(message: String, details: Model) = _apply(message = message, occurrenceDetails = details)
+	/**
+	  * Logs an entry with no message but some details instead
+	  * @param details Details to log
+	  */
+	def apply(details: Model) = _apply(occurrenceDetails = details)
 	
 	/**
 	  * @param severity Level of severity applicable to this issue
