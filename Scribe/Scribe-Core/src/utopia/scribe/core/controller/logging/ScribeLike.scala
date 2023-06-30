@@ -4,7 +4,7 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.ScopeUsable
 import utopia.flow.util.logging.Logger
 import utopia.scribe.core.model.enumeration.Severity
-import utopia.scribe.core.model.enumeration.Severity.{Critical, Debug, Info, Recoverable, Unrecoverable}
+import utopia.scribe.core.model.enumeration.Severity.{Critical, Debug, Info, Recoverable, Unrecoverable, Warning}
 
 /**
   * Common trait for loggers on both the client and the server side
@@ -64,13 +64,25 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  */
 	def info = apply(Info)
 	/**
+	  * @return Copy of this instance that records warnings by default
+	  */
+	def warning = apply(Warning)
+	/**
 	  * @return Copy of this instance that records partial / recoverable failures by default
 	  */
-	def partialFailure = apply(Recoverable)
+	def partialFailure = recoverable
 	/**
-	  * @return Copy of this instance that records process failures by default
+	  * @return Copy of this instance that records partial / recoverable failures by default
 	  */
-	def failure = apply(Unrecoverable)
+	def recoverable = apply(Recoverable)
+	/**
+	  * @return Copy of this instance that records process unrecoverable failures by default
+	  */
+	def failure = unrecoverable
+	/**
+	  * @return Copy of this instance that records process unrecoverable failures by default
+	  */
+	def unrecoverable = apply(Unrecoverable)
 	/**
 	  * @return Copy of this instance that records critical system failures by default
 	  */
