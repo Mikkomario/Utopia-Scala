@@ -49,8 +49,8 @@ case class Scribe(context: String, defaultSeverity: Severity = Severity.default,
 	
 	override def self = this
 	
-	override def apply(details: Model, severity: Severity) =
-		copy(details = details, defaultSeverity = severity)
+	override def withContext(context: String): Scribe = copy(context = context)
+	override def apply(details: Model, severity: Severity) = copy(details = details, defaultSeverity = severity)
 	
 	override protected def _apply(error: Option[Throwable], message: String, details: Model, severity: Severity,
 	                              variantDetails: Model) =

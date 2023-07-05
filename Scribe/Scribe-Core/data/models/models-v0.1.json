@@ -122,7 +122,7 @@
       },
       {
         "name": "Issue",
-        "doc": "Represents a type of problem or issue that may occur during a program's run",
+        "doc": "Represents a type of problem or an issue that may occur during a program's run",
         "has_combos": true,
         "combos": [
           {

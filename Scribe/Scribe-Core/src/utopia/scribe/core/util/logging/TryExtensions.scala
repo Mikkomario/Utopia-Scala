@@ -56,29 +56,31 @@ object TryExtensions
 		  * Converts this Try to an Option. Logs possible failure using a Scribe instance.
 		  * @param message Error message to include (optional)
 		  * @param details Error details to include (optional, occurrence-specific)
+		  * @param subContext Sub-context where this issue occurred (optional)
 		  * @param severity Error severity (default = Unrecoverable)
 		  * @param variantDetails Issue variant -specific details (optional)
 		  * @param scribe Implicit scribe implementation
 		  * @return Some if this was a success. None otherwise.
 		  */
-		def logToOptionWith(message: String = "", details: Model = Model.empty, severity: Severity = Severity.default,
-		                    variantDetails: Model = Model.empty)
+		def logToOptionWith(message: String = "", details: Model = Model.empty, subContext: String = "",
+		                    severity: Severity = Severity.default, variantDetails: Model = Model.empty)
 		                   (implicit scribe: Scribe) =
-			scribeToOption { _(severity).variant(variantDetails)(_, message, details) }
+			scribeToOption { _.in(subContext)(severity).variant(variantDetails)(_, message, details) }
 		
 		/**
 		  * Logs a potential failure in this Try using a Scribe instance
 		  * @param message        Error message to include (optional)
 		  * @param details        Error details to include (optional, occurrence-specific)
+		  * @param subContext Sub-context where this issue occurred (optional)
 		  * @param severity       Error severity (default = Unrecoverable)
 		  * @param variantDetails Issue variant -specific details (optional)
 		  * @param scribe         Implicit scribe implementation
 		  */
-		def logWith(message: String = "", details: Model = Model.empty, severity: Severity = Severity.default,
-		            variantDetails: Model = Model.empty)
+		def logWith(message: String = "", details: Model = Model.empty, subContext: String = "",
+		            severity: Severity = Severity.default, variantDetails: Model = Model.empty)
 		           (implicit scribe: Scribe) =
 			t match {
-				case Failure(error) => scribe(severity).variant(variantDetails)(error, message, details)
+				case Failure(error) => scribe.in(subContext)(severity).variant(variantDetails)(error, message, details)
 				case _ => ()
 			}
 	}
@@ -162,27 +164,30 @@ object TryExtensions
 		  * Converts this TryCatch into a Try, logging potential encountered partial failures using a Scribe instance
 		  * @param message Message to include in logging entries (optional)
 		  * @param details        Error details to include (optional, occurrence-specific)
+		  * @param subContext Sub-context where this issue occurred (optional)
 		  * @param severity       Error severity (default = Recoverable)
 		  * @param variantDetails Issue variant -specific details (optional)
 		  * @param scribe Implicit Scribe implementation
 		  * @return Success in case of a full or partial success. Failure in case of a full failure.
 		  */
-		def logToTryWith(message: String = "", details: Model = Model.empty, severity: Severity = Recoverable,
-		                 variantDetails: Model = Model.empty)
+		def logToTryWith(message: String = "", details: Model = Model.empty, subContext: String = "",
+		                 severity: Severity = Recoverable, variantDetails: Model = Model.empty)
 		                (implicit scribe: Scribe) =
-			scribeToTry { _(severity).variant(variantDetails)(_, message, details) }
+			scribeToTry { _.in(subContext)(severity).variant(variantDetails)(_, message, details) }
 		
 		/**
 		  * Converts this TryCatch into an Option,
 		  * logging potential encountered failures using a Scribe instance
 		  * @param message        Message to include in logging entries (optional)
 		  * @param details        Error details to include (optional, occurrence-specific)
+		  * @param subContext Sub-context where this issue occurred (optional)
 		  * @param variantDetails Issue variant -specific details (optional)
 		  * @param scribe         Implicit Scribe implementation
 		  * @return Some in case of a full or partial success. None in case of a full failure.
 		  */
-		def logToOptionWith(message: String = "", details: Model = Model.empty, variantDetails: Model = Model.empty)
+		def logToOptionWith(message: String = "", details: Model = Model.empty, subContext: String = "",
+		                    variantDetails: Model = Model.empty)
 		                   (implicit scribe: Scribe) =
-			scribeToOption { (s, e, _) => s.variant(variantDetails)(e, message, details) }
+			scribeToOption { (s, e, _) => s.in(subContext).variant(variantDetails)(e, message, details) }
 	}
 }

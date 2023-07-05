@@ -34,37 +34,42 @@ object LoggingNode
 	  * @return A new node that accepts client error logging information
 	  */
 	def named[C <: PostContext](name: String)(authorize: (C, () => Result) => Response) =
-		namedWithMutation("log")(authorize)(Identity)
+		namedWithMutation[C](name) { (context, f) => authorize(context, () => f(Identity)) }
 	
 	/**
 	  * Creates a new logging node, named "log"
 	  * @param authorize function used for authorizing the incoming requests.
-	  *                  Accepts request context and a function to perform if the request is authorized.
-	  *                  Returns a response.
+	  *                  Accepts two parameters:
+	  *                  1) Request context, and
+	  *                  2) Function to perform if the request is authorized.
+	  *                  This function accepts a mutation function which is applied
+	  *                  to all incoming ClientIssue instances.
+	  *                  Returns a response. The response is typically based on either authorization failure,
+	  *                  or the result returned by the received function.
 	  * @param mutate    A function for mutating incoming client issues before logging them
 	  * @tparam C Type of accepted request context
 	  * @return A new node that accepts client error logging information
 	  */
-	def mutating[C <: PostContext](authorize: (C, () => Result) => Response)
+	def mutating[C <: PostContext](authorize: (C, Mutate[ClientIssue] => Result) => Response)
 	                              (mutate: Mutate[ClientIssue]) =
-		namedWithMutation("log")(authorize)(mutate)
+		namedWithMutation("log")(authorize)
 	
 	/**
 	  * Creates a new logging node
 	  * @param name Name of this node
 	  * @param authorize function used for authorizing the incoming requests.
-	  *                  Accepts request context and a function to perform if the request is authorized.
-	  *                  Returns a response.
-	  * @param mutate A function for mutating incoming client issues before logging them
+	  *                  Accepts two parameters:
+	  *                     1) Request context, and
+	  *                     2) Function to perform if the request is authorized.
+	  *                     This function accepts a mutation function which is applied
+	  *                     to all incoming ClientIssue instances.
+	  *                  Returns a response. The response is typically based on either authorization failure,
+	  *                  or the result returned by the received function.
 	  * @tparam C Type of accepted request context
 	  * @return A new node that accepts client error logging information
 	  */
-	def namedWithMutation[C <: PostContext](name: String)(authorize: (C, () => Result) => Response)
-	                                       (mutate: Mutate[ClientIssue]) =
-		_apply[C](name) { (context, f) => authorize(context, () => f(mutate)) }
-	
-	private def _apply[C <: PostContext](name: String)(auth: (C, Mutate[ClientIssue] => Result) => Response) =
-		new LoggingNode[C](name, auth)
+	def namedWithMutation[C <: PostContext](name: String)(authorize: (C, Mutate[ClientIssue] => Result) => Response) =
+		new LoggingNode[C](name, authorize)
 }
 
 /**

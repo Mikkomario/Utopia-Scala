@@ -33,6 +33,11 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	protected def details: Model
 	
 	/**
+	  * @param context New context to assign
+	  * @return Copy of this Scribe with the new context -property
+	  */
+	def withContext(context: String): Repr
+	/**
 	  * Creates a copy of this Scribe that serves in a specific sub-context
 	  * @param details Details that differentiate the resulting Scribe instance from this one.
 	  *                Different details result in different IssueVariants being created.
@@ -127,17 +132,43 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	def apply(details: Model) = _apply(occurrenceDetails = details)
 	
 	/**
+	  * @param subContext A sub-context within this Scribe instance's context
+	  * @return Copy of this instance with a context modified so that it includes the specified sub-context
+	  */
+	def in(subContext: String): Repr = {
+		if (subContext.isEmpty)
+			self
+		else {
+			val c = context
+			// Selects a separator appropriate for the current context
+			val separator = {
+				if (c.contains(' '))
+					" "
+				else if (c.contains('_'))
+					"_"
+				else
+					"."
+			}
+			withContext(s"$c$separator$subContext")
+		}
+	}
+	/**
+	  * Alias for [[in]]
+	  */
+	def /(subContext: String) = in(subContext)
+	
+	/**
 	  * @param severity Level of severity applicable to this issue
 	  * @return Copy of this logger that uses the specified severity instead of the default severity
 	  */
-	def apply(severity: Severity): Repr = apply(details, severity)
+	def apply(severity: Severity): Repr = if (severity == defaultSeverity) self else apply(details, severity)
 	/**
 	  * Creates a new variant of this instance with additional details
 	  * @param details Details that separate this issue variant from the others.
 	  *                These details are appended to the existing details in this Scribe instance.
 	  * @return Copy of this logger that logs the specified issue variant
 	  */
-	def variant(details: Model) = apply(this.details ++ details, defaultSeverity)
+	def variant(details: Model) = if (details.isEmpty) self else apply(this.details ++ details, defaultSeverity)
 	/**
 	  * Creates a new variant of this instance with an additional detail.
 	  * Please note that different details result in different issue variants.
