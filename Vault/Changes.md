@@ -1,6 +1,10 @@
 # Utopia Vault - List of Changes
 
-## v1.16.1 (in development)
+## v1.17 (in development)
+### Breaking Changes
+- `DatabaseTableReader.apply(...)` now accepts a different function for column- to property name -mapping. 
+  This is because some mapping logic implementations will need to scan the whole table at once.
+  - Also updated the default mapping logic to look for common prefixes between the column names, removing those
 ### Bugfixes
 - Fixed a bug in **ClearOldData** reference processing logic
 ### New Features

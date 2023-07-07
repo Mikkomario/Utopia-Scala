@@ -760,12 +760,19 @@ object CollectionExtensions
 		def only = if (hasSize(1)) Some(t.head) else None
 		
 		/**
-		  * Converts this collection to a map, by pairing each value with a map result key
+		  * Converts this collection to a map by pairing each value with a map result key
 		  * @param f A function that extracts a key from each item (expected to return unique results)
 		  * @tparam K Type of keys used
 		  * @return A new map where each item from this collection is mapped to a key
 		  */
-		def toMapBy[K](f: A => K) = t.iterator.map { a => f(a) -> a }.toMap
+		def toMapBy[K](f: A => K) = Map.from(t.iterator.map { a => f(a) -> a })
+		/**
+		  * Converts this collection to a map by pairing each item (as key) with a map result value
+		  * @param f A function that forms a value for each item
+		  * @tparam V Type of map values
+		  * @return A map where each item from this collection acts as a key to a mapping result value
+		  */
+		def mapTo[V](f: A => V): Map[A, V] = Map.from(t.iterator.map { a => a -> f(a) })
 		
 		/**
 		  * @param end Targeted end of this collection

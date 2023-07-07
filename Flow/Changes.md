@@ -18,6 +18,7 @@
   - Added `.mapSide(End)(...)` for symmetric Eithers
 - **Iterable** (**CollectionExtensions**)
   - Added `.ends` and `.endsOption`
+  - Added `.mapTo(...)` for `.toMap` -conversion
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
 - **Pointer**

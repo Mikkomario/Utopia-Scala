@@ -1,14 +1,12 @@
 package utopia.vault.test.app
 
-import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.test.TestContext._
-import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
-import utopia.vault.test.database.{TestTables, VaultTestTables}
+import utopia.vault.database.{Connection, ConnectionPool}
+import utopia.vault.test.database.VaultTestTables
 import utopia.vault.test.database.model.operation.ElectronicSignatureModel
 import utopia.vault.test.model.partial.operation.ElectronicSignatureData
 
@@ -28,7 +26,7 @@ object LengthRulesTest extends App
 	val dbName = "vault_test"
 	Connection.modifySettings { _.copy(defaultDBName = Some(dbName), charsetName = "utf8",
 		charsetCollationName = "utf8_general_ci") }
-	TestTables.columnNameConversion = original => original.afterLast("_").notEmpty.getOrElse(original)
+	// TestTables.columnNameConversion = original => original.afterLast("_").notEmpty.getOrElse(original)
 	
 	Paths.get("Vault/test-data/length-rules")
 		.tryIterateChildren { _.tryForeach { ColumnLengthRules.loadFrom(_, dbName) } }

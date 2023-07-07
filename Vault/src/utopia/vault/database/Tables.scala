@@ -1,6 +1,5 @@
 package utopia.vault.database
 
-import scala.collection.immutable.HashMap
 import scala.concurrent.ExecutionContext
 
 /**
@@ -12,8 +11,9 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES	---------------------
 	
-	private var dbs = HashMap[String, TablesReader]()
-	private var _columnNameConversion: String => String = DatabaseTableReader.underlineToCamelCase
+	private var dbs = Map[String, TablesReader]()
+	private var _columnNameConversion: Iterable[String] => Map[String, String] =
+		DatabaseTableReader.columnNamesToPropertyNames
 	
 	
 	// COMPUTED	-------------------------
@@ -28,12 +28,12 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 	 * @param newConversionMethod A new method for column name conversion. Takes the database-originated column name
 	 *                            as parameter and returns the column attribute name used in the code.
 	 */
-	def columnNameConversion_=(newConversionMethod: String => String) =
+	def columnNameConversion_=(newConversionMethod: Iterable[String] => Map[String, String]) =
 	{
 		// Has to clear all existing data to use the new method
 		_columnNameConversion = newConversionMethod
 		dbs.keys.foreach(References.clear)
-		dbs = HashMap()
+		dbs = Map()
 	}
 	
 	
@@ -56,14 +56,11 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 	  */
 	def all(dbName: String) = reader(dbName).tables.values
 	
-	private def reader(dbName: String) =
-	{
+	private def reader(dbName: String) = {
 		val lowerDbName = dbName.toLowerCase
-		
 		if (dbs.contains(lowerDbName))
 			dbs(lowerDbName)
-		else
-		{
+		else {
 			// May have to initialize new databases
 			val db = new TablesReader(dbName)
 			dbs += lowerDbName -> db
@@ -95,8 +92,7 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 		
 		// OTHER	-------------------
 		
-		def apply(tableName: String) =
-		{
+		def apply(tableName: String) = {
 			if (tables.contains(tableName))
 				tables(tableName)
 			else
