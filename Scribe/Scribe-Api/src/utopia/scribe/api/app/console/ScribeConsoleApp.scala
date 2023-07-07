@@ -101,7 +101,9 @@ object ScribeConsoleApp extends App
 				else {
 					println(s"${newIssueIds.size} of the issues have appeared just recently (i.e. in last 7 days):")
 					val newIssueById = DbIssues(newIssueIds.map { _._1 }.toSet).toMapBy { _.id }
-					newIssueIds.foreach { case (issueId, variantCount) =>
+					val orderedNewIssueIds = newIssueIds
+						.reverseSortBy { case (issueId, _) => newIssueById.get(issueId) }
+					orderedNewIssueIds.foreach { case (issueId, variantCount) =>
 						val baseStr = newIssueById.get(issueId) match {
 							case Some(issue) => s"\t- $issueId: ${issue.severity} @ ${issue.context}"
 							case None => s"\t- $issueId"
@@ -111,7 +113,7 @@ object ScribeConsoleApp extends App
 						else
 							println(baseStr)
 					}
-					queuedIssuesPointer.value = newIssueIds.map { case (id, _) => Left(id) } -> 0
+					queuedIssuesPointer.value = orderedNewIssueIds.map { case (id, _) => Left(id) } -> 0
 					println("For more information concerning these issues, use 'see next' or 'see <issue id>'")
 				}
 			}

@@ -26,7 +26,7 @@
 - **PostponingProcess** (object)
   - Added a new constructor
 - **Seq** (**CollectionExtensions**)
-  - Added `.reverseSorted` and `.random`
+  - Added `.reverseSorted`, `.reverseSortBy(...)` and `.random`
 - **Span** (object)
   - Added `.numeric(...)`
 - **SpanLike**

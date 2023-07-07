@@ -1225,6 +1225,16 @@ object CollectionExtensions
 		}
 		
 		/**
+		  * Sorts this collection using mapping results.
+		  * Reverses the applied implicit ordering.
+		  * @param f A mapping function
+		  * @param ord Implicit ordering to use for mapping results (will be reversed)
+		  * @tparam B Type of mapping results
+		  * @return A sorted copy of this collection
+		  */
+		def reverseSortBy[B](f: A => B)(implicit ord: Ordering[B]) = seq.sortBy(f)(ord.reverse)
+		
+		/**
 		  * @param end The targeted end and length
 		  * @return The first or last n items of this collection
 		  */
