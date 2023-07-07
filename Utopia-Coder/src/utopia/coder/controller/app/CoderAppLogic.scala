@@ -24,7 +24,6 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 4.9.2021, v0.1
   */
-// FIXME: The -N argument is not working at this time
 trait CoderAppLogic extends AppLogic
 {
 	// ABSTRACT ------------------------------
@@ -244,7 +243,9 @@ trait CoderAppLogic extends AppLogic
 		}
 		
 		// Runs the actual application logic
-		val didSucceed = run(arguments, inputPath, outputPath, mergeRoots, filter, targetType)
+		// Merge roots may not be given if specifically denied with -N
+		val didSucceed = run(arguments, inputPath, outputPath,
+			if (arguments("nomerge").getBoolean) Lazy.initialized(Vector()) else mergeRoots, filter, targetType)
 		
 		// May store the project settings for future use
 		if (didSucceed && project.isEmpty &&

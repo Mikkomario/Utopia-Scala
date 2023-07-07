@@ -70,7 +70,7 @@ case class RecordableError(className: String, stackTrace: StackTrace, cause: Opt
 	  *         Contains records for all errors and all stack trace elements within this error.
 	  */
 	def logLinesIterator = topToBottomIterator.zipWithIndex.flatMap { case (error, index) =>
-		Iterator.single(s"${if (index == 0) "" else "caused by " }${error.logLine}") ++
+		Iterator.single(s"${if (index == 0) "" else "Caused by " }${error.logLine}") ++
 			error.stackTrace.logLinesIterator.map { line => s"\t$line" }
 	}
 	

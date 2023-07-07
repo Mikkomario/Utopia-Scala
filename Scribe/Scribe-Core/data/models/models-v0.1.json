@@ -90,7 +90,7 @@
           },
           {
             "name": "causeId",
-            "ref": "stack_trace_element",
+            "ref": "stack_trace_element_record",
             "type": "Option[Int]",
             "doc": "Id of the stack trace element that originated this element. I.e. the element directly before this element. None if this is the root element."
           }
@@ -245,13 +245,11 @@
             "parts": [
               {
                 "name": "earliest",
-                "column_name": "first_occurrence",
-                "sql_default": "CURRENT_TIMESTAMP"
+                "column_name": "first_occurrence"
               },
               {
                 "name": "latest",
-                "column_name": "last_occurrence",
-                "sql_default": "CURRENT_TIMESTAMP"
+                "column_name": "last_occurrence"
               }
             ]
           }

@@ -1,14 +1,12 @@
 -- 
 -- Database structure for scribe models
 -- Version: v0.1
--- Last generated: 2023-05-22
---
--- TODO: Must be rebuilt
+-- Last generated: 2023-07-07
 --
 
 --	Logging	----------
 
--- Represents a type of problem or issue that may occur during a program's run
+-- Represents a type of problem or an issue that may occur during a program's run
 -- context:        Program context where this issue occurred or was logged. Should be unique.
 -- severity_level: The estimated severity of this issue
 -- 		References enumeration Severity
@@ -29,14 +27,14 @@ CREATE TABLE `issue`(
 -- method_name: The name of the class method where this event was recorded
 -- line_number: The code line number where this event was recorded
 -- cause_id:    Id of the stack trace element that originated this element. I.e. the element directly before this element. None if this is the root element.
-CREATE TABLE `stack_trace_element`(
+CREATE TABLE `stack_trace_element_record`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`class_name` VARCHAR(48) NOT NULL, 
 	`method_name` VARCHAR(48) NOT NULL, 
 	`line_number` INT NOT NULL, 
 	`cause_id` INT, 
-	INDEX ste_combo_1_idx (class_name, method_name, line_number), 
-	CONSTRAINT ste_ste_cause_ref_fk FOREIGN KEY ste_ste_cause_ref_idx (cause_id) REFERENCES `stack_trace_element`(`id`) ON DELETE SET NULL
+	INDEX ster_combo_1_idx (class_name, method_name, line_number), 
+	CONSTRAINT ster_ster_cause_ref_fk FOREIGN KEY ster_ster_cause_ref_idx (cause_id) REFERENCES `stack_trace_element_record`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a single error or exception thrown during program runtime
@@ -49,7 +47,7 @@ CREATE TABLE `error_record`(
 	`stack_trace_id` INT NOT NULL, 
 	`cause_id` INT, 
 	INDEX er_combo_1_idx (exception_type, stack_trace_id), 
-	CONSTRAINT er_ste_stack_trace_ref_fk FOREIGN KEY er_ste_stack_trace_ref_idx (stack_trace_id) REFERENCES `stack_trace_element`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT er_ster_stack_trace_ref_fk FOREIGN KEY er_ster_stack_trace_ref_idx (stack_trace_id) REFERENCES `stack_trace_element_record`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT er_er_cause_ref_fk FOREIGN KEY er_er_cause_ref_idx (cause_id) REFERENCES `error_record`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -74,22 +72,21 @@ CREATE TABLE `issue_variant`(
 
 -- Represents one or more specific occurrences of a recorded issue
 -- case_id:          Id of the issue variant that occurred
--- error_messages:   Error messages listed in the stack trace.
+-- error_messages:   Error messages listed in the stack trace. 
 -- 		If multiple occurrences are represented, contains data from the latest occurrence.
 -- details:          Additional details concerning these issue occurrences.
 -- 		In case of multiple occurrences, contains only the latest entry for each detail.
 -- count:            Number of issue occurrences represented by this entry
 -- occurrence period (first_occurrence, last_occurrence): The first and last time this set of issues occurred
 CREATE TABLE `issue_occurrence`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	`case_id` INT NOT NULL,
-	`error_messages` VARCHAR(255),
-	`details` VARCHAR(128),
-	`count` INT NOT NULL DEFAULT 1,
-	`first_occurrence` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`last_occurrence` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	INDEX io_combo_1_idx (last_occurrence, first_occurrence),
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`case_id` INT NOT NULL, 
+	`error_messages` VARCHAR(255), 
+	`details` VARCHAR(128), 
+	`count` INT NOT NULL DEFAULT 1, 
+	`first_occurrence` DATETIME NOT NULL,
+	`last_occurrence` DATETIME NOT NULL,
+	INDEX io_combo_1_idx (last_occurrence, first_occurrence), 
 	CONSTRAINT io_iv_case_ref_fk FOREIGN KEY io_iv_case_ref_idx (case_id) REFERENCES `issue_variant`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
 

@@ -1,14 +1,11 @@
 package utopia.scribe.api.app.console
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.async.context.ThreadPool
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.vault.database.Connection
 
 import java.io.FileNotFoundException
@@ -47,7 +44,7 @@ object ScribeConsoleSettings
 	// OTHER    --------------------
 	
 	/**
-	  * Initializes database connection settings based on read user input
+	  * Initializes database connection settings
 	  * @return Success or failure
 	  */
 	def initializeDbSettings() = loaded.map { settings =>

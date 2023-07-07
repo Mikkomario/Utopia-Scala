@@ -7,6 +7,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDec
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, PairType, VectorType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 
 import java.time.Instant
 
@@ -62,11 +63,15 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Vector[String] = Vect
 	  * The first issue occurrence time covered by this instance
 	  */
 	def firstOccurrence = occurrencePeriod.start
-	
 	/**
 	  * The last issue occurrence time covered by this instance
 	  */
 	def lastOccurrence = occurrencePeriod.end
+	
+	/**
+	  * @return The length of the time span represented by this occurrence instance
+	  */
+	def duration = occurrencePeriod.end - occurrencePeriod.start
 	
 	
 	// IMPLEMENTED	--------------------

@@ -1,0 +1,21 @@
+<component name="ArtifactManager">
+  <artifact name="utopia-scribe-console-app">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_scribe_console_app</output-path>
+    <root id="root">
+      <element id="archive" name="Scribe-Console.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/Scribe/Scribe-Api/console-app/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="Scribe-Api" />
+        <element id="module-output" name="Access" />
+        <element id="module-output" name="Flow" />
+        <element id="module-output" name="BunnyMunch" />
+        <element id="module-output" name="Nexus" />
+        <element id="module-output" name="Scribe-Core" />
+        <element id="module-output" name="Vault" />
+      </element>
+      <element id="library" level="application" name="scala-sdk-2.13.7" />
+      <element id="library" level="project" name="mariadb-java-client-1" />
+    </root>
+  </artifact>
+</component>
