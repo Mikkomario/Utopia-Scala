@@ -6,6 +6,48 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 
 import scala.math.Ordered.orderingToOrdered
 
+object HasEnds
+{
+	// OTHER    ------------------------
+	
+	/**
+	  * Creates a new range
+	  * @param start First value (inclusive)
+	  * @param end Ending value (inclusive or exclusive)
+	  * @param exclusive Whether the ending value is exclusive (default = false)
+	  * @param ord Implicit ordering to apply
+	  * @tparam P Type of range end values
+	  * @return A new range
+	  */
+	def apply[P](start: P, end: P, exclusive: Boolean = false)(implicit ord: Ordering[P]): HasEnds[P] =
+		_HasEnds[P](start, end, !exclusive)
+	
+	/**
+	  * Creates a new inclusive range
+	  * @param start     First value (inclusive)
+	  * @param end       Ending value (inclusive)
+	  * @param ord       Implicit ordering to apply
+	  * @tparam P Type of range end values
+	  * @return A new range
+	  */
+	def inclusive[P](start: P, end: P)(implicit ord: Ordering[P]) = apply(start, end)
+	/**
+	  * Creates a new exclusive range
+	  * @param start     First value (inclusive)
+	  * @param end       Ending value (exclusive)
+	  * @param ord       Implicit ordering to apply
+	  * @tparam P Type of range end values
+	  * @return A new range
+	  */
+	def exclusive[P](start: P, end: P)(implicit ord: Ordering[P]) = apply(start, end, exclusive = true)
+	
+	
+	// NESTED   ------------------------
+	
+	private case class _HasEnds[P](start: P, end: P, isInclusive: Boolean)(implicit override val ordering: Ordering[P])
+		extends HasEnds[P]
+}
+
 /**
   * A common trait for items which have two ends: A start and an end.
   * The end-point may be inclusive or exclusive.

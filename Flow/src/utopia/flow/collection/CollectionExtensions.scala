@@ -848,6 +848,17 @@ object CollectionExtensions
 		  * @return Minimum item or None if this Iterable was empty
 		  */
 		def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] = if (t.isEmpty) None else Some(t.min(cmp))
+		/**
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value within this collection as a pair
+		  */
+		def minMax(implicit ord: Ordering[A]) = t.iterator.minMax
+		/**
+		  * @param ord Implicit ordering
+		  * @return The minimum and the maximum value within this collection as a pair.
+		  *         None if this collection is empty.
+		  */
+		def minMaxOption(implicit ord: Ordering[A]) = if (t.isEmpty) None else Some(minMax)
 		
 		/**
 		  * Finds the maximum value based on map result
@@ -869,17 +880,6 @@ object CollectionExtensions
 			if (t.isEmpty) None else Some(t.minBy(map))
 		
 		/**
-		  * @param ord Implicit ordering
-		  * @return The minimum and the maximum value within this collection as a pair
-		  */
-		def minMax(implicit ord: Ordering[A]) = t.iterator.minMax
-		/**
-		  * @param ord Implicit ordering
-		  * @return The minimum and the maximum value within this collection as a pair.
-		  *         None if this collection is empty.
-		  */
-		def minMaxOption(implicit ord: Ordering[A]) = if (t.isEmpty) None else Some(minMax)
-		/**
 		  * @param f A mapping function for ordered values
 		  * @param ord Implicit ordering for mapping results
 		  * @tparam B Type of mapping results
@@ -894,6 +894,15 @@ object CollectionExtensions
 		  *         None if this collection is empty.
 		  */
 		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) = if (t.isEmpty) None else Some(minMaxBy(f))
+		
+		/**
+		  * @param end Targeted end of this collection
+		  * @return Index of the specified end of this collection. -1 if this collection is empty.
+		  */
+		def indexOfEnd(end: End) = end match {
+			case First => if (t.isEmpty) -1 else 0
+			case Last => t.size - 1
+		}
 		
 		/**
 		  * @param other Another collection
@@ -1051,6 +1060,45 @@ object CollectionExtensions
 				}
 			})
 		}
+		/**
+		  * @param end Targeted collection end-point
+		  * @param f Mapping function to apply to that end of this collection
+		  * @param buildFrom Implicit build-from
+		  * @tparam B Type of mapping result
+		  * @tparam That Type of resulting collection
+		  * @return Copy of this collection with the first or the last item mapped (unless empty)
+		  */
+		def mapEnd[B >: seq.A, That](end: End)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
+			val ops = seq(coll)
+			if (ops.isEmpty)
+				buildFrom.fromSpecific(coll)(Iterator.empty)
+			else {
+				val index = end match {
+					case First => 0
+					case Last => ops.size - 1
+				}
+				mapIndex[B, That](index)(f)
+			}
+		}
+		/**
+		  * @param f         Mapping function to apply to the first item of this collection
+		  * @param buildFrom Implicit build-from
+		  * @tparam B    Type of mapping result
+		  * @tparam That Type of resulting collection
+		  * @return Copy of this collection with the first item mapped (unless empty)
+		  */
+		def mapFirst[B >: seq.A, That](f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+			mapIndex[B, That](0)(f)
+		/**
+		  * @param f         Mapping function to apply to last item of this collection
+		  * @param buildFrom Implicit build-from
+		  * @tparam B    Type of mapping result
+		  * @tparam That Type of resulting collection
+		  * @return Copy of this collection with the last item mapped (unless empty)
+		  */
+		def mapLast[B >: seq.A, That](f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+			mapEnd[B, That](Last)(f)
+		
 		/**
 		  * Maps the first item that matches provided condition, leaves the other items as they were
 		  * @param find      A function for finding the mapped item
@@ -2187,6 +2235,22 @@ object CollectionExtensions
 				case Failure(error) => failuresBuilder += error
 			}
 			failuresBuilder.result() -> successesBuilder.result()
+		}
+	}
+	
+	implicit class RichIterableOnceTuples[A, B](val i: IterableOnce[(A, B)]) extends AnyVal
+	{
+		/**
+		  * @return Contents of this collection split into two groups (as vectors)
+		  */
+		def split = {
+			val lBuilder = new VectorBuilder[A]()
+			val rBuilder = new VectorBuilder[B]()
+			i.iterator.foreach { case (a, b) =>
+				lBuilder += a
+				rBuilder += b
+			}
+			lBuilder.result() -> rBuilder.result()
 		}
 	}
 	

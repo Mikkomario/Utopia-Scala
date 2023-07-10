@@ -23,7 +23,7 @@ import utopia.scribe.core.model.combined.logging.{IssueInstances, IssueVariantIn
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Debug
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
-import utopia.vault.database.ConnectionPool
+import utopia.vault.database.{ConnectionPool, Tables}
 
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -55,7 +55,7 @@ object ScribeConsoleApp extends App
 	}
 	private implicit val cPool: ConnectionPool = new ConnectionPool(30)
 	
-	ScribeContext.setup(exc, cPool, ScribeConsoleSettings.dbName, backupLogger = log)
+	ScribeContext.setup(exc, cPool, new Tables(cPool), ScribeConsoleSettings.dbName, backupLogger = log)
 	
 	// Tracks program state in separate pointers
 	
@@ -75,7 +75,7 @@ object ScribeConsoleApp extends App
 	private val statusCommand = Command.withoutArguments("status", "st", "Shows current issue status") {
 		cPool.tryWith { implicit c =>
 			// Counts active issues
-			val activeIssueIds = DbManyIssueInstances.since(recent).ids.toSet
+			val activeIssueIds = DbManyIssueInstances.since(recent, includePartialRanges = true).ids.toSet
 			
 			// Case: No active issues
 			if (activeIssueIds.isEmpty)
@@ -132,7 +132,8 @@ object ScribeConsoleApp extends App
 		val minLevel = Severity.fromValue(args("level"))
 		// Finds the issues
 		cPool.tryWith { implicit c =>
-			val occurrencesPerVariantId = DbIssueOccurrences.since(since).pull.groupBy { _.caseId }
+			val occurrencesPerVariantId = DbIssueOccurrences.since(since, includePartialRanges = true).pull
+				.groupBy { _.caseId }
 			if (occurrencesPerVariantId.isEmpty)
 				Vector()
 			else {
@@ -199,7 +200,7 @@ object ScribeConsoleApp extends App
 				val issue = target match {
 					case Left(issueId) =>
 						DbVaryingIssue(issueId).pull.map { issue =>
-							issue.withOccurrences(DbIssueOccurrences.forVariants(issue.variants.map { _.id }).pull)
+							issue.withOccurrences(DbIssueOccurrences.ofVariants(issue.variants.map { _.id }).pull)
 						}
 					case Right(issue) => Some(issue)
 				}
@@ -207,7 +208,7 @@ object ScribeConsoleApp extends App
 					case Some(issue) =>
 						// Retrieves and prints available information about the issue
 						val lastOccurrence = issue.latestOccurrence
-						val numberOfOccurrences = DbIssueOccurrences.forVariants(issue.variantIds)
+						val numberOfOccurrences = DbIssueOccurrences.ofVariants(issue.variantIds)
 							.before(issue.earliestOccurrence match {
 								case Some(o) => o.lastOccurrence
 								case None => recent

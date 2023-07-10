@@ -3,6 +3,8 @@ package utopia.scribe.api.database.model.logging
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.operator.End
+import utopia.flow.operator.End.{First, Last}
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
@@ -25,27 +27,22 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	  * Name of the property that contains issue occurrence case id
 	  */
 	val caseIdAttName = "caseId"
-	
 	/**
 	  * Name of the property that contains issue occurrence error messages
 	  */
 	val errorMessagesAttName = "errorMessages"
-	
 	/**
 	  * Name of the property that contains issue occurrence details
 	  */
 	val detailsAttName = "details"
-	
 	/**
 	  * Name of the property that contains issue occurrence count
 	  */
 	val countAttName = "count"
-	
 	/**
 	  * Name of the property that contains issue occurrence earliest
 	  */
 	val earliestAttName = "firstOccurrence"
-	
 	/**
 	  * Name of the property that contains issue occurrence latest
 	  */
@@ -58,27 +55,22 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	  * Column that contains issue occurrence case id
 	  */
 	def caseIdColumn = table(caseIdAttName)
-	
 	/**
 	  * Column that contains issue occurrence error messages
 	  */
 	def errorMessagesColumn = table(errorMessagesAttName)
-	
 	/**
 	  * Column that contains issue occurrence details
 	  */
 	def detailsColumn = table(detailsAttName)
-	
 	/**
 	  * Column that contains issue occurrence count
 	  */
 	def countColumn = table(countAttName)
-	
 	/**
 	  * Column that contains issue occurrence earliest
 	  */
 	def earliestColumn = table(earliestAttName)
-	
 	/**
 	  * Column that contains issue occurrence latest
 	  */
@@ -102,6 +94,15 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * @param end Targeted end (first or last)
+	  * @return Column that matches the earliest or the latest occurrence, based on the specified end
+	  */
+	def timeColumn(end: End) = end match {
+		case First => earliestColumn
+		case Last => latestColumn
+	}
 	
 	/**
 	  * @param caseId Id of the issue variant that occurred

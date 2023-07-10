@@ -1,9 +1,10 @@
 package utopia.scribe.api.controller.logging
 
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.logging.Logger
 import utopia.scribe.api.controller.logging.Scribe.loggingQueue
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
+import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.api.util.ScribeContext._
 import utopia.scribe.core.controller.logging.ScribeLike
 import utopia.scribe.core.model.cached.logging.RecordableError
@@ -16,8 +17,7 @@ object Scribe
 	// ATTRIBUTES   ---------------------
 	
 	private lazy val loggingQueue = {
-		// TODO: Use a more sophisticated backup logger
-		implicit val backupLogger: Logger = SysErrLogger
+		implicit val backupLogger: Logger = ScribeContext.backupLogger
 		DatabaseActionQueue()
 	}
 	

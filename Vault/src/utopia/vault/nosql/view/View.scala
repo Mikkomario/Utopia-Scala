@@ -1,8 +1,10 @@
 package utopia.vault.nosql.view
 
-import utopia.vault.database.Connection
+import utopia.flow.collection.CollectionExtensions._
+import utopia.vault.database.{Connection, References}
 import utopia.vault.model.immutable.{Column, Storable, Table}
-import utopia.vault.sql.{Condition, Delete, Exists, SqlTarget, Where}
+import utopia.vault.model.template.Joinable
+import utopia.vault.sql.{Condition, Delete, Exists, Join, SqlTarget, Where}
 
 /**
   * A template trait for all access points. Doesn't specify anything about the read content but specifies the
@@ -108,17 +110,82 @@ trait View
 		containsNull(table(attributeName))
 	
 	/**
-	  * Deletes all items accessible from this access points (only primary table is targeted)
+	  * Deletes all items accessible from this access points
+	  * @param table The table in which deletion occurs. Should be part of this view's target
+	  *              (i.e. primary table or one of the joined tables).
+	  *              Default = this view's primary table.
 	  * @param connection Database connection (implicit)
 	  */
-	def delete()(implicit connection: Connection): Unit =
-		connection(Delete(target, table) + globalCondition.map { Where(_) })
+	def delete(table: Table = table)(implicit connection: Connection): Unit = _delete(table)
 	/**
 	  * Deletes items which are accessible from this access point and fulfill the specified condition
-	  * (only primary table is targeted)
 	  * @param condition  Deletion condition (applied in addition to the global condition)
+	  * @param joins Joins that should be applied to this query (optional)
+	  * @param table The table in which deletion occurs. Should be part of this view's target
+	  *              (i.e. primary table or one of the joined tables).
+	  *              Default = this view's primary table.
 	  * @param connection DB Connection (implicit)
 	  */
-	def deleteWhere(condition: Condition)(implicit connection: Connection): Unit =
-		connection(Delete(target, table) + Where(mergeCondition(condition)))
+	def deleteWhere(condition: Condition, joins: Vector[Joinable] = Vector(), table: Table = table)
+	               (implicit connection: Connection): Unit =
+		_delete(table, Some(condition), joins)
+	/**
+	  * Deletes items which are not linked to the specified table in some way
+	  * @param table Targeted link table
+	  * @param linkCondition Condition on which links should be considered valid (optional)
+	  * @param deletedTable Table to target with the deletion (default = primary table of this view)
+	  * @param connection Implicit DB Connection
+	  */
+	def deleteNotLinkedTo(table: Table, linkCondition: Option[Condition] = None, deletedTable: Table = table)
+	                     (implicit connection: Connection) =
+		forNotLinkedTo(table, linkCondition) { (c, join) =>
+			deleteWhere(c, Vector(join), deletedTable)
+		} { delete(deletedTable) }
+	
+	/**
+	  * Performs a database operation for cases that can't be linked to a specific table
+	  * @param table Targeted table
+	  * @param linkCondition Condition that must be true in order for the link to be considered (optional)
+	  * @param onRefFound Function called in cases where a reference between these tables is found.
+	  *                   Accepts the **additional** condition to apply to requests, and the join to apply.
+	  * @param onNoRefFound Function called in cases where no reference exists between these tables
+	  * @tparam A Function result type
+	  * @return Function result
+	  */
+	protected def forNotLinkedTo[A](table: Table, linkCondition: Option[Condition] = None)
+	                               (onRefFound: (Condition, Join) => A)
+	                               (onNoRefFound: => A) =
+	{
+		// Finds the reference between these tables, if possible
+		target.tables.findMap { t => References.between(t, table).headOption } match {
+			// Case: Reference found => Converts the reference to a join
+			case Some(ref) =>
+				val directionalRef = if (ref.from.table == this.table) ref else ref.reverse
+				val baseJoin = directionalRef.toLeftJoin
+				val join = linkCondition match {
+					case Some(c) => baseJoin.where(c)
+					case None => baseJoin
+				}
+				// Performs the specified function
+				onRefFound(directionalRef.to.column.isNull, join)
+			// Case: No reference found => Performs the alternative function
+			case None => onNoRefFound
+		}
+	}
+	
+	private def _delete(table: Table, condition: Option[Condition] = None, joins: Vector[Joinable] = Vector())
+	                   (implicit connection: Connection): Unit =
+	{
+		// Applies additional joins
+		val baseTarget = joins.foldLeft(target) { _ join _ }
+		val appliedTarget = {
+			// Case: Targeting a table that's part of this view's target => Performs delete
+			if (baseTarget.tables.contains(table))
+				target
+			// Case: Targeting a table outside of this view's target => Attempts join
+			else
+				baseTarget join table
+		}
+		connection(Delete(appliedTarget, table) + mergeCondition(condition).map { Where(_) })
+	}
 }

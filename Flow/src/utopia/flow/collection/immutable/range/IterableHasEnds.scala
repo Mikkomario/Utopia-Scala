@@ -1,9 +1,62 @@
 package utopia.flow.collection.immutable.range
 
-import utopia.flow.operator.Sign
+import utopia.flow.operator.{Sign, Steppable}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
+import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
+
+object IterableHasEnds
+{
+	// OTHER    -------------------------
+	
+	/**
+	  * @param start Range starting value (inclusive)
+	  * @param end Range end value (inclusive or exlusive)
+	  * @param exclusive Whether the end value is exclusive (default = false)
+	  * @param traverse A function that accepts a start point value, and the direction of travel (binary) and
+	  *                 yields the next step.
+	  *
+	  *                 E.g. an integer-based function could accept (2, Positive) and yield 3.
+	  * @param ord Implicit ordering to apply
+	  * @tparam P Type of range end-points
+	  * @return A new iterable range
+	  */
+	def iterate[P](start: P, end: P, exclusive: Boolean = false)
+	            (traverse: (P, Sign) => P)
+	            (implicit ord: Ordering[P]): IterableHasEnds[P] =
+		new _IterableHasEnds[P](start, end, !exclusive)(traverse)
+	
+	/**
+	  * @param start     Range starting value (inclusive)
+	  * @param end       Range end value (inclusive or exlusive)
+	  * @param exclusive Whether the end value is exclusive (default = false)
+	  * @param ord       Implicit ordering to apply
+	  * @tparam P Type of range end-points
+	  * @return A new iterable range
+	  */
+	def apply[P <: Steppable[P]](start: P, end: P, exclusive: Boolean = false)(implicit ord: Ordering[P]) =
+		iterate(start, end, exclusive) { _ next _ }
+	
+	/**
+	  * Wraps another range that has supported value type
+	  * @param other Another range
+	  * @tparam P Type of range end-points
+	  * @return A new iterable copy of that range
+	  */
+	implicit def wrap[P <: Steppable[P]](other: HasEnds[P]): IterableHasEnds[P] =
+		apply(other.start, other.end, other.isExclusive)(other.ordering)
+	
+	
+	// NESTED   -------------------------
+	
+	private class _IterableHasEnds[P](override val start: P, override val end: P, override val isInclusive: Boolean)
+	                                 (f: (P, Sign) => P)(implicit override val ordering: Ordering[P])
+		extends IterableHasEnds[P]
+	{
+		override protected def traverse(from: P, direction: Sign): P = f(from, direction)
+	}
+}
 
 /**
   * A common trait for iterable items which have two ends: A start and an end.

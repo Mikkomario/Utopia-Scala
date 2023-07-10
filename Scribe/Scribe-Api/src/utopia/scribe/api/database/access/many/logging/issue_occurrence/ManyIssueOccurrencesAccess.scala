@@ -13,8 +13,6 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
-import java.time.Instant
-
 object ManyIssueOccurrencesAccess
 {
 	// NESTED	--------------------
@@ -34,6 +32,7 @@ object ManyIssueOccurrencesAccess
   */
 trait ManyIssueOccurrencesAccess 
 	extends ManyRowModelAccess[IssueOccurrence] with FilterableView[ManyIssueOccurrencesAccess] with Indexed
+		with OccurrenceTimeBasedAccess[ManyIssueOccurrencesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -81,17 +80,10 @@ trait ManyIssueOccurrencesAccess
 	// OTHER	--------------------
 	
 	/**
-	  * @param threshold A time threshold
-	  * @param includePartialRanges Whether those occurrences should be included,
-	  * where some but not all of them occurred before the specified time threshold
-	  * (default = false)
-	  * @return Access to instance occurrences before the specified time threshold
+	  * @param variantIds Ids of the targeted issue variants
+	  * @return Access to the occurrences of those variants
 	  */
-	def before(threshold: Instant, includePartialRanges: Boolean = false) = {
-		val condition = if (includePartialRanges) model.earliestColumn <
-			 threshold else model.latestColumn < threshold
-		filter(condition)
-	}
+	def ofVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
 	
 	/**
 	  * Updates the case ids of the targeted issue occurrences
@@ -122,18 +114,6 @@ trait ManyIssueOccurrencesAccess
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
 		putColumn(model.errorMessagesColumn, 
-			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map[Value] { v => v }: Value).toJson): Value; case None => Value.empty })
-	
-	/**
-	  * @param variantIds Ids of the targeted issue variants
-	  * @return Access to the occurrences of those variants
-	  */
-	def forVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
-	
-	/**
-	  * @param threshold A time threshold
-	  * @return Access to instance occurrences after that time threshold
-	  */
-	def since(threshold: Instant) = filter(model.latestColumn > threshold)
+			NotEmpty(newErrorMessages) match { case Some(v) => (v.map[Value] { v => v }: Value).toJson: Value; case None => Value.empty })
 }
 

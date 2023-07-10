@@ -120,8 +120,7 @@ object TimeExtensions
 		/**
 		  * An instant after the specified duration has passed from this instant
 		  */
-		def +(amount: TemporalAmount) =
-		{
+		def +(amount: TemporalAmount) = {
 			amount match {
 				case period: Period =>
 					// Long time periods are a bit tricky because the actual length of traversed time depends
@@ -141,12 +140,19 @@ object TimeExtensions
 		  * @return An instant after specified duration has passed from this instant
 		  */
 		def +(amount: FiniteDuration) = i.plusNanos(amount.toNanos)
+		/**
+		  * @param amount Amount of duration to advance this instant (may be infinite)
+		  * @return An instant after 'amount' from this instant. Maximum instant if the specified duration is infinite.
+		  */
+		def +(amount: Duration): Instant = amount.finite match {
+			case Some(d) => this + d
+			case None => Instant.MAX
+		}
 		
 		/**
 		  * An instant before the specified duration
 		  */
-		def -(amount: TemporalAmount) =
-		{
+		def -(amount: TemporalAmount) = {
 			amount match {
 				case period: Period =>
 					// See + for explanation
@@ -163,6 +169,14 @@ object TimeExtensions
 		  * @return The instant before this instant by specified duration
 		  */
 		def -(amount: FiniteDuration) = i.minusNanos(amount.toNanos)
+		/**
+		  * @param duration Amount of time to subtract (may be infinite)
+		  * @return An instant before this one by the specified duration (minimum instant if the duration is infinite)
+		  */
+		def -(duration: scala.concurrent.duration.Duration): Instant = duration.finite match {
+			case Some(d) => this - d
+			case None => Instant.MIN
+		}
 		/**
 		  * Finds the difference (duration) between the two time instances
 		  */

@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.access.many.logging.issue_variant
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.scribe.api.database.access.many.logging.issue.SeverityBasedAccess
 import utopia.scribe.api.database.factory.logging.ContextualIssueVariantFactory
 import utopia.scribe.api.database.model.logging.IssueModel
 import utopia.scribe.core.model.combined.logging.ContextualIssueVariant
@@ -30,7 +31,7 @@ object ManyContextualIssueVariantsAccess
   */
 trait ManyContextualIssueVariantsAccess 
 	extends ManyIssueVariantsAccessLike[ContextualIssueVariant, ManyContextualIssueVariantsAccess] 
-		with ManyRowModelAccess[ContextualIssueVariant]
+		with ManyRowModelAccess[ContextualIssueVariant] with SeverityBasedAccess[ManyContextualIssueVariantsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -51,11 +52,6 @@ trait ManyContextualIssueVariantsAccess
 	  */
 	def issueCreationTimes(implicit connection: Connection) = 
 		pullColumn(issueModel.createdColumn).map { v => v.getInstant }
-	
-	/**
-	  * Model (factory) used for interacting the issues associated with this contextual issue variant
-	  */
-	protected def issueModel = IssueModel
 	
 	
 	// IMPLEMENTED	--------------------

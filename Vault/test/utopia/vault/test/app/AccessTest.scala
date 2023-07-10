@@ -1,14 +1,14 @@
 package utopia.vault.test.app
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.Connection
-import utopia.vault.test.database.TestConnectionPool
-import utopia.vault.test.database.TestThreadPool.executionContext
 import utopia.vault.test.database.access.many.sales.DbSalesProducts
 import utopia.vault.test.database.access.single.sales.DbSalesProduct
 import utopia.vault.test.database.model.sales.SalesProductModel
+import utopia.vault.test.database.{TestConnectionPool, TestThreadPool}
 import utopia.vault.test.model.partial.sales.SalesProductData
+
+import scala.concurrent.ExecutionContext
 
 /**
   * Tests database accessing
@@ -17,6 +17,7 @@ import utopia.vault.test.model.partial.sales.SalesProductData
   */
 object AccessTest extends App
 {
+	implicit val exc: ExecutionContext = TestThreadPool
 	
 	Connection.modifySettings { _.copy(defaultDBName = Some("vault_test"), charsetName = "utf8",
 		charsetCollationName = "utf8_general_ci") }

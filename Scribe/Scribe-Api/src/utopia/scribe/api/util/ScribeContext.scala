@@ -7,7 +7,7 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.Pointer
 import utopia.scribe.api.controller.logging.Scribe
 import utopia.scribe.core.model.enumeration.Severity
-import utopia.vault.database.ConnectionPool
+import utopia.vault.database.{ConnectionPool, Tables}
 
 import scala.concurrent.ExecutionContext
 
@@ -52,10 +52,19 @@ object ScribeContext
 		.getOrElse { throw new IllegalStateException("ScribeContext hasn't been initialized yet") }
 	
 	/**
+	  * @param tableName Name of the targeted table
+	  * @return That table
+	  */
+	def table(tableName: String) = settings.tables(databaseName, tableName)
+	/**
 	  * @return The name of the database used for scribe features
 	  */
 	def databaseName = settings.dbName
 	
+	/**
+	  * @return Logging implementation to use when this system is not available.
+	  *         Also logs errors within this system.
+	  */
 	def backupLogger = settingOr { _.backupLogger }(SysErrLogger)
 	
 	
@@ -65,14 +74,15 @@ object ScribeContext
 	  * Initializes this context
 	  * @param exc The execution context to use
 	  * @param cPool The database connection pool to use
+	  * @param tables The root Tables instance that should be used when accessing database tables
 	  * @param databaseName Name of the database used for Scribe features (default = utopia_scribe_db)
 	  * @param version Current software version (default = v1.0)
 	  * @param backupLogger Logging implementation to use when the Scribe logging system is not working
 	  *                     (default = print to console)
 	  */
-	def setup(exc: ExecutionContext, cPool: ConnectionPool, databaseName: String = "utopia_scribe_db",
+	def setup(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, databaseName: String = "utopia_scribe_db",
 	          version: Version = Version(1), backupLogger: Logger = SysErrLogger) =
-		settingsPointer.value = Some(Settings(exc, cPool, databaseName, version, backupLogger))
+		settingsPointer.value = Some(Settings(exc, cPool, tables, databaseName, version, backupLogger))
 	
 	/**
 	  * Creates a new specific logger
@@ -92,6 +102,6 @@ object ScribeContext
 	
 	// NESTED   -------------------------
 	
-	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, dbName: String, version: Version,
-	                            backupLogger: Logger)
+	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, dbName: String,
+	                            version: Version, backupLogger: Logger)
 }

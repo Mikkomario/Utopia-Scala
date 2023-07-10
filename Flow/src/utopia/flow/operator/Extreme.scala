@@ -2,6 +2,7 @@ package utopia.flow.operator
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
   * A common trait for the two extremes min/low and max/high.
@@ -178,6 +179,18 @@ object Extreme
 	  * The minimum and the maximum extreme
 	  */
 	val values = Pair[Extreme](Min, Max)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param sign Targeted sign
+	  * @return The extreme that matches that sign (i.e. Min for Negative and Max for Positive)
+	  */
+	def apply(sign: Sign): Extreme = sign match {
+		case Positive => Max
+		case Negative => Min
+	}
 	
 	
 	// VALUES   -------------------------

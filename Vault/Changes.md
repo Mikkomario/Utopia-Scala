@@ -9,6 +9,10 @@
 - Fixed a bug in **ClearOldData** reference processing logic
 ### New Features
 - Added **DatabaseActionQueue** class
+- Added specific table-targeting and joining support to `.delete()` and its variants in **View** 
+### New Methods
+- **View**
+  - Added `.deleteNotLinkedTo(...)` and `.forNotLinkedTo(...)` (protected)
 
 ## v1.16 - 01.05.2023
 While this update focuses on adding new utility functions, 

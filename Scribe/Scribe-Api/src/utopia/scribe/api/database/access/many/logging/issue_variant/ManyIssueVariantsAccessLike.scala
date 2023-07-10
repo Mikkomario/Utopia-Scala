@@ -4,7 +4,7 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
-import utopia.scribe.api.database.model.logging.IssueVariantModel
+import utopia.scribe.api.database.model.logging.{IssueOccurrenceModel, IssueVariantModel}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -57,8 +57,18 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	  */
 	protected def model = IssueVariantModel
 	
+	protected def occurrenceModel = IssueOccurrenceModel
+	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * @param issueId Id of the targeted issue
+	  * @param version Targeted version
+	  * @return Access to that issue's variants that occurred in the specified version
+	  */
+	def matching(issueId: Int,
+	             version: Version) = filter(model.withId(issueId).withVersion(version).toCondition)
 	
 	/**
 	  * @param errorId Id of an error, or None if targeting variants that are not associated with any error
@@ -71,6 +81,14 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 		}
 		filter(condition)
 	}
+	
+	/**
+	  * @param threshold  A time threshold
+	  * @param connection Implicit DB Connection
+	  * @return Issue variants that have not occurred at all since the specified time threshold
+	  */
+	def findNotOccurredSince(threshold: Instant)(implicit connection: Connection) =
+		findNotLinkedTo(occurrenceModel.table, Some(occurrenceModel.latestColumn > threshold))
 	
 	/**
 	  * Updates the creation times of the targeted issue variants
@@ -103,14 +121,6 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	  */
 	def issueIds_=(newIssueId: Int)(implicit connection: Connection) = putColumn(model.issueIdColumn, 
 		newIssueId)
-	
-	/**
-	  * @param issueId Id of the targeted issue
-	  * @param version Targeted version
-	  * @return Access to that issue's variants that occurred in the specified version
-	  */
-	def matching(issueId: Int, 
-		version: Version) = filter(model.withId(issueId).withVersion(version).toCondition)
 	
 	/**
 	  * Updates the versions of the targeted issue variants

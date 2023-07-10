@@ -9,6 +9,7 @@
 - Fixed deadlock issues in **PostponingProcess**
 ### New Features
 - Added new **TryCatch** utility class for handling situations that included non-critical failures
+- Added new **Steppable** trait for items that provide step-based iteration
 - Added sorting support to immutable **Models**
 ### New Methods
 - **Changing** (object)
@@ -16,9 +17,19 @@
 - **Either** (**CollectionExtensions**)
   - Added `.eitherAndSide` for symmetric Eithers
   - Added `.mapSide(End)(...)` for symmetric Eithers
+- **Extreme** (object)
+  - Added `.apply(Sign)`
+- **HasEnds** & **IterableHasEnds** (object)
+  - Added constructors
 - **Iterable** (**CollectionExtensions**)
   - Added `.ends` and `.endsOption`
   - Added `.mapTo(...)` for `.toMap` -conversion
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.split` -property for collections that consist of **Tuples**
+- **IterableSpan** (object)
+  - Added new constructors
+- **Instant** (**TimeExtensions**)
+  - Added `+` and `-` support for **Durations** (including `Duration.Inf`)
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
 - **Pointer**
@@ -27,6 +38,7 @@
   - Added a new constructor
 - **Seq** (**CollectionExtensions**)
   - Added `.reverseSorted`, `.reverseSortBy(...)` and `.random`
+  - Added `.mapEnd(End)(...)`, `.mapFirst(...)` and `.mapLast(...)`
 - **Span** (object)
   - Added `.numeric(...)`
 - **SpanLike**

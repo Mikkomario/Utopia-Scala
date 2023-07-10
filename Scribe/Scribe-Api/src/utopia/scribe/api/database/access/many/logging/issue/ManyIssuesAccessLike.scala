@@ -15,7 +15,8 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-trait ManyIssuesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
+trait ManyIssuesAccessLike[+A, +Repr]
+	extends ManyModelAccess[A] with Indexed with FilterableView[Repr] with SeverityBasedAccess[Repr]
 {
 	// COMPUTED	--------------------
 	
@@ -45,17 +46,6 @@ trait ManyIssuesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wi
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param minSeverity Smallest included issue severity
-	  * @return Access to issues that are of the specified severity level or higher
-	  */
-	def withSeverityAtLeast(minSeverity: Severity) = {
-		if (minSeverity == Severity.min)
-			self
-		else
-			filter(model.severityColumn >= minSeverity)
-	}
 	
 	/**
 	  * @param threshold A time threshold

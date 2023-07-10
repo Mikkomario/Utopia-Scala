@@ -4,7 +4,6 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueVariantInstancesFactory
-import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
 import utopia.scribe.core.model.combined.logging.IssueVariantInstances
 import utopia.vault.database.Connection
 import utopia.vault.sql.Condition
@@ -48,12 +47,6 @@ trait ManyIssueVariantInstancesAccess
 	  */
 	def occurrenceCounts(implicit connection: Connection) = 
 		pullColumn(occurrenceModel.countColumn).map { v => v.getInt }
-	
-	/**
-	  * Model (factory) used for interacting the issue occurrences associated 
-		with this issue variant instances
-	  */
-	protected def occurrenceModel = IssueOccurrenceModel
 	
 	
 	// IMPLEMENTED	--------------------

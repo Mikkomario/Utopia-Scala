@@ -1,9 +1,9 @@
 package utopia.vault.sql
 
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.model.enumeration.ComparisonOperator
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.vault.model.enumeration.ComparisonOperator
 
 import scala.language.implicitConversions
 

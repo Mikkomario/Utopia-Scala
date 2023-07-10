@@ -4,14 +4,15 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.Extreme.{Max, Min}
+import utopia.flow.operator.{Extreme, SelfComparable, Sign, Steppable}
 
 /**
   * Represents the level of severity associated with some problem or error situation
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-sealed trait Severity extends ValueConvertible with SelfComparable[Severity]
+sealed trait Severity extends ValueConvertible with SelfComparable[Severity] with Steppable[Severity]
 {
 	// ABSTRACT	--------------------
 	
@@ -28,6 +29,15 @@ sealed trait Severity extends ValueConvertible with SelfComparable[Severity]
 	override def toValue = level
 	
 	override def compareTo(o: Severity) = level - o.level
+	
+	override def is(extreme: Extreme): Boolean = this == Severity.extremes(extreme)
+	
+	/**
+	  * @param direction Targeted direction where Positive means more severe and Negative means less severe
+	  * @return The next level of severity in the specified direction.
+	  *         Returns this severity if this is the most extreme level of severity in that direction.
+	  */
+	def next(direction: Sign): Severity = Severity.forLevel(level + direction.modifier)
 }
 
 object Severity
@@ -38,6 +48,10 @@ object Severity
 	  * All available severity values
 	  */
 	val values: Vector[Severity] = Vector(Debug, Info, Warning, Recoverable, Unrecoverable, Critical)
+	/**
+	  * All available severity values, each matching their severity level (int) value
+	  */
+	lazy val valueByLevel: Map[Int, Severity] = values.iterator.map { v => v.level -> v }.toMap
 	
 	/**
 	  * The smallest severity
@@ -47,6 +61,10 @@ object Severity
 	  * The largest severity
 	  */
 	val max = Critical
+	/**
+	  * A map that contains the minimum and the maximum severity level
+	  */
+	val extremes = Map[Extreme, Severity](Min -> min, Max -> max)
 	
 	
 	// COMPUTED	--------------------
@@ -63,7 +81,7 @@ object Severity
 	  * @param level level representing a severity
 	  * @return severity matching the specified level. None if the level didn't match any severity
 	  */
-	def findForLevel(level: Int) = values.find { _.level == level }
+	def findForLevel(level: Int) = valueByLevel.get(level)
 	
 	/**
 	  * @param level level matching a severity
@@ -73,10 +91,7 @@ object Severity
 		// Case: Off-scale level => Uses largest available value
 		if (level > max.level)
 			max
-		// Case: Negative level => Treated as unknown => Uses default value
-		else if (level < 0)
-			default
-		// Case: 0 level => Uses minimum available value
+		// Case: 0 or negative level => Uses minimum available value
 		else
 			min
 	}
@@ -131,8 +146,7 @@ object Severity
 	}
 	
 	/**
-	  * 
-		Information about the application's state and/or behavior which may be of use. Doesn't necessarily indicate
+	  * Information about the application's state and/or behavior which may be of use. Doesn't necessarily indicate
 	  *  a real problem.
 	  * @since 22.05.2023
 	  */
@@ -144,8 +158,7 @@ object Severity
 	}
 	
 	/**
-	  * 
-		Indicates a process failure which is either partial or which may possibly be recovered from automatically.
+	  * Indicates a process failure which is either partial or which may possibly be recovered from automatically.
 	  * Doesn't require immediate action, but may be important to review and fix eventually.
 	  * @since 22.05.2023
 	  */

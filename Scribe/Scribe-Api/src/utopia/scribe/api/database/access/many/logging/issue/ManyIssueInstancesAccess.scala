@@ -1,14 +1,13 @@
 package utopia.scribe.api.database.access.many.logging.issue
 
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.scribe.api.database.access.many.logging.issue.ManyIssueInstancesAccess.ManyIssueInstancesSubView
+import utopia.scribe.api.database.access.many.logging.issue_occurrence.OccurrenceTimeBasedAccess
 import utopia.scribe.api.database.factory.logging.IssueInstancesFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
 import utopia.scribe.core.model.combined.logging.IssueInstances
+import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.Condition
-
-import java.time.Instant
 
 object ManyIssueInstancesAccess
 {
@@ -25,11 +24,13 @@ object ManyIssueInstancesAccess
   * @author Mikko Hilpinen
   * @since 25.5.2023, v0.1
   */
-trait ManyIssueInstancesAccess extends ManyIssuesAccessLike[IssueInstances, ManyIssueInstancesAccess]
+trait ManyIssueInstancesAccess
+	extends ManyIssuesAccessLike[IssueInstances, ManyIssueInstancesAccess]
+		with OccurrenceTimeBasedAccess[ManyIssueInstancesAccess]
 {
 	// COMPUTED ----------------------------
 	
-	private def occurrenceModel = IssueOccurrenceModel
+	protected def occurrenceModel = IssueOccurrenceModel
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -42,11 +43,11 @@ trait ManyIssueInstancesAccess extends ManyIssuesAccessLike[IssueInstances, Many
 		new ManyIssueInstancesSubView(mergeCondition(additionalCondition))
 		
 	
-	// OTHER    ----------------------------
+	// OTHER    --------------------------
 	
 	/**
-	  * @param threshold A time threshold
-	  * @return Access to issues that have occurred since the specified time threshold
+	  * Deletes all accessible instance occurrences from the database
+	  * @param connection Implicit DB connection
 	  */
-	def since(threshold: Instant) = filter(occurrenceModel.latestColumn > threshold)
+	def deleteOccurrences()(implicit connection: Connection) = delete(occurrenceModel.table)
 }

@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable.range
 
-import utopia.flow.operator.{Combinable, Sign, Signed}
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.{Combinable, Sign, Signed, Steppable}
 
 object IterableSpan
 {
@@ -19,6 +20,18 @@ object IterableSpan
 	def apply[P <: Combinable[D, P], D <: Signed[D]](start: P, end: P, step: D)
 	                                                (implicit ordering: Ordering[P]): IterableSpan[P] =
 		iterate[P](start, end) { (p, s) => p + step.withSign(s) }
+	/**
+	  * Creates a new inclusive span
+	  * @param start The starting point of this span
+	  * @param end The ending point of this span
+	  * @param ord Implicit ordering to use
+	  * @tparam P Type of span end values (incrementing)
+	  * @return A new iterable span
+	  */
+	def apply[P <: Steppable[P]](start: P, end: P)(implicit ord: Ordering[P]): IterableSpan[P] =
+		iterate[P](start, end) { _.next(_) }
+	def apply[P <: Steppable[P]](ends: Pair[P])(implicit ord: Ordering[P]): IterableSpan[P] =
+		apply(ends.first, ends.second)
 	
 	/**
 	  * Creates a new span

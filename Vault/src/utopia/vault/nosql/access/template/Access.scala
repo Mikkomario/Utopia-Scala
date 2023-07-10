@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.template
 
-import utopia.vault.database.{Connection, References}
+import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.view.View
@@ -59,18 +59,7 @@ trait Access[+A] extends View
 	  */
 	def findNotLinkedTo(table: Table, linkCondition: Option[Condition] = None, order: Option[OrderBy] = None)
 	                   (implicit connection: Connection) =
-		// Looks for the reference between these tables
-		References.between(this.table, table).headOption match {
-			// Case: Reference found => Converts it to a join and a search condition
-			case Some(ref) =>
-				val directionalRef = if (ref.from.table == this.table) ref else ref.reverse
-				val baseJoin = directionalRef.toLeftJoin
-				val join = linkCondition match {
-					case Some(c) => baseJoin.where(c)
-					case None => baseJoin
-				}
-				find(directionalRef.to.column.isNull, order, Vector(join), JoinType.Left)
-			// Case: No reference found => No item is considered to be linked
-			case None => read(order = order)
-		}
+		forNotLinkedTo(table, linkCondition) { (c, join) =>
+			find(c, order, Vector(join), JoinType.Left)
+		} { read(order = order) }
 }
