@@ -79,6 +79,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 				tree.filterWithPaths { _.nav == childRule.targetTable }.map { childPath =>
 					// Converts the table path to a reference path
 					// Throws possible errors here (those would result from logic / programming error)
+					// TODO: Sometimes the path is empty. Probably for self-referencing tables.
 					referencePathFrom(rule.targetTable, childPath.drop(1).map { _.nav }).get
 				}
 			}.toVector
@@ -130,13 +131,11 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	{
 		// Checks whether child status should be checked as well
 		val restrictions = rule.restrictiveChildPaths
-		if (restrictions.isEmpty)
-		{
+		if (restrictions.isEmpty) {
 			// If no restricting tables exist, simply deletes old data
 			connection(Delete(rule.table) + Where(baseDeletionCondition))
 		}
-		else
-		{
+		else {
 			// If there were restrictions, performs a join and only deletes tables where the join fails
 			val target = targetFrom(rule.table, restrictions)
 			val noJoinConditions = restrictions.map { _.last.to.column.isNull }
@@ -145,10 +144,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		}
 	}
 	
-	private def referencePathFrom(primaryTable: Table, childPath: Vector[Table]) =
-	{
+	private def referencePathFrom(primaryTable: Table, childPath: Vector[Table]) = {
 		var lastTable = primaryTable
-		
 		childPath.tryMap { nextTable =>
 			val reference = References.fromTo(nextTable, lastTable).headOption.orElse { References.fromTo(lastTable,
 				nextTable).headOption }.toTry { new NoReferenceFoundException(
@@ -176,7 +173,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	{
 		lazy val timeColumn = table(timePropertyName)
 		
-		lazy val restrictiveChildTables = restrictiveChildPaths.map { _.last.to.table }.toSet
+		lazy val restrictiveChildTables = restrictiveChildPaths.iterator
+			.flatMap { _.lastOption.map { _.to.table } }.toSet
 		
 		/*
 		def maxDuration = baseLiveDuration.getOrElse(conditionalPeriods.values.max)

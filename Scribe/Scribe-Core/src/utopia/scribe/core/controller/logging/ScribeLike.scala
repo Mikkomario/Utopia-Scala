@@ -120,6 +120,13 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  */
 	def apply(error: Throwable, severity: Severity) = _apply(Some(error), severity = severity)
 	/**
+	  * Logs an error
+	  * @param error The error to log (optional)
+	  * @param message Additional message to log (may be empty)
+	  * @param details Additional details to log (may be empty)
+	  */
+	def apply(error: Option[Throwable], message: String, details: Model) = _apply(error, message, details)
+	/**
 	  * Logs a message with details
 	  * @param message Message to log
 	  * @param details Details to include
