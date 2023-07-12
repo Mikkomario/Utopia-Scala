@@ -69,30 +69,36 @@
       {
         "name": "StackTraceElementRecord",
         "doc": "Represents a single error stack trace line.\nA stack trace indicates how an error propagated through the program flow before it was recorded.",
-        "combo_index": ["className", "methodName", "lineNumber"],
+        "combo_index": ["fileName", "className", "methodName", "lineNumber"],
         "props": [
           {
-            "name": "className",
+            "name": "fileName",
             "type": "NonEmptyString(48)",
             "limit": 1048,
-            "doc": "The class where this event was recorded."
+            "doc": "Name of the file in which this event was recorded"
+          },
+          {
+            "name": "className",
+            "type": "String(48)",
+            "limit": 1048,
+            "doc": "Name of the class in which this event was recorded. \nEmpty if the class name is identical with the file name."
           },
           {
             "name": "methodName",
-            "type": "NonEmptyString(48)",
+            "type": "String(48)",
             "limit": 255,
-            "doc": "The name of the class method where this event was recorded"
+            "doc": "Name of the method where this event was recorded. Empty if unknown."
           },
           {
             "name": "lineNumber",
-            "type": "Int",
-            "doc": "The code line number where this event was recorded"
+            "type": "Option[Int]",
+            "doc": "The code line number where this event was recorded. None if not available."
           },
           {
             "name": "causeId",
             "ref": "stack_trace_element_record",
             "type": "Option[Int]",
-            "doc": "Id of the stack trace element that originated this element. I.e. the element directly before this element. None if this is the root element."
+            "doc": "Id of the stack trace element that originated this element. I.e. the element directly before this element. \nNone if this is the root element."
           }
         ]
       },

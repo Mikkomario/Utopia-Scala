@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * The root access point when targeting multiple stack trace elements at a time
+  * The root access point when targeting multiple stack trace element records at a time
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
@@ -13,8 +13,8 @@ object DbStackTraceElementRecords extends ManyStackTraceElementRecordsAccess wit
 	// OTHER	--------------------
 	
 	/**
-	  * @param ids Ids of the targeted stack trace elements
-	  * @return An access point to stack trace elements with the specified ids
+	  * @param ids Ids of the targeted stack trace element records
+	  * @return An access point to stack trace element records with the specified ids
 	  */
 	def apply(ids: Set[Int]) = new DbStackTraceElementRecordsSubset(ids)
 	

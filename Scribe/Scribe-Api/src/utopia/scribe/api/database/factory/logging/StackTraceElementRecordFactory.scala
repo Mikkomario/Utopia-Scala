@@ -7,7 +7,7 @@ import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * Used for reading stack trace element data from the DB
+  * Used for reading stack trace element record data from the DB
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
@@ -20,7 +20,8 @@ object StackTraceElementRecordFactory extends FromValidatedRowModelFactory[Stack
 	override def table = ScribeTables.stackTraceElementRecord
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		StackTraceElementRecord(valid("id").getInt, StackTraceElementRecordData(valid("className").getString,
-			valid("methodName").getString, valid("lineNumber").getInt, valid("causeId").int))
+		StackTraceElementRecord(valid("id").getInt, StackTraceElementRecordData(valid("fileName").getString, 
+			valid("className").getString, valid("methodName").getString, valid("lineNumber").int, 
+			valid("causeId").int))
 }
 

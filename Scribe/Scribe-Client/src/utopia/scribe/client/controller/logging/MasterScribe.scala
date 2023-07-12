@@ -118,10 +118,9 @@ object MasterScribe
 				}
 				// Sends and persists the requests on JVM shutdown
 				CloseHook.registerAsyncAction {
-					// Persists, sends and then persists again
-					queue.persistRequests()
-						.flatMap { _ => sendPendingIssues() }
-						.flatMap { _ => queue.persistRequests() }
+					// Persists the request before and after its completion
+					val sendFuture = sendPendingIssues()
+					queue.persistRequests().flatMap { _ => sendFuture }.flatMap { _ => queue.persistRequests() }
 				}
 				queue
 			case None => RequestQueue(queueSystem)
@@ -155,15 +154,15 @@ object MasterScribe
 			}
 		}
 		
-		
-		// OTHER    ----------------------------
-		
-		private def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()) match {
+		override def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()) match {
 			// Case: Issues to send => Sends them and records the result, if failure
 			case Some(issues) => requestQueue.push(new PostIssuesRequest(issues)).map { handlePostResult(issues, _) }
 			// Case: No issues to send => Resolves immediately
 			case None => Future.successful(())
 		}
+		
+		
+		// OTHER    ----------------------------
 		
 		private def handlePostResult(issues: Vector[(ClientIssue, Instant)], result: RequestResult) = {
 			result.toEmptyTry.failure.foreach { error =>
@@ -256,6 +255,8 @@ object MasterScribe
 	{
 		// Immediately relays the issues to the specified logger
 		override def accept(issue: ClientIssue): Unit = logger(issue.toString)
+		
+		override def sendPendingIssues(): Future[Unit] = Future.successful(())
 	}
 }
 
@@ -271,4 +272,10 @@ trait MasterScribe
 	  * @param issue An issue to record
 	  */
 	def accept(issue: ClientIssue): Unit
+	
+	/**
+	  * Sends any issues that are being bundled
+	  * @return Future that resolves once the issues have been sent (or sending has failed)
+	  */
+	def sendPendingIssues(): Future[Unit]
 }

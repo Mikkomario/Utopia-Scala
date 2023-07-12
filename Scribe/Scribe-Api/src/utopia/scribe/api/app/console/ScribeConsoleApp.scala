@@ -11,6 +11,7 @@ import utopia.flow.time.{Now, Today}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.many.logging.issue.{DbIssues, DbManyIssueInstances}
@@ -23,6 +24,7 @@ import utopia.scribe.core.model.combined.logging.{IssueInstances, IssueVariantIn
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Debug
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
+import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
 import utopia.vault.database.{ConnectionPool, Tables}
 
 import java.time.Instant
@@ -330,22 +332,25 @@ object ScribeConsoleApp extends App
 				cPool.tryWith { implicit c =>
 					// Reads and prints error data
 					DbErrorRecord(errorId).topToBottomIterator.zipWithIndex.foreach { case (error, index) =>
+						// Prints one line for the error type
 						val prefix = if (index == 0) "" else "\tCaused by: "
 						println(s"$prefix${error.exceptionType}")
-						error.stackAccess.topToBottomIterator.groupBy { _.className }
-							.foreach { case (className, stack) =>
-								stack.iterator.groupBy { _.methodName }.toVector.oneOrMany match {
-									case Left((methodName, lines)) =>
-										println(s"\t$className.$methodName: [${lines.map { _.lineNumber }.mkString(", ")}]")
-									case Right(methods) =>
-										println(s"\t$className")
-										methods.foreach { case (methodName, lines) =>
-											println(s"\t\t$methodName: [${ lines.map { _.lineNumber }.mkString(", ") }]")
+						// Groups by file, class and method
+						error.stackAccess.topToBottomIterator.groupBy { _.fileName }
+							.foreach { case (fileName, stack) =>
+								stack.iterator.groupBy { _.className }.toVector.oneOrMany match {
+									// Case: Only one class in this file
+									case Left((_, classLines)) =>
+										printClassStack(classLines, stack.head.fileAndClassName)
+									// Case: Multiple classes in this file => Prints a separate header for the file
+									case Right(classes) =>
+										println(s"\t$fileName")
+										classes.foreach { case (className, classLines) =>
+											printClassStack(classLines, className.nonEmptyOrElse(fileName), 2)
 										}
 								}
 							}
 					}
-					
 				}.logFailure
 			case None => println("There is no error to describe")
 		}
@@ -361,6 +366,29 @@ object ScribeConsoleApp extends App
 	
 	
 	// OTHER FUNCTIONS  -------------------------
+	
+	private def printClassStack(classLines: IterableOnce[StackTraceElementRecord], className: String, indents: Int = 1) =
+	{
+		val indentStr = "\t" * indents
+		// Groups by method names
+		classLines.iterator.groupBy { _.methodName }.toVector.oneOrMany match {
+			// Case: Only one method involved => Prints class and method on one line
+			case Left((methodName, lines)) =>
+				println(s"$indentStr$className.$methodName${ lineNumberString(lines) }")
+			// Case: Multiple methods involved => Prints class first and each method on a separate line
+			case Right(methods) =>
+				println(s"$indentStr$className")
+				methods.foreach { case (methodName, lines) =>
+					println(s"$indentStr\t$methodName${ lineNumberString(lines) }")
+				}
+		}
+	}
+	
+	private def lineNumberString(stack: Iterable[StackTraceElementRecord]) =
+		stack.flatMap { _.lineNumber }.oneOrMany match {
+			case Left(line) => s": $line"
+			case Right(lines) => if (lines.isEmpty) "" else s": [${lines.mkString(", ")}]"
+		}
 	
 	// Describes at indentation 2
 	private def describeOccurrence(occurrence: IssueOccurrenceData) = {

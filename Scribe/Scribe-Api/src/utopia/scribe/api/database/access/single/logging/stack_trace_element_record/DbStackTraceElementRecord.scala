@@ -44,12 +44,12 @@ object DbStackTraceElementRecord extends SingleRowModelAccess[StackTraceElementR
 	/**
 	  * Stores a stack trace into the database.
 	  * Avoids duplicate entries, where possible.
-	  * @param trace The stack trace to store
+	  * @param trace      The stack trace to store
 	  * @param connection Implicit DB connection
 	  * @return Either
-	  *             Left) Stored stack trace elements, where at least one of them was new,
-	  *             Right) Stack trace elements that already existed in the database.
-	  *                    No new inserts have been made.
+	  *         Left) Stored stack trace elements, where at least one of them was new,
+	  *         Right) Stack trace elements that already existed in the database.
+	  *         No new inserts have been made.
 	  */
 	def store(trace: StackTrace)(implicit connection: Connection): Either[Vector[StackTraceElementRecord], Vector[StackTraceElementRecord]] =
 	{
@@ -80,28 +80,29 @@ object DbStackTraceElementRecord extends SingleRowModelAccess[StackTraceElementR
 				storedElements.last.mapEither { _ => storedElements.reverseIterator.map { _.either }.toVector }
 		}
 	}
+	
 	/**
 	  * Stores an individual stack trace element to the database.
 	  * Avoids inserting duplicates.
-	  * @param element The element to store
+	  * @param element    The element to store
 	  * @param connection Implicit DB connection
 	  * @return Either
-	  *             Left) Newly inserted stack trace element, or
-	  *             Right) A matching element that already existed in the database, in which case no insert is made
+	  *         Left) Newly inserted stack trace element, or
+	  *         Right) A matching element that already existed in the database, in which case no insert is made
 	  */
 	def store(element: StackTraceElementRecordData)(implicit connection: Connection) = {
 		// Checks whether there already exists a matching element
 		// Inserts a new entry, if necessary
 		find(model(element).toCondition).toRight { model.insert(element) }
 	}
+	
 	private def dataFrom(element: StackTrace, causeId: Option[Int] = None) =
-		StackTraceElementRecordData(element.className, element.methodName, element.lineNumber, causeId)
+		StackTraceElementRecordData(element.fileName, element.className, element.methodName, element.lineNumber, causeId)
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
-	  *  unique stack trace elements.
+	  *                  unique stack trace elements.
 	  * @return An access point to the stack trace element that satisfies the specified condition
 	  */
 	protected def filterDistinct(condition: Condition) = UniqueStackTraceElementRecordAccess(mergeCondition(condition))
 }
-

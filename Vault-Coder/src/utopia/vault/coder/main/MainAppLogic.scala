@@ -7,7 +7,7 @@ import utopia.coder.model.scala.datatype.Reference
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.Today
-import utopia.flow.util.console.CommandArguments
+import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.coder.controller.reader
@@ -51,6 +51,10 @@ object MainAppLogic extends CoderAppLogic
 	
 	override protected def projectsStoreLocation: Path = "projects.json"
 	override protected def supportsAlternativeMergeRoots: Boolean = true
+	
+	// Adds the "no combos" -argument
+	override def argumentSchema = super.argumentSchema :+
+		ArgumentSchema.flag("no-combos", "NC", help = "Whether combo-class writing should be disabled")
 	
 	override protected def run(args: CommandArguments, inputPath: Lazy[Path], outputPath: Lazy[Path],
 	                           mergeRoots: Lazy[Vector[Path]], filter: Lazy[Option[Filter]],
@@ -124,7 +128,6 @@ object MainAppLogic extends CoderAppLogic
 	
 	// OTHER    -------------------
 	
-	
 	private def filterAndWrite(data: Iterable[ProjectData], targetType: => Int, filter: => Option[Filter],
 	                           outputPath: => Path, mainMergeRoot: => Option[Path],
 	                           alternativeMergeRoot: => Option[Path], arguments: CommandArguments): Boolean =
@@ -134,25 +137,27 @@ object MainAppLogic extends CoderAppLogic
 		println()
 		// Applies filters
 		val filteredData = {
+			// May remove combo classes
+			val base = if (arguments("no-combos").getBoolean) data.map { _.withoutCombos } else data
 			if (targetType == _class)
 				filter match {
-					case Some(filter) => data.map { _.filterByClassName(filter) }
-					case None => data.map { _.onlyClasses }
+					case Some(filter) => base.map { _.filterByClassName(filter) }
+					case None => base.map { d => d.onlyClasses }
 				}
 			else if (targetType == _package)
 				filter match {
-					case Some(filter) => data.map { _.filterByPackage(filter) }
-					case None => data
+					case Some(filter) => base.map { _.filterByPackage(filter) }
+					case None => base
 				}
 			else if (targetType == _enums)
 				filter match {
-					case Some(filter) => data.map { _.filterByEnumName(filter) }
-					case None => data.map { _.onlyEnumerations }
+					case Some(filter) => base.map { _.filterByEnumName(filter) }
+					case None => base.map { _.onlyEnumerations }
 				}
 			else
 				filter match {
-					case Some(filter) => data.map { _.filter(filter) }
-					case None => data
+					case Some(filter) => base.map { _.filter(filter) }
+					case None => base
 				}
 		}
 		

@@ -179,6 +179,12 @@ object StringExtensions
 				s"$prefix$s"
 		}
 		/**
+		  * @param prefix Prefix that is not allowed
+		  * @return Copy of this string without the specified prefix, if present.
+		  *         Otherwise returns this string as is.
+		  */
+		def notStartingWith(prefix: String) = if (s.startsWith(prefix)) s.drop(prefix.length) else s
+		/**
 		  * @param suffix                   A suffix with which the resulting string will end
 		  * @param enablePartialReplacement Whether the suffix and this string may partially overlap, causing
 		  *                                 only a portion of the suffix to be appended.
@@ -206,6 +212,12 @@ object StringExtensions
 			else
 				s"$s$suffix"
 		}
+		/**
+		  * @param suffix A suffix that is not allowed
+		  * @return Copy of this string without the specified suffix, if present.
+		  *         Otherwise returns this string as is.
+		  */
+		def notEndingWith(suffix: String) = if (s.endsWith(suffix)) s.dropRight(suffix.length) else s
 		
 		/**
 		 * @param str A searched string

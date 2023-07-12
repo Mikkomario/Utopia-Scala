@@ -23,17 +23,21 @@ CREATE TABLE `issue`(
 
 -- Represents a single error stack trace line.
 -- 		A stack trace indicates how an error propagated through the program flow before it was recorded.
--- class_name:  The class where this event was recorded.
--- method_name: The name of the class method where this event was recorded
--- line_number: The code line number where this event was recorded
--- cause_id:    Id of the stack trace element that originated this element. I.e. the element directly before this element. None if this is the root element.
+-- file_name:   Name of the file in which this event was recorded
+-- class_name:  Name of the class in which this event was recorded.
+-- 		Empty if the class name is identical with the file name.
+-- method_name: Name of the method where this event was recorded. Empty if unknown.
+-- line_number: The code line number where this event was recorded. None if not available.
+-- cause_id:    Id of the stack trace element that originated this element. I.e. the element directly before this element.
+-- 		None if this is the root element.
 CREATE TABLE `stack_trace_element_record`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`class_name` VARCHAR(48) NOT NULL, 
-	`method_name` VARCHAR(48) NOT NULL, 
-	`line_number` INT NOT NULL, 
-	`cause_id` INT, 
-	INDEX ster_combo_1_idx (class_name, method_name, line_number), 
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`file_name` VARCHAR(48) NOT NULL,
+	`class_name` VARCHAR(48),
+	`method_name` VARCHAR(48),
+	`line_number` INT,
+	`cause_id` INT,
+	INDEX ster_combo_1_idx (file_name, class_name, method_name, line_number),
 	CONSTRAINT ster_ster_cause_ref_fk FOREIGN KEY ster_ster_cause_ref_idx (cause_id) REFERENCES `stack_trace_element_record`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

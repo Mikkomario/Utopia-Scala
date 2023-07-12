@@ -43,6 +43,9 @@
   - Added `.numeric(...)`
 - **SpanLike**
   - Added `.map(...)`
+- **String** (**StringExtensions**)
+  - Added `.dropRightWhile(...)`
+  - Added `.notStartingWith(String)` and `.notEndingWith(String)`
 - **Throwable** (**ErrorExtensions**)
   - Added `.causesIterator`
 - **TreeLike**

@@ -45,6 +45,11 @@ case class ProjectData(projectName: Name, modelPackage: Package, databasePackage
 	  */
 	def onlyEnumerations = copy(classes = Vector(), combinations = Vector())
 	
+	/**
+	  * @return Copy of this data set without any combo-classes included
+	  */
+	def withoutCombos = copy(combinations = Vector.empty)
+	
 	
 	// IMPLEMENTED  ---------------------------
 	
@@ -62,29 +67,42 @@ case class ProjectData(projectName: Name, modelPackage: Package, databasePackage
 	  * @param filter A filter to apply
 	  * @return Copy of this projects data that keeps items that are somehow matched with that filter
 	  */
-	def filter(filter: Filter) =
-	{
+	def filter(filter: Filter) = {
 		val baseFilteredClasses = classes.filter { c => filter(c.name) || filter(c.packageName) }
 		val (filteredClasses, filteredCombos) = comboInclusiveClasses(baseFilteredClasses) { c => filter(c.name) }
 		copy(classes = filteredClasses, enumerations = enumerations.filter { e => filter(e.name) },
 			combinations = filteredCombos)
 	}
-	
 	/**
 	  * @param filter A filter to apply
+	  * @param includeCombos Whether combo objects and combining classes should be included as well (default = false)
 	  * @return A copy of this data with only classes remaining which match the filter by their name
 	  */
-	def filterByClassName(filter: Filter) = filterByClass { c => filter(c.name) }
+	def filterByClassName(filter: Filter, includeCombos: Boolean = false) = {
+		val f = { c: Class => filter(c.name) }
+		if (includeCombos) filterByClass { c => filter(c.name) } else filterClassesOnly(f)
+	}
 	/**
 	  * @param filter A filter to apply
+	  * @param includeCombos Whether combo objects and combining classes should be included as well (default = false)
 	  * @return A copy of this data with only classes remaining which match the filter by their package name
 	  */
-	def filterByPackage(filter: Filter) = filterByClass { c => filter(c.packageName) }
+	def filterByPackage(filter: Filter, includeCombos: Boolean = false) = {
+		val f = { c: Class => filter(c.packageName) }
+		if (includeCombos) filterByClass(f) else filterClassesOnly(f)
+	}
+	
 	/**
 	  * @param f A filter to apply
 	  * @return A copy of this data with only classes remaining which match the filter
 	  */
 	def filterByClass(f: Class => Boolean) = filterByClassOrCombo(f) { _ => false }
+	/**
+	  * @param f A filter to apply to classes
+	  * @return Classes accepted by the specified filter. Won't include any combos or related classes.
+	  */
+	def filterClassesOnly(f: Class => Boolean) =
+		copy(enumerations = Vector.empty, classes = classes.filter(f), combinations = Vector.empty)
 	/**
 	  * @param includeClass A function that returns true for classes that should be included in the results
 	  *                     (also includes their related combinations)
@@ -92,8 +110,7 @@ case class ProjectData(projectName: Name, modelPackage: Package, databasePackage
 	  *                     (also includes their classes)
 	  * @return A copy of this data with only classes remaining which match the filter
 	  */
-	def filterByClassOrCombo(includeClass: Class => Boolean)(includeCombo: CombinationData => Boolean) =
-	{
+	def filterByClassOrCombo(includeClass: Class => Boolean)(includeCombo: CombinationData => Boolean) = {
 		val remainingClasses = classes.filter(includeClass)
 		val (filteredClasses, filteredCombos) = comboInclusiveClasses(remainingClasses)(includeCombo)
 		copy(enumerations = Vector(), classes = filteredClasses, combinations = filteredCombos)

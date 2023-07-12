@@ -49,7 +49,7 @@ object DbLoggingTest extends App
 		.logWith("Test function failed (expected)", subContext = "testFunction", severity = Debug)
 	
 	// Waits in order to make sure the error is recorded asynchronously
-	Wait(2.5.seconds)
+	Wait(1.0.seconds)
 	
 	cPool { implicit c =>
 		val issues = DbIssues.instances.since(Now - 5.seconds, includePartialRanges = true).pull
@@ -65,7 +65,7 @@ object DbLoggingTest extends App
 					println(s"Describing error $errorId")
 					DbErrorRecord(errorId).topToBottomIterator.foreach { error =>
 						println(error.data.exceptionType)
-						error.stackAccess.topToBottomIterator.groupBy { _.className }
+						error.stackAccess.topToBottomIterator.groupBy { _.fileAndClassName }
 							.foreach { case (className, stack) =>
 								stack.iterator.groupBy { _.methodName }.toVector.oneOrMany match {
 									case Left((methodName, lines)) =>

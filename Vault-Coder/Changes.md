@@ -9,6 +9,9 @@
 - Fixed a bug where function types using generic type parameters would not get 
   interpreted properly in the merging process
 ### New Features
+- Added support for `no-combos` (`-NC`) argument/flag, which prevents the writing of any combo classes
+  - This may be useful in situations where you only want to overwrite a single class and don't want to deal with 
+    related class merge problems
 - Added support for **Vector**, **Pair**, **Span**, **DateRange** and **Model** data types
 - Standard and custom data types now support different from- & to-value conversion logic when dealing with json values
   - See README on how to apply this support to custom data types

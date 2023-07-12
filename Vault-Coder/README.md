@@ -44,6 +44,7 @@ Once you have created a specification document, run the application using the fo
     - This is only necessary on saved projects
   - NB: When merging data in projects where the database and the model implementations are separated to different 
     modules, the application will request another (optional) source directory for the other module
+- Additionally, if you specify the `-NC` flag, you may prevent any combo classes from being written
 
 The program will inform you if there were any problems during input file processing or during output write operations.
 
