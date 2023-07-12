@@ -4,7 +4,8 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.RequestResult
+import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
+import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.PostponingProcess
@@ -165,11 +166,17 @@ object MasterScribe
 		// OTHER    ----------------------------
 		
 		private def handlePostResult(issues: Vector[(ClientIssue, Instant)], result: RequestResult) = {
-			result.toEmptyTry.failure.foreach { error =>
-				// On send failure, records the failure itself, as well as any issues that couldn't be sent
-				log(error, s"Failed to send ${issues.map { _._1.instances }.sum} occurrences of ${
-					issues.size} issues over to the server")
-				issues.foreach { case (issue, recorded) => log(issue.delayedBy(Now - recorded).toString) }
+			result match {
+				// Case: Request was deprecated => Only logs locally (WET WET)
+				case RequestWasDeprecated =>
+					issues.foreach { case (issue, recorded) => log(issue.delayedBy(Now - recorded).toString) }
+				// Case: Request-sending failed => Logs the original issues and the sending error using the backup logger
+				case f: RequestFailure =>
+					log(f.cause, s"Failed to send ${ issues.map { _._1.instances }.sum } occurrences of ${
+						issues.size } issues over to the server")
+					issues.foreach { case (issue, recorded) => log(issue.delayedBy(Now - recorded).toString) }
+				// Case: Success => No action required
+				case _ => ()
 			}
 		}
 		
@@ -217,7 +224,7 @@ object MasterScribe
 			
 			// Removes the deprecated issues
 			// Considers this request deprecated once all issues have deprecated
-			override def isDeprecated: Boolean = deprecateOldIssues().nonEmpty
+			override def isDeprecated: Boolean = deprecateOldIssues().isEmpty
 			
 			override def persistingModel: Option[Model] = {
 				// Updates the issue status before persisting them
