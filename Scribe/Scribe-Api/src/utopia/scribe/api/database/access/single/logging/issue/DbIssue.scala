@@ -81,7 +81,8 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty,
 	          occurrenceDetails: Model = Model.empty, occurrences: Int = 1,
 	          timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection,
-		version: Version): DetailedIssue = {
+		version: Version): DetailedIssue =
+	{
 		// Inserts or finds the matching issue
 		val issueResult = store(IssueData(context, severity, timeRange.start))
 		// Extracts the stack trace elements from the error, if applicable,
@@ -101,7 +102,8 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 			timeRange.start)
 		val variant = (variantDependenciesType match {
 			// Case: There is a chance that the variant already exists => Checks for duplicates before inserting
-			case Last => DbIssueVariant.findMatching(variantData).toRight { variantModel.insert(variantData) }
+			case Last =>
+				DbIssueVariant.findMatching(variantData).toRight { variantModel.insert(variantData) }
 			// Case: It's impossible that the variant would already exist => Inserts a new variant
 			case First => Left(variantModel.insert(variantData))
 		}).either

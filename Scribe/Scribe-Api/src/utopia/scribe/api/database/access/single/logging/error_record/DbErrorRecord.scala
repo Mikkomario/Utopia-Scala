@@ -73,7 +73,8 @@ object DbErrorRecord extends SingleRowModelAccess[ErrorRecord] with Unconditiona
 		val data = ErrorRecordData(error.className, elements.head.id, appliedCauseId)
 		val storedError = dependencyType match {
 			// Case: The stack trace and the cause were already recorded => Checks whether this error is a duplicate
-			case Last => find(model(data).toCondition).toRight { model.insert(data) }
+			case Last =>
+				find(model(data).toCondition).toRight { model.insert(data) }
 			// Case: The stack trace or the cause was new => Inserts a new error (can't be duplicate)
 			case First => Left(model.insert(data))
 		}

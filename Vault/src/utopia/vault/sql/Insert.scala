@@ -27,12 +27,10 @@ object Insert
      * match those of the table are used
      * @return Results of the insert operation, which contain generated auto-increment keys where applicable
      */
-    def apply(table: Table, rows: Seq[ModelLike[Property]])(implicit connection: Connection) =
-    {
+    def apply(table: Table, rows: Seq[ModelLike[Property]])(implicit connection: Connection) = {
         if (rows.isEmpty)
             Result.empty
-        else
-        {
+        else {
             // Finds the inserted properties that are applicable to this table
             // Only properties matching columns (that are not auto-increment) are included
             // Generates an error based on attributes that don't fit into the table, but leaves the error
@@ -55,11 +53,11 @@ object Insert
             val columnNames = propertiesToInsert.map { _._2.sqlColumnName }.mkString(", ")
             val singleRowValuesSql = {
                 if (propertiesToInsert.nonEmpty)
-                    "(?" + ", ?" * (propertiesToInsert.size - 1) + ")"
+                    s"(?${ ", ?" * (propertiesToInsert.size - 1) })"
                 else
                     "()"
             }
-            val valuesSql = singleRowValuesSql + (", " + singleRowValuesSql) * (rows.size - 1)
+            val valuesSql = s"$singleRowValuesSql${ s", $singleRowValuesSql" * (rows.size - 1) }"
             // Makes sure the inserted values conform to the applicable column length rules
             val dbName = table.databaseName
             val lengthRules = ColumnLengthRules(table)

@@ -19,16 +19,14 @@ object DatabaseActionQueue
 	{
 		// ATTRIBUTES   ----------------
 		
-		private val promise = Promise[A]()
+		private val promise = Promise[Try[A]]()
 		
 		val future = promise.future
 		
 		
 		// OTHER  ----------------------
 		
-		def apply()(implicit connection: Connection): Unit = {
-			promise.complete(act(connection))
-		}
+		def apply()(implicit connection: Connection): Unit = promise.success(act(connection))
 	}
 }
 
@@ -51,6 +49,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 	  * @param act An action to perform asynchronously. Accepts a database connection.
 	  * @tparam A Type of action result.
 	  * @return Future that resolves once the action has been completed.
+	  *         May contain a failure.
 	  */
 	def push[A](act: Connection => A) = _push { c => Try { act(c) } }
 	def pushTry[A](act: Connection => Try[A]) = _push { c => Try { act(c) }.flatten }
@@ -86,7 +85,12 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 						}
 					}).foreach { _() }
 				}
-			}.foreachFailure { log(_) }
+			}.foreachFailure { error =>
+				// TODO: Remove test prints
+				println("Encountered an error in DB action queue")
+				error.printStackTrace()
+				log(error)
+			}
 		// Returns completion future
 		action.future
 	}

@@ -4,7 +4,6 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.CloseHook
@@ -21,16 +20,16 @@ import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.mutable.Pointer
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.post.logging.ClientIssue
 
 import java.nio.file.Path
 import java.time.Instant
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object MasterScribe
@@ -117,10 +116,12 @@ object MasterScribe
 				errors.headOption.foreach {
 					backupLogger(_, s"Failed to restore ${ errors.size } persisted request for sending issue data")
 				}
-				// Persists the requests on JVM shutdown
+				// Sends and persists the requests on JVM shutdown
 				CloseHook.registerAsyncAction {
-					sendPendingIssues()
+					// Persists, sends and then persists again
 					queue.persistRequests()
+						.flatMap { _ => sendPendingIssues() }
+						.flatMap { _ => queue.persistRequests() }
 				}
 				queue
 			case None => RequestQueue(queueSystem)
@@ -157,9 +158,11 @@ object MasterScribe
 		
 		// OTHER    ----------------------------
 		
-		private def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()).foreach { issues =>
-			requestQueue.push(new PostIssuesRequest(issues))
-				.onComplete { res => handlePostResult(issues, res.getOrMap(RequestSendingFailed)) }
+		private def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()) match {
+			// Case: Issues to send => Sends them and records the result, if failure
+			case Some(issues) => requestQueue.push(new PostIssuesRequest(issues)).map { handlePostResult(issues, _) }
+			// Case: No issues to send => Resolves immediately
+			case None => Future.successful(())
 		}
 		
 		private def handlePostResult(issues: Vector[(ClientIssue, Instant)], result: RequestResult) = {
@@ -248,6 +251,7 @@ object MasterScribe
 	}
 	
 	// TODO: Possibly add bundling feature to this implementation as well
+	// TODO: Also, support Scribes also
 	private class BackupMasterScribe(logger: Logger) extends MasterScribe
 	{
 		// Immediately relays the issues to the specified logger

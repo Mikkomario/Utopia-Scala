@@ -1,5 +1,6 @@
 package utopia.scribe.api.controller.logging
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.logging.Logger
 import utopia.scribe.api.controller.logging.Scribe.loggingQueue
@@ -54,7 +55,14 @@ case class Scribe(context: String, defaultSeverity: Severity = Severity.default,
 	
 	override protected def _apply(error: Option[Throwable], message: String, details: Model, severity: Severity,
 	                              variantDetails: Model) =
+	{
 		loggingQueue.push { implicit c =>
+			println("Starts logging")
 			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails, details)
+		}.foreachFailure { loggingError =>
+			// If logging fails, logs the original error and the logging failure using the backup logger
+			ScribeContext.backupLogger(error, message)
+			ScribeContext.backupLogger(loggingError, s"Logging failed in $context")
 		}
+	}
 }

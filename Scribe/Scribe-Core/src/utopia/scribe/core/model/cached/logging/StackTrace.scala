@@ -8,7 +8,9 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.parse.string.Regex
 import utopia.flow.util.NotEmpty
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.MutatingOnce
 
 import scala.util.Try
@@ -24,6 +26,8 @@ object StackTrace extends FromModelFactory[StackTrace]
 	
 	
 	// ATTRIBUTES   -----------------
+	
+	private val methodSplitter = Regex.escape('$')
 	
 	private lazy val schema = ModelDeclaration(
 		PropertyDeclaration("class", StringType, Vector("className", "class_name"), "CouldNotParse"),
@@ -62,11 +66,19 @@ object StackTrace extends FromModelFactory[StackTrace]
 	}
 	// nextElement will be called until it returns None
 	private def _from(element: JStackTraceElement)(nextElement: => Option[JStackTraceElement]): StackTrace = {
+		// Converts the dollar-sign -ending class names to those that don't end with a dollar sign
+		// Removes the package part, also
 		val className = NotEmpty(element.getClassName.split('.').takeRightWhile { _.head.isUpper }.toVector) match {
-			case Some(elements) => elements.mkString(".")
-			case None => element.getClassName
+			case Some(elements) => elements.map { _.dropRightWhile { _ == '$' } }.mkString(".")
+			case None => element.getClassName.dropRightWhile { _ == '$' }
 		}
-		apply(className, element.getMethodName, element.getLineNumber, nextElement.map { _from(_)(nextElement) })
+		// Splits method names by dollar sign, if applicable
+		val methodName = element.getMethodName.split(methodSplitter)
+			// Doesn't use digit method names (e.g. "apply$1" would otherwise become "1")
+			// Also ignores empty names (e.g. "flatMap$" now becomes "flatMap" instead of "")
+			.reverseIterator.filterNot { _.forall { _.isDigit } }
+			.nextOption().getOrElse("")
+		apply(className, methodName, element.getLineNumber, nextElement.map { _from(_)(nextElement) })
 	}
 }
 
@@ -81,6 +93,7 @@ object StackTrace extends FromModelFactory[StackTrace]
   * @param lineNumber Index of the line (1-based) where this event occurred
   * @param cause Stack trace element / event that occurred before this element. None if this was the first occurrence.
   */
+// TODO: LineNumber should be optional
 case class StackTrace(className: String, methodName: String, lineNumber: Int, cause: Option[StackTrace] = None)
 	extends ModelConvertible
 {

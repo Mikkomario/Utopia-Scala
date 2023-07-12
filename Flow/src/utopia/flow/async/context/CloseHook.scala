@@ -89,19 +89,19 @@ object CloseHook
 	/**
 	  * Stops all registered breakable items
 	  */
-	def shutdown() =
-	{
+	def shutdown() = {
 		// Updates the pointer
 		_shutdownPointer.set()
 		
 		// Stops all registered loops
-		val completions = breakables.getAndSet(WeakList()).strong.map { _.stop() } ++ hooks.popAll().map { _ () }
+		val completions = breakables.getAndSet(WeakList()).strong.map { _.stop() } ++ hooks.popAll().map { _() }
 		if (completions.nonEmpty) {
 			// Waits until all of the completions are done
 			val shutdownDeadline = Now + maxShutdownTime
 			completions.foreach { completion =>
 				if (shutdownDeadline.isInFuture)
 					completion.waitFor(shutdownDeadline - Now)
+				// TODO: Should log if not performed
 			}
 			
 			// Waits additional shutdown time

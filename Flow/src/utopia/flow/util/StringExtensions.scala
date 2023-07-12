@@ -267,6 +267,16 @@ object StringExtensions
 		 *         specified string is not a substring of this string), (case-sensitive)
 		 */
 		def dropUntilLast(str: String) = optionLastIndexOf(str).map(s.drop).getOrElse("")
+		/**
+		  * @param f A function that returns true for the characters to remove from the end of this string.
+		  *          Called from right to left, as long as it returns true and there are characters left.
+		  * @return Copy of this string without the last 'n' characters where n is the number of
+		  *         times the specified function returned true.
+		  */
+		def dropRightWhile(f: Char => Boolean) = {
+			val dropLength = s.reverseIterator.takeWhile(f).size
+			if (dropLength == 0) s else s.dropRight(dropLength)
+		}
 		
 		/**
 		 * @param str A string

@@ -84,13 +84,13 @@ object ScribeConsoleApp extends App
 			else {
 				val countBySeverity = DbIssues(activeIssueIds).severities
 					.groupMapReduce(Identity) { _ => 1 } { _ + _ }
-				println(s"${ countBySeverity.valuesIterator.sum } active issues:")
+				println(s"${ activeIssueIds.size } active issues:")
 				countBySeverity.keys.toVector.reverseSorted.foreach { severity =>
 					println(s"\t- $severity: ${countBySeverity(severity)} issues")
 				}
 				
 				// Checks for new issues
-				val newIssueIds = DbIssueVariants.createdAfter(Now - 7.days).issueIds
+				val newIssueIds = DbIssueVariants.createdAfter(recent).issueIds
 					.groupMapReduce(Identity) { _ => 1 } { _ + _ }
 					.toVector.reverseSorted
 				
@@ -155,7 +155,7 @@ object ScribeConsoleApp extends App
 				else {
 					println(s"Found ${issues.size} issues:")
 					issues.iterator.take(15).foreach { issue => println(s"\t- ${issue.id}: $issue${
-						if (issue.variants.exists { _.created > since }) "NEW" else "" }") }
+						if (issue.variants.exists { _.created > since }) " NEW" else "" }") }
 					if (issues.hasSize > 15)
 						println("\t- ...")
 				}
@@ -208,13 +208,20 @@ object ScribeConsoleApp extends App
 					case Some(issue) =>
 						// Retrieves and prints available information about the issue
 						val lastOccurrence = issue.latestOccurrence
-						val numberOfOccurrences = DbIssueOccurrences.ofVariants(issue.variantIds)
-							.before(issue.earliestOccurrence match {
-								case Some(o) => o.lastOccurrence
-								case None => recent
-							})
-							.counts.sum + issue.numberOfOccurrences
-						val averageOccurrenceInterval = (Now - issue.created) / numberOfOccurrences
+						val numberOfOccurrences = {
+							val access = DbIssueOccurrences.ofVariants(issue.variantIds)
+							val targetedAccess = issue.earliestOccurrence match {
+								case Some(o) => access.before(o.lastOccurrence)
+								case None => access
+							}
+							targetedAccess.counts.sum + issue.numberOfOccurrences
+						}
+						val averageOccurrenceInterval = {
+							if (numberOfOccurrences > 0)
+								Some((Now - issue.created) / numberOfOccurrences)
+							else
+								None
+						}
 						val affectedVersions = issue.variants.map { _.version }.minMaxOption
 						
 						println(s"${issue.id}: ${issue.severity} @ ${issue.context}")
@@ -224,7 +231,9 @@ object ScribeConsoleApp extends App
 							describeOccurrence(last)
 						}
 						println(s"\t- $numberOfOccurrences occurrences in total")
-						println(s"\t- Has occurred once every ${averageOccurrenceInterval.description}")
+						averageOccurrenceInterval.foreach { interval =>
+							println(s"\t- Has occurred once every ${interval.description}")
+						}
 						issue.earliestOccurrence.foreach { first =>
 							println(s"\t\t- Recently once every ${
 								((Now - first.firstOccurrence) / issue.numberOfOccurrences).description}")

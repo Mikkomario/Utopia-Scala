@@ -13,8 +13,6 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 
-import scala.collection.immutable.VectorBuilder
-
 /**
   * Used for accessing individual stack trace elements
   * @author Mikko Hilpinen
@@ -53,7 +51,8 @@ object DbStackTraceElementRecord extends SingleRowModelAccess[StackTraceElementR
 	  *             Right) Stack trace elements that already existed in the database.
 	  *                    No new inserts have been made.
 	  */
-	def store(trace: StackTrace)(implicit connection: Connection): Either[Vector[StackTraceElementRecord], Vector[StackTraceElementRecord]] = {
+	def store(trace: StackTrace)(implicit connection: Connection): Either[Vector[StackTraceElementRecord], Vector[StackTraceElementRecord]] =
+	{
 		// Stores the elements from bottom to top, avoiding duplicates
 		val elements = trace.bottomToTop
 		elements.oneOrMany match {
@@ -77,7 +76,8 @@ object DbStackTraceElementRecord extends SingleRowModelAccess[StackTraceElementR
 					}
 				}.toVector
 				// Returns Right if all elements existed already and Left otherwise
-				storedElements.last.mapEither { _ => storedElements.map { _.either } }
+				// Returns the elements from top-to-bottom order, so that the primary element 'trace' is the head
+				storedElements.last.mapEither { _ => storedElements.reverseIterator.map { _.either }.toVector }
 		}
 	}
 	/**
