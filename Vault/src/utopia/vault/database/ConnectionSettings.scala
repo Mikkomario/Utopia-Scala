@@ -28,12 +28,10 @@ case class ConnectionSettings(connectionTarget: String = "jdbc:mysql://localhost
 	/**
 	 * @return String inserted to driver manager connection in order to specify charset and collation
 	 */
-	def charsetString =
-	{
+	def charsetString = {
 		if (charsetName.isEmpty && charsetCollationName.isEmpty)
 			""
-		else
-		{
+		else {
 			val charsetPart = if (charsetName.isEmpty) "" else s"&characterEncoding=$charsetName"
 			val collationPart = if (charsetCollationName.isEmpty) "" else s"&connectionCollation=$charsetCollationName"
 			s"?useUnicode=true$charsetPart$collationPart"

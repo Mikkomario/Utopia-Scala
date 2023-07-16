@@ -8,7 +8,7 @@ import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.CloseHook
-import utopia.flow.async.process.PostponingProcess
+import utopia.flow.async.process.{Loop, PostponingProcess}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.collection.mutable.VolatileList
@@ -24,7 +24,9 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.async.Volatile
 import utopia.scribe.core.model.enumeration.Severity
+import utopia.scribe.core.model.enumeration.Severity.Critical
 import utopia.scribe.core.model.post.logging.ClientIssue
 
 import java.nio.file.Path
@@ -56,6 +58,16 @@ object MasterScribe
 	  *                                  necessary to send to the server.
 	  *                                  A different value may be configured for each severity level.
 	  *                                  By default, the issues will not deprecate.
+	  * @param maxLogVelocity            Maximum number of issues logged and the time in which to reset the
+	  *                                  issue counter.
+	  *
+	  *                                  E.g. if defined as (1000, 1.hours), the maximum is reached if over 1000
+	  *                                  issues are recorded within the duration of a single hour.
+	  *
+	  *                                  After the maximum has been reached, no issues will be logged at all.
+	  *
+	  *                                  None if no maximum should be applied (default).
+	  *
 	  * @param modifyIssue               A function called for each recorded issue,
 	  *                                  which may modify them before logging.
 	  *                                  The function may, for example, append client environment information to
@@ -68,10 +80,11 @@ object MasterScribe
 	def apply(queueSystem: QueueSystem, loggingEndpointPath: String, backupLogger: Logger = SysErrLogger,
 	          issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
 	          requestStoreLocation: Option[Path] = None,
-	          issueDeprecationDurations: Map[Severity, Duration] = Map(), modifyIssue: Mutate[ClientIssue] = Identity)
+	          issueDeprecationDurations: Map[Severity, Duration] = Map(),
+	          maxLogVelocity: Option[(Int, Duration)] = None, modifyIssue: Mutate[ClientIssue] = Identity)
 	         (implicit exc: ExecutionContext): MasterScribe =
 		new _MasterScribe(queueSystem, loggingEndpointPath, backupLogger, issueBundleDuration, requestStoreLocation,
-			issueDeprecationDurations, modifyIssue)
+			issueDeprecationDurations, maxLogVelocity, modifyIssue)
 	
 	/**
 	  * Creates a new master scribe backup implementation that never sends data to the server,
@@ -94,10 +107,12 @@ object MasterScribe
 	  * @author Mikko Hilpinen
 	  * @since 23.5.2023, v0.1
 	  */
-	private class _MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String, backupLogger: Logger = SysErrLogger,
+	private class _MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String,
+	                            backupLogger: Logger = SysErrLogger,
 	                            issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
 	                            requestStoreLocation: Option[Path] = None,
 	                            issueDeprecationDurations: Map[Severity, Duration] = Map(),
+	                            maxLogVelocity: Option[(Int, Duration)],
 	                            modifyIssue: Mutate[ClientIssue] = Identity)
 	                           (implicit exc: ExecutionContext)
 		extends MasterScribe
@@ -106,6 +121,9 @@ object MasterScribe
 		
 		private implicit val log: Logger = backupLogger
 		private implicit val jsonParser: JsonParser = JsonBunny
+		
+		// Pointer for tracking outgoing issue count/velocity (for limiting output)
+		private val issueCounter = Volatile(0)
 		
 		private val pendingIssuesPointer = VolatileList[(ClientIssue, Instant)]()
 		
@@ -137,6 +155,17 @@ object MasterScribe
 				sendIssuesProcess.runAsync()
 		}
 		
+		// Starts resetting the issue counter after the first issue has been recorded (optional feature)
+		maxLogVelocity.foreach { case (maxCount, resetInterval) =>
+			resetInterval.finite.foreach { resetInterval =>
+				pendingIssuesPointer.once { _.nonEmpty } { _ =>
+					Loop.regularly(resetInterval, waitFirst = true) {
+						issueCounter.setIf { _ < maxCount }(0)
+					}
+				}
+			}
+		}
+		
 		
 		// IMPLEMENTED  ------------------------
 		
@@ -145,14 +174,54 @@ object MasterScribe
 		  * @param issue An issue to record
 		  */
 		override def accept(issue: ClientIssue) = pendingIssuesPointer.update { pending =>
-			// Adds a new pending issue
-			// If there already was a similar pending issue,
-			// merges them together instead of adding a new entry altogether
-			val now = Now.toInstant
-			val modified = modifyIssue(issue)
-			pending.mergeOrAppend(modified -> now) { _._1 ~== issue } { case ((existing, previousRecording), _) =>
-				existing.repeated(modified.instances, now - previousRecording) -> now
+			// Checks whether the maximum logging velocity has been reached.
+			// Prevents additional logging, if so.
+			val (shouldLog, maxWasJustReached) = issueCounter.pop { count =>
+				// Case: Int.MaxValue log entries reached => Stops counting or resets counter
+				if (count == Int.MaxValue) {
+					if (maxLogVelocity.isDefined)
+						(false, false) -> count
+					else
+						(true, false) -> 0
+				}
+				else {
+					val nextCount = count + 1
+					val result = maxLogVelocity match {
+						case Some((max, _)) =>
+							// Case: Maximum not reached => OK to log
+							if (count < max)
+								(true, false)
+							// Case: Maximum just reached => Logs a warning, prevents logging
+							else if (count == max)
+								(false, true)
+							// Case: Maximum reached earlier => Prevents logging
+							else
+								(false, false)
+						// Case: No maximum defined => OK to log
+						case None => (true, false)
+					}
+					result -> nextCount
+				}
 			}
+			// Case: Normal logging
+			if (shouldLog) {
+				// Adds a new pending issue
+				// If there already was a similar pending issue,
+				// merges them together instead of adding a new entry altogether
+				val now = Now.toInstant
+				val modified = modifyIssue(issue)
+				pending.mergeOrAppend(modified -> now) { _._1 ~== issue } { case ((existing, previousRecording), _) =>
+					existing.repeated(modified.instances, now - previousRecording) -> now
+				}
+			}
+			// Case: Maximum reached -warning
+			else if (maxWasJustReached)
+				pending :+ (ClientIssue(issue.version, "MasterScribe.accept", Critical,
+					message = "Maximum outgoing issue count reached. Stops logging.",
+					occurrenceDetails = Model.from("limit" -> maxLogVelocity.map { _._1 })) -> Now)
+			// Case: Logging prevented
+			else
+				pending
 		}
 		
 		override def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()) match {

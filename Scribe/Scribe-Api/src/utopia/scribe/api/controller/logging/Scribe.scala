@@ -1,17 +1,24 @@
 package utopia.scribe.api.controller.logging
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.process.{Loop, Process}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.scribe.api.controller.logging.Scribe.loggingQueue
+import utopia.flow.view.mutable.async.Volatile
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
 import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.api.util.ScribeContext._
 import utopia.scribe.core.controller.logging.ScribeLike
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
+import utopia.scribe.core.model.enumeration.Severity.Critical
 import utopia.scribe.core.model.post.logging.ClientIssue
+import utopia.vault.database.Connection
 import utopia.vault.util.DatabaseActionQueue
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object Scribe
 {
@@ -21,6 +28,14 @@ object Scribe
 		implicit val backupLogger: Logger = ScribeContext.backupLogger
 		DatabaseActionQueue()
 	}
+	// Counts the number of logging entries in order to apply a maximum limit
+	private val logCounter = Volatile(0)
+	// Maximum allowed logCounter value. None if not limited.
+	private var logLimit: Option[Int] = None
+	// Process for resetting the logging counter regularly
+	// None until initialized
+	// Also contains the repeat interval, in case it needs to be modified
+	private var counterResetLoop: Option[(FiniteDuration, Process)] = None
 	
 	
 	// OTHER    -------------------------
@@ -28,9 +43,99 @@ object Scribe
 	/**
 	  * Records a client-side issue to the database (asynchronously)
 	  * @param issue The issue to record
-	  * @return Future resolving into the recorded issue
 	  */
-	def record(issue: ClientIssue) = loggingQueue.push { implicit c => DbIssue.store(issue) }
+	def record(issue: ClientIssue) = {
+		log[Unit] { implicit c => DbIssue.store(issue) } { loggingError =>
+			backupLogger(loggingError, "Failed to document a client-originated issue")
+			backupLogger(issue.toString)
+		}
+	}
+	
+	/**
+	  * Sets up a limit on how many logging entries are allowed within a specific time period.
+	  * If this limit is reached, no more logging is performed
+	  * (except for one entry indicating that this limit was reached).
+	  *
+	  * This function is normally called at ScribeContext.setup(...), and is not necessary to call afterwards.
+	  * However, if you wish to override the previously set limit, you may use this method for that.
+	  *
+	  * @param maxLogCount The maximum allowed number of logging entries within 'resetInterval'
+	  * @param resetInterval Duration after which the counter will be reset (may be infinite)
+	  * @param resetAfterReached Whether the counter should be reset even after the maximum limit has been reached.
+	  *
+	  *                          If false, this logging system will stay locked after the limit has been reached
+	  *                          once.
+	  *                          If true, logging will only be denied temporarily, and will be enabled once
+	  *                          every 'resetInterval'.
+	  *
+	  *                          Default = false.
+	  */
+	def setupLoggingLimit(maxLogCount: Int, resetInterval: Duration, resetAfterReached: Boolean = false) = {
+		logLimit = Some(maxLogCount)
+		resetInterval.finite match {
+			// Case: Reset interval specified => Starts a reset process (unless identical process is already running)
+			case Some(interval) =>
+				if (counterResetLoop.forall { _._1 != interval }) {
+					// Cancels the previous reset process, if applicable
+					counterResetLoop.foreach { _._2.stop() }
+					// Starts the new process
+					implicit val logger: Logger = backupLogger
+					val loop = Loop.regularly(interval) {
+						logCounter.setIf { _ < maxLogCount || resetAfterReached }(0)
+					}
+					counterResetLoop = Some(interval -> loop)
+				}
+			// Case: Counter should never be reset => Cancels any existing reset process
+			case None =>
+				counterResetLoop.foreach { _._2.stop() }
+				counterResetLoop = None
+		}
+	}
+	
+	// Performs the specified operation in the logging queue.
+	// Follows maximum logging count
+	private def log[U](f: Connection => U)(handleFailure: Throwable => U) = {
+		// Denies logging if the maximum limit is reached
+		val (shouldLog, maximumWasJustReached) = logCounter.pop { count =>
+			// Case: Int.MaxValue logging entries => Resets the counter or denies logging
+			if (count == Int.MaxValue) {
+				if (logLimit.isDefined)
+					(false, false) -> count
+				else
+					(true, false) -> 0
+			}
+			else {
+				// Increases the counter by 1
+				val increasedCount = count + 1
+				val result = logLimit match {
+					case Some(limit) =>
+						// Case: Limit not yet reached => Continues
+						if (count < limit)
+							(true, false)
+						// Case: Limit just reached => Denies logging and logs a warning instead
+						else if (count == limit)
+							(false, true)
+						// Case: Limit reached before => Denies logging
+						else
+							(false, false)
+					case None => (true, false)
+				}
+				result -> increasedCount
+			}
+		}
+		
+		if (shouldLog || maximumWasJustReached)
+			loggingQueue.push { implicit c =>
+				// Case: Maximum reached => Logs the warning
+				if (maximumWasJustReached)
+					DbIssue.store("Scribe.maximumReached", None,
+						"Maximum number of logging entries was reached. Logging will not be performed anymore.",
+						Critical, Model.empty, Model.from("limit" -> logLimit))
+				// Case: Allowed to log => Logs
+				else
+					f(c)
+			}.foreachFailure(handleFailure)
+	}
 }
 
 /**
@@ -56,10 +161,9 @@ case class Scribe(context: String, defaultSeverity: Severity = Severity.default,
 	override protected def _apply(error: Option[Throwable], message: String, details: Model, severity: Severity,
 	                              variantDetails: Model) =
 	{
-		loggingQueue.push { implicit c =>
-			println("Starts logging")
+		Scribe.log[Unit] { implicit c =>
 			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails, details)
-		}.foreachFailure { loggingError =>
+		} { loggingError =>
 			// If logging fails, logs the original error and the logging failure using the backup logger
 			ScribeContext.backupLogger(error, message)
 			ScribeContext.backupLogger(loggingError, s"Logging failed in $context")

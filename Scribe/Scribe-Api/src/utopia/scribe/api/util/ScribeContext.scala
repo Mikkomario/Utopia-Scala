@@ -10,6 +10,7 @@ import utopia.scribe.core.model.enumeration.Severity
 import utopia.vault.database.{ConnectionPool, Tables}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
 
 /**
   * A set of settings which must be initialized before the program is used
@@ -67,6 +68,13 @@ object ScribeContext
 	  */
 	def backupLogger = settingOr { _.backupLogger }(SysErrLogger)
 	
+	/**
+	  * @return Maximum amount of logging entries to allow within a specific time period,
+	  *         and the duration within which this counter should be reset.
+	  *         None if maximum logging count should not be observed.
+	  */
+	def maxLoggingVelocity = settingOr { _.maxLoggingVelocity }(None)
+	
 	
 	// OTHER    -------------------------
 	
@@ -79,10 +87,31 @@ object ScribeContext
 	  * @param version Current software version (default = v1.0)
 	  * @param backupLogger Logging implementation to use when the Scribe logging system is not working
 	  *                     (default = print to console)
+	  * @param maximumLoggingVelocity Maximum number of logging entries and the time period within which those
+	  *                               entries must occur.
+	  *                               Use this value for preventing cyclical logging in some error situations,
+	  *                               avoiding filling the database with logging entries.
+	  *                               Logging systems may stop function if this threshold is reached.
+	  *
+	  *                               E.g. If specified as (1000, 1.hours), this system will stop functioning if
+	  *                               1000 or more logging entries are received within a one hour time period.
+	  *                               The counter would reset every hour (unless reached).
+	  *
+	  *                               None if no there shouldn't be any maximum (default).
+	  *                               Please note that this may result in huge amount of log entries under certain
+	  *                               circumstances.
 	  */
 	def setup(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, databaseName: String = "utopia_scribe_db",
-	          version: Version = Version(1), backupLogger: Logger = SysErrLogger) =
-		settingsPointer.value = Some(Settings(exc, cPool, tables, databaseName, version, backupLogger))
+	          version: Version = Version(1), backupLogger: Logger = SysErrLogger,
+	          maximumLoggingVelocity: Option[(Int, Duration)] = None) =
+	{
+		settingsPointer.value = Some(Settings(exc, cPool, tables, databaseName, version, backupLogger,
+			maximumLoggingVelocity))
+		// Sets up maximum logging limit, also
+		maximumLoggingVelocity.foreach { case (maxLogCount, resetInterval) =>
+			Scribe.setupLoggingLimit(maxLogCount, resetInterval)
+		}
+	}
 	
 	/**
 	  * Creates a new specific logger
@@ -103,5 +132,6 @@ object ScribeContext
 	// NESTED   -------------------------
 	
 	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, dbName: String,
-	                            version: Version, backupLogger: Logger)
+	                            version: Version, backupLogger: Logger,
+	                            maxLoggingVelocity: Option[(Int, Duration)])
 }
