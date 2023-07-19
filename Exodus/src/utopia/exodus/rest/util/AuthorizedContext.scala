@@ -185,7 +185,7 @@ abstract class AuthorizedContext extends PostContext
 	def basicAuthorized(f: (Int, Connection) => Result) = {
 		// Authorizes request with basic auth, finding user id
 		val result = request.headers.basicAuthorization match {
-			case Some(Pair(email, password)) =>
+			case Some((email, password)) =>
 				connectionPool.tryWith { implicit connection =>
 					tryAuthenticate(email, password) match {
 						// Performs the operation on authorized user id

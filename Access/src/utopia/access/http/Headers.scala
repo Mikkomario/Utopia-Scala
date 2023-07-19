@@ -193,7 +193,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
         val (authType, encodedValue) = auth.splitAtFirst(" ").toTuple
         if (authType ~== "Basic")
             Try { Base64.getDecoder.decode(encodedValue) }.toOption.map {
-                new String(_, Codec.UTF8.charSet).splitAtFirst(":") }
+                new String(_, Codec.UTF8.charSet).splitAtFirst(":").toTuple }
         else
             None
     }

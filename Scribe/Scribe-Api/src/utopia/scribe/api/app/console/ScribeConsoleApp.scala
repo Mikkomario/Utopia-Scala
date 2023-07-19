@@ -281,7 +281,7 @@ object ScribeConsoleApp extends App
 	private val nextCommand = Command.withoutArguments("next", "variant",
 		help = "Lists information about the next queued issue variant") {
 		queuedVariantsPointer.mutate { case (variants, nextIndex) =>
-			variants.lift(nextIndex).map { _ -> (nextIndex < variants.size - 2) } -> (variants -> (nextIndex + 1))
+			variants.lift(nextIndex).map { _ -> (nextIndex < variants.size - 1) } -> (variants -> (nextIndex + 1))
 		} match {
 			// Case: Variant found
 			case Some((variant, hasMore)) =>

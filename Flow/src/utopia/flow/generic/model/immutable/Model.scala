@@ -1,11 +1,12 @@
 package utopia.flow.generic.model.immutable
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.DataType.ModelType
 import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
-import utopia.flow.operator.{EqualsBy, MaybeEmpty}
+import utopia.flow.operator.{ApproxSelfEquals, EqualsBy, EqualsFunction, MaybeEmpty}
 import utopia.flow.operator.EqualsExtensions._
 
 object Model
@@ -16,6 +17,20 @@ object Model
      * An empty model with a basic constant generator
      */
     val empty = new Model(Map(), Vector(), PropertyFactory.forConstants)
+    
+    /**
+      * Checks whether the two models have equal non-empty properties.
+      * The values are considered equal as long as they convert to the same value (i.e. data types may differ).
+      * Value ordering is not considered.
+      */
+    implicit val similarProperties: EqualsFunction[Model] = (a, b) => {
+        // Only compares defined (i.e. non-empty) properties
+        val props = Pair(a, b).map { _.propertyMap.filter { _._2.nonEmpty } }
+        if (props.isSymmetricBy { _.keySet })
+            props.first.keys.forall { n => props.map { _(n).value }.isSymmetricWith(Value.convertToEqual) }
+        else
+            false
+    }
     
     
     // OPERATORS    --------------------
@@ -79,7 +94,7 @@ object Model
 class Model private(override val propertyMap: Map[String, Constant],
                     override protected val propertyOrder: Vector[String],
                     propFactory: PropertyFactory[Constant])
-    extends ModelLike[Constant] with EqualsBy with ValueConvertible with MaybeEmpty[Model]
+    extends ModelLike[Constant] with EqualsBy with ValueConvertible with MaybeEmpty[Model] with ApproxSelfEquals[Model]
 {
     // COMP. PROPERTIES    -------
     
@@ -114,6 +129,8 @@ class Model private(override val propertyMap: Map[String, Constant],
     override def toValue = new Value(Some(this), ModelType)
     
     override def nonEmpty = !isEmpty
+    
+    override implicit def equalsFunction: EqualsFunction[Model] = ???
     
     override def newProperty(attName: String) = propFactory(attName)
     

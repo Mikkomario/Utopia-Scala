@@ -8,7 +8,7 @@ import utopia.flow.time.{Days, Today}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction, MaybeEmpty}
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.collection.mutable
@@ -17,10 +17,30 @@ import scala.util.Try
 
 object Value
 {
+    // ATTRIBUTES   --------------------------
+    
     /**
      * An empty value with no data type
      */
     val empty: Value = emptyWithType(AnyType)
+    
+    /**
+      * Returns true if the two values are both empty or convert into an equal value.
+      * I.e. The "surface" data type of the values may still differ.
+      */
+    implicit val convertToEqual: EqualsFunction[Value] = (a, b) => {
+        if (a.dataType == b.dataType)
+            a.content == b.content
+        else if (a.isEmpty)
+            b.isEmpty
+        else if (b.isEmpty)
+            false
+        else
+            b.objectValue(a.dataType) == a.content
+    }
+    
+    
+    // OTHER    ------------------------------
     
     /**
      * Creates a new empty value that represents / mimics the provided data type
@@ -32,7 +52,8 @@ object Value
  * Values can wrap an object value and associate it with a certain data type. Values can be cast 
  * to different data types. They are immutable.
  */
-case class Value(content: Option[Any], dataType: DataType) extends JsonConvertible with MaybeEmpty[Value]
+case class Value(content: Option[Any], dataType: DataType)
+    extends JsonConvertible with MaybeEmpty[Value] with ApproxSelfEquals[Value]
 {
     // INITIAL CODE    ---------
     
@@ -68,6 +89,8 @@ case class Value(content: Option[Any], dataType: DataType) extends JsonConvertib
      * The contents of this value cast to a string
      */
     override def toString = string.getOrElse("")
+    
+    override implicit def equalsFunction: EqualsFunction[Value] = Value.convertToEqual
     
     override def appendToJson(jsonBuilder: mutable.StringBuilder) = JsonValueConverter(this) match {
         case Some(json) => jsonBuilder ++= json
