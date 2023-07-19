@@ -17,9 +17,14 @@ import scala.util.{Failure, Success, Try}
   *
   * @author Mikko Hilpinen
   * @since 11.7.2023, v1.0
+  *
+  * @constructor Creates a new empty Synagogue
+  * @param defaultSeverity Default severity for logging entries when no other severity has been specified
+  *                        (default = Unrecoverable)
+  * @param defaultVariantDetails Default variant-specific details to add to all logging entries
+  * @param logLoggingFailures Whether logging failures should be logged using other loggers (default = true)
   */
-class Synagogue(defaultContext: String,
-                override protected val defaultSeverity: Severity = Severity.default,
+class Synagogue(override protected val defaultSeverity: Severity = Severity.default,
                 defaultVariantDetails: Model = Model.empty, logLoggingFailures: Boolean = true)
 	extends Scribe
 {
@@ -33,7 +38,7 @@ class Synagogue(defaultContext: String,
 	
 	override def self = this
 	
-	override protected def context = defaultContext
+	override protected def context = ""
 	override protected def details = defaultVariantDetails
 	
 	override def withContext(context: String): Scribe = ScribeDelegate(context, details, defaultSeverity)
@@ -78,58 +83,65 @@ class Synagogue(defaultContext: String,
 	private def _apply(context: String, error: Option[Throwable], message: String, occurrenceDetails: Model,
 	                   severity: Severity, variantDetails: Model) =
 	{
-		// Delegates the logging to a Scribe instance, if possible
-		// Catches any thrown errors
-		val (scribeLoggingErrors, shouldUseStandardLogger) = logUsingAnyOf(scribes) { (scribe, isDelegated) =>
-			// Appends a "delegated" detail in case this is not the primary logging implementation to use
-			val actualDetails: Model = {
-				if (isDelegated)
-					occurrenceDetails + ("delegated" -> (true: Value))
-				else
-					occurrenceDetails
-			}
-			scribe.in(context)(variantDetails, severity)(error, message, actualDetails)
-			
-		} { _.in("Synagogue.log").info }
-		
-		// Case: Scribe-based logging was not possible => Delegates to a standard logger implementation
-		if (shouldUseStandardLogger) {
-			val (loggerLoggingErrors, useSysErr) = logUsingAnyOf(loggers) { (logger, isDelegated) =>
-				val appliedMessage = {
+		// Because the consequences of accidentally throwing something here are quite severe,
+		// catches all errors and prints them
+		Try {
+			// Delegates the logging to a Scribe instance, if possible
+			// Catches any thrown errors
+			val (scribeLoggingErrors, shouldUseStandardLogger) = logUsingAnyOf(scribes) { (scribe, isDelegated) =>
+				// Appends a "delegated" detail in case this is not the primary logging implementation to use
+				val actualDetails: Model = {
 					if (isDelegated)
-						s"${message.mapIfNotEmpty { m => s"$m " }}(primary logging failed)"
+						occurrenceDetails + ("delegated" -> (true: Value))
 					else
-						message
+						occurrenceDetails
 				}
-				logger(error, appliedMessage)
-			}(Identity)
+				scribe.in(context)(variantDetails, severity).apply(error, message, actualDetails)
+				
+			} { _.in("Synagogue.log").info }
 			
-			// If even this failed, prints to System.error
-			if (useSysErr) {
-				System.err.println(s"$severity failure in $context")
-				message.notEmpty.foreach { m => System.err.println(s"Message: $m") }
-				val fullDetails = variantDetails ++ occurrenceDetails
-				fullDetails.notEmpty.foreach { d => System.err.println(s"Details: $d") }
-				error.foreach { _.printStackTrace() }
+			// Case: Scribe-based logging was not possible => Delegates to a standard logger implementation
+			if (shouldUseStandardLogger) {
+				val (loggerLoggingErrors, useSysErr) = logUsingAnyOf(loggers) { (logger, isDelegated) =>
+					val appliedMessage = {
+						if (isDelegated)
+							s"${ message.mapIfNotEmpty { m => s"$m " } }(primary logging failed)"
+						else
+							message
+					}
+					logger(error, appliedMessage)
+				}(Identity)
+				
+				// If even this failed, prints to System.error
+				if (useSysErr) {
+					System.err.println(s"$severity failure in $context")
+					message.notEmpty.foreach { m => System.err.println(s"Message: $m") }
+					val fullDetails = variantDetails ++ occurrenceDetails
+					fullDetails.notEmpty.foreach { d => System.err.println(s"Details: $d") }
+					error.foreach { _.printStackTrace() }
+				}
+				if (logLoggingFailures && loggerLoggingErrors.nonEmpty) {
+					System.err.println(
+						s"${ loggerLoggingErrors.size } failures while attempting to log the error above (stack traces below)")
+					loggerLoggingErrors.foreach { _.printStackTrace() }
+				}
 			}
-			if (logLoggingFailures && loggerLoggingErrors.nonEmpty) {
-				System.err.println(
-					s"${loggerLoggingErrors.size} failures while attempting to log the error above (stack traces below)")
-				loggerLoggingErrors.foreach { _.printStackTrace() }
+			// Case: Scribe-based logging succeeded => May still log logging failures
+			else if (logLoggingFailures && scribeLoggingErrors.nonEmpty) {
+				val remainingErrors = loggers.foldLeft(scribeLoggingErrors) { (errors, logger) =>
+					if (errors.nonEmpty)
+						logLoggingFailures(logger, errors)
+					else
+						errors
+				}
+				if (remainingErrors.nonEmpty) {
+					System.err.println(s"${ remainingErrors.size } logging failures encountered (see stack traces below)")
+					remainingErrors.foreach { _.printStackTrace() }
+				}
 			}
-		}
-		// Case: Scribe-based logging succeeded => May still log logging failures
-		else if (logLoggingFailures && scribeLoggingErrors.nonEmpty) {
-			val remainingErrors = loggers.foldLeft(scribeLoggingErrors) { (errors, logger) =>
-				if (errors.nonEmpty)
-					logLoggingFailures(logger, errors)
-				else
-					errors
-			}
-			if (remainingErrors.nonEmpty) {
-				System.err.println(s"${remainingErrors.size} logging failures encountered (see stack traces below)")
-				remainingErrors.foreach { _.printStackTrace() }
-			}
+		}.failure.foreach { error =>
+			System.err.println("Failure during logging")
+			error.printStackTrace()
 		}
 	}
 	

@@ -19,14 +19,12 @@ object BasicSqlTypeInterpreter extends SqlTypeInterpreter
     // See type maximum lengths at:
     // https://dev.mysql.com/doc/refman/8.0/en/storage-requirements.html#data-types-storage-reqs-strings
     // Int types: https://dev.mysql.com/doc/refman/5.7/en/integer-types.html
-    def apply(typeString: String) =
-    {   
+    def apply(typeString: String) = {
         // TODO: Unsigned int should be read as long since it can have double as large a value
         // Doesn't include the text in parentheses '()', except in maximum length
-        val (mainPart, parenthesisPart) = typeString.splitAtFirst("(")
+        val (mainPart, parenthesisPart) = typeString.splitAtFirst("(").toTuple
         val maxLength = parenthesisPart.untilFirst(")").notEmpty.flatMap { s => Try { s.toInt }.toOption }
-        mainPart.toLowerCase match
-        {
+        mainPart.toLowerCase match {
             case "int" => Some(IntType) -> Some(IntLimit(maxLength))
             case "smallint" => Some(IntType) -> Some(SmallIntLimit(maxLength))
             case "mediumint" => Some(IntType) -> Some(MediumIntLimit(maxLength))

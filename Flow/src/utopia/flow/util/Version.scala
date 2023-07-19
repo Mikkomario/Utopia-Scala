@@ -37,10 +37,9 @@ object Version
 	 * @param versionString A string representation of version. Eg. "v1.2.3-beta-3" or "2.16"
 	 * @return A version parsed from specified string
 	 */
-	def apply(versionString: String) =
-	{
+	def apply(versionString: String) = {
 		// Checks whether there should be a suffix at the end
-		val (numberPart, suffix) = versionString.splitAtFirst("-")
+		val (numberPart, suffix) = versionString.splitAtFirst("-").toTuple
 		val numbers = numberPart.split('.').toVector.map { _.digits }.filter { _.nonEmpty }.map { _.toInt }
 			.dropRightWhile { _ == 0 }
 		new Version(numbers, suffix.trim)
@@ -50,8 +49,7 @@ object Version
 	 * @param text Text that may contain a version number
 	 * @return The first version number found from that text. None if no version number was found.
 	 */
-	def findFrom(text: String) =
-	{
+	def findFrom(text: String) = {
 		val matchIter = regex.matchesIteratorFrom(text)
 		// If the first result doesn't start with 'v', tries to find one that does
 		// If that fails, reverts back to the first result

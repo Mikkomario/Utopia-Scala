@@ -190,7 +190,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      *         a basic authorization or not properly encoded
      */
     def basicAuthorization = authorization.flatMap { auth =>
-        val (authType, encodedValue) = auth.splitAtFirst(" ")
+        val (authType, encodedValue) = auth.splitAtFirst(" ").toTuple
         if (authType ~== "Basic")
             Try { Base64.getDecoder.decode(encodedValue) }.toOption.map {
                 new String(_, Codec.UTF8.charSet).splitAtFirst(":") }
@@ -202,7 +202,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
       *         None if there was no authorization header or if it was not of type "bearer".
       */
     def bearerAuthorization = authorization.flatMap { auth =>
-        val (authType, token) = auth.splitAtFirst(" ")
+        val (authType, token) = auth.splitAtFirst(" ").toTuple
         if (authType ~== "Bearer")
             Some(token)
         else

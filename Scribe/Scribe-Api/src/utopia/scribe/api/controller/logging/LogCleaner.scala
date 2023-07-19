@@ -91,6 +91,7 @@ object LogCleaner
 						// Case: Inactivity required =>
 						// Finds issue variants that have not occurred within the specified duration
 						if (requiredInactivity > Duration.Zero) {
+							// FIXME: Sql syntax error here
 							NotEmpty(DbIssueVariants.contextual.withSeverityIn(severities)
 								.findNotOccurredSince(now - requiredInactivity))
 								.foreach { targetedVariants =>

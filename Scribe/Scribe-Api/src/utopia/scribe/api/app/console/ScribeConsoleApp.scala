@@ -3,15 +3,16 @@ package utopia.scribe.api.app.console
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType.{DurationType, InstantType, IntType, StringType}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.{Now, Today}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Now, Today}
+import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
-import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.many.logging.issue.{DbIssues, DbManyIssueInstances}
@@ -22,7 +23,6 @@ import utopia.scribe.api.database.access.single.logging.issue.DbVaryingIssue
 import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.core.model.combined.logging.{IssueInstances, IssueVariantInstances}
 import utopia.scribe.core.model.enumeration.Severity
-import utopia.scribe.core.model.enumeration.Severity.Debug
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
 import utopia.vault.database.{ConnectionPool, Tables}
@@ -123,15 +123,33 @@ object ScribeConsoleApp extends App
 	}
 	// Used for listing latest issues
 	private val listCommand = Command("list", "ls", "Lists currently active issues")(
-		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for"),
-		ArgumentSchema("level", "lvl", Debug.level,
-			help = "The lowest level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures.")) { args =>
+		ArgumentSchema("level", "lvl",
+			help = "The level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures. \nAlternatively you may use level names: Debug | Info | Warning | Recoverable | Unrecoverable | Critical. \nYou may also specify two values (lowest - highest), if you want to target a range."),
+		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for")) { args =>
 		// Parses the arguments
 		val since = args("since").castTo(InstantType, DurationType) match {
 			case Left(instantV) => instantV.getInstant
 			case Right(durationV) => Now - durationV.getDuration
 		}
-		val minLevel = Severity.fromValue(args("level"))
+		val severityRange = {
+			val value = args("level")
+			if (value.isEmpty)
+				Severity.valuesRange
+			else {
+				val str = value.getString
+				if (str.contains('-')) {
+					val ends = str.splitAtFirst("-").map { _.trim }.map { s =>
+						s.int match {
+							case Some(level) => Severity.forLevel(level)
+							case None => Severity.forName(s)
+						}
+					}
+					Span(ends)
+				}
+				else
+					Span.singleValue(Severity.fromValue(value))
+			}
+		}
 		// Finds the issues
 		cPool.tryWith { implicit c =>
 			val occurrencesPerVariantId = DbIssueOccurrences.since(since, includePartialRanges = true).pull
@@ -142,7 +160,7 @@ object ScribeConsoleApp extends App
 				val variantsPerIssueId = DbIssueVariants(occurrencesPerVariantId.keySet).pull
 					.map { v => v.withOccurrences(occurrencesPerVariantId(v.id).reverseSorted) }
 					.groupBy { _.issueId }
-				val issues = DbIssues(variantsPerIssueId.keySet).withSeverityAtLeast(minLevel).pull.map { issue =>
+				val issues = DbIssues(variantsPerIssueId.keySet).withSeverityIn(severityRange).pull.map { issue =>
 					issue.withOccurrences(variantsPerIssueId(issue.id).reverseSorted)
 				}.reverseSorted
 				// Queues the issues, enabling more detailed checks
@@ -250,7 +268,7 @@ object ScribeConsoleApp extends App
 							println("\t- Has not appeared recently")
 						else {
 							println(s"\t- Has ${issue.variants.size} different variants")
-							println("For more information about each variant, use the 'next' command")
+							println("\nFor more information about each variant, use the 'next' command")
 						}
 						queuedVariantsPointer.value = issue.variants -> 0
 					
@@ -263,10 +281,10 @@ object ScribeConsoleApp extends App
 	private val nextCommand = Command.withoutArguments("next", "variant",
 		help = "Lists information about the next queued issue variant") {
 		queuedVariantsPointer.mutate { case (variants, nextIndex) =>
-			variants.lift(nextIndex) -> (variants -> (nextIndex + 1))
+			variants.lift(nextIndex).map { _ -> (nextIndex < variants.size - 2) } -> (variants -> (nextIndex + 1))
 		} match {
 			// Case: Variant found
-			case Some(variant) =>
+			case Some((variant, hasMore)) =>
 				// Groups similar consecutive variant issues together (based on messages and details)
 				val occurrenceIterator = variant.occurrences.reverseSorted.iterator
 					.groupBy { o => o.errorMessages -> o.details }
@@ -305,10 +323,12 @@ object ScribeConsoleApp extends App
 				}
 				queuedErrorIdPointer.value = variant.errorId
 				if (variant.errorId.isDefined)
-					println("For more information about the associated error, use the 'stack' command")
+					println("\nFor more information about the associated error, use the 'stack' command")
 				queuedOccurrences = occurrenceIterator
 				if (occurrenceIterator.hasNext)
 					println("For information about previous issue occurrences, use the 'more' command")
+				if (hasMore)
+					println("For information about the next variant of this issue, use the 'next' command")
 				
 			// Case: No more variants found
 			case None => println("No more variants have been queued")
@@ -333,7 +353,7 @@ object ScribeConsoleApp extends App
 					// Reads and prints error data
 					DbErrorRecord(errorId).topToBottomIterator.zipWithIndex.foreach { case (error, index) =>
 						// Prints one line for the error type
-						val prefix = if (index == 0) "" else "\tCaused by: "
+						val prefix = if (index == 0) "" else "Caused by: "
 						println(s"$prefix${error.exceptionType}")
 						// Groups by file, class and method
 						error.stackAccess.topToBottomIterator.groupBy { _.fileName }

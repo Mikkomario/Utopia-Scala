@@ -160,8 +160,7 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: String = "",
 			Future.successful(())
 	}
 	
-	override def run() =
-	{
+	override def run() = {
 		// Records that the run started
 		currentRunsPointer.update { _ + 1 }
 		
@@ -173,26 +172,22 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: String = "",
 				Command.withoutArguments(commandName, help = "Closes this console") { closed = true }
 			}
 			
-			while (!stopFlag.getAndReset() && !closed && !terminatorPointer.value)
-			{
+			while (!stopFlag.getAndReset() && !closed && !terminatorPointer.value) {
 				val baseCommands = commandsPointer.value.toVector
 				// If there are no commands available, automatically closes
 				if (baseCommands.isEmpty)
 					closed = true
-				else
-				{
+				else {
 					// Asks the user for input
 					prompt.notEmpty.foreach(println)
 					val input = StdIn.readLine()
 					
-					if (input.nonEmpty)
-					{
+					if (input.nonEmpty) {
 						val availableCommands = (baseCommands :+ helpCommand) ++ closeCommand
 						// Splits the input into command name and argument list parts
-						val (commandPart, argsPart) = input.splitAtFirst(" ")
+						val (commandPart, argsPart) = input.splitAtFirst(" ").toTuple
 						// Finds the targeted command
-						availableCommands.find { _.matchesName(commandPart) } match
-						{
+						availableCommands.find { _.matchesName(commandPart) } match {
 							// Case: Targeted command found => executes that command using the specified arguments
 							case Some(command) =>
 								// Catches thrown exceptions

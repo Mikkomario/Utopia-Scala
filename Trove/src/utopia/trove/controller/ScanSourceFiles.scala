@@ -45,9 +45,9 @@ object ScanSourceFiles
 			val sources = files.flatMap { file =>
 				val comments = IterateLines.fromPath(file) { _.filterNot { _.isEmpty }.takeWhile { _.startsWith("--") }
 					.flatMap { line =>
-						val (key, value) = line.drop(2).splitAtFirst(":")
-						if (key.nonEmpty && value.nonEmpty)
-							Some(key.trim.toLowerCase -> value.trim.toLowerCase)
+						val keyValuePair = line.drop(2).splitAtFirst(":").map { _.trim.toLowerCase }
+						if (keyValuePair.forall { _.nonEmpty })
+							Some(keyValuePair.toTuple)
 						else
 							None
 					}.toMap

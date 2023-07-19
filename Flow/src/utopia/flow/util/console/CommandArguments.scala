@@ -44,18 +44,15 @@ case class CommandArguments(schema: CommandArgumentsSchema, input: Vector[String
 		val unrecognizedBuilder = new VectorBuilder[String]()
 		
 		input.foreach { argument =>
-			if (argument.contains("="))
-			{
-				val (rawKey, rawValue) = argument.splitAtFirst("=")
-				schema(rawKey.trim) match
-				{
-					case Some(schema) => namedBuilder += schema -> jsonParser.valueOf(rawValue.trim)
+			if (argument.contains("=")) {
+				val (rawKey, rawValue) = argument.splitAtFirst("=").map { _.trim }.toTuple
+				schema(rawKey) match {
+					case Some(schema) => namedBuilder += schema -> jsonParser.valueOf(rawValue)
 					case None => unrecognizedBuilder += argument
 				}
 			}
 			else if (argument.startsWith("-"))
-				schema(argument.drop(1).trim) match
-				{
+				schema(argument.drop(1).trim) match {
 					case Some(schema) => flagsBuilder += schema
 					case None => unrecognizedBuilder += argument
 				}

@@ -50,7 +50,7 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
 			leftColumn.columnNameWithTable } = ${ rightColumn.columnNameWithTable }",
 			Vector(), Some(rightTable.databaseName), Set(rightTable))
 		condition match {
-			case Some(c) => base + c.segment
+			case Some(c) => base + "AND" + c.segment
 			case None => base
 		}
 	}

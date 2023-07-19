@@ -19,9 +19,8 @@ object VersionNumber
 	  * @param versionString A string representing a version number (Eg. "v1.2.3-alpha")
 	  * @return A version number based on the string
 	  */
-	def parse(versionString: String) =
-	{
-		val (front, back) = versionString.splitAtFirst("-")
+	def parse(versionString: String) = {
+		val (front, back) = versionString.splitAtFirst("-").toTuple
 		VersionNumber(front.split('.').flatMap { s => s.digits.int }.toVector, back)
 	}
 }

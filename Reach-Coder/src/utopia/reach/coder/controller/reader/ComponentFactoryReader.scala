@@ -62,7 +62,7 @@ object ComponentFactoryReader
 				val pck = prop.value.getString
 				// Case: / is used to refer to another package alias
 				if (pck.contains('/')) {
-					val (referred, afterRef) = pck.splitAtFirst("/")
+					val (referred, afterRef) = pck.splitAtFirst("/").toTuple
 					builder.get(referred) match {
 						// Case: Referred alias could be discerned from previously specified aliases
 						case Some(parent) => builder += (name -> (parent / afterRef))
@@ -88,7 +88,7 @@ object ComponentFactoryReader
 			val reference = {
 				// Case: The reference refers to a package alias
 				if (ref.contains('/')) {
-					val (referred, afterRef) = ref.splitAtFirst("/")
+					val (referred, afterRef) = ref.splitAtFirst("/").toTuple
 					packageAliases.get(referred) match {
 						// Case: Package alias could be resolved
 						case Some(parentPackage) => Reference(s"$parentPackage.$afterRef")
@@ -237,7 +237,7 @@ object ComponentFactoryReader
 	{
 		// Case: Generic type => Parses the parent and the child types separately and then combines them
 		if (typeString.contains('[')) {
-			val (parentTypeString, childTypeString) = typeString.splitAtFirst("[")
+			val (parentTypeString, childTypeString) = typeString.splitAtFirst("[").toTuple
 			scalaTypeFrom(parentTypeString, packageAliases, referenceAliases)(
 				scalaTypeFrom(childTypeString.untilLast("]"), packageAliases, referenceAliases))
 		}
@@ -249,7 +249,7 @@ object ComponentFactoryReader
 				case None =>
 					// Case: Package alias used => Resolves the package alias and forms a complete reference
 					if (typeString.contains('/')) {
-						val (packageRefPart, typePart) = typeString.splitAtFirst("/")
+						val (packageRefPart, typePart) = typeString.splitAtFirst("/").toTuple
 						packageAliases.get(packageRefPart) match {
 							case Some(parentPackage) => Reference(s"$parentPackage.$typePart")
 							// Case: Package alias couldn't be resolved => Warns the user

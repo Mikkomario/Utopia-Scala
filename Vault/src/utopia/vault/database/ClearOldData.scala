@@ -138,7 +138,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		else {
 			// If there were restrictions, performs a join and only deletes tables where the join fails
 			val target = targetFrom(rule.table, restrictions)
-			val noJoinConditions = restrictions.map { _.last.to.column.isNull }
+			val noJoinConditions = restrictions.flatMap { _.lastOption.map { _.to.column.isNull } }
 			
 			connection(Delete(target, Vector(rule.table)) + Where(baseDeletionCondition && noJoinConditions))
 		}

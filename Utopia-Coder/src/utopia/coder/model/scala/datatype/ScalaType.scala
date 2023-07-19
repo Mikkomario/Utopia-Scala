@@ -81,7 +81,7 @@ object ScalaType
 	  * @return Data type parsed from that string
 	  */
 	def apply(typeString: String): ScalaType = {
-		val (beforeTypes, typesPart) = typeString.splitAtFirst("[")
+		val (beforeTypes, typesPart) = typeString.splitAtFirst("[").toTuple
 		val basePart = {
 			if (Package.separatorRegex.existsIn(beforeTypes))
 				Right(Reference(beforeTypes))

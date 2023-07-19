@@ -3,6 +3,8 @@
 ## v2.2 (in development)
 ### Breaking Changes
 - **IterableOnce**`.toTryCatch` now returns a **TryCatch** instead of a **Try**
+- **String**`.splitAtFirst(String)` and `.splitAtLast(String)` in **StringExtensions** 
+  now return a **Pair** instead of a **Tuple** 
 ### Deprecations
 - Deprecated `.toPair` in **ChangeEvent** because the name implied conversion
 ### Bugfixes

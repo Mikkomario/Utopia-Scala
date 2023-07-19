@@ -194,7 +194,7 @@ case class Reference private(packagePath: Package, importTarget: Vector[String],
 	  * @return Path to the referenced file
 	  */
 	def pathIn(sourceRoot: Path) = {
-		val (packagePart, classPart) = importTarget.mkString(".").splitAtLast(".")
+		val (packagePart, classPart) = importTarget.mkString(".").splitAtLast(".").toTuple
 		// Case: There are no two parts in the target => Uses the only part as the file name
 		if (classPart.isEmpty)
 			packagePath.pathTo(packagePart, sourceRoot)

@@ -346,8 +346,8 @@ object StringExtensions
 		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
 		 */
 		def splitAtFirst(str: String) = optionIndexOf(str) match {
-			case Some(index) => s.take(index) -> s.drop(index + str.length)
-			case None => s -> ""
+			case Some(index) => Pair(s.take(index), s.drop(index + str.length))
+			case None => Pair(s, "")
 		}
 		/**
 		  * Splits this string into two at the first regular expression match.
@@ -357,8 +357,8 @@ object StringExtensions
 		  *         the first part is this whole string and the second part is empty
 		  */
 		def splitAtFirstMatch(regex: Regex) = regex.firstRangeFrom(s) match {
-			case Some(range) => s.take(range.start) -> s.drop(range.end)
-			case None => s -> ""
+			case Some(range) => Pair(s.take(range.start), s.drop(range.end))
+			case None => Pair(s, "")
 		}
 		/**
 		 * Splits this string into two at the last occurrence of specified substring. Eg. "apple".splitAtLast("p") = "ap" -> "le"
@@ -366,8 +366,8 @@ object StringExtensions
 		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
 		 */
 		def splitAtLast(str: String) = optionLastIndexOf(str) match {
-			case Some(index) => s.take(index) -> s.drop(index + str.length)
-			case None => s -> ""
+			case Some(index) => Pair(s.take(index), s.drop(index + str.length))
+			case None => Pair(s, "")
 		}
 		
 		/**

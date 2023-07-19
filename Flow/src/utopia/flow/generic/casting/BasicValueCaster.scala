@@ -355,10 +355,8 @@ object BasicValueCaster extends ValueCaster
 				val v = splitToValueVector(s.drop(1).dropRight(1), ',')
 				Some(Pair(v.head, v(1)))
 			}
-			else if (s.contains('&')) {
-				val (start, end) = s.splitAtFirst("&")
-				Some(Pair[Value](start, end))
-			}
+			else if (s.contains('&'))
+				Some(s.splitAtFirst("&").map { s => s: Value })
 			else if (containsComma) {
 				val v = splitToValueVector(s, ',')
 				Some(Pair(v.head, v(1)))

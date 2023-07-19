@@ -60,7 +60,7 @@ object CodePiece extends FromValueFactory[CodePiece]
 						referenceAliases.getOrElse(refStr, {
 							// Checks whether package alias was used (signaled by '/')
 							if (refStr.contains('/')) {
-								val (packageRefPart, typePart) = refStr.splitAtFirst("/")
+								val (packageRefPart, typePart) = refStr.splitAtFirst("/").toTuple
 								packageAliases.get(packageRefPart) match {
 									case Some(pck) => Reference(s"$pck.$typePart")
 									// Case: Package alias couldn't be resolved => Prints a warning

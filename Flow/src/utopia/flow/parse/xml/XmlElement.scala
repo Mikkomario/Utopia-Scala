@@ -21,7 +21,7 @@ object XmlElement extends FromModelFactory[XmlElement]
         model("name").string.map { name =>
             val namespacedName = {
                 if (name.contains(':')) {
-                    val (nsPart, namePart) = name.splitAtFirst(":")
+                    val (nsPart, namePart) = name.splitAtFirst(":").toTuple
                     Namespace(nsPart)(namePart)
                 }
                 else
@@ -69,7 +69,7 @@ object XmlElement extends FromModelFactory[XmlElement]
                     // Attribute name may specify namespace
                     val childName = {
                         if (attName.contains(':')) {
-                            val (namespacePart, namePart) = attName.splitAtFirst(":")
+                            val (namespacePart, namePart) = attName.splitAtFirst(":").toTuple
                             Namespace(namespacePart)(namePart)
                         }
                         else
@@ -97,7 +97,7 @@ object XmlElement extends FromModelFactory[XmlElement]
         // Processes attribute namespaces, also
         val namespacedAttributes = attributes.properties.map { c =>
             if (c.name.contains(':')) {
-                val (namespacePart, namePart) = c.name.splitAtFirst(":")
+                val (namespacePart, namePart) = c.name.splitAtFirst(":").toTuple
                 Namespace(namespacePart) -> c.withName(namePart)
             }
             else

@@ -6,6 +6,7 @@
   This is because some mapping logic implementations will need to scan the whole table at once.
   - Also updated the default mapping logic to look for common prefixes between the column names, removing those
 ### Bugfixes
+- Bugfix to conditional join syntax
 - Fixed a bug in **ClearOldData** reference processing logic
 ### New Features
 - Added **DatabaseActionQueue** class

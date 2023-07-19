@@ -18,6 +18,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
@@ -181,15 +182,12 @@ abstract class AuthorizedContext extends PostContext
 	  * @param f Function called when request is authorized. Accepts userId + database connection. Produces an http result.
 	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
 	  */
-	def basicAuthorized(f: (Int, Connection) => Result) =
-	{
+	def basicAuthorized(f: (Int, Connection) => Result) = {
 		// Authorizes request with basic auth, finding user id
-		val result = request.headers.basicAuthorization match
-		{
-			case Some((email, password)) =>
+		val result = request.headers.basicAuthorization match {
+			case Some(Pair(email, password)) =>
 				connectionPool.tryWith { implicit connection =>
-					tryAuthenticate(email, password) match
-					{
+					tryAuthenticate(email, password) match {
 						// Performs the operation on authorized user id
 						case Some(userId) => f(userId, connection)
 						case None => Result.Failure(Unauthorized, "Invalid email or password")

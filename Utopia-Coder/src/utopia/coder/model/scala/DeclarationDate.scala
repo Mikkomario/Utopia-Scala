@@ -37,7 +37,7 @@ object DeclarationDate
 	  */
 	def apply(string: String): Try[DeclarationDate] = {
 		if (string.contains(',')) {
-			val (datePart, versionPart) = string.splitAtLast(",")
+			val (datePart, versionPart) = string.splitAtLast(",").toTuple
 			parseDate(datePart.trim).map { date => apply(date, Version.findFrom(versionPart)) }
 		}
 		else

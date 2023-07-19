@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.enumeration
 
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
@@ -65,6 +66,10 @@ object Severity
 	  * A map that contains the minimum and the maximum severity level
 	  */
 	val extremes = Map[Extreme, Severity](Min -> min, Max -> max)
+	/**
+	  * All severity values as a range (i.e. a Span)
+	  */
+	val valuesRange = Span[Severity](min, max)
 	
 	
 	// COMPUTED	--------------------
@@ -95,6 +100,14 @@ object Severity
 		else
 			min
 	}
+	/**
+	  * @param name Name of the searched severity level
+	  * @return A severity level matching that name. Default if no value matches.
+	  */
+	def forName(name: String) = {
+		val lower = name.toLowerCase
+		values.find { _.toString.toLowerCase.contains(lower) }.getOrElse(default)
+	}
 	
 	/**
 	  * @param value A value representing an severity level
@@ -113,9 +126,7 @@ object Severity
 					case None => default
 				}
 			// Case String (name) type => Finds a match with name
-			case Right(strV) =>
-				val str = strV.getString.toLowerCase
-				values.reverseIterator.find { _.toString.toLowerCase.contains(str) }.getOrElse(default)
+			case Right(strV) => forName(strV.getString)
 		}
 	}
 	

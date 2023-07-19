@@ -28,7 +28,7 @@ object NamespacedString
 	 */
 	def parseFrom(string: String) = {
 		if (string.contains(':')) {
-			val (nsPart, localPart) = string.splitAtFirst(":")
+			val (nsPart, localPart) = string.splitAtFirst(":").toTuple
 			apply(localPart)(Namespace(nsPart))
 		}
 		else

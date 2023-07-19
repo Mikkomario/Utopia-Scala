@@ -89,7 +89,7 @@ object ScalaParser
 				.flatMap { importString =>
 					// println(s"Read import: $importString")
 					if (importString.contains('{')) {
-						val (basePart, endPart) = importString.splitAtFirst("{")
+						val (basePart, endPart) = importString.splitAtFirst("{").toTuple
 						val trimmedBase = basePart.trim
 						val endItems = endPart.untilFirst("}").split(',').toVector.map { _.trim }
 						/*println(s"Which is split into ${endItems.size} parts after $trimmedBase (${
@@ -100,11 +100,11 @@ object ScalaParser
 						Vector(importString.trim)
 				}
 			val separatedImportStatements = importStatements.map { importStatement =>
-				val (beginning, end) = importStatement.splitAtLast(".")
+				val (beginning, end) = importStatement.splitAtLast(".").toTuple
 				end.notEmpty match {
 					case Some(end) =>
 						if (end == "_") {
-							val (packagePart, targetPrefix) = beginning.splitAtLast(".")
+							val (packagePart, targetPrefix) = beginning.splitAtLast(".").toTuple
 							if (targetPrefix.isEmpty)
 								filePackageString -> importStatement
 							else
@@ -334,7 +334,7 @@ object ScalaParser
 										!firstBodyLine.code.afterLast("{").contains('}'))
 									{
 										val (beforeBlockStart, afterBlockStart) = firstBodyLine.code
-											.splitAtLast("{")
+											.splitAtLast("{").toTuple
 										val (mainBlock, remaining) = readBlock(
 											CodeLine(declarationLine.indentation, afterBlockStart), linesIter)
 										combineLineAndBlock(CodeLine(firstBodyLine.indentation, beforeBlockStart),
@@ -420,8 +420,8 @@ object ScalaParser
 	}
 	
 	private def annotationFrom(line: CodeLine, refMap: Map[String, Reference]) = {
-		val (mainPart, rawParamsPart) = line.code.splitAtFirst("(")
-		val (namePart, typesPart) = mainPart.splitAtFirst("[")
+		val (mainPart, rawParamsPart) = line.code.splitAtFirst("(").toTuple
+		val (namePart, typesPart) = mainPart.splitAtFirst("[").toTuple
 		val name = namePart.drop(1)
 		val types = if (typesPart.nonEmpty) scalaTypesFrom(typesPart, refMap)._1 else Vector()
 		val params = {
@@ -482,7 +482,7 @@ object ScalaParser
 	{
 		if (line.startsWith("@"))
 		{
-			val (keywordPart, afterKeyword) = line.splitAtFirst(" ")
+			val (keywordPart, afterKeyword) = line.splitAtFirst(" ").toTuple
 			val contentPartPointer = new MutatingOnce(afterKeyword, afterKeyword.afterFirst(" "))
 			
 			ScalaDocKeyword.matching(keywordPart.drop(1),
@@ -498,7 +498,7 @@ object ScalaParser
 		// Case: Instance block starts on the first line
 		if (openLine.exists { _.code.contains('{') })
 		{
-			val (beforeBlock, afterBlockStart) = openLine.get.code.splitAtFirst("{")
+			val (beforeBlock, afterBlockStart) = openLine.get.code.splitAtFirst("{").toTuple
 			val (block, _) = readBlock(CodeLine(openLine.get.indentation, afterBlockStart), moreLinesIter)
 			extensionsFrom(Vector(beforeBlock), refMap) -> Some(block)
 		}
@@ -648,10 +648,10 @@ object ScalaParser
 		// println(s"Parsing next parameter from: '$string'")
 		
 		// Parses name and data type
-		val (namePart, remaining) = string.splitAtFirst(":")
+		val (namePart, remaining) = string.splitAtFirst(":").toTuple
 		val trimmedNamePart = namePart.trim
 		val (dataType, afterType) = scalaTypeFrom(remaining.trim, refMap)
-		val (beforeName, name) = if (trimmedNamePart.contains(' ')) trimmedNamePart.splitAtLast(" ") else
+		val (beforeName, name) = if (trimmedNamePart.contains(' ')) trimmedNamePart.splitAtLast(" ").toTuple else
 			"" -> trimmedNamePart
 		// Parses parameter prefix, if there is one
 		val prefix = DeclarationType.values.find { t => beforeName.contains(t.keyword) }.map { declarationType =>

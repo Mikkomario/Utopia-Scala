@@ -216,7 +216,7 @@ object FileExtensions
 					else
 						'-'
 				}
-				val (myNameBeginning, myExtension) = myName.splitAtLast(".")
+				val (myNameBeginning, myExtension) = myName.splitAtLast(".").toTuple
 				val myFullExtension = if (myExtension.isEmpty) myExtension else s".$myExtension"
 				// Generates new names until one is found which isn't a duplicate
 				val newName = Iterator.iterate(2) { _ + 1 }
@@ -1014,7 +1014,7 @@ object FileExtensions
 		  */
 		def edit[U](f: FileEditor => U)(implicit codec: Codec) = {
 			// Finds a copy name that hasn't been taken yet
-			val (fileNamePart, extensionPart) = fileName.splitAtLast(".")
+			val (fileNamePart, extensionPart) = fileName.splitAtLast(".").toTuple
 			// Writes to copy by editing the original
 			editToCopy(withFileName(s"$fileNamePart-temp.$extensionPart").unique)(f)
 				.flatMap { copyPath =>

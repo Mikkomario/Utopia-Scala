@@ -147,16 +147,20 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 			self
 		else {
 			val c = context
-			// Selects a separator appropriate for the current context
-			val separator = {
-				if (c.contains(' '))
-					" "
-				else if (c.contains('_'))
-					"_"
-				else
-					"."
+			if (c.isEmpty)
+				withContext(subContext)
+			else {
+				// Selects a separator appropriate for the current context
+				val separator = {
+					if (c.contains(' '))
+						" "
+					else if (c.contains('_'))
+						"_"
+					else
+						"."
+				}
+				withContext(s"$c$separator$subContext")
 			}
-			withContext(s"$c$separator$subContext")
 		}
 	}
 	/**

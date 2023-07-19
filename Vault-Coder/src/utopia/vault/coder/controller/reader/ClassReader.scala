@@ -83,7 +83,7 @@ object ClassReader
 			val referencedEnumerations = root("referenced_enums", "referenced_enumerations").getVector
 				.flatMap { _.string }
 				.map { enumPath =>
-					val (packagePart, enumName) = enumPath.splitAtLast(".")
+					val (packagePart, enumName) = enumPath.splitAtLast(".").toTuple
 					Enum(enumName, packagePart, Vector())
 				}
 			val allEnumerations = enumerations ++ referencedEnumerations
@@ -335,7 +335,7 @@ object ClassReader
 		// val name = propModel("name").getString
 		// val columnName = propModel("column_name").stringOr(NamingUtils.camelToUnderscore(name))
 		val tableReference = propModel("references", "ref").string.map { ref =>
-			val (tablePart, columnPart) = ref.splitAtFirst("(")
+			val (tablePart, columnPart) = ref.splitAtFirst("(").toTuple
 			tablePart -> columnPart.untilLast(")").notEmpty.map { Name.interpret(_, ColumnName.style) }
 		}
 		val length = propModel("length", "len").int
