@@ -3,12 +3,13 @@ package utopia.firmament.context
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.LinearAlignment.Middle
 import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D, LinearAlignment}
-import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.paradigm.shape.template.HasDimensions
 
 /**
   * A common trait for text context implementations
@@ -149,6 +150,9 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return Copy of this context where vertical text insets have been set to zero
 	  */
 	def withoutVerticalTextInsets = withoutTextInsetsAlong(Y)
+	def withTextInsetsHalved = withTextInsetsScaledBy(0.5)
+	def withHorizontalTextInsetsHalved = withHorizontalTextInsetsScaledBy(0.5)
+	def withVerticalTextInsetsHalved = withVerticalTextInsetsScaledBy(0.5)
 	
 	/**
 	  * @return Copy of this context where text expands easily to right
@@ -261,6 +265,10 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return A modified copy of this context
 	  */
 	def mapTextInsets(f: StackInsets => StackInsets): Repr = withTextInsets(f(textInsets))
+	def mapTextInsetsAlong(axis: Axis2D)(f: StackLength => StackLength) = mapTextInsets { _.mapAxis(axis)(f) }
+	def mapHorizontalTextInsets(f: StackLength => StackLength) = mapTextInsetsAlong(X)(f)
+	def mapVerticalTextInsets(f: StackLength => StackLength) = mapTextInsetsAlong(Y)(f)
+	def mapTextInset(side: Direction2D)(f: StackLength => StackLength) = mapTextInsets { _.mapSide(side)(f) }
 	
 	/**
 	  * @param axis Targeted axis
@@ -278,6 +286,14 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return A copy of this context with text insets scaled by the specified factor
 	  */
 	def withTextInsetsScaledBy(scaling: Double) = mapTextInsets { _ * scaling }
+	/**
+	  * @param scaling A two-dimensional scaling modifier
+	  * @return Copy of this context with text insets multiplied with the specified scaling modifier
+	  */
+	def withTextInsetsScaledBy(scaling: HasDimensions[Double]) = mapTextInsets { _ * scaling }
+	def withHorizontalTextInsetsScaledBy(scaling: Double) = mapHorizontalTextInsets { _ * scaling }
+	def withVerticalTextInsetsScaledBy(scaling: Double) = mapVerticalTextInsets { _ * scaling }
+	def withTextInsetScaledBy(side: Direction2D, scaling: Double) = mapTextInset(side) { _ * scaling }
 	/**
 	  * @param insetsSize New text inset sizes to apply on all sides (relative to margins)
 	  * @return A copy of this context with specified inset sizes
