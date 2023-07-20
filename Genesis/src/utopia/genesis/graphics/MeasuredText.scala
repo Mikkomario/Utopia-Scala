@@ -13,20 +13,26 @@ import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size, Vector2D}
 import scala.collection.immutable.VectorBuilder
 
 /**
-  * A text class that contains (context-dependent) measurement information as well. Most calculations are performed
-  * lazily.
+  * A text class that contains (context-dependent) measurement information as well.
+  * Most calculations are performed lazily.
   * @author Mikko Hilpinen
   * @since 1.11.2020
   * @param text Wrapped text
   * @param context Text measurement context used
   * @param alignment Alignment used when placing text on multiple lines and when drawing text (default = top left)
   * @param heightSettings Settings used when interpreting text height (default = use standard line height)
+  * @param lineSplitThreshold A width threshold after which new lines are formed.
+  *                           No line within this text will be longer than the specified limit, unless it consists
+  *                           of a single word only.
+  *
+  *                           None if there should not occur any automatic line-splitting (default)
+  *
   * @param betweenLinesAdjustment Adjustment applied to the between lines margins, in pixels (default = 0)
   * @param allowLineBreaks Whether line breaks should be applied (default = true)
   */
 case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Alignment = Alignment.TopLeft,
-                        heightSettings: TextDrawHeight = LineHeight, betweenLinesAdjustment: Double = 0.0,
-                        allowLineBreaks: Boolean = true)
+                        heightSettings: TextDrawHeight = LineHeight, lineSplitThreshold: Option[Double] = None,
+                        betweenLinesAdjustment: Double = 0.0, allowLineBreaks: Boolean = true)
 	extends MaybeEmpty[MeasuredText]
 {
 	// ATTRIBUTES	-----------------------------------
@@ -35,14 +41,51 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * Individual lines of text
 	  */
 	lazy val lines = {
-		if (allowLineBreaks) {
-			// Makes sure the line breaks at the end of the text are also included
-			// Regex.newLine.startIndexIteratorIn(???)
-			val lineBreaksAtEnd = text.reverseIterator.takeWhile { c => Regex.newLine(c.toString) }.size
-			(text.linesIterator.map { _.stripControlCharacters } ++ Vector.fill(lineBreaksAtEnd) { "" }).toVector
+		val default = {
+			if (allowLineBreaks) {
+				// Makes sure the line breaks at the end of the text are also included
+				val lineBreaksAtEnd = text.reverseIterator.takeWhile { c => Regex.newLine(c.toString) }.size
+				(text.linesIterator.map { _.stripControlCharacters } ++ Vector.fill(lineBreaksAtEnd) { "" }).toVector
+			}
+			else
+				Vector(text.stripControlCharacters)
 		}
-		else
-			Vector(text.stripControlCharacters)
+		// Also applies automatic line-breaks, if applicable
+		lineSplitThreshold match {
+			case Some(t) =>
+				default.flatMap { line =>
+					if (line.isEmpty)
+						Some(line)
+					else {
+						// Measures the width of all parts of this line
+						val parts = line.split(Regex.whiteSpace).map { s => s -> context.widthOf(s) }
+						val whiteSpaceWidth = context.widthOf(' ')
+						
+						val resultBuilder = new VectorBuilder[String]()
+						var nextStartIndex = 0
+						
+						// Assigns each sequence of parts into a line
+						while (nextStartIndex < parts.size) {
+							// Takes the maximum number of words until the threshold is met
+							val takeCount = parts.drop(nextStartIndex + 1)
+								// 1: Total width, 2: Number of parts included
+								.foldLeftIterator(parts(nextStartIndex)._2 -> 1) { case ((width, takeCount), (_, partWidth)) =>
+									// Includes a whitespace between consecutive parts
+									(width + whiteSpaceWidth + partWidth) -> (takeCount + 1)
+								}
+								.takeWhile { _._1 <= t }
+								.last._2
+							resultBuilder += parts.slice(nextStartIndex, nextStartIndex + takeCount)
+								.iterator.map { _._1 }.mkString(" ")
+							// Moves to the next sequence
+							nextStartIndex += takeCount
+						}
+						
+						resultBuilder.result()
+					}
+				}
+			case None => default
+		}
 	}
 	
 	lazy val (firstLineCaretIndices, lastLineCaretIndices) = {
@@ -446,8 +489,6 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			val textStart = topLeft - lineBounds.position
 			// Bounds of this text area
 			val areaBounds = Bounds(topLeft, lineBounds.size)
-			
-			// println(s"\nLine bounds = $lineBounds\nTop left = $topLeft\nArea bounds = $areaBounds\nText Start = $textStart\n")
 			
 			(areaBounds, Vector(areaBounds -> textStart))
 		}

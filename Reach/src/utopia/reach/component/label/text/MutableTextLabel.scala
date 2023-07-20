@@ -7,11 +7,8 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
-import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.PointerWithEvents
-import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorRole}
-import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -54,9 +51,8 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString) = {
-		val label = new MutableTextLabel(parentHierarchy, text, context.font,
-			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
-			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
+		val label = new MutableTextLabel(parentHierarchy, text, TextDrawContext.createContextual(isHint)(context),
+			context.allowTextShrink)
 		customDrawers.foreach(label.addCustomDrawer)
 		label
 	}
@@ -87,10 +83,7 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
   * @since 4.10.2020, v0.1
   */
 class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
-					   initialFont: Font, initialTextColor: Color = Color.textBlack,
-					   initialAlignment: Alignment = Alignment.Left, initialInsets: StackInsets = StackInsets.any,
-					   initialBetweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = false,
-					   override val allowTextShrink: Boolean = false)
+                       initialStyle: TextDrawContext, override val allowTextShrink: Boolean = false)
 	extends MutableCustomDrawReachComponent with TextComponent with MutableTextComponent
 {
 	// ATTRIBUTES	-------------------------
@@ -98,8 +91,7 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	/**
 	  * A mutable pointer that contains this label's style
 	  */
-	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
-		initialInsets, initialBetweenLinesMargin, allowLineBreaks))
+	val stylePointer = new PointerWithEvents(initialStyle)
 	/**
 	  * A mutable pointer that contains this label's text
 	  */

@@ -34,8 +34,7 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext(context: TextContext) =
-		ContextualMutableTextButtonFactory(this, context)
+	override def withContext(context: TextContext) = ContextualMutableTextButtonFactory(parentHierarchy, context)
 	
 	
 	// OTHER	-----------------------------------
@@ -60,8 +59,8 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 					  alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 					  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 					  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		new MutableTextButton(parentHierarchy, text, font, color, textColor, alignment, textInsets, betweenLinesMargin,
-			borderWidth, hotKeys, allowLineBreaks, allowTextShrink)
+		new MutableTextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets, None,
+			betweenLinesMargin, allowLineBreaks), color, borderWidth, hotKeys, allowTextShrink)
 	
 	/**
 	  * Creates a new button
@@ -92,7 +91,7 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualMutableTextButtonFactory(buttonFactory: MutableTextButtonFactory, context: TextContext)
+case class ContextualMutableTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
 	extends TextContextualFactory[ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------------------
@@ -111,9 +110,8 @@ case class ContextualMutableTextButtonFactory(buttonFactory: MutableTextButtonFa
 	  * @return A new button
 	  */
 	def withoutAction(text: LocalizedString = LocalizedString.empty, hotKeys: Set[HotKey] = Set()) =
-		buttonFactory.withoutAction(text, context.font, context.background, context.textColor,
-			context.textAlignment, context.textInsets, context.buttonBorderWidth, context.betweenLinesMargin.optimal,
-			hotKeys, context.allowLineBreaks, context.allowTextShrink)
+		new MutableTextButton(parentHierarchy, text, context.textDrawContext, context.background,
+			context.buttonBorderWidth, hotKeys, context.allowTextShrink)
 	
 	/**
 	  * Creates a new button
@@ -122,8 +120,7 @@ case class ContextualMutableTextButtonFactory(buttonFactory: MutableTextButtonFa
 	  * @param action Action performed when this button is pressed
 	  * @return A new button
 	  */
-	def apply(text: LocalizedString = LocalizedString.empty, hotKeys: Set[HotKey] = Set())(action: => Unit) =
-	{
+	def apply(text: LocalizedString = LocalizedString.empty, hotKeys: Set[HotKey] = Set())(action: => Unit) = {
 		val button = withoutAction(text, hotKeys)
 		button.registerAction(action)
 		button
@@ -135,19 +132,17 @@ case class ContextualMutableTextButtonFactory(buttonFactory: MutableTextButtonFa
   * @author Mikko Hilpinen
   * @since 25.10.2020, v0.1
   */
-class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: LocalizedString, initialFont: Font,
-						initialColor: Color, initialTextColor: Color = Color.textBlack,
-						initialAlignment: Alignment = Alignment.Center, initialTextInsets: StackInsets = StackInsets.any,
-						borderWidth: Double = 0.0, initialBetweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-						allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
+class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
+                        initialStyle: TextDrawContext,
+						initialColor: Color, borderWidth: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+						override val allowTextShrink: Boolean = false)
 	extends ReachComponentWrapper with MutableButtonLike with MutableTextComponent with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	---------------------------------
 	
 	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
 	
-	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialFont, initialTextColor,
-		initialAlignment, initialTextInsets, initialBetweenLinesMargin, allowLineBreaks, allowTextShrink)
+	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialStyle, allowTextShrink)
 	/**
 	  * A mutable pointer to this button's base color
 	  */

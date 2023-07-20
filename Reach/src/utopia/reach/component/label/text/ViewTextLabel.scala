@@ -161,6 +161,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	  * @param textColor          Color used when drawing the text (default = standard black)
 	  * @param alignment          Text alignment (default = left)
 	  * @param insets             Insets around the text (default = any insets, preferring zero)
+	  * @param lineSplitThreshold A width threshold after which lines are split (optional)
 	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0)
 	  * @param allowLineBreaks    Whether line breaks within the text should be respected and applied (default = true)
 	  * @return A new label
@@ -168,10 +169,11 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	def withStaticStyle[A](contentPointer: Changing[A], font: Font,
 	                       displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                       textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-	                       insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-	                       allowLineBreaks: Boolean = true) =
+	                       insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
+	                       betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true) =
 		apply(contentPointer,
-			Fixed(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)),
+			Fixed(TextDrawContext(font, textColor, alignment, insets, lineSplitThreshold, betweenLinesMargin,
+				allowLineBreaks)),
 			displayFunction)
 	
 	/**
@@ -197,12 +199,15 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	  * @param allowLineBreaks    Whether line breaks within the text should be respected and applied (default = true)
 	  * @return A new label
 	  */
+	// WET WET
+	// TODO: Remove this factory or replace these params with a single TextDrawContext param, too much repetition here
 	def textWithStaticStyle(contentPointer: Changing[LocalizedString], font: Font,
-	                           textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-	                           insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-	                           allowLineBreaks: Boolean = true) =
+	                        textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+	                        insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
+	                        betweenLinesMargin: Double = 0.0,
+	                        allowLineBreaks: Boolean = true) =
 		withStaticStyle[LocalizedString](contentPointer, font, DisplayFunction.identity, textColor, alignment, insets,
-			betweenLinesMargin, allowLineBreaks)
+			lineSplitThreshold, betweenLinesMargin, allowLineBreaks)
 	/**
 	  * Creates a new text label
 	  * @param contentPointer     Pointer to the text displayed on this label
@@ -219,7 +224,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	                           textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 	                           insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
 	                           allowLineBreaks: Boolean = true) =
-		textWithStaticStyle(contentPointer, font, textColor, alignment, insets, betweenLinesMargin, allowLineBreaks)
+		textWithStaticStyle(contentPointer, font, textColor, alignment, insets, None, betweenLinesMargin, allowLineBreaks)
 }
 
 object ViewTextLabel extends Cff[ViewTextLabelFactory]

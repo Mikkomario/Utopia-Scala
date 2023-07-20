@@ -64,9 +64,9 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 {
 	// ATTRIBUTES	------------------------
 	
-	private var _drawContext = TextDrawContext(initialFont, initialTextColor, initialAlignment, initialInsets)
+	private var _drawContext = TextDrawContext(initialFont, initialTextColor, initialAlignment, initialInsets,
+		Some(initialLineSplitThreshold))
 	private var _text = LocalizedString.empty
-	private var _lineSplitThreshold = initialLineSplitThreshold
 	
 	private val panel = new SwitchPanel[AlignFrame[Stack[TextLabel]]](makeNewContent())
 	
@@ -77,18 +77,6 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	if (useLowPriorityForScalingSides)
 		panel.addConstraint(new LowPriorityLengthConstraint)
 	text = initialText
-	
-	
-	// COMPUTED	----------------------------
-	
-	/**
-	  * @return Maximum length of a multiple word line (in pixels)
-	  */
-	def lineSplitThreshold = _lineSplitThreshold
-	def lineSplitThreshold_=(newThreshold: Double) = {
-		_lineSplitThreshold = newThreshold
-		resetContent()
-	}
 	
 	
 	// IMPLEMENTED	------------------------
@@ -156,35 +144,35 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	}
 	
 	private def split(text: String) = {
-		val threshold = _lineSplitThreshold
-		
-		var lineSplitIndices = Vector[Int]()
-		var currentLineStartIndex = 0
-		var lastCursorIndex = 0
-		
-		// Finds line split indices (NB: Splits are positioned in front of white space characters)
-		text.indexOfIterator(" ").foreach { cursorIndex =>
-			// Checks whether threshold was exeeded
-			// (Cannot split twice at the same point, however)
-			if (lastCursorIndex != currentLineStartIndex &&
-				textWidthWith(font, text.substring(currentLineStartIndex, cursorIndex)) > threshold)
-			{
-				lineSplitIndices :+= lastCursorIndex
-				currentLineStartIndex = lastCursorIndex
-			}
-			lastCursorIndex = cursorIndex
+		lineSplitThreshold match {
+			case Some(threshold) =>
+				var lineSplitIndices = Vector[Int]()
+				var currentLineStartIndex = 0
+				var lastCursorIndex = 0
+				
+				// Finds line split indices (NB: Splits are positioned in front of white space characters)
+				text.indexOfIterator(" ").foreach { cursorIndex =>
+					// Checks whether threshold was exeeded
+					// (Cannot split twice at the same point, however)
+					if (lastCursorIndex != currentLineStartIndex &&
+						textWidthWith(font, text.substring(currentLineStartIndex, cursorIndex)) > threshold) {
+						lineSplitIndices :+= lastCursorIndex
+						currentLineStartIndex = lastCursorIndex
+					}
+					lastCursorIndex = cursorIndex
+				}
+				
+				// Splits the string
+				if (lineSplitIndices.isEmpty)
+					Vector(text)
+				else if (lineSplitIndices.size == 1) {
+					val (first, second) = text.splitAt(lineSplitIndices.head)
+					Vector(first, second.trim)
+				}
+				else
+					(-1 +: lineSplitIndices :+ text.length).paired.map { case Pair(start, end) => text.substring(start + 1, end) }
+			case None => Vector(text)
 		}
-		
-		// Splits the string
-		if (lineSplitIndices.isEmpty)
-			Vector(text)
-		else if (lineSplitIndices.size == 1)
-		{
-			val (first, second) = text.splitAt(lineSplitIndices.head)
-			Vector(first, second.trim)
-		}
-		else
-			(-1 +: lineSplitIndices :+ text.length).paired.map { case Pair(start, end) => text.substring(start + 1, end) }
 	}
 	
 	

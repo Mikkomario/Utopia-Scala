@@ -76,7 +76,7 @@ trait TextContextLike extends ColorContextLike
 	/**
 	 * @return The text draw context defined by this context
 	 */
-	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, betweenLinesMargin.optimal)
+	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, None, betweenLinesMargin.optimal)
 	
 	
 	// OTHER	--------------------------

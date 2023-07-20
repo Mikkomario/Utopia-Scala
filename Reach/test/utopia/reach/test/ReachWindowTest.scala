@@ -4,6 +4,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.genesis.util.Screen
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.window.ReachWindow
 
@@ -19,11 +20,13 @@ object ReachWindowTest extends App
 	val textPointer = new PointerWithEvents("Text")
 	
 	val window = ReachWindow.withResizeLogic(User)
-		.withWindowBackground(colors.primary.default).muchLarger.withTextInsetsScaledBy(4).withoutShrinkingText
-		.using(ViewTextLabel, title = "Test") { (_, f) => f(textPointer) }
+		.withWindowBackground(colors.primary.default).muchLarger
+		.withTextInsetsScaledBy(4).withoutShrinkingText.withLineSplitThreshold(Screen.width / 3.0)
+		.using(ViewTextLabel, title = "Test") { (_, f) =>
+			f(textPointer)
+		}
 	
-	Loop.regularly(5.seconds, waitFirst = true) {
-		println()
+	Loop.regularly(2.seconds, waitFirst = true) {
 		textPointer.update { t => s"more $t" }
 	}
 	

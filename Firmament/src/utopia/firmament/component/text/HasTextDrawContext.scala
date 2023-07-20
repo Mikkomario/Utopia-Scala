@@ -35,4 +35,8 @@ trait HasTextDrawContext
 	  * @return The color of the text in this component
 	  */
 	def textColor = textDrawContext.color
+	/**
+	  * @return Width threshold used for automated line-splitting (optional)
+	  */
+	def lineSplitThreshold: Option[Double] = textDrawContext.lineSplitThreshold
 }

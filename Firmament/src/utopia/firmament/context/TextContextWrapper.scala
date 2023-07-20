@@ -33,6 +33,7 @@ trait TextContextWrapper[+Repr] extends TextContextLike[Repr]
 	
 	override def promptFont = textContext.promptFont
 	
+	override def lineSplitThreshold: Option[Double] = textContext.lineSplitThreshold
 	override def betweenLinesMargin = textContext.betweenLinesMargin
 	
 	override def allowLineBreaks = textContext.allowLineBreaks
@@ -42,6 +43,8 @@ trait TextContextWrapper[+Repr] extends TextContextLike[Repr]
 	override def withPromptFont(font: Font): Repr = withTextContext(textContext.withPromptFont(font))
 	override def withTextAlignment(alignment: Alignment): Repr = withTextContext(textContext.withTextAlignment(alignment))
 	override def withTextInsets(insets: StackInsets): Repr = withTextContext(textContext.withTextInsets(insets))
+	override def withLineSplitThreshold(threshold: Option[Double]): Repr =
+		withTextContext(textContext.withLineSplitThreshold(threshold))
 	override def withMarginBetweenLines(margin: StackLength): Repr = withTextContext(textContext.withMarginBetweenLines(margin))
 	override def withAllowLineBreaks(allowLineBreaks: Boolean): Repr =
 		withTextContext(textContext.withAllowLineBreaks(allowLineBreaks))

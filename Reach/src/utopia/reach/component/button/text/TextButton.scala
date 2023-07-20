@@ -40,27 +40,12 @@ trait TextButtonFactoryLike[+Repr] extends ButtonSettingsWrapper[Repr] with Cust
 	
 	// OTHER	--------------------
 	
-	/**
-	  * Creates a new text button
-	  * @param text               Text displayed on this button
-	  * @param font               Font used when drawing the text
-	  * @param color              Button background color
-	  * @param textColor          Button text color (default = standard black)
-	  * @param alignment          Text alignment (default = Center)
-	  * @param textInsets         Insets placed around the text (default = any, preferring 0)
-	  * @param borderWidth        Width of the border on this button (default = 0 = no border)
-	  * @param betweenLinesMargin Margin placed between horizontal text lines in case there are multiple (default = 0.0)
-	  * @param allowLineBreaks    Whether line breaks in the drawn text should be respected and applied (default = true)
-	  * @param allowTextShrink    Whether text size should be allowed to decrease to conserve space (default = false)
-	  * @param action             Action performed each time this button is triggered (call by name)
-	  * @return A new text button
-	  */
 	protected def _apply(text: LocalizedString, font: Font, color: Color, textColor: Color, alignment: Alignment,
-	                     textInsets: StackInsets, borderWidth: Double, betweenLinesMargin: Double,
-	                     allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
+	                     textInsets: StackInsets, borderWidth: Double, lineSplitThreshold: Option[Double],
+	                     betweenLinesMargin: Double, allowLineBreaks: Boolean, allowTextShrink: Boolean)
 	                    (action: => Unit) =
 		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
-			betweenLinesMargin, allowLineBreaks), color, settings, borderWidth, customDrawers,
+			lineSplitThreshold, betweenLinesMargin, allowLineBreaks), color, settings, borderWidth, customDrawers,
 			allowTextShrink)(action)
 }
 
@@ -95,8 +80,8 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
 	  */
 	def apply(text: LocalizedString)(action: => Unit) =
 		_apply(text, context.font, context.background, context.textColor, context.textAlignment,
-			context.textInsets, context.buttonBorderWidth, context.betweenLinesMargin.optimal,
-			context.allowLineBreaks, context.allowTextShrink)(action)
+			context.textInsets, context.buttonBorderWidth, context.lineSplitThreshold,
+			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)(action)
 }
 
 /**
@@ -141,7 +126,7 @@ case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
 	          borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0,
 	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
 	         (action: => Unit) =
-		_apply(text, font, color, textColor, alignment, textInsets, borderWidth,
+		_apply(text, font, color, textColor, alignment, textInsets, borderWidth, None,
 			betweenLinesMargin, allowLineBreaks, allowTextShrink)(action)
 }
 

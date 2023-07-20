@@ -20,21 +20,23 @@ object TextContext
 	/**
 	  * @param base Color context to use as the base settings
 	  * @param alignment Text alignment to use (default = left)
+	  * @param lineSplitThreshold A width threshold after which lines should be split.
+	  *                           None if no automated line-splitting should occur (default).
 	  * @param allowLineBreaks Whether line breaks should be allowed within text components (default = true)
 	  * @param allowTextShrink Whether text components should be allowed to shrink their content
 	  *                        in order to conserve space (default = false)
 	  * @return A new text context instance
 	  */
-	def apply(base: ColorContext, alignment: Alignment = Alignment.Left, allowLineBreaks: Boolean = true,
-	          allowTextShrink: Boolean = false): TextContext =
+	def apply(base: ColorContext, alignment: Alignment = Alignment.Left, lineSplitThreshold: Option[Double] = None,
+	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false): TextContext =
 		_TextContext(base, StackInsets.symmetric(base.margins.aroundSmall, base.margins.aroundVerySmall),
-			alignment, base.margins.verySmall.downscaling, None, allowLineBreaks, allowTextShrink)
+			alignment, lineSplitThreshold, base.margins.verySmall.downscaling, None, allowLineBreaks, allowTextShrink)
 	
 	
 	// NESTED   -----------------------------
 	
 	private case class _TextContext(colorContext: ColorContext, textInsets: StackInsets, textAlignment: Alignment,
-	                                betweenLinesMargin: StackLength,
+	                                lineSplitThreshold: Option[Double], betweenLinesMargin: StackLength,
 	                                customPromptFont: Option[Font], allowLineBreaks: Boolean, allowTextShrink: Boolean)
 		extends TextContext
 	{
@@ -51,6 +53,8 @@ object TextContext
 		
 		override def withTextInsets(insets: StackInsets): TextContext = copy(textInsets = insets)
 		
+		override def withLineSplitThreshold(threshold: Option[Double]): TextContext =
+			copy(lineSplitThreshold = threshold)
 		override def withMarginBetweenLines(margin: StackLength): TextContext = copy(betweenLinesMargin = margin)
 		
 		override def withAllowLineBreaks(allowLineBreaks: Boolean): TextContext =

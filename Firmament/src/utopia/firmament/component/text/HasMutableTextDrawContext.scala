@@ -30,10 +30,10 @@ trait HasMutableTextDrawContext extends HasTextDrawContext with HasMutableAlignm
 	// COMPUTED	--------------------------
 	
 	def textInsets_=(newInsets: StackInsets) = mapTextDrawContext { _.copy(insets = newInsets) }
-	
 	def font_=(newFont: Font) = mapTextDrawContext { _.copy(font = newFont) }
-	
 	def textColor_=(newColor: Color) = mapTextDrawContext { _.copy(color = newColor) }
+	def lineSplitThreshold_=(newThreshold: Option[Double]) =
+		mapTextDrawContext { _.copy(lineSplitThreshold = newThreshold) }
 	
 	@deprecated("Please use alignment = alignment instead", "v1.0")
 	def align(alignment: Alignment) = this.alignment = alignment

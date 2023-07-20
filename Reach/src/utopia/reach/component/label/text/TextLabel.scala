@@ -16,56 +16,39 @@ import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, From
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
-object TextLabel extends Cff[TextLabelFactory]
+/**
+  * Common trait for factories that are used for constructing text labels
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 20.07.2023, v1.1
+  */
+trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = TextLabelFactory(hierarchy)
+	// ABSTRACT	--------------------
+	
+	/**
+	  * The component hierarchy, to which created text labels will be attached
+	  */
+	protected def parentHierarchy: ComponentHierarchy
+	
+	
+	// OTHER    -------------------
+	
+	protected def _apply(text: LocalizedString, drawContext: TextDrawContext, allowTextShrink: Boolean = false) =
+		new TextLabel(parentHierarchy, text, drawContext, customDrawers, allowTextShrink)
 }
 
 /**
-  * Used for constructing new static text labels
-  * @param parentHierarchy A component hierarchy the new labels will be placed in
+  * Factory class used for constructing text labels using contextual component creation information
+  * @param isHint Whether this factory is used for creating hint labels. These labels have more transparent text.
+  * @author Mikko Hilpinen
+  * @since 20.07.2023, v1.1
   */
-case class TextLabelFactory(parentHierarchy: ComponentHierarchy, alignment: Alignment = Alignment.Left,
-                            insets: StackInsets = StackInsets.any, customDrawers: Vector[CustomDrawer] = Vector())
-	extends FromContextFactory[TextContext, ContextualTextLabelFactory] with FramedFactory[TextLabelFactory]
-		with CustomDrawableFactory[TextLabelFactory] with BackgroundAssignable[TextLabelFactory]
-		with FromAlignmentFactory[TextLabelFactory]
-{
-	// IMPLEMENTED	----------------------------
-	
-	override def apply(alignment: Alignment) = copy(alignment = alignment)
-	
-	override def withInsets(insets: StackInsetsConvertible): TextLabelFactory = copy(insets = insets.toInsets)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): TextLabelFactory = copy(customDrawers = drawers)
-	
-	override def withBackground(background: Color): TextLabelFactory = withCustomDrawer(BackgroundDrawer(background))
-	
-	override def withContext(context: TextContext) = ContextualTextLabelFactory(parentHierarchy, context, customDrawers)
-	
-	
-	// OTHER	--------------------------------
-	
-	/**
-	  * Creates a new text label
-	  * @param text Text displayed on this label
-	  * @param font Font used when drawing the text
-	  * @param textColor Color used when drawing the text (default = standard black)
-	  * @param betweenLinesMargin Margin placed between lines of text when line breaks are used (default = 0)
-	  * @param allowLineBreaks Whether line breaks in the text should be recognized and respected (default = true)
-	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
-	  * @return A new label
-	  */
-	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack, betweenLinesMargin: Double = 0.0,
-	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets,
-			betweenLinesMargin, allowLineBreaks), customDrawers, allowTextShrink)
-}
-
 case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
                                       customDrawers: Vector[CustomDrawer] = Vector(), isHint: Boolean = false)
-	extends TextContextualFactory[ContextualTextLabelFactory]
+	extends TextLabelFactoryLike[ContextualTextLabelFactory]
+		with TextContextualFactory[ContextualTextLabelFactory]
 		with ContextualBackgroundAssignableFactory[TextContext, ContextualTextLabelFactory]
-		with CustomDrawableFactory[ContextualTextLabelFactory]
 {
 	// COMPUTED ---------------------------------
 	
@@ -79,9 +62,9 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	
 	override def self: ContextualTextLabelFactory = this
 	
+	override def withContext(context: TextContext) = copy(context = context)
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualTextLabelFactory =
 		copy(customDrawers = drawers)
-	override def withContext(newContext: TextContext) = copy(context = newContext)
 	
 	
 	// OTHER	---------------------------------
@@ -98,15 +81,12 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString) =
-		new TextLabel(parentHierarchy, text,
-			TextDrawContext(context.font, if (isHint) context.hintTextColor else context.textColor,
-				context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, context.allowLineBreaks),
-			customDrawers, context.allowTextShrink)
+		_apply(text, TextDrawContext.createContextual(isHint)(context), context.allowTextShrink)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param text              Text displayed on this label
-	  * @param background        Label background color
+	  * @param text       Text displayed on this label
+	  * @param background Label background color
 	  * @return A new label
 	  */
 	@deprecated("Replaced with .withBackground(Color).apply(LocalizedString)", "v1.1")
@@ -114,12 +94,61 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param text              Text displayed on this label
-	  * @param role              Label background color role
+	  * @param text Text displayed on this label
+	  * @param role Label background color role
 	  * @return A new label
 	  */
 	@deprecated("Replaced with .withBackground(ColorRole).apply(LocalizedString)", "v1.1")
 	def withBackground(text: LocalizedString, role: ColorRole): TextLabel = withBackground(role).apply(text)
+}
+
+/**
+  * Factory class that is used for constructing text labels without using contextual information
+  * @author Mikko Hilpinen
+  * @since 20.07.2023, v1.1
+  */
+case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
+                            alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
+                            customDrawers: Vector[CustomDrawer] = Vector())
+	extends TextLabelFactoryLike[TextLabelFactory]
+		with FromContextFactory[TextContext, ContextualTextLabelFactory] with FramedFactory[TextLabelFactory]
+		with CustomDrawableFactory[TextLabelFactory] with BackgroundAssignable[TextLabelFactory]
+		with FromAlignmentFactory[TextLabelFactory]
+{
+	// IMPLEMENTED	----------------------------
+	
+	override def apply(alignment: Alignment) = copy(alignment = alignment)
+	override def withInsets(insets: StackInsetsConvertible): TextLabelFactory = copy(insets = insets.toInsets)
+	override def withBackground(background: Color): TextLabelFactory = withCustomDrawer(BackgroundDrawer(background))
+	
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): TextLabelFactory = copy(customDrawers = drawers)
+	override def withContext(context: TextContext) = ContextualTextLabelFactory(parentHierarchy, context, customDrawers)
+	
+	
+	// OTHER	--------------------------------
+	
+	/**
+	  * Creates a new text label
+	  * @param text Text displayed on this label
+	  * @param font Font used when drawing the text
+	  * @param textColor Color used when drawing the text (default = standard black)
+	  * @param lineSplitThreshold An optional width threshold after which lines are split (default = None = no splitting)
+	  * @param betweenLinesMargin Margin placed between lines of text when line breaks are used (default = 0)
+	  * @param allowLineBreaks Whether line breaks in the text should be recognized and respected (default = true)
+	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
+	  * @return A new label
+	  */
+	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
+	          lineSplitThreshold: Option[Double] = None, betweenLinesMargin: Double = 0.0,
+	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+		_apply(text, TextDrawContext(font, textColor, alignment, insets, lineSplitThreshold, betweenLinesMargin,
+			allowLineBreaks),
+			allowTextShrink)
+}
+
+object TextLabel extends Cff[TextLabelFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = TextLabelFactory(hierarchy)
 }
 
 /**
@@ -133,8 +162,8 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
   * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
   */
 class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: LocalizedString,
-                override val textDrawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
-                override val allowTextShrink: Boolean = false)
+                override val textDrawContext: TextDrawContext,
+                additionalDrawers: Seq[CustomDrawer] = Vector(), override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent
 {
 	// ATTRIBUTES	-----------------------------

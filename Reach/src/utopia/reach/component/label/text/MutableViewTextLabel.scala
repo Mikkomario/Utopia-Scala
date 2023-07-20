@@ -44,6 +44,7 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param textColor Color used when drawing text (default = standard black)
 	  * @param alignment Alignment used when placing text (default = Left)
 	  * @param insets Insets placed around the text (default = any, preferring 0)
+	  * @param lineSplitThreshold Width threshold after which lines are split (optional)
 	  * @param betweenLinesMargin Margin placed between lines of text, in case there are many (default = 0.0)
 	  * @param allowLineBreaks Whether line breaks within text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
@@ -53,10 +54,11 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	def forPointer[A](pointer: PointerWithEvents[A], font: Font,
 					  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-					  insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-					  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+					  insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
+					  betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true,
+					  allowTextShrink: Boolean = false) =
 		new MutableViewTextLabel[A](parentHierarchy, pointer, TextDrawContext(font, textColor, alignment, insets,
-			betweenLinesMargin, allowLineBreaks), displayFunction, allowTextShrink)
+			lineSplitThreshold, betweenLinesMargin, allowLineBreaks), displayFunction, allowTextShrink)
 	
 	/**
 	  * Creates a new mutable text view label
@@ -66,16 +68,18 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param textColor Color used when drawing text (default = standard black)
 	  * @param alignment Alignment used when placing text (default = Left)
 	  * @param insets Insets placed around the text (default = any, preferring 0)
+	  * @param lineSplitThreshold Width threshold after which lines are split (optional)
+	  * @param betweenLinesMargin Margin placed between lines of text, in case there are many (default = 0.0)
 	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
 	  * @tparam A Type of displayed content
 	  * @return A new label
 	  */
 	def apply[A](initialValue: A, font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 				 textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-				 insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-				 allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+				 insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
+				 betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
 		forPointer[A](new PointerWithEvents[A](initialValue), font, displayFunction, textColor, alignment, insets,
-			betweenLinesMargin, allowLineBreaks, allowTextShrink)
+			lineSplitThreshold, betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
 case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLabelFactory, context: TextContext,
@@ -114,6 +118,7 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 	def forPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
 		val label = labelFactory.forPointer(pointer, context.font, displayFunction,
 			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
+			context.lineSplitThreshold,
 			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
 		customDrawers.foreach(label.addCustomDrawer)
 		label

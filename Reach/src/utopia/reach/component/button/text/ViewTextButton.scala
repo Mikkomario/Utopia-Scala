@@ -24,6 +24,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
+// TODO: Refactor these constructors
 object ViewTextButton extends Cff[ViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
@@ -64,6 +65,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[Color],
+	             lineSplitThresholdPointer: Changing[Option[Double]] = Fixed(None),
 	             enabledPointer: Changing[Boolean] = AlwaysTrue,
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 	             alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
@@ -71,9 +73,9 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	             additionalDrawers: Seq[CustomDrawer] = Vector(),
 	             additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 	             allowTextShrink: Boolean = false)(action: A => Unit) =
-		new ViewTextButton[A](parentHierarchy, contentPointer, font, colorPointer, enabledPointer, displayFunction,
-			borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, additionalDrawers,
-			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
+		new ViewTextButton[A](parentHierarchy, contentPointer, font, colorPointer, lineSplitThresholdPointer,
+			enabledPointer, displayFunction, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys,
+			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
 	
 	/**
 	  * Creates a new button
@@ -103,7 +105,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	                   additionalDrawers: Seq[CustomDrawer] = Vector(),
 	                   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 	                   allowTextShrink: Boolean = false)(action: => Unit) =
-		new ViewTextButton[LocalizedString](parentHierarchy, Fixed(text), font, colorPointer, enabledPointer,
+		new ViewTextButton[LocalizedString](parentHierarchy, Fixed(text), font, colorPointer, Fixed(None), enabledPointer,
 			DisplayFunction.identity, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys,
 			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(_ => action)
 }
@@ -142,10 +144,10 @@ case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, conte
 	                         borderWidth: Double = context.margins.verySmall, hotKeys: Set[HotKey] = Set(),
 	                         additionalDrawers: Seq[CustomDrawer] = Vector(),
 	                         additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
-		factory[A](contentPointer, context.font, colorPointer, enabledPointer, displayFunction, borderWidth,
-			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, hotKeys,
-			additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
-			context.allowTextShrink)(action)
+		factory[A](contentPointer, context.font, colorPointer, Fixed(context.lineSplitThreshold), enabledPointer,
+			displayFunction, borderWidth, context.textAlignment, context.textInsets,
+			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers, additionalFocusListeners,
+			context.allowLineBreaks, context.allowTextShrink)(action)
 	
 	/**
 	  * Creates a new button that changes its color based on a pointer value
@@ -193,8 +195,8 @@ case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, conte
 	             additionalDrawers: Seq[CustomDrawer] = Vector(),
 	             additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 	{
-		factory[A](contentPointer, context.font, Fixed(context.background), enabledPointer,
-			displayFunction, context.buttonBorderWidth, context.textAlignment, context.textInsets,
+		factory[A](contentPointer, context.font, Fixed(context.background), Fixed(context.lineSplitThreshold),
+			enabledPointer, displayFunction, context.buttonBorderWidth, context.textAlignment, context.textInsets,
 			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
 			additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
 	}
@@ -224,7 +226,7 @@ case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, conte
   * @since 26.10.2020, v0.1
   */
 class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A], font: Font,
-                        colorPointer: Changing[Color],
+                        colorPointer: Changing[Color], lineSplitThresholdPointer: Changing[Option[Double]] = Fixed(None),
                         enabledPointer: Changing[Boolean] = AlwaysTrue,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
                         alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
@@ -240,10 +242,11 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	private val _statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
 		state + (Disabled -> !enabled) }
 	private val actualTextInsets = if (borderWidth > 0) textInsets + borderWidth else textInsets
-	private val stylePointer = colorPointer.mergeWith(enabledPointer) { (color, enabled) =>
-		TextDrawContext(font, if (enabled) color.shade.defaultTextColor else color.shade.defaultHintTextColor,
-			alignment, actualTextInsets, betweenLinesMargin, allowLineBreaks)
-	}
+	private val stylePointer = colorPointer
+		.mergeWith(lineSplitThresholdPointer, enabledPointer) { (color, splitThreshold, enabled) =>
+			TextDrawContext(font, if (enabled) color.shade.defaultTextColor else color.shade.defaultHintTextColor,
+				alignment, actualTextInsets, splitThreshold, betweenLinesMargin, allowLineBreaks)
+		}
 	
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	override val focusId = hashCode()

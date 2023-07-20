@@ -24,7 +24,7 @@ object TextDrawContext
 	  */
 	def createContextual(isHint: Boolean = false)(implicit context: TextContext) =
 		TextDrawContext(context.font, if (isHint) context.hintTextColor else context.textColor, context.textAlignment,
-			context.textInsets, context.betweenLinesMargin.optimal, context.allowLineBreaks)
+			context.textInsets, context.lineSplitThreshold, context.betweenLinesMargin.optimal, context.allowLineBreaks)
 }
 
 /**
@@ -35,12 +35,14 @@ object TextDrawContext
   * @param color Color used when drawing the text
   * @param alignment Alignment used for positioning the text within the target context
   * @param insets Insets placed around the text within the target context
+  * @param lineSplitThreshold A width threshold at which a new line is started.
+  *                           None if there should not be any automatic line-splitting (default).
   * @param betweenLinesMargin Vertical margin placed between each line of text (default = 0.0)
   * @param allowLineBreaks Whether text line splitting should be allowed (default = false)
   */
 case class TextDrawContext(font: Font, color: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
-						   allowLineBreaks: Boolean = false)
+						   insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
+						   betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = false)
 {
 	// COMPUTED	------------------------------------
 	

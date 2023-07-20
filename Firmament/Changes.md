@@ -9,6 +9,7 @@
 - **StackLike** no longer extends **AreaOfItems**. Please use **StackItemAreas** instead.
 - The functions `.larger` and `.smaller` in **BaseContextLike** now require an implicit **Adjustment** parameter
 - **SingleColorIconCache** now requires an implicit **Logger** parameter
+- **TextContextLike** now requires additional properties
 - **ButtonBackgroundViewDrawer** now accepts the borderWidth as a pointer and not a static value
 ### Bug Fixes
 - The adjustment modifier in **Margins** didn't work as described in the documentary
@@ -19,6 +20,8 @@
 ### New Features
 - Added new **SizeCategory** and **StandardSizeAdjustable** classes
   - **SingleColorIcon** now extends **StandardSizeAdjustable**, offering a number of new utility functions
+- **TextContext** classes now support automated line-splitting
+  - Please note, however, that not all components necessarily follow this property, especially so in **Reflection**
 ### New Methods
 - **BaseContext** & **TextContext**
   - Added multiple utility functions that utilize the new **SizeCategory** class

@@ -1,8 +1,12 @@
 # Utopia Genesis - List of Changes
 
-## v3.3.1 (in development)
+## v3.4 (in development)
+### Breaking Changes
+- New parameter added to **MeasuredText** constructor 
 ### Bugfixes
 - Bugfix to **MeasuredText**`.caretIndexToCharacterIndex(Int)`
+### New Features
+- Added automatic line-splitting -feature to **MeasuredText**
 
 ## v3.3 - 01.05.2023
 This version introduces a completely rewritten **Drawer** implementation with a new interface.

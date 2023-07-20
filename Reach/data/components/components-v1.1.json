@@ -211,6 +211,29 @@
         ],
         "text": [
           {
+            "name": "TextLabel",
+            "context": "text",
+            "parents": ["customDrawable"],
+            "props": [
+              {
+                "name": "lineSplitThreshold",
+                "param": "threshold",
+                "type": "Option[Double]",
+                "default": "None",
+                "doc": "Maximum line length in pixels. A newline character is placed before the word that would exceed this limit. \nNone if there should not be any automatic line-splitting."
+              }
+            ],
+            "contextual_props": [
+              {
+                "name": "isHint",
+                "param": "hint",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether this factory is used for creating hint labels. These labels have more transparent text."
+              }
+            ]
+          },
+          {
             "name": "ViewTextLabel",
             "context": "text",
             "variable_context": true,

@@ -34,6 +34,11 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	def textInsets: StackInsets
 	
 	/**
+	  * @return A width threshold after which text should be split into separate lines.
+	  *         None if no automatic line-splitting should occur.
+	  */
+	def lineSplitThreshold: Option[Double]
+	/**
 	  * @return Margin placed between lines of text
 	  */
 	def betweenLinesMargin: StackLength
@@ -73,6 +78,12 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	def withTextInsets(insets: StackInsets): Repr
 	
 	/**
+	  * @param threshold A width threshold after which automated line-splitting should occur.
+	  *                  None if no automated line-splitting should occur.
+	  * @return Copy of this context with the specified split-threshold.
+	  */
+	def withLineSplitThreshold(threshold: Option[Double]): Repr
+	/**
 	  * @param margin Margin to place between text lines, where applicable
 	  * @return Copy of this context that uses the specified margin
 	  */
@@ -101,7 +112,8 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	/**
 	 * @return The text draw context defined by this context
 	 */
-	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, betweenLinesMargin.optimal)
+	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, lineSplitThreshold,
+		betweenLinesMargin.optimal)
 	
 	/**
 	  * @return Horizontal text alignment applied in this context
@@ -146,6 +158,11 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return Copy of this context where text expands easily horizontally
 	  */
 	def withHorizontallyExpandingText = withTextExpandingAlong(X)
+	
+	/**
+	  * @return Copy of this context with no automatic line-splitting in use
+	  */
+	def withoutAutomatedLineSplitting = if (lineSplitThreshold.isDefined) withLineSplitThreshold(None) else self
 	
 	/**
 	  * @return Copy of this context without any additional margin between text lines
@@ -310,6 +327,12 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @return A copy of this context where text insets don't include the specified direction
 	  */
 	def withoutTextInsetsTowards(direction: Direction2D) = mapTextInsets { _ - direction }
+	
+	/**
+	  * @param threshold A width threshold after which lines should be split.
+	  * @return A copy of this context with the specified line-split threshold.
+	  */
+	def withLineSplitThreshold(threshold: Double): Repr = withLineSplitThreshold(Some(threshold))
 	
 	/**
 	  * @param f A mapping function for between-lines margin
