@@ -290,7 +290,8 @@ trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 	  * @param scaling A two-dimensional scaling modifier
 	  * @return Copy of this context with text insets multiplied with the specified scaling modifier
 	  */
-	def withTextInsetsScaledBy(scaling: HasDimensions[Double]) = mapTextInsets { _ * scaling }
+	def withTextInsetsScaledBy(scaling: HasDimensions[Double]) =
+		mapTextInsets { _.mergeWith(scaling) { (insets, scaling) => insets.map { _ * scaling } } }
 	def withHorizontalTextInsetsScaledBy(scaling: Double) = mapHorizontalTextInsets { _ * scaling }
 	def withVerticalTextInsetsScaledBy(scaling: Double) = mapVerticalTextInsets { _ * scaling }
 	def withTextInsetScaledBy(side: Direction2D, scaling: Double) = mapTextInset(side) { _ * scaling }

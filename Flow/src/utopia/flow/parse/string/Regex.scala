@@ -446,8 +446,7 @@ case class Regex(string: String)
 	 * @param str A string to split
 	 * @return Divided parts of the string
 	 */
-	def separate(str: String) =
-	{
+	def separate(str: String) = {
 		val matcher = pattern.matcher(str)
 		val builder = new VectorBuilder[String]()
 		var lastEndIndex = 0

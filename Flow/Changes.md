@@ -62,6 +62,7 @@
 - Added a **Mutate[A]** type alias for **A => A** functions
 - Added a couple new constructor for span classes
 - **Pair**`.separateMatching` now uses `EqualsFunction.default` by default
+- **Tree**`.map(...)` and `.flatMap(...)` now use `EqualsFunction.default` by default
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

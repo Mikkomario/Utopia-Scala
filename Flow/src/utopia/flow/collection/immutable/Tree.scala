@@ -66,7 +66,7 @@ case class Tree[A](override val nav: A, override val children: Vector[Tree[A]] =
 	  * @tparam B Target content type
 	  * @return A mapped version of this tree
 	  */
-	def map[B](f: A => B)(implicit equals: EqualsFunction[B]): Tree[B] =
+	def map[B](f: A => B)(implicit equals: EqualsFunction[B] = EqualsFunction.default): Tree[B] =
 		Tree(f(nav), children.map { _.map(f) })(equals)
 	
 	/**
@@ -75,6 +75,6 @@ case class Tree[A](override val nav: A, override val children: Vector[Tree[A]] =
 	  * @tparam B Target content type
 	  * @return A mapped version of this tree. None if the content of this node mapped to None.
 	  */
-	def flatMap[B](f: A => Option[B])(implicit equals: EqualsFunction[B]): Option[Tree[B]] =
+	def flatMap[B](f: A => Option[B])(implicit equals: EqualsFunction[B] = EqualsFunction.default): Option[Tree[B]] =
 		f(nav).map { c => Tree(c, children.flatMap { _.flatMap(f) })(equals) }
 }
