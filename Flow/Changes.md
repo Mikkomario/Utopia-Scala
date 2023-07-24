@@ -10,6 +10,8 @@
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 ### New Features
+- Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 
+  an external condition is met
 - Added new **TryCatch** utility class for handling situations that included non-critical failures
 - Added new **Steppable** trait for items that provide step-based iteration
 - Added sorting support to immutable **Models**
@@ -17,6 +19,7 @@
 ### New Methods
 - **Changing** (object)
   - Added `.completionOf(Future)`
+  - Added `.addListenerAndPossiblySimulateEvent(...)`, a variant of `.addListenerAndSimulateEvent(...)`
 - **Either** (**CollectionExtensions**)
   - Added `.eitherAndSide` for symmetric Eithers
   - Added `.mapSide(End)(...)` for symmetric Eithers

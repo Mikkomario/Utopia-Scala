@@ -74,8 +74,7 @@ abstract class AbstractChanging[A] extends Changing[A]
 	  * @param set A function for updating this pointer's value
 	  * @tparam O Type of origin pointer's value
 	  */
-	protected def startMirroring[O](origin: Changing[O])(map: (A, ChangeEvent[O]) => A)(set: A => Unit) =
-	{
+	protected def startMirroring[O](origin: Changing[O])(map: (A, ChangeEvent[O]) => A)(set: A => Unit) = {
 		// Registers as a dependency for the origin pointer
 		origin.addDependency(ChangeDependency { e1: ChangeEvent[O] =>
 			// Whenever the origin's value changes, calculates a new value

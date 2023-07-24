@@ -339,6 +339,27 @@ trait Changing[+A] extends Any with View[A]
 	}
 	
 	/**
+	  * Functions like [[addListenerAndSimulateEvent]],
+	  * except that the value simulation is applied only if such value is defined.
+	  *
+	  * When the simulated value is not defined, functions like [[addListener]]
+	  *
+	  * @param simulatedOldValue A value to simulate for the purposes of generating an immediate change event.
+	  *                          See [[addListenerAndSimulateEvent]] for more details.
+	  *                          Set to None in cases where you don't want the initial event to be fired.
+	  *
+	  * @param listener A listener to add to this pointer (call-by-name).
+	  *                 May not be called in cases where this pointer won't change anymore (even via simulation).
+	  *
+	  * @tparam B Type of the simulated/listened value
+	  */
+	def addListenerAndPossiblySimulateEvent[B >: A](simulatedOldValue: Option[B])(listener: => ChangeListener[B]) =
+		simulatedOldValue match {
+			case Some(v) => addListenerAndSimulateEvent(v)(listener)
+			case None => addListener(listener)
+		}
+	
+	/**
 	  * Adds a new listener that will be informed whenever this item changes
 	  * @param listener A function called whenever this item changes. Accepts a change event.
 	  * @tparam U Arbitrary result type
