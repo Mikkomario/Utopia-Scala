@@ -1,11 +1,12 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.operator.End
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object ChangingWrapper
@@ -42,14 +43,14 @@ trait ChangingWrapper[+A] extends Changing[A]
 	
 	override def isChanging = wrapped.isChanging
 	
-	override def addListener(changeListener: => ChangeListener[A]) = wrapped.addListener(changeListener)
-	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
-		wrapped.addListenerAndSimulateEvent(simulatedOldValue)(changeListener)
+	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit =
+		wrapped.addListenerOfPriority(priority)(listener)
+	
+	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean)
+	                                                (changeListener: => ChangeListener[B]) =
+		wrapped.addListenerAndSimulateEvent(simulatedOldValue, isHighPriority)(changeListener)
 	
 	override def removeListener(changeListener: Any) = wrapped.removeListener(changeListener)
-	
-	override def addDependency(dependency: => ChangeDependency[A]) = wrapped.addDependency(dependency)
-	override def removeDependency(dependency: Any) = wrapped.removeDependency(dependency)
 	
 	override def map[B](f: A => B) = wrapped.map(f)
 	override def lazyMap[B](f: A => B) = wrapped.lazyMap(f)

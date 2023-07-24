@@ -2,10 +2,20 @@
 
 ## v2.2 (in development)
 ### Breaking Changes
+- Updated the abstract functions in **Changing**
+  - `.addListener(ChangeListener)` and `.addDependency(ChangeDependency)` are no longer abstract and is instead 
+    replaced with `.addListenerOfPriority(End)(ChangeListener)`
+  - `.addListenerAndSimulateEvent(...)` is no longer abstract and now contains an additional parameter
+- **ChangeListener** now returns **ChangeResponse** instead of **DetachmentChoice**
+  - **DetachmentChoice** is still considered a **ChangeResponse** for backwards-compatibility, but 
+    a **Boolean** will no longer implicitly map to a **DetachmentChoice**
+- Replaced **ChangeDependency** with new version of **ChangeListener**
 - **IterableOnce**`.toTryCatch` now returns a **TryCatch** instead of a **Try**
 - **String**`.splitAtFirst(String)` and `.splitAtLast(String)` in **StringExtensions** 
   now return a **Pair** instead of a **Tuple** 
 ### Deprecations
+- Deprecated **ChangeDependency** and **DetachmentChoice** (see breaking changes)
+- Deprecated certain listener properties in **AbstractChanging** in favor of new listener style properties
 - Deprecated `.toPair` in **ChangeEvent** because the name implied conversion
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**

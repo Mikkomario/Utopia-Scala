@@ -2,11 +2,10 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileOption
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -80,12 +79,9 @@ object ChangeFuture
   */
 class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A, Try[F]) => A)
                         (implicit exc: ExecutionContext)
-	extends Changing[A]
+	extends AbstractChanging[A]
 {
 	// ATTRIBUTES	------------------------------
-	
-	private var dependencies = Vector[ChangeDependency[A]]()
-	private var listeners = Vector[ChangeListener[A]]()
 	
 	private val resultPointer = VolatileOption[A]()
 	
@@ -99,19 +95,11 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 		resultPointer.setOne(v)
 		
 		// Generates change events, if needed
-		if (v != placeHolder) {
-			val event = ChangeEvent(placeHolder, v)
-			// Informs the dependencies first
-			val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event) }
-			// Then the listeners
-			listeners.foreach { _.onChangeEvent(event) }
-			// Finally performs dependency after-effects
-			afterEffects.foreach { _ () }
-		}
+		if (v != placeHolder)
+			fireEvent(ChangeEvent(placeHolder, v))
 		
 		// Forgets about the listeners and dependencies afterwards
-		listeners = Vector()
-		dependencies = Vector()
+		clearListeners()
 	}
 	
 	
@@ -126,23 +114,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	// IMPLEMENTED	------------------------------
 	
 	override def value = resultPointer.value.getOrElse(placeHolder)
-	
 	override def isChanging = !isCompleted
-	
-	override def addListener(changeListener: => ChangeListener[A]) = if (isChanging) listeners :+= changeListener
-	
-	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
-	{
-		val listener = changeListener
-		if (isChanging)
-			listeners :+= listener
-		simulateChangeEventFor(listener, simulatedOldValue)
-	}
-	
-	override def removeListener(changeListener: Any) = listeners = listeners.filterNot { _ == changeListener }
-	
-	override def addDependency(dependency: => ChangeDependency[A]) = if (isChanging) dependencies :+= dependency
-	override def removeDependency(dependency: Any) = dependencies = dependencies.filterNot { _ == dependency }
 	
 	override def findMapNextFuture[B](f: A => Option[B]) =
 		if (isCompleted) Future.never else findMapFuture(f)

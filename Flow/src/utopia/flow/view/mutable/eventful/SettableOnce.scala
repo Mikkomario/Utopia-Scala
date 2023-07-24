@@ -1,6 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractChanging
 
@@ -70,9 +70,10 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 	override def value_=(newValue: Option[A]) = {
 		if (_value.exists { v => !newValue.contains(v) })
 			throw new IllegalStateException("SettableOnce.value may only be defined once")
-		else {
+		else if (newValue.isDefined) {
 			_value = newValue
 			fireChangeEvent(None)
+			clearListeners()
 		}
 	}
 	
@@ -112,9 +113,9 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 			// Case: Set event => Calls the function and ends listening
 			case Some(value) =>
 				f(value)
-				DetachmentChoice.detach
+				Detach
 			// Case: Reset event (not applicable)
-			case None => DetachmentChoice.continue
+			case None => Continue
 		}
 	}
 }

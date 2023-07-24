@@ -2,6 +2,7 @@ package utopia.reach.test
 
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.paradigm.enumeration.Alignment
@@ -91,5 +92,6 @@ object ReachSwitchTest extends App
 		popup.setToCloseOnAnyKeyRelease()
 		popup.setToCloseAfter(2.seconds)
 		popup.display()
+		Continue
 	}
 }

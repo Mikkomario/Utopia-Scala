@@ -2,6 +2,7 @@ package utopia.reach.dnd
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.PointerWithEvents
@@ -49,10 +50,10 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 		if (e.newValue.nonEmpty) {
 			Try { new DropTarget(component, DnDListener) }
 				.failure.foreach { log(_, "Failed to start drag-and-drop managing") }
-			DetachmentChoice.detach
+			Detach
 		}
 		else
-			DetachmentChoice.continue
+			Continue
 	}
 	
 	
@@ -80,7 +81,6 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 				addTarget(target)
 			else
 				removeTarget(target)
-			DetachmentChoice.continue
 		}
 	
 	/**

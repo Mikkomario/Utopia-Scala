@@ -1,7 +1,10 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.operator.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
@@ -117,8 +120,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		private var finalLinkConditionPointer: Option[View[Boolean]] = None
 		
 		// Holds listeners temporarily while there is no pointer to receive them yet
-		private var queuedListeners = Vector[ChangeListener[Boolean]]()
-		private var queuedDependencies = Vector[ChangeDependency[Boolean]]()
+		private var queuedListeners = Pair.twice(Vector.empty[ChangeListener[Boolean]])
 		
 		
 		// COMPUTED	--------------------------
@@ -135,30 +137,15 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			case None => false
 		}
 		
-		override def addListener(changeListener: => ChangeListener[Boolean]) = finalManagedPointer match {
-			case Some(pointer) => pointer.addListener(changeListener)
-			case None => queuedListeners :+= changeListener
-		}
-		
-		override def addListenerAndSimulateEvent[B >: Boolean](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
-		{
-			val listener = changeListener
-			addListener(listener)
-			simulateChangeEventFor(listener, simulatedOldValue)
-		}
+		override def addListenerOfPriority(priority: End)(listener: => ChangeListener[Boolean]) =
+			finalManagedPointer match {
+				case Some(pointer) => pointer.addListenerOfPriority(priority)(listener)
+				case None => queuedListeners = queuedListeners.mapSide(priority) { _ :+ listener }
+			}
 		
 		override def removeListener(changeListener: Any) = {
-			queuedListeners = queuedListeners.filterNot { _ == changeListener }
+			queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
 			finalManagedPointer.foreach { _.removeListener(changeListener) }
-		}
-		override def removeDependency(dependency: Any) = {
-			queuedDependencies = queuedDependencies.filterNot { _ == dependency }
-			finalManagedPointer.foreach { _.removeDependency(dependency) }
-		}
-		
-		override def addDependency(dependency: => ChangeDependency[Boolean]) = finalManagedPointer match {
-			case Some(pointer) => pointer.addDependency(dependency)
-			case None => queuedDependencies :+= dependency
 		}
 		
 		
@@ -179,41 +166,27 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			finalManagedPointer = Some(pointer)
 			finalLinkConditionPointer = Some(thisLevelPointer)
 			
-			// Transfers dependencies, if any were queued
-			val afterEffects = {
-				if (queuedDependencies.nonEmpty) {
-					queuedDependencies.foreach { pointer.addDependency(_) }
-					// Informs the dependencies of this new change
-					val afterEffects = {
-						if (pointer.value) {
-							val event = ChangeEvent(false, true)
-							queuedDependencies.flatMap { _.beforeChangeEvent(event) }
-						}
-						else
-							Vector()
+			// Transfers listeners, if any were queued
+			val queued = queuedListeners
+			queuedListeners = Pair.twice(Vector.empty)
+			// Case: Attachment status changes => Informs the listeners
+			if (pointer.value) {
+				val event = ChangeEvent(false, true)
+				val afterEffects = End.values.flatMap { prio =>
+					// Only transfers those listeners that didn't get detached upon this change
+					val (remainingListeners, afterEffects) = queued(prio).splitFlatMap { listener =>
+						val response = listener.onChangeEvent(event)
+						(if (response.shouldContinueListening) Some(listener) else None) -> response.afterEffects
 					}
+					remainingListeners.foreach { pointer.addListenerOfPriority(prio)(_) }
 					afterEffects
 				}
-				else
-					Vector()
+				// Triggers all after-effects once the listeners have been handled
+				afterEffects.foreach { _() }
 			}
-			
-			// Transfers listeners, if any were queued
-			if (queuedListeners.nonEmpty) {
-				val remainingListeners = {
-					if (pointer.value) {
-						val event = ChangeEvent(false, true)
-						queuedListeners.filter { _.onChangeEvent(event).shouldContinue }
-					}
-					else
-						queuedListeners
-				}
-				queuedListeners = Vector()
-				remainingListeners.foreach { pointer.addListener(_) }
-			}
-			
-			// Performs the dependency after effects
-			afterEffects.foreach { _() }
+			// Case: Attachment status stays the same => Simply transfers the listeners
+			else
+				End.values.foreach { prio => queued(prio).foreach { pointer.addListenerOfPriority(prio)(_) } }
 		}
 	}
 }

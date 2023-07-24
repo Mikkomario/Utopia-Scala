@@ -2,12 +2,15 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
-import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
+import utopia.flow.operator.End
+import utopia.flow.operator.End.{First, Last}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, AsyncMirror, AsyncProcessMirror, ChangeFuture, DelayedView, Fixed, FlatteningMirror, LazyMergeMirror, LazyMirror, ListenableLazy, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.view.immutable.eventful._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -76,8 +79,8 @@ object Changing
 }
 
 /**
-  * A common trait for items which have the potential of changing their contents and generating change events, although
-  * they may not utilize it.
+  * A common trait for items which have the potential of changing their contents and generating change events,
+  * although they might choose not utilize this potential.
   * @author Mikko Hilpinen
   * @since 26.5.2019, v1.9
   */
@@ -91,36 +94,41 @@ trait Changing[+A] extends Any with View[A]
 	def isChanging: Boolean
 	
 	/**
-	  * Registers a new listener to be informed whenever this item's value changes
-	  * @param changeListener A listener that should be informed (call by name)
+	  * @param priority Priority assigned to the specified listener, where
+	  *                 First is high priority (called first) and Last is standard priority (called afterwards)
+	  * @param listener A listener to assign to this item,
+	  *                 if appropriate (i.e. this item will still change) (call-by-name)
 	  */
-	def addListener(changeListener: => ChangeListener[A]): Unit
+	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit
 	/**
 	  * Registers a new listener to be informed whenever this item's value changes
 	  * @param simulatedOldValue A simulated 'old' value for this changing item to inform the listener of
 	  *                                        the initial state of this item. Won't inform the listener
 	  *                                        if equal to this item's current value.
+	  * @param isHighPriority Whether the specified listener should be considered to be
+	  *                       of a high priority, meaning that it should be called before the standard
+	  *                       priority listeners are.
+	  *                       Default = false.
 	  * @param changeListener A listener that should be informed (call by name)
 	  */
-	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]): Unit
+	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean = false)
+	                                       (changeListener: => ChangeListener[B]): Unit =
+	{
+		val lazyNewListener = Lazy(changeListener)
+		// Performs the simulation
+		val simulationResult = simulateChangeEventFor(lazyNewListener.value, simulatedOldValue)
+		// Adds the listener, if appropriate (i.e. listener didn't detach itself during the simulation)
+		if (simulationResult.shouldContinueListening)
+			addListenerOfPriority(if (isHighPriority) First else Last)(lazyNewListener.value)
+		// Triggers the caused after-effects
+		simulationResult.afterEffects.foreach { _() }
+	}
 	
 	/**
 	  * Makes sure the specified change listener won't be informed of possible future change events
 	  * @param changeListener A listener to no longer be informed
 	  */
 	def removeListener(changeListener: Any): Unit
-	
-	/**
-	  * Registers a new high-priority listener to be informed whenever this item's value changes.
-	  * These dependencies must be informed first before triggering any normal listeners.
-	  * @param dependency A dependency to add (call by name)
-	  */
-	def addDependency(dependency: => ChangeDependency[A]): Unit
-	/**
-	  * Removes a change dependency from being activated in the future
-	  * @param dependency A dependency to remove from this item
-	  */
-	def removeDependency(dependency: Any): Unit
 	
 	
 	// COMPUTED	--------------------
@@ -141,6 +149,33 @@ trait Changing[+A] extends Any with View[A]
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * Registers a new listener to be informed whenever this item's value changes
+	  * @param changeListener A listener that should be informed (call by name)
+	  */
+	def addListener(changeListener: => ChangeListener[A]): Unit = addListenerOfPriority(Last)(changeListener)
+	/**
+	  * Register a new listener to be informed whenever this item's value changes.
+	  * This listener should be considered high priority, and called before the normal priority listeners are
+	  * called.
+	  * @param listener A listener to inform of future change events (call-by-name)
+	  */
+	def addHighPriorityListener(listener: => ChangeListener[A]): Unit = addListenerOfPriority(First)(listener)
+	
+	/**
+	  * Registers a new high-priority listener to be informed whenever this item's value changes.
+	  * These dependencies must be informed first before triggering any normal listeners.
+	  * @param dependency A dependency to add (call by name)
+	  */
+	@deprecated("Deprecated for removal. Change dependencies have been replaced with high-priority change listeners. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
+	def addDependency(dependency: => ChangeDependency[A]): Unit = addHighPriorityListener(dependency)
+	/**
+	  * Removes a change dependency from being activated in the future
+	  * @param dependency A dependency to remove from this item
+	  */
+	@deprecated("Deprecated for removal. Change dependencies have been replaced with high-priority change listeners. Please use .removeListener(Any) instead", "v2.2")
+	def removeDependency(dependency: Any): Unit = removeListener(dependency)
 	
 	/**
 	  * @param valueCondition A condition for finding a suitable future
@@ -386,9 +421,11 @@ trait Changing[+A] extends Any with View[A]
 	/**
 	  * Adds a new function to be called whenever this item's value changes
 	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
-	  *                 change event itself. Returns whether future change events should also trigger this function.
+	  *                 change event itself.
+	  *                 Returns whether future change events should also trigger this function,
+	  *                 and whether any after effects should be performed.
 	  */
-	def addAnyChangeListener(onChange: => DetachmentChoice) = addListener(ChangeListener.onAnyChange(onChange))
+	def addAnyChangeListener(onChange: => ChangeResponse) = addListener(ChangeListener.onAnyChange(onChange))
 	
 	/**
 	  * Calls the specified function when this item changes the next time
@@ -405,10 +442,10 @@ trait Changing[+A] extends Any with View[A]
 	def onNextChangeWhere[U](condition: ChangeEvent[A] => Boolean)(f: ChangeEvent[A] => U) = addListener { e =>
 		if (condition(e)) {
 			f(e)
-			DetachmentChoice.detach
+			Detach
 		}
 		else
-			DetachmentChoice.continue
+			Continue
 	}
 	/**
 	  * Calls the specified function once the value of this item satisfies the specified condition.
@@ -432,6 +469,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @param beforeChange A function called before each change event (accepts change event that will be fired)
 	  * @param afterChange A function called after each change event (accepts change event that was fired)
 	  */
+	@deprecated("Deprecated for removal. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
 	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
 		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
 	
@@ -558,7 +596,7 @@ trait Changing[+A] extends Any with View[A]
 		if (simulatedOldValue != current)
 			listener.onChangeEvent(ChangeEvent(simulatedOldValue, current))
 		else
-			DetachmentChoice.continue
+			Continue
 	}
 	
 	/**
@@ -641,8 +679,8 @@ trait Changing[+A] extends Any with View[A]
 						condition(e.newValue) match {
 							case Some(result) =>
 								promise.trySuccess(result)
-								DetachmentChoice.detach
-							case None => DetachmentChoice.continue
+								Detach
+							case None => Continue
 						}
 					}
 					promise.future

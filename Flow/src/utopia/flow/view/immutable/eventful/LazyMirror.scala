@@ -1,6 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.ChangeDependency
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
@@ -55,7 +55,7 @@ class LazyMirror[+Origin, Reflection](source: Changing[Origin])(f: Origin => Ref
 	// INITIAL CODE	--------------------------
 	
 	// Resets cache whenever original pointer changes
-	source.addDependency(ChangeDependency.beforeAnyChange { cache.reset() })
+	source.addHighPriorityListener { _ => cache.reset(); Continue }
 	
 	
 	// IMPLEMENTED	--------------------------

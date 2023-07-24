@@ -199,7 +199,6 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			
 			handlingPointerUpdate = false
 		}
-		true
 	}
 	
 	
@@ -304,7 +303,6 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 				// Updates date pointer based on selection update
 				event.newValue.foreach { value = _ }
 			}
-			true
 		}
 	}
 	
@@ -337,7 +335,6 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 						valuePointer.value = Some(date)
 					else if (value.contains(date))
 						valuePointer.value = None
-					true
 				}
 			}
 			

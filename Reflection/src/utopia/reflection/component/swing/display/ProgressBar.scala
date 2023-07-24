@@ -21,6 +21,7 @@ import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -117,10 +118,8 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	
 	private object TargetUpdateListener extends ChangeListener[Double]
 	{
-		override def onChangeEvent(event: ChangeEvent[Double]) = {
+		override def onChangeEvent(event: ChangeEvent[Double]) =
 			ProgressDrawer.updateTargetProgress(event.newValue)
-			true
-		}
 	}
 	
 	private object InvisibleProgressListener extends ChangeListener[Double]
@@ -128,10 +127,10 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		override def onChangeEvent(event: ChangeEvent[Double]) = {
 			if (event.newValue >= 1) {
 				isCompletedFlag.set()
-				false
+				Detach
 			}
 			else
-				true
+				Continue
 		}
 	}
 	

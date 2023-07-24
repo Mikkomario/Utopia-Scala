@@ -1,6 +1,7 @@
 package utopia.flow.event.listener
 
-import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse, DetachmentChoice}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Changing
@@ -161,7 +162,7 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 	conditionPointer.addListener { e =>
 		// Case: Listening has already permanently ceased => Detaches from this pointer, also
 		if (ended)
-			DetachmentChoice.detach
+			Detach
 		// Case: Listening may still be performed => Reacts to the change
 		else {
 			// Case: Listening should reactivate
@@ -183,7 +184,7 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 			else
 				detachmentQueuedFlag.set()
 			
-			DetachmentChoice.continue
+			Continue
 		}
 	}
 	
@@ -193,12 +194,12 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 	// Doesn't expose the ChangeListener interface, therefore uses a private object for that function
 	private object Delegate extends ChangeListener[A]
 	{
-		override def onChangeEvent(event: ChangeEvent[A]): DetachmentChoice = {
+		override def onChangeEvent(event: ChangeEvent[A]): ChangeResponse = {
 			// Case: Detachment was queued => Actuates it
 			if (detachmentQueuedFlag.reset()) {
 				// Remembers the last informed state for event simulation upon reattachment
 				memorizedValuePointer.value = Some(event.oldValue)
-				DetachmentChoice.detach
+				Detach
 			}
 			// Case: No detachment queued => Reacts to this change by forwarding it to the 'effect'
 			else {

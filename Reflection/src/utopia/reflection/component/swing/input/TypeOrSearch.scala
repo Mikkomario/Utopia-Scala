@@ -139,7 +139,6 @@ class TypeOrSearch
 			// Won't include already selected items
 			val selected = selectedItemsPointer.value
 			manager.content = event.newValue.toVector.filterNot(selected.contains)
-			true
 		}
 	
 	// Submits a new item on enter press

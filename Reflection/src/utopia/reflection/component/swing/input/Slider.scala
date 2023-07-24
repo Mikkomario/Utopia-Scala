@@ -497,7 +497,6 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 				passedDuration = Duration.Zero
 				isMoving = true
 			}
-			true
 		}
 	}
 	

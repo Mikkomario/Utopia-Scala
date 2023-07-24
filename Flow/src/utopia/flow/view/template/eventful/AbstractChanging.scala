@@ -1,7 +1,12 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.ChangeResponse.{Continue, ContinueAnd}
+import utopia.flow.operator.End
+import utopia.flow.operator.End.{First, Last}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -14,54 +19,103 @@ abstract class AbstractChanging[A] extends Changing[A]
 {
 	// ATTRIBUTES   -----------------
 	
+	// First value contains high priority listeners, second contains standard priority listeners
+	private var _listeners = Pair.twice(Vector[ChangeListener[A]]())
+	
+	
+	// COMPUTED --------------------
+	
+	// TODO: Consider hiding the setters, or at least making them protected
 	/**
-	  * Listeners listening this changing instance
+	  * @return Listeners of this changing item that are considered high priority
 	  */
-	var listeners = Vector[ChangeListener[A]]()
+	def highPriorityListeners = _listeners.first
 	/**
-	  * Dependencies of this changing instance
+	  * Replaces the high-priority listeners assigned to this changing item
+	  * @param newListeners New set of high-priority listeners
 	  */
-	var dependencies = Vector[ChangeDependency[A]]()
+	def highPriorityListeners_=(newListeners: Vector[ChangeListener[A]]) =
+		_listeners = _listeners.withFirst(newListeners)
+	/**
+	  * @return Listeners of this changing item that are considered standard priority
+	  */
+	def standardListeners = _listeners.second
+	/**
+	  * Replaces the standard-priority listeners assigned to this changing item
+	  * @param newListeners New set of standard-priority listeners
+	  */
+	def standardListeners_=(newListeners: Vector[ChangeListener[A]]) =
+		_listeners = _listeners.withSecond(newListeners)
+	/**
+	  * @return All listeners of this changing item
+	  */
+	def allListeners = _listeners.flatten
+	
+	/**
+	  * @return Listeners that are informed of changes within this item
+	  */
+	@deprecated("Replaced with .standardListeners and .allListeners", "v2.2")
+	def listeners = standardListeners
+	/**
+	  * Replaces the listeners of this changing item
+	  * @param newListeners New listeners to assign
+	  */
+	@deprecated("Replaced with .standardListeners = ...", "v2.2")
+	def listeners_=(newListeners: Vector[ChangeListener[A]]) = standardListeners = newListeners
+	
+	@deprecated("Replaced with .highPriorityListeners", "v2.2")
+	def dependencies = highPriorityListeners
+	@deprecated("Replaced with .highPriorityListeners = ...", "v2.2")
+	def dependencies_=(newDependencies: Vector[ChangeListener[A]]) = highPriorityListeners = newDependencies
 	
 	
 	// IMPLEMENTED	----------------
 	
-	override def addListener(changeListener: => ChangeListener[A]) = listeners :+= changeListener
-	
-	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
-	{
-		val newListener = changeListener
-		if (simulateChangeEventFor[B](newListener, simulatedOldValue).shouldContinue)
-			listeners :+= newListener
+	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = {
+		// Only adds more listeners if changes are to be anticipated
+		if (isChanging)
+			_listeners = _listeners.mapSide(priority) { _ :+ listener }
 	}
 	
-	override def removeListener(listener: Any) = listeners = listeners.filterNot { _ == listener }
-	
-	override def addDependency(dependency: => ChangeDependency[A]) = dependencies :+= dependency
-	override def removeDependency(dependency: Any) = dependencies = dependencies.filterNot { _ == dependency }
+	override def removeListener(listener: Any) = _listeners = _listeners.map { _.filterNot { _ == listener } }
 	
 	
 	// OTHER	--------------------
 	
 	/**
+	  * Removes all change listeners from this item
+	  */
+	protected def clearListeners() = _listeners = Pair.twice(Vector.empty)
+	
+	/**
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
-	protected def fireChangeEvent(oldValue: => A) = _fireEvent(Lazy { ChangeEvent(oldValue, value) })
+	protected def fireChangeEvent(oldValue: => A) = fireEvent(Lazy { ChangeEvent(oldValue, value) })
 	/**
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
-	  * @param event A change event to fire (should be lazily initialized)
+	  * @param event A change event to fire
 	  */
-	protected def fireEvent(event: ChangeEvent[A]) = _fireEvent(View(event))
-	private def _fireEvent(event: View[ChangeEvent[A]]) = {
-		// Informs the dependencies first
-		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event.value) }
-		// Then the listeners (may remove some listeners in the process)
-		val listenersToRemove = listeners.filter { _.onChangeEvent(event.value).shouldDetach }
+	protected def fireEvent(event: ChangeEvent[A]): Unit = fireEvent(View.fixed(event))
+	/**
+	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
+	  * @param event A change event to fire (possibly lazy)
+	  */
+	protected def fireEvent(event: View[ChangeEvent[A]]) = {
+		// First informs the high priority listeners, then standard priority, and finally performs the after-effects
+		End.values.flatMap { _fireEvent(event, _) }.foreach { _() }
+	}
+	private def _fireEvent(event: View[ChangeEvent[A]], targetedPriority: End) = {
+		// Informs the listeners and collects the after effects to trigger later
+		// (may remove some listeners in the process)
+		val (listenersToRemove, afterEffects) = _listeners(targetedPriority).splitFlatMap { listener =>
+			val response = listener.onChangeEvent(event.value)
+			(if (response.shouldDetach) Some(listener) else None) -> response.afterEffects
+		}
 		if (listenersToRemove.nonEmpty)
-			listeners = listeners.filterNot(listenersToRemove.contains)
-		// Finally performs the after-effects defined by the dependencies
-		afterEffects.foreach { _() }
+			_listeners = _listeners.mapSide(targetedPriority) { _.filterNot(listenersToRemove.contains) }
+		// Returns the scheduled after-effects
+		afterEffects
 	}
 	
 	/**
@@ -76,29 +130,24 @@ abstract class AbstractChanging[A] extends Changing[A]
 	  */
 	protected def startMirroring[O](origin: Changing[O])(map: (A, ChangeEvent[O]) => A)(set: A => Unit) = {
 		// Registers as a dependency for the origin pointer
-		origin.addDependency(ChangeDependency { e1: ChangeEvent[O] =>
+		origin.addHighPriorityListener { e1: ChangeEvent[O] =>
 			// Whenever the origin's value changes, calculates a new value
 			val oldValue = value
 			val newValue = map(oldValue, e1)
 			// If the new value is different from the previous state, updates the value and generates a new change event
 			if (newValue != oldValue) {
 				set(newValue)
-				val event2 = ChangeEvent(oldValue, newValue)
-				// The dependencies are informed immediately, other listeners only afterwards
-				val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event2) }
-				if (afterEffects.nonEmpty || listeners.nonEmpty)
-					Some(event2 -> afterEffects)
-				else
-					None
+				// The dependencies are informed immediately, other listeners and after-effects only afterwards
+				val event2 = Lazy { ChangeEvent(oldValue, newValue) }
+				val firstEffects = _fireEvent(event2, First)
+				ContinueAnd {
+					val moreEffects = _fireEvent(event2, Last)
+					(firstEffects.iterator ++ moreEffects).foreach { _() }
+				}
 			}
+			// Case: Projected value didn't change => No change event takes place
 			else
-				None
-		} { case (event, actions) =>
-			// After the origin has finished its update, informs the listeners and triggers the dependency after-effects
-			val listenersToRemove = listeners.filter { _.onChangeEvent(event).shouldDetach }
-			if (listenersToRemove.nonEmpty)
-				listeners = listeners.filterNot(listenersToRemove.contains)
-			actions.foreach { _() }
-		})
+				Continue
+		}
 	}
 }

@@ -436,7 +436,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		Bounds.aroundOption(e.values.flatten).foreach { area =>
 			repaintArea(area.enlarged(settings.axis(marginPointer.value.optimal)), High)
 		}
-		true
 	}
 	private val revalidateListener = ChangeListener.continuousOnAnyChange { stack.revalidate() }
 	

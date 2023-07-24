@@ -2,6 +2,7 @@ package utopia.flow.event.model
 
 import scala.language.implicitConversions
 
+@deprecated("Replaced with ChangeResponse", "v2.2")
 object DetachmentChoice
 {
 	// ATTRIBUTES   -----------------------
@@ -9,20 +10,13 @@ object DetachmentChoice
 	/**
 	  * Represents a choice to continue listening for new events
 	  */
+	@deprecated("Replaced with ChangeResponse.Continue", "v2.2")
 	val continue = apply(shouldContinue = true)
 	/**
 	  * Represents a choice to detach from an event source
 	  */
+	@deprecated("Replaced with ChangeResponse.Detach", "v2.2")
 	val detach = apply(shouldContinue = false)
-	
-	
-	// IMPLICIT --------------------------
-	
-	// Unit implicitly converts to a choice to continue attached
-	implicit def continueByDefault(u: Unit): DetachmentChoice = continue
-	// Boolean is converted implicitly, so that true marks a desire to continue as attached
-	// while false leads to detachment
-	implicit def convertBoolean(shouldContinue: Boolean): DetachmentChoice = apply(shouldContinue)
 	
 	
 	// OTHER    --------------------------
@@ -31,11 +25,13 @@ object DetachmentChoice
 	  * @param condition A condition
 	  * @return Continues if 'condition' is true, otherwise detaches
 	  */
+	@deprecated("Replaced with ChangeResponse.continueIf(Boolean)", "v2.2")
 	def continueIf(condition: Boolean) = apply(condition)
 	/**
 	  * @param condition A condition
 	  * @return Continues if the 'condition' is false, otherwise detaches
 	  */
+	@deprecated("Replaced with ChangeResponse.continueUnless(Boolean)", "v2.2")
 	def continueUntil(condition: Boolean) = apply(!condition)
 }
 
@@ -51,7 +47,11 @@ object DetachmentChoice
   * @constructor Creates a new detachment choice
   * @param shouldContinue Whether the listener should be kept attached to the event source
   */
-case class DetachmentChoice(shouldContinue: Boolean)
+@deprecated("Replaced with ChangeResponse", "v2.2")
+case class DetachmentChoice(shouldContinue: Boolean) extends ChangeResponse
 {
-	def shouldDetach = !shouldContinue
+	override def shouldContinueListening: Boolean = shouldContinue
+	override def afterEffects: Iterable[() => Unit] = Vector.empty
+	
+	override def and[U](afterEffect: => U): ChangeResponse = ChangeResponse.continueIf(shouldContinue).and(afterEffect)
 }

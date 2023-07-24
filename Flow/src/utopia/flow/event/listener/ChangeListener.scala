@@ -1,6 +1,7 @@
 package utopia.flow.event.listener
 
-import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 
 import scala.language.implicitConversions
 
@@ -13,7 +14,7 @@ object ChangeListener
 	  * @tparam A Type of changed item
 	  * @return A new change listener based on the provided function
 	  */
-	def apply[A](f: ChangeEvent[A] => DetachmentChoice): ChangeListener[A] = new FunctionalChangeListener[A](f)
+	def apply[A](f: ChangeEvent[A] => ChangeResponse): ChangeListener[A] = new FunctionalChangeListener[A](f)
 	/**
 	  * Wraps a function into a change listener
 	  * @param f A function that reacts to change events
@@ -24,7 +25,7 @@ object ChangeListener
 	  */
 	def continuous[A, U](f: ChangeEvent[A] => U): ChangeListener[A] = apply { e =>
 		f(e)
-		DetachmentChoice.continue
+		Continue
 	}
 	/**
 	  * Wraps a function into a one-time change listener.
@@ -36,7 +37,7 @@ object ChangeListener
 	  */
 	def once[A, U](f: ChangeEvent[A] => U) = apply[A] { e =>
 		f(e)
-		DetachmentChoice.detach
+		Detach
 	}
 	
 	/**
@@ -45,7 +46,7 @@ object ChangeListener
 	  *          whether it should be continued to be called in the future
 	  * @return A new change listener that calls the specified function whenever a value changes
 	  */
-	def onAnyChange(f: => DetachmentChoice): ChangeListener[Any] = new AnyChangeListener(f)
+	def onAnyChange(f: => ChangeResponse): ChangeListener[Any] = new AnyChangeListener(f)
 	/**
 	  * Wraps a function into a change listener
 	  * @param f A function that doesn't use the change event
@@ -53,17 +54,17 @@ object ChangeListener
 	  */
 	def continuousOnAnyChange(f: => Unit): ChangeListener[Any] = onAnyChange {
 		f
-		DetachmentChoice.continue
+		Continue
 	}
 	
 	
 	// NESTED	-----------------------------------
 	
-	private class FunctionalChangeListener[-A](f: ChangeEvent[A] => DetachmentChoice) extends ChangeListener[A]
+	private class FunctionalChangeListener[-A](f: ChangeEvent[A] => ChangeResponse) extends ChangeListener[A]
 	{
 		override def onChangeEvent(event: ChangeEvent[A]) = f(event)
 	}
-	private class AnyChangeListener(f: => DetachmentChoice) extends ChangeListener[Any]
+	private class AnyChangeListener(f: => ChangeResponse) extends ChangeListener[Any]
 	{
 		override def onChangeEvent(event: ChangeEvent[Any]) = f
 	}
@@ -80,7 +81,8 @@ trait ChangeListener[-A]
 	/**
 	  * This method is called when a value changes
 	  * @param event The change event
-	  * @return Whether this listener should be informed of future changes, also
+	  * @return A response that dictates whether this listener should continue to be informed of change events
+	  *         in the future, and whether any additional actions should be performed afterwards.
 	  */
-	def onChangeEvent(event: ChangeEvent[A]): DetachmentChoice
+	def onChangeEvent(event: ChangeEvent[A]): ChangeResponse
 }

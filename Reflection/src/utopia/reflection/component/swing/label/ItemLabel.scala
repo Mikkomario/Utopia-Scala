@@ -148,9 +148,6 @@ class ItemLabel[A](override val contentPointer: PointerWithEvents[A], val displa
 	
 	private object ContentUpdateListener extends ChangeListener[A]
 	{
-		override def onChangeEvent(event: ChangeEvent[A]) = {
-			label.text = displayFunction(event.newValue)
-			true
-		}
+		override def onChangeEvent(event: ChangeEvent[A]) = label.text = displayFunction(event.newValue)
 	}
 }

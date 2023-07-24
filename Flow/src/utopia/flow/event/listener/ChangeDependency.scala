@@ -1,7 +1,9 @@
 package utopia.flow.event.listener
 
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.ChangeResponse.{Continue, ContinueAnd}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 
+@deprecated("Replaced with ChangeListener", "v2.2")
 object ChangeDependency
 {
 	// OTHER    -----------------------------
@@ -68,12 +70,25 @@ object ChangeDependency
   * @author Mikko Hilpinen
   * @since 22.3.2021, v1.9
   */
-trait ChangeDependency[-A]
+@deprecated("Replaced with ChangeListener", "v2.2")
+trait ChangeDependency[-A] extends ChangeListener[A]
 {
+	// ABSTRACT -----------------------
+	
 	/**
 	  * This method is called before a normal change event is fired
 	  * @param event The event that will be fired later
 	  * @return A function that should be performed when / after the event is actually fired (optional)
 	  */
 	def beforeChangeEvent(event: ChangeEvent[A]): Option[() => Unit]
+	
+	
+	// IMPLEMENTED  ------------------
+	
+	override def onChangeEvent(event: ChangeEvent[A]): ChangeResponse = {
+		beforeChangeEvent(event) match {
+			case Some(effect) => ContinueAnd(Vector(effect))
+			case None => Continue
+		}
+	}
 }

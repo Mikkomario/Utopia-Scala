@@ -14,7 +14,7 @@ import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.event.model.ChangeResponse
 import utopia.flow.operator.End.First
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{End, EqualsFunction, Identity}
@@ -569,7 +569,6 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				lastSelectedValuePointer.value = e.oldValue
 			else
 				lastSelectedValuePointer.clear()
-			DetachmentChoice.continue
 		}
 		// May deselect the current value or select the previously selected value on content changes
 		val contentUpdateListener = ChangeListener[Vector[A]] { e =>
@@ -579,7 +578,6 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				// Case: Value is selected => Deselects it if it no longer appears among the options
 				case s: Some[A] => s.filter { e.newValue.containsEqual(_) }
 			}
-			DetachmentChoice.continue
 		}
 		if (isAttached) {
 			valuePointer.addListenerAndSimulateEvent(None)(updateLastValueListener)
@@ -696,7 +694,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		popup.focusedFlag.addListener { e =>
 			if (!e.newValue)
 				popup.visible = false
-			DetachmentChoice.continueUntil(popup.hasClosed)
+			ChangeResponse.continueUnless(popup.hasClosed)
 		}
 		// Returns the pop-up window
 		popup.window

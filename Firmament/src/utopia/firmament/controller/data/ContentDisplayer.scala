@@ -107,7 +107,6 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = {
 			setContent(event.newValue)
 			finalizeRefresh()
-			true
 		}
 		
 		private def setContent(newValues: Vector[A]) = {

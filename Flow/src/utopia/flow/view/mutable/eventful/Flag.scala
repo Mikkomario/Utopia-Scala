@@ -1,6 +1,5 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, FlagLike}
 
@@ -51,31 +50,13 @@ object Flag
 		// Can't be set twice, so asking for nextFuture after set is futile
 		override def nextFuture = if (isSet) Future.never else future
 		
-		// Listeners and dependencies are not accepted after this flag has been set,
-		// because they would never be triggered
-		override def addListener(changeListener: => ChangeListener[Boolean]) = {
-			if (isNotSet)
-				super.addListener(changeListener)
-		}
-		override def addListenerAndSimulateEvent[B >: Boolean](simulatedOldValue: B)(changeListener: => ChangeListener[B]) = {
-			if (isSet)
-				simulateChangeEventFor(changeListener, simulatedOldValue)
-			else
-				super.addListenerAndSimulateEvent(simulatedOldValue)(changeListener)
-		}
-		override def addDependency(dependency: => ChangeDependency[Boolean]) = {
-			if (isNotSet)
-				super.addDependency(dependency)
-		}
-		
 		
 		override def set() = {
 			if (isNotSet) {
 				_value = true
 				fireChangeEvent(false)
 				// Forgets all the listeners at this point, because no more change events will be fired
-				listeners = Vector()
-				dependencies = Vector()
+				clearListeners()
 				true
 			}
 			else

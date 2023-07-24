@@ -1,7 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.ChangeResponse.ContinueAnd
 import utopia.flow.view.mutable.eventful.PointerWithEvents
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -63,12 +64,12 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	pointerPointer.value.addListener(valueUpdatingListener)
 	
 	// Listener that listens to the source pointer and moves the aforementioned listener between mid-pointers
-	pointerPointer.addDependency(ChangeDependency { event: ChangeEvent[Changing[R]] =>
+	pointerPointer.addHighPriorityListener { event =>
 		event.oldValue.removeListener(valueUpdatingListener)
 		event.newValue.addListener(valueUpdatingListener)
 		// Also updates the simulated value when pointers change
-		Some(event.newValue.value)
-	} { pointer.value = _ })
+		ContinueAnd { pointer.value = event.newValue.value }
+	}
 	
 	
 	// IMPLEMENTED  -----------------------

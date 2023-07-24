@@ -10,7 +10,7 @@ import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
@@ -696,7 +696,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 	private val goToEditInputListener: ChangeListener[Any] = ChangeListener.onAnyChange {
 		if (hasFocus)
 			_statePointer.value = Editing
-		DetachmentChoice.detach
+		Detach
 	}
 	
 	private val isEmptyPointer = textContentPointer.map { _.isEmpty }

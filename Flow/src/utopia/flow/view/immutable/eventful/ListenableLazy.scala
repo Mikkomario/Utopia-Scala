@@ -1,7 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener, LazyListener}
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.listener.{ChangeListener, LazyListener}
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.operator.End
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.eventful.Changing
 
@@ -73,79 +75,28 @@ object ListenableLazy
 		{
 			// ATTRIBUTES   ------------------------
 			
-			private var queuedDependencies = Vector[ChangeDependency[Option[A]]]()
-			private var queuedListeners = Vector[ChangeListener[Option[A]]]()
+			private var queuedListeners = Pair.twice(Vector.empty[ChangeListener[Option[A]]])
 			
 			
 			// IMPLEMENTED  ------------------------
 			
 			override def value = current
-			
 			override def isChanging = nonInitialized
 			
-			override def addListener(changeListener: => ChangeListener[Option[A]]) =
-				if (nonInitialized) queuedListeners :+= changeListener
-			
-			override def addListenerAndSimulateEvent[B >: Option[A]](simulatedOldValue: B)
-			                                                        (changeListener: => ChangeListener[B]) =
-			{
-				if (simulatedOldValue == None)
-					addListener(changeListener)
-				else
-				{
-					val listener = changeListener
-					current match
-					{
-						case Some(value) => listener.onChangeEvent(ChangeEvent(simulatedOldValue, Some(value)))
-						case None =>
-							listener.onChangeEvent(ChangeEvent(simulatedOldValue, None))
-							addListener(listener)
-					}
-				}
-			}
+			override def addListenerOfPriority(priority: End)(listener: => ChangeListener[Option[A]]): Unit =
+				if (nonInitialized) queuedListeners = queuedListeners.mapSide(priority) { _ :+ listener }
 			
 			override def removeListener(changeListener: Any) =
-				queuedListeners = queuedListeners.filterNot { _ == changeListener }
-			
-			override def addDependency(dependency: => ChangeDependency[Option[A]]) =
-				if (nonInitialized) queuedDependencies :+= dependency
-			
-			override def removeDependency(dependency: Any) =
-				queuedDependencies = queuedDependencies.filterNot { _ == dependency }
-			
-			/* Removed 12.9.2022 because ChangingLike now implements this without using an ExecutionContext
-			override def futureWhere(valueCondition: Option[A] => Boolean)(implicit exc: ExecutionContext) =
-				current match
-				{
-					case Some(value) => if (valueCondition(Some(value))) Future.successful(Some(value)) else Future.never
-					case None =>
-						if (valueCondition(None))
-							Future.successful(None)
-						else
-							valueFuture.flatMap { value =>
-								if (valueCondition(Some(value)))
-									Future.successful(Some(value))
-								else
-									Future.never
-							}
-				}
-			 */
+				queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
 			
 			
 			// OTHER    -------------------------------
 			
-			def unqueueListeners(newValue: A) =
-			{
+			def unqueueListeners(newValue: A) = {
 				val event = ChangeEvent(None, Some(newValue))
-				
-				val dependencies = queuedDependencies
-				queuedDependencies = Vector()
-				val actions = dependencies.flatMap { _.beforeChangeEvent(event) }
-				
-				val listeners = queuedListeners
-				queuedListeners = Vector()
-				listeners.foreach { _.onChangeEvent(event) }
-				actions.foreach { _() }
+				val queued = queuedListeners
+				queuedListeners = Pair.twice(Vector.empty)
+				queued.flatten.flatMap { _.onChangeEvent(event).afterEffects }.foreach { _() }
 			}
 		}
 	}

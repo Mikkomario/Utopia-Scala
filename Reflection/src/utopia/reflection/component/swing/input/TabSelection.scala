@@ -155,7 +155,6 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 			lastSelectedLabel = newSelected
 			
 			repaint()
-			true
 		}
 	}
 	
@@ -206,7 +205,6 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 				value = oldValue
 			else
 				value = None
-			true
 		}
 	}
 	

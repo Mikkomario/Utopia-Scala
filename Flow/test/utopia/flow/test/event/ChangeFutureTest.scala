@@ -27,18 +27,23 @@ object ChangeFutureTest extends App
 	assert(original.value == 1)
 	assert(delayMapped.value == 1)
 	
+	println("Waits")
 	Wait(delay * 1.5)
 	
+	println("Testing if map completed")
 	assert(original.value == 1)
 	assert(delayMapped.value == 2)
 	
+	println("Setting original value to 5")
 	original.value = 5
 	
 	assert(original.value == 5)
 	assert(delayMapped.value == 5)
 	
+	println("Waits")
 	Wait(delay * 1.5)
 	
+	println("Testing if map completed")
 	assert(delayMapped.value == 6)
 	
 	println("Done!")

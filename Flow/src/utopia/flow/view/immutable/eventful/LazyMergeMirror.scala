@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.ChangeDependency
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
@@ -53,20 +54,19 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[+O1, +O2, Reflection](source1: Changing[O1], source2: Changing[O2])
-                                         (merge: (O1, O2) => Reflection)
+class LazyMergeMirror[+O1, +O2, Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
 	private val cache = ResettableLazy.listenable { merge(source1.value, source2.value) }
-	private lazy val listener = ChangeDependency.beforeAnyChange { cache.reset() }
+	private lazy val listener = ChangeListener.onAnyChange { cache.reset(); Continue }
 	
 	
 	// INITIAL CODE	-------------------------------
 	
-	source1.addDependency(listener)
-	source2.addDependency(listener)
+	source1.addHighPriorityListener(listener)
+	source2.addHighPriorityListener(listener)
 	
 	
 	// IMPLEMENTED	-------------------------------

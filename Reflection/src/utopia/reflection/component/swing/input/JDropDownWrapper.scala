@@ -211,19 +211,15 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	
 	private class ContentUpdateListener extends ChangeListener[Vector[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = {
+		override def onChangeEvent(event: ChangeEvent[Vector[A]]) =
 			updateContent(event.newValue)
-			true
-		}
 	}
 	
 	private class SelectionUpdateListener extends ChangeListener[Option[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Option[A]]) =
-		{
+		override def onChangeEvent(event: ChangeEvent[Option[A]]) = {
 			isUpdatingSelection = true
-			if (event.newValue.isDefined)
-			{
+			if (event.newValue.isDefined) {
 				val newIndex = event.newValue.flatMap(content.optionIndexOf) getOrElse -1
 				
 				// Index 0 in field sometimes represents the placeholder value (not selected)
@@ -235,7 +231,6 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 					updateContent(content)
 			}
 			isUpdatingSelection = false
-			true
 		}
 	}
 	

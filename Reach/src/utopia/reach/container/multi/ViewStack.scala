@@ -7,7 +7,6 @@ import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Tra
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.DetachmentChoice
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -292,14 +291,10 @@ class ViewStack(override val parentHierarchy: ComponentHierarchy,
 		}
 	}
 	
-	private val revalidateOnChange = ChangeListener.onAnyChange {
-		revalidate()
-		DetachmentChoice.continue
-	}
+	private val revalidateOnChange = ChangeListener.onAnyChange { revalidate() }
 	private lazy val resetActiveComponentsOnChange = ChangeListener.onAnyChange {
 		activeComponentsCache.reset()
 		revalidate()
-		DetachmentChoice.continue
 	}
 	
 	/**

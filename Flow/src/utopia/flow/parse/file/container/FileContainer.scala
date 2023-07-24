@@ -9,6 +9,7 @@ import utopia.flow.parse.file.container.SaveTiming.{Delayed, Immediate, OnJvmClo
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
@@ -126,7 +127,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		if (listen)
 			_current.addListenerAndSimulateEvent(empty) { _ =>
 				saveProcess.lock { _.foreach { _.runAsync(loopIfRunning = true) } }
-				true
+				Continue
 			}
 	}
 	

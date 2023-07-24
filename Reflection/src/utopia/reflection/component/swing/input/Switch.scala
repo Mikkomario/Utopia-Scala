@@ -168,10 +168,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	private object StatusChangeListener extends ChangeListener[Boolean]
 	{
-		override def onChangeEvent(event: ChangeEvent[Boolean]) = {
-			SwitchDrawer2.updateTarget(event.newValue)
-			true
-		}
+		override def onChangeEvent(event: ChangeEvent[Boolean]) = SwitchDrawer2.updateTarget(event.newValue)
 	}
 	
 	private object SwitchDrawer2 extends CustomDrawer with Actor

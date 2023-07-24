@@ -118,8 +118,7 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	
 	private class ContentUpdateSelectionHandler extends ChangeListener[Vector[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Vector[A]]) =
-		{
+		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = {
 			// Tries to preserve selection after refresh (finds value that matches the previous selection and selects it)
 			value.foreach { currentValue =>
 				val newSelectedValue = {
@@ -138,15 +137,11 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 					case None => value = None
 				}
 			}
-			true
 		}
 	}
 	
 	private class ValueUpdateListener extends ChangeListener[Option[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Option[A]]) = {
-			updateSelection(event.newValue)
-			true
-		}
+		override def onChangeEvent(event: ChangeEvent[Option[A]]) = updateSelection(event.newValue)
 	}
 }

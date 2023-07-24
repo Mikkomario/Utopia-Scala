@@ -11,7 +11,7 @@ import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, WaitTarget}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.event.model.{ChangeResponse, DetachmentChoice}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
@@ -277,7 +277,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 						optimizeWindowPosition()
 				}
 			}
-			DetachmentChoice.continueUntil(window.hasClosed)
+			ChangeResponse.continueUnless(window.hasClosed)
 		}
 		
 		// Updates the window position whenever the owner component's absolute position changes,
@@ -287,7 +287,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 			val repositionListener = ChangeListener.onAnyChange {
 				optimizeWindowPosition()
 				// Stops reacting to events once the window has closed
-				DetachmentChoice.continueUntil(window.hasClosed)
+				ChangeResponse.continueUnless(window.hasClosed)
 			}
 			// Repositions on window size changes
 			// Case: Window optimization may alter size => Ignores recursive/looping calls
@@ -295,7 +295,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				window.sizePointer.addListener { _ =>
 					if (!ignoreNextSizeUpdateFlag.reset())
 						optimizeWindowPosition()
-					DetachmentChoice.continueUntil(window.hasClosed)
+					ChangeResponse.continueUnless(window.hasClosed)
 				}
 			// Case: Window optimization never alters size => Repositions on every size change
 			else

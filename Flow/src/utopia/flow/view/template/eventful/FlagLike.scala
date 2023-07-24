@@ -1,6 +1,6 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 
 import scala.language.implicitConversions
@@ -110,10 +110,10 @@ trait FlagLike extends Any with Changing[Boolean]
 	def onceSet[U](f: => U) = addListenerAndSimulateEvent(false) { e =>
 		if (e.newValue) {
 			f
-			DetachmentChoice.detach
+			Detach
 		}
 		else
-			DetachmentChoice.continue
+			Continue
 	}
 	/**
 	  * Performs the specified function once this flag is set.
@@ -126,9 +126,9 @@ trait FlagLike extends Any with Changing[Boolean]
 	def whenNextSet[U](f: => U) = addListener { e =>
 		if (e.newValue) {
 			f
-			DetachmentChoice.detach
+			Detach
 		}
 		else
-			DetachmentChoice.continue
+			Continue
 	}
 }
