@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.{ChangeListener, LazyListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.End
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.eventful.Changing
 
@@ -71,6 +72,7 @@ object ListenableLazy
 		
 		// NESTED   --------------------------------
 		
+		// TODO: Utilize FlatteningOncePointer
 		private object StateView extends Changing[Option[A]]
 		{
 			// ATTRIBUTES   ------------------------
@@ -83,8 +85,12 @@ object ListenableLazy
 			override def value = current
 			override def isChanging = nonInitialized
 			
-			override def addListenerOfPriority(priority: End)(listener: => ChangeListener[Option[A]]): Unit =
-				if (nonInitialized) queuedListeners = queuedListeners.mapSide(priority) { _ :+ listener }
+			// WET WET
+			override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Option[A]]]): Unit = {
+				if (nonInitialized) queuedListeners = queuedListeners.mapSide(priority) { q =>
+					if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
+				}
+			}
 			
 			override def removeListener(changeListener: Any) =
 				queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }

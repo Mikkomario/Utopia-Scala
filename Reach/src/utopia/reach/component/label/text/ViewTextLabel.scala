@@ -74,7 +74,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
 		val label = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
-			contextPointer.map { _.allowTextShrink }, displayFunction, customDrawers)
+			contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.allowTextShrink }, displayFunction, customDrawers)
 		// If background drawing is enabled, repaints when the background color changes
 		if (drawBackground)
 			contextPointer.addContinuousListener { e =>

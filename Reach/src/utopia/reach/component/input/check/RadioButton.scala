@@ -223,8 +223,7 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A) = {
 		// Uses a static size after creation
 		val context = contextPointer.value
-		// TODO: Creates unnecessary mappings
-		val bgPointer = contextPointer.map { _.background }
+		val bgPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.background }
 		val sizeMod = ComponentCreationDefaults.radioButtonScalingFactor * scaling
 		_apply[A](selectedValuePointer, value, bgPointer,
 			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
@@ -325,8 +324,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	 */
 	val selectedPointer = selectedValuePointer.map { _ == representing }
 	
-	override val calculatedStackSize =
-	{
+	override val calculatedStackSize = {
 		// Hover radius is omitted in the minimum size
 		val optimalLength = diameter + hoverExtraRadius * 2
 		StackLength(diameter, optimalLength, optimalLength).square

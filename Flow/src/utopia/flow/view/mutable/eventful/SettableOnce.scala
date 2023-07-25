@@ -72,7 +72,7 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 			throw new IllegalStateException("SettableOnce.value may only be defined once")
 		else if (newValue.isDefined) {
 			_value = newValue
-			fireChangeEvent(None)
+			fireEventIfNecessary(None, newValue).foreach { _() }
 			clearListeners()
 		}
 	}

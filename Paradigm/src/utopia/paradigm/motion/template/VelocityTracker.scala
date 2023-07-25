@@ -78,18 +78,15 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 			// Updates position history
 			val threshold = maxHistoryDuration.finite.map { eventTime - _ }
 			val oldPositionHistory = _positionHistory
-			threshold match
-			{
+			threshold match {
 				case Some(t) =>
 					_positionHistory = _positionHistory.dropWhile { _._2 < t } :+ (newPosition, eventTime)
 				case None => _positionHistory :+= newPosition -> eventTime
 			}
 			
 			// Updates velocity history
-			val newVelocity =
-			{
-				if (oldPositionHistory.nonEmpty)
-				{
+			val newVelocity = {
+				if (oldPositionHistory.nonEmpty) {
 					val (lastPosition, lastEventTime) = oldPositionHistory.last
 					calculateVelocity(newPosition - lastPosition, eventTime - lastEventTime)
 				}
@@ -97,26 +94,22 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 					zeroVelocity
 			}
 			val oldVelocityHistory = _velocityHistory
-			threshold match
-			{
+			threshold match {
 				case Some(t) =>
 					_velocityHistory = _velocityHistory.dropWhile { _._2 < t } :+ (newVelocity, eventTime)
 				case None => _velocityHistory :+= newVelocity -> eventTime
 			}
 			
 			// Updates acceleration history
-			val newAcceleration =
-			{
-				if (oldVelocityHistory.nonEmpty)
-				{
+			val newAcceleration = {
+				if (oldVelocityHistory.nonEmpty) {
 					val (lastVelocity, lastEventTime) = oldVelocityHistory.last
 					calculateAcceleration(newVelocity - lastVelocity, eventTime - lastEventTime)
 				}
 				else
 					zeroAcceleration
 			}
-			threshold match
-			{
+			threshold match {
 				case Some(t) =>
 					_accelerationHistory = _accelerationHistory.dropWhile { _._2 < t } :+ (newAcceleration, eventTime)
 				case None => _accelerationHistory :+= newAcceleration -> eventTime
@@ -124,7 +117,7 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 			
 			// Fires a change event and updates cached status
 			cachedValue = Some(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
-			fireChangeEvent(previousStatus)
+			fireEventIfNecessary(previousStatus).foreach { _() }
 		}
 	}
 }

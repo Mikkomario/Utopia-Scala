@@ -326,7 +326,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                         val textPointer: PointerWithEvents[String] = new PointerWithEvents(""))
 	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer,
-		textPointer.map { _.noLanguageLocalizationSkipped }, settings.labelSettings, settings.enabledPointer)
+		textPointer.strongMap { _.noLanguageLocalizationSkipped }, settings.labelSettings, settings.enabledPointer)
 {
 	// ATTRIBUTES	-------------------------------
 	

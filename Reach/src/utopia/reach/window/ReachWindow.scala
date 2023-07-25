@@ -11,7 +11,7 @@ import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, WaitTarget}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.{ChangeResponse, DetachmentChoice}
+import utopia.flow.event.model.ChangeResponse
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger

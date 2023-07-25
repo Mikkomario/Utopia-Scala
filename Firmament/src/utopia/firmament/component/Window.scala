@@ -11,7 +11,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.event.model.DetachmentChoice
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
@@ -394,7 +394,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		iconPointer.addListenerAndSimulateEvent(Image.empty) { e =>
 			// Is not interested in icon changes after this window has closed
 			if (hasClosed)
-				DetachmentChoice.detach
+				Detach
 			else {
 				// Copies the maximum size icon first
 				val original = e.newValue.downscaled
@@ -413,7 +413,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 						}
 					}
 				}
-				DetachmentChoice.continue
+				Continue
 			}
 		}
 		
@@ -454,7 +454,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// (layout updates are skipped while this window is not visible)
 		fullyVisibleFlag.addListener { e =>
 			if (hasClosed)
-				DetachmentChoice.detach
+				Detach
 			else {
 				if (e.newValue) {
 					AwtEventThread.async {
@@ -468,7 +468,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 						}
 					}
 				}
-				DetachmentChoice.continue
+				Continue
 			}
 		}
 	}
@@ -778,11 +778,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	def setToCloseOnFocusLost() = focusedFlag.addListener { e =>
 		// Case: Gained focus => Ignores
 		if (e.newValue)
-			DetachmentChoice.continue
+			Continue
 		// Case: Lost focus => Closes this window
 		else {
 			close()
-			DetachmentChoice.detach
+			Detach
 		}
 	}
 	/**

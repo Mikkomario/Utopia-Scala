@@ -40,14 +40,10 @@ class PointerWithEvents[A](initialValue: A) extends AbstractChanging[A] with Poi
 	/**
 	  * @param newValue The new value in this mutable
 	  */
-	def value_=(newValue: A) =
-	{
-		if (_value != newValue)
-		{
-			val oldValue = _value
-			_value = newValue
-			fireChangeEvent(oldValue)
-		}
+	def value_=(newValue: A) = {
+		val oldValue = _value
+		_value = newValue
+		fireEventIfNecessary(oldValue, newValue).foreach { _() }
 	}
 	
 	

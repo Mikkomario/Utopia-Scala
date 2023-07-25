@@ -1,7 +1,9 @@
 package utopia.flow.event.listener
 
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.event.model.{ChangeEvent, ChangeResponse, DetachmentChoice}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
+import utopia.flow.operator.End
+import utopia.flow.operator.End.{First, Last}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Changing
@@ -13,6 +15,8 @@ object ConditionalChangeReaction
 	  * @param origin The pointer to which this reaction applies
 	  * @param condition A pointer that contains true while this reaction should be active
 	  *                  (i.e. reactions should occur) and false while reactions should be disabled.
+	  * @param priority The priority given to this listener/reaction in the origin pointer.
+	  *                 Default = Last = standard priority.
 	  * @param simulatedInitialValue Initial value to 'simulate' for the 'origin' pointer for the purposes of
 	  *                              the initial call of 'effect'.
 	  *
@@ -32,7 +36,7 @@ object ConditionalChangeReaction
 	  *          Returns DetachmentChoice.detach when this reaction should permanently cease.
 	  * @tparam A Type of values held within the origin pointer
 	  */
-	def apply[A](origin: Changing[A], condition: Changing[Boolean], simulatedInitialValue: Option[A])
+	def apply[A](origin: Changing[A], condition: Changing[Boolean], priority: End, simulatedInitialValue: Option[A])
 	            (effect: ChangeListener[A]): Unit =
 	{
 		// Optimizes the cases where the listening condition is fixed
@@ -43,7 +47,7 @@ object ConditionalChangeReaction
 				if (fixedState)
 					origin.addListenerAndPossiblySimulateEvent(simulatedInitialValue)(effect)
 			// Case: Changing listening condition
-			case None => new ConditionalChangeReaction[A](origin, condition, effect, simulatedInitialValue)
+			case None => new ConditionalChangeReaction[A](origin, condition, effect, priority, simulatedInitialValue)
 		}
 	}
 	
@@ -52,6 +56,8 @@ object ConditionalChangeReaction
 	  * @param origin                The pointer to which this reaction applies
 	  * @param condition             A pointer that contains true while this reaction should be active
 	  *                              (i.e. reactions should occur) and false while reactions should be disabled.
+	  * @param priority The priority given to this listener/reaction in the origin pointer.
+	  *                 Default = Last = standard priority.
 	  * @param effect                     A function called whenever the 'origin' pointer changes while the 'conditionPointer' contains true.
 	  *                              This function is also called in cases where the 'origin' pointer had changed its value while
 	  *                              this reaction was disabled.
@@ -59,8 +65,8 @@ object ConditionalChangeReaction
 	  *                              Returns DetachmentChoice.detach when this reaction should permanently cease.
 	  * @tparam A Type of values held within the origin pointer
 	  */
-	def apply[A](origin: Changing[A], condition: Changing[Boolean])(effect: ChangeListener[A]): Unit =
-		apply[A](origin, condition, None)(effect)
+	def apply[A](origin: Changing[A], condition: Changing[Boolean], priority: End = Last)(effect: ChangeListener[A]): Unit =
+		apply[A](origin, condition, priority, None)(effect)
 	
 	/**
 	  * Activates a new conditional change reaction
@@ -77,6 +83,8 @@ object ConditionalChangeReaction
 	  *                              In cases where 'conditionPointer' initially contains false,
 	  *                              this simulated change event is delayed.
 	  *
+	  * @param priority The priority given to this listener/reaction in the origin pointer.
+	  *                 Default = Last = standard priority.
 	  * @param effect                A function called whenever the 'origin' pointer changes while the 'conditionPointer' contains true.
 	  *                              This function is also called in cases where the 'origin' pointer had changed its value while
 	  *                              this reaction was disabled.
@@ -84,9 +92,10 @@ object ConditionalChangeReaction
 	  *                              Returns DetachmentChoice.detach when this reaction should permanently cease.
 	  * @tparam A Type of values held within the origin pointer
 	  */
-	def simulatingInitialValue[A](origin: Changing[A], condition: Changing[Boolean], simulatedInitialValue: A)
+	def simulatingInitialValue[A](origin: Changing[A], condition: Changing[Boolean], simulatedInitialValue: A,
+	                              priority: End = Last)
 	                             (effect: ChangeListener[A]) =
-		apply[A](origin, condition, Some(simulatedInitialValue))(effect)
+		apply[A](origin, condition, priority, Some(simulatedInitialValue))(effect)
 }
 
 /**
@@ -115,6 +124,8 @@ object ConditionalChangeReaction
   *
   *          Returns DetachmentChoice.detach when this reaction should permanently cease.
   *
+  * @param priority              The priority given to this listener/reaction in the origin pointer.
+  *                              Default = Last = standard priority.
   * @param simulatedInitialValue Initial value to 'simulate' for the 'origin' pointer for the purposes of
   *                              the initial call of 'effect'.
   *
@@ -129,7 +140,8 @@ object ConditionalChangeReaction
   *                              to occur.
   */
 class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changing[Boolean],
-                                   effect: ChangeListener[A], simulatedInitialValue: Option[A] = None)
+                                   effect: ChangeListener[A], priority: End = Last,
+                                   simulatedInitialValue: Option[A] = None)
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -152,8 +164,9 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 	// Starts listening to the 'origin' pointer, if appropriate
 	if (conditionPointer.value)
 		simulatedInitialValue match {
-			case Some(simulation) => origin.addListenerAndSimulateEvent(simulation)(Delegate)
-			case None => origin.addListener(Delegate)
+			case Some(simulation) =>
+				origin.addListenerAndSimulateEvent(simulation, isHighPriority = priority == First)(Delegate)
+			case None => origin.addListenerOfPriority(priority)(Delegate)
 		}
 	else
 		memorizedValuePointer.value = simulatedInitialValue
@@ -175,9 +188,10 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 					memorizedValuePointer.pop() match {
 						// Case: Simulated value had been queued (expected) =>
 						// Uses that to possibly generate a new change event
-						case Some(memorized) => origin.addListenerAndSimulateEvent(memorized)(Delegate)
+						case Some(memorized) =>
+							origin.addListenerAndSimulateEvent(memorized, isHighPriority = priority == First)(Delegate)
 						// Case: No simulated value queued (unexpected) => Starts listening again
-						case None => origin.addListener(Delegate)
+						case None => origin.addListenerOfPriority(priority)(Delegate)
 					}
 			}
 			// Case: Listening should deactivate => Queues a detachment

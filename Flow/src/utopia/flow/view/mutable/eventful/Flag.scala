@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, FlagLike}
 
@@ -54,7 +55,7 @@ object Flag
 		override def set() = {
 			if (isNotSet) {
 				_value = true
-				fireChangeEvent(false)
+				fireEvent(ChangeEvent(false, true)).foreach { _() }
 				// Forgets all the listeners at this point, because no more change events will be fired
 				clearListeners()
 				true

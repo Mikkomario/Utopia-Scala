@@ -1,16 +1,18 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
-import utopia.flow.operator.End
+import utopia.flow.operator.{End, Identity}
 import utopia.flow.operator.End.{First, Last}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
+import utopia.flow.view.template.eventful.FlagLike.wrap
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -96,33 +98,11 @@ trait Changing[+A] extends Any with View[A]
 	/**
 	  * @param priority Priority assigned to the specified listener, where
 	  *                 First is high priority (called first) and Last is standard priority (called afterwards)
-	  * @param listener A listener to assign to this item,
-	  *                 if appropriate (i.e. this item will still change) (call-by-name)
+	  * @param lazyListener A listener to assign to this item,
+	  *                     if appropriate (i.e. if this item will still change and doesn't contain that listener already)
+	  *                     (specified as a lazily initialized view)
 	  */
-	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit
-	/**
-	  * Registers a new listener to be informed whenever this item's value changes
-	  * @param simulatedOldValue A simulated 'old' value for this changing item to inform the listener of
-	  *                                        the initial state of this item. Won't inform the listener
-	  *                                        if equal to this item's current value.
-	  * @param isHighPriority Whether the specified listener should be considered to be
-	  *                       of a high priority, meaning that it should be called before the standard
-	  *                       priority listeners are.
-	  *                       Default = false.
-	  * @param changeListener A listener that should be informed (call by name)
-	  */
-	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean = false)
-	                                       (changeListener: => ChangeListener[B]): Unit =
-	{
-		val lazyNewListener = Lazy(changeListener)
-		// Performs the simulation
-		val simulationResult = simulateChangeEventFor(lazyNewListener.value, simulatedOldValue)
-		// Adds the listener, if appropriate (i.e. listener didn't detach itself during the simulation)
-		if (simulationResult.shouldContinueListening)
-			addListenerOfPriority(if (isHighPriority) First else Last)(lazyNewListener.value)
-		// Triggers the caused after-effects
-		simulationResult.afterEffects.foreach { _() }
-	}
+	protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit
 	
 	/**
 	  * Makes sure the specified change listener won't be informed of possible future change events
@@ -151,6 +131,32 @@ trait Changing[+A] extends Any with View[A]
 	// OTHER	--------------------
 	
 	/**
+	  * @param condition A condition to test fixed values with
+	  * @return Whether this changing item is fixed to a value that fulfils the specified condition
+	  */
+	def existsFixed(condition: A => Boolean) = if (isChanging) false else condition(value)
+	/**
+	  * @param condition A condition to test fixed values with
+	  * @return This item if changing or not fixed to a value the specified condition returns true for
+	  */
+	def notFixedWhere(condition: A => Boolean) = {
+		if (isChanging)
+			Some(this)
+		else if (condition(value))
+			None
+		else
+			Some(this)
+	}
+	
+	/**
+	  * @param priority Priority assigned to the specified listener, where
+	  *                 First is high priority (called first) and Last is standard priority (called afterwards)
+	  * @param listener A listener to assign to this item,
+	  *                 if appropriate (i.e. this item will still change) (call-by-name)
+	  */
+	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit =
+		_addListenerOfPriority(priority, Lazy(listener))
+	/**
 	  * Registers a new listener to be informed whenever this item's value changes
 	  * @param changeListener A listener that should be informed (call by name)
 	  */
@@ -162,6 +168,29 @@ trait Changing[+A] extends Any with View[A]
 	  * @param listener A listener to inform of future change events (call-by-name)
 	  */
 	def addHighPriorityListener(listener: => ChangeListener[A]): Unit = addListenerOfPriority(First)(listener)
+	/**
+	  * Registers a new listener to be informed whenever this item's value changes
+	  * @param simulatedOldValue A simulated 'old' value for this changing item to inform the listener of
+	  *                          the initial state of this item. Won't inform the listener
+	  *                          if equal to this item's current value.
+	  * @param isHighPriority    Whether the specified listener should be considered to be
+	  *                          of a high priority, meaning that it should be called before the standard
+	  *                          priority listeners are.
+	  *                          Default = false.
+	  * @param changeListener    A listener that should be informed (call by name)
+	  */
+	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean = false)
+	                                       (changeListener: => ChangeListener[B]): Unit =
+	{
+		val lazyNewListener = Lazy(changeListener)
+		// Performs the simulation
+		val simulationResult = simulateChangeEventFor(lazyNewListener.value, simulatedOldValue)
+		// Adds the listener, if appropriate (i.e. listener didn't detach itself during the simulation)
+		if (simulationResult.shouldContinueListening)
+			addListenerOfPriority(if (isHighPriority) First else Last)(lazyNewListener.value)
+		// Triggers the caused after-effects
+		simulationResult.afterEffects.foreach { _() }
+	}
 	
 	/**
 	  * Registers a new high-priority listener to be informed whenever this item's value changes.
@@ -171,11 +200,170 @@ trait Changing[+A] extends Any with View[A]
 	@deprecated("Deprecated for removal. Change dependencies have been replaced with high-priority change listeners. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
 	def addDependency(dependency: => ChangeDependency[A]): Unit = addHighPriorityListener(dependency)
 	/**
+	  * Adds a new dependency to this changing item
+	  * @param beforeChange A function called before each change event (accepts change event that will be fired)
+	  * @param afterChange  A function called after each change event (accepts change event that was fired)
+	  */
+	@deprecated("Deprecated for removal. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
+	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
+		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
+	/**
 	  * Removes a change dependency from being activated in the future
 	  * @param dependency A dependency to remove from this item
 	  */
 	@deprecated("Deprecated for removal. Change dependencies have been replaced with high-priority change listeners. Please use .removeListener(Any) instead", "v2.2")
 	def removeDependency(dependency: Any): Unit = removeListener(dependency)
+	
+	/**
+	  * Functions like [[addListenerAndSimulateEvent]],
+	  * except that the value simulation is applied only if such value is defined.
+	  *
+	  * When the simulated value is not defined, functions like [[addListener]]
+	  *
+	  * @param simulatedOldValue A value to simulate for the purposes of generating an immediate change event.
+	  *                          See [[addListenerAndSimulateEvent]] for more details.
+	  *                          Set to None in cases where you don't want the initial event to be fired.
+	  *
+	  * @param listener          A listener to add to this pointer (call-by-name).
+	  *                          May not be called in cases where this pointer won't change anymore (even via simulation).
+	  *
+	  * @tparam B Type of the simulated/listened value
+	  */
+	def addListenerAndPossiblySimulateEvent[B >: A](simulatedOldValue: Option[B])(listener: => ChangeListener[B]) =
+		simulatedOldValue match {
+			case Some(v) => addListenerAndSimulateEvent(v)(listener)
+			case None => addListener(listener)
+		}
+	
+	/**
+	  * Adds a new listener that will be informed whenever this item changes
+	  * @param listener A function called whenever this item changes. Accepts a change event.
+	  * @tparam U Arbitrary result type
+	  */
+	def addContinuousListener[U](listener: ChangeEvent[A] => U) = addListener(ChangeListener.continuous(listener))
+	/**
+	  * Adds a new listener that will be informed whenever this item changes.
+	  * May create and fire a simulated change event for that listener.
+	  * @param simulatedOldValue A simulated "old value" for this item, compared to this item's current value
+	  * @param listener          A listener function to call on change events
+	  * @tparam B Type of simulated value
+	  * @tparam U Arbitrary function result type
+	  */
+	def addContinuousListenerAndSimulateEvent[B >: A, U](simulatedOldValue: B)(listener: ChangeEvent[B] => U) =
+		addListenerAndSimulateEvent(simulatedOldValue)(ChangeListener.continuous(listener))
+	/**
+	  * Adds a new function to be called whenever this item's value changes
+	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
+	  *                 change event itself
+	  */
+	def addContinuousAnyChangeListener[U](onChange: => U) =
+		addListener(ChangeListener.continuousOnAnyChange(onChange))
+	
+	/**
+	  * Adds a new function to be called whenever this item's value changes
+	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
+	  *                 change event itself.
+	  *                 Returns whether future change events should also trigger this function,
+	  *                 and whether any after effects should be performed.
+	  */
+	def addAnyChangeListener(onChange: => ChangeResponse) = addListener(ChangeListener.onAnyChange(onChange))
+	
+	/**
+	  * Assigns a listener to this changing item, which is active only while the specified
+	  * external condition is met
+	  * @param condition A pointer that contains true while listening should occur
+	  * @param priority The priority given to this listener/reaction in the origin pointer.
+	  *                 Default = Last = standard priority.
+	  * @param listener A change listener that should be assigned
+	  */
+	def addListenerWhile(condition: Changing[Boolean], priority: End = Last)(listener: => ChangeListener[A]) = {
+		// Only assigns listeners to changing items, as they are useless in other situations
+		if (isChanging) {
+			// Case: Variable condition => Utilizes a conditional change reaction
+			if (condition.isChanging)
+				ConditionalChangeReaction(this, condition, priority)(listener)
+			// Case: Always listening => Assigns a continuous listener
+			else if (condition.value)
+				addListenerOfPriority(priority)(listener)
+			
+			// In case where the listening condition never actuates, no listener-assignment is needed
+		}
+	}
+	/**
+	  * Assigns a listener to this changing item, which is active only while the specified
+	  * external condition is met.
+	  * May also generate an initial simulated change event for the listener, based on the specified "old" value.
+	  * @param condition A pointer that contains true while listening (or simulated event-receiving) should occur
+	  * @param simulatedOldValue Value used as the "old value" of this pointer for change event simulation.
+	  *                          If this is equal to the current/new value of this pointer,
+	  *                          no change event is simulated.
+	  * @param priority The priority given to this listener/reaction in the origin pointer.
+	  *                 Default = Last = standard priority.
+	  * @param listener A listener to assign
+	  * @tparam B Type of the listener and the simulated value
+	  */
+	def addListenerWhileAndSimulateEvent[B >: A](condition: Changing[Boolean], simulatedOldValue: => B,
+	                                             priority: End = Last)
+	                                            (listener: => ChangeListener[B]): Unit =
+	{
+		// Case: Variable condition
+		if (condition.isChanging) {
+			// Case: This item is still changing => Utilizes a conditional change reaction
+			if (isChanging)
+				ConditionalChangeReaction
+					.simulatingInitialValue[B](this, condition, simulatedOldValue, priority)(listener)
+			// Case: This item is fixed => Generates a simulated change event, if appropriate,
+			// either immediately or when the condition allows it
+			else {
+				val oldValue = simulatedOldValue
+				val currentValue = value
+				if (currentValue != oldValue)
+					condition.once(Identity) { _ => listener.onChangeEvent(ChangeEvent(oldValue, currentValue)) }
+			}
+		}
+		// Case: Always listening => Assigns a normal, continuous, listener
+		else if (condition.value)
+			addListenerAndSimulateEvent(simulatedOldValue, isHighPriority = priority == First)(listener)
+		
+		// In cases where the condition never allows listening, no action is required
+	}
+	
+	/**
+	  * Calls the specified function when this item changes the next time
+	  * @param f A function that will be called when this item changes
+	  * @tparam U Arbitrary function result type
+	  */
+	def onNextChange[U](f: ChangeEvent[A] => U) = addListener(ChangeListener.once(f))
+	/**
+	  * @param condition A condition that must be fulfilled for the specified function to be called
+	  * @param f         A function that is called once a change event satisfies the specified condition.
+	  *                  Will only be called up to once.
+	  * @tparam U Arbitrary function result type
+	  */
+	def onNextChangeWhere[U](condition: ChangeEvent[A] => Boolean)(f: ChangeEvent[A] => U) = addListener { e =>
+		if (condition(e)) {
+			f(e)
+			Detach
+		}
+		else
+			Continue
+	}
+	/**
+	  * Calls the specified function once the value of this item satisfies the specified condition.
+	  * If the current item satisfies the condition, the function is called immediately.
+	  * @param condition A condition that the item in this pointer must satisfy
+	  * @param f         A function that shall be called for the item that satisfies the specified condition.
+	  *                  Will be called only up to once.
+	  * @tparam U Arbitrary function result type
+	  */
+	def once[U](condition: A => Boolean)(f: A => U): Unit = {
+		// Case: Current values is accepted => Calls the specified function for the current value
+		if (condition(value))
+			f(value)
+		// Case: Current value is not accepted => Waits for a suitable value
+		else
+			onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
+	}
 	
 	/**
 	  * @param valueCondition A condition for finding a suitable future
@@ -212,7 +400,52 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A mirrored version of this item, using specified mapping function
 	  */
-	def map[B](f: A => B): Changing[B] = diverge { Mirror(this)(f) } { f(value) }
+	def map[B](f: A => B): Changing[B] = diverge { OptimizedMirror(this)(f) } { f(value) }
+	/**
+	  * Creates a mirrored version of this changing item by assigning a listener to continuously update
+	  * the mirror.
+	  *
+	  * This map method version is most appropriate for closely related pointers
+	  * in a continuous (permanent) relationship.
+	  * If the relationship is merely temporary, one should consider other mapping options such as map or lightMap.
+	  *
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A (strongly) mirrored version of this item, using specified mapping function
+	  */
+	def strongMap[B](f: A => B): Changing[B] = diverge { Mirror(this)(f) } { f(value) }
+	/**
+	  * Creates a mirrored version of this changing item by assigning a listener to update
+	  * the mirror, but only while the specified condition holds true.
+	  *
+	  * This map method is suitable in situations where a clear stop condition may be placed,
+	  * and the cost of listening to that condition is smaller than the cost of performing the mapping
+	  * while that condition does not hold.
+	  *
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A (strongly) mirrored version of this item, using specified mapping function
+	  */
+	def strongMapWhile[B](condition: Changing[Boolean])(f: A => B): Changing[B] = diverge {
+		// Case: Mirroring is never actually allowed => Uses a fixed value instead
+		if (condition.isAlwaysFalse)
+			Fixed(f(value))
+		// Case: Mirroring is allowed
+		else
+			Mirror(this, condition)(f)
+	} { f(value) }
+	/**
+	  * Creates a mirrored view into this changing item.
+	  * Values of this view are calculated on demand without caching, except when this mirror is being listened to.
+	  *
+	  * This map method version is most appropriate for situations where 'f' is very cheap to compute,
+	  * and the relationship between these two pointers is merely temporary.
+	  *
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A (lightly) mirrored version of this item, using the specified mapping function
+	  */
+	def lightMap[B](f: A => B): Changing[B] = diverge { OptimizedMirror(this, disableCaching = true)(f) } { f(value) }
 	/**
 	  * Creates a new changing item that contains a mapped value of this item.
 	  * The mapping function used acquires additional contextual information.
@@ -253,6 +486,56 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R): Changing[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
+	/**
+	  * Creates a mirror that reflects the merged value of this and another pointer.
+	  * However, this mirror is updated only while the specified condition allows it.
+	  * @param other Another changing item
+	  * @param condition Condition that must be met in order for the merging to occur.
+	  * @param f     A merge function
+	  * @tparam B Type of the other changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from both of these items
+	  */
+	def mergeWithWhile[B, R](other: Changing[B], condition: Changing[Boolean])(f: (A, B) => R): Changing[R] = {
+		if (condition.isAlwaysFalse)
+			Fixed(f(value, other.value))
+		else
+			divergeMerge[B, Changing[R]](other) { MergeMirror(this, other, condition)(f) } { v2 =>
+				strongMapWhile(condition) { f(_, v2) } } { Mirror(other, condition) { v2 => f(value, v2) } }
+	}
+	/**
+	  * Creates a mirror that reflects the merged value of this and two other pointers.
+	  * However, this mirror is updated only while the specified condition allows it.
+	  * @param first  Another changing item
+	  * @param second Yet another changing item
+	  * @param condition Condition that must be met in order for the merging to occur.
+	  * @param merge  A merge function
+	  * @tparam B Type of the second changing item
+	  * @tparam C Type of the third changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from all three of these items
+	  */
+	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: Changing[Boolean])
+	                           (merge: (A, B, C) => R): Changing[R] =
+	{
+		if (condition.isAlwaysFalse)
+			Fixed(merge(value, first.value, second.value))
+		else
+			TripleMergeMirror.of(this, first, second, condition)(merge)
+	}
+	/**
+	  * This merge function variant is appropriate for use-cases where 'f' is very light to compute,
+	  * and the relationship between these pointers is temporary.
+	  *
+	  * @param other Another changing item
+	  * @param f A merge function
+	  * @tparam B Type of values in the other changing item
+	  * @tparam R Type of merge results
+	  * @return A mirror that merges the values from both of these items on demand
+	  */
+	def lightMergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] =
+		divergeMerge[B, Changing[R]](other) { LightMergeMirror(this, other)(f) } { v2 => lightMap { f(_, v2) } } {
+			OptimizedMirror(other, disableCaching = true) { v2 => f(value, v2) } }
 	/**
 	  * Creates a new changing item that combines the values of this and the other item.
 	  * The merge function used acquires additional information.
@@ -331,13 +614,20 @@ trait Changing[+A] extends Any with View[A]
 	
 	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event
+	  * @param viewCondition A condition that must be met in order for the delayed view to get updated at all
+	  *                      (default = always view)
 	  * @param exc Implicit execution context
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in
 	  *         this pointer's changes
 	  */
-	def delayedBy(threshold: => Duration)(implicit exc: ExecutionContext): Changing[A] = {
+	def delayedBy(threshold: => Duration, viewCondition: Changing[Boolean] = AlwaysTrue)
+	             (implicit exc: ExecutionContext): Changing[A] =
+	{
+		// Case: The view is not allowed to update => Returns a fixed value
+		if (viewCondition.isAlwaysFalse)
+			Fixed(value)
 		// Case: This item may change
-		if (isChanging)
+		else if (isChanging)
 			threshold.finite match {
 				// Case: A finite delay has been defined
 				case Some(duration) =>
@@ -346,7 +636,7 @@ trait Changing[+A] extends Any with View[A]
 						this
 					// Case: Positive delay => Creates a delayed view
 					else
-						DelayedView(this, duration)
+						DelayedView(this, duration, viewCondition)
 				// Case: Infinite delay = Fixed value
 				case None => Fixed(value)
 			}
@@ -354,124 +644,6 @@ trait Changing[+A] extends Any with View[A]
 		else
 			this
 	}
-	
-	/**
-	  * @param condition A condition to test fixed values with
-	  * @return Whether this changing item is fixed to a value that fulfils the specified condition
-	  */
-	def existsFixed(condition: A => Boolean) = if (isChanging) false else condition(value)
-	/**
-	  * @param condition A condition to test fixed values with
-	  * @return This item if changing or not fixed to a value the specified condition returns true for
-	  */
-	def notFixedWhere(condition: A => Boolean) = {
-		if (isChanging)
-			Some(this)
-		else if (condition(value))
-			None
-		else
-			Some(this)
-	}
-	
-	/**
-	  * Functions like [[addListenerAndSimulateEvent]],
-	  * except that the value simulation is applied only if such value is defined.
-	  *
-	  * When the simulated value is not defined, functions like [[addListener]]
-	  *
-	  * @param simulatedOldValue A value to simulate for the purposes of generating an immediate change event.
-	  *                          See [[addListenerAndSimulateEvent]] for more details.
-	  *                          Set to None in cases where you don't want the initial event to be fired.
-	  *
-	  * @param listener A listener to add to this pointer (call-by-name).
-	  *                 May not be called in cases where this pointer won't change anymore (even via simulation).
-	  *
-	  * @tparam B Type of the simulated/listened value
-	  */
-	def addListenerAndPossiblySimulateEvent[B >: A](simulatedOldValue: Option[B])(listener: => ChangeListener[B]) =
-		simulatedOldValue match {
-			case Some(v) => addListenerAndSimulateEvent(v)(listener)
-			case None => addListener(listener)
-		}
-	
-	/**
-	  * Adds a new listener that will be informed whenever this item changes
-	  * @param listener A function called whenever this item changes. Accepts a change event.
-	  * @tparam U Arbitrary result type
-	  */
-	def addContinuousListener[U](listener: ChangeEvent[A] => U) = addListener(ChangeListener.continuous(listener))
-	/**
-	  * Adds a new listener that will be informed whenever this item changes.
-	  * May create and fire a simulated change event for that listener.
-	  * @param simulatedOldValue A simulated "old value" for this item, compared to this item's current value
-	  * @param listener A listener function to call on change events
-	  * @tparam B Type of simulated value
-	  * @tparam U Arbitrary function result type
-	  */
-	def addContinuousListenerAndSimulateEvent[B >: A, U](simulatedOldValue: B)(listener: ChangeEvent[B] => U) =
-		addListenerAndSimulateEvent(simulatedOldValue)(ChangeListener.continuous(listener))
-	
-	/**
-	  * Adds a new function to be called whenever this item's value changes
-	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
-	  *                 change event itself
-	  */
-	def addContinuousAnyChangeListener[U](onChange: => U) =
-		addListener(ChangeListener.continuousOnAnyChange(onChange))
-	/**
-	  * Adds a new function to be called whenever this item's value changes
-	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
-	  *                 change event itself.
-	  *                 Returns whether future change events should also trigger this function,
-	  *                 and whether any after effects should be performed.
-	  */
-	def addAnyChangeListener(onChange: => ChangeResponse) = addListener(ChangeListener.onAnyChange(onChange))
-	
-	/**
-	  * Calls the specified function when this item changes the next time
-	  * @param f A function that will be called when this item changes
-	  * @tparam U Arbitrary function result type
-	  */
-	def onNextChange[U](f: ChangeEvent[A] => U) = addListener(ChangeListener.once(f))
-	/**
-	  * @param condition A condition that must be fulfilled for the specified function to be called
-	  * @param f A function that is called once a change event satisfies the specified condition.
-	  *          Will only be called up to once.
-	  * @tparam U Arbitrary function result type
-	  */
-	def onNextChangeWhere[U](condition: ChangeEvent[A] => Boolean)(f: ChangeEvent[A] => U) = addListener { e =>
-		if (condition(e)) {
-			f(e)
-			Detach
-		}
-		else
-			Continue
-	}
-	/**
-	  * Calls the specified function once the value of this item satisfies the specified condition.
-	  * If the current item satisfies the condition, the function is called immediately.
-	  * @param condition A condition that the item in this pointer must satisfy
-	  * @param f A function that shall be called for the item that satisfies the specified condition.
-	  *          Will be called only up to once.
-	  * @tparam U Arbitrary function result type
-	  */
-	def once[U](condition: A => Boolean)(f: A => U): Unit = {
-		// Case: Current values is accepted => Calls the specified function for the current value
-		if (condition(value))
-			f(value)
-		// Case: Current value is not accepted => Waits for a suitable value
-		else
-			onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
-	}
-	
-	/**
-	  * Adds a new dependency to this changing item
-	  * @param beforeChange A function called before each change event (accepts change event that will be fired)
-	  * @param afterChange A function called after each change event (accepts change event that was fired)
-	  */
-	@deprecated("Deprecated for removal. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
-	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
-		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
@@ -512,6 +684,8 @@ trait Changing[+A] extends Any with View[A]
 	/**
 	  * Creates an asynchronously mapping view of this changing item
 	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param mapCondition A condition that must be met in order for the mapping process to initiate.
+	  *                     Default = always map.
 	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
 	  *                       should be skipped, and the placeholder be used instead.
 	  *                       Suitable for situations where the placeholder is a proper mapping result.
@@ -524,13 +698,16 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merged / reduced mapping results
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def incrementalMapToFuture[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
+	def incrementalMapToFuture[A2 >: A, B, R](placeHolderResult: R, mapCondition: Changing[Boolean] = AlwaysTrue,
+	                                          skipInitialMap: Boolean = false)
 	                                         (f: A2 => Future[B])(merge: (R, Try[B]) => R)
 	                                         (implicit exc: ExecutionContext) =
-		AsyncMirror[A2, B, R](this, placeHolderResult, skipInitialMap)(f)(merge)
+		AsyncMirror[A2, B, R](this, placeHolderResult, mapCondition, skipInitialProcess = skipInitialMap)(f)(merge)
 	/**
 	  * Creates an asynchronously mapping view of this changing item
 	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param mapCondition A condition that must be met in order for the mapping process to initiate.
+	  *                     Default = always map.
 	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
 	  *                       should be skipped, and the placeholder be used instead.
 	  *                       Suitable for situations where the placeholder is a proper mapping result.
@@ -542,14 +719,19 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def incrementalMapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
-	                     (merge: (B, Try[B]) => B)(implicit exc: ExecutionContext) =
-		incrementalMapToFuture(placeHolderResult, skipInitialMap)(f) { (previous, result) => merge(previous, result.flatten) }
+	def incrementalMapToTryFuture[B](placeHolderResult: B, mapCondition: Changing[Boolean] = AlwaysTrue,
+	                                 skipInitialMap: Boolean = false)
+	                                (f: A => Future[Try[B]])(merge: (B, Try[B]) => B)
+	                                (implicit exc: ExecutionContext) =
+		incrementalMapToFuture(placeHolderResult, mapCondition, skipInitialMap)(f) { (previous, result) =>
+			merge(previous, result.flatten) }
 	/**
 	  * Creates an asynchronously mapping view of this changing item.
 	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
 	  * mapping was even requested / as if the value of this pointer didn't change.
 	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param mapCondition A condition that must be met in order for the mapping process to initiate.
+	  *                     Default = always map.
 	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
 	  *                       should be skipped, and the placeholder be used instead.
 	  *                       Suitable for situations where the placeholder is a proper mapping result.
@@ -560,14 +742,17 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapToFuture[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[B])
+	def mapToFuture[B](placeHolderResult: B, mapCondition: Changing[Boolean] = AlwaysTrue,
+	                   skipInitialMap: Boolean = false)(f: A => Future[B])
 	                  (implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror.catching(this, placeHolderResult, skipInitialMap)(f)
+		AsyncMirror.catching(this, placeHolderResult, mapCondition, skipInitialProcess = skipInitialMap)(f)
 	/**
 	  * Creates an asynchronously mapping view of this changing item.
 	  * In cases where the asynchronous mapping fails, errors are simply logged and treated as if no
 	  * mapping was even requested / as if the value of this pointer didn't change.
 	  * @param placeHolderResult Value placed in the view before the map result has been calculated
+	  * @param mapCondition A condition that must be met in order for the mapping process to initiate.
+	  *                     Default = always map.
 	  * @param skipInitialMap Whether the initial mapping process (i.e. the mapping of this item's current value)
 	  *                       should be skipped, and the placeholder be used instead.
 	  *                       Suitable for situations where the placeholder is a proper mapping result.
@@ -578,9 +763,10 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
+	def mapToTryFuture[B](placeHolderResult: B, mapCondition: Changing[Boolean] = AlwaysTrue,
+	                      skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
 	                     (implicit exc: ExecutionContext, logger: Logger) =
-		AsyncMirror.tryCatching(this, placeHolderResult, skipInitialMap)(f)
+		AsyncMirror.tryCatching(this, placeHolderResult, mapCondition, skipInitialProcess = skipInitialMap)(f)
 	
 	/**
 	  * Simulates a change event for the specified listener, if necessary
@@ -651,6 +837,100 @@ trait Changing[+A] extends Any with View[A]
 		}
 		else
 			ifOtherIsFixed(other.value)
+	}
+	
+	/**
+	  * Informs all listeners about a possible change event.
+	  * Updates the list of active listeners accordingly.
+	  *
+	  * Won't generate any event or action in cases where the old and the new value would resolve in the same value.
+	  *
+	  * @param oldValue The previous value of this changing item
+	  *                 (call-by-name, called only if there are listeners assigned to this item)
+	  * @param currentValue Current value of this changing item
+	  *                     (call-by-name, called only if there are listeners assigned to this item)
+	  * @param acquireListeners A function that acquires the listeners of this item, based on their priority
+	  * @param detachListeners  A function that removes a set of listeners from this item.
+	  *                         Accepts:
+	  *                         1) Priority to target, and
+	  *                         2) Listeners to remove (never empty)
+	  * @tparam B Type of events and listeners applied here
+	  * @return The effects to trigger afterwards
+	  */
+	protected def fireEventIfNecessary[B >: A](oldValue: => B, currentValue: => B)
+	                                          (acquireListeners: End => Iterable[ChangeListener[B]])
+	                                          (detachListeners: (End, Vector[ChangeListener[B]]) => Unit) =
+	{
+		// Calculates the event lazily
+		// In case where the current and old value are equal, won't generate an event
+		val eventView = Lazy {
+			val o = oldValue
+			val n = currentValue
+			if (o == n)
+				None
+			else
+				Some(ChangeEvent(o, n))
+		}
+		fireEvent[B](eventView)(acquireListeners)(detachListeners)
+	}
+	/**
+	  * Informs all listeners about a possible change event.
+	  * Updates the list of active listeners accordingly.
+	  * @param lazyEvent A (lazily initialized) pointer/view to the change event that occurred.
+	  *                  Contains None in case there was no change after all.
+	  *                  Won't be viewed in cases where there are no listeners assigned to this item.
+	  * @param acquireListeners A function that acquires the listeners of this item, based on their priority
+	  * @param detachListeners A function that removes a set of listeners from this item.
+	  *                        Accepts:
+	  *                             1) Priority to target, and
+	  *                             2) Listeners to remove (never empty)
+	  * @tparam B Type of events and listeners applied here
+	  * @return The effects to trigger afterwards
+	  */
+	protected def fireEvent[B >: A](lazyEvent: View[Option[ChangeEvent[B]]])
+	                               (acquireListeners: End => Iterable[ChangeListener[B]])
+	                               (detachListeners: (End, Vector[ChangeListener[B]]) => Unit) =
+	{
+		// Informs the listeners in order or priority
+		val queuedActions = End.values.map { priority =>
+			priority -> fireEventFor(acquireListeners(priority), lazyEvent.value)
+		}
+		// Detaches listeners that are no longer needed
+		queuedActions.foreach { case (priority, (listenersToRemove, _)) =>
+			if (listenersToRemove.nonEmpty)
+				detachListeners(priority, listenersToRemove)
+		}
+		// Returns the scheduled after-effects
+		queuedActions.flatMap { _._2._2 }
+	}
+	/**
+	  * Informs a specific set of change listeners of a new change event.
+	  * Collects the actions to perform, based on their responses.
+	  * @param listeners listeners to inform of a new change
+	  * @param event A view to the generated change event (call-by-name, not called if there are no listeners).
+	  *              Contains None if no change occurred after all.
+	  * @tparam B Type of change events and listeners applied
+	  * @return Listeners to remove from future change events &
+	  *         after-events to trigger once all listeners have been informed
+	  */
+	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]]) =
+	{
+		// Case: No listeners => No events required
+		if (listeners.isEmpty)
+			Vector() -> Vector()
+		// Case: Listeners present => Informs them and collects the after effects to trigger later
+		//       (may schedule some listeners to be removed, based on their change responses)
+		else
+			event match {
+				// Case: Event is real => Relays if to the listeners
+				case Some(event) =>
+					listeners.splitFlatMap { listener =>
+						val response = listener.onChangeEvent(event)
+						(if (response.shouldDetach) Some(listener) else None) -> response.afterEffects
+					}
+				// Case: There wasn't a change event after all => Skips the process
+				case None => Vector() -> Vector()
+			}
 	}
 	
 	/**

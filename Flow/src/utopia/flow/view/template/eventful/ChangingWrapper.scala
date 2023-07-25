@@ -4,10 +4,9 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.End
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.View
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.concurrent.ExecutionContext
 
 object ChangingWrapper
 {
@@ -43,8 +42,10 @@ trait ChangingWrapper[+A] extends Changing[A]
 	
 	override def isChanging = wrapped.isChanging
 	
-	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit =
+	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]) =
 		wrapped.addListenerOfPriority(priority)(listener)
+	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
+		wrapped.addListenerOfPriority(priority)(lazyListener.value)
 	
 	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean)
 	                                                (changeListener: => ChangeListener[B]) =
@@ -67,9 +68,6 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
 		wrapped.lazyMergeWith(other)(f)
 	
-	override def delayedBy(threshold: => Duration)(implicit exc: ExecutionContext) =
-		wrapped.delayedBy(threshold)
-	
 	override def futureWhere(valueCondition: A => Boolean) = wrapped.futureWhere(valueCondition)
 	override def nextFutureWhere(valueCondition: A => Boolean) = wrapped.nextFutureWhere(valueCondition)
 	override def findMapFuture[B](f: A => Option[B]) = wrapped.findMapFuture(f)
@@ -84,18 +82,4 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def mapAsync[A2 >: A, B](placeHolderResult: B, skipInitialMap: Boolean)(f: A2 => B)
 	                                  (implicit exc: ExecutionContext, log: Logger) =
 		wrapped.mapAsync(placeHolderResult, skipInitialMap)(f)
-	override def incrementalMapToFuture[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean)
-	                                                  (f: A2 => Future[B])(merge: (R, Try[B]) => R)
-	                                                  (implicit exc: ExecutionContext) =
-		wrapped.incrementalMapToFuture(placeHolderResult, skipInitialMap)(f)(merge)
-	override def incrementalMapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean)
-	                                         (f: A => Future[Try[B]])(merge: (B, Try[B]) => B)
-	                                         (implicit exc: ExecutionContext) =
-		wrapped.incrementalMapToTryFuture(placeHolderResult, skipInitialMap)(f)(merge)
-	override def mapToFuture[B](placeHolderResult: B, skipInitialMap: Boolean)
-	                           (f: A => Future[B])(implicit exc: ExecutionContext, logger: Logger) =
-		wrapped.mapToFuture(placeHolderResult, skipInitialMap)(f)
-	override def mapToTryFuture[B](placeHolderResult: B, skipInitialMap: Boolean)(f: A => Future[Try[B]])
-	                              (implicit exc: ExecutionContext, logger: Logger) =
-		wrapped.mapToTryFuture(placeHolderResult, skipInitialMap)(f)
 }

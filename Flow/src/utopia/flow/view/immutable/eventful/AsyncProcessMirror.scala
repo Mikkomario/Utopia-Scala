@@ -192,13 +192,6 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	
 	// NESTED   ----------------------------
 	
-	private object SingleThreadExc extends ExecutionContext
-	{
-		override def execute(runnable: Runnable) = ???
-		
-		override def reportFailure(cause: Throwable) = log(cause)
-	}
-	
 	private object MappingProcess extends Process(shutdownReaction = Some(Cancel))
 	{
 		override protected def isRestartable: Boolean = true

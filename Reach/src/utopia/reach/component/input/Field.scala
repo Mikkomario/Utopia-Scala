@@ -535,7 +535,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	
 	private val _focusPointer = new PointerWithEvents(false)
 	
-	private lazy val uncoloredHintContextPointer = contextPointer.map { context =>
+	private lazy val uncoloredHintContextPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { context =>
 		context
 			// Hint text is smaller and has smaller insets
 			.mapTextInsets { original =>
@@ -560,12 +560,12 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 		case None => settings.errorMessagePointer.notFixedWhere { _.isEmpty }
 	}
 	private lazy val hintVisibilityPointer = actualHintTextPointer match {
-		case Some(hintTextPointer) => hintTextPointer.map { _.nonEmpty }
+		case Some(hintTextPointer) => hintTextPointer.strongMap { _.nonEmpty }
 		case None => AlwaysFalse
 	}
 	
 	// A pointer to whether this field currently highlights an error
-	private val errorStatePointer = settings.errorMessagePointer.map { _.nonEmpty }
+	private val errorStatePointer = settings.errorMessagePointer.strongMap { _.nonEmpty }
 	// TODO: Add a state pointer and make error state pointer visible, also
 	// Pointer that determines highlighting color
 	private val highlightStatePointer = errorStatePointer
@@ -581,7 +581,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	private val innerContextPointer = {
 		// TODO: Handle mouse over state (highlights one more time)
 		if (settings.fillBackground)
-			contextPointer.mergeWith(_focusPointer) { (context, hasFocus) =>
+			contextPointer.mergeWithWhile(_focusPointer, parentHierarchy.linkPointer) { (context, hasFocus) =>
 				context.mapBackground { _.highlightedBy(if (hasFocus) 2 else 1) }
 			}
 		else
@@ -591,12 +591,12 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	  * A pointer to this field's current inner background color. May vary based on state.
 	  */
 	// TODO: See if this really needs to be exposed
-	val innerBackgroundPointer = innerContextPointer.map { _.background }
+	val innerBackgroundPointer = innerContextPointer.strongMap { _.background }
 	private val highlightColorPointer = highlightStatePointer.mergeWith(innerContextPointer) { (state, context) =>
 		state.map { s => context.color(s) }
 	}
 	
-	private val editTextColorPointer = innerContextPointer.map { _.textColor }
+	private val editTextColorPointer = innerContextPointer.strongMap { _.textColor }
 	private val contentColorPointer: Changing[Color] = highlightColorPointer
 		.mergeWith(editTextColorPointer) { (highlight, default) =>
 			highlight match {
@@ -620,12 +620,12 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	private val borderPointer = {
 		// When using filled background style, only draws the bottom border which varies in style based state
 		if (settings.fillBackground) {
-			contentColorPointer.mergeWith(_focusPointer, contextPointer) { (color, focus, context) =>
+			contentColorPointer.mergeWithWhile(_focusPointer, contextPointer, parentHierarchy.linkPointer) { (color, focus, context) =>
 				Border.bottom(if (focus) focusBorderWidthFrom(context) else defaultBorderWidthFrom(context), color)
 			}
 		}
 		else
-			contentColorPointer.mergeWith(_focusPointer, contextPointer) { (color, focus, context) =>
+			contentColorPointer.mergeWithWhile(_focusPointer, contextPointer, parentHierarchy.linkPointer) { (color, focus, context) =>
 				Border.symmetric(if (focus) focusBorderWidthFrom(context) else defaultBorderWidthFrom(context), color)
 			}
 	}
@@ -718,7 +718,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 			.withSettings(settings.imageSettings).lowPriority.mapInsets { _ - noMarginSide }
 			.iconPointer(pointer)
 	private def makeOpenViewImageLabel(pointer: Changing[SingleColorIcon], noMarginSide: Direction2D) =
-		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.map { _.nonEmpty })
+		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.strongMap { _.nonEmpty })
 	
 	private def makeContentAndNameArea(fieldNamePointer: Changing[LocalizedString]) = {
 		Open.using(ViewStack) { stackFactory =>

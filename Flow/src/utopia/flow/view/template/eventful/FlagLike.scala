@@ -51,7 +51,7 @@ trait FlagLike extends Any with Changing[Boolean]
 	  */
 	def unary_! = fixedValue match {
 		case Some(fixed) => if (fixed) AlwaysFalse else AlwaysTrue
-		case None => map { !_ }
+		case None => lightMap { !_ }
 	}
 	
 	/**
@@ -79,7 +79,7 @@ trait FlagLike extends Any with Changing[Boolean]
 			case None =>
 				other.fixedValue match {
 					case Some(fixed) => if (fixed) this else AlwaysFalse
-					case None => mergeWith(other) { _ && _ }
+					case None => lightMergeWith(other) { _ && _ }
 				}
 		}
 	}
@@ -96,7 +96,7 @@ trait FlagLike extends Any with Changing[Boolean]
 			case None =>
 				other.fixedValue match {
 					case Some(fixed) => if (fixed) AlwaysTrue else this
-					case None => mergeWith(other) { _ || _ }
+					case None => lightMergeWith(other) { _ || _ }
 				}
 		}
 	}

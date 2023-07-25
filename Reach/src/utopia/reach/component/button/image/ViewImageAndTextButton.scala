@@ -386,13 +386,13 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
 	override val focusId = hashCode()
 	
 	/**
-	  * A pointer that referers to this buttons main color
+	  * A pointer that refers to this button's main color
 	  */
-	val colorPointer = contextPointer.map { _.background }
+	val colorPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.background }
 	
 	override protected val wrapped = {
 		// Adds additional text insets
-		val labelContextPointer = contextPointer.map { c =>
+		val labelContextPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { c =>
 			c.mapTextInsets { _ + settings.insets.withoutSides(c.textAlignment.directions) + c.buttonBorderWidth }
 		}
 		// Adds additional image insets
@@ -407,7 +407,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
 		ViewImageAndTextLabel.withContext(parentHierarchy, labelContextPointer).withImageSettings(labelImageSettings)
 			.withCustomDrawers(
 				ButtonBackgroundViewDrawer(colorPointer, statePointer,
-					contextPointer.map { _.buttonBorderWidth }
+					contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.buttonBorderWidth }
 				) +: settings.customDrawers
 			)
 			.apply(contentPointer, imagePointer, displayFunction)

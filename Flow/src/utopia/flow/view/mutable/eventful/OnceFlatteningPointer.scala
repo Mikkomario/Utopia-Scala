@@ -6,6 +6,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.End
+import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -65,12 +66,16 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	}
 	override def isChanging: Boolean = pointer.forall { _.isChanging }
 	
-	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = pointer match {
-		// Case: Pointer already defined => Assigns listeners directly to it
-		case Some(p) => p.addListenerOfPriority(priority)(listener)
-		// Case: No pointer yet available => Queues the listeners
-		case None => queuedListeners = queuedListeners.mapSide(priority) { _ :+ listener }
-	}
+	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
+		pointer match {
+			// Case: Pointer already defined => Assigns listeners directly to it
+			case Some(p) => p.addListenerOfPriority(priority)(lazyListener.value)
+			// Case: No pointer yet available => Queues the listeners
+			case None =>
+				queuedListeners = queuedListeners.mapSide(priority) { q =>
+					if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
+				}
+		}
 	
 	override def removeListener(changeListener: Any): Unit = pointer match {
 		case Some(p) => p.removeListener(changeListener)

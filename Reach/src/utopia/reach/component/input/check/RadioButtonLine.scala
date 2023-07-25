@@ -78,7 +78,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 				val radioButton = factories(RadioButton).withContextPointer(contextPointer).withoutCustomDrawers
 					.apply(selectedValuePointer, value)
 				val label = factories(ViewTextLabel).withContextPointer(contextPointer)
-					.withIsHintPointer(settings.enabledPointer.map { !_ })
+					.withIsHintPointer(settings.enabledPointer.lightMap { !_ })
 					.text(labelText)
 				// Clicking the label triggers the button
 				label.addMouseButtonListener(MouseButtonStateListener.onLeftPressedInside { label.bounds } { _ =>

@@ -40,16 +40,10 @@ class MutableOnce[A](initialValue: A) extends AbstractChanging[A] with Pointer[A
 		if (_setFlag.isSet)
 			throw new IllegalStateException("This pointer has already been set")
 		else {
-			if (_value != newValue) {
-				val oldValue = _value
-				_value = newValue
-				_setFlag.set()
-				fireChangeEvent(oldValue)
-			}
-			else {
-				_value = newValue
-				_setFlag.set()
-			}
+			val oldValue = _value
+			_value = newValue
+			_setFlag.set()
+			fireEventIfNecessary(oldValue, newValue).foreach { _() }
 		}
 	}
 	

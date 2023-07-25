@@ -507,7 +507,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * A pointer that contains a timestamp of the latest pop-up visibility change event
 	  */
-	val popUpVisibilityLastChangedPointer = popUpVisiblePointer.map { _ => Now.toInstant }
+	val popUpVisibilityLastChangedPointer = popUpVisiblePointer.strongMap { _ => Now.toInstant }
 	// Merges the expand and the collapse icons, if necessary
 	private val rightIconPointer: Changing[SingleColorIcon] = {
 		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
@@ -524,7 +524,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 							case Some(collapseIcon) =>
 								// Makes sure both icons have the same size
 								if (expandIcon.size == collapseIcon.size)
-									popUpVisiblePointer.map { visible => if (visible) collapseIcon else expandIcon }
+									popUpVisiblePointer.strongMap { visible => if (visible) collapseIcon else expandIcon }
 								else {
 									val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
 									val targetSize = smaller.size
@@ -533,7 +533,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 									
 									val (newExpandIcon, newCollapseIcon) =
 										if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
-									popUpVisiblePointer.map { visible => if (visible) newCollapseIcon else newExpandIcon }
+									popUpVisiblePointer.strongMap { visible => if (visible) newCollapseIcon else newExpandIcon }
 								}
 							// Case: Only expand icon is defined => Doesn't use collapse icon
 							case None => Fixed(expandIcon)

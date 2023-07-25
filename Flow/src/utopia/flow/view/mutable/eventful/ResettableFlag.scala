@@ -30,10 +30,7 @@ object ResettableFlag
 		// IMPLEMENTED  -----------------------
 		
 		override def value = _value
-		override def value_=(newValue: Boolean) = {
-			if (newValue != value)
-				_set(newValue)
-		}
+		override def value_=(newValue: Boolean) = _set(newValue)
 		
 		override def isChanging = true
 		
@@ -57,10 +54,10 @@ object ResettableFlag
 		
 		// OTHER    --------------------------
 		
-		// Only call this if newValue != value
 		private def _set(newValue: Boolean) = {
+			val oldValue = _value
 			_value = newValue
-			fireChangeEvent(!newValue)
+			fireEventIfNecessary(oldValue, newValue).foreach { _() }
 		}
 	}
 }

@@ -540,7 +540,7 @@ object CollectionExtensions
 			val popBuilder = bf.newBuilder(coll)
 			val remainBuilder = bf.newBuilder(coll)
 			val foundFlag = Flag()
-			val currentBuilderPointer = foundFlag.map { if (_) remainBuilder else popBuilder }
+			val currentBuilderPointer = foundFlag.strongMap { if (_) remainBuilder else popBuilder }
 			ops.foreach { item =>
 				if (foundFlag.isNotSet && !f(item))
 					foundFlag.set()
@@ -1358,7 +1358,6 @@ object CollectionExtensions
 			f(seq(i))
 				.map { _ -> i }
 		}.headOption
-		
 		/**
 		  * Maps each item + index in this sequence
 		  * @param f A mapping function that takes both the item and the index of that item
@@ -1377,8 +1376,7 @@ object CollectionExtensions
 		  * @tparam B Type of resulting collection's items
 		  * @return A copy of this collection with the item inserted
 		  */
-		def inserted[B >: A](item: B, index: Int): CC[B] =
-		{
+		def inserted[B >: A](item: B, index: Int): CC[B] = {
 			if (index <= 0)
 				seq.prepended(item)
 			else if (index >= seq.size)

@@ -34,5 +34,6 @@ trait VariableContextualFactory[N, +Repr]
 	  * @param f A mapping function for the component creation context
 	  * @return Copy of this factory that uses a mapped context
 	  */
+	// TODO: Should restrict the mapping to only apply while the components are attached
 	def mapContext(f: N => N) = withContextPointer(contextPointer.map(f))
 }

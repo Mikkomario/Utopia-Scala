@@ -16,8 +16,7 @@ object MergeMirror
 	 * @return A new mirror
 	 */
 	@deprecated("Please use firstSource.mergeWith(secondSource)(f) instead", "v2.0")
-	def of[O1, O2, R](firstSource: Changing[O1], secondSource: Changing[O2])(f: (O1, O2) => R) =
-	{
+	def of[O1, O2, R](firstSource: Changing[O1], secondSource: Changing[O2])(f: (O1, O2) => R) = {
 		// Uses mapping functions or even a fixed value if possible
 		if (firstSource.isChanging) {
 			if (secondSource.isChanging)
@@ -35,14 +34,16 @@ object MergeMirror
 	  * Creates a new mirror that merges the values of two changing items and caches the result
 	  * @param source1 First source item
 	  * @param source2 Second source item
+	  * @param condition A condition that must be met for the merging to occur (default = always listen & merge)
 	  * @param merge A merge function
 	  * @tparam O1 Type of the values in the first item
 	  * @tparam O2 Type of the values in the second item
 	  * @tparam R Type of merge results
 	  * @return A new merge mirror
 	  */
-	def apply[O1, O2, R](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => R) =
-		new MergeMirror[O1, O2, R](source1, source2, merge(source1.value, source2.value))(
+	def apply[O1, O2, R](source1: Changing[O1], source2: Changing[O2], condition: Changing[Boolean] = AlwaysTrue)
+	                    (merge: (O1, O2) => R) =
+		new MergeMirror[O1, O2, R](source1, source2, merge(source1.value, source2.value), condition)(
 			(_, v1, v2, _) => merge(v1, v2))
 	
 	/**
@@ -77,12 +78,14 @@ object MergeMirror
  * @since 9.5.2020, v1.8
  * @param firstSource The first original item that is being merged
  * @param secondSource The second original item that is being merged
- * @param merge A mapping function for the mirrored value
+ * @param condition A condition that must be met for the merging to occur (default = always listen & merge)
+  * @param merge A mapping function for the mirrored value
  * @tparam O1 Type of the mirror origin (value from source item)
  * @tparam O2 Type of the second mirror origin (value from second source item)
  * @tparam R Type of mirror reflection (value from this item)
  */
-class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing[O2], initialValue: R)
+class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing[O2], initialValue: R,
+                               condition: Changing[Boolean] = AlwaysTrue)
                               (merge: (R, O1, O2, Either[ChangeEvent[O1], ChangeEvent[O2]]) => R)
 	extends AbstractChanging[R]
 {
@@ -94,8 +97,8 @@ class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing
 	// INITIAL CODE ------------------------------
 	
 	// Updates value whenever original value changes. Also generates change events for the listeners
-	startMirroring(firstSource) { (v, e1) => merge(v, e1.newValue, secondSource.value, Left(e1)) } { _value = _ }
-	startMirroring(secondSource) { (v, e2) => merge(v, firstSource.value, e2.newValue, Right(e2)) } { _value = _ }
+	startMirroring(firstSource, condition) { (v, e1) => merge(v, e1.newValue, secondSource.value, Left(e1)) } { _value = _ }
+	startMirroring(secondSource, condition) { (v, e2) => merge(v, firstSource.value, e2.newValue, Right(e2)) } { _value = _ }
 	
 	
 	// IMPLEMENTED  ------------------------------

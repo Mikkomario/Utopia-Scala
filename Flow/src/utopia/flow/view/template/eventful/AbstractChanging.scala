@@ -1,6 +1,5 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
@@ -8,14 +7,14 @@ import utopia.flow.event.model.ChangeResponse.{Continue, ContinueAnd}
 import utopia.flow.operator.End
 import utopia.flow.operator.End.{First, Last}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 
 /**
   * Changing instances generate change events
   * @author Mikko Hilpinen
   * @since 26.5.2019, v1.4.1
   */
-abstract class AbstractChanging[A] extends Changing[A]
+abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 {
 	// ATTRIBUTES   -----------------
 	
@@ -25,31 +24,18 @@ abstract class AbstractChanging[A] extends Changing[A]
 	
 	// COMPUTED --------------------
 	
-	// TODO: Consider hiding the setters, or at least making them protected
-	/**
-	  * @return Listeners of this changing item that are considered high priority
-	  */
-	def highPriorityListeners = _listeners.first
 	/**
 	  * Replaces the high-priority listeners assigned to this changing item
 	  * @param newListeners New set of high-priority listeners
 	  */
-	def highPriorityListeners_=(newListeners: Vector[ChangeListener[A]]) =
+	protected def highPriorityListeners_=(newListeners: Vector[ChangeListener[A]]) =
 		_listeners = _listeners.withFirst(newListeners)
-	/**
-	  * @return Listeners of this changing item that are considered standard priority
-	  */
-	def standardListeners = _listeners.second
 	/**
 	  * Replaces the standard-priority listeners assigned to this changing item
 	  * @param newListeners New set of standard-priority listeners
 	  */
-	def standardListeners_=(newListeners: Vector[ChangeListener[A]]) =
+	protected def standardListeners_=(newListeners: Vector[ChangeListener[A]]) =
 		_listeners = _listeners.withSecond(newListeners)
-	/**
-	  * @return All listeners of this changing item
-	  */
-	def allListeners = _listeners.flatten
 	
 	/**
 	  * @return Listeners that are informed of changes within this item
@@ -71,13 +57,19 @@ abstract class AbstractChanging[A] extends Changing[A]
 	
 	// IMPLEMENTED	----------------
 	
-	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = {
-		// Only adds more listeners if changes are to be anticipated
+	override protected def listenersByPriority: Pair[Iterable[ChangeListener[A]]] = _listeners
+	
+	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = {
+		// Only adds more listeners if changes are to be anticipated, and if the listener is unique
 		if (isChanging)
-			_listeners = _listeners.mapSide(priority) { _ :+ listener }
+			_listeners = _listeners.mapSide(priority) { q =>
+				if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
+			}
 	}
 	
 	override def removeListener(listener: Any) = _listeners = _listeners.map { _.filterNot { _ == listener } }
+	override protected def removeListeners(priority: End, listenersToRemove: Vector[ChangeListener[A]]): Unit =
+		_listeners = _listeners.mapSide(priority) { _.filterNot(listenersToRemove.contains) }
 	
 	
 	// OTHER	--------------------
@@ -91,27 +83,13 @@ abstract class AbstractChanging[A] extends Changing[A]
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
-	protected def fireChangeEvent(oldValue: => A) = fireEvent(Lazy { ChangeEvent(oldValue, value) })
-	/**
-	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
-	  * @param event A change event to fire
-	  */
-	protected def fireEvent(event: ChangeEvent[A]): Unit = fireEvent(View.fixed(event))
-	/**
-	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
-	  * @param event A change event to fire (possibly lazy)
-	  */
-	protected def fireEvent(event: View[ChangeEvent[A]]) = {
-		// First informs the high priority listeners, then standard priority, and finally performs the after-effects
-		End.values.flatMap { _fireEvent(event, _) }.foreach { _() }
-	}
-	private def _fireEvent(event: View[ChangeEvent[A]], targetedPriority: End) = {
+	@deprecated("Replaced with fireEventIfNecessary(A, A)", "v2.2")
+	protected def fireChangeEvent(oldValue: => A) = fireEventIfNecessary(oldValue, value).foreach { _() }
+	
+	private def _fireEvent(event: => Option[ChangeEvent[A]], targetedPriority: End) = {
 		// Informs the listeners and collects the after effects to trigger later
 		// (may remove some listeners in the process)
-		val (listenersToRemove, afterEffects) = _listeners(targetedPriority).splitFlatMap { listener =>
-			val response = listener.onChangeEvent(event.value)
-			(if (response.shouldDetach) Some(listener) else None) -> response.afterEffects
-		}
+		val (listenersToRemove, afterEffects) = fireEventFor(_listeners(targetedPriority), event)
 		if (listenersToRemove.nonEmpty)
 			_listeners = _listeners.mapSide(targetedPriority) { _.filterNot(listenersToRemove.contains) }
 		// Returns the scheduled after-effects
@@ -121,6 +99,7 @@ abstract class AbstractChanging[A] extends Changing[A]
 	/**
 	  * Starts mirroring another pointer
 	  * @param origin Origin value pointer
+	  * @param condition A condition that must be met for the mirroring to take place / update (default = always active)
 	  * @param map A value transformation function that accepts two parameters:
 	  *            1) Current pointer value,
 	  *            2) Source change event,
@@ -128,9 +107,12 @@ abstract class AbstractChanging[A] extends Changing[A]
 	  * @param set A function for updating this pointer's value
 	  * @tparam O Type of origin pointer's value
 	  */
-	protected def startMirroring[O](origin: Changing[O])(map: (A, ChangeEvent[O]) => A)(set: A => Unit) = {
+	protected def startMirroring[O](origin: Changing[O], condition: Changing[Boolean] = AlwaysTrue)
+	                               (map: (A, ChangeEvent[O]) => A)
+	                               (set: A => Unit) =
+	{
 		// Registers as a dependency for the origin pointer
-		origin.addHighPriorityListener { e1: ChangeEvent[O] =>
+		origin.addListenerWhile(condition, priority = First) { e1: ChangeEvent[O] =>
 			// Whenever the origin's value changes, calculates a new value
 			val oldValue = value
 			val newValue = map(oldValue, e1)
@@ -139,10 +121,10 @@ abstract class AbstractChanging[A] extends Changing[A]
 				set(newValue)
 				// The dependencies are informed immediately, other listeners and after-effects only afterwards
 				// TODO: Consider informing these listeners only after the event
-				val event2 = Lazy { ChangeEvent(oldValue, newValue) }
-				val firstEffects = _fireEvent(event2, First)
+				val event2 = ChangeEvent(oldValue, newValue)
+				val firstEffects = _fireEvent(Some(event2), First)
 				ContinueAnd {
-					val moreEffects = _fireEvent(event2, Last)
+					val moreEffects = _fireEvent(Some(event2), Last)
 					(firstEffects.iterator ++ moreEffects).foreach { _() }
 				}
 			}

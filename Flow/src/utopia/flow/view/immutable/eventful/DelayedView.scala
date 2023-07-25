@@ -51,12 +51,14 @@ object DelayedView
 	  * Creates a new delayed view of another changing item
 	  * @param source The viewed item
 	  * @param delay A delay to apply to each mirrored change
+	  * @param condition Condition that must be met in order for viewing / updating to take place (default = always active)
 	  * @param exc Implicit execution context
 	  * @tparam A Type of the values in the other item
 	  * @return A new delayed view
 	  */
-	def apply[A](source: Changing[A], delay: FiniteDuration)(implicit exc: ExecutionContext) =
-		new DelayedView[A](source, delay)
+	def apply[A](source: Changing[A], delay: FiniteDuration, condition: Changing[Boolean] = AlwaysTrue)
+	            (implicit exc: ExecutionContext) =
+		new DelayedView[A](source, delay, condition)
 }
 
 /**
@@ -68,10 +70,12 @@ object DelayedView
   * @since 23.9.2020, v1.9
   * @param source viewed pointer
   * @param delay Required pause between changes before a change event is fired
+  * @param condition Condition that must be met in order for viewing / updating to take place (default = always active)
   * @param exc Implicit execution context
   * @tparam A Type of original pointer value
   */
-class DelayedView[A](val source: Changing[A], delay: FiniteDuration)(implicit exc: ExecutionContext)
+class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: Changing[Boolean] = AlwaysTrue)
+                    (implicit exc: ExecutionContext)
 	extends ChangingWrapper[A]
 {
 	// ATTRIBUTES   --------------------------
@@ -86,7 +90,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration)(implicit ex
 	// INITIAL CODE -------------------------
 	
 	// Whenever source's value changes, delays change activation and updates future value
-	source.addListener(ChangeListener.continuous { event =>
+	source.addListenerWhile(condition)(ChangeListener.continuous { event =>
 		val initialTarget = event.newValue -> (Now + delay)
 		val shouldStartWait = queuedValuePointer.pop(old => old.isEmpty -> Some(initialTarget))
 		

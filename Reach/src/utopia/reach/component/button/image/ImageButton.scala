@@ -313,7 +313,7 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, s
 	override protected val wrapped = ViewImageLabel(parentHierarchy)
 		.withSettings(settings.imageSettings)
 		.withAllowUpscaling(allowUpscaling)
-		.apply(statePointer.map { state => images(state) })
+		.apply(statePointer.strongMap { state => images(state) })
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	
 	override val focusId = hashCode()

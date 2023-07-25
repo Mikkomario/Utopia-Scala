@@ -2,6 +2,7 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.End
+import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 
 case class Fixed[+A](override val value: A) extends Changing[A]
@@ -10,11 +11,10 @@ case class Fixed[+A](override val value: A) extends Changing[A]
 	
 	override def isChanging = false
 	
+	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = ()
 	override def removeListener(changeListener: Any) = ()
 	
 	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = other.map { f(value, _) }
-	
-	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = ()
 }
 
 /**

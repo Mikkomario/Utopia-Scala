@@ -18,6 +18,7 @@ object AsyncMirror
 	  * @param source A source pointer
 	  * @param placeHolder A placeholder for the first map result.
 	  *                    Used until a real value has been resolved.
+	  * @param condition Condition that must be met for the mirroring to take place (default = always active)
 	  * @param skipInitialProcess Whether the initial source value should not be mapped.
 	  *                           Suitable for situations where the placeholder is accurate.
 	  *                           Default = false = immediately start mapping.
@@ -29,11 +30,11 @@ object AsyncMirror
 	  * @return A new asynchronously mirroring pointer
 	  */
 	def tryCatching[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection,
-	                                    skipInitialProcess: Boolean = false)
+	                                    condition: Changing[Boolean] = AlwaysTrue, skipInitialProcess: Boolean = false)
 	                                   (map: Origin => Future[Try[Reflection]])
 	                                   (implicit exc: ExecutionContext, logger: Logger) =
 	{
-		apply[Origin, Try[Reflection], Reflection](source, placeHolder, skipInitialProcess)(map) { (previous, result) =>
+		apply[Origin, Try[Reflection], Reflection](source, placeHolder, condition, skipInitialProcess)(map) { (previous, result) =>
 			result.flatten.getOrMap { error =>
 				logger(error, s"Asynchronous mapping failed. Reverting back to $previous")
 				previous
@@ -46,6 +47,7 @@ object AsyncMirror
 	  * @param source A source pointer
 	  * @param placeHolder A placeholder for the first map result.
 	  *                    Used until a real value has been resolved.
+	  * @param condition Condition that must be met for the mirroring to take place (default = always active)
 	  * @param skipInitialProcess Whether the initial source value should not be mapped.
 	  *                           Suitable for situations where the placeholder is accurate.
 	  *                           Default = false = immediately start mapping.
@@ -57,11 +59,12 @@ object AsyncMirror
 	  * @return A new asynchronously mirroring pointer
 	  */
 	def catching[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection,
+	                                 condition: Changing[Boolean] = AlwaysTrue,
 	                                 skipInitialProcess: Boolean = false)
 	                                (map: Origin => Future[Reflection])
 	                                (implicit exc: ExecutionContext, logger: Logger): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
-		apply[Origin, Reflection, Reflection](source, placeHolder, skipInitialProcess)(map) { (previous, result) =>
+		apply[Origin, Reflection, Reflection](source, placeHolder, condition, skipInitialProcess)(map) { (previous, result) =>
 			result.getOrMap { error =>
 				logger(error, s"Asynchronous mapping failed. Reverts back to $previous")
 				previous
@@ -74,6 +77,7 @@ object AsyncMirror
 	  * @param source Pointer that's being mapped
 	  * @param placeHolder A placeholder for the first map result.
 	  *                    Used until a real value has been resolved.
+	  * @param condition Condition that must be met for the mirroring to take place (default = always active)
 	  * @param skipInitialProcess Whether the initial source value should not be mapped.
 	  *                           Suitable for situations where the placeholder is accurate.
 	  *                           Default = false = immediately start mapping.
@@ -87,14 +91,14 @@ object AsyncMirror
 	  * @return A new asynchronous mirror
 	  */
 	def apply[Origin, Result, Reflection](source: Changing[Origin], placeHolder: Reflection,
-	                                      skipInitialProcess: Boolean = false)
+	                                      condition: Changing[Boolean] = AlwaysTrue, skipInitialProcess: Boolean = false)
 	                                     (map: Origin => Future[Result])
 	                                     (merge: (Reflection, Try[Result]) => Reflection)
 	                                     (implicit exc: ExecutionContext): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
 		// Case: Mapping required => constructs a proper mirror
 		if (source.isChanging || !skipInitialProcess)
-			new AsyncMirror[Origin, Result, Reflection](source, placeHolder, skipInitialProcess)(map)(merge)
+			new AsyncMirror[Origin, Result, Reflection](source, placeHolder, condition, skipInitialProcess)(map)(merge)
 		// Case: Fixed source and no initial mapping required => Constructs a fixed pointer
 		else
 			Fixed(AsyncMirrorValue(placeHolder))
@@ -151,6 +155,11 @@ object AsyncMirror
   * @param source Pointer that's being mapped
   * @param initialPlaceHolder A placeholder for the first map result.
   *                           Used until a real value has been resolved.
+  * @param condition Condition that must be met for the mirroring to take place (default = always active)
+  * @param skipInitialProcess Whether the initial mirroring process should be skipped.
+  *                           Use this in cases where the specified placeholder value is a valid replacement for
+  *                           an asynchronously acquired value.
+  *                           Default = false.
   * @param f An asynchronous mapping function
   * @param merge A function that merges mapping results and previously acquired value into a new pointer value.
   *              Handles possible mapping function errors, also.
@@ -160,7 +169,7 @@ object AsyncMirror
   * @tparam Reflection Mapping result type after merging
   */
 class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], initialPlaceHolder: Reflection,
-                                              skipInitialProcess: Boolean = false)
+                                              condition: Changing[Boolean], skipInitialProcess: Boolean = false)
                                              (f: Origin => Future[Result])
                                              (merge: (Reflection, Try[Result]) => Reflection)
                                              (implicit exc: ExecutionContext)
@@ -184,7 +193,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 		f(source.value).onComplete(resultsArrived)
 	
 	// Whenever source value changes, requests an asynchronous status update
-	source.addListener(ChangeListener.continuous { event => requestCalculation(event.newValue) })
+	source.addListenerWhile(condition)(ChangeListener.continuous { event => requestCalculation(event.newValue) })
 	
 	
 	// IMPLEMENTED  ---------------------

@@ -14,8 +14,7 @@ object Mirror
 	 * @return A new mirror
 	 */
 	@deprecated("Please use source.map(f) instead", "v2.0")
-	def of[O, R](source: Changing[O])(f: O => R) =
-	{
+	def of[O, R](source: Changing[O])(f: O => R) = {
 		if (source.isChanging)
 			apply(source)(f)
 		else
@@ -25,12 +24,14 @@ object Mirror
 	/**
 	  * Creates a new mirror that reflects changes in another item
 	  * @param source A source item
+	  * @param condition Condition that must be met for the mirroring to occur (default = always active)
 	  * @param f A mapping function for source item values
 	  * @tparam O Type of source values
 	  * @tparam R Type of map results
 	  * @return A new mirror that contains the map results
 	  */
-	def apply[O, R](source: Changing[O])(f: O => R) = new Mirror[O, R](source, f(source.value))((_, e) => f(e.newValue))
+	def apply[O, R](source: Changing[O], condition: Changing[Boolean] = AlwaysTrue)(f: O => R) =
+		new Mirror[O, R](source, f(source.value), condition)((_, e) => f(e.newValue))
 	
 	/**
 	  * Creates a new mirror that reflects changes in another item.
@@ -55,11 +56,14 @@ object Mirror
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1.8
  * @param source The original item that is being mirrored
- * @param f A mapping function for the mirrored value
+ * @param condition Condition that must be met for the mirroring to occur (default = always active)
+  * @param f A mapping function for the mirrored value
  * @tparam O Type of the mirror origin (value from source item)
  * @tparam R Type of mirror reflection (value from this item)
  */
-class Mirror[+O, R](source: Changing[O], initialValue: R)(f: (R, ChangeEvent[O]) => R) extends AbstractChanging[R]
+class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Boolean] = AlwaysTrue)
+                   (f: (R, ChangeEvent[O]) => R)
+	extends AbstractChanging[R]
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -69,7 +73,7 @@ class Mirror[+O, R](source: Changing[O], initialValue: R)(f: (R, ChangeEvent[O])
 	// INITIAL CODE ------------------------------
 	
 	// Mirrors the source pointer
-	startMirroring(source)(f) { _value = _ }
+	startMirroring(source, condition)(f) { _value = _ }
 	
 	
 	// IMPLEMENTED  ------------------------------

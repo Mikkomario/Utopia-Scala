@@ -539,8 +539,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	              markMinMax: Pair[Boolean] = Pair.twice(false))
 	             (parse: Value => Option[A]) =
 	{
-		lazy val localizerPointer = contextPointer.map { _.localizer }
-		implicit def localizer: Localizer = localizerPointer.value
+		implicit def localizer: Localizer = contextPointer.value.localizer
 		
 		// Field width is based on minimum and maximum values and their lengths
 		val minMaxStrings = allowedRange.toPair.map { _.toString }
@@ -744,7 +743,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 	private val _wrapped = Field.withContext(parentHierarchy, contextPointer).withSettings(appliedFieldSettings)
 		.apply(isEmptyPointer) { fieldContext =>
 			// Modifies the context
-			val labelContextPointer = fieldContext.contextPointer.map { _.withHorizontallyExpandingText }
+			val labelContextPointer = fieldContext.contextPointer
+				.strongMapWhile(parentHierarchy.linkPointer) { _.withHorizontallyExpandingText }
 			// Assigns focus listeners and prompt drawers to label settings
 			val mainFocusListener: FocusListener = {
 				// Remembers the first time this field received focus
@@ -766,8 +766,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 			// Case: Shows input character count at the bottom right label
 			if (settings.showsCharacterCount)
 				settings.maxLength.map { maxLength =>
-					val localizerPointer = fieldContext.contextPointer.map { _.localizer }
-					implicit def localizer: Localizer = localizerPointer.value
+					implicit def localizer: Localizer = fieldContext.contextPointer.value.localizer
 					
 					val textLengthPointer = textContentPointer.map { _.length }
 					Open.using(ViewTextLabel) {

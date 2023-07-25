@@ -386,7 +386,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 	// TODO: This approach creates additional dependencies. Consider creating a cached margin (etc) pointers
 	private val marginPointer = {
 		if (settings.separator.isEmpty)
-			contextPointer.map { _.smallStackMargin }
+			contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.smallStackMargin }
 		else
 			Fixed(StackLength.fixedZero)
 	}

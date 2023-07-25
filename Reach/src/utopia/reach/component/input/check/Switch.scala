@@ -179,8 +179,9 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr]
 	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 	{
 		val scaling = ComponentCreationDefaults.switchScalingFactor
-		new Switch(parentHierarchy, actorHandler, color, math.round(knobDiameter * scaling),
-			math.round(hoverExtraRadius * scaling), knobShadowOffset.map { o => math.round(o * scaling) },
+		new Switch(parentHierarchy, actorHandler, color, math.round(knobDiameter * scaling).toDouble,
+			math.round(hoverExtraRadius * scaling).toDouble,
+			knobShadowOffset.map { o => math.round(o * scaling).toDouble },
 			valuePointer, settings, shade, animationDuration)
 	}
 }
