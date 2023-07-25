@@ -198,7 +198,6 @@ case class Pair[+A](first: A, second: A)
 	@deprecated("Please use .isAsymmetric instead", "v2.0")
 	def isNotSymmetric = !isSymmetric
 	
-	
 	/**
 	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
 	  *         Negative represents the left / first side, Positive represents the right / second side.
@@ -298,6 +297,13 @@ case class Pair[+A](first: A, second: A)
 		case First => first
 		case Last => second
 	}
+	
+	/**
+	  * Calls the specified function for each value of this pair. Includes the side where that item appears.
+	  * @param f A function that processes the items. Accepts the item and the side on which it appears.
+	  * @tparam U Arbitrary function result type
+	  */
+	def foreachSide[U](f: (A, End) => U) = End.values.foreach { side => f(apply(side), side) }
 	
 	/**
 	 * @param item An item

@@ -138,6 +138,7 @@ abstract class AbstractChanging[A] extends Changing[A]
 			if (newValue != oldValue) {
 				set(newValue)
 				// The dependencies are informed immediately, other listeners and after-effects only afterwards
+				// TODO: Consider informing these listeners only after the event
 				val event2 = Lazy { ChangeEvent(oldValue, newValue) }
 				val firstEffects = _fireEvent(event2, First)
 				ContinueAnd {

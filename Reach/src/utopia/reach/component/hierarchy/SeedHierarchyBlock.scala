@@ -1,14 +1,10 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeEvent
-import utopia.flow.operator.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
 import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 
@@ -110,17 +106,15 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	// NESTED	------------------------------
 	
-	private object LinkManager extends Changing[Boolean]
+	private object LinkManager extends ChangingWrapper[Boolean]
 	{
 		// ATTRIBUTES	----------------------
 		
 		// Contains final link status (will be set once hierarchy completes)
-		private var finalManagedPointer: Option[Changing[Boolean]] = None
+		private val _wrapped = OnceFlatteningPointer(false)
+		
 		// Contains "this level linked" -status after connected to a parent
 		private var finalLinkConditionPointer: Option[View[Boolean]] = None
-		
-		// Holds listeners temporarily while there is no pointer to receive them yet
-		private var queuedListeners = Pair.twice(Vector.empty[ChangeListener[Boolean]])
 		
 		
 		// COMPUTED	--------------------------
@@ -128,25 +122,9 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		def isThisLevelLinked = finalLinkConditionPointer.exists { _.value }
 		
 		
-		// IMPLEMENTED	----------------------
+		// IMPLEMENTED  ----------------------
 		
-		override def isChanging = finalManagedPointer.forall { _.isChanging }
-		
-		override def value = finalManagedPointer match {
-			case Some(pointer) => pointer.value
-			case None => false
-		}
-		
-		override def addListenerOfPriority(priority: End)(listener: => ChangeListener[Boolean]) =
-			finalManagedPointer match {
-				case Some(pointer) => pointer.addListenerOfPriority(priority)(listener)
-				case None => queuedListeners = queuedListeners.mapSide(priority) { _ :+ listener }
-			}
-		
-		override def removeListener(changeListener: Any) = {
-			queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
-			finalManagedPointer.foreach { _.removeListener(changeListener) }
-		}
+		override protected def wrapped: Changing[Boolean] = _wrapped
 		
 		
 		// OTHER	--------------------------
@@ -163,30 +141,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		private def specifyFinalPointer(pointer: Changing[Boolean], thisLevelPointer: View[Boolean]) = {
 			// Updates the pointer(s)
-			finalManagedPointer = Some(pointer)
+			_wrapped.complete(pointer)
 			finalLinkConditionPointer = Some(thisLevelPointer)
-			
-			// Transfers listeners, if any were queued
-			val queued = queuedListeners
-			queuedListeners = Pair.twice(Vector.empty)
-			// Case: Attachment status changes => Informs the listeners
-			if (pointer.value) {
-				val event = ChangeEvent(false, true)
-				val afterEffects = End.values.flatMap { prio =>
-					// Only transfers those listeners that didn't get detached upon this change
-					val (remainingListeners, afterEffects) = queued(prio).splitFlatMap { listener =>
-						val response = listener.onChangeEvent(event)
-						(if (response.shouldContinueListening) Some(listener) else None) -> response.afterEffects
-					}
-					remainingListeners.foreach { pointer.addListenerOfPriority(prio)(_) }
-					afterEffects
-				}
-				// Triggers all after-effects once the listeners have been handled
-				afterEffects.foreach { _() }
-			}
-			// Case: Attachment status stays the same => Simply transfers the listeners
-			else
-				End.values.foreach { prio => queued(prio).foreach { pointer.addListenerOfPriority(prio)(_) } }
 		}
 	}
 }

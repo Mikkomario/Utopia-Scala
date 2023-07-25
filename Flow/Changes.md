@@ -22,6 +22,8 @@
 ### New Features
 - Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 
   an external condition is met
+- Added **OnceFlatteningPointer** class that resembles **SettableOnce**, 
+  except that it will wrap another pointer (i.e. not just a value) once complete.
 - Added new **TryCatch** utility class for handling situations that included non-critical failures
 - Added new **Steppable** trait for items that provide step-based iteration
 - Added sorting support to immutable **Models**
