@@ -5,7 +5,7 @@ import utopia.flow.async.process.{Delay, Wait}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import scala.concurrent.ExecutionContext
 
@@ -22,7 +22,7 @@ object AsyncViewTest extends App
 	val waitLock = new AnyRef
 	
 	// Controlled pointer
-	val original = new PointerWithEvents[Int](0)
+	val original = new EventfulPointer[Int](0)
 	// Pointer that updates with a delay
 	val delayed = original.delayedBy(delay)
 	// Pointer that slowly adds 1 to the original pointer value and performs a single calculation at a time

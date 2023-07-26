@@ -5,7 +5,7 @@ import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.ChangeFuture
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 /**
   * A test for certain functions in Changing and ChangingLike
@@ -18,7 +18,7 @@ object ChangeFutureTest extends App
 	
 	val delay = 0.5.seconds
 	
-	val original = new PointerWithEvents(1)
+	val original = new EventfulPointer(1)
 	val delayMapped = original.flatMap { i => ChangeFuture(i, Delay(delay) { i + 1 }) }
 	
 	original.addListener { e => println(s"$Now original: $e") }

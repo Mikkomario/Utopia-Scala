@@ -6,7 +6,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.Loop
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.ColorRole.Gray
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.label.ItemLabel
@@ -30,7 +30,7 @@ object StackContentManagementTest extends App
 	val stack = Stack.column[ItemLabel[Int]]()
 	
 	val background = colorScheme(Gray)
-	val contentPointer = new PointerWithEvents(Vector(1, 4, 6))
+	val contentPointer = new EventfulPointer(Vector(1, 4, 6))
 	val manager = baseContext.against(background).forTextComponents.use { implicit txc =>
 		ContainerContentDisplayer.forStatelessItems(stack, contentPointer) { i: Int =>
 			println(s"Creating a new label ($i)")

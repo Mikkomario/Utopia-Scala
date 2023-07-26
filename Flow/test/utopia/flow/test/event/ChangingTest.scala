@@ -1,6 +1,6 @@
 package utopia.flow.test.event
 
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 /**
   * Tests various pointers
@@ -9,7 +9,7 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
   */
 object ChangingTest extends App
 {
-	val origin = new PointerWithEvents(1)
+	val origin = new EventfulPointer(1)
 	val mapped = origin.map { _ % 2 }
 	
 	var originChanges = 0

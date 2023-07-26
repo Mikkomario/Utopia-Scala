@@ -8,7 +8,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
@@ -83,7 +83,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new field
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)
 	(makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => C)
@@ -143,7 +143,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new field
 	  */
 	def simple[A, P <: Changing[Vector[A]]](contentPointer: P,
-	                                        valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
+	                                        valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
 	                                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                                        sameItemCheck: Option[EqualsFunction[A]] = None)
 	                                       (implicit scrollingContext: ScrollingContext, exc: ExecutionContext,

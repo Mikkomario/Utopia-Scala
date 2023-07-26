@@ -4,7 +4,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.flow.async.process.Loop
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
 import utopia.reach.component.label.image.ViewImageAndTextLabel
@@ -28,7 +28,7 @@ object ColoredViewImageAndTextLabelTest extends App
 		SingleColorIcon(Image.readFrom(images/"check-box-selected.png").get) -> "Selected",
 		SingleColorIcon.empty -> "Nothing"
 	)
-	val indexPointer = new PointerWithEvents(0)
+	val indexPointer = new EventfulPointer(0)
 	val itemPointer = indexPointer.map { options(_)._2 }
 	val imagePointer = indexPointer.map { options(_)._1 }
 	

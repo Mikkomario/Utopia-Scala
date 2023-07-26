@@ -25,7 +25,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
@@ -421,7 +421,7 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
 	  */
 	def apply[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
 		P <: Changing[Vector[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
-	                              valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
+	                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
 	                              sameItemCheck: Option[EqualsFunction[A]] = None)
 	                             (makeField: FieldCreationContext => C)
 	                             (makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
@@ -478,7 +478,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	+P <: Changing[Vector[A]]]
 (parentHierarchy: ComponentHierarchy, contextPointer: Changing[ReachContentWindowContext],
  isEmptyPointer: Changing[Boolean], override val contentPointer: P,
- override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
+ override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
  settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default,
  sameItemCheck: Option[EqualsFunction[A]] = None)
 (makeField: FieldCreationContext => C)
@@ -486,7 +486,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
 (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
-		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
+		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Vector[A], P]
 {
 	// ATTRIBUTES	------------------------------
 	

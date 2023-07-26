@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.util.Screen
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.window.ReachWindow
@@ -17,7 +17,7 @@ object ReachWindowTest extends App
 {
 	import ReachTestContext._
 	
-	val textPointer = new PointerWithEvents("Text")
+	val textPointer = new EventfulPointer("Text")
 	
 	val window = ReachWindow.withResizeLogic(User)
 		.withWindowBackground(colors.primary.default).muchLarger

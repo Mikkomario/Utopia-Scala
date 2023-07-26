@@ -2,7 +2,7 @@ package utopia.reach.test
 
 import utopia.firmament.component.Window
 import utopia.firmament.localization.LocalString._
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -50,7 +50,7 @@ object ReachComponentTest extends App
 					stackF.centered.build(Mixed) { factories =>
 						// 1: Editable text label
 						val editableLabel = factories(EditableTextLabel)
-							.withFocusListener(focusReporter("Label"))(new PointerWithEvents("Type Here"))
+							.withFocusListener(focusReporter("Label"))(new EventfulPointer("Type Here"))
 						// 2: Button Row
 						val buttonStack = factories(Stack).related.row.build(Mixed) { factories =>
 							// 2.1: Clear Button

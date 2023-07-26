@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
@@ -40,7 +40,7 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 	private var mousePosition = Point.origin
 	private var hoverTargets = Set[DragAndDropTarget]()
 	
-	private val targetsPointer = new PointerWithEvents(Vector[DragAndDropTarget]())
+	private val targetsPointer = new EventfulPointer(Vector[DragAndDropTarget]())
 	
 	
 	// INITIAL CODE -------------------------

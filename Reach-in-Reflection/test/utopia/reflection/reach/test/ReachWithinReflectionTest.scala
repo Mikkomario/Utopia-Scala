@@ -2,7 +2,7 @@ package utopia.reflection.reach.test
 
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.generic.ParadigmDataType
@@ -26,7 +26,7 @@ object ReachWithinReflectionTest extends App
 	import utopia.reach.test.TestCursors._
 	import utopia.reflection.test.TestContext._
 	
-	val textPointer = new PointerWithEvents[String]("")
+	val textPointer = new EventfulPointer[String]("")
 	val background = colorScheme.gray.light
 	val canvas = ReflectionReachCanvas(Color.black.withAlpha(0.0), cursors) { hierarchy =>
 		TextField.withContext(hierarchy, baseContext.against(background).forTextComponents)

@@ -17,7 +17,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.VolatileOption
-import utopia.flow.view.mutable.eventful.{Flag, IndirectPointer, PointerWithEvents, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{Flag, IndirectPointer, EventfulPointer, ResettableFlag}
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
@@ -229,7 +229,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private lazy val screenInsets = Screen.actualInsetsAt(component.getGraphicsConfiguration)
 	
 	// Allows mutable access to the display icon
-	val iconPointer = new PointerWithEvents(initialIcon)
+	val iconPointer = new EventfulPointer(initialIcon)
 	
 	// Stores window state in private flags
 	// These are only updated based on awt window events
@@ -241,8 +241,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private val _focusedFlag = ResettableFlag(component.isFocused)
 	
 	// Stores position and size in pointers, which are only updated on window events
-	private val _positionPointer = new PointerWithEvents(Point.origin)
-	private val _sizePointer = new PointerWithEvents(Size.zero)
+	private val _positionPointer = new EventfulPointer(Point.origin)
+	private val _sizePointer = new EventfulPointer(Size.zero)
 	
 	// Stores calculated anchor, which is used in repositioning after size changes
 	// This pointer is cleared after the anchor has been resolved / actuated

@@ -9,7 +9,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -140,13 +140,13 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val _statePointer = new EventfulPointer(GuiElementStatus.identity)
 	
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialStyle, allowTextShrink)
 	/**
 	  * A mutable pointer to this button's base color
 	  */
-	val colorPointer = new PointerWithEvents(initialColor)
+	val colorPointer = new EventfulPointer(initialColor)
 	
 	var focusListeners: Seq[FocusListener] = Vector(new ButtonDefaultFocusListener(_statePointer))
 	override val focusId = hashCode()

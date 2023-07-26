@@ -1,7 +1,7 @@
 package utopia.flow.view.mutable
 
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -29,12 +29,28 @@ object Pointer
 	def empty[A]() = apply[Option[A]](None)
 	
 	/**
+	  * Creates a new eventful pointer (see [[EventfulPointer]])
+	  * @param value The initial value for the pointer
+	  * @tparam A The type of the contained item
+	  * @return A new pointer that fires change events when its value changes
+	  */
+	def eventful[A](value: A) = EventfulPointer(value)
+	/**
 	  * Creates a new pointer with events
 	  * @param value The initial value for the pointer
 	  * @tparam A The type of the contained item
 	  * @return A new pointer with events
 	  */
-	def withEvents[A](value: A) = new PointerWithEvents(value)
+	@deprecated("Renamed to .eventful(A)", "v2.2")
+	def withEvents[A](value: A) = new EventfulPointer(value)
+	
+	/**
+	  * Creates a new (eventful) pointer that may be locked
+	  * @param value A value to assign to this pointer, initially
+	  * @tparam A Type of values held within this pointer
+	  * @return A new pointer
+	  */
+	def lockable[A](value: A) = LockablePointer(value)
 	
 	/**
 	  * @param referenceDuration A function for calculating the duration of strong references to the held values

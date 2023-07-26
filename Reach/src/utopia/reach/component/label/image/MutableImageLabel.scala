@@ -1,6 +1,6 @@
 package utopia.reach.component.label.image
 
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -47,15 +47,15 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	/**
 	  * Pointer to this label's displayed image
 	  */
-	val imagePointer = new PointerWithEvents(initialImage)
+	val imagePointer = new EventfulPointer(initialImage)
 	/**
 	  * Pointer to the insets placed around the image in this label
 	  */
-	val insetsPointer = new PointerWithEvents(initialInsets)
+	val insetsPointer = new EventfulPointer(initialInsets)
 	/**
 	  * Pointer to the alignment used when positioning the image in this label
 	  */
-	val alignmentPointer = new PointerWithEvents(initialAlignment)
+	val alignmentPointer = new EventfulPointer(initialAlignment)
 	
 	
 	// INITIAL CODE	--------------------------

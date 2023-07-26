@@ -12,7 +12,7 @@ import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.End.First
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
@@ -188,7 +188,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @return A new check box
 	  */
 	def iconsOrImages(images: Either[Pair[SingleColorIcon], Pair[Image]],
-	                  valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false)) =
+	                  valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false)) =
 	{
 		// Requires high contrast because of low alpha values
 		implicit val c: ColorContext = context.withEnhancedColorContrast
@@ -215,7 +215,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @return A new check box
 	  */
 	def icons(icons: Pair[SingleColorIcon],
-	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents[Boolean](false)) =
+	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer[Boolean](false)) =
 		iconsOrImages(Left(icons), valuePointer)
 	/**
 	  * Creates a new check box
@@ -223,7 +223,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param valuePointer Mutable pointer to currently selected value (default = new pointer)
 	  * @return A new check box
 	  */
-	def images(images: Pair[Image], valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents[Boolean](false)) =
+	def images(images: Pair[Image], valuePointer: EventfulPointer[Boolean] = new EventfulPointer[Boolean](false)) =
 		iconsOrImages(Right(images), valuePointer)
 }
 
@@ -256,7 +256,7 @@ case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new check box
 	  */
 	def apply(images: Pair[Image], hoverColors: Pair[Color], hoverRadius: Double = 0.0,
-	          valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false)) =
+	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false)) =
 		new CheckBox(parentHierarchy, images, hoverColors, hoverRadius, settings, valuePointer)
 }
 
@@ -284,7 +284,7 @@ case class FullContextualCheckBoxFactory(factory: ContextualCheckBoxFactory,
 	  * @param valuePointer   Mutable pointer to currently selected value (default = new pointer)
 	  * @return A new check box
 	  */
-	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false)) =
+	def apply(valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false)) =
 		factory.iconsOrImages(images, valuePointer)
 }
 
@@ -369,12 +369,12 @@ object CheckBox extends CheckBoxSetup()
 class CheckBox(parentHierarchy: ComponentHierarchy,
                images: Pair[Image], hoverColors: Pair[Color],
                hoverRadius: Double = 0.0, settings: CheckBoxSettings = CheckBoxSettings.default,
-               override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false))
+               override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false))
 	extends ReachComponentWrapper with ButtonLike with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	---------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer.mergeWith(settings.enabledPointer) { (base, enabled) =>
 		base + (Disabled -> !enabled) }
 	

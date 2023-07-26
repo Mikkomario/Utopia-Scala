@@ -6,7 +6,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
@@ -40,8 +40,8 @@ object DropDownTest extends App
 		.using(Framing, title = "Drop-Down Test") { (_, framingF) =>
 			framingF.build(Stack) { stackF =>
 				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.build(baseDdf) { ddF =>
-					val selectedCategoryPointer = new PointerWithEvents[Option[String]](None)
-					val selectedItemPointer = new PointerWithEvents[Option[String]](None)
+					val selectedCategoryPointer = new EventfulPointer[Option[String]](None)
+					val selectedItemPointer = new EventfulPointer[Option[String]](None)
 					
 					Vector(
 						ddF.withFieldName("Category")

@@ -3,7 +3,7 @@ package utopia.flow.view.mutable.caching
 import utopia.flow.event.listener.{LazyListener, LazyResetListener}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.eventful.ListenableLazy
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ResetListenable}
 
 import scala.concurrent.Future
@@ -30,7 +30,7 @@ class ListenableMutableLazy[A](generator: => A) extends MutableLazy[A] with List
 	private var listeners = Vector[LazyListener[A]]()
 	private var resetListeners = Vector[LazyResetListener[A]]()
 	
-	private val statePointer = PointerWithEvents.empty[A]()
+	private val statePointer = EventfulPointer.empty[A]()
 	
 	override lazy val valueFuture: Future[A] = statePointer.findMapFuture(Identity)
 	

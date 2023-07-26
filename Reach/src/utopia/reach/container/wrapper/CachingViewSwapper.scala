@@ -4,7 +4,7 @@ import utopia.firmament.component.input.{InputWithPointer, InteractionWithPointe
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.template.CacheLike
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
@@ -25,7 +25,7 @@ object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
 	// EXTENSIONS	------------------------
 	
 	// Swappers using a mutable pointer can be considered mutable themselves
-	implicit class MutableCachingViewSwapper[A, +C <: ReachComponentLike](val s: CachingViewSwapper[A, C, PointerWithEvents[A]])
+	implicit class MutableCachingViewSwapper[A, +C <: ReachComponentLike](val s: CachingViewSwapper[A, C, EventfulPointer[A]])
 		extends InteractionWithPointer[A]
 	{
 		override def valuePointer = s.valuePointer

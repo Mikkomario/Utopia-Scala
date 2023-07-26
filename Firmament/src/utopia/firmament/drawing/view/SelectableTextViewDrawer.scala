@@ -3,7 +3,7 @@ package utopia.firmament.drawing.view
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
@@ -29,7 +29,7 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 {
 	// ATTRIBUTES	------------------------------
 	
-	override protected val lastDrawStatusPointer = new PointerWithEvents(Point.origin -> Vector2D.identity)
+	override protected val lastDrawStatusPointer = new EventfulPointer(Point.origin -> Vector2D.identity)
 	
 	/**
 	  * Pointer to the currently drawn targets

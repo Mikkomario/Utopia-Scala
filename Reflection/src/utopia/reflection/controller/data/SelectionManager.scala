@@ -3,7 +3,7 @@ package utopia.reflection.controller.data
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.firmament.component.input.SelectableWithPointers
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.controller.data.ContentManager
@@ -20,7 +20,7 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	
 	// TODO: Value pointer should be settable from outside
 	private var _selectedDisplay: Option[C] = None
-	override val valuePointer = new PointerWithEvents[Option[A]](None)
+	override val valuePointer = new EventfulPointer[Option[A]](None)
 	
 	
 	// INITIAL CODE	-------------------

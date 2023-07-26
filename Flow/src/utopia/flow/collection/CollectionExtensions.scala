@@ -1855,7 +1855,15 @@ object CollectionExtensions
 		  * @tparam B Type of items in the resulting iterator
 		  * @return A copy of this iterator that supports change events
 		  */
-		def withEvents[B >: A](initialValue: B) = new IteratorWithEvents[B](initialValue, i)
+		def eventful[B >: A](initialValue: B) = EventfulIterator[B](initialValue, i)
+		/**
+		  * Creates a copy of this iterator that supports change events
+		  * @param initialValue The value of the resulting iterator until next() is called for the first time
+		  * @tparam B Type of items in the resulting iterator
+		  * @return A copy of this iterator that supports change events
+		  */
+		@deprecated("Renamed to .eventful(B)", "v2.2")
+		def withEvents[B >: A](initialValue: B) = new EventfulIterator[B](initialValue, i)
 	}
 	
 	

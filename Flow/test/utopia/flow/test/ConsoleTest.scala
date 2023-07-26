@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 /**
  * Provides a test console
@@ -16,7 +16,7 @@ object ConsoleTest extends App
 	implicit val jsonParser: JsonParser = JsonReader
 	
 	val terminatedPointer = Pointer(false)
-	val forgottenCommandsPointer = new PointerWithEvents(Set[String]())
+	val forgottenCommandsPointer = new EventfulPointer(Set[String]())
 	
 	val closeCommand = Command.withoutArguments("quit", "q", "Closes this console") {
 		terminatedPointer.value = true }

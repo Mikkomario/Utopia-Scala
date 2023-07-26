@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.firmament.localization.DisplayFunction
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.ColorRole.Primary
@@ -25,8 +25,8 @@ object SelectionListTest extends App
 	import ReachTestContext._
 	
 	// Data
-	val contentPointer = new PointerWithEvents(Vector(1, 2, 3, 4, 5, 6, 7))
-	val valuePointer = new PointerWithEvents[Option[Int]](Some(2))
+	val contentPointer = new EventfulPointer(Vector(1, 2, 3, 4, 5, 6, 7))
+	val valuePointer = new EventfulPointer[Option[Int]](Some(2))
 	
 	val mainBg = colors.gray.default
 	

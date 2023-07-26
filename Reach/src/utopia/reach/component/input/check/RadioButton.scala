@@ -7,7 +7,7 @@ import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{GuiElementStatus, HotKey, StandardSizeAdjustable}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -177,9 +177,9 @@ trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr]
 	  * @tparam A Type of selected value
 	  * @return A new radio button
 	  */
-	protected def _apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
-	             backgroundColorPointer: Changing[Color], diameter: Double,
-	             hoverExtraRadius: Double, ringWidth: Double)
+	protected def _apply[A](selectedValuePointer: EventfulPointer[A], value: A,
+	                        backgroundColorPointer: Changing[Color], diameter: Double,
+	                        hoverExtraRadius: Double, ringWidth: Double)
 	            (implicit colorScheme: ColorScheme) =
 		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
 			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, settings)
@@ -220,7 +220,7 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam A Type of selected value
 	  * @return A new radio button
 	  */
-	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A) = {
+	def apply[A](selectedValuePointer: EventfulPointer[A], value: A) = {
 		// Uses a static size after creation
 		val context = contextPointer.value
 		val bgPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
@@ -264,7 +264,7 @@ case class RadioButtonFactory(parentHierarchy: ComponentHierarchy,
 	 * @tparam A Type of selected value
 	 * @return A new radio button
 	 */
-	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
+	def apply[A](selectedValuePointer: EventfulPointer[A], value: A,
 	             backgroundColorPointer: Changing[Color], diameter: Double,
 	             hoverExtraRadius: Double, ringWidth: Double = 1.0)
 	            (implicit colorScheme: ColorScheme) =
@@ -302,7 +302,7 @@ object RadioButton extends RadioButtonSetup()
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
-class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
+class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: EventfulPointer[A],
                      representing: A, backgroundColorPointer: Changing[Color],
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
                      settings: RadioButtonSettings = RadioButtonSettings.default)
@@ -311,7 +311,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 {
 	// ATTRIBUTES   ---------------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = {
 		if (settings.enabledPointer.isAlwaysTrue)
 			baseStatePointer.view

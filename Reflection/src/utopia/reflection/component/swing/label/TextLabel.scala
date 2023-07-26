@@ -4,7 +4,7 @@ import utopia.firmament.component.text.MutableTextComponent
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.model.TextDrawContext
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -81,11 +81,11 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * A mutable pointer that contains this label's text
 	  */
-	val textPointer = new PointerWithEvents(initialText)
+	val textPointer = new EventfulPointer(initialText)
 	/**
 	  * A mutable pointer that contains this label's styling
 	  */
-	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
+	val stylePointer = new EventfulPointer(TextDrawContext(initialFont, initialTextColor, initialAlignment,
 		initialInsets))
 	
 	private val measuredTextPointer = textPointer.mergeWith(stylePointer) { (text, style) =>

@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.image.Image
@@ -38,9 +38,9 @@ object ImageViewStackTest extends App
 	val icon2 = Image.readFrom("Reach/test-images/cursor-hand.png").get.withCenterOrigin * 2
 	val icon3 = Image.readFrom("Reach/test-images/cursor-text.png").get
 	
-	val pointer1 = new PointerWithEvents(true)
-	val pointer2 = new PointerWithEvents(false)
-	val pointer3 = new PointerWithEvents(false)
+	val pointer1 = new EventfulPointer(true)
+	val pointer2 = new EventfulPointer(false)
+	val pointer3 = new EventfulPointer(false)
 	
 	// Window[Stack[Label1, Label2]]
 	val window = ReachWindow.contentContextual.using(ViewStack) { (_, stackF) =>

@@ -9,7 +9,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Point
@@ -254,7 +254,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer
 		.mergeWith(settings.enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
 	

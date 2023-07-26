@@ -5,7 +5,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalString._
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedHandlerType, KeyTypedListener}
@@ -278,7 +278,7 @@ case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @param textPointer A pointer to this label's text (default = new empty pointer)
 	  * @return a new label
 	  */
-	def apply(textPointer: PointerWithEvents[String] = new PointerWithEvents("")) =
+	def apply(textPointer: EventfulPointer[String] = new EventfulPointer("")) =
 		new EditableTextLabel(parentHierarchy, contextPointer, settings, textPointer)
 }
 
@@ -324,7 +324,7 @@ object EditableTextLabel extends EditableTextLabelSetup()
 // TODO: Should also support input modification (e.g. upper-casing)
 class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
-                        val textPointer: PointerWithEvents[String] = new PointerWithEvents(""))
+                        val textPointer: EventfulPointer[String] = new EventfulPointer(""))
 	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer,
 		textPointer.strongMap { _.noLanguageLocalizationSkipped }, settings.labelSettings, settings.enabledPointer)
 {

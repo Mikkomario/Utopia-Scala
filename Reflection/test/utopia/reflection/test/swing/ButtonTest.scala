@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.image.ButtonImageSet
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import java.nio.file.Paths
 import utopia.paradigm.color.Color
@@ -39,7 +39,7 @@ object ButtonTest extends App
 		val image = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(64, 64)).downscaled
 		val images = ButtonImageSet.brightening(image)
 
-		val progressPointer = new PointerWithEvents(0.0)
+		val progressPointer = new EventfulPointer(0.0)
 
 		def action() = progressPointer.value += 0.1
 

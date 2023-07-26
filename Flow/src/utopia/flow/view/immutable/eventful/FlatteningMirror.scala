@@ -3,7 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.ContinueAnd
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 object FlatteningMirror
@@ -53,7 +53,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	// Pointer that contains the currently tracked mid-pointer
 	private val pointerPointer = source.incrementalMap(initialMap)(incrementMap)
 	// Pointer that contains the currently simulated value
-	private val pointer = new PointerWithEvents[R](pointerPointer.value.value)
+	private val pointer = new EventfulPointer[R](pointerPointer.value.value)
 	
 	// Listener that listens to mid-pointers and updates the simulated value
 	private val valueUpdatingListener = ChangeListener[R] { event => pointer.value = event.newValue }

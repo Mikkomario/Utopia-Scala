@@ -3,7 +3,7 @@ package utopia.reflection.reach
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
@@ -59,7 +59,7 @@ object ReflectionReachCanvas
 		}
 		val contentPointer = SettableOnce[ReachComponentLike]()
 		val canvas = new ReflectionReachCanvas(contentPointer, absolutePositionView,
-			new PointerWithEvents[Color](background), ResettableFlag(), cursors, enableAwtDoubleBuffering,
+			new EventfulPointer[Color](background), ResettableFlag(), cursors, enableAwtDoubleBuffering,
 			disableFocus)({
 			case c: ReflectionStackable => c.revalidate()
 			case _ => canvasPointer.value.foreach { _.revalidate() }
@@ -114,7 +114,7 @@ object ReflectionReachCanvas
   */
 class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]],
                                       absoluteParentPositionView: => View[Point],
-                                      backgroundPointer: PointerWithEvents[Color],
+                                      backgroundPointer: EventfulPointer[Color],
                                       attachmentPointer: ResettableFlag = ResettableFlag(),
                                       cursors: Option[CursorSet] = None,
                                       enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)

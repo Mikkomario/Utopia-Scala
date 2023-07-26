@@ -5,7 +5,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.{Border, TextDrawContext}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -55,8 +55,8 @@ object DropDown
 	def contextual[A, C <: AwtStackable with Refreshable[A]]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
 	 displayFunction: DisplayFunction[A] = DisplayFunction.raw, displayStackLayout: StackLayout = Fit,
-	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
-	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplayFunction: A => C)
@@ -99,8 +99,8 @@ object DropDown
 	def contextualWithTextOnly[A]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
 	 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
-	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(implicit context: TextContext, exc: ExecutionContext) =
@@ -123,8 +123,8 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
  textAlignment: enumeration.Alignment = enumeration.Alignment.Left, textInsets: StackInsets = StackInsets.any,
  imageInsets: StackInsets = StackInsets.any, borderColor: Color = Color.textBlackDisabled,
  borderWidth: Double = 1.0, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
- override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), textHasMinWidth: Boolean = true,
+ override val contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+ valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None), textHasMinWidth: Boolean = true,
  allowImageUpscaling: Boolean = false, shouldDisplayPopUpOnFocusGain: Boolean = true,
  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 (makeDisplayFunction: A => C)(implicit exc: ExecutionContext)

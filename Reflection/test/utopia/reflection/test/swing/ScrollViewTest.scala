@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
@@ -52,7 +52,7 @@ object ScrollViewTest extends App
 	val displayFunction = DisplayFunction.interpolating("Label number %i")
 	def makeLabel(number: Int) =
 	{
-		val label = new ItemLabel(new PointerWithEvents(number), displayFunction, basicFont,
+		val label = new ItemLabel(new EventfulPointer(number), displayFunction, basicFont,
 			initialInsets = StackInsets.symmetric(16.any, 4.fixed))
 		label.background = Color.yellow
 		label.alignment = Center

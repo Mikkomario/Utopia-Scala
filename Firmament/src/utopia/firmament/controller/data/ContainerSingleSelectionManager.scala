@@ -4,7 +4,7 @@ import utopia.firmament.component.Component
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.component.display.Refreshable
 import utopia.flow.operator.EqualsFunction
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 
 object ContainerSingleSelectionManager
@@ -33,7 +33,7 @@ object ContainerSingleSelectionManager
 	  */
 	def forStatelessItems[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display],
 	                                             contentPointer: P[A],
-	                                             valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	                                             valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	                                             equalsCheck: EqualsFunction[A] = EqualsFunction.default)
 												(makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer,
@@ -55,7 +55,7 @@ object ContainerSingleSelectionManager
 	  * @return New content displayer
 	  */
 	def forImmutableStates[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A],
-	                                              valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None))
+	                                              valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None))
 												 (sameItemCheck: EqualsFunction[A])
 												 (makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer, sameItemCheck,
@@ -77,7 +77,7 @@ object ContainerSingleSelectionManager
 	  * @return New content displayer
 	  */
 	def forMutableItems[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A],
-	                                           valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None))
+	                                           valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None))
 											  (sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])
 											  (makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer, sameItemCheck,
@@ -91,7 +91,7 @@ object ContainerSingleSelectionManager
   */
 class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Component, +PA <: Changing[Vector[A]]]
 (container: MutableMultiContainer[W, Display], contentPointer: PA,
- override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty(),
+ override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => W)
 	extends ContainerContentDisplayer[A, W, Display, PA](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)
@@ -99,7 +99,7 @@ class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Comp
 {
 	// ATTRIBUTES	----------------------------
 	
-	private val _selectedDisplayPointer = new PointerWithEvents[Iterable[Display]](None)
+	private val _selectedDisplayPointer = new EventfulPointer[Iterable[Display]](None)
 	
 	
 	// INITIAL CODE ----------------------------

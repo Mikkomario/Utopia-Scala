@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.firmament.localization.LocalString._
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.Framing
@@ -27,7 +27,7 @@ object ViewStackTest extends App
 	import ReachTestContext._
 	
 	// Data
-	val numberPointer = new PointerWithEvents[Int](1)
+	val numberPointer = new EventfulPointer[Int](1)
 	
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>

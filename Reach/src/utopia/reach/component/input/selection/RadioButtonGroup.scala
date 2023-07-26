@@ -8,7 +8,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
@@ -176,7 +176,7 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 		if (options.isEmpty)
 			throw new IllegalArgumentException("There must be at least one available option")
 		else
-			apply(options, new PointerWithEvents[A](options.head._1))
+			apply(options, new EventfulPointer[A](options.head._1))
 	}
 	
 	/**
@@ -187,8 +187,8 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	  * @tparam A Type of selected value
 	  * @return A new radio button group
 	  */
-	def apply[A](options: Vector[(A, LocalizedString)], valuePointer: PointerWithEvents[A],
-	               hotKeys: Map[A, Set[HotKey]] = Map()) =
+	def apply[A](options: Vector[(A, LocalizedString)], valuePointer: EventfulPointer[A],
+	             hotKeys: Map[A, Set[HotKey]] = Map()) =
 	{
 		val group = new RadioButtonGroup[A](parentHierarchy, contextPointer, options, valuePointer, settings, hotKeys)
 		if (drawsBackground)
@@ -206,10 +206,10 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	  * @tparam A Type of selected value
 	  * @return A new radio button group
 	  */
-	def apply[A](options: Vector[(A, LocalizedString)], valuePointer: PointerWithEvents[A]): RadioButtonGroup[A] =
+	def apply[A](options: Vector[(A, LocalizedString)], valuePointer: EventfulPointer[A]): RadioButtonGroup[A] =
 		apply[A](options, valuePointer, Map[A, Set[HotKey]]())
 	@deprecated("Renamed to .apply(...)", "v1.1")
-	def withPointer[A](options: Vector[(A, LocalizedString)], valuePointer: PointerWithEvents[A]): RadioButtonGroup[A] =
+	def withPointer[A](options: Vector[(A, LocalizedString)], valuePointer: EventfulPointer[A]): RadioButtonGroup[A] =
 		apply[A](options, valuePointer)
 }
 
@@ -243,7 +243,7 @@ object RadioButtonGroup extends RadioButtonGroupSetup()
   * @since 9.3.2021, v0.1
   */
 class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
-                          options: Vector[(A, LocalizedString)], override val valuePointer: PointerWithEvents[A],
+                          options: Vector[(A, LocalizedString)], override val valuePointer: EventfulPointer[A],
                           settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                           hotKeys: Map[A, Set[HotKey]] = Map())
 	extends ReachComponentWrapper with Pool[Vector[A]] with InteractionWithPointer[A] with ManyFocusableWrapper

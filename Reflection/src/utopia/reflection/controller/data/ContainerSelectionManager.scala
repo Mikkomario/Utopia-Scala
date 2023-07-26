@@ -7,7 +7,7 @@ import utopia.firmament.controller.data.{ContainerContentDisplayer, ContentManag
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.MouseButtonStateListener
@@ -41,7 +41,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forStatelessItemsPointer[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]],
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Vector[A]],
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, equalsCheck)(makeDisplay)
 	
@@ -61,7 +61,7 @@ object ContainerSelectionManager
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer,
-			new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
+			new EventfulPointer(initialItems), equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that represent a state of some other object
@@ -79,7 +79,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forImmutableStatesPointer[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Vector[A]])(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
@@ -102,7 +102,7 @@ object ContainerSelectionManager
 	def forImmutableStates[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
-		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(sameItemCheck)(makeDisplay)
+		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, new EventfulPointer(initialItems))(sameItemCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for mutable / mutating items. Please note that the items may not always update
@@ -120,7 +120,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forMutableItemsPointer[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Vector[A]])(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
@@ -143,7 +143,7 @@ object ContainerSelectionManager
 	def forMutableItems[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
-		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(
+		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, new EventfulPointer(initialItems))(
 			sameItemCheck)(equalsCheck)(makeDisplay)
 }
 
@@ -154,15 +154,15 @@ object ContainerSelectionManager
   */
 class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 (container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
- contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
+ contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
-	extends ContainerContentDisplayer[A, C, C, PointerWithEvents[Vector[A]]](container, contentPointer,
-		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, Option[A], C, PointerWithEvents[Vector[A]]]
+	extends ContainerContentDisplayer[A, C, C, EventfulPointer[Vector[A]]](container, contentPointer,
+		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, Option[A], C, EventfulPointer[Vector[A]]]
 		with ContentManager[A, C]
 {
 	// ATTRIBUTES   --------------------
 	
-	override val valuePointer: PointerWithEvents[Option[A]] = PointerWithEvents.empty()
+	override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty()
 	
 	// Updates the display value every time content is updated, because the display may change or be not found anymore
 	override lazy val selectedDisplayPointer =

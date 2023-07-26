@@ -6,7 +6,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.image.ViewImageAndTextLabel
@@ -24,7 +24,7 @@ object AlignFrameTest extends App
 {
 	import ReachTestContext._
 	
-	val contentPointer = new PointerWithEvents(1)
+	val contentPointer = new EventfulPointer(1)
 	val imgPointer = Fixed(SingleColorIcon(
 		Image.readOrEmpty(Paths.get("Reach/test-images/check-box-selected.png"))
 	))

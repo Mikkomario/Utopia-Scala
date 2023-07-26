@@ -1,7 +1,7 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.CachingStackable
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 
@@ -14,7 +14,7 @@ abstract class ReachComponent extends ReachComponentLike with CachingStackable
 {
 	// ATTRIBUTES	-----------------------
 	
-	override val boundsPointer = new PointerWithEvents(Bounds.zero)
+	override val boundsPointer = new EventfulPointer(Bounds.zero)
 	override lazy val positionPointer = boundsPointer.lightMap { _.position }
 	override lazy val sizePointer = boundsPointer.lightMap { _.size }
 	

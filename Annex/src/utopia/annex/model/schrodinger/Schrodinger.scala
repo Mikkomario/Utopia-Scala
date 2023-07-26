@@ -1,7 +1,7 @@
 package utopia.annex.model.schrodinger
 
 import utopia.flow.view.immutable.caching.LazyFuture
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import scala.concurrent.ExecutionContext
 
@@ -28,7 +28,7 @@ trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 	
 	// ATTRIBUTES   -----------------------
 	
-	protected val _serverResultPointer: PointerWithEvents[Option[R]] = new PointerWithEvents(None)
+	protected val _serverResultPointer: EventfulPointer[Option[R]] = new EventfulPointer(None)
 	
 	/**
 	  * A pointer to the currently mimicked instance

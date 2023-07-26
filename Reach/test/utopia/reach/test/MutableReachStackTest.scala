@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.firmament.controller.data.ContainerContentDisplayer
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -35,7 +35,7 @@ object MutableReachStackTest extends App
 	}
 	
 	// Adds stack content management
-	val dataPointer = new PointerWithEvents[Vector[Int]](Vector(1, 2, 3))
+	val dataPointer = new EventfulPointer[Vector[Int]](Vector(1, 2, 3))
 	ContainerContentDisplayer.forStatelessItems(window.content, dataPointer) { i =>
 		implicit val c: ReachCanvas = window.canvas
 		Open.withContext(windowContext.withHorizontallyCenteredText)(MutableViewTextLabel) { labelF =>

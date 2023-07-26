@@ -3,6 +3,7 @@
 ## v2.2 (in development)
 TODO: Document changes to Changing (new map options) and related classes
 ### Breaking Changes
+- Renamed **PointerWithEvents** to **EventfulPointer** and **IteratorWithEvents** to **EventfulIterator**
 - Updated the abstract functions in **Changing**
   - `.addListener(ChangeListener)` and `.addDependency(ChangeDependency)` are no longer abstract and is instead 
     replaced with `.addListenerOfPriority(End)(ChangeListener)`
@@ -25,6 +26,8 @@ TODO: Document changes to Changing (new map options) and related classes
   - Please note the slightly different functionality 
     - I.e. that `.foreach { _() }` must be called for the result value in order to actuate the scheduled after-effects
 - Deprecated `.toPair` in **ChangeEvent** because the name implied conversion
+- Deprecated `Pointer.withEvents(A)` in favor of `Pointer.eventful(A)`
+  - Similarly, renamed **Iterator**`.withEvents(...)` to `.eventful(...)`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 ### New Features
@@ -35,6 +38,7 @@ TODO: Document changes to Changing (new map options) and related classes
     as well as in `.addListenerWhile(...)`
 - Added **OnceFlatteningPointer** class that resembles **SettableOnce**, 
   except that it will wrap another pointer (i.e. not just a value) once complete.
+- Added **LockablePointer** class
 - Added **ListenableMutableLazy** class and **ResetListenable** trait
 - Added new **TryCatch** utility class for handling situations that included non-critical failures
 - Added new **Steppable** trait for items that provide step-based iteration

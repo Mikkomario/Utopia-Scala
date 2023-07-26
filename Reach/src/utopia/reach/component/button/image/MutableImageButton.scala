@@ -3,7 +3,7 @@ package utopia.reach.component.button.image
 import utopia.firmament.image.ButtonImageSet
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.{GuiElementStatus, HotKey}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.ColorShade
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Point
@@ -85,17 +85,17 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	/**
 	  * A mutable pointer to this button's current image set
 	  */
-	val imagesPointer = new PointerWithEvents(initialImages)
+	val imagesPointer = new EventfulPointer(initialImages)
 	/**
 	  * A mutable pointer to this button's current insets
 	  */
-	val insetsPointer = new PointerWithEvents(initialInsets)
+	val insetsPointer = new EventfulPointer(initialInsets)
 	/**
 	  * A mutable pointer to this button's current alignment
 	  */
-	val alignmentPointer = new PointerWithEvents[Alignment](initialAlignment)
+	val alignmentPointer = new EventfulPointer[Alignment](initialAlignment)
 	
-	private val _statePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val _statePointer = new EventfulPointer(GuiElementStatus.identity)
 	/**
 	  * A pointer to this button's currently displayed image
 	  */

@@ -3,7 +3,7 @@ package utopia.firmament.controller.data
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.{InteractionWithPointer, SelectionWithPointers}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 
 /**
@@ -16,7 +16,7 @@ import utopia.flow.view.template.eventful.Changing
   * @tparam PA Type of pointer that contains the displayed content
   */
 trait SelectionManager[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
-	extends ContentDisplayer[A, C, PA] with SelectionWithPointers[S, PointerWithEvents[S], Vector[A], PA]
+	extends ContentDisplayer[A, C, PA] with SelectionWithPointers[S, EventfulPointer[S], Vector[A], PA]
 		with InteractionWithPointer[S]
 {
 	// ABSTRACT	-----------------------

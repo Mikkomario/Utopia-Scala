@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.text.Font
@@ -40,7 +40,7 @@ object ScrollAreaTest extends App
 	val basicFont = Font("Arial", 12, Plain, 2)
 	val labels = (1 to 10).toVector.map { row =>
 		(1 to 50).toVector.map { i =>
-			new ItemLabel(new PointerWithEvents(row * i),
+			new ItemLabel(new EventfulPointer(row * i),
 				DisplayFunction.interpolating("Label number %i"), basicFont, initialInsets = StackInsets.symmetric(16.any, 4.fixed))
 		}
 	}

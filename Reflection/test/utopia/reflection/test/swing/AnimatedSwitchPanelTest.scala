@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import java.awt.event.KeyEvent
 import utopia.genesis.handling.KeyStateListener
@@ -40,7 +40,7 @@ object AnimatedSwitchPanelTest extends App
 	val setup = new SingleFrameSetup(actorHandler, frame)
 	setup.start()
 
-	val indexPointer = new PointerWithEvents(0)
+	val indexPointer = new EventfulPointer(0)
 	frame.addKeyStateListener(KeyStateListener.onAnyKeyPressed { event =>
 		if (event.index == KeyEvent.VK_RIGHT)
 			indexPointer.update { i => (i + 1) % labels.size }

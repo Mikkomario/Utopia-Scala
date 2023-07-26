@@ -6,7 +6,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel
 import utopia.paradigm.color.ColorRole.{Gray, Primary}
@@ -92,7 +92,7 @@ class TypeOrSearch
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private val selectedItemsPointer = new PointerWithEvents(Vector[String]())
+	private val selectedItemsPointer = new EventfulPointer(Vector[String]())
 	
 	private implicit val languageCode: String = "en"
 	private implicit val localizer: Localizer = parentContext.localizer

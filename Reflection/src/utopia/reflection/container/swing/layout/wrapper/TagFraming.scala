@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.layout.wrapper
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.Color
 import utopia.firmament.drawing.view.RoundedBackgroundViewDrawer
 import utopia.reflection.component.swing.template.SwingComponentRelated
@@ -28,7 +28,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color)
 	/**
 	  * Pointer that contains the current tag background color
 	  */
-	val colorPointer = new PointerWithEvents(initialColor)
+	val colorPointer = new EventfulPointer(initialColor)
 	
 	private var _content = initialComponent
 	

@@ -2,7 +2,7 @@ package utopia.firmament.controller.data
 
 import utopia.firmament.component.display.{Refreshable, RefreshableWithPointer}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 /**
   * ContentManagers update content on a component. Please note that when using ContentManagers, you shouldn't modify
@@ -12,7 +12,7 @@ import utopia.flow.view.mutable.eventful.PointerWithEvents
   * @tparam A Type of item displayed in a single display component
  *  @tparam C Type of display component
   */
-trait ContentManager[A, C <: Refreshable[A]] extends ContentDisplayer[A, C, PointerWithEvents[Vector[A]]]
+trait ContentManager[A, C <: Refreshable[A]] extends ContentDisplayer[A, C, EventfulPointer[Vector[A]]]
 	with RefreshableWithPointer[Vector[A]]
 {
 	/**

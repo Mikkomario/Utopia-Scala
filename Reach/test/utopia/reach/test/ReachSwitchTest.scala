@@ -4,7 +4,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
@@ -29,7 +29,7 @@ object ReachSwitchTest extends App
 	import ReachTestContext._
 	
 	// Controls
-	val enabledPointer = new PointerWithEvents(true)
+	val enabledPointer = new EventfulPointer(true)
 	
 	// Creates the components
 	// Window

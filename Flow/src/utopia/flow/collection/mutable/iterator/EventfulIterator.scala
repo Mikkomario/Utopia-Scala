@@ -1,24 +1,42 @@
 package utopia.flow.collection.mutable.iterator
 
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
+
+object EventfulIterator
+{
+	/**
+	  * Creates a new eventful iterator
+	  * @param initialValue Value to hold initially
+	  * @param source An iterator that acts as the source of new values
+	  * @tparam A Type of values returned by this iterator
+	  * @return A new eventful iterator
+	  */
+	def apply[A](initialValue: A, source: Iterator[A]) = new EventfulIterator[A](initialValue, source)
+}
 
 /**
   * Wraps an iterator, adding support for change events
   * @author Mikko Hilpinen
   * @since 22.9.2022, v1.17
   */
-class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterator[A] with ChangingWrapper[A]
+class EventfulIterator[A](initialValue: A, source: Iterator[A]) extends Iterator[A] with ChangingWrapper[A]
 {
 	// ATTRIBUTES   -------------------
 	
-	private val pointer = new PointerWithEvents[A](initialValue)
+	private val pointer = LockablePointer[A](initialValue)
 	
 	
 	// IMPLEMENTED  -------------------
 	
-	override def hasNext = source.hasNext
+	override def hasNext = {
+		val result = source.hasNext
+		// Once there are no more items available, marks the pointer as locked
+		if (!result)
+			pointer.lock()
+		result
+	}
 	
 	override def next() = {
 		val n = source.next()
@@ -26,12 +44,9 @@ class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterat
 		n
 	}
 	
-	override protected def wrapped = pointer
+	override protected def wrapped: Changing[A] = pointer
 	
-	override def isChanging = hasNext
-	
-	override def map[B](f: A => B): Iterator[B] with Changing[B] =
-		new MappingIteratorWithEvents[A, B](this)(f)
+	override def map[B](f: A => B): Iterator[B] with Changing[B] = new MappingIteratorWithEvents[A, B](this)(f)
 	
 	
 	// OTHER    ---------------------
@@ -55,7 +70,7 @@ class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterat
 	{
 		// ATTRIBUTES   ------------
 		
-		private val pointer = new PointerWithEvents[R](f(source.value))
+		private val pointer = LockablePointer[R](f(source.value))
 		
 		
 		// INITIAL CODE ------------
@@ -67,8 +82,12 @@ class IteratorWithEvents[A](initialValue: A, source: Iterator[A]) extends Iterat
 		
 		override protected def wrapped = pointer
 		
-		override def isChanging = hasNext
-		override def hasNext = source.hasNext
+		override def hasNext = {
+			val result = source.hasNext
+			if (!result)
+				pointer.lock()
+			result
+		}
 		
 		override def next() = {
 			val n = f(source.next())

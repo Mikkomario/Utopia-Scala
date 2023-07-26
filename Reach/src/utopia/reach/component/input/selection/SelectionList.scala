@@ -14,7 +14,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -218,7 +218,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  */
 	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
-	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		new SelectionList[A, C, P](parentHierarchy, actorHandler, contextBackgroundPointer, contentPointer,
@@ -268,7 +268,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
-	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](actorHandler, contextBackgroundPointer, contentPointer, valuePointer, sameItemCheck,
@@ -337,7 +337,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new list
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(contentPointer: P, valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](contextPointer.value.actorHandler,
@@ -388,13 +388,13 @@ object SelectionList extends SelectionListSetup()
   */
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
- override val contentPointer: P, override val valuePointer: PointerWithEvents[Option[A]],
+ override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
  marginPointer: Changing[StackLength] = Fixed(StackLength.any), sameItemCheck: Option[EqualsFunction[A]],
  alternativeKeyCondition: => Boolean)
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
-		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P] with CursorDefining
+		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Vector[A], P] with CursorDefining
 {
 	// ATTRIBUTES	---------------------------------
 	
@@ -531,7 +531,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	{
 		// ATTRIBUTES	----------------------------
 		
-		private val relativeMousePositionPointer = new PointerWithEvents[Option[Point]](None)
+		private val relativeMousePositionPointer = new EventfulPointer[Option[Point]](None)
 		// FIXME: stack.itemNearestTo doesn't return the correct item anymore
 		val hoverComponentPointer = relativeMousePositionPointer.map { _.flatMap(locationTracker.itemNearestTo) }
 		

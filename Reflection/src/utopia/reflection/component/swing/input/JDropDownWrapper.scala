@@ -7,7 +7,7 @@ import utopia.firmament.model.Border
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.label.TextLabel
@@ -78,8 +78,8 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	private var isShowingSelectOption = true
 	private var isUpdatingSelection = false // Consider using a thread-safe solution
 	
-	override val valuePointer = new PointerWithEvents[Option[A]](None)
-	override val contentPointer = new PointerWithEvents[Vector[A]](Vector())
+	override val valuePointer = new EventfulPointer[Option[A]](None)
+	override val contentPointer = new EventfulPointer[Vector[A]](Vector())
 	
 	
 	// INITIAL CODE	-------------------

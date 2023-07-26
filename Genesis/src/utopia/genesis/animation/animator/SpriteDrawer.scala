@@ -1,6 +1,6 @@
 package utopia.genesis.animation.animator
 
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.shape.shape2D.MutableTransformable
@@ -18,7 +18,7 @@ object SpriteDrawer
 	  * @return A new sprite drawer
 	  */
 	def apply(sprite: TimedAnimation[Image], transformation: AffineTransformation = AffineTransformation.identity) =
-		new SpriteDrawer(new PointerWithEvents(sprite), new PointerWithEvents(transformation))
+		new SpriteDrawer(new EventfulPointer(sprite), new EventfulPointer(transformation))
 }
 
 /**
@@ -26,8 +26,8 @@ object SpriteDrawer
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-class SpriteDrawer(val spritePointer: PointerWithEvents[TimedAnimation[Image]],
-				   val transformationPointer: PointerWithEvents[AffineTransformation] = new PointerWithEvents(AffineTransformation.identity))
+class SpriteDrawer(val spritePointer: EventfulPointer[TimedAnimation[Image]],
+                   val transformationPointer: EventfulPointer[AffineTransformation] = new EventfulPointer(AffineTransformation.identity))
 	extends Animator[Image] with MutableTransformable
 {
 	// COMPUTED	---------------------------

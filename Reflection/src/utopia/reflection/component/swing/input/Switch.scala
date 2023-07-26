@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.input
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -69,7 +69,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	private var _attached = false
 	
 	override val stackSize = StackSize(targetWidth, targetWidth.noMax * Switch.maxHeightRatio)
-	override val valuePointer = new PointerWithEvents(initialState)
+	override val valuePointer = new EventfulPointer(initialState)
 	
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	

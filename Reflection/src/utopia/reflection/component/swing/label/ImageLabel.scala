@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.context.BaseContext
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.{Bounds, Point}
@@ -41,7 +41,7 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 {
 	// ATTRIBUTES	-----------------
 	
-	override val contentPointer = new PointerWithEvents(initialImage)
+	override val contentPointer = new EventfulPointer(initialImage)
 	
 	private var scaledImage = initialImage
 	private var relativeImagePosition = Point.origin

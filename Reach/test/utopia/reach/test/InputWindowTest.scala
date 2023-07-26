@@ -13,7 +13,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.genesis.util.ScreenExtensions._
@@ -73,9 +73,9 @@ object InputWindowTest extends App
 		
 		override protected def inputTemplate =
 		{
-			val nameErrorPointer = new PointerWithEvents(LocalizedString.empty)
+			val nameErrorPointer = new EventfulPointer(LocalizedString.empty)
 			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF =>
-				val textPointer = new PointerWithEvents[String]("")
+				val textPointer = new EventfulPointer[String]("")
 				val displayErrorPointer = nameErrorPointer.mergeWith(textPointer) { (error, text) =>
 					if (text.isEmpty) error else LocalizedString.empty
 				}

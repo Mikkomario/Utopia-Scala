@@ -4,7 +4,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
@@ -69,7 +69,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 	 * @return A new radio button and associated label in a stack. The created radio button is added
 	  *         as an additional result.
 	 */
-	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A, labelText: LocalizedString) =
+	def apply[A](selectedValuePointer: EventfulPointer[A], value: A, labelText: LocalizedString) =
 	{
 		val stack = Stack(parentHierarchy).withContext(contextPointer.value).centeredRow
 			// The custom drawers are assigned to this whole component

@@ -9,7 +9,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.Instant
@@ -69,7 +69,7 @@ object PostponingProcess
 				isRestartable = isRestartable) { _ => action }
 		// Case: Default => Uses a postponing process
 		else
-			new RangePostponingRevalidationProcess(new PointerWithEvents[WaitTarget](UntilNotified),
+			new RangePostponingRevalidationProcess(new EventfulPointer[WaitTarget](UntilNotified),
 				delayRange.start, delayRange.end, Some(shutDownReaction), isRestartable)(action)
 	}
 	
@@ -86,7 +86,7 @@ object PostponingProcess
 		override protected def afterDelay() = f(hurryPointer)
 	}
 	
-	private class RangePostponingRevalidationProcess(waitTargetPointer: PointerWithEvents[WaitTarget],
+	private class RangePostponingRevalidationProcess(waitTargetPointer: EventfulPointer[WaitTarget],
 	                                                 minRevalidationDelay: FiniteDuration,
 	                                                 maxRevalidationDelay: FiniteDuration,
 	                                                 shutdownReaction: Option[ShutdownReaction],

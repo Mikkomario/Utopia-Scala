@@ -6,7 +6,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -31,8 +31,8 @@ object ImageAndTextLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-								 imageInsets: Option[StackInsets] = None)
+	def contextualWithPointer[A](pointer: EventfulPointer[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                             imageInsets: Option[StackInsets] = None)
 								(itemToImage: A => Image)(implicit context: TextContext) =
 	{
 		new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.textInsets,
@@ -53,7 +53,7 @@ object ImageAndTextLabel
 	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
 					 (implicit context: TextContext) =
-		contextualWithPointer(new PointerWithEvents(item), displayFunction, imageInsets)(itemToImage)
+		contextualWithPointer(new EventfulPointer(item), displayFunction, imageInsets)(itemToImage)
 }
 
 /**
@@ -71,12 +71,12 @@ object ImageAndTextLabel
   * @param allowImageUpscaling Whether image should be allowed to scale up (default = false)
   * @param itemToImageFunction Function used for selecting proper image for each item
   */
-class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], initialFont: Font,
-						   displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-						   textInsets: StackInsets = StackInsets.any, imageInsets: StackInsets = StackInsets.any,
-						   alignment: Alignment = Alignment.Left,
-						   initialTextColor: Color = Color.textBlack, hasMinWidth: Boolean = true,
-						   allowImageUpscaling: Boolean = false)(itemToImageFunction: A => Image)
+class ImageAndTextLabel[A](override val contentPointer: EventfulPointer[A], initialFont: Font,
+                           displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                           textInsets: StackInsets = StackInsets.any, imageInsets: StackInsets = StackInsets.any,
+                           alignment: Alignment = Alignment.Left,
+                           initialTextColor: Color = Color.textBlack, hasMinWidth: Boolean = true,
+                           allowImageUpscaling: Boolean = false)(itemToImageFunction: A => Image)
 	extends StackableAwtComponentWrapperWrapper with RefreshableWithPointer[A]
 		with MutableStyleTextComponent with SwingComponentRelated
 {

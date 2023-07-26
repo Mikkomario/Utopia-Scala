@@ -4,7 +4,7 @@ import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.image.ButtonImageSet
 import utopia.firmament.model.GuiElementStatus
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 
@@ -26,7 +26,7 @@ class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys
 	// ATTRIBUTES	---------------------
 	
 	private val label = new ImageLabel(if (initialState) onImages.defaultImage else offImages.defaultImage)
-	override val valuePointer = new PointerWithEvents(initialState)
+	override val valuePointer = new EventfulPointer(initialState)
 	
 	
 	// INITIAL CODE	---------------------

@@ -5,7 +5,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{WeekDay, WeekDays}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -63,7 +63,7 @@ object Calendar
 	{
 		def makeDayNameLabel(day: WeekDay) =
 		{
-			new ItemLabel[WeekDay](new PointerWithEvents(day), dayNameDisplayFunction, dayNameFont, dayNameTextColor,
+			new ItemLabel[WeekDay](new EventfulPointer(day), dayNameDisplayFunction, dayNameFont, dayNameTextColor,
 				dayNameInsets, Alignment.Center)
 		}
 		def makeDateLabel(date: Int) = new DateLabel(date, dateFont, dateInsets, dateTextColor, selectionHoverColor,
@@ -80,10 +80,10 @@ object Calendar
 	{
 		// ATTRIBUTES	-----------------
 		
-		private val label = new ItemLabel[Int](new PointerWithEvents(date), DisplayFunction.raw, font, textColor,
+		private val label = new ItemLabel[Int](new EventfulPointer(date), DisplayFunction.raw, font, textColor,
 			insets, Alignment.Center)
 		
-		override val valuePointer = new PointerWithEvents[Boolean](false)
+		override val valuePointer = new EventfulPointer[Boolean](false)
 		
 		
 		// INITIAL CODE	-----------------
@@ -131,7 +131,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 {
 	// ATTRIBUTES	-----------------------
 	
-	override val valuePointer = new PointerWithEvents[LocalDate](LocalDate.now)
+	override val valuePointer = new EventfulPointer[LocalDate](LocalDate.now)
 	
 	private var handlingDropDownUpdate = false
 	private var handlingPointerUpdate = false
@@ -311,7 +311,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	{
 		// ATTRIBUTES	-------------------
 		
-		override val valuePointer = new PointerWithEvents[Option[LocalDate]](None)
+		override val valuePointer = new EventfulPointer[Option[LocalDate]](None)
 		
 		private val buttons = {
 			// Groups dates by weeks

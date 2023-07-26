@@ -5,7 +5,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.flow.util.StringExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
@@ -46,8 +46,8 @@ object SearchFrom
 	def wrapFieldWithContext[A, C <: AwtStackable with Refreshable[A]]
 	(searchField: TextField[String], noResultsView: AwtStackable, displayStackLayout: StackLayout = Fit,
 	 searchIcon: Option[Image] = None,
-	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
-	 selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+	 selectedValuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
@@ -87,8 +87,8 @@ object SearchFrom
 	  */
 	def contextual[A, C <: AwtStackable with Refreshable[A]]
 	(selectionPrompt: LocalizedString, standardWidth: StackLength, displayStackLayout: StackLayout = Fit,
-	 searchIcon: Option[Image] = None, contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
-	 selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	 searchIcon: Option[Image] = None, contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+	 selectedValuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeNoResultsView: Changing[String] => AwtStackable)
@@ -122,13 +122,13 @@ object SearchFrom
 	  * @return A new search from field
 	  */
 	def contextualWithTextOnly[A](selectionPrompt: LocalizedString, standardWidth: StackLength,
-								  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-								  displayStackLayout: StackLayout = Leading, searchIcon: Option[Image] = None,
-								  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
-								  selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
-								  shouldDisplayPopUpOnFocusGain: Boolean = true,
-								  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
-								  contentIsStateless: Boolean = true)
+	                              displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                              displayStackLayout: StackLayout = Leading, searchIcon: Option[Image] = None,
+	                              contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+	                              selectedValuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+	                              shouldDisplayPopUpOnFocusGain: Boolean = true,
+	                              sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
+	                              contentIsStateless: Boolean = true)
 								 (makeNoResultsView: Changing[String] => AwtStackable)
 								 (implicit context: TextContext, exc: ExecutionContext) =
 	{
@@ -181,8 +181,8 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 (searchField: TextField[String], override protected val noResultsView: AwtStackable, actorHandler: ActorHandler,
  selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  searchIcon: Option[Image] = None, searchIconInsets: StackInsets = StackInsets.any,
- override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+ override val contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+ selectedValuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
  shouldDisplayPopUpOnFocusGain: Boolean = true, sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
  contentIsStateless: Boolean = true)
 (makeDisplayFunction: A => C)(itemToSearchString: A => String)

@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.input
 
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import java.awt.event.KeyEvent
 import utopia.paradigm.color.Color
@@ -45,8 +45,8 @@ import scala.concurrent.ExecutionContext
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 (actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
  displayStackLayout: StackLayout = Fit,
- protected val currentSelectionOptionsPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+ protected val currentSelectionOptionsPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+ override val valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
  contentIsStateless: Boolean = false)
 (implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with SelectableWithPointers[Option[A], Vector[A]] with Focusable

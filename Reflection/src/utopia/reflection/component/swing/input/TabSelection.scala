@@ -6,7 +6,7 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.MouseButtonStateListener
@@ -80,8 +80,8 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 	
 	private var labels: Map[A, TextLabel] = HashMap()
 	
-	override val valuePointer = new PointerWithEvents[Option[A]](None)
-	override val contentPointer = new PointerWithEvents[Seq[A]](Vector())
+	override val valuePointer = new EventfulPointer[Option[A]](None)
+	override val contentPointer = new EventfulPointer[Seq[A]](Vector())
 	
 	
 	// INITIAL CODE	-------------------

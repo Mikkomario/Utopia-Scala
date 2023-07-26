@@ -8,7 +8,7 @@ import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -174,7 +174,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr]
 	  */
 	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	                     valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+	                     valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
 	                     shade: => ColorShade = Light,
 	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 	{
@@ -217,7 +217,7 @@ case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context:
 	  * @param valuePointer   A mutable pointer to this switches pointer (default = new pointer)
 	  * @return A new switch
 	  */
-	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false))
+	def apply(valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false))
 	         (implicit animationContext: AnimationContext) =
 	{
 		val knobR = context.margins.medium
@@ -261,10 +261,10 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new switch
 	  */
 	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
-	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	                     valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-	                     shade: => ColorShade = Light,
-	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
+	          hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
+	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
+	          shade: => ColorShade = Light,
+	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 		_apply(actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset, valuePointer, shade,
 			animationDuration)
 }
@@ -306,14 +306,14 @@ object Switch extends SwitchSetup()
   */
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-             override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+             override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends CustomDrawReachComponent with ButtonLike with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	
 	override val statePointer = baseStatePointer.mergeWith(settings.enabledPointer) { (state, enabled) =>
 		state + (Disabled -> !enabled) }

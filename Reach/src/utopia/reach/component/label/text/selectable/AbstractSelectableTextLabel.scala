@@ -12,7 +12,7 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event._
 import utopia.genesis.handling._
@@ -63,12 +63,12 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	/**
 	  * Pointer that contains the current caret index within text
 	  */
-	protected val caretIndexPointer = new PointerWithEvents(measuredText.maxCaretIndex)
-	private val caretVisibilityPointer = new PointerWithEvents(false)
+	protected val caretIndexPointer = new EventfulPointer(measuredText.maxCaretIndex)
+	private val caretVisibilityPointer = new EventfulPointer(false)
 	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
 		if (isVisible && selectable) Some(index) else None }
 	// Selected range is in caret indices
-	private val selectedRangePointer = new PointerWithEvents[Option[(Int, Int)]](None)
+	private val selectedRangePointer = new EventfulPointer[Option[(Int, Int)]](None)
 	
 	private val (selectionBgPointer, selectedTextColorPointer, caretColorPointer) = {
 		// Case: Draws text selection background => Other colors are also affected
@@ -330,7 +330,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	{
 		// ATTRIBUTES	--------------------------
 		
-		private val _focusPointer = new PointerWithEvents(false)
+		private val _focusPointer = new EventfulPointer(false)
 		
 		
 		// COMPUTED	------------------------------

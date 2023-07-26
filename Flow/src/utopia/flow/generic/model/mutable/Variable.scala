@@ -4,7 +4,7 @@ import utopia.flow.event.model.ChangeEvent
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.Property
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
 object Variable
@@ -73,7 +73,7 @@ object Variable
     // NESTED   -----------------------
     
     private class _Variable(override val name: String, initialValue: Value = Value.empty)
-        extends PointerWithEvents[Value](initialValue) with Variable
+        extends EventfulPointer[Value](initialValue) with Variable
     
     private class FixedTypeVariable(override val name: String, override val dataType: DataType,
                                     initialValue: Value = Value.empty, requireCastingSuccess: Boolean = false)

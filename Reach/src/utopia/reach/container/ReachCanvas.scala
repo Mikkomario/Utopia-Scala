@@ -10,7 +10,7 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.{IndirectPointer, PointerWithEvents, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{IndirectPointer, EventfulPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
@@ -239,7 +239,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	/**
 	  * A pointer that contains the up-to-date bounds of this canvas
 	  */
-	val boundsPointer = new PointerWithEvents(Bounds.zero)
+	val boundsPointer = new EventfulPointer(Bounds.zero)
 	// Uses an immutable version of the position and size pointer locally, exposes mutable versions publicly
 	private val _positionPointer = boundsPointer.map { _.position }
 	/**
@@ -501,7 +501,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		private val swapExc = new SingleThreadExecutionContext("Cursor swapper")
 		
 		private val minCursorDistance = 10
-		private val mousePositionPointer = new PointerWithEvents(Point.origin)
+		private val mousePositionPointer = new EventfulPointer(Point.origin)
 		
 		private lazy val shadeCalculatorPointer = painterPointer.map[Bounds => ColorShade] {
 			case Some(painter) => area => painter.averageShadeOf(area)

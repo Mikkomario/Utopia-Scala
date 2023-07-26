@@ -7,7 +7,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorShade}
@@ -379,7 +379,7 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	
 	override val statePointer = baseStatePointer
 		.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }

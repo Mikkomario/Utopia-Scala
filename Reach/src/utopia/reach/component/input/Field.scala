@@ -14,7 +14,7 @@ import utopia.flow.operator.End
 import utopia.flow.operator.End.{First, Last}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.{Color, ColorRole}
@@ -533,7 +533,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	
 	private implicit def c: ReachCanvas = parentHierarchy.top
 	
-	private val _focusPointer = new PointerWithEvents(false)
+	private val _focusPointer = new EventfulPointer(false)
 	
 	private lazy val uncoloredHintContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { context =>
 		context

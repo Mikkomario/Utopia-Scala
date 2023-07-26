@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.button
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.firmament.drawing.view.BorderViewDrawer
 import utopia.firmament.model.{Border, GuiElementStatus}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.Color
 
 /**
@@ -15,7 +15,7 @@ abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends B
 {
 	// ATTRIBUTES   -------------------
 	
-	private val borderPointer = new PointerWithEvents(makeBorder(color))
+	private val borderPointer = new EventfulPointer(makeBorder(color))
 	
 	
 	// IMPLEMENTED  ------------------

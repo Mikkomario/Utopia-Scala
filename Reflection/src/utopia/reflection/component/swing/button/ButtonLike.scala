@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.button
 
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -40,7 +40,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	
 	private var actions = Vector[() => Unit]()
 	
-	private val _statePointer = new PointerWithEvents[GuiElementStatus](GuiElementStatus.identity)
+	private val _statePointer = new EventfulPointer[GuiElementStatus](GuiElementStatus.identity)
 	
 	
 	// COMPUTED	----------------------

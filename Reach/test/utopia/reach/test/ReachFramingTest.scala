@@ -2,7 +2,7 @@ package utopia.reach.test
 
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.wrapper.Framing
@@ -17,7 +17,7 @@ object ReachFramingTest extends App
 {
 	import ReachTestContext._
 	
-	private val pointer = new PointerWithEvents("Some\nText")
+	private val pointer = new EventfulPointer("Some\nText")
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		framingF.expandingToRight.build(ViewTextLabel) { _.withBackground(Secondary)(pointer) }
 	}

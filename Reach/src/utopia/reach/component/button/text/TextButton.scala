@@ -9,7 +9,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, TextDrawContext}
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -169,7 +169,7 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer
 		.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	

@@ -9,7 +9,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -263,7 +263,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	private val label = new EmptyLabel()
 	
-	private val progressPointer = new PointerWithEvents[Double](initialValue)
+	private val progressPointer = new EventfulPointer[Double](initialValue)
 	val valuePointer =
 	{
 		if (stickyPoints.nonEmpty)

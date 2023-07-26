@@ -3,7 +3,7 @@ package utopia.reach.focus
 import utopia.flow.operator.{CombinedOrdering, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
@@ -26,7 +26,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	private implicit val focusOrdering: Ordering[Point] =
 		new CombinedOrdering[Point](Vector(Ordering.by[Point, Double] { _.y }, Ordering.by[Point, Double] { _.x }))
 	
-	private val targetsPointer = new PointerWithEvents(Set[Focusable]())
+	private val targetsPointer = new EventfulPointer(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
 		sortComponents(targets.map { c => c.parentHierarchy.toVector -> c }.toVector) }
 	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }

@@ -17,7 +17,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.VolatileOption
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
@@ -372,7 +372,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		def apply(window: => Window, canvas: => Stackable, revalidationDelay: Pair[FiniteDuration])
 		         (implicit exc: ExecutionContext, log: Logger) =
 		{
-			val waitPointer = new PointerWithEvents[WaitTarget](UntilNotified)
+			val waitPointer = new EventfulPointer[WaitTarget](UntilNotified)
 			val orderedDelay = revalidationDelay.sorted
 			val process = new PostponingRevalidationProcess(waitPointer, window, canvas, orderedDelay.first, orderedDelay.second)
 			// Starts the process immediately
@@ -381,7 +381,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		}
 	}
 	
-	private class PostponingRevalidationProcess(waitTargetPointer: PointerWithEvents[WaitTarget],
+	private class PostponingRevalidationProcess(waitTargetPointer: EventfulPointer[WaitTarget],
 	                                            window: => Window, canvas: => Stackable,
 	                                            minRevalidationDelay: FiniteDuration, maxRevalidationDelay: FiniteDuration)
 	                                           (implicit exc: ExecutionContext, log: Logger)

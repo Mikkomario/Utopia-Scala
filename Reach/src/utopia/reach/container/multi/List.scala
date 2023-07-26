@@ -12,7 +12,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.{PointerWithEvents, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -86,7 +86,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val mainStackCap = edgeMargins.along(mainStackDirection)
 		
 		// Creates the rows and row components first
-		val selectedRowIndexPointer = new PointerWithEvents[Int](0)
+		val selectedRowIndexPointer = new EventfulPointer[Int](0)
 		val rowIndexGenerator = Iterator.iterate(0) { _ + 1 }
 		val rowContextIterator = rowIndexGenerator.map { index =>
 			ListRowContext(new SeedHierarchyBlock(canvas), Lazy { selectedRowIndexPointer.map { _ == index } }, index)
@@ -227,7 +227,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 	
 	private var mousePressed = false
 	
-	private val relativeMousePositionPointer = new PointerWithEvents[Option[Point]](None)
+	private val relativeMousePositionPointer = new EventfulPointer[Option[Point]](None)
 	private lazy val mouseOverAreaPointer = relativeMousePositionPointer
 		.lazyMergeWith(locationTrackerPointer) { (pos, items) =>
 			pos.flatMap { pos => items.flatMap { _.areaNearestTo(pos) } }

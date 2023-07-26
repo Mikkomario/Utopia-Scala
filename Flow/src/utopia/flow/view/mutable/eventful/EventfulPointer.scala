@@ -3,13 +3,21 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
-object PointerWithEvents
+object EventfulPointer
 {
 	/**
 	  * @tparam A Type of values stored in this pointer, when defined
 	  * @return A new pointer that's currently empty
 	  */
-	def empty[A]() = new PointerWithEvents[Option[A]](None)
+	def empty[A]() = new EventfulPointer[Option[A]](None)
+	
+	/**
+	  * Creates a new mutable pointer
+	  * @param initialValue Initial value to assign to this pointer
+	  * @tparam A Type of values held within this pointer
+	  * @return A new pointer
+	  */
+	def apply[A](initialValue: A) = new EventfulPointer[A](initialValue)
 }
 
 /**
@@ -17,7 +25,7 @@ object PointerWithEvents
   * @author Mikko Hilpinen
   * @since 25.5.2019, v1.4.1
   */
-class PointerWithEvents[A](initialValue: A) extends AbstractChanging[A] with Pointer[A]
+class EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with Pointer[A]
 {
 	// ATTRIBUTES	----------------
 	

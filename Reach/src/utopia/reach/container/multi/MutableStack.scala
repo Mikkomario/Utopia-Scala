@@ -5,7 +5,7 @@ import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -107,7 +107,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 {
 	// ATTRIBUTES	------------------------
 	
-	private val _componentsPointer = new PointerWithEvents[Vector[C]](Vector())
+	private val _componentsPointer = new EventfulPointer[Vector[C]](Vector())
 	private var pointers = Map[Int, Pointer[Boolean]]()
 	
 	private var _direction = initialDirection
@@ -227,7 +227,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		pointers.get(c.component.hashCode()) match {
 			case Some(existingPointer) => existingPointer.value = true
 			case None =>
-				val newPointer = new PointerWithEvents(true)
+				val newPointer = new EventfulPointer(true)
 				pointers += (c.component.hashCode() -> newPointer)
 				c.hierarchy.complete(this, newPointer)
 		}

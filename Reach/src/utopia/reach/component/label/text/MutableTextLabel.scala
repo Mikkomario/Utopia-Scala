@@ -7,7 +7,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
@@ -91,11 +91,11 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	/**
 	  * A mutable pointer that contains this label's style
 	  */
-	val stylePointer = new PointerWithEvents(initialStyle)
+	val stylePointer = new EventfulPointer(initialStyle)
 	/**
 	  * A mutable pointer that contains this label's text
 	  */
-	val textPointer = new PointerWithEvents(initialText)
+	val textPointer = new EventfulPointer(initialText)
 	/**
 	  * A pointer to this label's measured text
 	  */

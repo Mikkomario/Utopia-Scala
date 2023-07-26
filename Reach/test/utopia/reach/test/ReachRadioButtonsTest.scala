@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.reach.component.input.selection.RadioButtonGroup
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.window.ReachWindow
@@ -16,7 +16,7 @@ object ReachRadioButtonsTest extends App
 	import ReachTestContext._
 	
 	// Controls
-	private val valuePointer = new PointerWithEvents(1)
+	private val valuePointer = new EventfulPointer(1)
 	
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>

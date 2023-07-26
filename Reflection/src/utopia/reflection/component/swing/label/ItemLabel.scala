@@ -7,7 +7,7 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -34,7 +34,7 @@ object ItemLabel
 	def apply[A](font: Font, initialContent: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	             insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
 	             textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
-		new ItemLabel[A](new PointerWithEvents[A](initialContent), displayFunction, font, textColor, insets, alignment,
+		new ItemLabel[A](new EventfulPointer[A](initialContent), displayFunction, font, textColor, insets, alignment,
 			hasMinWidth)
 	
 	/**
@@ -47,7 +47,7 @@ object ItemLabel
 	  */
 	def contextual[A](content: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 					 (implicit context: TextContext) = contextualWithPointer(
-		new PointerWithEvents(content), displayFunction)
+		new EventfulPointer(content), displayFunction)
 	
 	/**
 	  * Creates a new label using specified content pointer and contextual information
@@ -57,7 +57,7 @@ object ItemLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def contextualWithPointer[A](pointer: EventfulPointer[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 								(implicit context: TextContext) =
 	{
 		new ItemLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
@@ -96,9 +96,9 @@ object ItemLabel
  *  @param initialAlignment The alignment used for this component initially (default = Left)
   * @param hasMinWidth Whether this label should have minimum width (always show all content text) (default = true)
   */
-class ItemLabel[A](override val contentPointer: PointerWithEvents[A], val displayFunction: DisplayFunction[A], initialFont: Font,
-				   initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
-				   initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
+class ItemLabel[A](override val contentPointer: EventfulPointer[A], val displayFunction: DisplayFunction[A], initialFont: Font,
+                   initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
+                   initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
 	extends StackableAwtComponentWrapperWrapper with MutableStyleTextComponent with SwingComponentRelated
 		with MutableCustomDrawableWrapper with RefreshableWithPointer[A]
 {

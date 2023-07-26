@@ -8,7 +8,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
@@ -238,7 +238,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val baseStatePointer = new PointerWithEvents(GuiElementStatus.identity)
+	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	private val _statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
 		state + (Disabled -> !enabled) }
 	private val actualTextInsets = if (borderWidth > 0) textInsets + borderWidth else textInsets

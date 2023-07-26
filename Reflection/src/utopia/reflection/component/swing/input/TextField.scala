@@ -5,7 +5,7 @@ import utopia.firmament.model.Border
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.flow.view.mutable.eventful.PointerWithEvents
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
@@ -257,7 +257,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 {
 	// ATTRIBUTES	----------------------
 	
-	private val _textPointer = new PointerWithEvents(initialText)
+	private val _textPointer = new EventfulPointer(initialText)
 	override val valuePointer = _textPointer.map { text =>
 		// Text is trimmed before mapping. Empty strings are treated as None
 		val base = text.trim.notEmpty
