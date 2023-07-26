@@ -426,7 +426,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A (strongly) mirrored version of this item, using specified mapping function
 	  */
-	def strongMapWhile[B](condition: Changing[Boolean])(f: A => B): Changing[B] = diverge {
+	def mapWhile[B](condition: Changing[Boolean])(f: A => B): Changing[B] = diverge {
 		// Case: Mirroring is never actually allowed => Uses a fixed value instead
 		if (condition.isAlwaysFalse)
 			Fixed(f(value))
@@ -501,7 +501,7 @@ trait Changing[+A] extends Any with View[A]
 			Fixed(f(value, other.value))
 		else
 			divergeMerge[B, Changing[R]](other) { MergeMirror(this, other, condition)(f) } { v2 =>
-				strongMapWhile(condition) { f(_, v2) } } { Mirror(other, condition) { v2 => f(value, v2) } }
+				mapWhile(condition) { f(_, v2) } } { Mirror(other, condition) { v2 => f(value, v2) } }
 	}
 	/**
 	  * Creates a mirror that reflects the merged value of this and two other pointers.

@@ -202,14 +202,14 @@ case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	override def self: ContextualViewImageButtonFactory = this
 	
 	override protected def allowsUpscalingPointer: Changing[Boolean] =
-		contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.allowImageUpscaling }
+		contextPointer.mapWhile(parentHierarchy.linkPointer) { _.allowImageUpscaling }
 	
 	override def withContextPointer(contextPointer: Changing[ColorContext]) =
 		copy(contextPointer = contextPointer)
 	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
 	
 	override def *(mod: Double): ContextualViewImageButtonFactory =
-		copy(contextPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _ * mod },
+		copy(contextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _ * mod },
 			settings = settings * mod)
 	
 	

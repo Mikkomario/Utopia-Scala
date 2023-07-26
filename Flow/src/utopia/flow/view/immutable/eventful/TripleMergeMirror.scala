@@ -37,7 +37,7 @@ object TripleMergeMirror
 				MergeMirror(firstSource, thirdSource, condition)({ (a, c) => merge(a, secondSource.value, c) })
 			// Case: Only source 1 changes => Uses mapping
 			else
-				firstSource.strongMapWhile(condition) { merge(_, secondSource.value, thirdSource.value) }
+				firstSource.mapWhile(condition) { merge(_, secondSource.value, thirdSource.value) }
 		}
 		else if (secondSource.isChanging) {
 			// Case: Sources 2 & 3 change => Merge
@@ -45,11 +45,11 @@ object TripleMergeMirror
 				MergeMirror(secondSource, thirdSource, condition)({ (b, c) => merge(firstSource.value, b, c) })
 			// Case: Source 2 only changes => Maps
 			else
-				secondSource.strongMapWhile(condition) { merge(firstSource.value, _, thirdSource.value) }
+				secondSource.mapWhile(condition) { merge(firstSource.value, _, thirdSource.value) }
 		}
 		// Case: Source 3 changes only => Maps
 		else if (thirdSource.isChanging)
-			thirdSource.strongMapWhile(condition) { merge(firstSource.value, secondSource.value, _) }
+			thirdSource.mapWhile(condition) { merge(firstSource.value, secondSource.value, _) }
 		// Case: Nothing changes => Uses a fixed value
 		else
 			Fixed(merge(firstSource.value, secondSource.value, thirdSource.value))

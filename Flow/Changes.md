@@ -1,6 +1,7 @@
 # Utopia Flow - List of Changes
 
 ## v2.2 (in development)
+TODO: Document changes to Changing (new map options) and related classes
 ### Breaking Changes
 - Updated the abstract functions in **Changing**
   - `.addListener(ChangeListener)` and `.addDependency(ChangeDependency)` are no longer abstract and is instead 
@@ -13,17 +14,28 @@
 - **IterableOnce**`.toTryCatch` now returns a **TryCatch** instead of a **Try**
 - **String**`.splitAtFirst(String)` and `.splitAtLast(String)` in **StringExtensions** 
   now return a **Pair** instead of a **Tuple** 
+- **ListenableResettableLazy** is now a trait and not a class (i.e. the `new` keyword no longer works in this context)
+- The default implementation of **Changing**`.map(...)` now uses an **OptimizedMirror**. 
+  - It may be appropriate to review the uses of this method and to see whether 
+    `.strongMap(...)` or `.mapWhile(...)` would be more appropriate options. 
 ### Deprecations
 - Deprecated **ChangeDependency** and **DetachmentChoice** (see breaking changes)
 - Deprecated certain listener properties in **AbstractChanging** in favor of new listener style properties
+- Deprecated `.fireChangeEvent(...)` in **AbstractChanging** in favor of new `.fireEvent(...)` variants
+  - Please note the slightly different functionality 
+    - I.e. that `.foreach { _() }` must be called for the result value in order to actuate the scheduled after-effects
 - Deprecated `.toPair` in **ChangeEvent** because the name implied conversion
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 ### New Features
+- **ChangeListeners** can now cause after-effects to be triggered after the completion of a change event
 - Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 
   an external condition is met
+  - These are utilized in **Changing**`.mapWhile(...)` and as optional features in other map-like functions, 
+    as well as in `.addListenerWhile(...)`
 - Added **OnceFlatteningPointer** class that resembles **SettableOnce**, 
   except that it will wrap another pointer (i.e. not just a value) once complete.
+- Added **ListenableMutableLazy** class and **ResetListenable** trait
 - Added new **TryCatch** utility class for handling situations that included non-critical failures
 - Added new **Steppable** trait for items that provide step-based iteration
 - Added sorting support to immutable **Models**

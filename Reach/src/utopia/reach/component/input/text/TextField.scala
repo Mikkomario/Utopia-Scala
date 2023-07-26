@@ -744,7 +744,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 		.apply(isEmptyPointer) { fieldContext =>
 			// Modifies the context
 			val labelContextPointer = fieldContext.contextPointer
-				.strongMapWhile(parentHierarchy.linkPointer) { _.withHorizontallyExpandingText }
+				.mapWhile(parentHierarchy.linkPointer) { _.withHorizontallyExpandingText }
 			// Assigns focus listeners and prompt drawers to label settings
 			val mainFocusListener: FocusListener = {
 				// Remembers the first time this field received focus

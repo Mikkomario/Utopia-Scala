@@ -290,7 +290,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	// ATTRIBUTES   -------------------------
 	
 	override protected lazy val marginPointer: Changing[StackLength] =
-		customMarginPointer.getOrElse(contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.smallStackMargin })
+		customMarginPointer.getOrElse(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.smallStackMargin })
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -310,7 +310,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @return Copy of this factory that places the specified sized margin between list items.
 	  */
 	def withMargin(margin: SizeCategory) =
-		withMarginPointer(contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.scaledStackMargin(margin) })
+		withMarginPointer(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.scaledStackMargin(margin) })
 	/**
 	  * @param margin Margin size to use. None if no margin should be placed.
 	  * @return Copy of this factory that uses the specified margin between list items.
@@ -341,7 +341,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](contextPointer.value.actorHandler,
-			contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.background }, contentPointer,
+			contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }, contentPointer,
 			valuePointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
 }
 

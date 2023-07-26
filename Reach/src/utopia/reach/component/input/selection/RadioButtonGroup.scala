@@ -258,7 +258,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: C
 			// Creates a line for each option
 			val lineContextPointer = {
 				if (settings.axis == Y)
-					contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.withTextExpandingToRight }
+					contextPointer.mapWhile(parentHierarchy.linkPointer) { _.withTextExpandingToRight }
 				else
 					contextPointer
 			}

@@ -288,7 +288,7 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 	override def self: ContextualViewImageLabelFactory = this
 	
 	override protected def allowUpscalingPointer: Changing[Boolean] = contextPointer
-		.strongMapWhile(parentHierarchy.linkPointer) { _.allowImageUpscaling }
+		.mapWhile(parentHierarchy.linkPointer) { _.allowImageUpscaling }
 	
 	override def withContextPointer(p: Changing[ColorContext]): ContextualViewImageLabelFactory =
 		copy(contextPointer = p)
@@ -301,7 +301,7 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 			settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers), drawBackground = true)
 	
 	override def *(mod: Double): ContextualViewImageLabelFactory =
-		copy(contextPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _ * mod },
+		copy(contextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _ * mod },
 			settings = settings * mod)
 	
 	override def apply(imagePointer: Changing[Image]) = iconOrImagePointer(Right(imagePointer))
@@ -313,9 +313,9 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 		withInsetsPointer(contextPointer.mergeWith(sizePointer) { _.scaledStackMargin(_).toInsets })
 	
 	def withColor(color: ColorSet): ContextualViewImageLabelFactory =
-		withColorOverlayPointer(contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.color(color) })
+		withColorOverlayPointer(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.color(color) })
 	def withColor(color: ColorRole): ContextualViewImageLabelFactory =
-		withColorOverlayPointer(contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.color(color) })
+		withColorOverlayPointer(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.color(color) })
 	def withColorPointer(colorPointer: Changing[ColorRole]) =
 		withColorOverlayPointer(contextPointer.mergeWith(colorPointer) { _.color(_) })
 	

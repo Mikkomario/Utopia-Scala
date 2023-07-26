@@ -535,7 +535,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	
 	private val _focusPointer = new PointerWithEvents(false)
 	
-	private lazy val uncoloredHintContextPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { context =>
+	private lazy val uncoloredHintContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { context =>
 		context
 			// Hint text is smaller and has smaller insets
 			.mapTextInsets { original =>

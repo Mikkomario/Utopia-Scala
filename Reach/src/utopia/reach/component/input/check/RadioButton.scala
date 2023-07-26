@@ -223,7 +223,7 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A) = {
 		// Uses a static size after creation
 		val context = contextPointer.value
-		val bgPointer = contextPointer.strongMapWhile(parentHierarchy.linkPointer) { _.background }
+		val bgPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
 		val sizeMod = ComponentCreationDefaults.radioButtonScalingFactor * scaling
 		_apply[A](selectedValuePointer, value, bgPointer,
 			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
