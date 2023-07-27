@@ -2,6 +2,7 @@ package utopia.reach.component.factory.contextual
 
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
+import utopia.reach.component.hierarchy.ComponentHierarchy
 
 /**
   * Common trait for component factories that use a variable context parameter (i.e. a context pointer)
@@ -11,6 +12,11 @@ import utopia.flow.view.template.eventful.Changing
 trait VariableContextualFactory[N, +Repr]
 {
 	// ABSTRACT --------------------------
+	
+	/**
+	  * @return Component hierarchy used when creating the new components
+	  */
+	protected def parentHierarchy: ComponentHierarchy
 	
 	/**
 	  * @return Pointer that determines the context of the created components
@@ -34,6 +40,11 @@ trait VariableContextualFactory[N, +Repr]
 	  * @param f A mapping function for the component creation context
 	  * @return Copy of this factory that uses a mapped context
 	  */
-	// TODO: Should restrict the mapping to only apply while the components are attached
-	def mapContext(f: N => N) = withContextPointer(contextPointer.map(f))
+	def mapContext(f: N => N) = withContextPointer(contextPointer.mapWhile(parentHierarchy.linkPointer)(f))
+	/**
+	  * @param f A mapping function that targets the current component creation context.
+	  *          Returns a variable context.
+	  * @return Copy of this factory that uses the resulting variable context.
+	  */
+	def flatMapContext(f: N => Changing[N]) = withContextPointer(contextPointer.flatMap(f))
 }

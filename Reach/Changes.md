@@ -34,11 +34,14 @@
 - Deprecated **ImageLabelLike** in favor of **ImageLabel**
 - Deprecated **BuilderFactory** and **SimpleFilledBuilderFactory**
 ### Bugfixes
+- Fixed issues with `ReachCanvas.forSwing(...)`
+  - The previous implementation didn't properly follow component hierarchy attachment status
 - `.isThisLevelLinked` in **SeedHierarchyBlock** didn't always return the correct value (fixed)
 ### New Features
 - **FieldWithSelectionPopup** and **DropDown** now support an additional field at the end of the selection list 
   (optional feature)
 - Added new constructor style to various component factories
+- Added component factory traits that utilize a variable component creation context (i.e. a context-pointer)
 - Added easier methods for adding background drawing to certain components and containers
   - In containers, the new `.withBackground(...)` functions are available implicitly (see **GenericContextualFactory**)
   - In component factories, these become available after importing **ContextualBackgroundAssignableFactory**

@@ -10,7 +10,9 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.{IndirectPointer, EventfulPointer, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.Resettable
+import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
@@ -30,12 +32,13 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
-import utopia.reach.focus.ReachFocusManager
 import utopia.reach.drawing.RealTimeReachPaintManager
+import utopia.reach.focus.ReachFocusManager
 
-import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent}
+import java.awt.event.KeyEvent
 import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}
 import java.util
+import javax.swing.event.{AncestorEvent, AncestorListener}
 import javax.swing.{JComponent, JPanel}
 import scala.concurrent.ExecutionContext
 
@@ -138,7 +141,8 @@ object ReachCanvas
 			// Implements the attachment tracking etc.
 			val attachmentPointer = ResettableFlag()
 			val componentPointer = SettableOnce[java.awt.Component]()
-			val absoluteParentPositionView = View {
+			// TODO: Utilize the ancestor listener in caching & resetting this value
+			val absoluteParentPositionView = ResettableLazy {
 				componentPointer.value match {
 					case Some(component) =>
 						component.parentsIterator.takeTo { _.isInstanceOf[java.awt.Window] }
@@ -162,7 +166,8 @@ object ReachCanvas
 				canvas.updateLayout()
 			}(createContent)
 			componentPointer.set(canvas.component)
-			canvas.component.addComponentListener(new SwingAttachmentTracker(attachmentPointer))
+			val tracker = new SwingAttachmentTracker(attachmentPointer, absoluteParentPositionView)
+			canvas.component.addAncestorListener(tracker)
 			
 			// Initializes canvas size
 			canvas.size = canvas.stackSize.optimal
@@ -174,10 +179,13 @@ object ReachCanvas
 	
 	// NESTED   ----------------------------
 	
-	private class SwingAttachmentTracker(pointer: ResettableFlag) extends ComponentAdapter
+	private class SwingAttachmentTracker(pointer: ResettableFlag, absolutePositionView: Resettable)
+		extends AncestorListener
 	{
-		override def componentShown(e: ComponentEvent) = pointer.set()
-		override def componentHidden(e: ComponentEvent) = pointer.reset()
+		override def ancestorAdded(event: AncestorEvent) = pointer.set()
+		override def ancestorRemoved(event: AncestorEvent) = pointer.reset()
+		
+		override def ancestorMoved(event: AncestorEvent) = absolutePositionView.reset()
 	}
 }
 

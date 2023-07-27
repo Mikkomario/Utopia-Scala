@@ -77,7 +77,7 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	/**
 	  * Removes all change listeners from this item
 	  */
-	protected def clearListeners() = _listeners = Pair.twice(Vector.empty)
+	def clearListeners() = _listeners = Pair.twice(Vector.empty)
 	
 	/**
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
