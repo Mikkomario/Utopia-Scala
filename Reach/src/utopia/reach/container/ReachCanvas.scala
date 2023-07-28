@@ -104,7 +104,12 @@ object ReachCanvas
 	  * The resulting canvas will never resize itself automatically. If you want the canvas to change size, you
 	  * must resize it manually. Remember to call .updateLayout() after any size change.
 	  *
-	  * @param backgroundPointer          A pointer that contains the background use in this canvas
+	  * @param backgroundPointer          A pointer that contains the background use in this canvas.
+	  *
+	  *                                   Please note that a transparent background is not supported here,
+	  *                                   because this canvas must use some background color in order to reverse
+	  *                                   the effects of previous paint iteration.
+	  *
 	  * @param cursors                    A set of custom cursors to use on this canvas (optional)
 	  *
 	  * @param revalidateListener         A function that is called during ReachCanvas revalidation.
