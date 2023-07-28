@@ -181,7 +181,7 @@ trait View
 		val appliedTarget = {
 			// Case: Targeting a table that's part of this view's target => Performs delete
 			if (baseTarget.tables.contains(table))
-				target
+				baseTarget
 			// Case: Targeting a table outside of this view's target => Attempts join
 			else
 				baseTarget join table

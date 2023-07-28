@@ -3,7 +3,7 @@ package utopia.flow.view.template.eventful
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.event.model.ChangeResponse.{Continue, ContinueAnd}
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.End
 import utopia.flow.operator.End.{First, Last}
 import utopia.flow.view.immutable.View
@@ -123,7 +123,7 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 				// TODO: Consider informing these listeners only after the event
 				val event2 = ChangeEvent(oldValue, newValue)
 				val firstEffects = _fireEvent(Some(event2), First)
-				ContinueAnd {
+				Continue.and {
 					val moreEffects = _fireEvent(Some(event2), Last)
 					(firstEffects.iterator ++ moreEffects).foreach { _() }
 				}

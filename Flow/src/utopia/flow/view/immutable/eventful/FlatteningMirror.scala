@@ -2,7 +2,7 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.event.model.ChangeResponse.ContinueAnd
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -68,7 +68,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 		event.oldValue.removeListener(valueUpdatingListener)
 		event.newValue.addListener(valueUpdatingListener)
 		// Also updates the simulated value when pointers change
-		ContinueAnd { pointer.value = event.newValue.value }
+		Continue.and { pointer.value = event.newValue.value }
 	}
 	
 	

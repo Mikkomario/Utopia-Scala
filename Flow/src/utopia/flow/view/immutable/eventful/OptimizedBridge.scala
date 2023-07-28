@@ -34,7 +34,7 @@ object OptimizedBridge
 	  * @return A new bridge
 	  */
 	def map[O, R](origin: Changing[O], trackActivelyFlag: Changing[Boolean], disableCaching: Boolean = false)
-	             (f: O => R)(onUpdate: Lazy[Option[ChangeEvent[R]]] => Iterable[() => Unit]) =
+	             (f: O => R)(onUpdate: Lazy[Option[ChangeEvent[R]]] => Seq[() => Unit]) =
 		new OptimizedBridge[O, R](origin, trackActivelyFlag, f, onUpdate, disableCaching)
 	
 	/**
@@ -50,7 +50,7 @@ object OptimizedBridge
 	  * @return A new bridge
 	  */
 	def apply[A](origin: Changing[A], trackActivelyFlag: Changing[Boolean])
-	            (onUpdate: Lazy[Option[ChangeEvent[A]]] => Iterable[() => Unit]) =
+	            (onUpdate: Lazy[Option[ChangeEvent[A]]] => Seq[() => Unit]) =
 		map[A, A](origin, trackActivelyFlag, disableCaching = true)(Identity)(onUpdate)
 }
 
@@ -87,7 +87,7 @@ object OptimizedBridge
   *                        (e.g. retrieving a value from a map or something).
   */
 class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Boolean], f: O => R,
-                             onUpdate: Lazy[Option[ChangeEvent[R]]] => Iterable[() => Unit], cachingDisabled: Boolean)
+                             onUpdate: Lazy[Option[ChangeEvent[R]]] => Seq[() => Unit], cachingDisabled: Boolean)
 	extends View[R]
 {
 	// ATTRIBUTES   -------------------------

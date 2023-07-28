@@ -74,7 +74,7 @@ object ChangeResponse
 		override val shouldContinueListening: Boolean = true
 		override val afterEffects: Iterable[() => Unit] = Vector.empty
 		
-		override def and[U](afterEffect: => U): ChangeResponse = ContinueAnd(afterEffect)
+		override def and[U](afterEffect: => U): ChangeResponse = ContinueAnd(Vector(() => afterEffect))
 	}
 	
 	/**
@@ -85,13 +85,9 @@ object ChangeResponse
 		override val shouldContinueListening: Boolean = false
 		override val afterEffects: Iterable[() => Unit] = Vector.empty
 		
-		override def and[U](afterEffect: => U): ChangeResponse = DetachAnd(afterEffect)
+		override def and[U](afterEffect: => U): ChangeResponse = DetachAnd(Vector(() => afterEffect))
 	}
 	
-	object ContinueAnd
-	{
-		def apply[U](effect: => U): ContinueAnd = new ContinueAnd(Vector(() => effect))
-	}
 	/**
 	  * Change response used when the event receiver wishes to continue receiving change events,
 	  * and also needs to trigger certain effects after the event has been resolved.
@@ -101,13 +97,16 @@ object ChangeResponse
 	{
 		override def shouldContinueListening: Boolean = true
 		
+		override def toString = {
+			if (afterEffects.isEmpty)
+				"Continue"
+			else
+				s"Continue and perform ${afterEffects.size} actions"
+		}
+		
 		override def and[U](afterEffect: => U): ChangeResponse = copy(afterEffects :+ { () => afterEffect })
 	}
 	
-	object DetachAnd
-	{
-		def apply[U](effect: => U): DetachAnd = new DetachAnd(Vector(() => effect))
-	}
 	/**
 	  * Change response used when the event receiver wishes to stop receiving change events,
 	  * but also needs to trigger certain effects after the event has been resolved.
@@ -116,6 +115,13 @@ object ChangeResponse
 	case class DetachAnd(afterEffects: Seq[() => Unit]) extends ChangeResponse
 	{
 		override def shouldContinueListening: Boolean = false
+		
+		override def toString = {
+			if (afterEffects.isEmpty)
+				"Detach"
+			else
+				s"Detach and perform ${ afterEffects.size } actions"
+		}
 		
 		// WET WET
 		override def and[U](afterEffect: => U): ChangeResponse = copy(afterEffects :+ { () => afterEffect })

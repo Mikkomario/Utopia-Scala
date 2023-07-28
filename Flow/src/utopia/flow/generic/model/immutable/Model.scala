@@ -130,7 +130,7 @@ class Model private(override val propertyMap: Map[String, Constant],
     
     override def nonEmpty = !isEmpty
     
-    override implicit def equalsFunction: EqualsFunction[Model] = ???
+    override implicit def equalsFunction: EqualsFunction[Model] = Model.similarProperties
     
     override def newProperty(attName: String) = propFactory(attName)
     
