@@ -48,9 +48,10 @@ object DbIssueVariant extends SingleRowModelAccess[IssueVariant] with Unconditio
 	  * @return A matching issue variant, or None if no match was found
 	  */
 	// Doesn't apply the details condition to the query, because that column is not indexed
-	def findMatching(data: IssueVariantData)(implicit connection: Connection) = 
-		NotEmpty(DbIssueVariants.matching(data.issueId, 
-			data.version).causedByError(data.errorId).pull).flatMap { _.find { _.details ~== data.details } }
+	def findMatching(data: IssueVariantData)(implicit connection: Connection) = {
+		val options = DbIssueVariants.matching(data.issueId, data.version).causedByError(data.errorId).pull
+		NotEmpty(options).flatMap { _.find { _.details ~== data.details } }
+	}
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield

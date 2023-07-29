@@ -1,8 +1,8 @@
 package utopia.paradigm.shape.shape1d
 
 import utopia.flow.collection.immutable.range.{HasEnds, NumericSpan}
-import utopia.flow.operator.{ApproxSelfEquals, CanBeAboutZero, EqualsFunction}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.{ApproxSelfEquals, CanBeAboutZero, EqualsFunction}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.X
 
@@ -50,23 +50,6 @@ case class Span1D(override val start: Double, override val end: Double, axis: Ax
 	override lazy val dimensions = super.dimensions
 	
 	
-	// COMPUTED -------------------------
-	
-	/**
-	  * @return A vector that has the same length and direction as this span
-	  */
-	def vector = Vector1D(length, axis)
-	
-	/**
-	  * @return A vector representation of the starting point of this span
-	  */
-	def startVector = Vector1D(start, axis)
-	/**
-	  * @return A vector representation of the end of this span
-	  */
-	def endVector = Vector1D(end, axis)
-	
-	
 	// IMPLEMENTED  ---------------------
 	
 	override implicit def equalsFunction: EqualsFunction[Span1D] = Span1D.equalsFunction
@@ -76,6 +59,10 @@ case class Span1D(override val start: Double, override val end: Double, axis: Ax
 	override def value = this
 	
 	override def step = 1.0
+	
+	def vector = Vector1D(length, axis)
+	def startVector = Vector1D(start, axis)
+	def endVector = Vector1D(end, axis)
 	
 	override def isZero = start == 0.0 && end == 0.0
 	override def nonZero = !isZero

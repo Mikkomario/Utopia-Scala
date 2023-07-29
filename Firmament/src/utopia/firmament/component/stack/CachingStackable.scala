@@ -15,7 +15,8 @@ trait CachingStackable extends Stackable with Constrainable
 	
 	// TODO: Make these abstract, also
 	private var _constraints = Vector[StackSizeModifier]()
-	private val cachedStackSize = ResettableLazy[StackSize] { calculatedStackSizeWithConstraints }
+	// NB: Rounding is an experimental update added 29.7.2023, v1.1 - remove if not useful
+	private val cachedStackSize = ResettableLazy[StackSize] { calculatedStackSizeWithConstraints.round }
 	
 	
 	// IMPLEMENTED	-----------------

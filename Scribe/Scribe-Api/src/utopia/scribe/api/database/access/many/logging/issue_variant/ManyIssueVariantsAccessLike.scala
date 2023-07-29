@@ -67,8 +67,8 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	  * @param version Targeted version
 	  * @return Access to that issue's variants that occurred in the specified version
 	  */
-	def matching(issueId: Int,
-	             version: Version) = filter(model.withId(issueId).withVersion(version).toCondition)
+	def matching(issueId: Int, version: Version) =
+		filter(model.withIssueId(issueId).withVersion(version).toCondition)
 	
 	/**
 	  * @param errorId Id of an error, or None if targeting variants that are not associated with any error

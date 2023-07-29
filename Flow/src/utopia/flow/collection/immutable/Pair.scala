@@ -500,7 +500,7 @@ case class Pair[+A](first: A, second: A)
 	  * @return Whether the two values of this pair are equal when applying the specified function
 	  */
 	@deprecated("Renamed to .isSymmetricWith(EqualsFunction)", "2.1")
-	def equalsUsing(e: EqualsFunction[A]) = e.equals(first, second)
+	def equalsUsing(e: EqualsFunction[A]) = e(first, second)
 	/**
 	  * @param e An equals function
 	  * @return Whether the two values of this pair are unequal when applying the specified function
@@ -512,7 +512,7 @@ case class Pair[+A](first: A, second: A)
 	  * @param e An equals function
 	  * @return Whether the two values of this pair are equal when applying the specified function
 	  */
-	def isSymmetricWith(e: EqualsFunction[A]) = e.equals(first, second)
+	def isSymmetricWith(e: EqualsFunction[A]) = e(first, second)
 	/**
 	  * @param e An equals function
 	  * @return Whether the two values of this pair are unequal when applying the specified function

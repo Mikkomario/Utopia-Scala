@@ -4,6 +4,8 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.async.process.Wait
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
@@ -46,7 +48,8 @@ object DbLoggingTest extends App
 	// Connection.modifySettings { _.copy(debugPrintsEnabled = true) }
 	
 	Try { testFunction() }
-		.logWith("Test function failed (expected)", subContext = "testFunction", severity = Debug)
+		.logWith("Test function failed (expected)", subContext = "testFunction", severity = Debug,
+			variantDetails = Model.from("firstValue" -> 1, "secondValue" -> "test"))
 	
 	// Waits in order to make sure the error is recorded asynchronously
 	Wait(1.0.seconds)

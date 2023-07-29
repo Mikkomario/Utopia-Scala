@@ -27,7 +27,9 @@ object Model
         // Only compares defined (i.e. non-empty) properties
         val props = Pair(a, b).map { _.propertyMap.filter { _._2.nonEmpty } }
         if (props.isSymmetricBy { _.keySet })
-            props.first.keys.forall { n => props.map { _(n).value }.isSymmetricWith(Value.convertToEqual) }
+            props.first.keys.forall { n =>
+                props.map { _(n).value }.isSymmetricWith(Value.convertToEqual)
+            }
         else
             false
     }

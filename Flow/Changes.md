@@ -30,6 +30,7 @@ TODO: Document changes to Changing (new map options) and related classes
   - Similarly, renamed **Iterator**`.withEvents(...)` to `.eventful(...)`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
+- **Pair**`.equalsUsing(EqualsFunction)` didn't work previously
 ### New Features
 - **ChangeListeners** can now cause after-effects to be triggered after the completion of a change event
 - Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 

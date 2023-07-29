@@ -9,7 +9,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y, Z}
   * @since Genesis 13.9.2019, v2.1+
   * @tparam P Type of vector projection result
   */
-trait VectorProjectable2[+P]
+trait VectorProjectable[+P]
 {
 	// ABSTRACT	--------------------
 	

@@ -1,13 +1,13 @@
 package utopia.firmament.model.stack
 
+import utopia.firmament.model.stack.LengthPriority.Low
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Combinable.SelfCombinable
-import utopia.flow.operator.{EqualsBy, LinearScalable}
+import utopia.flow.operator.EqualsBy
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.{Insets, Size}
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
-import utopia.firmament.model.stack.LengthPriority.Low
 import utopia.paradigm.transform.SizeAdjustable
 
 object StackSize extends DimensionsWrapperFactory[StackLength, StackSize]
@@ -217,6 +217,11 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @return A copy of this size that is more easily expanded
       */
     def expanding = mapEachDimension { _.expanding }
+    
+    /**
+      * @return Copy of this stack size where all thresholds are rounded to nearest integers
+      */
+    def round = mapEachDimension { _.round }
     
     
     // IMPLEMENTED    ----------------

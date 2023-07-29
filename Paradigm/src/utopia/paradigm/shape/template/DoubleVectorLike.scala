@@ -23,7 +23,7 @@ import scala.math.Ordering.Double.TotalOrdering
 trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	extends Dimensional[Double, Repr]
 		with LinearScalable[Repr] with Combinable[HasDoubleDimensions, Repr] with HasLength
-		with VectorProjectable2[Repr] with CanBeAboutZero[HasDoubleDimensions, Repr] with Transformable[Repr]
+		with VectorProjectable[Repr] with CanBeAboutZero[HasDoubleDimensions, Repr] with Transformable[Repr]
 {
 	// ABSTRACT ---------------------
 	

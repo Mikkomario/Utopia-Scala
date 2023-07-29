@@ -242,6 +242,10 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	def right = StackInsets.right(this)
 	
 	/**
+	  * @return A copy of this stack length where all thresholds are integers
+	  */
+	def round = copy(min.round.toDouble, optimal.round.toDouble, max.map { _.round.toDouble })
+	/**
 	  * @return A copy of this length where all the values are rounded to the next full integer
 	  */
 	def ceil = copy(min.ceil, optimal.ceil, max.map { _.ceil })
