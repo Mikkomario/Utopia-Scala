@@ -65,11 +65,23 @@ object ScribeConsoleApp extends App
 	private val queuedVariantsPointer = Pointer(Vector.empty[IssueVariantInstances] -> 0)
 	private val queuedErrorIdPointer = Pointer.empty[Int]()
 	
+	// More issues and more occurrences are mutually exclusive
+	private var moreIssuesOrOccurrences: Either[Iterator[IssueOccurrenceData], Iterator[IssueInstances]] =
+		Left(Iterator.empty)
+	@deprecated("Replaced with moreIssuesOrOccurrences")
 	private var queuedOccurrences = Iterator.empty[IssueOccurrenceData]
 	
 	// Specifies some computed properties
 	
 	private def recent = Now - 7.days
+	
+	private def moreIssuesIterator = moreIssuesOrOccurrences.toOption.getOrElse(Iterator.empty)
+	private def moreIssuesIterator_=(more: Iterator[IssueInstances]) = moreIssuesOrOccurrences = Right(more)
+	
+	private def moreOccurrencesIterator =
+		moreIssuesOrOccurrences.leftOption.getOrElse { Iterator.empty }
+	private def moreOccurrencesIterator_=(more: Iterator[IssueOccurrenceData]) = moreIssuesOrOccurrences = Left(more)
+	
 	
 	// Sets up the commands for the console
 	
@@ -174,15 +186,20 @@ object ScribeConsoleApp extends App
 					println("No issues were found")
 				else {
 					println(s"Found ${issues.size} issues:")
-					issues.iterator.take(15).foreach { issue => println(s"\t- ${issue.id}: $issue${
-						if (issue.variants.exists { _.created > since }) " NEW" else "" }") }
-					if (issues.hasSize > 15)
+					val issuesIterator = issues.iterator
+					issuesIterator.collectNext(15).foreach { summarize(_, since) }
+					
+					if (issuesIterator.hasNext) {
+						moreIssuesIterator = issuesIterator
 						println("\t- ...")
+						println("\nFor an expanded list, use the 'more' command")
+					}
+					else
+						println()
+					
+					// Writes instructions
+					println("For more information concerning these issues, use 'see next' or 'see <issue id>'")
 				}
-				
-				// Writes instructions
-				println("For more information concerning these issues, use 'see next' or 'see <issue id>'")
-			
 			case Failure(error) =>
 				log(error, "Failed tor read issues")
 				println("Failed to read recent issues")
@@ -324,7 +341,7 @@ object ScribeConsoleApp extends App
 				queuedErrorIdPointer.value = variant.errorId
 				if (variant.errorId.isDefined)
 					println("\nFor more information about the associated error, use the 'stack' command")
-				queuedOccurrences = occurrenceIterator
+				moreOccurrencesIterator = occurrenceIterator
 				if (occurrenceIterator.hasNext)
 					println("For information about previous issue occurrences, use the 'more' command")
 				if (hasMore)
@@ -334,15 +351,24 @@ object ScribeConsoleApp extends App
 			case None => println("No more variants have been queued")
 		}
 	}
-	private val moreOccurrencesCommand = Command.withoutArguments("more",
-		help = "Prints information about another set of queued issue occurrences") {
-		queuedOccurrences.nextOption() match {
-			case Some(occurrence) =>
-				println(s"\tOccurrence of issue variant ${occurrence.caseId}:")
-				describeOccurrence(occurrence)
-				if (queuedOccurrences.hasNext)
-					println("For information about the next set of occurrences, use this same command")
-			case None => println("No more occurrences have been queued")
+	private val moreCommand = Command.withoutArguments("more",
+		help = "Prints information about another set of queued issues or occurrences") {
+		moreIssuesOrOccurrences match {
+			case Left(occurrencesIterator) =>
+				occurrencesIterator.nextOption() match {
+					case Some(occurrence) =>
+						println(s"\tOccurrence of issue variant ${ occurrence.caseId }:")
+						describeOccurrence(occurrence)
+						if (occurrencesIterator.hasNext)
+							println("For information about the next set of occurrences, use this same command")
+					case None => println("No more occurrences have been queued")
+				}
+			case Right(issuesIterator) =>
+				issuesIterator.collectNext(15).foreach { summarize(_) }
+				println()
+				if (issuesIterator.hasNext)
+					println("For more issues, use the 'more' command")
+				println("You may acquire more specifics of any single issue using the 'see <issue id>' command")
 		}
 	}
 	private val stackCommand = Command.withoutArguments("stack",
@@ -379,13 +405,37 @@ object ScribeConsoleApp extends App
 	// Starts the console
 	println("Welcome to the Scribe utility console!")
 	println("You will find the available commands with the 'help' command.")
-	Console.static(Vector(statusCommand, listCommand, seeCommand, nextCommand, moreOccurrencesCommand, stackCommand),
+	Console.static(Vector(statusCommand, listCommand, seeCommand, nextCommand, moreCommand, stackCommand),
 		"\nNext command:", "exit")
 		.run()
 	println("Bye!")
 	
 	
 	// OTHER FUNCTIONS  -------------------------
+	
+	private def summarize(issue: IssueInstances, threshold: Instant = recent) = {
+		val state = {
+			if (issue.created >= threshold)
+				" - NEW"
+			else if (issue.variants.exists { _.created >= threshold })
+				" - new variants"
+			else
+				""
+		}
+		println(s"\t- ${issue.id} ${issue.severity} ${issue.context}$state")
+		issue.latestOccurrence.foreach { latest =>
+			val lastTime = latest.lastOccurrence
+			println(s"\t\t- Last occurred ${(Now - lastTime).description} ago")
+			val earliest = issue.earliestOccurrence match {
+				case Some(o) => o.firstOccurrence
+				case None => latest.firstOccurrence
+			}
+			if (earliest == lastTime)
+				println("\t\t- Has occurred only once so far")
+			else
+				println(s"\t\t- Has occurred ${issue.numberOfOccurrences} over ${(lastTime - earliest).description}")
+		}
+	}
 	
 	private def printClassStack(classLines: IterableOnce[StackTraceElementRecord], className: String, indents: Int = 1) =
 	{

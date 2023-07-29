@@ -5,7 +5,6 @@ import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.StringExtensions._
 import utopia.flow.view.template.Extender
 import utopia.scribe.core.model.partial.logging.IssueData
 import utopia.scribe.core.model.stored.logging.Issue
