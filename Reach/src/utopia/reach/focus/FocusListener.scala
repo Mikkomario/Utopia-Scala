@@ -59,6 +59,7 @@ object FocusListener
 	def beforeFocusChange[U](f: Boolean => U) = apply {
 		case FocusEntering => f(true)
 		case FocusLeaving => f(false)
+		case _ => ()
 	}
 	
 	
