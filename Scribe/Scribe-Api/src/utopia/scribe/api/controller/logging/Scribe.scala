@@ -2,15 +2,19 @@ package utopia.scribe.api.controller.logging
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.{Loop, Process}
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
 import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.api.util.ScribeContext._
+import utopia.scribe.core.controller.listener.MaximumLogLimitReachedListener
 import utopia.scribe.core.controller.logging.ScribeLike
+import utopia.scribe.core.model.cached.event.MaximumLogLimitReachedEvent
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Critical
@@ -37,6 +41,13 @@ object Scribe
 	// Also contains the repeat interval, in case it needs to be modified
 	private var counterResetLoop: Option[(FiniteDuration, Process)] = None
 	
+	private var limitListeners = Vector[MaximumLogLimitReachedListener]()
+	
+	// Contains the latest timestamp when the counter reached 0 or 1
+	private val firstLogTimePointer = logCounter.incrementalMap { _ => Now.toInstant } { (previous, event) =>
+		if (event.newValue <= 1) Now.toInstant else previous
+	}
+	
 	
 	// OTHER    -------------------------
 	
@@ -49,6 +60,16 @@ object Scribe
 			backupLogger(loggingError, "Failed to document a client-originated issue")
 			backupLogger(issue.toString)
 		}
+	}
+	
+	/**
+	  * Adds a new listener to be informed in case of a log limit reached -event,
+	  * i.e. when/if the maximum number of logging entries is reached within a specific time period.
+	  * @param listener A listener to be informed in case of a limit reached -event
+	  */
+	def addLoggingLimitReachedListener(listener: MaximumLogLimitReachedListener) = {
+		if (!limitListeners.contains(listener))
+			limitListeners = limitListeners :+ listener
 	}
 	
 	/**
@@ -96,13 +117,13 @@ object Scribe
 	// Follows maximum logging count
 	private def log[U](f: Connection => U)(handleFailure: Throwable => U) = {
 		// Denies logging if the maximum limit is reached
-		val (shouldLog, maximumWasJustReached) = logCounter.pop { count =>
+		val (shouldLog, limitReachEvent) = logCounter.pop { count =>
 			// Case: Int.MaxValue logging entries => Resets the counter or denies logging
 			if (count == Int.MaxValue) {
 				if (logLimit.isDefined)
-					(false, false) -> count
+					(false, None) -> count
 				else
-					(true, false) -> 0
+					(true, None) -> 0
 			}
 			else {
 				// Increases the counter by 1
@@ -111,30 +132,38 @@ object Scribe
 					case Some(limit) =>
 						// Case: Limit not yet reached => Continues
 						if (count < limit)
-							(true, false)
+							(true, None)
 						// Case: Limit just reached => Denies logging and logs a warning instead
-						else if (count == limit)
-							(false, true)
+						else if (count == limit) {
+							val event = MaximumLogLimitReachedEvent(limit,
+								Span(firstLogTimePointer.value, Now.toInstant))
+							(false, Some(event))
+						}
 						// Case: Limit reached before => Denies logging
 						else
-							(false, false)
-					case None => (true, false)
+							(false, None)
+					case None => (true, None)
 				}
 				result -> increasedCount
 			}
 		}
 		
-		if (shouldLog || maximumWasJustReached)
+		if (shouldLog || limitReachEvent.isDefined)
 			loggingQueue.push { implicit c =>
-				// Case: Maximum reached => Logs the warning
-				if (maximumWasJustReached)
-					DbIssue.store("Scribe.maximumReached", None,
-						"Maximum number of logging entries was reached. Logging will not be performed anymore.",
-						Critical, Model.empty, Model.from("limit" -> logLimit))
-				// Case: Allowed to log => Logs
-				else
-					f(c)
+				limitReachEvent match {
+					// Case: Maximum reached => Logs the warning
+					case Some(event) =>
+						DbIssue.store("Scribe.maximumReached", None,
+							"Maximum number of logging entries was reached. Logging will not be performed anymore.",
+							Critical, Model.empty,
+							Model.from("limit" -> event.limit, "since" -> event.timeSpan.start))
+					// Case: Allowed to log => Logs
+					case None => f(c)
+				}
 			}.foreachFailure(handleFailure)
+		
+		// Informs assigned listeners about the limit reach, when appropriate
+		limitReachEvent.foreach { event => limitListeners.foreach { _.onLogLimitReached(event) } }
 	}
 }
 

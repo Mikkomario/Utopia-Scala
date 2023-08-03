@@ -6,7 +6,6 @@ import utopia.flow.time.TimeExtensions._
 import utopia.scribe.api.controller.logging.Scribe
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
 import utopia.scribe.core.model.enumeration.Severity.Debug
-import utopia.vault.database.Connection
 
 /**
   * Tests logging maximum capacity
@@ -21,12 +20,18 @@ object LoggingOverfillTest extends App
 	val noOverfill = _scribe.variant("shouldOverfill", false)
 	val overfill = _scribe.variant("shouldOverfill", true)
 	
+	var overfillEventReceived = false
+	
 	// Connection.modifySettings { _.copy(debugPrintsEnabled = true) }
 	
 	println("Test starting. Estimated duration: 4 seconds")
 	
 	// Sets up maximum logging
 	Scribe.setupLoggingLimit(3, 1.0.seconds)
+	Scribe.addLoggingLimitReachedListener { _ =>
+		assert(!overfillEventReceived)
+		overfillEventReceived = true
+	}
 	
 	// Logs "normally"
 	noOverfill("Testing 1.1")
@@ -38,7 +43,9 @@ object LoggingOverfillTest extends App
 	noOverfill("Testing 2.1")
 	noOverfill("Testing 2.2")
 	noOverfill("Testing 2.3")
+	assert(!overfillEventReceived)
 	overfill("Testing 2.4")
+	assert(overfillEventReceived)
 	overfill("Testing 2.5")
 	
 	Wait(2.0.seconds)

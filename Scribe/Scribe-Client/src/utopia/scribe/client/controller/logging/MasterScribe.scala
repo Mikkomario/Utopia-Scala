@@ -25,6 +25,8 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
+import utopia.scribe.core.controller.listener.MaximumLogLimitReachedListener
+import utopia.scribe.core.model.cached.event.MaximumLogLimitReachedEvent
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Critical
 import utopia.scribe.core.model.post.logging.ClientIssue
@@ -124,6 +126,9 @@ object MasterScribe
 		
 		// Pointer for tracking outgoing issue count/velocity (for limiting output)
 		private val issueCounter = Volatile(0)
+		private val firstIssueTimestampPointer = issueCounter.incrementalMap { _ => Now.toInstant } { (prev, event) =>
+			if (event.newValue <= 1) Now.toInstant else prev
+		}
 		
 		private val pendingIssuesPointer = VolatileList[(ClientIssue, Instant)]()
 		
@@ -145,6 +150,8 @@ object MasterScribe
 			case None => RequestQueue(queueSystem)
 		}
 		private lazy val sendIssuesProcess = PostponingProcess.by(issueBundleDuration) { sendPendingIssues() }
+		
+		private var limitListeners = Vector[MaximumLogLimitReachedListener]()
 		
 		
 		// INITIAL CODE ------------------------
@@ -176,13 +183,13 @@ object MasterScribe
 		override def accept(issue: ClientIssue) = pendingIssuesPointer.update { pending =>
 			// Checks whether the maximum logging velocity has been reached.
 			// Prevents additional logging, if so.
-			val (shouldLog, maxWasJustReached) = issueCounter.pop { count =>
+			val (shouldLog, limitReachedEvent) = issueCounter.pop { count =>
 				// Case: Int.MaxValue log entries reached => Stops counting or resets counter
 				if (count == Int.MaxValue) {
 					if (maxLogVelocity.isDefined)
-						(false, false) -> count
+						(false, None) -> count
 					else
-						(true, false) -> 0
+						(true, None) -> 0
 				}
 				else {
 					val nextCount = count + 1
@@ -190,15 +197,18 @@ object MasterScribe
 						case Some((max, _)) =>
 							// Case: Maximum not reached => OK to log
 							if (count < max)
-								(true, false)
+								(true, None)
 							// Case: Maximum just reached => Logs a warning, prevents logging
-							else if (count == max)
-								(false, true)
+							else if (count == max) {
+								val event = MaximumLogLimitReachedEvent(max,
+									Span(firstIssueTimestampPointer.value, Now.toInstant))
+								(false, Some(event))
+							}
 							// Case: Maximum reached earlier => Prevents logging
 							else
-								(false, false)
+								(false, None)
 						// Case: No maximum defined => OK to log
-						case None => (true, false)
+						case None => (true, None)
 					}
 					result -> nextCount
 				}
@@ -214,14 +224,18 @@ object MasterScribe
 					existing.repeated(modified.instances, now - previousRecording) -> now
 				}
 			}
-			// Case: Maximum reached -warning
-			else if (maxWasJustReached)
-				pending :+ (ClientIssue(issue.version, "MasterScribe.accept", Critical,
-					message = "Maximum outgoing issue count reached. Stops logging.",
-					occurrenceDetails = Model.from("limit" -> maxLogVelocity.map { _._1 })) -> Now)
-			// Case: Logging prevented
 			else
-				pending
+				limitReachedEvent match {
+					// Case: Maximum reached -warning
+					case Some(event) =>
+						// Informs the listeners as well
+						limitListeners.foreach { _.onLogLimitReached(event) }
+						pending :+ (ClientIssue(issue.version, "MasterScribe.accept", Critical,
+							message = "Maximum outgoing issue count reached. Stops logging.",
+							occurrenceDetails = Model.from("limit" -> maxLogVelocity.map { _._1 })) -> Now)
+					// Case: Logging prevented
+					case None => pending
+				}
 		}
 		
 		override def sendPendingIssues() = NotEmpty(pendingIssuesPointer.popAll()) match {
@@ -229,6 +243,11 @@ object MasterScribe
 			case Some(issues) => requestQueue.push(new PostIssuesRequest(issues)).map { handlePostResult(issues, _) }
 			// Case: No issues to send => Resolves immediately
 			case None => Future.successful(())
+		}
+		
+		override def addLoggingLimitReachedListener(listener: MaximumLogLimitReachedListener): Unit = {
+			if (!limitListeners.contains(listener))
+				limitListeners :+= listener
 		}
 		
 		
@@ -333,6 +352,8 @@ object MasterScribe
 		override def accept(issue: ClientIssue): Unit = logger(issue.toString)
 		
 		override def sendPendingIssues(): Future[Unit] = Future.successful(())
+		
+		override def addLoggingLimitReachedListener(listener: MaximumLogLimitReachedListener): Unit = ()
 	}
 }
 
@@ -354,4 +375,11 @@ trait MasterScribe
 	  * @return Future that resolves once the issues have been sent (or sending has failed)
 	  */
 	def sendPendingIssues(): Future[Unit]
+	
+	/**
+	  * Adds a new listener to be informed in case of a log limit reached -event,
+	  * i.e. when/if the maximum number of logging entries is reached within a specific time period.
+	  * @param listener A listener to be informed in case of a limit reached -event
+	  */
+	def addLoggingLimitReachedListener(listener: MaximumLogLimitReachedListener): Unit
 }
