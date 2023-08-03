@@ -64,6 +64,13 @@ trait ManyIssuesAccessLike[+A, +Repr]
 	}
 	
 	/**
+	  * @param contextPart Context or part of a context to search for
+	  * @return Access to issues that include the specified string in their context
+	  */
+	def includingContext(contextPart: String) =
+		if (contextPart.isEmpty) self else filter(model.contextColumn.contains(contextPart))
+	
+	/**
 	  * @param threshold A time threshold
 	  * @return Access to issues that appeared since the specified time threshold
 	  */

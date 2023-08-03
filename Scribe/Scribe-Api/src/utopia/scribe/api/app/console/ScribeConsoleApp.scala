@@ -13,7 +13,9 @@ import utopia.flow.time.{Now, Today}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.many.logging.issue.{DbIssues, DbManyIssueInstances}
 import utopia.scribe.api.database.access.many.logging.issue_occurrence.DbIssueOccurrences
@@ -29,6 +31,7 @@ import utopia.vault.database.{ConnectionPool, Tables}
 
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import scala.collection.immutable.VectorBuilder
 import scala.util.{Failure, Success}
 
 /**
@@ -62,25 +65,22 @@ object ScribeConsoleApp extends App
 	// Tracks program state in separate pointers
 	
 	private val queuedIssuesPointer = Pointer(Vector.empty[Either[Int, IssueInstances]] -> 0)
-	private val queuedVariantsPointer = Pointer(Vector.empty[IssueVariantInstances] -> 0)
-	private val queuedErrorIdPointer = Pointer.empty[Int]()
+	private val queuedVariantsPointer = EventfulPointer(Vector.empty[IssueVariantInstances] -> 0)
+	private val queuedErrorIdPointer = EventfulPointer.empty[Int]()
 	
 	// More issues and more occurrences are mutually exclusive
-	private var moreIssuesOrOccurrences: Either[Iterator[IssueOccurrenceData], Iterator[IssueInstances]] =
-		Left(Iterator.empty)
-	@deprecated("Replaced with moreIssuesOrOccurrences")
-	private var queuedOccurrences = Iterator.empty[IssueOccurrenceData]
+	private val moreIssuesOrOccurrencesPointer =
+		EventfulPointer[(Either[Vector[IssueOccurrenceData], Vector[IssueInstances]], Int)](Left(Vector.empty) -> 0)
+	
+	private val hasMoreVariantsPointer = queuedVariantsPointer
+		.map { case (variants, nextIndex) => nextIndex < variants.size }
+	private val hasQueuedErrorPointer = queuedErrorIdPointer.map { _.isDefined }
+	private val hasMoreIssuesOrOccurrencesPointer = moreIssuesOrOccurrencesPointer
+		.map { case (data, nextIndex) => data.either.hasSize > nextIndex }
 	
 	// Specifies some computed properties
 	
 	private def recent = Now - 7.days
-	
-	private def moreIssuesIterator = moreIssuesOrOccurrences.toOption.getOrElse(Iterator.empty)
-	private def moreIssuesIterator_=(more: Iterator[IssueInstances]) = moreIssuesOrOccurrences = Right(more)
-	
-	private def moreOccurrencesIterator =
-		moreIssuesOrOccurrences.leftOption.getOrElse { Iterator.empty }
-	private def moreOccurrencesIterator_=(more: Iterator[IssueOccurrenceData]) = moreIssuesOrOccurrences = Left(more)
 	
 	
 	// Sets up the commands for the console
@@ -137,6 +137,7 @@ object ScribeConsoleApp extends App
 	private val listCommand = Command("list", "ls", "Lists currently active issues")(
 		ArgumentSchema("level", "lvl",
 			help = "The level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures. \nAlternatively you may use level names: Debug | Info | Warning | Recoverable | Unrecoverable | Critical. \nYou may also specify two values (lowest - highest), if you want to target a range."),
+		ArgumentSchema("filter", "f", help = "A filter applied to issue context (optional)"),
 		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for")) { args =>
 		// Parses the arguments
 		val since = args("since").castTo(InstantType, DurationType) match {
@@ -172,9 +173,10 @@ object ScribeConsoleApp extends App
 				val variantsPerIssueId = DbIssueVariants(occurrencesPerVariantId.keySet).pull
 					.map { v => v.withOccurrences(occurrencesPerVariantId(v.id).reverseSorted) }
 					.groupBy { _.issueId }
-				val issues = DbIssues(variantsPerIssueId.keySet).withSeverityIn(severityRange).pull.map { issue =>
-					issue.withOccurrences(variantsPerIssueId(issue.id).reverseSorted)
-				}.reverseSorted
+				val issues = DbIssues(variantsPerIssueId.keySet)
+					.withSeverityIn(severityRange).includingContext(args("filter").getString)
+					.pull
+					.map { issue => issue.withOccurrences(variantsPerIssueId(issue.id).reverseSorted) }.reverseSorted
 				// Queues the issues, enabling more detailed checks
 				queuedIssuesPointer.value = issues.map { Right(_) } -> 0
 				issues
@@ -186,11 +188,10 @@ object ScribeConsoleApp extends App
 					println("No issues were found")
 				else {
 					println(s"Found ${issues.size} issues:")
-					val issuesIterator = issues.iterator
-					issuesIterator.collectNext(15).foreach { summarize(_, since) }
+					issues.iterator.take(15).foreach { summarize(_, since) }
 					
-					if (issuesIterator.hasNext) {
-						moreIssuesIterator = issuesIterator
+					if (issues.hasSize > 15) {
+						moreIssuesOrOccurrencesPointer.value = Right(issues) -> 15
 						println("\t- ...")
 						println("\nFor an expanded list, use the 'more' command")
 					}
@@ -309,7 +310,7 @@ object ScribeConsoleApp extends App
 			// Case: Variant found
 			case Some((variant, hasMore)) =>
 				// Groups similar consecutive variant issues together (based on messages and details)
-				val occurrenceIterator = variant.occurrences.reverseSorted.iterator
+				val occurrences = variant.occurrences.reverseSorted.iterator
 					.groupBy { o => o.errorMessages -> o.details }
 					.map { case ((_, _), group) =>
 						if (group.hasSize > 1) {
@@ -323,6 +324,7 @@ object ScribeConsoleApp extends App
 						else
 							group.head.data
 					}
+					.toVector
 				
 				println(s"Variant of issue ${variant.issueId}")
 				println(s"\t- Version: ${variant.version}")
@@ -333,13 +335,15 @@ object ScribeConsoleApp extends App
 					}
 				}
 				println(s"\t- First appeared at ${timeDescription(variant.created)}")
-				occurrenceIterator.nextOption().foreach { last =>
+				occurrences.headOption.foreach { last =>
 					println("\t- Latest occurrence:")
 					describeOccurrence(last)
 					if (variant.occurrences.hasSize > 1) {
 						println(s"\t- Recently there have been ${ variant.numberOfOccurrences } occurrences")
-						println(s"\t\t- Which averages one in every ${
-							((Now - variant.earliestOccurrence.get.firstOccurrence) / variant.numberOfOccurrences).description}")
+						val earliest = variant.earliestOccurrence.get.firstOccurrence
+						val latest = variant.latestOccurrence.get.lastOccurrence
+						println(s"\t\t- Which averages once in every ${
+							((latest - earliest) / variant.numberOfOccurrences).description}")
 					}
 					else
 						println("\t\t- This is the only recent appearance of this variant")
@@ -347,8 +351,8 @@ object ScribeConsoleApp extends App
 				queuedErrorIdPointer.value = variant.errorId
 				if (variant.errorId.isDefined)
 					println("\nFor more information about the associated error, use the 'stack' command")
-				moreOccurrencesIterator = occurrenceIterator
-				if (occurrenceIterator.hasNext)
+				moreIssuesOrOccurrencesPointer.value = Left(occurrences) -> 1
+				if (hasMoreIssuesOrOccurrencesPointer.value)
 					println("For information about previous issue occurrences, use the 'more' command")
 				if (hasMore)
 					println("For information about the next variant of this issue, use the 'next' command")
@@ -359,20 +363,27 @@ object ScribeConsoleApp extends App
 	}
 	private val moreCommand = Command.withoutArguments("more",
 		help = "Prints information about another set of queued issues or occurrences") {
-		moreIssuesOrOccurrences match {
-			case Left(occurrencesIterator) =>
-				occurrencesIterator.nextOption() match {
+		// Collects the next 15 issues or the next occurrence
+		val next = moreIssuesOrOccurrencesPointer.mutate { case (from, nextIndex) =>
+			from match {
+				case Right(issues) => Right(issues.slice(nextIndex, nextIndex + 15)) -> (from -> (nextIndex + 15))
+				case Left(occurrences) => Left(occurrences.lift(nextIndex)) -> (from -> (nextIndex + 1))
+			}
+		}
+		next match {
+			case Left(occurrence) =>
+				occurrence match {
 					case Some(occurrence) =>
 						println(s"\tOccurrence of issue variant ${ occurrence.caseId }:")
 						describeOccurrence(occurrence)
-						if (occurrencesIterator.hasNext)
+						if (hasMoreIssuesOrOccurrencesPointer.value)
 							println("For information about the next set of occurrences, use this same command")
 					case None => println("No more occurrences have been queued")
 				}
-			case Right(issuesIterator) =>
-				issuesIterator.collectNext(15).foreach { summarize(_) }
+			case Right(issues) =>
+				issues.foreach { summarize(_) }
 				println()
-				if (issuesIterator.hasNext)
+				if (hasMoreIssuesOrOccurrencesPointer.value)
 					println("For more issues, use the 'more' command")
 				println("You may acquire more specifics of any single issue using the 'see <issue id>' command")
 		}
@@ -408,11 +419,25 @@ object ScribeConsoleApp extends App
 		}
 	}
 	
+	// Determines the commands available at each time
+	private val staticCommands = Vector(statusCommand, listCommand, seeCommand)
+	private val commandsPointer = hasMoreVariantsPointer
+		.mergeWith(hasQueuedErrorPointer, hasMoreIssuesOrOccurrencesPointer) { (variants, error, more) =>
+			val builder = new VectorBuilder[Command]()
+			if (error)
+				builder += stackCommand
+			if (more)
+				builder += moreCommand
+			if (variants)
+				builder += nextCommand
+			staticCommands ++ builder.result()
+		}
+	
 	// Starts the console
 	println("Welcome to the Scribe utility console!")
 	println("You will find the available commands with the 'help' command.")
-	Console.static(Vector(statusCommand, listCommand, seeCommand, nextCommand, moreCommand, stackCommand),
-		"\nNext command:", "exit")
+	Console(Fixed(staticCommands ++ Vector(nextCommand, stackCommand, moreCommand)),
+		s"\nNext command (${commandsPointer.value.map { _.name }.mkString(" | ")}):", closeCommandName = "exit")
 		.run()
 	println("Bye!")
 	
@@ -439,7 +464,7 @@ object ScribeConsoleApp extends App
 			if (earliest == lastTime)
 				println("\t\t- Has occurred only once so far")
 			else
-				println(s"\t\t- Has occurred ${issue.numberOfOccurrences} over ${(lastTime - earliest).description}")
+				println(s"\t\t- Has occurred ${issue.numberOfOccurrences} times over ${(lastTime - earliest).description}")
 		}
 	}
 	
@@ -469,8 +494,8 @@ object ScribeConsoleApp extends App
 	// Describes at indentation 2
 	private def describeOccurrence(occurrence: IssueOccurrenceData) = {
 		if (occurrence.count > 1)
-			println(s"\t\t- ${occurrence.count} occurrences, which appeared between ${
-				timeDescription(occurrence.firstOccurrence)} and ${timeDescription(occurrence.lastOccurrence)} (during ${
+			println(s"\t\t- ${occurrence.count} occurrences, which appeared between \n\t\t${
+				timeDescription(occurrence.firstOccurrence)} and \n\t\t${timeDescription(occurrence.lastOccurrence)} \n\t\t(during ${
 				occurrence.duration.description})")
 		else
 			println(s"\t\t- Appeared ${timeDescription(occurrence.lastOccurrence)}")
