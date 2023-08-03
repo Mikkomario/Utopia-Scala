@@ -43,9 +43,9 @@ object ScribeConsoleApp extends App
 {
 	private val otherYearDateFormat = DateTimeFormatter.ofPattern("dd.MM.YYYY")
 	private val otherMonthDateFormat = DateTimeFormatter.ofPattern("dd.MM")
-	private val otherDayDateFormat = DateTimeFormatter.ofPattern("dd hh:mm")
-	private val recentDayDateFormat = DateTimeFormatter.ofPattern("hh:mm")
-	private val sameDayDateFormat = DateTimeFormatter.ofPattern("hh:mm:ss")
+	private val otherDayDateFormat = DateTimeFormatter.ofPattern("dd HH:mm")
+	private val recentDayDateFormat = DateTimeFormatter.ofPattern("HH:mm")
+	private val sameDayDateFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 	
 	// Initializes settings and context (may fail)
 	

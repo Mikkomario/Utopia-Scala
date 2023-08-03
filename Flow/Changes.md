@@ -95,6 +95,7 @@ TODO: Document changes to Changing (new map options) and related classes
 - Added a couple new constructor for span classes
 - **Pair**`.separateMatching` now uses `EqualsFunction.default` by default
 - **Tree**`.map(...)` and `.flatMap(...)` now use `EqualsFunction.default` by default
+- **Console** now accepts its prompt as a call-by-name parameter
 
 ## v2.1 - 01.05.2023
 This update mostly introduces new utility functions and some new utility classes.  

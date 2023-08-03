@@ -21,13 +21,13 @@ object Console
 	/**
 	 * Creates a new console
 	 * @param commandsPointer A pointer to the available commands
-	 * @param prompt Prompt displayed before requesting user to type the next command (default = empty)
+	 * @param prompt Prompt displayed before requesting user to type the next command (call-by-name, default = empty)
 	 * @param terminatorPointer A pointer that contains true when this console should be closed (default = always false)
 	 * @param closeCommandName Name of the command that closes this console (default = empty = no close command is used)
 	 * @param jsonParser Implicit json parser for command argument handling
 	 * @return A new console
 	 */
-	def apply(commandsPointer: View[Iterable[Command]], prompt: String = "",
+	def apply(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 	          terminatorPointer: View[Boolean] = Fixed(false), closeCommandName: String = "")
 	         (implicit jsonParser: JsonParser) =
 		new Console(commandsPointer, prompt, terminatorPointer, closeCommandName)
@@ -35,7 +35,7 @@ object Console
 	/**
 	 * Creates a new console that doesn't change its commands (or state unless stopped or directed by the user)
 	 * @param commands Commands served by this console
-	 * @param prompt Prompt displayed before requesting user to type the next command (default = empty)
+	 * @param prompt Prompt displayed before requesting user to type the next command (call-by-name, default = empty)
 	 * @param closeCommandName Name of the command that closes this console
 	 *                         (default = empty = no close command is used).
 	 *                         Please note that if empty, the only way to close this console
@@ -43,13 +43,13 @@ object Console
 	 * @param jsonParser jsonParser Implicit json parser for command argument handling
 	 * @return A new console
 	 */
-	def static(commands: Iterable[Command], prompt: String = "", closeCommandName: String = "")
+	def static(commands: Iterable[Command], prompt: => String = "", closeCommandName: String = "")
 	          (implicit jsonParser: JsonParser) =
 		apply(View(commands), prompt, closeCommandName = closeCommandName)
 	/**
 	 * Creates a new console with fixed commands that terminates when a condition is met
 	 * @param commands Commands served by this console
-	 * @param prompt Prompt displayed before requesting user to type the next command (default = empty)
+	 * @param prompt Prompt displayed before requesting user to type the next command (call-by-name, default = empty)
 	 * @param closeCommandName Name of the command that closes this console
 	 *                         (default = empty = no close command is used)
 	 * @param testTermination A function called between commands to see whether this console should close.
@@ -57,7 +57,7 @@ object Console
 	 * @param jsonParser jsonParser jsonParser Implicit json parser for command argument handling
 	 * @return A new console
 	 */
-	def terminating(commands: Iterable[Command], prompt: String = "", closeCommandName: String = "")
+	def terminating(commands: Iterable[Command], prompt: => String = "", closeCommandName: String = "")
 	               (testTermination: => Boolean)
 	               (implicit jsonParser: JsonParser) =
 		apply(View(commands), prompt, View(testTermination), closeCommandName)
@@ -68,12 +68,12 @@ object Console
  * @author Mikko Hilpinen
  * @since 10.10.2021, v1.13
  * @param commandsPointer A pointer to the available commands
- * @param prompt Prompt displayed before requesting user to type the next command (default = empty)
+ * @param prompt Prompt displayed before requesting user to type the next command (call-by-name, default = empty)
  * @param terminatorPointer A pointer that contains true when this console should be closed (default = always false)
  * @param closeCommandName Name of the command that closes this console (default = empty = no close command is used)
  * @param jsonParser Implicit json parser for command argument handling
  */
-class Console(commandsPointer: View[Iterable[Command]], prompt: String = "",
+class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
               terminatorPointer: View[Boolean] = View(false), closeCommandName: String = "")
              (implicit jsonParser: JsonParser)
 	extends Runnable with Breakable
