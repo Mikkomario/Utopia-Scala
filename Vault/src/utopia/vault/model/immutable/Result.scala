@@ -150,13 +150,13 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       *         The secondary maps contain rows for each of the secondary tables (although the list may be empty).
       *         Only unique rows are preserved (based on row index)
       */
-    def grouped(primaryTable: Table, secondaryTables: Iterable[Table]) =
-    {
+    def grouped(primaryTable: Table, secondaryTables: Iterable[Table]) = {
         rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }.view
             .mapValues { rows =>
-                rows.head -> secondaryTables.map { table =>
-                    table -> rows.filter { _.containsDataForTable(table) }.distinctBy { _.indexForTable(table) }
-                }.toMap
+                rows.head ->
+                    secondaryTables.map { table =>
+                        table -> rows.filter { _.containsDataForTable(table) }.distinctBy { _.indexForTable(table) }
+                    }.toMap
             }.toMap
     }
     
@@ -168,11 +168,13 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       *         is also included in results. Resulting lists contain only rows that include data from the secondary table,
       *         each duplicate row (based on secondary table index) is removed.
       */
-    def grouped(primaryTable: Table, secondaryTable: Table) =
-    {
+    def grouped(primaryTable: Table, secondaryTable: Table) = {
         rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-            .view.mapValues { rows => rows.head -> rows.filter { _.containsDataForTable(secondaryTable) }
-                .distinctBy { _.indexForTable(secondaryTable) } }.toMap
+            .view.mapValues { rows =>
+                rows.head -> rows.filter { _.containsDataForTable(secondaryTable) }
+                    .distinctBy { _.indexForTable(secondaryTable) }
+            }
+            .toMap
     }
     
     /**
@@ -180,9 +182,8 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
      * @param primaryTable The table based on which the this result is split
      * @return Sub-results found. Please note that this won't include any results / rows without data from the primary table.
      */
-    def split(primaryTable: Table) =
-    {
+    def split(primaryTable: Table) = {
         val rowsPerId = rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-        rowsPerId.values.map { rows => copy(rows = rows) }.toVector
+        rowsPerId.valuesIterator.map { rows => copy(rows = rows) }.toVector
     }
 }

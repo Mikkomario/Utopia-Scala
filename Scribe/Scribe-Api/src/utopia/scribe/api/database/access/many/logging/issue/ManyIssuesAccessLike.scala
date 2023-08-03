@@ -48,6 +48,22 @@ trait ManyIssuesAccessLike[+A, +Repr]
 	// OTHER	--------------------
 	
 	/**
+	  * @param context Targeted issue context
+	  * @param includeSubContexts Whether contexts appearing under the specified context should also be included
+	  *                           (default = false)
+	  * @return Access to issues with that context
+	  */
+	def inContext(context: String, includeSubContexts: Boolean = false) = {
+		val condition = {
+			if (includeSubContexts)
+				model.contextColumn.startsWith(context)
+			else
+				model.withContext(context).toCondition
+		}
+		filter(condition)
+	}
+	
+	/**
 	  * @param threshold A time threshold
 	  * @return Access to issues that appeared since the specified time threshold
 	  */

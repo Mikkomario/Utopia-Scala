@@ -29,10 +29,10 @@ object IssueInstancesFactory extends FromResultFactory[IssueInstances]
 	
 	override def defaultOrdering = None
 	
-	override def apply(result: Result): Vector[IssueInstances] = result.grouped(table, childFactory.table).iterator
-		.map { case (_, (row, variantData)) =>
-			parentFactory(row).map { issue =>
-				val variants = childFactory(Result(variantData))
+	override def apply(result: Result): Vector[IssueInstances] = result.split(table).iterator
+		.map { result =>
+			parentFactory(result.rows.head).map { issue =>
+				val variants = childFactory(result)
 				IssueInstances(issue, variants)
 			}
 		}.toTry.getOrMap { error => ErrorHandling.modelParsePrinciple.handle(error); Vector() }

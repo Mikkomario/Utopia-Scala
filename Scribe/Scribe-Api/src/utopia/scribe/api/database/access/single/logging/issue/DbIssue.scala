@@ -59,6 +59,14 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	def apply(id: Int) = DbSingleIssue(id)
 	
 	/**
+	  * @param context Targeted issue context (exact)
+	  * @param severity Targeted issue severity
+	  * @return Access to issue with that context and severity (unique)
+	  */
+	def specific(context: String, severity: Severity) =
+		filterDistinct(model.withContext(context).withSeverity(severity).toCondition)
+	
+	/**
 	  * Stores a detailed issue to the database.
 	  * Avoids inserting duplicate information.
 	  * @param context The context in which this issue occurred

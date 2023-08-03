@@ -1,28 +1,17 @@
 package utopia.scribe.api.test
 
-import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.async.context.ThreadPool
 import utopia.flow.async.process.Wait
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.SysErrLogger
-import utopia.scribe.api.controller.logging.Scribe
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.many.logging.issue.DbIssues
 import utopia.scribe.api.database.access.single.logging.error_record.DbErrorRecord
-import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.core.model.enumeration.Severity.Debug
 import utopia.scribe.core.util.logging.TryExtensions._
-import utopia.vault.database.columnlength.ColumnLengthRules
-import utopia.vault.database.{ConnectionPool, Tables}
-import utopia.vault.util.{ErrorHandling, ErrorHandlingPrinciple}
 
-import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 /**
@@ -32,15 +21,7 @@ import scala.util.Try
   */
 object DbLoggingTest extends App
 {
-	implicit val exc: ExecutionContext = new ThreadPool("Scribe-Test")(SysErrLogger)
-	implicit val cPool: ConnectionPool = new ConnectionPool(25, 5, 5.seconds)
-	implicit val jsonParser: JsonParser = JsonBunny
-	
-	ScribeContext.setup(exc, cPool, new Tables(cPool))
-	ErrorHandling.defaultPrinciple = ErrorHandlingPrinciple.Throw
-	ColumnLengthRules.loadFrom("Scribe/Scribe-Core/data/length-rules/scribe-length-rules-v0.1.json",
-		"utopia_scribe_db")
-	implicit val scribe: Scribe = Scribe("Test")
+	import ScribeTestContext._
 	
 	def testFunction() = {
 		throw new IllegalStateException("Test Error")

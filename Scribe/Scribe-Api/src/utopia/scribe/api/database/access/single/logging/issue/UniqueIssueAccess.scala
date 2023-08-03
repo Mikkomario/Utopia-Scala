@@ -1,18 +1,9 @@
 package utopia.scribe.api.database.access.single.logging.issue
 
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
 import utopia.scribe.api.database.factory.logging.IssueFactory
-import utopia.scribe.api.database.model.logging.IssueModel
-import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.stored.logging.Issue
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
-import utopia.vault.nosql.access.template.model.DistinctModelAccess
-import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Condition
-
-import java.time.Instant
 
 object UniqueIssueAccess
 {
@@ -42,6 +33,15 @@ object UniqueIssueAccess
   */
 trait UniqueIssueAccess extends UniqueIssueAccessLike[Issue] with SingleChronoRowModelAccess[Issue, UniqueIssueAccess]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Copy of this access point where issue variants and occurrences are also included
+	  */
+	def withInstances =
+		DbIssueInstances.filterDistinct(globalCondition.getOrElse(Condition.alwaysTrue))
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = IssueFactory

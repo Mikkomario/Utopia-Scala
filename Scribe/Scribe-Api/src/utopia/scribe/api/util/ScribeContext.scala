@@ -68,12 +68,12 @@ object ScribeContext
 	  */
 	def backupLogger = settingOr { _.backupLogger }(SysErrLogger)
 	
-	/**
+	/*
 	  * @return Maximum amount of logging entries to allow within a specific time period,
 	  *         and the duration within which this counter should be reset.
 	  *         None if maximum logging count should not be observed.
 	  */
-	def maxLoggingVelocity = settingOr { _.maxLoggingVelocity }(None)
+	// def maxLoggingVelocity = settingOr { _.maxLoggingVelocity }(None)
 	
 	
 	// OTHER    -------------------------
@@ -105,8 +105,8 @@ object ScribeContext
 	          version: Version = Version(1), backupLogger: Logger = SysErrLogger,
 	          maximumLoggingVelocity: Option[(Int, Duration)] = None) =
 	{
-		settingsPointer.value = Some(Settings(exc, cPool, tables, databaseName, version, backupLogger,
-			maximumLoggingVelocity))
+		settingsPointer.value = Some(Settings(exc, cPool, tables, databaseName, version, backupLogger/*,
+			maximumLoggingVelocity*/))
 		// Sets up maximum logging limit, also
 		maximumLoggingVelocity.foreach { case (maxLogCount, resetInterval) =>
 			Scribe.setupLoggingLimit(maxLogCount, resetInterval)
@@ -132,6 +132,6 @@ object ScribeContext
 	// NESTED   -------------------------
 	
 	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, dbName: String,
-	                            version: Version, backupLogger: Logger,
-	                            maxLoggingVelocity: Option[(Int, Duration)])
+	                            version: Version, backupLogger: Logger/*,
+	                            maxLoggingVelocity: Option[(Int, Duration)]*/)
 }

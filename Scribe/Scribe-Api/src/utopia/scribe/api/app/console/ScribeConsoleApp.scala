@@ -254,7 +254,7 @@ object ScribeConsoleApp extends App
 							targetedAccess.counts.sum + issue.numberOfOccurrences
 						}
 						val averageOccurrenceInterval = {
-							if (numberOfOccurrences > 0)
+							if (numberOfOccurrences > 1)
 								Some((Now - issue.created) / numberOfOccurrences)
 							else
 								None
@@ -271,9 +271,15 @@ object ScribeConsoleApp extends App
 						averageOccurrenceInterval.foreach { interval =>
 							println(s"\t- Has occurred once every ${interval.description}")
 						}
-						issue.earliestOccurrence.foreach { first =>
-							println(s"\t\t- Recently once every ${
-								((Now - first.firstOccurrence) / issue.numberOfOccurrences).description}")
+						issue.latestOccurrence.foreach { last =>
+							issue.earliestOccurrence.foreach { first =>
+								val start = first.firstOccurrence
+								val end = last.lastOccurrence
+								if (start != end)
+									println(s"\t\t- Recently once every ${
+										((end - start) / issue.numberOfOccurrences).description
+									}")
+							}
 						}
 						affectedVersions.foreach { versions =>
 							if (versions.isSymmetric)
