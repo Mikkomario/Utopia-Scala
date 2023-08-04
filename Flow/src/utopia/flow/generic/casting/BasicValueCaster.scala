@@ -8,7 +8,7 @@ import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss,
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
 import utopia.flow.parse.json.JsonReader
-import utopia.flow.time.Days
+import utopia.flow.time.{Days, Today}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 
@@ -84,6 +84,7 @@ object BasicValueCaster extends ValueCaster
 		// Conversions to LocalDateTime
 		immutable.Conversion(InstantType, LocalDateTimeType, DataLoss),
 		immutable.Conversion(LocalDateType, LocalDateTimeType, Perfect),
+		immutable.Conversion(LocalTimeType, LocalDateTimeType, MeaningLoss),
 		immutable.Conversion(StringType, LocalDateTimeType, Dangerous),
 		immutable.Conversion(PairType, LocalDateTimeType, Dangerous),
 		// Conversions to Duration
@@ -273,6 +274,7 @@ object BasicValueCaster extends ValueCaster
 		value.dataType match {
 			case InstantType => Some(LocalDateTime.ofInstant(value.getInstant, ZoneId.systemDefault()))
 			case LocalDateType => Some(value.getLocalDate.atStartOfDay())
+			case LocalTimeType => Some(Today.atTime(value.getLocalTime))
 			case StringType => Try(LocalDateTime.parse(value.toString())).toOption
 			case PairType =>
 				val p = value.getPair

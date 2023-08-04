@@ -1,11 +1,12 @@
 package utopia.flow.test.generic
 
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.collection.mutable.GraphNode
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.enumeration.ConversionReliability
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, IntType, LocalDateTimeType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, LocalDateTimeType, StringType}
+import utopia.flow.time.Today
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 
@@ -95,6 +96,7 @@ object DataTypeTest extends App
 	assert(lDT.castTo(InstantType).castTo(LocalDateTimeType).localDateTime == lDT.localDateTime)
 	assert(lDate.castTo(LocalDateTimeType).localDate == lDate.localDate)
 	assert(lDate.castTo(StringType).localDate == lDate.localDate)
+	assert(lTime.getLocalDateTime == Today.atTime(lTime.getLocalTime))
 	
 	println(vector.toString())
 	assert(vector.vectorOr().length == 4)

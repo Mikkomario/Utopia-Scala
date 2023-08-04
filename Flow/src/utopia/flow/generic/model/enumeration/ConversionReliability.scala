@@ -52,7 +52,7 @@ object ConversionReliability
     /**
 	 * The data type cast will never fail, but the value may lose some of its data. The 
 	 * remaining data preserves its meaning and will work properly, however.
-	 * A conversion from a double number to an integer would be a reliable conversion 
+	 * A conversion from a double number to an integer would be this kind of a conversion
 	 * (1.23 -> 1).
 	 */
     case object DataLoss extends ConversionReliability {

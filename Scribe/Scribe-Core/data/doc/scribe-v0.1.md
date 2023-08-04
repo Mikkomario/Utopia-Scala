@@ -1,6 +1,6 @@
 # Scribe
 Version: **v0.1**  
-Updated: 2023-07-07
+Updated: 2023-08-04
 
 ## Table of Contents
 - [Enumerations](#enumerations)
@@ -125,14 +125,17 @@ Represents a single error stack trace line.
 A stack trace indicates how an error propagated through the program flow before it was recorded.
 
 ##### Details
-- Uses a **combo index**: `class_name` => `method_name` => `line_number`
+- Uses a **combo index**: `file_name` => `class_name` => `method_name` => `line_number`
 
 ##### Properties
-Stack Trace Element Record contains the following 4 properties:
-- **Class Name** - `className: String` - The class where this event was recorded.
-- **Method Name** - `methodName: String` - The name of the class method where this event was recorded
-- **Line Number** - `lineNumber: Int` - The code line number where this event was recorded
-- **Cause Id** - `causeId: Option[Int]` - Id of the stack trace element that originated this element. I.e. the element directly before this element. None if this is the root element.
+Stack Trace Element Record contains the following 5 properties:
+- **File Name** - `fileName: String` - Name of the file in which this event was recorded
+- **Class Name** - `className: String` - Name of the class in which this event was recorded. 
+Empty if the class name is identical with the file name.
+- **Method Name** - `methodName: String` - Name of the method where this event was recorded. Empty if unknown.
+- **Line Number** - `lineNumber: Option[Int]` - The code line number where this event was recorded. None if not available.
+- **Cause Id** - `causeId: Option[Int]` - Id of the stack trace element that originated this element. I.e. the element directly before this element. 
+None if this is the root element.
   - Refers to [Stack Trace Element Record](#stack-trace-element-record)
 
 ##### Referenced from

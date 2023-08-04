@@ -39,6 +39,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 25.5.2023, v0.1
   */
+// TODO: Split commands/actions to separate files
 object ScribeConsoleApp extends App
 {
 	private val otherYearDateFormat = DateTimeFormatter.ofPattern("dd.MM.YYYY")
@@ -138,7 +139,7 @@ object ScribeConsoleApp extends App
 		ArgumentSchema("level", "lvl",
 			help = "The level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures. \nAlternatively you may use level names: Debug | Info | Warning | Recoverable | Unrecoverable | Critical. \nYou may also specify two values (lowest - highest), if you want to target a range."),
 		ArgumentSchema("filter", "f", help = "A filter applied to issue context (optional)"),
-		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for")) { args =>
+		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for. E.g. \"3d\", \"3 days\", \"2h\", \"2 hours\", \"2000-09-30\", \"2000-09-30T13:24:00\" or \"13:24\". Default = 7 days.")) { args =>
 		// Parses the arguments
 		val since = args("since").castTo(InstantType, DurationType) match {
 			case Left(instantV) => instantV.getInstant

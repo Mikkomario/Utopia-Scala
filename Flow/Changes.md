@@ -92,9 +92,10 @@ TODO: Document changes to Changing (new map options) and related classes
 ### Other
 - Added a **Sided[A]** type alias for **Either[A, A]** to **CollectionExtensions**
 - Added a **Mutate[A]** type alias for **A => A** functions
-- Added a couple new constructor for span classes
+- Added a couple new constructor for **Span** classes
 - **Pair**`.separateMatching` now uses `EqualsFunction.default` by default
 - **Tree**`.map(...)` and `.flatMap(...)` now use `EqualsFunction.default` by default
+- Added a low-priority conversion from **LocalTime** values to **LocalDateTime** values (assigns the current date as the date)
 - **Console** now accepts its prompt as a call-by-name parameter
 
 ## v2.1 - 01.05.2023
