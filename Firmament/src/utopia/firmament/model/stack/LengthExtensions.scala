@@ -4,8 +4,9 @@ import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.Sign
+import utopia.flow.operator.{Sign, SignOrZero}
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.SignOrZero.Neutral
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.{Alignment, Axis2D, LinearAlignment}
 import utopia.paradigm.measurement.{Distance, Ppi}
@@ -238,8 +239,7 @@ object LengthExtensions
 				// Calculates new breadth
 				val breadth = areaToPosition(sideAxis)
 				val maxBreadth = areaWithinMinInsets.size(sideAxis)
-				val actualBreadth =
-				{
+				val actualBreadth = {
 					// Case: Margin has to be shrunk below minimum
 					if (breadth.min > maxBreadth)
 						breadth.min min within.size(sideAxis)
@@ -302,9 +302,8 @@ object LengthExtensions
 		{
 			// May override the primary axis parameter
 			val actualPrimaryAxis = if (a.affects(primaryAxis)) primaryAxis else primaryAxis.perpendicular
-			a(actualPrimaryAxis).direction match
-			{
-				case Some(primaryDirection) =>
+			a(actualPrimaryAxis).direction match {
+				case primaryDirection: Sign =>
 					val primaryLength = areaToPosition(actualPrimaryAxis)
 					val optimalPrimaryLength = primaryLength.optimal
 					
@@ -352,15 +351,10 @@ object LengthExtensions
 						val referenceEnd = referenceStart + referenceLength
 						
 						// Calculates the preferred aligned position
-						val preferredSecondaryCoordinate = a(secondaryAxis).direction match
-						{
-							case Some(direction) =>
-								direction match
-								{
-									case Positive => referenceEnd - optimalSecondaryLength
-									case Negative => referenceStart
-								}
-							case None => referenceStart + referenceLength / 2 - optimalSecondaryLength / 2
+						val preferredSecondaryCoordinate = a(secondaryAxis).direction match {
+							case Positive => referenceEnd - optimalSecondaryLength
+							case Negative => referenceStart
+							case Neutral => referenceStart + referenceLength / 2 - optimalSecondaryLength / 2
 						}
 						// Adjusts the position so that the component fits within the target area
 						val minSecondary = within.minAlong(secondaryAxis)
@@ -371,7 +365,7 @@ object LengthExtensions
 				
 				// Case: Center alignment =>
 				// Positions the area at the center of the reference area, using its optimal size (or lower)
-				case None => Bounds.centered(referenceArea.center, areaToPosition.optimal).fittedInto(within)
+				case Neutral => Bounds.centered(referenceArea.center, areaToPosition.optimal).fittedInto(within)
 			}
 		}
 		
@@ -421,7 +415,7 @@ object LengthExtensions
 		}
 		
 		private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,
-		                                  targetEndMargin: StackLength, direction: Option[Sign],
+		                                  targetEndMargin: StackLength, direction: SignOrZero,
 		                                  allowStartBelowZero: Boolean) =
 		{
 			val emptyLength = withinLength - length
@@ -429,10 +423,10 @@ object LengthExtensions
 				0.0
 			else {
 				direction match {
-					case Some(definedDirection) =>
+					case direction: Sign =>
 						// Checks how much margin can be used
 						val totalTargetMargin = targetStartMargin.optimal + targetEndMargin.optimal
-						if (definedDirection.isPositive) {
+						if (direction.isPositive) {
 							// Case: Enough space available
 							if (totalTargetMargin <= emptyLength)
 								emptyLength - targetEndMargin.optimal
@@ -464,7 +458,7 @@ object LengthExtensions
 								usedStartMargin
 							}
 						}
-					case None =>
+					case Neutral =>
 						val baseResult = (withinLength - length) / 2.0
 						if (baseResult >= 0 || allowStartBelowZero)
 							baseResult

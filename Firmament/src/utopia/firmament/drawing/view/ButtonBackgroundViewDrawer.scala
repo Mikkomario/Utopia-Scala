@@ -43,7 +43,7 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 	override def border = borderPointer.value
 	
 	override def draw(drawer: Drawer, bounds: Bounds) = {
-		if (bounds.size.isPositive) {
+		if (bounds.size.sign.isPositive) {
 			// Draws the background, then the border
 			val backgroundArea = drawer.clippingBounds match {
 				case Some(clipArea) => bounds.overlapWith(clipArea)

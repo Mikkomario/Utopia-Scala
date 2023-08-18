@@ -25,26 +25,22 @@ object ComponentToImage
 	  * @param component Component to draw
 	  * @return An image of this component's paint result.
 	  */
-	def apply(component: AwtComponentRelated with HasMutableBounds): Image =
-	{
+	def apply(component: AwtComponentRelated with HasMutableBounds): Image = {
 		// Tries to avoid using 0x0 size by backing up with component preferred size, if available
 		val componentSize = component.size
-		val imageSize =
-		{
-			if (componentSize.isPositive)
+		val imageSize = {
+			if (componentSize.sign.isPositive)
 				componentSize
 			else
-				component match
-				{
+				component match {
 					case c: Stackable => c.stackSize.optimal
 					case _ => componentSize
 				}
 		}
 		
 		// For visible displayed components, may simply draw them to an image
-		if (component.isInVisibleHierarchy)
-		{
-			if (imageSize.isPositive)
+		if (component.isInVisibleHierarchy) {
+			if (imageSize.sign.isPositive)
 				AwtEventThread.blocking {
 					val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
 					val graphics = image.getGraphics
@@ -65,11 +61,9 @@ object ComponentToImage
 	  * @param imageSize Size of the resulting image
 	  * @return An image of this component's paint result
 	  */
-	def apply(component: AwtComponentRelated with HasMutableBounds, imageSize: Size) =
-	{
+	def apply(component: AwtComponentRelated with HasMutableBounds, imageSize: Size) = {
 		// Prepares the image
-		if (imageSize.isPositive)
-		{
+		if (imageSize.sign.isPositive) {
 			AwtEventThread.blocking {
 				val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
 				

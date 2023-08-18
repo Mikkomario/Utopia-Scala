@@ -1,7 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.operator.Reversible
-import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
+import utopia.flow.util.UncertainBoolean.CertainBoolean
 
 import scala.language.implicitConversions
 
@@ -10,48 +10,45 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 31.3.2021, v1.9
  */
-sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
+sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] with Reversible[UncertainBoolean]
 {
 	// ABSTRACT --------------------------
 	
 	/**
-	 * @return The boolean representation of this value, if known
-	 */
-	def value: Option[Boolean]
+	  * @return An inversion of this value
+	  */
+	def unary_! : UncertainBoolean
 	
 	
 	// COMPUTED --------------------------
 	
 	/**
+	  * @return The boolean representation of this value, if known
+	  */
+	@deprecated("Please use .exact instead", "v2.2")
+	def value: Option[Boolean] = exact
+	
+	/**
 	  * @return Whether this value is known for certain to be either true or false
 	  */
+	@deprecated("Please use .isExact instead", "v2.2")
 	def isCertain = value.isDefined
 	/**
 	  * @return Whether it isn't known whether this value is true or false
 	  */
+	@deprecated("Please use .nonExact instead", "v2.2")
 	def isUncertain = !isCertain
-	
-	/**
-	 * @return True if this boolean value is known
-	 */
-	@deprecated("Please use .isCertain instead", "v2.0")
-	def isDefined = value.isDefined
-	/**
-	 * @return True if this boolean value is unknown / undefined
-	 */
-	@deprecated("Please use .isUncertain instead", "v2.0")
-	def isUndefined = value.isEmpty
 	
 	/**
 	 * @return Whether this value is known to be true
 	 */
-	def isCertainlyTrue = value.contains(true)
+	def isCertainlyTrue = isCertainlyExactly(true)
 	@deprecated("Please use .isCertainlyTrue instead", "v2.0")
 	def isTrue = isCertainlyTrue
 	/**
 	 * @return Whether this boolean is known to be false
 	 */
-	def isCertainlyFalse = value.contains(false)
+	def isCertainlyFalse = isCertainlyExactly(false)
 	@deprecated("Please use .isCertainlyFalse instead", "v2.0")
 	def isFalse = isCertainlyFalse
 	/**
@@ -70,33 +67,22 @@ sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
 	@deprecated("Please use toBoolean instead", "v2.0")
 	def get = toBoolean
 	
-	/**
-	  * @return An inversion of this value
-	  */
-	def unary_! : UncertainBoolean = value match {
-		case Some(known) => Certain(!known)
-		case None => Uncertain
-	}
-	
 	
 	// IMPLEMENTED  ----------------------
 	
 	override def self = this
 	override def unary_- = !this
 	
+	override def mayBe[B >: Boolean](v: B): Boolean = exact.forall { _ == v }
+	
 	
 	// OTHER    --------------------------
 	
 	/**
-	 * @param default Value returned in uncertain cases
-	 * @return This value if known, otherwise the default value
-	 */
-	def getOrElse(default: => Boolean) = value.getOrElse(default)
-	/**
 	 * @param other Another uncertain boolean value (call-by-name)
 	 * @return This value if defined, otherwise the other value
 	 */
-	def orElse(other: => UncertainBoolean) = if (isCertain) this else other
+	def orElse(other: => UncertainBoolean) = if (isExact) this else other
 	
 	/**
 	 * @param other Another known boolean value
@@ -104,20 +90,20 @@ sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
 	 */
 	def &&(other: Boolean): UncertainBoolean = {
 		if (other)
-			value match {
-				case Some(known) => Certain(known && other)
-				case None => Uncertain
+			exact match {
+				case Some(known) => CertainBoolean(known && other)
+				case None => UncertainBoolean
 			}
 		else
-			Certain(false)
+			CertainBoolean(false)
 	}
 	/**
 	 * @param other Another boolean value
 	 * @return AND of these two values (known if either of these is known to be false or if both are known)
 	 */
 	def &&(other: UncertainBoolean): UncertainBoolean = other match {
-		case Certain(known) => this && known
-		case Uncertain => if (isCertainlyFalse) Certain(false) else Uncertain
+		case CertainBoolean(known) => this && known
+		case UncertainBoolean => if (isCertainlyFalse) CertainBoolean(false) else UncertainBoolean
 	}
 	/**
 	 * @param other Another known boolean value
@@ -125,7 +111,7 @@ sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
 	 */
 	def ||(other: Boolean) = {
 		if (other)
-			Certain(true)
+			CertainBoolean(true)
 		else
 			this
 	}
@@ -133,68 +119,66 @@ sealed trait UncertainBoolean extends Reversible[UncertainBoolean]
 	 * @param other Another boolean value
 	 * @return OR of these two values (known if either of these is known to be true or if both are known)
 	 */
-	def ||(other: UncertainBoolean): UncertainBoolean = other.value match {
+	def ||(other: UncertainBoolean): UncertainBoolean = other.exact match {
 		case Some(known) => this || known
-		case None => if (isCertainlyTrue) Certain(true) else Uncertain
+		case None => if (isCertainlyTrue) CertainBoolean(true) else UncertainBoolean
 	}
 }
 
-object UncertainBoolean
+case object UncertainBoolean extends UncertainBoolean
 {
 	// ATTRIBUTES   --------------------------------
 	
 	/**
 	 * All possible values of this enumeration
 	 */
-	lazy val values = Vector[UncertainBoolean](Certain(true), Certain(false), Uncertain)
+	lazy val values = Vector[UncertainBoolean](CertainBoolean(true), CertainBoolean(false), this)
 	
 	
 	// COMPUTED -------------------------
 	
 	@deprecated("Please use Uncertain instead", "v2.0")
-	def Undefined = Uncertain
+	def Undefined = this
+	@deprecated("Please use CertainBoolean instead", "v2.2")
+	def Certain = CertainBoolean
 	
 	
 	// IMPLICIT ------------------------------------
 	
-	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.value
-	
+	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.exact
 	implicit def autoConvertFromOption(value: Option[Boolean]): UncertainBoolean = value match {
-		case Some(known) => Certain(known)
-		case None => Uncertain
+		case Some(known) => CertainBoolean(known)
+		case None => this
 	}
+	implicit def autoConvertFromBoolean(boolean: Boolean): UncertainBoolean = CertainBoolean(boolean)
 	
-	implicit def autoConvertFromBoolean(boolean: Boolean): UncertainBoolean = Certain(boolean)
+	
+	// IMPLEMENTED  --------------------------------
+	
+	override def exact: Option[Boolean] = None
+	override def unary_! : UncertainBoolean = this
 	
 	
 	// NESTED   ------------------------------------
 	
-	object Certain
+	object CertainBoolean
 	{
 		// IMPLICIT --------------------------------
 		
-		implicit def autoConvertToBoolean(certain: Certain): Boolean = certain.knownValue
-		implicit def autoConvertFromBoolean(boolean: Boolean): Certain = Certain(boolean)
+		implicit def autoConvertToBoolean(certain: CertainBoolean): Boolean = certain.knownValue
+		implicit def autoConvertFromBoolean(boolean: Boolean): CertainBoolean = CertainBoolean(boolean)
 	}
 	/**
 	 * Used when the boolean value is known
 	 * @param knownValue The known boolean value
 	 */
-	case class Certain(knownValue: Boolean) extends UncertainBoolean with Reversible[Certain]
+	case class CertainBoolean(knownValue: Boolean) extends UncertainBoolean with Reversible[CertainBoolean]
 	{
-		override def value = Some(knownValue)
+		override def exact = Some(knownValue)
 		
 		override def self = this
 		
-		override def unary_! = Certain(!knownValue)
+		override def unary_! = CertainBoolean(!knownValue)
 		override def unary_- = !this
-	}
-	
-	/**
-	 * Used when the boolean value is unknown
-	 */
-	case object Uncertain extends UncertainBoolean
-	{
-		override def value = None
 	}
 }

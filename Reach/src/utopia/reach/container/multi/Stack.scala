@@ -8,6 +8,7 @@ import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Tra
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.Sign.Negative
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -281,7 +282,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 					case None => Center
 				}
 				(X, horizontal.sign, layout)
-			case None => (Y, alignment.vertical.sign, Center)
+			case None => (Y, alignment.vertical.sign.binaryOr(Negative), Center)
 		}
 		// Negative sign keeps order, positive swaps it
 		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }

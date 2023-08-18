@@ -7,7 +7,8 @@ import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
+import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike, Sign, SignOrZero}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LinearVelocityType
@@ -68,40 +69,35 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity]
 		with CanBeAboutZero[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
 {
+	// ATTRIBUTES   --------------------
+	
+	// The amount and the duration may cancel each other out
+	override lazy val sign: SignOrZero =
+		if (duration.isInfinite) Neutral else if (duration < Duration.Zero) -Sign.of(amount) else Sign.of(amount)
+	
+	
 	// IMPLEMENTED	--------------------
-	
-	override def length = perMilliSecond
-	
-	/**
-	  * @return Whether this velocity has 0 amount and doesn't move items
-	  */
-	override def isZero = amount == 0.0 || duration.isInfinite
-	override def isAboutZero = (amount ~== 0.0) || duration.isInfinite
 	
 	override def self = this
 	
+	override def length = perMilliSecond
+	
+	override def isAboutZero = (amount ~== 0.0) || duration.isInfinite
+	
 	override def toString = s"$perMilliSecond/ms"
-	
-	// The amount and the duration may cancel each other out
-	override def isPositive = nonZero && (if (amount > 0) duration >= Duration.Zero else duration < Duration.Zero)
-	
-	override def zero = LinearVelocity.zero
-	
 	override implicit def toValue: Value = new Value(Some(this), LinearVelocityType)
-	
 	override def toModel = duration.finite match {
 		case Some(duration) => Model.from("amount" -> amount, "duration" -> duration)
 		case None => Model.from("amount" -> 0.0)
 	}
 	
+	override def zero = LinearVelocity.zero
+	
 	override def +(another: LinearVelocity) = LinearVelocity(amount + another(duration), duration)
-	
-	override def compareTo(o: LinearVelocity) = perMilliSecond.compareTo(o.perMilliSecond)
-	
 	def -(another: LinearVelocity) = this + (-another)
-	
 	override def *(mod: Double) = LinearVelocity(amount * mod, duration)
 	
+	override def compareTo(o: LinearVelocity) = perMilliSecond.compareTo(o.perMilliSecond)
 	override def ~==(other: LinearVelocity) = perMilliSecond ~== other.perMilliSecond
 	
 	
@@ -113,7 +109,6 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	  *         linear velocity of the resulting velocity will match this velocity.
 	  */
 	def *(vector: Vector2D) = Velocity2D(vector * amount, duration)
-	
 	/**
 	  * @param vector A vector this velocity is multiplied with
 	  * @return A velocity vector with the same direction as the specified vector's. If a unit vector was provided, the
@@ -126,15 +121,25 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	  * @param amount The amount of velocity to add
 	  * @return A combined amount of velocities (0 if this velocity would have changed sign)
 	  */
-	def increasePreservingDirection(amount: LinearVelocity) =
-	{
-		// Case: Applying change would change direction
-		if (isPositive != amount.isPositive && abs <= amount.abs)
+	def increasePreservingDirection(amount: LinearVelocity) = {
+		// Case: No adjustment
+		if (amount.isZero)
+			this
+		else if (isZero) {
+			// Case: Positive adjustment over a 0 velocity => Applies
+			if (amount.sign.isPositive)
+				amount
+			// Case: Negative adjustment over a 0 velocity => Ignores
+			else
+				this
+		}
+		// Case: Applying change would change direction => Limits to 0
+		else if (sign != amount.sign && abs <= amount.abs)
 			LinearVelocity(0, duration)
+		// Case: Normal adjustment
 		else
 			this + amount
 	}
-	
 	/**
 	  * Subtracts provided amount of velocity from this one. Will never change the sign of this velocity but will stop at 0
 	  * @param amount The amount of velocity to subtract
@@ -152,11 +157,11 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	/**
 	  * @param acceleration Acceleration applied
 	  * @return The duration it takes to stop when specified acceleration is applied consistently.
-	  *         None if this never happens.
+	  *         May be infinite.
 	  */
 	def durationUntilStopWith(acceleration: LinearAcceleration) =
-		if (amount == 0) Some(Duration.Zero) else if (isPositive == acceleration.isPositive || acceleration.isZero) None else
-			Some((perMilliSecond / acceleration.perMilliSecond.perMilliSecond).abs.millis)
+		if (isZero) Duration.Zero else if (acceleration.sign != sign.opposite) Duration.Inf else
+			(perMilliSecond / acceleration.perMilliSecond.perMilliSecond).abs.millis
 	
 	/**
 	  * Calculates amount of transition over a period of time when consistent acceleration is also applied
@@ -164,19 +169,17 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	  * @param acceleration Acceleration applied over the whole duration (expected to be consistent)
 	  * @return Amount of transition in provided time period + the velocity at the end of this period
 	  */
-	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (Double, LinearVelocity) =
+	def apply(time: Duration, acceleration: LinearAcceleration,
+	          preserveDirection: Boolean = false): (Double, LinearVelocity) =
 	{
 		// If preserving direction, has to check whether the movement would stop at a certain point
-		val durationLimit =
-		{
+		val durationLimit = {
 			if (preserveDirection)
-				durationUntilStopWith(acceleration).filter(_ < time)
+				durationUntilStopWith(acceleration).finite.filter(_ < time)
 			else
 				None
 		}
-		
-		durationLimit match
-		{
+		durationLimit match {
 			case Some(limit) => apply(limit, acceleration)
 			case None =>
 				val endVelocity = this + acceleration(time)

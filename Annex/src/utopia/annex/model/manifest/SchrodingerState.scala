@@ -1,6 +1,7 @@
 package utopia.annex.model.manifest
 
 import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.UncertainSign.UncertainBinarySign
 import utopia.flow.operator.{BinarySigned, Sign}
 
 import scala.language.implicitConversions
@@ -10,6 +11,7 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 20.11.2022, v1.4
   */
+// TODO: Use uncertain signed trait once it is available
 sealed trait SchrodingerState
 {
 	// ABSTRACT ------------------------
@@ -23,9 +25,9 @@ sealed trait SchrodingerState
 	  * @return The sign, or expectancy, of this state.
 	  *         If Positive, it is apparently more likely for this state to resolve to Alive.
 	  *         If Negative, it is apparently more likely for this state to resolve to Dead.
-	  *         If None, if is undetermined whether this state is likely to resolve to Alive or to Dead.
+	  *         If Uncertain, if is undetermined whether this state is likely to resolve to Alive or to Dead.
 	  */
-	def signOption: Option[Sign]
+	def estimate: UncertainBinarySign
 	
 	
 	// COMPUTED -----------------------
@@ -34,11 +36,13 @@ sealed trait SchrodingerState
 	  * @return Whether this is a permanent state and will not change (anymore)
 	  */
 	def isFinal = !isFlux
-	
 	/**
 	  * @return Whether this state has a positive or negative expectancy
 	  */
-	def isSigned = signOption.isDefined
+	def isSigned = estimate.isExact
+	
+	@deprecated("Replaced with estimate", "v1.6")
+	def signOption = estimate.exact
 	
 	
 	// OTHER    -----------------------
@@ -59,7 +63,7 @@ object SchrodingerState
 		// ATTRIBUTES   -----------------
 		
 		private val instance: Flux = new Flux {
-			override def signOption = None
+			override def estimate = UncertainBinarySign
 			override def expectancy = None
 		}
 		
@@ -115,7 +119,7 @@ object SchrodingerState
 	  */
 	sealed trait SignedFlux extends Flux with BinarySigned[SignedFlux] {
 		override def self = this
-		override def signOption = Some(sign)
+		override def estimate = sign
 		override def expectancy = Some(Final(sign))
 	}
 	object Final {
@@ -139,35 +143,35 @@ object SchrodingerState
 	sealed trait Final extends SchrodingerState with BinarySigned[Final] {
 		override def self = this
 		override def isFlux = false
-		override def signOption = Some(sign)
+		override def estimate = sign
 	}
 	
 	/**
 	  * A flux state with positive expectancy
 	  */
 	case object PositiveFlux extends SignedFlux {
-		override def isPositive = true
+		override def sign: Sign = Positive
 		override def unary_- = NegativeFlux
 	}
 	/**
 	  * A flux state with negative expectancy
 	  */
 	case object NegativeFlux extends SignedFlux {
-		override def isPositive = false
+		override def sign: Sign = Negative
 		override def unary_- = PositiveFlux
 	}
 	/**
 	  * The success state (the cat was found to be alive)
 	  */
 	case object Alive extends Final {
-		override def isPositive = true
+		override def sign: Sign = Positive
 		override def unary_- = Dead
 	}
 	/**
 	  * The (unrecoverable) failure state (the cat was found to be dead)
 	  */
 	case object Dead extends Final {
-		override def isPositive = false
+		override def sign: Sign = Negative
 		override def unary_- = Alive
 	}
 }

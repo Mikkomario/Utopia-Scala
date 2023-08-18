@@ -1,6 +1,7 @@
 package utopia.reflection.event
 
-import utopia.flow.operator.{BinarySigned, SelfComparable}
+import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{BinarySigned, SelfComparable, Sign}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
 
@@ -64,9 +65,9 @@ sealed trait Visibility extends VisibilityState with BinarySigned[Visibility]
 	
 	override def self = this
 	
-	override def unary_- = opposite
+	override def sign: Sign = if (isVisible) Positive else Negative
 	
-	override def isPositive = isVisible
+	override def unary_- = opposite
 }
 
 /**
@@ -119,8 +120,7 @@ object Visibility
 		
 		override def opposite = Invisible
 		
-		override def compareTo(o: VisibilityState) = o match
-		{
+		override def compareTo(o: VisibilityState) = o match {
 			case Visible => 0
 			case _ => 1
 		}
@@ -152,15 +152,14 @@ object VisibilityChange
 	  */
 	case object Appearing extends VisibilityChange
 	{
-		override def isPositive = true
+		override def sign: Sign = Positive
 		
 		override def originalState = Invisible
 		override def targetState = Visible
 		
 		override def opposite = Disappearing
 		
-		override def compareTo(o: VisibilityState) = o match
-		{
+		override def compareTo(o: VisibilityState) = o match {
 			case Visible => -1
 			case Appearing => 0
 			case _ => 1
@@ -172,7 +171,7 @@ object VisibilityChange
 	  */
 	case object Disappearing extends VisibilityChange
 	{
-		override def isPositive = false
+		override def sign: Sign = Negative
 		
 		override def originalState = Visible
 		override def targetState = Invisible

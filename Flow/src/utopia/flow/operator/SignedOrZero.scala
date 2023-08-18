@@ -1,6 +1,6 @@
 package utopia.flow.operator
 
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.SignOrZero.Neutral
 
 /**
   * A common trait for items which can be either positive or negative, or zero
@@ -14,41 +14,42 @@ trait SignedOrZero[+Repr] extends Any with Signed[Repr] with CanBeZero[Repr]
 	/**
 	  * @return Whether this item is positive or zero (>=0)
 	  */
-	def isPositiveOrZero = isPositive || isZero
+	def isPositiveOrZero = sign.isPositive || isZero
 	/**
 	  * @return Whether this item is negative or zero (<=0)
 	  */
-	def isNegativeOrZero = !isPositive
+	def isNegativeOrZero = sign.isNegative || isZero
 	
 	/**
 	  * @return Sign of this item. None if zero.
 	  */
-	def signOption: Option[Sign] = if (isPositive) Some(Positive) else if (isZero) None else Some(Negative)
+	@deprecated("Please use .sign.binary instead", "v2.2")
+	def signOption: Option[Sign] = sign.binary
 	
 	/**
 	  * @return A copy of this item that's at least zero.
 	  *         I.e. if this item is below zero, returns zero. Otherwise returns this.
 	  */
-	def minZero = if (isPositive) self else zero
+	def minZero = if (sign.isNegative) zero else self
 	/**
 	  * @return A copy of this item that's at most zero.
 	  *         I.e. if this item is above zero, returns zero. Otherwise returns this.
 	  */
-	def maxZero = if (isPositive) zero else self
+	def maxZero = if (sign.isPositive) zero else self
 	
 	/**
 	  * @return A positive or zero value copy of this item
 	  */
 	@deprecated("Please use minZero instead", "v2.0")
-	def positiveOrZero = if (isPositive) self else zero
+	def positiveOrZero = minZero
 	/**
 	  * @return A negative or zero value of this item
 	  */
 	@deprecated("Please use maxZero instead", "v2.0")
-	def negativeOrZero = if (isPositive) zero else self
+	def negativeOrZero = maxZero
 	
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def isNegative = !isPositiveOrZero
+	override def isZero: Boolean = sign == Neutral
 }

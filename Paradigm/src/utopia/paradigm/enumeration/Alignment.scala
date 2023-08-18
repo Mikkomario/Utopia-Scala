@@ -83,18 +83,21 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	/**
 	  * @return Directions this alignment will try to move contents
 	  */
-	def directions = Axis2D.values.flatMap { axis => apply(axis).direction.map { axis(_) } }
+	def directions =
+		Axis2D.values.flatMap { axis => apply(axis).direction.binary.map { axis(_) } }
 	
 	/**
 	  * @return The direction this alignment will move the items horizontally. None if this alignment doesn't
 	  *         specify a direction (centered)
 	  */
-	def horizontalDirection: Option[HorizontalDirection] = horizontal.direction.map { enumeration.HorizontalDirection(_) }
+	def horizontalDirection: Option[HorizontalDirection] =
+		horizontal.direction.binary.map { enumeration.HorizontalDirection(_) }
 	/**
 	  * @return The direction this alignment will move the items vertically. None if this alignment doesn't
 	  *         specify a direction (centered)
 	  */
-	def verticalDirection: Option[VerticalDirection] = vertical.direction.map { enumeration.VerticalDirection(_) }
+	def verticalDirection: Option[VerticalDirection] =
+		vertical.direction.binary.map { enumeration.VerticalDirection(_) }
 	
 	/**
 	  * @return A copy of this alignment that doesn't move items horizontally

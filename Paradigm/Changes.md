@@ -2,6 +2,7 @@
 
 ## v1.4 (in development)
 ### Breaking Changes
+- **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**
 - Renamed **VectorProjectable2** to **VectorProjectable** (leftover from an earlier update)
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions

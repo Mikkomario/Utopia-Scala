@@ -1,5 +1,7 @@
 package utopia.firmament.model.stack
 
+import utopia.flow.operator.Sign
+import utopia.flow.operator.SignOrZero.Neutral
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.shape.shape2d.{Insets, InsetsFactory, InsetsLike}
@@ -167,8 +169,8 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  *         axis = X and alignment is Right, expands to Left. If alignment is center, expands to both directions.
 	  */
 	def expandingAccordingTo(axis: Axis2D, alignment: Alignment) = alignment(axis).direction match {
-		case Some(preservedDirection) => expandingTowards(axis.toDirection(preservedDirection.opposite))
-		case None => expandingAlong(axis)
+		case preservedDirection: Sign => expandingTowards(axis.toDirection(preservedDirection.opposite))
+		case Neutral => expandingAlong(axis)
 	}
 	/**
 	  * @param alignment Contextual alignment

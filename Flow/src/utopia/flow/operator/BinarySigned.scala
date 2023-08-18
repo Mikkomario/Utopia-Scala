@@ -7,7 +7,7 @@ package utopia.flow.operator
   */
 trait BinarySigned[+Repr] extends Signed[Repr]
 {
-	// IMPLEMENTED  --------------------
+	// ABSTRACT ------------------------
 	
-	override def isNegative = !isPositive
+	override def sign: Sign
 }

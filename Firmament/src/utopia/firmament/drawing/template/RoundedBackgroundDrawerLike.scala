@@ -29,7 +29,7 @@ trait RoundedBackgroundDrawerLike extends CustomDrawer
 	override def opaque = false
 	
 	override def draw(drawer: Drawer, bounds: Bounds) = {
-		if (bounds.size.isPositive) {
+		if (bounds.size.sign.isPositive) {
 			implicit val ds: DrawSettings = DrawSettings.onlyFill(color)
 			rounding match {
 				case Left(radius) =>

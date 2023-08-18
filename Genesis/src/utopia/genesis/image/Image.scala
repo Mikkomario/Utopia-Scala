@@ -123,8 +123,7 @@ object Image
 	  */
 	def paint[U](size: Size)(draw: Drawer => U) = {
 		// If some of the dimensions were 0, simply creates an empty image
-		if (size.isPositive)
-		{
+		if (size.sign.isPositive) {
 			// Creates the new buffer image
 			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
 			// Draws on the image
@@ -575,7 +574,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def withBackground(color: Color) = {
 		// Case: Has positive size => Paints this image over a solid background
-		if (sourceResolution.isPositive && color.alpha > 0)
+		if (sourceResolution.sign.isPositive && color.alpha > 0)
 			Image.paint(sourceResolution) { drawer =>
 				drawer.draw(Bounds(Point.origin, sourceResolution))(DrawSettings.onlyFill(color))
 				drawWith(drawer, sourceResolutionOrigin)
@@ -597,7 +596,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 		source match {
 			case Some(source) =>
 				// Won't copy into 0 or negative size
-				if (newSize.isNegative)
+				if (newSize.isNegativeOrZero)
 					Image.empty
 				else if (source.getWidth == newSize.width.toInt && source.getHeight == newSize.height.toInt)
 					this

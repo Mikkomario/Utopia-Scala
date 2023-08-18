@@ -6,6 +6,8 @@
 - **NoConnection** is now **RequestSendingFailed**
 - Functions that previously returned or accepted **Either[RequestNotSent, Response]** now use **RequestResult**
 - Renamed Manifest to Manifestation because of Scala naming conflicts
+### Deprecations
+- Replaced **ShrodingerState**`.signOption: Option[Sign]` with `.estimate: UncertainBinarySign`
 ### New Methods
 - **Schrodinger**
   - Added utility functions for adding manifest and result listeners

@@ -387,7 +387,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) = {
-			if (bounds.size.isPositive) {
+			if (bounds.size.sign.isPositive) {
 				val actualDrawer = (if (enabled) drawer else drawer.withAlpha(0.66)).antialiasing
 				val baseColor = shade match {
 					case Light => Color.white

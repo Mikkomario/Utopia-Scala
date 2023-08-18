@@ -1,12 +1,14 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.generic.model.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.{EqualsBy, SignedOrZero}
+import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.{EqualsBy, SignOrZero, SignedOrZero}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.SizeType
@@ -67,6 +69,18 @@ class Size private(override val dimensions: Dimensions[Double])
     extends DoubleVectorLike[Size] with DoubleVector with ValueConvertible with ModelConvertible
         with SignedOrZero[Size] with Sized[Size] with SizeAdjustable[Size] with EqualsBy
 {
+    // ATTRIBUTES   -------------------------
+    
+    /**
+      * Sign of this size.
+      *     Positive only if both width and height are larger than 0.
+      *     Neutral if either of them is 0,
+      *     Negative otherwise.
+      */
+    override val sign: SignOrZero =
+        if (dimensions.exists { _ == 0.0 }) Neutral else if (dimensions.exists { _ < 0.0 }) Negative else Positive
+    
+    
     // COMPUTED    --------------------------
     
     /**
@@ -87,7 +101,6 @@ class Size private(override val dimensions: Dimensions[Double])
      * A vector representation of this size
      */
     def toVector = toVector2D
-    
     /**
      * An awt representation of this size
      */
@@ -109,8 +122,6 @@ class Size private(override val dimensions: Dimensions[Double])
     
     override def self = this
     override def size = this
-    
-    override def isPositive = dimensions.forall { _ > 0 }
     
     override def zero = Size.zero
     

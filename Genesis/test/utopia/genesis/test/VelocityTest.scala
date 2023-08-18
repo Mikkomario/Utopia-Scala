@@ -92,9 +92,9 @@ object VelocityTest extends App
 	assert(v2(1.millis, a3) == (1.75, LinearVelocity(1.5)))
 	assert(v2(2.millis, a3) == (3, LinearVelocity(1)))
 	
-	assert(v1.durationUntilStopWith(a3).contains(2.millis))
-	assert(v2.durationUntilStopWith(a3).contains(4.millis))
-	assert(v1.durationUntilStopWith(a1).isEmpty)
+	assert(v1.durationUntilStopWith(a3) == 2.millis)
+	assert(v2.durationUntilStopWith(a3) == 4.millis)
+	assert(v1.durationUntilStopWith(a1).isInfinite)
 	
 	val expectedResult1 = (4.0, LinearVelocity(0.0, 1.millis))
 	assert(v2(4.millis, a3) == expectedResult1)

@@ -10,21 +10,17 @@ object IntLike
 	
 	implicit class IntWrapper(val i: Int) extends AnyVal with IntLike[IntWrapper]
 	{
-		override def length = i
-		
-		override def *(mod: Int) = i * mod
-		
-		override def +(other: IntWrapper) = i + other.i
-		
 		override def self = this
 		
-		override def isZero = i == 0
-		
-		override def isPositive = i > 0
+		override def sign: SignOrZero = Sign.of(i)
+		override def length = i
 		
 		override def zero = 0
 		
 		override def compareTo(o: IntWrapper) = i - o.i
+		
+		override def *(mod: Int) = i * mod
+		override def +(other: IntWrapper) = i + other.i
 	}
 }
 

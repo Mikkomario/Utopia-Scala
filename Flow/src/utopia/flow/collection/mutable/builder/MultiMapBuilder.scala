@@ -17,13 +17,13 @@ class MultiMapBuilder[K, V] extends mutable.Builder[(K, V), Map[K, Vector[V]]]
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override def addOne(elem: (K, V)) =
-	{
+	override def addOne(elem: (K, V)) = {
 		builders.getOrElseUpdate(elem._1, new VectorBuilder[V]()) += elem._2
 		this
 	}
 	
 	override def clear() = builders.clear()
 	
-	override def result() = builders.view.mapValues { _.result() }.toMap
+	override def result() =
+		builders.view.mapValues { _.result() }.toMap.withDefaultValue(Vector.empty)
 }

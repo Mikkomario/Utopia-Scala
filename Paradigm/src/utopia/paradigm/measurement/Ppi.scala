@@ -1,6 +1,6 @@
 package utopia.paradigm.measurement
 
-import utopia.flow.operator.DoubleLike
+import utopia.flow.operator.{DoubleLike, Sign, SignOrZero}
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Inch}
 
 object Ppi
@@ -46,15 +46,17 @@ case class Ppi(value: Double) extends DoubleLike[Ppi]
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def isPositive = value > 0
+	override def self = this
 	
-	override def isZero = value == 0
-	
+	override def sign: SignOrZero = Sign.of(value)
 	override def length = value
 	
-	override def +(other: Ppi) = Ppi(value + other.value)
-	
 	override def zero = Ppi.zero
+	
+	override def toString = s"${value.round} pixels per inch"
+	
+	override def +(other: Ppi) = Ppi(value + other.value)
+	override def *(mod: Double) = Ppi(value * mod)
 	
 	override def compareTo(o: Ppi) =
 	{
@@ -66,10 +68,4 @@ case class Ppi(value: Double) extends DoubleLike[Ppi]
 		else
 			0
 	}
-	
-	override def toString = s"${value.round} pixels per inch"
-	
-	override def self = this
-	
-	override def *(mod: Double) = Ppi(value * mod)
 }

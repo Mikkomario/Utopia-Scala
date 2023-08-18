@@ -93,7 +93,7 @@ trait LinkedDescriptionsAccessLike
 	 * @param connection Implicit DB Connection
 	 * @return Whether any row was updated
 	 */
-	def deprecate()(implicit connection: Connection) = putAttribute(descriptionModel.deprecationAttName, Now)
+	def deprecate()(implicit connection: Connection) = putProperty(descriptionModel.deprecationAttName, Now)
 	
 	/**
 	 * @param languageId Id of targeted language

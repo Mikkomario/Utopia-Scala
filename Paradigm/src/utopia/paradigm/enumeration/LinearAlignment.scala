@@ -2,7 +2,8 @@ package utopia.paradigm.enumeration
 
 import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{Sign, SignedOrZero}
+import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.{SignOrZero, SignedOrZero}
 import utopia.paradigm.enumeration.LinearAlignment.Middle
 
 /**
@@ -15,9 +16,9 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	// ABSTRACT ---------------------------
 	
 	/**
-	  * @return Direction to which this alignment moves items. None if items should be kept at the middle / not moved.
+	  * @return Direction to which this alignment moves items.
 	  */
-	def direction: Option[Sign]
+	def direction: SignOrZero
 	
 	/**
 	  * @return The linear alignment opposite to this one
@@ -68,18 +69,16 @@ sealed trait LinearAlignment extends SignedOrZero[LinearAlignment]
 	/**
 	  * @return Whether this alignment tends to move items from the middle to either direction
 	  */
-	def movesItems = direction.isDefined
+	def movesItems = direction.isNotNeutral
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def zero = Middle
+	override def sign: SignOrZero = direction
 	
-	override def isPositive = direction.exists { _.isPositive }
-	override def isZero = direction.isEmpty
-	
-	override def unary_- = opposite
 	override def self = this
+	override def zero = Middle
+	override def unary_- = opposite
 	
 	
 	// OTHER    ------------------------------
@@ -149,7 +148,7 @@ object LinearAlignment
 	  */
 	case object Close extends LinearAlignment
 	{
-		override def direction = Some(Negative)
+		override def direction = Negative
 		override def opposite = Far
 		
 		override def origin(within: Double) = 0.0
@@ -167,7 +166,7 @@ object LinearAlignment
 	  */
 	case object Far extends LinearAlignment
 	{
-		override def direction = Some(Positive)
+		override def direction = Positive
 		override def opposite = Close
 		
 		override def origin(within: Double) = within
@@ -182,7 +181,7 @@ object LinearAlignment
 	  */
 	case object Middle extends LinearAlignment
 	{
-		override def direction = None
+		override def direction = Neutral
 		override def opposite = this
 		
 		override def origin(within: Double) = within / 2.0

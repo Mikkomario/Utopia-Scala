@@ -39,15 +39,14 @@ trait ImageDrawerLike extends CustomDrawer
 	
 	override def opaque = false
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
-	{
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		// Calculates the size of the drawn image
 		val defaultSize = image.size + insets.optimal.total
 		val imageToDraw = {
 			// Default case: No upscaling used or required
 			if (!useUpscaling || defaultSize.existsDimensionWith(bounds.size) { _ >= _ }) {
 				// Downscales if necessary
-				(bounds.size - insets.min.total).ifPositive.map { image.fittingWithin(_) }
+				Some(bounds.size - insets.min.total).filter { _.sign.isPositive }.map { image.fittingWithin(_) }
 			}
 			else {
 				// Case: Upscaling is required (still limited by original image resolution,

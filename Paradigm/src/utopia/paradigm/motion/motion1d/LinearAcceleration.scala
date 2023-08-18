@@ -2,7 +2,8 @@ package utopia.paradigm.motion.motion1d
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike}
+import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike, SignOrZero}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LinearAccelerationType
@@ -42,29 +43,29 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	extends ModelConvertibleChange[LinearVelocity, LinearAcceleration] with DoubleLike[LinearAcceleration]
 		with CanBeAboutZero[Change[LinearVelocity, _], LinearAcceleration] with ValueConvertible
 {
+	// ATTRIBUTES   -------------------
+	
+	override lazy val sign: SignOrZero =
+		if (duration.isInfinite) Neutral else if (duration < Duration.Zero) -amount.sign else amount.sign
+	
+	
 	// IMPLEMENTED	-------------------
-	
-	override def length = perMilliSecond.length
-	
-	override def isAboutZero = amount.isAboutZero || duration.isInfinite
 	
 	override def self = this
 	
-	override implicit def toValue: Value = new Value(Some(this), LinearAccelerationType)
-	
-	override def *(mod: Double) = LinearAcceleration(amount * mod, duration)
-	
-	override def +(another: LinearAcceleration) = LinearAcceleration(amount + another(duration), duration)
-	
-	def -(another: LinearAcceleration) = this + (-another)
-	
-	override def toString = s"${perMilliSecond.amount}/ms^2"
-	
-	override def compareTo(o: LinearAcceleration) = perMilliSecond.compareTo(o.perMilliSecond)
-	
-	override def isPositive = if (duration >= Duration.Zero) amount.isPositive else amount.isNegative
+	override def length = perMilliSecond.length
 	
 	override def zero = LinearAcceleration.zero
+	override def isAboutZero = amount.isAboutZero || duration.isInfinite
+	
+	override implicit def toValue: Value = new Value(Some(this), LinearAccelerationType)
+	override def toString = s"${perMilliSecond.amount}/ms^2"
+	
+	override def *(mod: Double) = LinearAcceleration(amount * mod, duration)
+	override def +(another: LinearAcceleration) = LinearAcceleration(amount + another(duration), duration)
+	def -(another: LinearAcceleration) = this + (-another)
+	
+	override def compareTo(o: LinearAcceleration) = perMilliSecond.compareTo(o.perMilliSecond)
 	
 	override def ~==(other: Change[LinearVelocity, _]) = perMilliSecond ~== other.perMilliSecond
 	
@@ -77,7 +78,6 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	  *         acceleration of the resulting acceleration will match this acceleration.
 	  */
 	def *(vector: Vector2D) = Acceleration2D(amount * vector, duration)
-	
 	/**
 	  * @param vector A vector
 	  * @return Acceleration with the same direction as the specified vector. If a unit vector was provided, the linear

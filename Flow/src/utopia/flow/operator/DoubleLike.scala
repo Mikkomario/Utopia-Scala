@@ -10,21 +10,17 @@ object DoubleLike
 	
 	implicit class DoubleWrapper(val d: Double) extends AnyVal with DoubleLike[DoubleWrapper]
 	{
-		override def isPositive = d > 0
-		
-		override def isZero = d == 0
-		
-		override def length = d
-		
-		override def *(mod: Double) = d * mod
-		
-		override def +(other: DoubleWrapper) = d + other.d
-		
 		override def self = this
+		
+		override def sign: SignOrZero = Sign.of(d)
+		override def length = d
 		
 		override def zero = 0.0
 		
 		override def compareTo(o: DoubleWrapper) = d.compareTo(o.d)
+		
+		override def *(mod: Double) = d * mod
+		override def +(other: DoubleWrapper) = d + other.d
 	}
 }
 

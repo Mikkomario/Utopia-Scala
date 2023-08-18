@@ -2,6 +2,7 @@ package utopia.paradigm.shape.shape1d
 
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.Positive
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
@@ -89,7 +90,7 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 	  *         None if this vector is along the Z-axis.
 	  */
 	def direction2D = axis match {
-		case axis: Axis2D => Some(Direction2D(axis, Sign.of(length)))
+		case axis: Axis2D => Some(Direction2D(axis, Sign.of(length).binaryOr(Positive)))
 		case _ => None
 	}
 	

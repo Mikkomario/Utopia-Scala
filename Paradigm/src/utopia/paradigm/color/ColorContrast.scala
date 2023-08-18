@@ -1,6 +1,6 @@
 package utopia.paradigm.color
 
-import utopia.flow.operator.DoubleLike
+import utopia.flow.operator.{DoubleLike, Sign, SignOrZero}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.{Enhanced, Minimum}
 import utopia.paradigm.measurement.Distance
@@ -42,7 +42,6 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	  * @return Whether this color contrast ensures minimum legibility on all font sizes
 	  */
 	def isAlwaysLegible = ratio >= Minimum.defaultMinimumContrast
-	
 	/**
 	  * @return Whether this color contrast ensures minimum legibility for large text sizes
 	  */
@@ -52,7 +51,6 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	  * @return Whether this color contrast ensures enhanced legibility on all font sizes
 	  */
 	def isAlwaysHighQuality = ratio >= Enhanced.defaultMinimumContrast
-	
 	/**
 	  * @return Whether this color contrast ensures enhanced legibility on large font sizes
 	  */
@@ -61,20 +59,15 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	
 	// IMPLEMENTED	----------------------
 	
-	override def isPositive = ratio > 0
+	override def self = this
 	
-	override def isZero = ratio == 0
-	
+	override def sign: SignOrZero = Sign.of(ratio)
 	override def length = ratio
 	
 	override def zero = ColorContrast(0)
 	
 	def -(another: ColorContrast) = ColorContrast(ratio - another.ratio)
-	
 	override def +(another: ColorContrast) = ColorContrast(ratio + another.ratio)
-	
-	override def self = this
-	
 	override def *(mod: Double) = ColorContrast(ratio * mod)
 	
 	override def compareTo(o: ColorContrast) = ratio.compareTo(o.ratio)

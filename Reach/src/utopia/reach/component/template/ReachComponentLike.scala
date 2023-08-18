@@ -117,7 +117,7 @@ trait ReachComponentLike extends Stackable
 	  */
 	def toImage = {
 		// Places the drawer so that after applying component position, drawer will draw to (0,0)
-		if (size.isPositive)
+		if (size.sign.isPositive)
 			Image.paint(size) { d => paintWith(d.translated(-position)) }
 		else
 			Image.empty
@@ -261,7 +261,7 @@ trait ReachComponentLike extends Stackable
 	  * @return Image containing the specified region
 	  */
 	def regionToImage(region: Bounds) = {
-		if (size.isPositive) {
+		if (size.sign.isPositive) {
 			// Places the drawer so that the top left corner of the region will be drawn to (0,0)
 			region.overlapWith(Bounds(Point.origin, size)) match {
 				case Some(actualRegion) =>

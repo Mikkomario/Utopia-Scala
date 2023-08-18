@@ -2,7 +2,7 @@ package utopia.annex.model.manifest
 
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux}
 import utopia.flow.util.UncertainBoolean
-import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
+import utopia.flow.util.UncertainBoolean.CertainBoolean
 
 /**
   * A common trait for items which have a Schrödinger state, i.e. may be dead, alive or undetermined (Flux).
@@ -34,9 +34,9 @@ trait HasSchrodingerState
 	  *         Uncertain otherwise
 	  */
 	def isAlive: UncertainBoolean = state match {
-		case Alive => Certain(true)
-		case Dead => Certain(false)
-		case _ => Uncertain
+		case Alive => CertainBoolean(true)
+		case Dead => CertainBoolean(false)
+		case _ => UncertainBoolean
 	}
 	/**
 	  * @return Certain(false) if this is the final success state,

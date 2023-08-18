@@ -28,7 +28,7 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.scribe.core.controller.listener.MaximumLogLimitReachedListener
 import utopia.scribe.core.model.cached.event.MaximumLogLimitReachedEvent
 import utopia.scribe.core.model.enumeration.Severity
-import utopia.scribe.core.model.enumeration.Severity.Critical
+import utopia.scribe.core.model.enumeration.Severity.{Critical, Unrecoverable}
 import utopia.scribe.core.model.post.logging.ClientIssue
 
 import java.nio.file.Path
@@ -230,7 +230,7 @@ object MasterScribe
 					case Some(event) =>
 						// Informs the listeners as well
 						limitListeners.foreach { _.onLogLimitReached(event) }
-						pending :+ (ClientIssue(issue.version, "MasterScribe.accept", Critical,
+						pending :+ (ClientIssue(issue.version, "MasterScribe.accept", Unrecoverable,
 							message = "Maximum outgoing issue count reached. Stops logging.",
 							occurrenceDetails = Model.from("limit" -> maxLogVelocity.map { _._1 })) -> Now)
 					// Case: Logging prevented

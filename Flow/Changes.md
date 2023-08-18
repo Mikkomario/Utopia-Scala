@@ -1,8 +1,14 @@
 # Utopia Flow - List of Changes
 
 ## v2.2 (in development)
-TODO: Document changes to Changing (new map options) and related classes
 ### Breaking Changes
+- Multiple changes relating to **Signed**, **SignedOrZero** and **BinarySigned**:
+  - **Signed** now requires the implementation of `.sign: SignOrZero` 
+    instead of separately defining `.isPositive` and `.isNegative`
+    - In **BinarySigned**, this property is `.sign: Sign`
+  - `.sign` now returns **SignOrZero** for **SignedOrZero** and **Signed** traits, 
+    and will no longer return **Positive** in case of a zero value
+- `Sign.of(...)` now returns **SignOrZero** instead of **Sign**
 - Renamed **PointerWithEvents** to **EventfulPointer** and **IteratorWithEvents** to **EventfulIterator**
 - Updated the abstract functions in **Changing**
   - `.addListener(ChangeListener)` and `.addDependency(ChangeDependency)` are no longer abstract and is instead 
@@ -15,6 +21,8 @@ TODO: Document changes to Changing (new map options) and related classes
 - **IterableOnce**`.toTryCatch` now returns a **TryCatch** instead of a **Try**
 - **String**`.splitAtFirst(String)` and `.splitAtLast(String)` in **StringExtensions** 
   now return a **Pair** instead of a **Tuple** 
+- Renamed **UncertainBoolean.Uncertain** to **UncertainBoolean** and 
+  **UncertainBoolean.Certain** to **UncertainBoolean.CertainBoolean**
 - **ListenableResettableLazy** is now a trait and not a class (i.e. the `new` keyword no longer works in this context)
 - The default implementation of **Changing**`.map(...)` now uses an **OptimizedMirror**. 
   - It may be appropriate to review the uses of this method and to see whether 
@@ -28,10 +36,17 @@ TODO: Document changes to Changing (new map options) and related classes
 - Deprecated `.toPair` in **ChangeEvent** because the name implied conversion
 - Deprecated `Pointer.withEvents(A)` in favor of `Pointer.eventful(A)`
   - Similarly, renamed **Iterator**`.withEvents(...)` to `.eventful(...)`
+- Deprecated `.isPositive` and `.isNegative` in **Signed**
+- Multiple deprecations in **UncertainBoolean**
+  - Deprecated `.value` in favor of `.exact`
+  - Deprecated `.isCertain` and `.isUncertain` in favor of `.isExact` and `.nonExact`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 - **Pair**`.equalsUsing(EqualsFunction)` didn't work previously
 ### New Features
+- Added new **SignOrZero** enumeration with three values: **Positive**, **Negative** and **Neutral**
+  - The **Positive** and **Negative** options are still available as a binary pair under trait **Sign**
+- Added **UncertainSign** enumeration
 - **ChangeListeners** can now cause after-effects to be triggered after the completion of a change event
 - Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 
   an external condition is met
@@ -49,6 +64,7 @@ TODO: Document changes to Changing (new map options) and related classes
 - **Changing** (object)
   - Added `.completionOf(Future)`
   - Added `.addListenerAndPossiblySimulateEvent(...)`, a variant of `.addListenerAndSimulateEvent(...)`
+  - Added new map and merge variants (e.g. `.strongMap(...)` and `.lightMergeWith(...)`)
 - **Either** (**CollectionExtensions**)
   - Added `.eitherAndSide` for symmetric Eithers
   - Added `.mapSide(End)(...)` for symmetric Eithers
@@ -96,6 +112,7 @@ TODO: Document changes to Changing (new map options) and related classes
 - **Pair**`.separateMatching` now uses `EqualsFunction.default` by default
 - **Tree**`.map(...)` and `.flatMap(...)` now use `EqualsFunction.default` by default
 - Added a low-priority conversion from **LocalTime** values to **LocalDateTime** values (assigns the current date as the date)
+- `Sign.of(...)` now accepts a wider range of numeric classes
 - **Console** now accepts its prompt as a call-by-name parameter
 
 ## v2.1 - 01.05.2023

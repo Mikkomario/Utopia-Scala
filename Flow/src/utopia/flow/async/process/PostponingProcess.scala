@@ -6,7 +6,8 @@ import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.UncertainBoolean.{Certain, Uncertain}
+import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -176,7 +177,7 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 		val shouldRun = Iterator.continually {
 			// Case: Scheduled to hurry => Skips waiting (may also skip the execution)
 			if (shouldHurry)
-				Certain(state.isNotBroken)
+				CertainBoolean(state.isNotBroken)
 			else {
 				// Next wait target
 				val target = waitTargetPointer.value.breakable
@@ -185,23 +186,23 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 					if (Wait(target, waitLock)) {
 						// Case: Scheduled to hurry during waiting => Skips waiting (and possibly execution)
 						if (shouldHurry)
-							Certain(state.isNotBroken)
+							CertainBoolean(state.isNotBroken)
 						// Case: Wait target was switched during waiting => Starts over with the new wait target
 						else if (resetFlag.getAndReset())
-							Uncertain
+							UncertainBoolean
 						// Case: Wait target was reached => Moves to execution
 						else
-							Certain(true)
+							CertainBoolean(true)
 					}
 					// Case: Wait was interrupted with an InterruptedException => Skips wait and execution
 					else
-						Certain(false)
+						CertainBoolean(false)
 				}
 				// Case: No wait was scheduled => Moves immediately to execution
 				else
-					Certain(true)
+					CertainBoolean(true)
 			}
-		}.flatMap { _.value }.next()
+		}.flatMap { _.exact }.next()
 		// Case: Execution was allowed => Executes
 		if (shouldRun) {
 			// Executes the wrapped function

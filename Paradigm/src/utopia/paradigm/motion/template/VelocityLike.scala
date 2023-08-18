@@ -56,6 +56,7 @@ trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
 	
 	// IMPLEMENTED	-------------
 	
+	override def amount = transition
 	override def dimensions = transition.dimensions.map { LinearVelocity(_, duration) }
 	
 	/**
@@ -64,23 +65,18 @@ trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
 	override def isZero = transition.isZero || duration.isInfinite
 	override def isAboutZero = transition.isAboutZero || duration.isInfinite
 	
+	override def toString = s"$perMilliSecond/ms"
+	
 	override def ~==(other: Change[HasDoubleDimensions, _]) = perMilliSecond ~== other.perMilliSecond
 	
-	override def amount = transition
-	
 	override def *(mod: Double) = buildCopy(transition * mod)
-	
 	override def +(other: Change[HasDoubleDimensions, _]) = buildCopy(transition + other(duration))
-	
 	def -(other: Change[HasDoubleDimensions, _]) = buildCopy(transition - other(duration))
-	
-	override def toString = s"$perMilliSecond/ms"
 	
 	
 	// OPERATORS	-------------
 	
 	def +(other: LinearVelocity) = buildCopy(transition + other(duration))
-	
 	def -(other: LinearVelocity) = this + (-other)
 	
 	
@@ -95,13 +91,24 @@ trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
 	
 	/**
 	  * @param amount Amount to increase this velocity
-	  * @return A copy of this velocity with increased amount (if provided amount is positive). Direction of this
-	  *         velocity is always kept as is, if this velocity was to change direction, a zero velocity is returned
-	  *         instead
+	  * @return A copy of this velocity with increased amount.
+	  *         Direction of this velocity is always kept as is, if this velocity was to change direction,
+	  *         a zero velocity is returned instead
 	  */
-	def increasePreservingDirection(amount: LinearVelocity) = if (amount.isPositive || linear > -amount)
-		buildCopy(transition + amount(duration)) else buildCopy(zeroTransition, duration)
-	
+	def increasePreservingDirection(amount: LinearVelocity) = {
+		if (amount.isZero)
+			self
+		else if (isZero) {
+			if (amount.sign.isPositive)
+				buildCopy(transition + amount(duration))
+			else
+				self
+		}
+		else if (amount.sign.isPositive || linear > -amount)
+			buildCopy(transition + amount(duration))
+		else
+			buildCopy(zeroTransition, duration)
+	}
 	/**
 	  * @param amount Amount to decrease this velocity
 	  * @return A copy of this velocity with decreased amount (if provided amount is positive). Direction of this
@@ -123,8 +130,7 @@ trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
 	  * @param acceleration Amount of acceleration (considered to be consistent)
 	  * @return The amount of transition in provided time, and also the velocity at the end of that time
 	  */
-	def apply(time: Duration, acceleration: Change[Change[HasDoubleDimensions, _], _]): (X, Repr) =
-	{
+	def apply(time: Duration, acceleration: Change[Change[HasDoubleDimensions, _], _]): (X, Repr) = {
 		val endVelocity = this + acceleration(time)
 		val averageVelocity = this.average(endVelocity)
 		averageVelocity(time) -> endVelocity
@@ -138,16 +144,14 @@ trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
 	  *                          change directions (by being decreased below 0), a zero velocity will be returned instead
 	  * @return The amount of transition in provided time, and also the velocity at the end of that time
 	  */
-	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (X, Repr) =
-	{
+	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (X, Repr) = {
 		// Sometimes translation & acceleration needs to be stopped when velocity would change direction
 		val durationLimit = {
 			if (preserveDirection)
-				durationUntilStopWith(acceleration).filter(_ < time)
+				durationUntilStopWith(acceleration).finite.filter(_ < time)
 			else
 				None
 		}
-		
 		durationLimit match {
 			case Some(limit) => apply(limit, acceleration)
 			case None =>

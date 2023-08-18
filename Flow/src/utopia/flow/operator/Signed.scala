@@ -1,7 +1,5 @@
 package utopia.flow.operator
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-
 /**
   * A common trait for items which can be either positive or negative, but not necessarily zero
   * @author Mikko Hilpinen
@@ -12,13 +10,20 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	// ABSTRACT -------------------------
 	
 	/**
+	  * @return The sign of this item
+	  */
+	def sign: SignOrZero
+	
+	/**
 	  * @return Whether this item is positive (>0)
 	  */
-	def isPositive: Boolean
+	@deprecated("Please call .sign.isPositive instead", "v2.2")
+	def isPositive: Boolean = sign.isPositive
 	/**
 	  * @return Whether this item is negative (<0)
 	  */
-	def isNegative: Boolean
+	@deprecated("Please call .sign.isNegative instead", "v2.2")
+	def isNegative: Boolean = sign.isNegative
 	
 	
 	// COMPUTED    ----------------------
@@ -26,112 +31,103 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	/**
 	  * @return True if this item is not positive. False otherwise.
 	  */
+	@deprecated("Please call .sign.isNotPositive instead", "v2.2")
 	def nonPositive = !isPositive
 	/**
 	  * @return True if this item is not negative. False otherwise.
 	  */
+	@deprecated("Please call .sign.isNotNegative instead", "v2.2")
 	def nonNegative = !isNegative
-	
-	/**
-	  * @return Sign of this item. Returns Positive for zero items.
-	  */
-	def sign: Sign = if (isNegative) Negative else Positive
 	
 	/**
 	  * @return Absolute value of this item
 	  */
-	def abs = if (isNegative) -this else self
+	def abs = if (sign.isNegative) -this else self
 	/**
 	  * @return Negative absolute value of this item
 	  */
-	def negativeAbs = if (isPositive) -this else self
+	def negativeAbs = if (sign.isPositive) -this else self
 	
 	/**
 	  * @return Some(this) if positive, None otherwise
 	  */
-	def ifPositive = if (isPositive) Some(self) else None
+	def ifPositive = if (sign.isPositive) Some(self) else None
 	/**
 	  * @return Some(this) if negative, None otherwise
 	  */
-	def ifNegative = if (isNegative) Some(self) else None
+	def ifNegative = if (sign.isNegative) Some(self) else None
 	
 	/**
 	  * @return Some(this) if not positive, None otherwise
 	  */
-	def notPositive = if (!isPositive) Some(self) else None
+	def notPositive = if (sign.isNotPositive) Some(self) else None
 	/**
 	  * @return Some(this) if not negative, None otherwise
 	  */
-	def notNegative = if (!isNegative) Some(self) else None
+	def notNegative = if (sign.isNotNegative) Some(self) else None
 	
 	
 	// OTHER    --------------------------
 	
 	/**
-	  * @param sign A sign
-	  * @return Whether this instance is of that sign. NB: Zero returns false for both signs.
+	  * @param sign A sign or zero / neutral
+	  * @return Whether this instance is of that sign.
 	  */
-	def is(sign: Sign) = sign match {
-		case Positive => isPositive
-		case Negative => isNegative
-	}
+	def is(sign: SignOrZero) = this.sign == sign
 	/**
-	  * @param sign A sign
+	  * @param sign A sign or zero / neutral
 	  * @return Whether this item is not of that sign
 	  */
-	def isNot(sign: Sign) = sign match {
-		case Positive => nonPositive
-		case Negative => nonNegative
-	}
+	def isNot(sign: SignOrZero) = this.sign != sign
 	
 	/**
 	  * @param sign A sign (+ or -)
-	  * @return A copy of this item with that sign
+	  * @return A copy of this item with that sign. Returns this if zero.
 	  */
-	def withSign(sign: Sign) = if (is(sign)) self else -this
+	def withSign(sign: Sign) = if (is(sign.opposite)) -this else self
 	/**
 	  * @param sign A sign
 	  * @return Some(this) if this item is of that sign. None otherwise.
 	  */
-	def ifHasSign(sign: Sign) = if (is(sign)) Some(self) else None
+	def ifHasSign(sign: SignOrZero) = if (is(sign)) Some(self) else None
 	
 	/**
 	  * @param default Value to return if this item is not positive
 	  * @tparam B Type of default item
 	  * @return This item if positive, otherwise the specified default
 	  */
-	def positiveOrElse[B >: Repr](default: => B) = if (isPositive) self else default
+	def positiveOrElse[B >: Repr](default: => B) = if (sign.isPositive) self else default
 	/**
 	  * @param default Value to return if this item is not negative
 	  * @tparam B Type of default item
 	  * @return This item if negative, otherwise the specified default
 	  */
-	def negativeOrElse[B >: Repr](default: => B) = if (isNegative) self else default
+	def negativeOrElse[B >: Repr](default: => B) = if (sign.isNegative) self else default
 	/**
 	  * @param sign Accepted sign
 	  * @param default Value specified if this item is not of that sign (call-by-name)
 	  * @tparam B Type of default value
 	  * @return This item if of that sign, otherwise the default value
 	  */
-	def withSignOrElse[B >: Repr](sign: Sign, default: => B) = if (is(sign)) self else default
+	def withSignOrElse[B >: Repr](sign: SignOrZero, default: => B) = if (is(sign)) self else default
 	
 	/**
 	  * @param f A mapping function to apply if this item is positive
 	  * @tparam B Type of mapping result
 	  * @return Mapped copy of this item if this was positive, otherwise this item as is
 	  */
-	def mapIfPositive[B >: Repr](f: Repr => B) = if (isPositive) f(self) else self
+	def mapIfPositive[B >: Repr](f: Repr => B) = if (sign.isPositive) f(self) else self
 	/**
 	  * @param f A mapping function to apply if this item is negative
 	  * @tparam B Type of mapping result
 	  * @return Mapped copy of this item if this was negative, otherwise this item as is
 	  */
-	def mapIfNegative[B >: Repr](f: Repr => B) = if (isNegative) f(self) else self
+	def mapIfNegative[B >: Repr](f: Repr => B) = if (sign.isNegative) f(self) else self
 	/**
 	  * @param sign Sign for which the mapping function applies
 	  * @param f A mapping function applied for this item, if of the specified sign
 	  * @tparam B Type of mapping result
 	  * @return A mapped copy of this item, if this was of the specified sign. This item otherwise.
 	  */
-	def mapIfHasSign[B >: Repr](sign: Sign)(f: Repr => B) = if (is(sign)) f(self) else self
+	def mapIfHasSign[B >: Repr](sign: SignOrZero)(f: Repr => B) = if (is(sign)) f(self) else self
 }

@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape1d
 
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike, EqualsFunction}
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike, EqualsFunction, Sign, SignOrZero}
 
 import scala.language.implicitConversions
 
@@ -69,12 +69,12 @@ case class RoundingDouble(wrapped: Double)
 	
 	// IMPLEMENTED  ------------------------
 	
+	override def sign: SignOrZero = Sign.of(wrapped)
+	
 	override def self = this
 	
 	override def zero = RoundingDouble.zero
-	override def isZero = wrapped == 0.0
 	override def isAboutZero: Boolean = int == 0
-	override def isPositive = int > 0
 	
 	override def length = double
 	

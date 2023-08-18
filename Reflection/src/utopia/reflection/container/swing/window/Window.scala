@@ -345,7 +345,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	def setIcon(icon: Image, minSize: Size = Size(16, 16)) =
 	{
 		// Minimum size must be positive
-		if (!minSize.isPositive)
+		if (minSize.sign.isNotPositive)
 			throw new IllegalArgumentException(s"Icon minimum size must be positive. Now supplied $minSize")
 		else
 		{
