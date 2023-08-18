@@ -24,6 +24,12 @@ trait HasInclusiveEnds[P] extends HasEnds[P]
 	  */
 	def isUnit = start == end
 	
+	/**
+	  * @return The only value contained within this range.
+	  *         None if this range contains multiple values.
+	  */
+	def only = Some(start).filter { _ == end }
+	
 	
 	// IMPLEMENTED  --------------------
 	

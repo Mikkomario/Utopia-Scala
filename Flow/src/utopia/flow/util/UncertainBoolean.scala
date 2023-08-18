@@ -73,7 +73,7 @@ sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] wi
 	override def self = this
 	override def unary_- = !this
 	
-	override def mayBe[B >: Boolean](v: B): Boolean = exact.forall { _ == v }
+	override def mayBe(v: Boolean): Boolean = exact.forall { _ == v }
 	
 	
 	// OTHER    --------------------------

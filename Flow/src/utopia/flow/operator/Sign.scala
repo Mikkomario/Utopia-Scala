@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Extreme.{Max, Min}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.UncertainSign.CertainSign
 
 import scala.concurrent.duration.Duration
 
@@ -83,6 +84,17 @@ sealed trait SignOrZero
 	  * @return A non-neutral copy of this item.
 	  */
 	def binaryOr(replacementForNeutral: => Sign): Sign = binary.getOrElse(replacementForNeutral)
+	
+	/**
+	  * @param other Another possible sign
+	  * @return Either of these signs
+	  */
+	def ||(other: SignOrZero): UncertainSign = CertainSign(this) || other
+	/**
+	  * @param other Another possible sign or signs
+	  * @return Any of these signs
+	  */
+	def ||(other: UncertainSign): UncertainSign = CertainSign(this) || other
 }
 
 object SignOrZero
@@ -148,6 +160,7 @@ sealed trait Sign extends SignOrZero with Reversible[Sign]
 	override def binary: Option[Sign] = Some(this)
 	
 	override def *[N](num: N)(implicit n: Numeric[N]): N = if (isPositive) num else n.negate(num)
+	override def *(sign: Sign): Sign = if (this == sign) this else opposite
 	
 	
 	// OTHER	----------------------------

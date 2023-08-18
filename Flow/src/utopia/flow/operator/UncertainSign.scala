@@ -22,6 +22,17 @@ sealed trait UncertainSign extends Uncertain[SignOrZero] with Reversible[Uncerta
 	  */
 	def binary: Option[UncertainBinarySign]
 	
+	/**
+	  * @param other Another possible sign
+	  * @return copy of this sign that may also be the other sign
+	  */
+	def ||(other: SignOrZero): UncertainSign
+	/**
+	  * @param other Another possible sign
+	  * @return copy of this sign that may also be the other sign
+	  */
+	def ||(other: UncertainSign): UncertainSign
+	
 	
 	// COMPUTED -----------------------------
 	
@@ -64,9 +75,12 @@ object UncertainSign extends UncertainSign
 	
 	override def exact: Option[SignOrZero] = None
 	override def unary_- : UncertainSign = this
-	override def binary: Option[UncertainBinarySign] = Some(UncertainBinarySign)
+	override def binary: Option[UncertainBinarySign] = Some(NotNeutral)
 	
-	override def mayBe[B >: SignOrZero](v: B): Boolean = true
+	override def mayBe(v: SignOrZero): Boolean = true
+	
+	override def ||(other: SignOrZero): UncertainSign = this
+	override def ||(other: UncertainSign): UncertainSign = this
 	
 	
 	// IMPLICIT -----------------------------
@@ -85,7 +99,7 @@ object UncertainSign extends UncertainSign
 	
 	// VALUES   -----------------------------
 	
-	case object UncertainBinarySign extends UncertainBinarySign
+	case object UncertainBinarySign
 	{
 		// ATTRIBUTES   ---------------------
 		
@@ -98,20 +112,25 @@ object UncertainSign extends UncertainSign
 		// IMPLICIT -------------------------
 		
 		implicit def certainToUncertain(sign: Sign): UncertainBinarySign = CertainBinarySign(sign)
-		
-		
-		// IMPLEMENTED  ---------------------
-		
-		override def exact: Option[Sign] = None
-		override def unary_- : UncertainSign = this
 	}
 	/**
 	  * Common traits for uncertain selections between Positive and Negative
 	  */
-	sealed trait UncertainBinarySign extends UncertainSign with Uncertain[Sign]
+	sealed trait UncertainBinarySign extends UncertainSign
 	{
+		// ABSTRACT -------------------
+		
+		override def exact: Option[Sign]
+		
+		
+		// IMPLEMENTED  ---------------
+		
 		override def binary: Option[UncertainBinarySign] = Some(this)
-		override def mayBe[B >: Sign](v: B): Boolean = exact.forall { _ == v }
+		
+		override def mayBe(v: SignOrZero): Boolean = v match {
+			case Neutral => false
+			case s: Sign => exact.forall { _ == s }
+		}
 	}
 	
 	object CertainSign
@@ -142,7 +161,9 @@ object UncertainSign extends UncertainSign
 	{
 		override def self = this
 		override def exact: Option[SignOrZero] = Some(sign)
-		override def mayBe[B >: SignOrZero](v: B): Boolean = sign == v
+		override def mayBe(v: SignOrZero): Boolean = sign == v
+		
+		override def ||(other: UncertainSign): UncertainSign = if (other.mayBe(sign)) other else other || sign
 	}
 	object CertainBinarySign
 	{
@@ -181,6 +202,12 @@ object UncertainSign extends UncertainSign
 	{
 		override def sign: Sign = Positive
 		override def unary_- : CertainBinarySign = CertainlyNegative
+		
+		override def ||(other: SignOrZero): UncertainSign = other match {
+			case Positive => this
+			case Negative => NotNeutral
+			case Neutral => NotNegative
+		}
 	}
 	/**
 	  * Sign that is known to be Negative (exactly)
@@ -189,6 +216,12 @@ object UncertainSign extends UncertainSign
 	{
 		override def sign: Sign = Negative
 		override def unary_- : CertainBinarySign = CertainlyPositive
+		
+		override def ||(other: SignOrZero): UncertainSign = other match {
+			case Positive => NotNeutral
+			case Negative => this
+			case Neutral => NotPositive
+		}
 	}
 	/**
 	  * Sign that is known to be Neutral / Zero
@@ -198,6 +231,11 @@ object UncertainSign extends UncertainSign
 		override def sign: SignOrZero = Neutral
 		override def unary_- = this
 		override def binary: Option[UncertainBinarySign] = None
+		
+		override def ||(other: SignOrZero): UncertainSign = other match {
+			case Neutral => this
+			case s: Sign => NotSign(s.opposite)
+		}
 	}
 	
 	object NotSign
@@ -238,7 +276,10 @@ object UncertainSign extends UncertainSign
 		// IMPLEMENTED  -----------------
 		
 		override def exact: Option[SignOrZero] = None
-		override def mayBe[B >: SignOrZero](v: B): Boolean = v != nonValue
+		override def mayBe(v: SignOrZero): Boolean = v != nonValue
+		
+		override def ||(other: SignOrZero): UncertainSign = if (other == nonValue) UncertainSign else this
+		override def ||(other: UncertainSign): UncertainSign = if (other.mayBe(nonValue)) UncertainSign else this
 	}
 	
 	/**
@@ -262,10 +303,11 @@ object UncertainSign extends UncertainSign
 	/**
 	  * Case when the sign is known to be binary (i.e. not neutral)
 	  */
-	case object NotNeutral extends NotSign
+	case object NotNeutral extends NotSign with UncertainBinarySign
 	{
 		override def nonValue: SignOrZero = Neutral
-		override def binary: Option[UncertainBinarySign] = Some(UncertainBinarySign)
+		override def exact = None
+		override def binary: Option[UncertainBinarySign] = Some(this)
 		override def unary_- : UncertainSign = this
 	}
 }

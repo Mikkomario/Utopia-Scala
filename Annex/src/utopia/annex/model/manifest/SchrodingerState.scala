@@ -1,7 +1,7 @@
 package utopia.annex.model.manifest
 
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.UncertainSign.UncertainBinarySign
+import utopia.flow.operator.UncertainSign.{NotNeutral, UncertainBinarySign}
 import utopia.flow.operator.{BinarySigned, Sign}
 
 import scala.language.implicitConversions
@@ -63,7 +63,7 @@ object SchrodingerState
 		// ATTRIBUTES   -----------------
 		
 		private val instance: Flux = new Flux {
-			override def estimate = UncertainBinarySign
+			override def estimate = NotNeutral
 			override def expectancy = None
 		}
 		

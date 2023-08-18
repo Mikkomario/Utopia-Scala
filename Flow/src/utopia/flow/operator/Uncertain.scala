@@ -9,7 +9,7 @@ import utopia.flow.util.UncertainBoolean.CertainBoolean
  * @since 18.8.2023, v2.2
   * @tparam A Type of the wrapped value, when certainly known
  */
-trait Uncertain[+A]
+trait Uncertain[A]
 {
 	// ABSTRACT --------------------------
 	
@@ -20,10 +20,9 @@ trait Uncertain[+A]
 	
 	/**
 	  * @param v A value
-	  * @tparam B Type of the specified value
 	  * @return Whether this item might match exactly the specified value.
 	  */
-	def mayBe[B >: A](v: B): Boolean
+	def mayBe(v: A): Boolean
 	
 	
 	// COMPUTED --------------------------
@@ -48,10 +47,9 @@ trait Uncertain[+A]
 	def isCertainlyExactly[B >: A](v: B) = exact.contains(v)
 	/**
 	  * @param v A value
-	  * @tparam B Type of the specified value
 	  * @return Whether this item is known to not match the specified value
 	  */
-	def isCertainlyNot[B >: A](v: B) = !mayBe(v)
+	def isCertainlyNot(v: A) = !mayBe(v)
 	
 	/**
 	 * @param default Value returned in uncertain cases (call-by-name)
@@ -61,11 +59,10 @@ trait Uncertain[+A]
 	
 	/**
 	  * @param v A value
-	  * @tparam B Type of the specified value
 	  * @return Whether this value equals the specified value.
 	  *         This result may be uncertain.
 	  */
-	def ==[B >: A](v: B): UncertainBoolean = {
+	def ==(v: A): UncertainBoolean = {
 		if (isCertainlyExactly(v))
 			CertainBoolean(true)
 		else if (mayBe(v))
@@ -75,11 +72,10 @@ trait Uncertain[+A]
 	}
 	/**
 	  * @param v A value
-	  * @tparam B Type of the specified value
 	  * @return Whether this value does not equal the specified value.
 	  *         This result may be uncertain.
 	  */
-	def !=[B >: A](v: B): UncertainBoolean = {
+	def !=(v: A): UncertainBoolean = {
 		if (mayBe(v)) {
 			if (isCertainlyExactly(v))
 				CertainBoolean(false)
