@@ -2,7 +2,8 @@ package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.End.{First, Last}
-import utopia.flow.operator.{End, Sign}
+import utopia.flow.operator.Extreme.{Max, Min}
+import utopia.flow.operator.{End, Extreme, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
@@ -68,6 +69,14 @@ trait HasInclusiveEnds[P] extends HasEnds[P]
 	def apply(end: End) = end match {
 		case First => start
 		case Last => this.end
+	}
+	/**
+	  * @param extreme Targeted extreme (min or max)
+	  * @return The most extreme value at the specified end
+	  */
+	def apply(extreme: Extreme) = extreme match {
+		case Max => ordering.max(start, end)
+		case Min => ordering.min(start, end)
 	}
 	/**
 	 * @param side The targeted side, where negative is the start and positive is the end

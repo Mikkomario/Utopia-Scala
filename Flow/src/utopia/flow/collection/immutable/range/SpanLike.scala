@@ -2,8 +2,9 @@ package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.Extreme.{Max, Min}
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{Combinable, Reversible, Sign}
+import utopia.flow.operator.{Combinable, Extreme, Reversible, Sign}
 
 import scala.math.Ordered.orderingToOrdered
 
@@ -158,6 +159,14 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return A copy of this span with that direction
 	  */
 	def withDirection(direction: Sign) = if (this.direction == direction) self else reverse
+	/**
+	  * @param extreme The extreme that should be placed at the end of this span
+	  * @return Copy of this span where the more extreme value is at the end
+	  */
+	def towards(extreme: Extreme) = extreme match {
+		case Max => ascending
+		case Min => descending
+	}
 	
 	/**
 	  * @param point A point to include within this span

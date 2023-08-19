@@ -37,14 +37,45 @@ sealed trait UncertainSign extends Uncertain[SignOrZero] with Reversible[Uncerta
 	// COMPUTED -----------------------------
 	
 	/**
+	  * @return Whether this sign is positive (may be uncertain)
+	  */
+	def isPositive = this == Positive
+	/**
+	  * @return Whether this sign is negative (may be uncertain)
+	  */
+	def isNegative = this == Negative
+	/**
 	  * @return Whether this item represents the neutral / zero state.
 	  *         Result may be uncertain.
 	  */
 	def isNeutral: UncertainBoolean = this == Neutral
+	
+	/**
+	  * @return Whether this sign is negative or neutral (may be uncertain)
+	  */
+	def nonPositive = !isPositive
+	/**
+	  * @return Whether this sign is positive or neutral (may be uncertain)
+	  */
+	def nonNegative = !isNegative
+	/**
+	  * @return Whether this sign is positive or negative (may be uncertain)
+	  */
+	def nonNeutral = !isNeutral
+	
+	/**
+	  * @return Whether it is possible that this sign is positive
+	  */
+	def mayBePositive = isPositive.mayBeTrue
+	/**
+	  * @return Whether it is possible that this sign is negative
+	  */
+	def mayBeNegative = isNegative.mayBeTrue
 	/**
 	  * @return Whether neutral / 0 is a potential value of this item
 	  */
 	def mayBeNeutral = isNeutral.mayBeTrue
+	
 	/**
 	  * @return Whether this item is known to be neutral / 0
 	  */
@@ -157,8 +188,13 @@ object UncertainSign extends UncertainSign
 	/**
 	  * Common traits for certainly known sign selections
 	  */
-	sealed trait CertainSign extends UncertainSign with Signed[CertainSign]
+	sealed trait CertainSign extends UncertainSign
 	{
+		/**
+		  * @return Certainly known sign
+		  */
+		def sign: SignOrZero
+		
 		override def self = this
 		override def exact: Option[SignOrZero] = Some(sign)
 		override def mayBe(v: SignOrZero): Boolean = sign == v
@@ -189,8 +225,10 @@ object UncertainSign extends UncertainSign
 	/**
 	  * Common trait for certain wrappers of Positive and Negative
 	  */
-	sealed trait CertainBinarySign extends CertainSign with UncertainBinarySign with BinarySigned[CertainBinarySign]
+	sealed trait CertainBinarySign extends CertainSign with UncertainBinarySign
 	{
+		override def sign: Sign
+		
 		override def self = this
 		override def exact = Some(sign)
 	}

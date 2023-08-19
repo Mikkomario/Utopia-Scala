@@ -172,6 +172,33 @@ sealed trait Sign extends SignOrZero with Reversible[Sign]
 	  * @return 'r' if this is positive, -r otherwise
 	  */
 	def *[R2, R <: Reversible[R2]](r: R) = if (isPositive) r.self else -r
+	/**
+	  * @param ordering An ordering to possibly reverse
+	  * @tparam A Type of ordered items
+	  * @return Specified ordering if this is Positive, otherwise reversed ordering
+	  */
+	def *[A](ordering: Ordering[A]) = if (isPositive) ordering else ordering.reverse
+	
+	/**
+	  * @param a An item
+	  * @param b Another item
+	  * @param ord Implicit ordering to use
+	  * @tparam A Type of the two items
+	  * @return The lesser of the two items, when moving along this sign.
+	  *         I.e. for Positive, returns min,
+	  *              for Negative, returns max
+	  */
+	def lesser[A](a: A, b: A)(implicit ord: Ordering[A]) = if (isPositive) ord.min(a, b) else ord.max(a, b)
+	/**
+	  * @param a   An item
+	  * @param b   Another item
+	  * @param ord Implicit ordering to use
+	  * @tparam A Type of the two items
+	  * @return The greater of the two items, when moving along this sign.
+	  *         I.e. for Positive, returns max,
+	  *         for Negative, returns min
+	  */
+	def greater[A](a: A, b: A)(implicit ord: Ordering[A]) = if (isPositive) ord.max(a, b) else ord.min(a, b)
 }
 
 object Sign
@@ -206,6 +233,14 @@ object Sign
 	def of(duration: Duration): SignOrZero =
 		if (duration == Duration.Zero) Neutral else if (duration < Duration.Zero) Negative else Positive
 	
+	/**
+	  * @param extreme Targeted extreme
+	  * @return Sign at that extreme
+	  */
+	def apply(extreme: Extreme): Sign = extreme match {
+		case Min => Negative
+		case Max => Positive
+	}
 	/**
 	  * @param positiveCondition A condition for returning Positive
 	  * @return Positive if condition was true, Negative otherwise

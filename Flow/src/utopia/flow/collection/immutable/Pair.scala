@@ -3,7 +3,8 @@ package utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
 import utopia.flow.operator.End.{First, Last}
-import utopia.flow.operator.{Combinable, End, EqualsFunction, Reversible, Sign}
+import utopia.flow.operator.Extreme.{Max, Min}
+import utopia.flow.operator.{Combinable, End, EqualsFunction, Extreme, Reversible, Sign}
 
 import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance
@@ -297,6 +298,23 @@ case class Pair[+A](first: A, second: A)
 		case First => first
 		case Last => second
 	}
+	/**
+	  * @param extreme The targeted extreme
+	  * @param ord Implicit ordering applied
+	  * @tparam B Type of the ordering used
+	  * @return The more extreme of the two available items
+	  */
+	def apply[B >: A](extreme: Extreme)(implicit ord: Ordering[B]): A = extreme match {
+		case Max => max[B]
+		case Min => min[B]
+	}
+	/**
+	  * @param sign The targeted sign, where Negative targets the smaller item and Positive targets the greater
+	  * @param ord     Implicit ordering applied
+	  * @tparam B Type of the ordering used
+	  * @return The smaller or larger of the two available items
+	  */
+	def apply[B >: A](sign: Sign)(implicit ord: Ordering[B]): A = apply[B](sign.extreme)
 	
 	/**
 	  * Calls the specified function for each value of this pair. Includes the side where that item appears.

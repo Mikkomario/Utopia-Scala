@@ -31,12 +31,10 @@ sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] wi
 	/**
 	  * @return Whether this value is known for certain to be either true or false
 	  */
-	@deprecated("Please use .isExact instead", "v2.2")
-	def isCertain = value.isDefined
+	def isCertain = isExact
 	/**
 	  * @return Whether it isn't known whether this value is true or false
 	  */
-	@deprecated("Please use .nonExact instead", "v2.2")
 	def isUncertain = !isCertain
 	
 	/**

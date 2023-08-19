@@ -37,16 +37,14 @@
 - Deprecated `Pointer.withEvents(A)` in favor of `Pointer.eventful(A)`
   - Similarly, renamed **Iterator**`.withEvents(...)` to `.eventful(...)`
 - Deprecated `.isPositive` and `.isNegative` in **Signed**
-- Multiple deprecations in **UncertainBoolean**
-  - Deprecated `.value` in favor of `.exact`
-  - Deprecated `.isCertain` and `.isUncertain` in favor of `.isExact` and `.nonExact`
+- In **UncertainBoolean**, deprecated `.value` in favor of `.exact`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 - **Pair**`.equalsUsing(EqualsFunction)` didn't work previously
 ### New Features
 - Added new **SignOrZero** enumeration with three values: **Positive**, **Negative** and **Neutral**
   - The **Positive** and **Negative** options are still available as a binary pair under trait **Sign**
-- Added **UncertainSign** enumeration
+- Added **UncertainSign** enumeration and **UncertainNumber** class
 - **ChangeListeners** can now cause after-effects to be triggered after the completion of a change event
 - Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 
   an external condition is met
