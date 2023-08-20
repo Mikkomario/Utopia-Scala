@@ -156,6 +156,8 @@ case object UncertainBoolean extends UncertainBoolean
 	override def exact: Option[Boolean] = None
 	override def unary_! : UncertainBoolean = this
 	
+	override def toString = "?"
+	
 	
 	// NESTED   ------------------------------------
 	
@@ -178,5 +180,7 @@ case object UncertainBoolean extends UncertainBoolean
 		
 		override def unary_! = CertainBoolean(!knownValue)
 		override def unary_- = !this
+		
+		override def toString = knownValue.toString
 	}
 }

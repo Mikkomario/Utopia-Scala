@@ -127,6 +127,17 @@ object ComparisonOperator
 			case d: DirectionalComparison => if (d.includesEqual) d.copy(includesEqual = false) else d
 		}
 	}
+	object DirectionalComparison
+	{
+		/**
+		  * A directional comparison that returns true when the first value is smaller than the second value
+		  */
+		lazy val lessThan = apply(Negative)
+		/**
+		  * A directional comparison that returns true when the first value is larger than the second value
+		  */
+		lazy val greaterThan = apply(Positive)
+	}
 	/**
 	  * An operator that represents smaller than, larger than, or some other variant of these
 	  * @param requiredDirection Allowed direction of increase (Positive) or decrease (Negative)
@@ -134,10 +145,20 @@ object ComparisonOperator
 	  */
 	case class DirectionalComparison(requiredDirection: Sign, includesEqual: Boolean = false) extends ComparisonOperator
 	{
+		// COMPUTED ------------------------
+		
+		/**
+		  * @return Copy of this comparison that doesn't allow equal values
+		  */
+		def butNotEqual = if (includesEqual) copy(includesEqual = false) else this
+		
+		
 		// IMPLEMENTED  --------------------
 		
-		override def unary_! : ComparisonOperator = DirectionalComparison(-requiredDirection, !includesEqual)
-		override def unary_- : ComparisonOperator = copy(requiredDirection = -requiredDirection)
+		override def unary_! = DirectionalComparison(-requiredDirection, !includesEqual)
+		override def unary_- = copy(requiredDirection = -requiredDirection)
+		
+		override def orEqual: DirectionalComparison = if (includesEqual) this else copy(includesEqual = true)
 		
 		override def apply[A](a: A, b: A)(implicit ord: Ordering[A]): Boolean = Sign.of(ord.compare(a, b)) match {
 			case Neutral => includesEqual

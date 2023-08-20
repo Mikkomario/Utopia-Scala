@@ -10,9 +10,8 @@ import utopia.flow.operator._
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.view.immutable.View
 
-import scala.math.Numeric.Implicits.infixNumericOps
 import scala.language.implicitConversions
-import scala.math.Ordered.orderingToOrdered
+import scala.math.Numeric.Implicits.infixNumericOps
 
 /**
   * Common trait for numbers that may be known or unknown, or known only partially, or as a range of possible values.
@@ -51,6 +50,20 @@ sealed trait UncertainNumber[N]
 	  * @return Whether these two numbers are, or may be, the same
 	  */
 	def ==(other: UncertainNumber[N]): UncertainBoolean
+	/**
+	  * Compares this number with another number
+	  * @param other      Another number
+	  * @param comparison Comparison operator to use
+	  * @return Comparison result, which may be uncertain
+	  */
+	def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean
+	/**
+	  * Compares this number with another number
+	  * @param other Another number
+	  * @param comparison Comparison operator to use
+	  * @return Comparison result, which may be uncertain
+	  */
+	def compareWith(other: UncertainNumber[N], comparison: DirectionalComparison): UncertainBoolean
 	
 	/**
 	  * @param extreme Targeted extreme
@@ -110,10 +123,25 @@ sealed trait UncertainNumber[N]
 	// OTHER    -------------------------
 	
 	/**
+	  * @param other A number to subtract from this number
+	  * @return Subtraction result (may be uncertain)
+	  */
+	def -(other: N) = this + (-other)
+	
+	/**
 	  * @param other Another uncertain number
 	  * @return Whether these numbers are not equal (may be uncertain)
 	  */
 	def !=(other: UncertainNumber[N]) = !(this == other)
+	
+	def <(other: N) = compareWith(other, DirectionalComparison.lessThan)
+	def <(other: UncertainNumber[N]) = compareWith(other, DirectionalComparison.lessThan)
+	def >(other: N) = compareWith(other, DirectionalComparison.greaterThan)
+	def >(other: UncertainNumber[N]) = compareWith(other, DirectionalComparison.greaterThan)
+	def <=(other: N) = compareWith(other, DirectionalComparison.lessThan.orEqual)
+	def <=(other: UncertainNumber[N]) = compareWith(other, DirectionalComparison.lessThan.orEqual)
+	def >=(other: N) = compareWith(other, DirectionalComparison.greaterThan.orEqual)
+	def >=(other: UncertainNumber[N]) = compareWith(other, DirectionalComparison.greaterThan.orEqual)
 	
 	/**
 	  * @param other Another number
@@ -168,6 +196,18 @@ object UncertainNumber
 	  * @return An uncertain number that may be any negative (< 0) number
 	  */
 	def negative[N](implicit n: Numeric[N]) = NumbersWithSign(Negative)
+	/**
+	  * @param n Implicit numeric implementation
+	  * @tparam N Type of numeric values used
+	  * @return An uncertain number that may be any negative number or zero (i.e. <= 0)
+	  */
+	def zeroOrLess[N](implicit n: Numeric[N]) = lessThan(n.zero, orEqual = true)
+	/**
+	  * @param n Implicit numeric implementation
+	  * @tparam N Type of numeric values used
+	  * @return An uncertain number that may be any positive number or zero (i.e. >= 0)
+	  */
+	def zeroOrMore[N](implicit n: Numeric[N]) = greaterThan(n.zero, orEqual = true)
 	
 	
 	// OTHER    ------------------------
@@ -230,8 +270,8 @@ object UncertainNumber
 		override def sign: UncertainSign = UncertainSign
 		
 		override def unary_- : UncertainNumber[N] = this
-		override def abs: UncertainNumber[N] = this
-		override def negativeAbs: UncertainNumber[N] = this
+		override def abs: UncertainNumber[N] = UncertainNumber.greaterThan(n.zero, orEqual = true)
+		override def negativeAbs: UncertainNumber[N] = UncertainNumber.lessThan(n.zero, orEqual = true)
 		
 		override def mayBe(v: N): Boolean = true
 		
@@ -243,12 +283,15 @@ object UncertainNumber
 		override def +(other: UncertainNumber[N]): UncertainNumber[N] = this
 		
 		override def ==(other: UncertainNumber[N]): UncertainBoolean = UncertainBoolean
+		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean = UncertainBoolean
+		override def compareWith(other: UncertainNumber[N], comparison: DirectionalComparison): UncertainBoolean =
+			UncertainBoolean
 		
 		override def options(extreme: Extreme): Option[N] = None
 		
 		// Limits the number to an open range
 		override def minOrMax(other: N, extreme: Extreme): UncertainNumber[N] =
-			NumberComparison(other, DirectionalComparison(Sign(extreme.opposite), includesEqual = true))
+			NumberComparison(other, DirectionalComparison(Sign(extreme), includesEqual = true))
 		
 		override def toStringWith(formatting: N => String): String = "?"
 	}
@@ -288,6 +331,13 @@ object UncertainNumber
 		}
 		
 		override def ==(other: UncertainNumber[N]): UncertainBoolean = other == value
+		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean =
+			comparison(value, other)
+		override def compareWith(other: UncertainNumber[N], comparison: DirectionalComparison): UncertainBoolean =
+			other.exact match {
+				case Some(exact) => compareWith(exact, comparison)
+				case None => other.compareWith(value, -comparison)
+			}
 		
 		override def options(extreme: Extreme): Option[N] = Some(value)
 		
@@ -368,13 +418,33 @@ object UncertainNumber
 			else
 				CertainBoolean(false)
 		}
+		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean = {
+			// Case: The other number is of a different sign => Will have a certain answer
+			// (e.g. + > -, regardless of numbers involved)
+			if (Sign.of(other) != targetSign)
+				CertainBoolean(comparison.requiredDirection == targetSign)
+			// Case: The other number may be smaller, larger or equal, because it has identical sign => Uncertain
+			else
+				UncertainBoolean
+		}
+		override def compareWith(other: UncertainNumber[N], comparison: DirectionalComparison): UncertainBoolean = {
+			// (See implementation above for comments)
+			if ((other.sign == targetSign).isCertainlyFalse)
+				CertainBoolean(comparison.requiredDirection == targetSign)
+			else
+				UncertainBoolean
+		}
 		
 		override def options(extreme: Extreme): Option[N] = if (Sign(extreme) == targetSign) None else Some(n.zero)
 		
 		override def minOrMax(other: N, extreme: Extreme): UncertainNumber[N] = {
-			// Case: This range may contain a more extreme item => Limits the less extreme side
-			if (targetSign.extreme == extreme)
-				NumberComparison(other, DirectionalComparison(targetSign, includesEqual = true))
+			// Case: This range may contain a more extreme item => May limit the less extreme side
+			if (targetSign.extreme == extreme) {
+				if (Sign.of(other) == targetSign)
+					NumberComparison(other, DirectionalComparison(targetSign, includesEqual = true))
+				else
+					this
+			}
 			// Case: The most extreme number in this range is next to zero
 			else {
 				val otherSign = Sign.of(other)
@@ -511,6 +581,81 @@ object UncertainNumber
 					case None => UncertainBoolean
 				}
 		}
+		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean = operator match {
+			case Equality => comparison(threshold, other)
+			case myComparison: DirectionalComparison =>
+				// Case: The other number lies within this range
+				if (myComparison(other, threshold)) {
+					// Case: The other number lies exactly at the edge of this range =>
+					// Yields a certain value for non-inclusive operators
+					if (myComparison.includesEqual && other == threshold) {
+						if (myComparison.requiredDirection == comparison.requiredDirection) {
+							if (comparison.includesEqual)
+								CertainBoolean(true)
+							else
+								UncertainBoolean
+						}
+						else if (comparison.includesEqual)
+							UncertainBoolean
+						else
+							CertainBoolean(false)
+					}
+					else
+						UncertainBoolean
+				}
+				// Case: These ranges / values are clearly distinct => Certain result
+				else
+					CertainBoolean(myComparison.requiredDirection == comparison.requiredDirection)
+			case _ => UncertainBoolean
+		}
+		override def compareWith(other: UncertainNumber[N], comparison: DirectionalComparison): UncertainBoolean =
+			other.exact match {
+				// Case: Comparing with an exact number => Delegates to another method
+				case Some(exact) => compareWith(exact, comparison)
+				case None =>
+					operator match {
+						// Case: This side is certain => Delegates to the other number
+						case Equality => other.compareWith(threshold, -comparison)
+						// Case: This is an open range
+						case myComparison: DirectionalComparison =>
+							other match {
+								case NumberComparison(t, otherOperator) =>
+									otherOperator match {
+										// Case: The other number is an open range as well
+										case DirectionalComparison(otherDirection, otherIncludesEqual) =>
+											// Case: Potential ranges largely overlap
+											if (myComparison.requiredDirection == otherDirection)
+												UncertainBoolean
+											// Case: Overlapping ranges with different open ends
+											else if (myComparison(t, threshold)) {
+												// Case: => These ranges overlap at the edge
+												// which is excluded from the other range => Returns a certain value
+												if (myComparison.includesEqual && t == threshold && !otherIncludesEqual)
+													CertainBoolean(myComparison.requiredDirection == comparison.requiredDirection)
+												else
+													UncertainBoolean
+											}
+											else if (myComparison(t, threshold) &&
+												!(myComparison.includesEqual && !comparison.includesEqual && t == threshold))
+												UncertainBoolean
+											// Case: Clearly separate ranges
+											else
+												CertainBoolean(myComparison.requiredDirection == comparison.requiredDirection)
+										case _ => UncertainBoolean
+									}
+								// Case: The other number is a closed range =>
+								// Tests against both ends of that range separately
+								case UncertainNumberRange(range) =>
+									val comparisons = range.toPair.map { compareWith(_, comparison) }
+									if (comparisons.isSymmetric)
+										comparisons.first
+									else
+										UncertainBoolean
+								case _ => UncertainBoolean
+							}
+						case _ => UncertainBoolean
+					}
+			}
 		
 		override def options(extreme: Extreme): Option[N] = operator match {
 			case Equality => Some(threshold)
@@ -660,6 +805,9 @@ object UncertainNumber
 						NumberComparison(t + range(c.requiredDirection.opposite.extreme), c)
 					case _ => AnyNumber()
 				}
+			case NumbersWithSign(sign) =>
+				val threshold = range(sign.extreme.opposite)
+				NumberComparison(threshold, DirectionalComparison(sign))
 			case _ => AnyNumber()
 		}
 		
@@ -678,6 +826,29 @@ object UncertainNumber
 						}
 				}
 		}
+		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean = {
+			// Checks separately against both ends
+			val results = range.toPair.map { comparison(_, other) }
+			// Case: The result is the same regardless of side => Returns that resul
+			if (results.isSymmetric)
+				CertainBoolean(results.first)
+			else
+				UncertainBoolean
+		}
+		override def compareWith(other: UncertainNumber[N], comparison: DirectionalComparison): UncertainBoolean =
+			other.exact match {
+				// Case: Comparing against an exact value => Delegates to another method
+				case Some(exact) => compareWith(exact, comparison)
+				// Case: Comparing against an uncertain value =>
+				// Delegates to the other number, comparing with both ends of this range
+				case None =>
+					val results = range.toPair.map { other.compareWith(_, -comparison) }
+					// Case: Both ends yield the same result => Returns that result
+					if (results.isSymmetric)
+						results.first
+					else
+						UncertainBoolean
+			}
 		
 		override def options(extreme: Extreme): Option[N] = Some(range(extreme))
 		
