@@ -184,6 +184,37 @@ object UncertainNumbersTest extends App
 	assertUncertain(lteq6 == 6)
 	assert(gt3pos.smallestPossibleValue.contains(3))
 	
+	// Tests *
+	val n4 = n1 * 4
+	val nr2to6 = nr1to3 * 2
+	val negmod = pos * -1
+	val gt6 = gt3 * 2
+	val nrm15to6 = nr1to3 * nrm5to2
+	val negpos = pos * neg
+	val gt18 = gt3 * gt6
+	
+	assert(n4.exact.contains(4))
+	assert(nr2to6.smallestPossibleValue.contains(2))
+	assert(nr2to6.largestPossibleValue.contains(6))
+	assert(negmod.isCertainlyNegative, negmod)
+	assert(gt6.smallestPossibleValue.contains(6))
+	assertFalse(gt6 == 6)
+	assert(nrm15to6.smallestPossibleValue.contains(-15))
+	assert(nrm15to6.largestPossibleValue.contains(6))
+	assert(negpos.isCertainlyNegative)
+	assert(gt18.smallestPossibleValue.contains(18))
+	assertFalse(gt18 == 18)
+	
+	// Tests multiplying by zero
+	def testZeroMultiply(number: UncertainInt) = assert((number * 0).exact.contains(0), number * 0)
+	
+	testZeroMultiply(n1)
+	testZeroMultiply(nr1to3)
+	testZeroMultiply(gt3)
+	testZeroMultiply(any)
+	testZeroMultiply(pos)
+	testZeroMultiply(neg)
+	
 	// Tests abs
 	val absn1 = n1.abs
 	val nr0to5 = nrm5to2.abs

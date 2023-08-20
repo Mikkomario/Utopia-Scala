@@ -761,7 +761,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * @param requireFocus Whether the escape key-press should only be recognized if this window is the
 	  *                     focused window at that time
 	  */
-	// FIXME: Doesn't work at all
 	def setToCloseOnEsc(requireFocus: Boolean = true) = {
 		val handler = if (requireFocus) focusKeyStateHandler else keyStateHandler
 		handler += KeyStateListener.onKeyReleased(KeyEvent.VK_ESCAPE) { _ => close() }

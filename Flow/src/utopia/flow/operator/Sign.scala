@@ -160,7 +160,10 @@ sealed trait Sign extends SignOrZero with Reversible[Sign]
 	override def binary: Option[Sign] = Some(this)
 	
 	override def *[N](num: N)(implicit n: Numeric[N]): N = if (isPositive) num else n.negate(num)
-	override def *(sign: Sign): Sign = if (this == sign) this else opposite
+	override def *(sign: Sign): Sign = sign match {
+		case Positive => this
+		case Negative => opposite
+	}
 	
 	
 	// OTHER	----------------------------

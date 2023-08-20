@@ -1,5 +1,6 @@
 package utopia.flow.util
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.operator.ComparisonOperator.{Always, DirectionalComparison, Equality, Inequality, Never}
 import utopia.flow.operator.Extreme.{Max, Min}
@@ -19,8 +20,9 @@ import scala.math.Numeric.Implicits.infixNumericOps
   * @since 18.8.2023, v2.2
   * @tparam N Type of numeric values used
   */
+// TODO: Add support for *
 sealed trait UncertainNumber[N]
-	extends Uncertain[N] with Reversible[UncertainNumber[N]] with Scalable[N, UncertainNumber[N]]
+	extends Uncertain[N] with Reversible[UncertainNumber[N]] with Scalable[UncertainNumber[N], UncertainNumber[N]]
 		with Combinable[UncertainNumber[N], UncertainNumber[N]] with HasUncertainSign
 {
 	// ABSTRACT ------------------------
@@ -44,6 +46,11 @@ sealed trait UncertainNumber[N]
 	  * @return Copy of this number increased by the specified amount (result may be uncertain)
 	  */
 	def +(other: N): UncertainNumber[N]
+	/**
+	  * @param mod A scaling modifier
+	  * @return A scaled copy of this number
+	  */
+	def *(mod: N): UncertainNumber[N]
 	
 	/**
 	  * @param other Another uncertain number
@@ -278,6 +285,8 @@ object UncertainNumber
 		// Anything times zero is zero
 		override def *(mod: N): UncertainNumber[N] =
 			if (mod == n.zero) CertainNumber(n.zero) else this
+		override def *(mod: UncertainNumber[N]): UncertainNumber[N] =
+			if (mod.isCertainlyZero) CertainNumber(n.zero) else this
 		
 		override def +(other: N): UncertainNumber[N] = this
 		override def +(other: UncertainNumber[N]): UncertainNumber[N] = this
@@ -309,6 +318,7 @@ object UncertainNumber
 		override def mayBe(v: N): Boolean = v == value
 		
 		override def *(mod: N): UncertainNumber[N] = copy(value * mod)
+		override def *(mod: UncertainNumber[N]): UncertainNumber[N] = mod * value
 		
 		override def +(other: N): UncertainNumber[N] = CertainNumber(value + other)
 		override def +(other: UncertainNumber[N]): UncertainNumber[N] = {
@@ -372,6 +382,27 @@ object UncertainNumber
 		override def *(mod: N): UncertainNumber[N] = Sign.of(mod) match {
 			case s: Sign => copy(s * targetSign)
 			case Neutral => CertainNumber(n.zero)
+		}
+		override def *(mod: UncertainNumber[N]): UncertainNumber[N] = {
+			val sign = mod.sign
+			sign.binary match {
+				case Some(binarySign) =>
+					binarySign.exact match {
+						// Case: The number had a specific positive or negative sign (may be mixed with 0)
+						case Some(exactSign) =>
+							val corrected = copy(exactSign * targetSign)
+							// Case: 0 was also a possibility => Includes that as a possible result
+							if (sign.mayBeNeutral)
+								corrected.orZero
+							// Case: 0 is impossible => Returns positive or negative range
+							else
+								corrected
+						// Case: The number might have been positive or negative => Can't determine sign
+						case None => AnyNumber()
+					}
+				// Case: The number was exactly 0 => results in 0
+				case None => CertainNumber(n.zero)
+			}
 		}
 		
 		override def +(other: N): UncertainNumber[N] = {
@@ -519,6 +550,50 @@ object UncertainNumber
 				case modSign: Sign => copy(threshold * mod, operator * modSign)
 				// Case: Multiplying with 0 => Always 0, no matter the number
 				case Neutral => CertainNumber(n.zero)
+			}
+		}
+		override def *(mod: UncertainNumber[N]): UncertainNumber[N] = {
+			mod.exact match {
+				// Case: Exact modifier => Delegates to another method
+				case Some(mod) => this * mod
+				case None =>
+					operator match {
+						// Case: This is exact => Delegates to the modifier
+						case Equality => mod * threshold
+						// Case: Inequality => Only works with exact numbers
+						case Inequality =>
+							(mod * threshold).exact match {
+								case Some(exact) => copy(exact)
+								case None => AnyNumber()
+							}
+						case Always => AnyNumber()
+						case Never => this
+						// Case: Directional open range => Sign matters
+						case DirectionalComparison(direction, includesEqual) =>
+							val modSign = mod.sign
+							modSign.binary match {
+								case Some(sign) =>
+									sign.exact match {
+										// Case: Modifier sign may be determined => Open range end may be determined
+										case Some(sign) =>
+											val resultingDirection = sign * direction
+											// Attempts to specify the closed side
+											(mod * threshold).options(resultingDirection.opposite.extreme) match {
+												// Case: Closed side possible => Creates a new open range
+												case Some(leastValue) =>
+													NumberComparison(leastValue,
+														DirectionalComparison(resultingDirection,
+															includesEqual || modSign.mayBeNeutral))
+												// Case: The other side is also open => Uncertain number
+												case None => AnyNumber()
+											}
+										// Case: Uncertain sign => Can't determine any limits
+										case None => AnyNumber()
+									}
+								// Case: Times 0 => 0 (should come here)
+								case None => CertainNumber(n.zero)
+							}
+					}
 			}
 		}
 		
@@ -787,6 +862,47 @@ object UncertainNumber
 		override def negativeAbs: UncertainNumber[N] = -abs
 		
 		override def *(mod: N): UncertainNumber[N] = copy(range * mod)
+		override def *(mod: UncertainNumber[N]): UncertainNumber[N] = mod.exact match {
+			case Some(exactMod) => this * exactMod
+			case None =>
+				exact match {
+					case Some(exact) => mod * exact
+					case None =>
+						mod match {
+							// Case: Multiplying by a range of values =>
+							//       Determines the most extreme possible values and forms a range between them
+							case UncertainNumberRange(r2) =>
+								val v1 = range.toPair
+								val v2 = r2.toPair
+								UncertainNumberRange(
+									NumericSpan((v1.mergeWith(v2) { _ * _ } ++ v1.mergeWith(v2.reverse) { _ * _ }).minMax))
+							// Case: Multiplying by some positive or negative number =>
+							//       Single-sign ranges are converted to <= 0 or >= 0 ranges
+							//       (assumes that fractional multiplying is possible)
+							case NumbersWithSign(modSign) =>
+								sign.binary.flatMap { _.exact } match {
+									case Some(mySign) =>
+										NumberComparison(n.zero,
+											DirectionalComparison(mySign * modSign, includesEqual = sign.mayBeNeutral))
+									case None => AnyNumber()
+								}
+							case NumberComparison(t, operator) =>
+								operator match {
+									case DirectionalComparison(direction, includesEqual) =>
+										// Case: Combining a single-sign range with an open range
+										if (isCertainlyNotPositive || isCertainlyNotNegative) {
+											val end = range(direction.opposite.extreme)
+											NumberComparison(t * end,
+												DirectionalComparison(direction, includesEqual))
+										}
+										else
+											AnyNumber()
+									case _ => AnyNumber()
+								}
+							case _ => AnyNumber()
+						}
+				}
+		}
 		
 		override def +(other: N): UncertainNumber[N] = map { _ + other }
 		override def +(other: UncertainNumber[N]): UncertainNumber[N] = other match {
