@@ -116,6 +116,20 @@ trait FlagLike extends Any with Changing[Boolean]
 			Continue
 	}
 	/**
+	  * Performs the specified function once this flag is reset / not set.
+	  * If this flag is not set at this time, calls the function immediately.
+	  * @param f A function to call once this flag is not set (will be called 0 or 1 times only)
+	  * @tparam U Arbitrary function result type
+	  */
+	def onceNotSet[U](f: => U) = addListenerAndSimulateEvent(true) { e =>
+		if (e.newValue)
+			Continue
+		else {
+			f
+			Detach
+		}
+	}
+	/**
 	  * Performs the specified function once this flag is set.
 	  * If this flag is already set, will only call the specified function after this flag has been
 	  * reset and then set again.

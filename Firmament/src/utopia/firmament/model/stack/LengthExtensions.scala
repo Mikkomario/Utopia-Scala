@@ -27,7 +27,6 @@ object LengthExtensions
 		 * @return A stacklength that has no maximum or minimum, preferring this length
 		 */
 		def any(implicit n: Numeric[A]) = StackLength.any(double)
-		
 		/**
 		 * @return A stacklength fixed to this length
 		 */
@@ -37,7 +36,6 @@ object LengthExtensions
 		 * @return A stacklength maximized on this length with no minimum
 		 */
 		def downscaling(implicit n: Numeric[A]) = StackLength.downscaling(double)
-		
 		/**
 		 * @return A stacklength minimized on this length with no maximum
 		 */
@@ -48,7 +46,6 @@ object LengthExtensions
 		 * @return A stack length between this and maximum, preferring this
 		 */
 		def upTo(max: Double)(implicit n: Numeric[A]) = StackLength(double, double, max)
-		
 		/**
 		 * @param min Minimum length
 		 * @return A stack length between minimum and this, preferring this
@@ -151,6 +148,38 @@ object LengthExtensions
 		 */
 		def toStackInsetsWith(other: Insets)(f: (Double, Double) => StackLength) = stack.StackInsets(
 			(i.amounts.keySet ++ other.amounts.keySet).map { d => d -> f(i(d), other(d)) }.toMap)
+	}
+	
+	implicit class StackConvertibleSize(val s: Size) extends AnyVal
+	{
+		/**
+		  * @return A stack size where this is the optimal size, but the actual size may vary freely
+		  */
+		def any = StackSize.any(s)
+		/**
+		  * @return A stack size that matches this size exactly
+		  */
+		def fixed = StackSize.fixed(s)
+		
+		/**
+		  * @return A stack size where this is the optimal and maximum size
+		  */
+		def downscaling = StackSize.downscaling(s)
+		/**
+		  * @return A stack size where this is the optimal and minimum size
+		  */
+		def upscaling = StackSize.upscaling(s)
+		
+		/**
+		  * @param max Maximum size
+		  * @return A stack size where this is the optimal and minimum size, and where the specified maximum applies
+		  */
+		def upTo(max: Size) = StackSize(s, s, Some(max))
+		/**
+		  * @param min Minimum size
+		  * @return A stack size where this is the optimal and maximum size, and where the specified minimum applies
+		  */
+		def downTo(min: Size) = StackSize(min, s, Some(s))
 	}
 	
 	implicit class StackingLinearAlignment(val a: LinearAlignment) extends AnyVal

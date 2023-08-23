@@ -22,6 +22,8 @@
   - **SingleColorIcon** now extends **StandardSizeAdjustable**, offering a number of new utility functions
 - **TextContext** classes now support automated line-splitting
   - Please note, however, that not all components necessarily follow this property, especially so in **Reflection**
+- You can now specify a custom **Logger** implementation for the **AwtEventThread** -interface
+  - See `AwtEventThread.logger`
 ### New Methods
 - **BaseContext** & **TextContext**
   - Added multiple utility functions that utilize the new **SizeCategory** class
@@ -35,8 +37,16 @@
   - Added multiple new methods that utilize **SizeCategory**
 - **SingleColorIcon** (object)
   - Added `.alwaysEmpty`
+- **Size** (**LengthExtensions**)
+  - Added methods for converting **Sizes** to **StackSizes**
 ### Other Changes
 - **Window** mouse move events are now only fired while the window has focus, except in windows that can't gain focus.
+- Button hotkeys are now only triggered while the applicable window has focus
+  - This is configurable for each hotkey (see `.triggeringWithoutWindowFocus` in **HotKey**)
+  - Non-focusable windows are excluded from this rule
+- Modified how **Window** bounds get updated and when the **Window**'s `openedFlag`, `openFlag` and `openFuture` resolve
+- Added better exception-handling to the **AwtEventThread**
+  - Exceptions are no longer propagated to the AWT event thread itself, except for **InterruptedExceptions**
 - **SingleColorIconCache** now logs errors and appends ".png" to file names in case the file extension is not specified
 - **SingleColorIcon** now extends **MayBeEmpty**
 - **CachingStackable** now rounds stack size values before caching them (this update may be removed in the future)

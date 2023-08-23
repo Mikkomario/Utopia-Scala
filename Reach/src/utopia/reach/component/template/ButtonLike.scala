@@ -177,12 +177,12 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		
 		// IMPLEMENTED	---------------------------
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
-			if (hotKeys.exists { _.isTriggeredWith(event.keyStatus) })
+		override def onKeyState(event: KeyStateEvent) = {
+			lazy val windowHasFocus = parentWindow.exists { window => window.isFocused || !window.isFocusableWindow }
+			if (hotKeys.exists { key =>
+				key.isTriggeredWith(event.keyStatus) && (key.triggersWithoutWindowFocus || windowHasFocus) })
 				down = true
-			else if (down)
-			{
+			else if (down) {
 				trigger()
 				down = false
 			}

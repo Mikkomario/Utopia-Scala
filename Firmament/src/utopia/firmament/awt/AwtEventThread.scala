@@ -7,12 +7,13 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.SysErrLogger
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.Instant
 import javax.swing.SwingUtilities
+import scala.concurrent.Promise
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, Promise}
+import scala.util.Try
 
 /**
   * Methods for performing operations on the awt event thread
@@ -27,9 +28,13 @@ object AwtEventThread
 	  * Whether debugging mode should be enabled
 	  */
 	var debugMode = false
+	/**
+	  * The logging implementation used for handling errors that would otherwise be thrown to the AWT event thread.
+	  */
+	implicit var logger: Logger = SysErrLogger
 	
-	private val taskKeepDuration = 3.seconds
-	private val tasks = VolatileList[TaskWrapper[_]]()
+	private lazy val taskKeepDuration = 3.seconds
+	private lazy val tasks = VolatileList[TaskWrapper[_]]()
 	
 	
 	// COMPUTED	----------------------------
@@ -64,30 +69,20 @@ object AwtEventThread
 	// OTHER	----------------------------
 	
 	/**
-	  * Performs an operation in the awt event thread. Ignores operation return value.
+	  * Performs an operation in the awt event thread.
+	  * Ignores operation return value and logs possibly encountered failures.
 	  * @param operation An operation that should be performed in the awt event thread
 	  * @tparam U Arbitrary result type
 	  */
 	def async[U](operation: => U): Unit = {
 		if (SwingUtilities.isEventDispatchThread)
-			operation
-		else
-			_async(operation)
-	}
-	
-	private def _async[U](operation: => U): Unit = {
-		if (debugMode) {
-			val task = new TaskWrapper(operation)
-			tasks.update { old =>
-				val now = Instant.now()
-				old.dropWhile { _.endTime.exists { now - _ > taskKeepDuration } } :+ task
+			Try { operation }.failure.foreach {
+				case e: InterruptedException => throw e
+				case e => logger(e)
 			}
-			SwingUtilities.invokeLater(task)
-		}
 		else
-			SwingUtilities.invokeLater(() => operation)
+			_async(operation) { logger(_) }
 	}
-	
 	/**
 	  * Performs an operation in the awt event thread and returns the operation completion as a future
 	  * @param operation An operation that will be performed
@@ -96,20 +91,13 @@ object AwtEventThread
 	  */
 	def future[A](operation: => A) = {
 		if (SwingUtilities.isEventDispatchThread)
-			Future.successful(operation)
+			Try(operation).toCompletedFuture
 		else {
 			val completionPromise = Promise[A]()
-			_async { completionPromise.success(operation) }
+			_async { completionPromise.success(operation) }(completionPromise.failure)
 			completionPromise.future
 		}
 	}
-	
-	private def _future[A](operation: => A) = {
-		val completionPromise = Promise[A]()
-		_async { completionPromise.success(operation) }
-		completionPromise.future
-	}
-	
 	/**
 	  * Performs the operation in the awt event thread, blocking until the operation has completed
 	  * @param operation An operation to perform
@@ -123,6 +111,32 @@ object AwtEventThread
 			_future(operation).waitFor().get
 	}
 	
+	private def _future[A](operation: => A) = {
+		val completionPromise = Promise[A]()
+		// Possible failures are forwarded to the promise / future
+		_async { completionPromise.success(operation) }(completionPromise.failure)
+		completionPromise.future
+	}
+	
+	private def _async[U](operation: => U)(onFailure: Throwable => Unit): Unit = {
+		if (debugMode) {
+			val task = new TaskWrapper(operation, onFailure)
+			tasks.update { old =>
+				lazy val now = Instant.now()
+				old.dropWhile { _.endTime.exists { now - _ > taskKeepDuration } } :+ task
+			}
+			SwingUtilities.invokeLater(task)
+		}
+		else
+			SwingUtilities.invokeLater { () =>
+				Try { operation }.failure.foreach {
+					// InterruptedExceptions are not caught but rethrown
+					case e: InterruptedException => throw e
+					case e => onFailure(e)
+				}
+			}
+	}
+	
 	
 	// NESTED	----------------------------
 	
@@ -130,7 +144,7 @@ object AwtEventThread
 		private lazy val exc = new ThreadPool("AwtEventThreadMonitor", coreSize = 0, maxSize = 10)(SysErrLogger)
 	}
 	
-	private class TaskWrapper[U](operation: => U) extends Runnable
+	private class TaskWrapper[U](operation: => U, onFailure: Throwable => Unit) extends Runnable
 	{
 		// ATTRIBUTES	--------------------
 		
@@ -165,16 +179,22 @@ object AwtEventThread
 		}
 		
 		override def run() = {
-			startTime = Some(Now)
-			val t = Thread.currentThread()
-			val waitLock = new AnyRef
-			Delay(3.seconds, waitLock) {
-				if (_endTime.isEmpty)
-					t.interrupt()
-			}(TaskWrapper.exc, SysErrLogger)
-			operation
-			_endTime = Some(Now)
-			WaitUtils.notify(waitLock)
+			Try {
+				startTime = Some(Now)
+				val t = Thread.currentThread()
+				val waitLock = new AnyRef
+				Delay(3.seconds, waitLock) {
+					if (_endTime.isEmpty)
+						t.interrupt()
+				}(TaskWrapper.exc, SysErrLogger)
+				operation
+				_endTime = Some(Now)
+				WaitUtils.notify(waitLock)
+			}.failure.foreach {
+				// InterruptedExceptions are not caught but forwarded further
+				case e: InterruptedException => throw e
+				case e => onFailure(e)
+			}
 		}
 	}
 }

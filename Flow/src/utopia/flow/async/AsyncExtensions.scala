@@ -336,4 +336,15 @@ object AsyncExtensions
 		  */
 		def futureResult(implicit exc: ExecutionContext) = Future { waitForResult() }
 	}
+	
+	implicit class CompletedAttempt[A](val t: Try[A]) extends AnyVal
+	{
+		/**
+		  * @return A resolved future (successful or failed) that contains the result of this Try
+		  */
+		def toCompletedFuture = t match {
+			case Success(result) => Future.successful(result)
+			case Failure(e) => Future.failed(e)
+		}
+	}
 }

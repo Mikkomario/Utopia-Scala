@@ -8,6 +8,7 @@ import utopia.firmament.context.{ComponentCreationDefaults, WindowContext}
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
@@ -16,8 +17,9 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.async.VolatileOption
-import utopia.flow.view.mutable.eventful.{Flag, IndirectPointer, EventfulPointer, ResettableFlag}
+import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, Flag, IndirectPointer, ResettableFlag}
+import utopia.flow.view.template.eventful.FlagLike._
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
@@ -31,7 +33,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 
 import java.awt.Frame
-import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
+import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent, WindowAdapter, WindowEvent}
 import javax.swing.{JDialog, JFrame}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -44,6 +46,17 @@ object Window
 	
 	// The smallest allowed window icon size
 	private val minIconSize = Size.square(16)
+	
+	/**
+	  * The maximum duration given to the window initialization process to block the calling thread while
+	  * waiting for the AWT event thread access or completion.
+	  *
+	  * This value is used as a default during window creation, but may be overruled by another value
+	  * specified during window-creation.
+	  *
+	  * By default, this value is zero and no warnings will be fired.
+	  */
+	var maxInitializationWaitDurationDefault: Duration = Duration.Zero
 	
 	
 	// OTHER    ----------------------------
@@ -68,6 +81,14 @@ object Window
 	  *                            Default = center = The center of this window will remain in the same place upon resize, if possible.
 	  * @param icon                Icon displayed on this window, initially.
 	  *                            Default = common default (see [[ComponentCreationDefaults]])
+	  * @param maxInitializationWaitDuration The maximum duration this window is allowed to block the current thread
+	  *                                      during the initialization process.
+	  *                                      The initialization occurs within the AWT event thread and by default
+	  *                                      this thread will wait until it is completed or until this threshold duration
+	  *                                      is reached.
+	  *                                      Default = the default specified in the Window object,
+	  *                                      which by default is 0.1 seconds.
+	  *                                      A warning is logged if this threshold is reached.
 	  * @param borderless          Whether this window is 'undecorated', i.e. has no OS headers or borders.
 	  *                            Set to true if you implement your own header,
 	  *                            or if you're creating a temporary pop-up window.
@@ -96,23 +117,27 @@ object Window
 	  *
 	  *                                 Default = false = window automatically updates its bounds
 	  * @param exc                 Implicit execution context
+	  * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
+	  *               as well as possible window initialization warnings.
 	  * @return A new window
 	  */
 	def apply(container: java.awt.Container, content: Stackable, eventActorHandler: ActorHandler,
 	          parent: Option[java.awt.Window], title: LocalizedString = LocalizedString.empty,
 	          resizeLogic: WindowResizePolicy = Program, screenBorderMargins: Insets = Insets.zero,
 	          getAnchor: Bounds => Point = _.center, icon: Image = ComponentCreationDefaults.windowIcon,
+	          maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
 	          ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false,
 	          disableAutoBoundsUpdates: Boolean = false)
-	         (implicit exc: ExecutionContext) =
+	         (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		val window = parent match {
 			case Some(parent) => Left(new JDialog(parent, title.string))
 			case None => Right(new JFrame(title.string))
 		}
 		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins, getAnchor, icon,
-			!borderless, fullScreen, !disableFocus, !ignoreScreenInsets, enableTransparency, disableAutoBoundsUpdates)
+			maxInitializationWaitDuration, !borderless, fullScreen, !disableFocus, !ignoreScreenInsets,
+			enableTransparency, disableAutoBoundsUpdates)
 	}
 	
 	/**
@@ -127,6 +152,14 @@ object Window
 	  * @param getAnchor           A function for determining the so-called anchor position within this window's bounds on screen.
 	  *                            When this window is resized, the anchor position is not moved if at all possible.
 	  *                            Default = center = The center of this window will remain in the same place upon resize, if possible.
+	  * @param maxInitializationWaitDuration The maximum duration this window is allowed to block the current thread
+	  *                                      during the initialization process.
+	  *                                      The initialization occurs within the AWT event thread and by default
+	  *                                      this thread will wait until it is completed or until this threshold duration
+	  *                                      is reached.
+	  *                                      Default = the default specified in the Window object,
+	  *                                      which by default is 0.1 seconds.
+	  *                                      A warning is logged if this threshold is reached.
 	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
 	  *                                 This concerns bounds updates that occur at two places:
 	  *                                 1) When this window is constructed (once), and
@@ -136,16 +169,19 @@ object Window
 	  *                                 upon these two cases.
 	  *
 	  *                                 Default = false = window automatically updates its bounds
+	  * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
+	  *               as well as possible window initialization warnings.
 	  * @return A new window
 	  */
 	def contextual(container: java.awt.Container, content: Stackable, parent: Option[java.awt.Window] = None,
 	               title: LocalizedString = LocalizedString.empty, getAnchor: Bounds => Point = _.center,
+	               maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	               disableAutoBoundsUpdates: Boolean = false)
-	              (implicit context: WindowContext, exc: ExecutionContext) =
+	              (implicit context: WindowContext, exc: ExecutionContext, logger: Logger) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
-			context.screenBorderMargins, getAnchor, context.icon, !context.windowBordersEnabled,
-			context.fullScreenEnabled, !context.focusEnabled, !context.screenInsetsEnabled, context.transparencyEnabled,
-			disableAutoBoundsUpdates)
+			context.screenBorderMargins, getAnchor, context.icon, maxInitializationWaitDuration,
+			!context.windowBordersEnabled, context.fullScreenEnabled, !context.focusEnabled,
+			!context.screenInsetsEnabled, context.transparencyEnabled, disableAutoBoundsUpdates)
 }
 
 /**
@@ -177,6 +213,14 @@ object Window
   *                  Default = center = The center of this window will remain in the same place upon resize, if possible.
   * @param initialIcon Icon displayed on this window, initially.
   *                    Default = common default (see [[ComponentCreationDefaults]])
+  * @param maxInitializationWaitDuration The maximum duration this window is allowed to block the current thread
+  *                                      during the initialization process.
+  *                                      The initialization occurs within the AWT event thread and by default
+  *                                      this thread will wait until it is completed or until this threshold duration
+  *                                      is reached.
+  *                                      Default = the default specified in the Window object,
+  *                                                which by default is 0.1 seconds.
+  *                                      A warning is logged if this threshold is reached.
   * @param hasBorders Whether this window is 'decorated', i.e. has the main OS header and borders.
   *                   Set to false if you implement your own header, or if you're creating a temporary pop-up window.
   *                   Notice that without the OS header, the user can't move this window by default.
@@ -203,14 +247,19 @@ object Window
   *                                 upon these two cases.
   *
   *                                 Default = false = window automatically updates its bounds
+  * @param exc Implicit execution context
+  * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
+  *               as well as possible window initialization warnings.
   */
 class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt.Container, content: Stackable,
              eventActorHandler: ActorHandler, resizeLogic: WindowResizePolicy = Program,
              screenBorderMargins: Insets = Insets.zero, getAnchor: Bounds => Point = _.center,
-             initialIcon: Image = ComponentCreationDefaults.windowIcon, val hasBorders: Boolean = true,
-             isFullScreen: Boolean = false, val isFocusable: Boolean = true, respectScreenInsets: Boolean = true,
-             enableTransparency: Boolean = false, disableAutoBoundsUpdates: Boolean = false)
-            (implicit exc: ExecutionContext)
+             initialIcon: Image = ComponentCreationDefaults.windowIcon,
+             maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
+             val hasBorders: Boolean = true, isFullScreen: Boolean = false, val isFocusable: Boolean = true,
+             respectScreenInsets: Boolean = true, enableTransparency: Boolean = false,
+             disableAutoBoundsUpdates: Boolean = false)
+            (implicit exc: ExecutionContext, logger: Logger)
 	extends CachingStackable
 {
 	// ATTRIBUTES   ----------------
@@ -232,7 +281,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	val iconPointer = new EventfulPointer(initialIcon)
 	
 	// Stores window state in private flags
-	// These are only updated based on awt window events
+	// These are updated based on awt window events, but also accept preliminary updates from other sources
 	private val _openedFlag = Flag()
 	private val _closedFlag = Flag()
 	private val _visibleFlag = ResettableFlag()
@@ -242,11 +291,19 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// Stores position and size in pointers, which are only updated on window events
 	private val _positionPointer = new EventfulPointer(Point.origin)
-	private val _sizePointer = new EventfulPointer(Size.zero)
+	// Pre-initializes the window size based on container size.
+	// Won't take into account the window insets. Actual size is initialized after pack() in the AWT event thread
+	private val _sizePointer = new EventfulPointer(Size.of(container.getSize))
 	
 	// Stores calculated anchor, which is used in repositioning after size changes
 	// This pointer is cleared after the anchor has been resolved / actuated
 	private val pendingAnchor = VolatileOption[Point]()
+	
+	// Tracks situations where position and/or size are yet to update because the updates are performed within
+	// the AWT event thread
+	// BoundLocks contains unique instances for each pending position/size/bounds event
+	private val boundLocks = Volatile(Set[AnyRef]())
+	private val boundsUpdatingFlag = boundLocks.lightMap { _.nonEmpty }
 	
 	/**
 	  * A flag that contains true whenever this window is fully visible
@@ -257,7 +314,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * A future that resolves once this window is displayed for the first time
 	  */
-	val openedFuture = fullyVisibleFlag.findMapFuture { if (_) Some(()) else None }
+	val openedFuture = _openedFlag.future
 	
 	/**
 	  * A flag that contains true while this window is open.
@@ -357,7 +414,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// INITIAL CODE ----------------
 	
-	AwtEventThread.async {
+	// These initial actions are performed in the AWT event thread
+	// This thread waits for the completion of these actions for some time, but not indefinitely
+	AwtEventThread.future {
 		// Starts tracking window state
 		component.addWindowListener(WindowStateListener)
 		
@@ -384,9 +443,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Initializes position and size
 		_positionPointer.value = Point.of(component.getLocation)
 		_sizePointer.value = Size.of(component.getSize)
-		if (!disableAutoBoundsUpdates)
-			optimizeBounds(dictateSize = true)
-		
+			
 		// Registers to update the state when the wrapped window updates
 		component.addComponentListener(WindowComponentStateListener)
 		
@@ -411,6 +468,31 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 								.takeWhile { _.size.existsDimensionWith(minIconSize) { _ >= _ } }
 								.flatMap { _.toAwt }.toVector).asJava)
 						}
+					}
+				}
+				Continue
+			}
+		}
+		
+		// Whenever this window becomes visible, updates content layout
+		// (layout updates are skipped while this window is not visible)
+		fullyVisibleFlag.addListener { e =>
+			if (hasClosed)
+				Detach
+			else {
+				if (e.newValue) {
+					AwtEventThread.async {
+						content.resetCachedSize()
+						resetCachedSize()
+						// Automatic bounds-updates may be disabled
+						if (disableAutoBoundsUpdates || !optimizeBounds()) {
+							updateLayout()
+							content.updateLayout()
+							component.repaint()
+						}
+						// Marks this window as opened when becomes visible the first time
+						if (_openedFlag.isNotSet)
+							boundsUpdatingFlag.onceNotSet { _openedFlag.set() }
 					}
 				}
 				Continue
@@ -449,29 +531,14 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
 			}
 		}
-		
-		// Whenever this window becomes visible, updates content layout
-		// (layout updates are skipped while this window is not visible)
-		fullyVisibleFlag.addListener { e =>
-			if (hasClosed)
-				Detach
-			else {
-				if (e.newValue) {
-					AwtEventThread.async {
-						content.resetCachedSize()
-						resetCachedSize()
-						// Automatic bounds-updates may be disabled
-						if (disableAutoBoundsUpdates || !optimizeBounds()) {
-							updateLayout()
-							content.updateLayout()
-							component.repaint()
-						}
-					}
-				}
-				Continue
-			}
+	}.waitFor(maxInitializationWaitDuration).failure
+		// Logs a warning if the window-initialization takes longer than the allowed block time
+		.foreach { e =>
+			if (maxInitializationWaitDuration > Duration.Zero)
+				logger(e,
+					s"Warning: Window initialization process took more than ${
+						maxInitializationWaitDuration.description}. The process will be completed in another thread.")
 		}
-	}
 	
 	
 	// COMPUTED    ----------------
@@ -648,27 +715,44 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	override def position = _positionPointer.value
 	override def position_=(newPosition: Point) = {
-		if (newPosition != position)
-			AwtEventThread.async { component.setLocation(newPosition.toAwtPoint) }
+		if (newPosition != position) {
+			val lock = startBoundsUpdate()
+			_positionPointer.value = newPosition
+			AwtEventThread.async {
+				component.setLocation(newPosition.toAwtPoint)
+				completeBoundsUpdate(lock)
+			}
+		}
 	}
 	
 	override def size = _sizePointer.value
 	override def size_=(newSize: Size) = {
 		if (newSize != size) {
+			val lock = startBoundsUpdate()
 			// Remembers the anchor position for repositioning
 			pendingAnchor.setOne(absoluteAnchorPosition)
+			_sizePointer.value = newSize
 			val dims = newSize.toDimension
 			AwtEventThread.async {
 				component.setPreferredSize(dims)
 				component.setSize(dims)
+				completeBoundsUpdate(lock)
 			}
 		}
 	}
 	
 	override def bounds: Bounds = _boundsPointer.value
 	override def bounds_=(b: Bounds): Unit = {
-		if (b != bounds)
-			AwtEventThread.async { component.setBounds(b.toAwt) }
+		if (b != bounds) {
+			val lock = startBoundsUpdate()
+			_sizePointer.value = b.size
+			_positionPointer.value = b.position
+			AwtEventThread.async {
+				component.setPreferredSize(b.size.toDimension)
+				component.setBounds(b.toAwt)
+				completeBoundsUpdate(lock)
+			}
+		}
 	}
 	
 	override def children: Vector[Component] = Vector(content)
@@ -707,6 +791,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * Please note that this has no effect after this window has closed.
 	  * @param gainFocus Whether this window should be allowed to gain focus when it becomes visible
 	  *                  (default = whether focus is generally allowed in this window)
+	  * @param centerOnParent Whether this window should be positioned so that it lies at the center of
+	  *                       its parent component (center of screen if there is no parent window).
+	  *                       Default = false.
 	  * @return Whether the state of this window was affected
 	  */
 	def display(gainFocus: Boolean = isFocusable, centerOnParent: Boolean = false): Boolean = {
@@ -719,7 +806,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				if (visible)
 					this.centerOnParent()
 				else
-					visiblePointer.onNextChange { _ => this.centerOnParent() }
+					visiblePointer.onNextChange { _ =>
+						boundsUpdatingFlag.onceNotSet { this.centerOnParent() }
+					}
 			}
 			
 			// Case: Default focus option => Updates visibility
@@ -738,6 +827,28 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				true
 			}
 		}
+	}
+	/**
+	  * Displays this window, making it visible
+	  * @param gainFocus Whether this window should be allowed to gain focus when it becomes visible
+	  *                  (default = whether focus is generally allowed in this window)
+	  * @param centerOnParent Whether this window should be positioned so that it lies at the center of
+	  *                       its parent component (center of screen if there is no parent window).
+	  *                       Default = false.
+	  * @param f A function to run after this window has been made visible
+	  * @tparam U Arbitrary function result type
+	  * @return Whether the visibility state of this window was affected
+	  */
+	def displayAndThen[U](gainFocus: Boolean = isFocusable, centerOnParent: Boolean = false)(f: => U) = {
+		val wasOpen = hasOpened
+		// Displays this window
+		val result = display(gainFocus, centerOnParent)
+		// Triggers the after-effect once visible with up-to-date bounds
+		if (wasOpen)
+			_visibleFlag.onceSet { boundsUpdatingFlag.onceNotSet(f) }
+		else
+			openedFuture.foreach { _ => f }
+		result
 	}
 	
 	/**
@@ -801,16 +912,13 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * Makes it so that this window closes automatically after the specified time period
 	  * @param delay Delay before closing this window
-	  * @param log Implicit logging implementation for handling unexpected non-critical errors
 	  */
-	def setToCloseAfter(delay: Duration)(implicit log: Logger) = delay.finite.foreach { Delay(_) { close() } }
+	def setToCloseAfter(delay: Duration) = delay.finite.foreach { Delay(_) { close() } }
 	/**
 	  * Sets it so that the JVM will exit once this window closes.
 	  * @param delay Delay after window closing, before the closing of the JVM
-	  * @param exc   Implicit execution context
-	  * @param log Implicit logging for encountered errors
 	  */
-	def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext, log: Logger) =
+	def setToExitOnClose(delay: FiniteDuration = Duration.Zero) =
 		closeFuture.onComplete { res =>
 			res.logFailure
 			Delay(delay) { System.exit(0) }
@@ -911,9 +1019,23 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			}
 	}
 	
+	// Marks that some variant of setBounds is pending
+	// Returns the lock to release
+	private def startBoundsUpdate() = {
+		val lock = new AnyRef()
+		boundLocks.update { _ + lock }
+		lock
+	}
+	private def completeBoundsUpdate(lock: AnyRef) = boundLocks.update { _ - lock }
+	
 	private def centerOn(component: java.awt.Component) = {
-		if (isNotFullScreen)
-			AwtEventThread.async { this.component.setLocationRelativeTo(component) }
+		if (isNotFullScreen) {
+			val lock = startBoundsUpdate()
+			AwtEventThread.async {
+				this.component.setLocationRelativeTo(component)
+				completeBoundsUpdate(lock)
+			}
+		}
 	}
 	
 	// Ensures that this window is kept within the screen area
@@ -955,7 +1077,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// NESTED   -------------------------
 	
-	private object WindowComponentStateListener extends ComponentAdapter
+	private object WindowComponentStateListener extends ComponentListener
 	{
 		override def componentShown(e: ComponentEvent) = _visibleFlag.set()
 		override def componentHidden(e: ComponentEvent) = _visibleFlag.reset()
@@ -981,7 +1103,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	}
 	private object WindowStateListener extends WindowAdapter
 	{
-		override def windowOpened(e: WindowEvent) = _openedFlag.set()
+		override def windowOpened(e: WindowEvent) = _visibleFlag.set()
 		
 		override def windowIconified(e: WindowEvent) = _minimizedFlag.set()
 		override def windowDeiconified(e: WindowEvent) = _minimizedFlag.reset()

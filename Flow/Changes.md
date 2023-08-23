@@ -68,6 +68,8 @@
   - Added `.mapSide(End)(...)` for symmetric Eithers
 - **Extreme** (object)
   - Added `.apply(Sign)`
+- **FlagLike**
+  - Added `.onceNotSet(...)`
 - **HasEnds** & **IterableHasEnds** (object)
   - Added constructors
 - **Iterable** (**CollectionExtensions**)
@@ -99,8 +101,11 @@
   - Added `.causesIterator`
 - **TreeLike**
   - Added `.bottomToTopNodesIterator`
-- **Try** (**CollectionExtensions**)
-  - Added `.logToOption` and `.logToOptionWithMessage(String)`
+- **Try**
+  - **AsyncExtensions**
+    - Added `.toCompletedAttempt: Future[A]`
+  - **CollectionExtensions**
+    - Added `.logToOption` and `.logToOptionWithMessage(String)`
 - **Year** (**TimeExtensions**)
   - Added `.dates`
 ### Other
