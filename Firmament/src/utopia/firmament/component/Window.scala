@@ -717,6 +717,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	override def position_=(newPosition: Point) = {
 		if (newPosition != position) {
 			val lock = startBoundsUpdate()
+			pendingAnchor.clear()
 			_positionPointer.value = newPosition
 			AwtEventThread.async {
 				component.setLocation(newPosition.toAwtPoint)
@@ -730,7 +731,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		if (newSize != size) {
 			val lock = startBoundsUpdate()
 			// Remembers the anchor position for repositioning
-			pendingAnchor.setOne(absoluteAnchorPosition)
+			if (isFullyVisible) {
+				println("Setting anchor")
+				pendingAnchor.setOne(absoluteAnchorPosition)
+			}
 			_sizePointer.value = newSize
 			val dims = newSize.toDimension
 			AwtEventThread.async {
@@ -745,6 +749,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	override def bounds_=(b: Bounds): Unit = {
 		if (b != bounds) {
 			val lock = startBoundsUpdate()
+			pendingAnchor.clear()
 			_sizePointer.value = b.size
 			_positionPointer.value = b.position
 			AwtEventThread.async {
@@ -805,10 +810,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			if (centerOnParent) {
 				if (visible)
 					this.centerOnParent()
+				else if (hasOpened)
+					visiblePointer.onNextChange { _ => boundsUpdatingFlag.onceNotSet { this.centerOnParent() } }
 				else
-					visiblePointer.onNextChange { _ =>
-						boundsUpdatingFlag.onceNotSet { this.centerOnParent() }
-					}
+					openedFuture.foreach { _ => this.centerOnParent() }
 			}
 			
 			// Case: Default focus option => Updates visibility
@@ -1031,6 +1036,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private def centerOn(component: java.awt.Component) = {
 		if (isNotFullScreen) {
 			val lock = startBoundsUpdate()
+			println("Centering window")
+			pendingAnchor.clear()
 			AwtEventThread.async {
 				this.component.setLocationRelativeTo(component)
 				completeBoundsUpdate(lock)
@@ -1094,6 +1101,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			}
 			// Repositions based on anchoring, if queued
 			pendingAnchor.pop().foreach { anchor =>
+				println(s"Resolving pending anchor: $anchor")
 				val newAnchor = absoluteAnchorPosition
 				// Moves this window so that the anchors overlap.
 				// Makes sure screen borders are respected, also.
