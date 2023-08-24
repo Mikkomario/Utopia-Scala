@@ -13,6 +13,10 @@ object RoundingDouble
 	  * A zero value
 	  */
 	val zero = apply(0.0)
+	/**
+	  * A unit (1) value
+	  */
+	val unit = apply(1.0)
 	
 	/**
 	  * Numeric implementation for this class

@@ -82,15 +82,13 @@ class Vector2D private(override val dimensions: Dimensions[Double])
 	// IMPLEMENTED	-----------------------------
 	
 	override def self = this
+	override protected def factory = Vector2D
 	
 	override def zero = Vector2D.zero
 	
 	override protected def equalsProperties = dimensions
 	
 	override implicit def toValue: Value = new Value(Some(this), Vector2DType)
-	
-	override protected def factory = Vector2D
-	
 	override def toModel = Model.from("x" -> x, "y" -> y)
 	
 	

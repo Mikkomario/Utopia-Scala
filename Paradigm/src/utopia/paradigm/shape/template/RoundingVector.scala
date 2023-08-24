@@ -20,6 +20,8 @@ object RoundingVector extends RoundingVectorFactory[RoundingVector]
 	{
 		override def self: RoundingVector = this
 		override protected def factory: RoundingVectorFactory[RoundingVector] = RoundingVector
+		override protected def fromDoublesFactory: FromDimensionsFactory[Double, RoundingVector] =
+			RoundingVector.forDoubles
 	}
 }
 
@@ -30,4 +32,4 @@ object RoundingVector extends RoundingVectorFactory[RoundingVector]
   * @author Mikko Hilpinen
   * @since 24.8.2023, v1.4
   */
-trait RoundingVector extends RoundingVectorLike[RoundingVector]
+trait RoundingVector extends RoundingVectorLike[RoundingVector, RoundingVector]
