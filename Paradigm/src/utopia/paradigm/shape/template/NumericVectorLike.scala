@@ -54,25 +54,6 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	  */
 	implicit def n: Numeric[D] = factory.n
 	
-	/*
-	/**
-	  * @return A 2D-copy of this vector
-	  */
-	def toVector2D = Vector2D.from(this)
-	/**
-	  * @return A 3D-copy of this vector
-	  */
-	def toVector3D = Vector3D.from(this)
-	/**
-	  * @return A point based on this vector
-	  */
-	def toPoint = Point.from(this)
-	/**
-	  * @return A size based on this vector
-	  */
-	def toSize = Size.from(this)
-	*/
-	
 	/**
 	  * @return Direction of this vector in x-y -plane
 	  */
@@ -184,7 +165,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	  * @param n A scaling modifier
 	  * @return A copy of this vector where each dimension is scaled by the specified amount
 	  */
-	def *(n: Double) = map { factory.scale(_, n) }
+	def scaledBy(n: Double) = map { factory.scale(_, n) }
 	/**
 	  * @param other Another vector-like element
 	  * @return This element multiplied on each axis of the provided element
@@ -244,15 +225,13 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	  * The length of the cross product of these two vectors. |a||b|sin(a, b)
 	  */
 	// = |a||b|sin(a, b)e, |e| = 1 (in this we skip the e)
-	def crossProductLength[
-		V <: VectorProjectable[V2] with Combinable[V2, HasLength] with HasLength,
-		V2 <: Reversible[V2] with HasLength](other: V) =
-		length * other.length * angleDifference[V, V2](other).sine
+	def crossProductLength[V <: VectorProjectable[V] with Reversible[V] with Combinable[V, HasLength] with HasLength](other: V) =
+		length * other.length * angleDifference[V](other).sine
 	/**
 	  * Calculates the directional difference between these two vectors. The difference is
 	  * absolute (always positive) and doesn't specify the direction of the difference.
 	  */
-	def angleDifference[V <: VectorProjectable[V2] with Combinable[V2, HasLength], V2 <: Reversible[V2] with HasLength](other: V) = {
+	def angleDifference[V <: VectorProjectable[V] with Reversible[V] with Combinable[V, HasLength] with HasLength](other: V) = {
 		// This vector is used as the 'x'-axis, while a perpendicular vector is used as the 'y'-axis
 		// The other vector is then measured against these axes
 		val x = other.projectedOver(DoubleVector(dimensions.map(n.toDouble)))
@@ -269,15 +248,13 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	/**
 	  * Checks whether this vector is parallel with another vector (has same or opposite direction)
 	  */
-	def isParallelWith[
-		V <: VectorProjectable[V2] with Combinable[V2, HasLength] with HasLength,
-		V2 <: Reversible[V2] with HasLength](other: V) =
-		crossProductLength[V, V2](other) ~== 0.0
+	def isParallelWith[V <: VectorProjectable[V] with Reversible[V] with Combinable[V, HasLength] with HasLength](other: V) =
+		crossProductLength[V](other) ~== 0.0
 	/**
 	  * @param axis Target axis
 	  * @return Whether this vector is parallel to the specified axis
 	  */
-	def isParallelWith(axis: Axis): Boolean = isParallelWith[Vector1D, Vector1D](axis.unit)
+	def isParallelWith(axis: Axis): Boolean = isParallelWith[Vector1D](axis.unit)
 	/**
 	  * Checks whether this vector is perpendicular to another vector (ie. (1, 0) vs. (0, 1))
 	  */
@@ -293,7 +270,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	  * Creates a new vector with the same direction with this vector
 	  * @param length The length of the new vector
 	  */
-	def withLength(length: Double) = this * (length / this.length)
+	def withLength(length: Double) = scaledBy(length / this.length)
 	/**
 	  * Creates a new vector with the same length as this vector
 	  * @param direction The direction of the new vector (on the x-y -plane)

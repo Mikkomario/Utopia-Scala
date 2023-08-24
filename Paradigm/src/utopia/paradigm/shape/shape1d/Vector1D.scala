@@ -1,8 +1,8 @@
 package utopia.paradigm.shape.shape1d
 
-import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.Positive
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
@@ -143,7 +143,7 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 	override protected def factory: DoubleVectorFactory[Vector1D] = Vector1D.Factory
 	
 	override def isZero = length == 0.0
-	override def isAboutZero = length ~== 0.0
+	override def isAboutZero = doubleEquals(length, 0.0)
 	
 	override def toUnit = withLength(1.0)
 	

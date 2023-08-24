@@ -17,7 +17,7 @@ trait DoubleVectorFactory[+V] extends NumericVectorFactory[Double, V]
 	override def dimensionFrom(double: Double): Double = double
 	override def scale(d: Double, mod: Double): Double = d * mod
 	// Will never divide by zero
-	override def div(d: Double, div: Double): Double = if (div == 0.0) d else div
+	override def div(d: Double, div: Double): Double = if (div == 0.0) d else d / div
 	
 	override def fromDoubles(v: HasDimensions[Double]) = from(v)
 }

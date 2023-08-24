@@ -1,6 +1,7 @@
 package utopia.genesis.test
 
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.Identity
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape3d.Vector3D
@@ -13,10 +14,11 @@ object VectorTest extends App
     
     println(s"$v1 * ${ Vector3D.identity } = ${ v1 * Vector3D.identity }")
     
+    assert(v1.map(Identity) == v1)
     assert(v1 == Vector3D(1, 1))
     assert(v1 * 1 == v1)
     assert(v1 * Vector3D.identity == v1)
-    assert(v1 / 1 == v1)
+    assert(v1 / 1 == v1, v1 / 1)
     assert(v1 / Vector3D.identity == v1)
     assert(v1.length > 1)
     assert(v1 - v1 == Vector3D.zero)
