@@ -3,7 +3,8 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.{DoubleVector, VectorProjectable}
 import utopia.paradigm.transform.Transformable
 
 import java.awt.Shape
@@ -14,7 +15,7 @@ import java.awt.Shape
   * @since Genesis 14.4.2019, v2+
   */
 // TODO: Handle cases where there are 0 corners
-trait Polygonic extends ShapeConvertible with Projectable with Area2D with Transformable[Polygonic] with HasBounds
+trait Polygonic extends ShapeConvertible with Projectable with Transformable[Polygonic] with HasBounds with Area2D
 {
 	// ABSTRACT	----------------
 	
@@ -206,13 +207,12 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		Line(start, end)
 	}
 	
-	override def contains[V <: DoubleVectorLike[V]](point: V) =
-		collisionAxes.forall { containsProjection(point, _) }
-	
 	override def transformedWith(transformation: Matrix3D): Polygonic =
 		Polygon(corners.map { transformation(_).toPoint }.toVector)
 	override def transformedWith(transformation: Matrix2D): Polygonic =
 		Polygon(corners.map { transformation(_).toPoint }.toVector)
+	
+	override def contains(point: DoubleVector): Boolean = contains(point: VectorProjectable[HasDoubleDimensions])
 	
 	
 	// OTHER	---------------
@@ -276,6 +276,9 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	  * @return The angle at the specified corner of this polygonic shape
 	  */
 	def angle(index: Int) = rotation(index).toAngle
+	
+	def contains(point: VectorProjectable[HasDoubleDimensions]) =
+		collisionAxes.forall { containsProjection(point, _) }
 	
 	/**
 	  * Calculates the minimum translation vector that would get these two projectable shapes out of

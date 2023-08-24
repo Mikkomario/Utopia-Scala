@@ -39,7 +39,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	/**
 	  * @return Factory used for building transformed vectors that are based on double precision numbers
 	  */
-	protected def fromDoublesFactory: DimensionsWrapperFactory[Double, Transformed]
+	protected def fromDoublesFactory: FromDimensionsFactory[Double, Transformed]
 	
 	/**
 	  * @return Approximate function used for comparing individual dimensions
@@ -122,7 +122,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	override def ~==(other: HasDimensions[D]) = super[Dimensional].~==(other)
 	
 	// ab = (a . b) / (b . b) * b
-	override def projectedOver[V <: DoubleVectorLike[V]](vector: V) =
+	override def projectedOver(vector: DoubleVector) =
 		fromDoublesFactory.from(vector * (doubleDot(vector) / (vector dot vector)))
 	
 	override def transformedWith(transformation: Matrix2D) =
@@ -254,7 +254,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	  * @param axis Target axis
 	  * @return Whether this vector is parallel to the specified axis
 	  */
-	def isParallelWith(axis: Axis): Boolean = isParallelWith[Vector1D](axis.unit)
+	def isParallelWith(axis: Axis): Boolean = isParallelWith(axis.unit.in3D)
 	/**
 	  * Checks whether this vector is perpendicular to another vector (ie. (1, 0) vs. (0, 1))
 	  */
@@ -290,7 +290,8 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 		val twoDimensional = separator.withDirection(separator.direction + rotation) + origin
 		
 		if (dimensions.size > 2)
-			fromDoublesFactory(twoDimensional.dimensions.withLength(2) ++ dimensions.drop(2).map(n.toDouble))
+			fromDoublesFactory(
+				Dimensions.double(twoDimensional.dimensions.withLength(2) ++ dimensions.drop(2).map(n.toDouble)))
 		else
 			fromDoublesFactory.from(twoDimensional)
 	}

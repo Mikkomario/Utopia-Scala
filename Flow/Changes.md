@@ -58,6 +58,7 @@
 - Added new **Steppable** trait for items that provide step-based iteration
 - Added sorting support to immutable **Models**
 - **Value**, **Constant** and **Model** now extend **ApproxEquals**
+- Added **RoundingFunction** utility trait
 ### New Methods
 - **Changing** (object)
   - Added `.completionOf(Future)`

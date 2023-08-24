@@ -98,7 +98,7 @@ trait Sized[+Repr] extends HasSize
 	  *                 (default = false)
 	  * @return A copy of this item that fills the specified area but has the same shape.
 	  */
-	def filling[V <: DoubleVectorLike[V]](minArea: V, minimize: Boolean = false) = {
+	def filling[V <: DoubleVectorLike[V, _]](minArea: V, minimize: Boolean = false) = {
 		// Case: Zero size => can't scale
 		if (size.isZero)
 			self
@@ -116,7 +116,7 @@ trait Sized[+Repr] extends HasSize
 	  *                 so that it barely fits within that area (default = false)
 	  * @return A copy of this item that fits the specified area but has the same shape
 	  */
-	def fittingWithin[V <: DoubleVectorLike[V]](maxArea: V, maximize: Boolean = false) = {
+	def fittingWithin[V <: DoubleVectorLike[V, _]](maxArea: V, maximize: Boolean = false) = {
 		// Case: Zero size => already fits
 		if (size.isZero)
 			self

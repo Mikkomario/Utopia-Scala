@@ -8,7 +8,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.{Combinable, EqualsBy, LinearScalable}
+import utopia.flow.operator.{Combinable, EqualsBy, LinearScalable, Reversible}
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Direction2D}
@@ -256,7 +256,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def -[V <: DoubleVectorLike[V]](translation: V) = translated(-translation)
+    def -(translation: Reversible[HasDoubleDimensions]) = translated(-translation)
     /**
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted

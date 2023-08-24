@@ -4,7 +4,7 @@ import utopia.flow.operator.{CanBeAboutZero, Combinable, LinearScalable}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{Dimensional, DoubleVectorLike, VectorProjectable}
+import utopia.paradigm.shape.template.{Dimensional, NumericVectorLike, VectorProjectable}
 
 import scala.concurrent.duration.Duration
 
@@ -15,7 +15,7 @@ import scala.concurrent.duration.Duration
   * @tparam X Type of transition / position
   * @tparam Repr Concrete velocity type
   */
-trait VelocityLike[X <: DoubleVectorLike[X], +Repr <: Change[X, Repr]]
+trait VelocityLike[X <: NumericVectorLike[Double, X, _], +Repr <: Change[X, Repr]]
 	extends Change[X, Repr] with LinearScalable[Repr] with Combinable[Change[HasDoubleDimensions, _], Repr]
 		with CanBeAboutZero[Change[HasDoubleDimensions, _], Repr] with Dimensional[LinearVelocity, Repr]
 		with VectorProjectable[Repr]

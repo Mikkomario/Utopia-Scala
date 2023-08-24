@@ -1,72 +1,34 @@
 package utopia.paradigm.shape.shape1d
 
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.Positive
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.EqualsFunction
+import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
-import utopia.paradigm.enumeration.Direction2D.{Down, Up}
-import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.shape.shape2d.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, FromDimensionsFactory, HasDimensions}
 
-object Vector1D
+object Vector1D extends Vector1DFactoryLike[Double, Vector1D] with DoubleVectorFactory[Vector1D]
 {
 	// ATTRIBUTES   ----------------------
 	
 	/**
 	  * A unit (1.0) vector (along the X-axis)
 	  */
-	val unit = apply(1.1)
+	override val unit = super.unit
 	/**
 	  * A zero vector (along the X-axis)
 	  */
-	val zero = apply(0.0)
-	
-	
-	// OTHER    -------------------------
-	
-	/**
-	  * @param axis Axis along which this vector should run
-	  * @return A unit vector along the specified axis
-	  */
-	def unitAlong(axis: Axis) = apply(1.0, axis)
-	/**
-	  * @param direction Direction of the resulting vector
-	  * @return A unit vector pointing towards the specified direction
-	  */
-	def unitTowards(direction: Direction2D) = apply(direction.sign.modifier, direction.axis)
-	
-	/**
-	  * @param axis Axis along which this vector should run
-	  * @return A zero length vector along the specified axis
-	  */
-	def zeroAlong(axis: Axis) = apply(0.0, axis)
+	override val zero = super.zero
 	
 	
 	// NESTED   -----------------------
 	
-	private object Factory extends DoubleVectorFactory[Vector1D]
-	{
-		override def apply(dimensions: Dimensions[Double]) = {
-			dimensions.zipWithAxis.find { _._1 !~== 0.0 } match {
-				case Some((length, axis)) => Vector1D(length, axis)
-				case None => Vector1D.zero
-			}
-		}
-		
-		override def from(other: HasDimensions[Double]): Vector1D = other match {
-			case v: Vector1D => v
-			case v: DoubleVectorLike[_] => v.components.find { _.nonZero }.getOrElse(zero)
-			case o => apply(o.dimensions)
-		}
-		
-		override def apply(values: Map[Axis, Double]) =
-			values.find { _._2 !~== 0.0 }.orElse { values.find { _._2 != 0.0 } }.orElse { values.headOption } match
-			{
-				case Some((axis, length)) => Vector1D(length, axis)
-				case None => empty
-			}
+	override implicit def dimensionApproxEquals: EqualsFunction[Double] = EqualsFunction.approxDouble
+	
+	override def from(other: HasDimensions[Double]): Vector1D = other match {
+		case v: Vector1D => v
+		case v: DoubleVectorLike[_, _] => v.components.find { _.nonZero }.getOrElse(zero)
+		case o => apply(o.dimensions)
 	}
 }
 
@@ -75,8 +37,8 @@ object Vector1D
   * @author Mikko Hilpinen
   * @since 16.9.2022, v1.1
   */
-case class Vector1D(override val length: Double, axis: Axis = X)
-	extends Dimension[Double] with DoubleVectorLike[Vector1D] with DoubleVector
+case class Vector1D(override val length: Double, axis: Axis)
+	extends Vector1DLike[Double, Vector1D, Vector2D] with DoubleVectorLike[Vector1D, Vector2D] with DoubleVector
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -84,15 +46,6 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 	
 	
 	// COMPUTED ------------------------------
-	
-	/**
-	  * @return The direction of this vector on the 2D (X-Y) plane.
-	  *         None if this vector is along the Z-axis.
-	  */
-	def direction2D = axis match {
-		case axis: Axis2D => Some(Direction2D(axis, Sign.of(length).binaryOr(Positive)))
-		case _ => None
-	}
 	
 	/**
 	  * @return A copy of this vector as a 3-dimensional vector
@@ -111,67 +64,19 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 		case _ => Vector2D.zero
 	}
 	
-	/**
-	  * @return A copy of this vector that points up (or down, if this vector has negative length)
-	  */
-	def up = towards(Up)
-	/**
-	  * @return A copy of this vector that points right (or left, if this vector has negative length)
-	  */
-	def right = towards(Direction2D.Right)
-	/**
-	  * @return A copy of this vector that points down (or up, if this vector has negative length)
-	  */
-	def down = towards(Down)
-	/**
-	  * @return A copy of this vector that points left (or right, if this vector has negative length)
-	  */
-	def left = towards(Direction2D.Left)
-	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def value = length
-	override def zeroValue = 0.0
-	
-	override def nonZero = !isZero
-	
-	override def zero = Vector1D.zeroAlong(axis)
-	
-	override def self = this
-	
-	override protected def factory: DoubleVectorFactory[Vector1D] = Vector1D.Factory
-	
-	override def isZero = length == 0.0
-	override def isAboutZero = doubleEquals(length, 0.0)
-	
-	override def toUnit = withLength(1.0)
-	
-	override def components = Vector(this)
+	override def unary_- = copy(length = -length)
 	
 	override def *(n: Double) = copy(length = length * n)
-	override def +(length: Double) = copy(length = this.length + length)
-	override def -(length: Double) = this + (-length)
+	override def /(div: Double) = super[Vector1DLike]./(div)
 	
-	override def isParallelWith(axis: Axis) = this.axis == axis
-	override def isPerpendicularTo(axis: Axis) = this.axis != axis
+	override def self = this
+	override protected def factory = Vector1D
+	override protected def fromDoublesFactory: FromDimensionsFactory[Double, Vector2D] = Vector2D
 	
-	override def withLength(length: Double) = copy(length)
+	override def value = length
 	
-	
-	// OTHER    -----------------------------
-	
-	/**
-	  * @param axis New axis to apply to this vector
-	  * @return A copy of this vector that runs along the specified axis
-	  */
-	def withAxis(axis: Axis) = copy(axis = axis)
-	
-	/**
-	  * @param direction A 2D direction
-	  * @return A copy of this vector that points towards the specified direction
-	  *         (except if this vector had negative length,
-	  *         in which case the resulting vector will point to the opposite direction).
-	  */
-	def towards(direction: Direction2D) = copy(length * direction.sign.modifier, direction.axis)
+	override def components = Vector(this)
 }

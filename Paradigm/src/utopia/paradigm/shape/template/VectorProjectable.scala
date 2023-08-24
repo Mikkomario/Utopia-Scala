@@ -18,7 +18,7 @@ trait VectorProjectable[+P]
 	  * @param vector Target vector
 	  * @return This instance's projection over target vector
 	  */
-	def projectedOver[V <: DoubleVectorLike[V]](vector: V): P
+	def projectedOver(vector: DoubleVector): P
 	
 	
 	// COMPUTED	-------------------

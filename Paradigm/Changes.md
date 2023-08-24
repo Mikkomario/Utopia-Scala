@@ -3,6 +3,9 @@
 ## v1.4 (in development)
 ### Breaking Changes
 - Renamed **VectorFactory** to **DoubleVectorFactory**
+- **DoubleVectorLike** now accepts two generic type parameters instead of one
+  - Certain transformation- and direction-altering functions now return a different type for one-dimensional vectors
+- **VectorProjectable**`.projectedOver(...)` now accepts **DoubleVector** instead of **DoubleVectorLike**
 - **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**
 - **LinearTransformable** now longer requires the implementation of `.self`
 - Renamed **VectorProjectable2** to **VectorProjectable** (leftover from an earlier update)

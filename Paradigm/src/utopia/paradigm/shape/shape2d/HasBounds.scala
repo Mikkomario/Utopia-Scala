@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.range.HasEnds
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{DoubleVectorLike, HasDimensions}
+import utopia.paradigm.shape.template.{DoubleVector, HasDimensions}
 
 /**
   * Common trait for shapes that can specify a bounding box
@@ -92,7 +92,7 @@ trait HasBounds extends HasSize with Area2D
 	
 	override def size = bounds.size
 	
-	override def contains[V <: DoubleVectorLike[V]](point: V): Boolean = contains(point: HasDoubleDimensions)
+	override def contains(point: DoubleVector): Boolean = contains(point: HasDoubleDimensions)
 	
 	
 	// OTHER    -------------------------

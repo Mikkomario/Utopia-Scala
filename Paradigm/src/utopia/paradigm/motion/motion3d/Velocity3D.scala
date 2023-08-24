@@ -10,7 +10,7 @@ import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.template.{ChangeFromModelFactory, ModelConvertibleChange, VelocityLike}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, DoubleVectorLike, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, DoubleVector, HasDimensions}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
@@ -97,7 +97,7 @@ case class Velocity3D(transition: Vector3D, override val duration: Duration)
 	
 	override def self = this
 	
-	override def projectedOver[V <: DoubleVectorLike[V]](vector: V) = Velocity3D(transition.projectedOver(vector), duration)
+	override def projectedOver(vector: DoubleVector) = Velocity3D(transition.projectedOver(vector), duration)
 	
 	
 	// OTHER	-----------------

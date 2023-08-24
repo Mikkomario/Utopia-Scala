@@ -5,7 +5,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{Dimensional, DoubleVectorLike, VectorProjectable}
+import utopia.paradigm.shape.template.{Dimensional, NumericVectorLike, VectorProjectable}
 
 import scala.concurrent.duration.Duration
 
@@ -17,7 +17,7 @@ import scala.concurrent.duration.Duration
   * @tparam V    Type of velocity information
   * @tparam Repr A concrete implementation of this trait
   */
-trait AccelerationLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], +Repr <: Change[V, _]]
+trait AccelerationLike[X <: NumericVectorLike[Double, X, _], V <: VelocityLike[X, V], +Repr <: Change[V, _]]
 	extends Change[V, Repr] with Combinable[Change[V, _], Repr] with Dimensional[LinearAcceleration, Repr]
 		with VectorProjectable[Repr] with CanBeAboutZero[Change[Change[HasDoubleDimensions, _], _], Repr]
 {

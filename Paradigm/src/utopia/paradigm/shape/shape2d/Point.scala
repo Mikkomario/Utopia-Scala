@@ -10,7 +10,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.PointType
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, HasDimensions}
 
 import java.awt.geom.Point2D
 import scala.collection.immutable.HashMap
@@ -69,7 +69,7 @@ object Point extends DoubleVectorFactory[Point] with FromModelFactory[Point]
 * @since Genesis 20.11.2018
 **/
 class Point private(override val dimensions: Dimensions[Double])
-	extends DoubleVectorLike[Point] with DoubleVector with ValueConvertible with ModelConvertible
+	extends DoubleVectorLike2D[Point] with DoubleVector with ValueConvertible with ModelConvertible
 		with EqualsBy
 {
     // IMPLEMENTED    -----------------

@@ -12,7 +12,7 @@ import utopia.flow.operator.{EqualsBy, SignOrZero, SignedOrZero}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.SizeType
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, HasDimensions}
 import utopia.paradigm.transform.SizeAdjustable
 
 import java.awt.{Dimension, Insets}
@@ -66,7 +66,7 @@ object Size extends DoubleVectorFactory[Size] with FromModelFactory[Size]
 * @since Genesis 20.11.2018
 **/
 class Size private(override val dimensions: Dimensions[Double])
-    extends DoubleVectorLike[Size] with DoubleVector with ValueConvertible with ModelConvertible
+    extends DoubleVectorLike2D[Size] with DoubleVector with ValueConvertible with ModelConvertible
         with SignedOrZero[Size] with Sized[Size] with SizeAdjustable[Size] with EqualsBy
 {
     // ATTRIBUTES   -------------------------

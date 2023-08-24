@@ -7,7 +7,7 @@ import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.motion.motion2d.Acceleration2D
 import utopia.paradigm.motion.template.{AccelerationLike, ChangeFromModelFactory, ModelConvertibleChange}
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, DoubleVectorLike, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, DoubleVector, HasDimensions}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
@@ -76,5 +76,5 @@ case class Acceleration3D(override val amount: Velocity3D, override val duration
 	
 	override protected def buildCopy(amount: Velocity3D, duration: Duration) = copy(amount, duration)
 	
-	override def projectedOver[V <: DoubleVectorLike[V]](vector: V) = Acceleration3D(amount.projectedOver(vector), duration)
+	override def projectedOver(vector: DoubleVector) = Acceleration3D(amount.projectedOver(vector), duration)
 }

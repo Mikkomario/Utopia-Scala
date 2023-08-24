@@ -1,10 +1,10 @@
 package utopia.paradigm.motion.template
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.shape.template.DoubleVectorLike
 
 import java.time.Instant
@@ -15,7 +15,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */
-trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
+trait MovementHistoryLike[X <: DoubleVectorLike[X, _], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
 	+S <: MovementStatusLike[X, V, A, _]]
 {
 	// ABSTRACT	-----------------------------

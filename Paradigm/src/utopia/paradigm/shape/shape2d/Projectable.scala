@@ -3,15 +3,14 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Projectable.PointOrdering
-import utopia.paradigm.shape.template.DoubleVectorLike
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.VectorProjectable
 
 object Projectable
 {
     private object PointOrdering extends Ordering[Point]
     {
-        override def compare(v1: Point, v2: Point) =
-        {
+        override def compare(v1: Point, v2: Point) = {
             if (v1.x < v2.x) { -1 }
             else if (v1.x > v2.x) { 1 }
             else
@@ -60,8 +59,7 @@ trait Projectable
     * @param axis the axis along which the overlap is checked
     * @return the mtv for the specified axis, if there is overlap
     */
-    def projectionOverlapWith(other: Projectable, axis: Vector2D) =
-    {
+    def projectionOverlapWith(other: Projectable, axis: Vector2D) = {
         val projection = orderedProjectionOver(axis)
         val otherProjection = other.orderedProjectionOver(axis)
         
@@ -85,8 +83,7 @@ trait Projectable
      * @return The minimum translation vector that gets the two shapes out of a collision situation 
      * or none if there is no collision
      */
-    def collisionMtvWith(other: Projectable, axes: Iterable[Vector2D]) =
-    {
+    def collisionMtvWith(other: Projectable, axes: Iterable[Vector2D]) = {
         // If there is collision, there must be overlap on each axis
         val mtvs = axes.lazyMap { projectionOverlapWith(other, _) }
         if (mtvs.forall { _.isDefined })
@@ -103,7 +100,7 @@ trait Projectable
       * @return Whether the projected point is contained within this object's projection when considering only the
       *         specified axis
       */
-    def containsProjection[V <: DoubleVectorLike[V]](point: V, axis: Vector2D) = {
+    def containsProjection(point: VectorProjectable[HasDoubleDimensions], axis: Vector2D) = {
         val pointProjection = point.projectedOver(axis)
         val myProjection = projectedOver(axis)
         
@@ -111,18 +108,15 @@ trait Projectable
         comparePoints(myProjection.start, pointProjection) <= 0 && comparePoints(myProjection.end, pointProjection) >= 0
     }
     
-    private def orderedProjectionOver(axis: Vector2D) =
-    {
+    private def orderedProjectionOver(axis: Vector2D) = {
         val projection = projectedOver(axis)
         if (comparePoints(projection.start, projection.end) <= 0) projection else projection.reverse
     }
     
-    protected def comparePoints(v1: HasDoubleDimensions, v2: HasDoubleDimensions) =
-    {
+    protected def comparePoints(v1: HasDoubleDimensions, v2: HasDoubleDimensions) = {
         if (v1.x < v2.x) { -1 }
         else if (v1.x > v2.x) { 1 }
-        else
-        {
+        else {
             if (v1.y < v2.y) { -1 }
             else if (v1.y > v2.y) { 1 }
             else 0

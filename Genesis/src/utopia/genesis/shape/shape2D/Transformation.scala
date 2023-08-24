@@ -4,7 +4,7 @@ import java.awt.geom.AffineTransform
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.shape.shape2d
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.{Dimensional, DoubleVectorLike}
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 @deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
@@ -224,7 +224,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * Transforms a <b>relative</b> point <b>into an absolute</b> point
      * @param relative a relative point that will be transformed
      */
-    def apply[V <: DoubleVectorLike[V]](relative: V): V =
+    def apply[V <: Dimensional[Double, V]](relative: V): V =
         relative.withDimensions(apply(shape2d.Point(relative.x, relative.y)).dimensions)
     
     /**
@@ -257,7 +257,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * @param absolute a vector in absolute world space
      * @return The absolute point in relative world space
      */
-    def invert[V  <: DoubleVectorLike[V]](absolute: V): V =
+    def invert[V <: Dimensional[Double, V]](absolute: V): V =
         absolute.withDimensions(invert(shape2d.Point(absolute.x, absolute.y)).dimensions)
     
     /**

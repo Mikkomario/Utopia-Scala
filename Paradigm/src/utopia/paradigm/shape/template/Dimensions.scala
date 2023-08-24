@@ -1,12 +1,12 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
-import utopia.paradigm.enumeration.{Axis, Axis2D}
-import utopia.flow.operator.{CanBeZero, EqualsBy, EqualsFunction}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.{CanBeZero, EqualsBy, EqualsFunction}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
+import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.shape.shape1d.Dimension
 
 import scala.annotation.unchecked.uncheckedVariance

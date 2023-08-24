@@ -9,7 +9,7 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
   * @author Mikko Hilpinen
   * @since Genesis 15.7.2020, v2.3
   */
-trait MatrixLike[V <: DoubleVectorLike[V], +Repr] extends Dimensional[V, Repr] with LinearScalable[Repr]
+trait MatrixLike[V <: DoubleVectorLike[V, _], +Repr] extends Dimensional[V, Repr] with LinearScalable[Repr]
 {
 	// ABSTRACT	---------------------
 	

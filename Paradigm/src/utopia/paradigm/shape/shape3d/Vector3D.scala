@@ -1,19 +1,18 @@
 package utopia.paradigm.shape.shape3d
 
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
-import utopia.paradigm.shape.shape2d.Vector2D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
+import utopia.paradigm.shape.shape2d.{DoubleVectorLike2D, Vector2D}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, HasDimensions}
 
 import scala.concurrent.duration.Duration
 
@@ -149,7 +148,7 @@ object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[
  * @since Genesis 24.12.2016
  */
 class Vector3D private(override val dimensions: Dimensions[Double])
-	extends DoubleVectorLike[Vector3D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
+	extends DoubleVectorLike2D[Vector3D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
 {
     // COMPUTED PROPERTIES    ----------
 	
@@ -221,21 +220,6 @@ class Vector3D private(override val dimensions: Dimensions[Double])
 			case Z => zProjection
 		}
 	}
-    
-    /**
-     * Calculates the directional difference between the two vectors in radians. The difference is 
-     * absolute (always positive) and doesn't specify the direction of the difference.
-     */
-	@deprecated("Please use angleDifference(...) instead", "v2.3")
-    def angleDifferenceRads(other: Vector3D) = 
-    {
-        // This vector is used as the 'x'-axis, while a perpendicular vector is used as the 'y'-axis
-        // The other vector is then measured against these axes
-        val x = other projectedOver this
-        val y = other - x
-        
-        math.atan2(y.length, x.length).abs
-    }
     
     /**
      * Creates a new vector with the same length as this vector

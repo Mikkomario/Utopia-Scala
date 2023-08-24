@@ -189,7 +189,7 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  * @param enlargement A size increase to apply
 	  * @return A copy of this item with bounds that keep the same center-point but have enlarged size
 	  */
-	def enlarged[V <: DoubleVectorLike[V]](enlargement: V) =
+	def enlarged[V <: DoubleVectorLike[V, _]](enlargement: V) =
 		withBounds(bounds.mergeWith(enlargement) { (area, increase) =>
 			val halved = increase / 2
 			area.withEnds(area.start - halved, area.end + halved)
@@ -199,7 +199,7 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 	  * @param shrinking A size decrease to apply
 	  * @return A copy of this item with bounds that keep the same center-point but have shrunk size
 	  */
-	def shrunk[V <: DoubleVectorLike[V]](shrinking: V) =
+	def shrunk[V <: DoubleVectorLike[V, _]](shrinking: V) =
 		withBounds(bounds.mergeWith(shrinking) { (area, decrease) =>
 			// Won't shrink below length 0
 			val halved = (decrease min area.length) / 2

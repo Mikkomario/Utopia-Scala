@@ -1,6 +1,7 @@
-package utopia.paradigm.shape.shape1d
+package utopia.paradigm.shape.shape1d.rounding
 
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike, EqualsFunction, Sign, SignOrZero}
+import utopia.flow.operator.RoundingFunction.{Ceil, Floor, Round}
+import utopia.flow.operator.{CanBeAboutZero, DoubleLike, EqualsFunction, RoundingFunction, Sign, SignOrZero}
 
 import scala.language.implicitConversions
 
@@ -58,18 +59,40 @@ object RoundingDouble
   * @author Mikko Hilpinen
   * @since 28.7.2023, v1.3.1
   */
-case class RoundingDouble(wrapped: Double)
+case class RoundingDouble(wrapped: Double, logic: RoundingFunction = Round)
 	extends DoubleLike[RoundingDouble] with CanBeAboutZero[Double, RoundingDouble]
 {
 	// ATTRIBUTES   ------------------------
 	
-	lazy val int = wrapped.round.toInt
+	/**
+	  * This number as an integer
+	  */
+	lazy val int = logic(wrapped).toInt
+	/**
+	  * This number as a double (rounded)
+	  */
 	lazy val double = int.toDouble
+	
+	override lazy val sign: SignOrZero = Sign.of(wrapped)
+	
+	
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Copy of this number where rounding is to the nearest integer
+	  */
+	def round = withLogic(Round)
+	/**
+	  * @return Copy of this number where the rounding is to the next full integer
+	  */
+	def ceil = withLogic(Ceil)
+	/**
+	  * @return Copy of this number where decimal places are removed
+	  */
+	def floor = withLogic(Floor)
 	
 	
 	// IMPLEMENTED  ------------------------
-	
-	override def sign: SignOrZero = Sign.of(wrapped)
 	
 	override def self = this
 	
@@ -78,15 +101,37 @@ case class RoundingDouble(wrapped: Double)
 	
 	override def length = double
 	
-	override def compareTo(o: RoundingDouble) = wrapped.compareTo(o.wrapped)
+	override def compareTo(o: RoundingDouble) = {
+		val intCompare = int - o.int
+		if (intCompare == 0)
+			wrapped.compareTo(o.wrapped)
+		else
+			intCompare
+	}
 	
 	override def *(mod: Double) = RoundingDouble(wrapped * mod)
-	override def +(other: RoundingDouble) = RoundingDouble(wrapped + other.wrapped)
+	override def +(other: RoundingDouble) = {
+		val resultingLogic = {
+			if (logic == other.logic)
+				logic
+			else if ((wrapped - double).abs >= (other.wrapped - other.double).abs)
+				logic
+			else
+				other.logic
+		}
+		RoundingDouble(wrapped + other.wrapped, resultingLogic)
+	}
 	
 	override def ~==(other: Double): Boolean = int == other.round
 	
 	
 	// OTHER    --------------------------
+	
+	/**
+	  * @param logic Rounding logic to apply
+	  * @return Copy of this number using that rounding logic
+	  */
+	def withLogic(logic: RoundingFunction) = if (logic == this.logic) this else copy(logic = logic)
 	
 	/**
 	  * Approximately compares this number with another rounded number

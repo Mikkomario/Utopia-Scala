@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.DoubleVector
 
 /**
 * Classes extending this trait can be treated as continuous 2-dimensional areas
@@ -12,5 +12,5 @@ trait Area2D
     /**
      * Whether this area contains the specified 2D point
      */
-	def contains[V <: DoubleVectorLike[V]](point: V): Boolean
+	def contains(point: DoubleVector): Boolean
 }

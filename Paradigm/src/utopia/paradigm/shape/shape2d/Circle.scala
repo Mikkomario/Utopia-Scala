@@ -1,16 +1,16 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.generic.model.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.operator.Combinable
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.generic.ParadigmDataType.CircleType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.DoubleVector
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.SizeAdjustable
 
@@ -79,7 +79,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
     
     override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
     
-    override def contains[V <: DoubleVectorLike[V]](point: V) = point.distanceFrom(origin) <= radius
+    override def contains(point: DoubleVector) = point.distanceFrom(origin) <= radius
     
     override def projectedOver(axis: Vector2D) = {
         val projectedOrigin = origin.projectedOver(axis)

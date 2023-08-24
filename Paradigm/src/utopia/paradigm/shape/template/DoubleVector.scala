@@ -7,7 +7,7 @@ object DoubleVector extends DoubleVectorFactory[DoubleVector]
 {
 	// IMPLICIT ------------------------------
 	
-	implicit val equals: EqualsFunction[DoubleVectorLike[_]] = _.dimensions ~== _.dimensions
+	implicit val equals: EqualsFunction[DoubleVectorLike[_, _]] = _.dimensions ~== _.dimensions
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -26,6 +26,7 @@ object DoubleVector extends DoubleVectorFactory[DoubleVector]
 		override def self = this
 		
 		override protected def factory = DoubleVector
+		override protected def fromDoublesFactory: FromDimensionsFactory[Double, DoubleVector] = DoubleVector
 	}
 }
 
@@ -35,4 +36,4 @@ object DoubleVector extends DoubleVectorFactory[DoubleVector]
   * @author Mikko Hilpinen
   * @since 9.11.2022, v1.2
   */
-trait DoubleVector extends DoubleVectorLike[DoubleVector]
+trait DoubleVector extends DoubleVectorLike[DoubleVector, DoubleVector]
