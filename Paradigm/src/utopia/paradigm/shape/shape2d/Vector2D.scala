@@ -12,11 +12,11 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.Vector2DType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
 
 import scala.concurrent.duration.Duration
 
-object Vector2D extends VectorFactory[Vector2D] with SureFromModelFactory[Vector2D]
+object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[Vector2D]
 {
 	// ATTRIBUTES	---------------------------
 	

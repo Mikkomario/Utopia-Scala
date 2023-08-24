@@ -14,11 +14,11 @@ import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.shape.shape2d.Vector2D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
 
 import scala.concurrent.duration.Duration
 
-object Vector3D extends VectorFactory[Vector3D] with SureFromModelFactory[Vector3D]
+object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[Vector3D]
 {
     // ATTRIBUTES    --------------------
     

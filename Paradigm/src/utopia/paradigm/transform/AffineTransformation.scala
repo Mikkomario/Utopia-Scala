@@ -88,32 +88,24 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     
     // IMPLEMENTED  -----------------
     
-    override def self = toMatrix
-    
     override def scaling = linear.scaling
-    
     override def shear = linear.shear
+    override def rotation = linear.rotation
+    
+    override def toJavaAffineTransform = toMatrix.toJavaAffineTransform
     
     override implicit def toValue: Value = new Value(Some(this), AffineTransformationType)
-    
     override def toModel: immutable.Model = linear.toModel + Constant("translation", translation)
     
     override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
         copy(linear = LinearTransformation(scaling, rotation, shear))
     
-    override def rotation = linear.rotation
-    
-    override def toJavaAffineTransform = toMatrix.toJavaAffineTransform
-    
     override def ~==(other: AffineTransformation) = (translation ~== other.translation) && (linear ~== other.linear)
     
     override def transformedWith(transformation: Matrix3D) = toMatrix.transformedWith(transformation)
-    
     override def transformedWith(transformation: Matrix2D) = toMatrix.transformedWith(transformation)
-    
     override def transformedWith(transformation: Animation[Matrix2D]) =
         AnimatedAffineTransformation { p => this * transformation(p) }
-    
     override def affineTransformedWith(transformation: Animation[Matrix3D]) =
         AnimatedAffineTransformation { p => transformation(p)(toMatrix) }
     

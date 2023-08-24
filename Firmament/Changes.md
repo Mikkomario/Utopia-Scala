@@ -50,6 +50,8 @@
 - **SingleColorIconCache** now logs errors and appends ".png" to file names in case the file extension is not specified
 - **SingleColorIcon** now extends **MayBeEmpty**
 - **CachingStackable** now rounds stack size values before caching them (this update may be removed in the future)
+- **BorderDrawers** now round the border sizes before drawing
+  - This should reduce the number of drawing problems in components that use borders.
 
 ## v1.0 - 01.05.2023
 Initial version  

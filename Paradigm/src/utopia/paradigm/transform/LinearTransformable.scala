@@ -17,11 +17,6 @@ trait LinearTransformable[+Transformed]
 	// ABSTRACT	---------------------------
 	
 	/**
-	  * @return This item as is
-	  */
-	def self: Transformed
-	
-	/**
 	  * @param transformation A linear transformation (matrix) to apply
 	  * @return A transformed copy of this instance
 	  */
@@ -91,7 +86,7 @@ trait LinearTransformable[+Transformed]
 	def scaled(vector: Vector1D): Transformed = vector.axis match {
 		case X => scaled(vector.length, 1.0)
 		case Y => scaled(1.0, vector.length)
-		case _ => self
+		case _ => scaled(1.0, 1.0)
 	}
 	/**
 	  * @param axis     Target axis

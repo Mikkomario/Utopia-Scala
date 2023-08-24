@@ -8,7 +8,5 @@ package utopia.paradigm.shape.shape2d
   */
 case class Parallelogram(topLeftCorner: Point, topEdge: Vector2D, rightEdge: Vector2D) extends Parallelogramic
 {
-	override def self = this
-	
 	override def toString = s"Origin: $topLeft, Top Edge: $topEdge, Right Edge: $rightEdge"
 }

@@ -2,15 +2,22 @@
 
 ## v1.4 (in development)
 ### Breaking Changes
+- Renamed **VectorFactory** to **DoubleVectorFactory**
 - **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**
+- **LinearTransformable** now longer requires the implementation of `.self`
 - Renamed **VectorProjectable2** to **VectorProjectable** (leftover from an earlier update)
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
 - Added **FromDirectionFactory** and **FromAlignmentFactory** -traits
 - Added **RoundingDouble** wrapper class in preparation of rounding shapes (which have not yet been implemented)
+- Added more generic numeric vector traits
+  - **NumericVectorLike** trait, based on the **DoubleVectorLike** -trait
+  - **NumericVectorFactory**, based on **VectorFactory**
 ### New Methods
 - **Dimensions**
   - Added `.mapWithZero(...)(...)`
+- **Insets**
+  - Added `.round`
 - **InsetsLike**
   - Added `-(Axis2D)`
 

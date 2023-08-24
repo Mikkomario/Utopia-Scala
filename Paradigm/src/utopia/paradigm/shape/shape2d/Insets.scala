@@ -42,21 +42,6 @@ case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, 
     lazy override val dimensions = super.dimensions
     
     
-    // IMPLEMENTED  --------------
-    
-    override def self = this
-    
-    override protected def withAmounts(newAmounts: Map[Direction2D, Double]) = Insets(newAmounts)
-    
-    override protected def zeroLength = 0.0
-    
-    override protected def plus(first: Double, second: Double) = first + second
-    
-    override protected def multiply(a: Double, multiplier: Double) = a * multiplier
-    
-    override protected def make2D(horizontal: Double, vertical: Double) = Size(horizontal, vertical)
-    
-    
 	// COMPUTED    ---------------
     
     /**
@@ -73,4 +58,22 @@ case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, 
       * @return A non-negative version of these insets
       */
     def positive = Insets(amounts.map { case (k, v) => k -> (v max 0) })
+    
+    /**
+      * @return Copy of these insets where every value is rounded to the nearest integer
+      */
+    def round = copy(amounts.view.mapValues { _.round.toDouble }.toMap)
+    
+    
+    // IMPLEMENTED  --------------
+    
+    override def self = this
+    
+    override protected def zeroLength = 0.0
+    
+    override protected def withAmounts(newAmounts: Map[Direction2D, Double]) = Insets(newAmounts)
+    override protected def make2D(horizontal: Double, vertical: Double) = Size(horizontal, vertical)
+    
+    override protected def plus(first: Double, second: Double) = first + second
+    override protected def multiply(a: Double, multiplier: Double) = a * multiplier
 }

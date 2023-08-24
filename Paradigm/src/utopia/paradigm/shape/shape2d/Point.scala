@@ -10,13 +10,13 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.PointType
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
 
 import java.awt.geom.Point2D
 import scala.collection.immutable.HashMap
 import scala.util.Success
 
-object Point extends VectorFactory[Point] with FromModelFactory[Point]
+object Point extends DoubleVectorFactory[Point] with FromModelFactory[Point]
 {
 	// ATTRIBUTES   ---------------------------
 	

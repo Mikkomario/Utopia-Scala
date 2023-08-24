@@ -30,7 +30,7 @@ trait DoubleVectorLike[+Repr <: DoubleVectorLike[Repr]]
 	/**
 	  * @return Factory used for building more copies of this vector
 	  */
-	protected def factory: VectorFactory[Repr]
+	protected def factory: DoubleVectorFactory[Repr]
 	
 	
 	// COMPUTED ---------------------

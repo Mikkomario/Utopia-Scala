@@ -62,43 +62,34 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
     
     // IMPLEMENTED METHODS    ----------------
     
-    override def self = this
-    
-    override def transformedWith(transformation: Matrix3D) =
-    {
+    override def transformedWith(transformation: Matrix3D) = {
         val transformedPolygons = convexPolygons.map { _ * transformation }
-    
         // Some transformations allow the circles to retain their shape while others will not
         if (circles.isEmpty)
             copy(convexPolygons = transformedPolygons)
-        else if (transformation.in2D.isEqualScaling)
-        {
+        else if (transformation.in2D.isEqualScaling) {
             val transformedCircles = circles.map { original =>
                 Circle(transformation(original.origin).toPoint, original.radius * transformation.apply(0, 0)) }
             new CollisionShape(transformedPolygons, transformedCircles, circleToPolygonEdges)
         }
-        else
-        {
+        else {
             val transformedCirclePolygons = circlesAsPolygons.map { _.transformedWith(transformation) }
             new CollisionShape(transformedPolygons ++ transformedCirclePolygons, Vector(), circleToPolygonEdges)
         }
     }
     
-    override def transformedWith(transformation: Matrix2D) =
-    {
+    override def transformedWith(transformation: Matrix2D) = {
         val transformedPolygons = convexPolygons.map { _ * transformation }
         
         // Some transformations allow the circles to retain their shape while others will not
         if (circles.isEmpty)
             copy(convexPolygons = transformedPolygons)
-        else if (transformation.isEqualScaling)
-        {
+        else if (transformation.isEqualScaling) {
             val transformedCircles = circles.map { original =>
                 Circle(transformation(original.origin).toPoint, original.radius * transformation.apply(0, 0)) }
             new CollisionShape(transformedPolygons, transformedCircles, circleToPolygonEdges)
         }
-        else
-        {
+        else {
             val transformedCirclePolygons = circlesAsPolygons.map { _.transformedWith(transformation) }
             new CollisionShape(transformedPolygons ++ transformedCirclePolygons, Vector(), circleToPolygonEdges)
         }
@@ -111,11 +102,9 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
      * Makes a collision check between the two shapes. Returns collision data if there is a collision. 
      * Doesn't always check all of the parts of the shapes if has found a collision between other parts already
      */
-    def checkCollisionWith(other: CollisionShape) = 
-    {
+    def checkCollisionWith(other: CollisionShape) = {
         // For multipart collisionShapes, bounds must be in collision for the check to continue
-        if ((!isMultiPart && !other.isMultiPart) || checkBoundsCollisionWith(other).isDefined)
-        {
+        if ((!isMultiPart && !other.isMultiPart) || checkBoundsCollisionWith(other).isDefined) {
             // Check order:
             // 1) Polygons
             // 2) Circles
@@ -130,7 +119,8 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
             None
     }
     
-    private def checkBoundsCollisionWith(other: CollisionShape) = bounds.checkCollisionWith(other.bounds)
+    private def checkBoundsCollisionWith(other: CollisionShape) =
+        bounds.checkCollisionWith(other.bounds)
     
     // TODO: Instead of combining the collisions, one could filter only those which push the shapes apart
     private def checkPolygonCollisionWith(other: CollisionShape) = convexPolygons.flatMap { 

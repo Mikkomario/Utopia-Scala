@@ -157,8 +157,10 @@ case class Line(points: Pair[Point])
     
     // IMPLEMENTED METHODS    ----------
     
-    override def self = this
+    override def start = points.first
+    override def end = points.second
     
+    override def length = vector.length
     /**
       * @return The bounds around this line
       */
@@ -167,20 +169,12 @@ case class Line(points: Pair[Point])
     override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
     
     override def toValue = new Value(Some(this), LineType)
-    
     override def toModel = Model(Vector("start" -> start, "end" -> end))
     
     def ~==(other: Line) = (start ~== other.start) && (end ~== other.end)
     
-    override def start = points.first
-    
-    override def end = points.second
-    
     override def transformedWith(transformation: Matrix3D) = map { transformation(_).toPoint }
-    
     override def transformedWith(transformation: Matrix2D) = map { transformation(_).toPoint }
-    
-    override def length = vector.length
     
     override def projectedOver(axis: Vector2D) = Line(start.toVector.projectedOver(axis).toPoint,
             end.toVector.projectedOver(axis).toPoint)

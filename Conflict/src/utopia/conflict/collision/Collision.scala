@@ -30,8 +30,6 @@ class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point]) e
     
     // IMPLEMENTED  ----------------------
     
-    override def self = this
-    
     protected override def equalsProperties = Vector(mtv, collisionPoints)
     
     

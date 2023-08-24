@@ -37,11 +37,12 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	private def drawBorder(drawer: Drawer, bounds: Bounds, border: Border): Unit = {
 		val roundedBounds = bounds.floor
-		
 		if (roundedBounds.width > 0 && roundedBounds.height > 0) {
 			// Sets the color & draws the borders
 			border.color.foreach { color =>
-				val boundsToDraw = boundsFromInsets(roundedBounds, border.insets)
+				// TODO: Rounding here helps with many repainting issues.
+				//  We will likely need better rounding tools going forward, however.
+				val boundsToDraw = boundsFromInsets(roundedBounds, border.insets.round)
 				if (boundsToDraw.nonEmpty) {
 					implicit val ds: DrawSettings = DrawSettings.onlyFill(color)
 					boundsToDraw.foreach { drawer.draw(_) }
@@ -53,8 +54,7 @@ trait BorderDrawerLike extends CustomDrawer
 		}
 	}
 	
-	private def boundsFromInsets(bounds: Bounds, insets: Insets) =
-	{
+	private def boundsFromInsets(bounds: Bounds, insets: Insets) = {
 		val buffer = new VectorBuilder[Bounds]
 		
 		// FIXME: Probably rounding errors here

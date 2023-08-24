@@ -203,21 +203,19 @@ class Matrix2D private(override val columns: Dimensions[Vector2D])
 	
 	// IMPLEMENTED	----------------------------
 	
-	override protected def equalsProperties = dimensions
-	
-	override def withDimensions(newDimensions: Dimensions[Vector2D]) = Matrix2D(newDimensions)
-	
 	override def self = this
-	
-	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
-	
-	override def transformedWith(transformation: Matrix3D) = transformation(to3D)
+	override protected def equalsProperties = dimensions
 	
 	// This matrix uses coordinates (column (x), row (y))
 	// Affine transform uses coordinates (row (y), column (x))
 	override def toJavaAffineTransform = new AffineTransform(
-		apply(0,0), apply(0,1),
-		apply(1,0), apply(1,1), 0, 0)
+		apply(0, 0), apply(0, 1),
+		apply(1, 0), apply(1, 1), 0, 0)
+	
+	override def withDimensions(newDimensions: Dimensions[Vector2D]) = Matrix2D(newDimensions)
+	
+	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
+	override def transformedWith(transformation: Matrix3D) = transformation(to3D)
 	
 	
 	// OTHER	---------------------------------

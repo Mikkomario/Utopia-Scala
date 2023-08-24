@@ -8,7 +8,7 @@ import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.shape.shape2d.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
 
 object Vector1D
 {
@@ -46,7 +46,7 @@ object Vector1D
 	
 	// NESTED   -----------------------
 	
-	private object Factory extends VectorFactory[Vector1D]
+	private object Factory extends DoubleVectorFactory[Vector1D]
 	{
 		override def apply(dimensions: Dimensions[Double]) = {
 			dimensions.zipWithAxis.find { _._1 !~== 0.0 } match {
@@ -140,7 +140,7 @@ case class Vector1D(override val length: Double, axis: Axis = X)
 	
 	override def self = this
 	
-	override protected def factory: VectorFactory[Vector1D] = Vector1D.Factory
+	override protected def factory: DoubleVectorFactory[Vector1D] = Vector1D.Factory
 	
 	override def isZero = length == 0.0
 	override def isAboutZero = length ~== 0.0

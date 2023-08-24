@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.ApproxEquals
+import utopia.flow.util.NotEmpty
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable, AnimatedLinearTransformation}
@@ -106,10 +107,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
     
     // IMPLEMENTED  -----------------
     
-    override def self = toMatrix
-    
-    override def toString =
-    {
+    override def toString = {
         val segments = new VectorBuilder[String]
         if (scaling != Vector2D.identity)
             segments += s"Scaling (${scaling.x} x ${scaling.y})"
@@ -118,25 +116,24 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
         if (rotation.nonZero)
             segments += s"Rotation ($rotation)"
         
-        segments.result().reduceOption { _ + " & " + _ }.getOrElse("Identity transform")
+        NotEmpty(segments.result()) match {
+            case Some(segments) => segments.mkString(" & ")
+            case None => "Identity transform"
+        }
     }
     
-    override implicit def toValue: Value = new Value(Some(this), LinearTransformationType)
+    override def toJavaAffineTransform = toMatrix.toJavaAffineTransform
     
+    override implicit def toValue: Value = new Value(Some(this), LinearTransformationType)
     override def toModel = Model.from("scaling" -> scaling, "rotation" -> rotation, "shear" -> shear)
     
     override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
         LinearTransformation(scaling, rotation, shear)
     
-    override def toJavaAffineTransform = toMatrix.toJavaAffineTransform
-    
     override def transformedWith(transformation: Matrix2D) = toMatrix.transformedWith(transformation)
-    
     override def transformedWith(transformation: Matrix3D) = toMatrix.transformedWith(transformation)
-    
     override def transformedWith(transformation: Animation[Matrix2D]) =
         AnimatedLinearTransformation { p => transformation(p)(toMatrix) }
-    
     override def affineTransformedWith(transformation: Animation[Matrix3D]) =
         AnimatedAffineTransformation { p => transformation(p)(toMatrix) }
     
@@ -155,7 +152,6 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
      * @param vector a (relative) vector that will be transformed to this coordinate system
      */
     def apply(vector: HasDoubleDimensions) = toMatrix(vector)
-    
     /**
       * @param other Another linear transformation
       * @return A combination of these transformations where the other transformation is applied first and then

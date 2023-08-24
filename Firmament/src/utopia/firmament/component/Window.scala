@@ -731,10 +731,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		if (newSize != size) {
 			val lock = startBoundsUpdate()
 			// Remembers the anchor position for repositioning
-			if (isFullyVisible) {
-				println("Setting anchor")
+			if (isFullyVisible)
 				pendingAnchor.setOne(absoluteAnchorPosition)
-			}
 			_sizePointer.value = newSize
 			val dims = newSize.toDimension
 			AwtEventThread.async {
@@ -1036,7 +1034,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private def centerOn(component: java.awt.Component) = {
 		if (isNotFullScreen) {
 			val lock = startBoundsUpdate()
-			println("Centering window")
 			pendingAnchor.clear()
 			AwtEventThread.async {
 				this.component.setLocationRelativeTo(component)
@@ -1101,7 +1098,6 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			}
 			// Repositions based on anchoring, if queued
 			pendingAnchor.pop().foreach { anchor =>
-				println(s"Resolving pending anchor: $anchor")
 				val newAnchor = absoluteAnchorPosition
 				// Moves this window so that the anchors overlap.
 				// Makes sure screen borders are respected, also.

@@ -31,10 +31,7 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Pol
 	// IMPLEMENTED	----------------
 	
 	override def transformedWith(transformation: Matrix3D) = mapCorners { _ * transformation }
-	
 	override def transformedWith(transformation: Matrix2D) = mapCorners { _ * transformation }
-	
-	override def self = this
 	
 	
 	// OTHER    -------------------
@@ -43,8 +40,7 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Pol
 	 * @param f A mapping function
 	 * @return A copy of this triangle with mapped corners
 	 */
-	def mapCorners(f: Point => Point) =
-	{
+	def mapCorners(f: Point => Point) = {
 		val mapped = corners.map(f)
 		Triangle.withCorners(mapped.head, mapped(1), mapped(2))
 	}

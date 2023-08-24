@@ -3,7 +3,7 @@ package utopia.paradigm.shape.template
 import utopia.flow.operator.EqualsFunction
 import utopia.flow.operator.EqualsExtensions._
 
-object DoubleVector extends VectorFactory[DoubleVector]
+object DoubleVector extends DoubleVectorFactory[DoubleVector]
 {
 	// IMPLICIT ------------------------------
 	

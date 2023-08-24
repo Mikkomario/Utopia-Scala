@@ -12,13 +12,13 @@ import utopia.flow.operator.{EqualsBy, SignOrZero, SignedOrZero}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.SizeType
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, VectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorLike, HasDimensions, DoubleVectorFactory}
 import utopia.paradigm.transform.SizeAdjustable
 
 import java.awt.{Dimension, Insets}
 import scala.util.Success
 
-object Size extends VectorFactory[Size] with FromModelFactory[Size]
+object Size extends DoubleVectorFactory[Size] with FromModelFactory[Size]
 {
     // ATTRIBUTES   --------------------------
     

@@ -30,19 +30,14 @@ case class AnimatedAffineTransformation(f: Double => Matrix3D)
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def self = this
-	
 	override def apply(progress: Double) = f(progress)
 	
 	override def transformedWith(transformation: Matrix2D) =
 		AnimatedAffineTransformation { p => f(p) * transformation }
-	
 	override def transformedWith(transformation: Matrix3D) =
 		AnimatedAffineTransformation { p => transformation(f(p)) }
-	
 	override def transformedWith(transformation: Animation[Matrix2D]) =
 		AnimatedAffineTransformation { p => f(p) * transformation(p) }
-	
 	override def affineTransformedWith(transformation: Animation[Matrix3D]) =
 		AnimatedAffineTransformation { p => transformation(p)(apply(p)) }
 	
