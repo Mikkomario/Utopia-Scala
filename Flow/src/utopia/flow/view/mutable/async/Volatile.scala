@@ -148,7 +148,7 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
             result -> changeEvent
         }
         // Fires the change event, if necessary
-        changeEvent.foreach(fireEvent)
+        changeEvent.foreach { fireEvent(_).foreach { _() } }
         // Returns the custom result
         result
     }

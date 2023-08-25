@@ -96,6 +96,15 @@ trait Changing[+A] extends Any with View[A]
 	def isChanging: Boolean
 	
 	/**
+	  * @return Whether this pointer is being listened to at the moment
+	  */
+	def hasListeners: Boolean
+	/**
+	  * @return Number of listeners registered for this pointer at the moment
+	  */
+	def numberOfListeners: Int
+	
+	/**
 	  * @param priority Priority assigned to the specified listener, where
 	  *                 First is high priority (called first) and Last is standard priority (called afterwards)
 	  * @param lazyListener A listener to assign to this item,
@@ -103,7 +112,6 @@ trait Changing[+A] extends Any with View[A]
 	  *                     (specified as a lazily initialized view)
 	  */
 	protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit
-	
 	/**
 	  * Makes sure the specified change listener won't be informed of possible future change events
 	  * @param changeListener A listener to no longer be informed
@@ -121,6 +129,11 @@ trait Changing[+A] extends Any with View[A]
 	  * @return The current fixed value of this pointer (will continue to remain the same)
 	  */
 	def fixedValue = if (isChanging) None else Some(value)
+	
+	/**
+	  * @return Whether this pointer is not currently being listened to
+	  */
+	def hasNoListeners = !hasListeners
 	
 	
 	// IMPLEMENTED  -----------------

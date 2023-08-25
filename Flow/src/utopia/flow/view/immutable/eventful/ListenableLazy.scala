@@ -85,13 +85,16 @@ object ListenableLazy
 			override def value = current
 			override def isChanging = nonInitialized
 			
+			override def hasListeners: Boolean = queuedListeners.exists { _.nonEmpty }
+			override def numberOfListeners: Int = queuedListeners.map { _.size }.sum
+			
 			// WET WET
 			override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Option[A]]]): Unit = {
-				if (nonInitialized) queuedListeners = queuedListeners.mapSide(priority) { q =>
-					if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
-				}
+				if (nonInitialized)
+					queuedListeners = queuedListeners.mapSide(priority) { q =>
+						if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
+					}
 			}
-			
 			override def removeListener(changeListener: Any) =
 				queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
 			

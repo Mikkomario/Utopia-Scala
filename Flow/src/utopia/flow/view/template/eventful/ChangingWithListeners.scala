@@ -44,6 +44,12 @@ trait ChangingWithListeners[A] extends Changing[A]
 	protected def allListeners = listenersByPriority.flatten
 	
 	
+	// IMPLEMENTED  ----------------------
+	
+	override def hasListeners: Boolean = listenersByPriority.exists { _.nonEmpty }
+	override def numberOfListeners: Int = listenersByPriority.map { _.size }.sum
+	
+	
 	// OTHER    --------------------------
 	
 	/**

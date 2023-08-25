@@ -96,7 +96,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 		
 		// Generates change events, if needed
 		if (v != placeHolder)
-			fireEvent(ChangeEvent(placeHolder, v))
+			fireEvent(ChangeEvent(placeHolder, v)).foreach { _() }
 		
 		// Forgets about the listeners and dependencies afterwards
 		clearListeners()

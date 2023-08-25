@@ -12,7 +12,9 @@
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
 - Added **FromDirectionFactory** and **FromAlignmentFactory** -traits
-- Added **RoundingDouble** wrapper class in preparation of rounding shapes (which have not yet been implemented)
+- Added certain rounding shapes: **RoundingDouble**, **RoundingVector**, **RoundingVector1D**, 
+  **RoundingSpan** and **RoundingVector2D**
+  - The rounding shape support is not yet fully implemented, however
 - Added more generic numeric vector traits
   - **NumericVectorLike** trait, based on the **DoubleVectorLike** -trait
   - **NumericVectorFactory**, based on **VectorFactory**

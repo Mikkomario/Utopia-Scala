@@ -93,7 +93,7 @@ object Variable
             if (value != _value) {
                 val event = ChangeEvent(_value, castValue)
                 _value = castValue
-                fireEvent(event)
+                fireEvent(event).foreach { _() }
             }
         }
     

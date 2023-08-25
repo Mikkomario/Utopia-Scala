@@ -24,19 +24,9 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A]
 	protected val hasListenersFlag = listenersPointer.strongMap { _.exists { _.nonEmpty } }
 	
 	
-	// COMPUTED -----------------------------
-	
-	/**
-	  * @return Whether this pointer is being listened to
-	  */
-	def hasListeners = hasListenersFlag.value
-	/**
-	  * @return Whether this pointer is not currently being listened to
-	  */
-	def hasNoListeners = !hasListeners
-	
-	
 	// IMPLEMENTED  -------------------------
+	
+	override def hasListeners = hasListenersFlag.value
 	
 	override protected def listenersByPriority: Pair[Iterable[ChangeListener[A]]] = listenersPointer.value
 	

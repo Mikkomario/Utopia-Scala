@@ -66,6 +66,15 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	}
 	override def isChanging: Boolean = pointer.forall { _.isChanging }
 	
+	override def hasListeners: Boolean = pointer match {
+		case Some(p) => p.hasListeners
+		case None => queuedListeners.exists { _.nonEmpty }
+	}
+	override def numberOfListeners: Int = pointer match {
+		case Some(p) => p.numberOfListeners
+		case None => queuedListeners.map { _.size }.sum
+	}
+	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
 		pointer match {
 			// Case: Pointer already defined => Assigns listeners directly to it
