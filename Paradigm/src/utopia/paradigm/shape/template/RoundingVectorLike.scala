@@ -26,4 +26,10 @@ trait RoundingVectorLike[+Repr <: HasDimensions[RoundingDouble] with HasLength]
 		dimensions.zipWithAxis.map { case (d, axis) => RoundingVector1D(d, axis) }
 	
 	override def along(axis: Axis) = RoundingVector1D(apply(axis), axis)
+	
+	
+	// OTHER    ----------------------
+	
+	def *(scaling: Double) = scaledBy(scaling)
+	def /(div: Double) = dividedBy(div)
 }
