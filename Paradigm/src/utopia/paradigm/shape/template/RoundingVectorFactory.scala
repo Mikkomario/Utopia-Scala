@@ -20,7 +20,7 @@ trait RoundingVectorFactory[+V] extends NumericVectorFactory[RoundingDouble, V]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override implicit def n: Numeric[RoundingDouble] = RoundingDouble.numeric
+	override implicit def n: Fractional[RoundingDouble] = RoundingDouble.numeric
 	
 	override def dimensionFrom(double: Double): RoundingDouble = RoundingDouble(double)
 	

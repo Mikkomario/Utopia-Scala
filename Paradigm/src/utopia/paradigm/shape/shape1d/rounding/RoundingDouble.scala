@@ -1,7 +1,11 @@
 package utopia.paradigm.shape.shape1d.rounding
 
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.RoundingFunction.{Ceil, Floor, Round}
 import utopia.flow.operator.{CanBeAboutZero, DoubleLike, EqualsFunction, RoundingFunction, Sign, SignOrZero}
+import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
 
@@ -40,10 +44,10 @@ object RoundingDouble
 	private object NumericRoundingDouble extends Fractional[RoundingDouble]
 	{
 		override def plus(x: RoundingDouble, y: RoundingDouble): RoundingDouble = x + y
-		override def minus(x: RoundingDouble, y: RoundingDouble): RoundingDouble = RoundingDouble(x.wrapped - y.wrapped)
+		override def minus(x: RoundingDouble, y: RoundingDouble): RoundingDouble = RoundingDouble(x.value - y.value)
 		override def times(x: RoundingDouble, y: RoundingDouble): RoundingDouble = x * y
-		override def div(x: RoundingDouble, y: RoundingDouble): RoundingDouble = RoundingDouble(x.wrapped / y.wrapped)
-		override def negate(x: RoundingDouble): RoundingDouble = RoundingDouble(-x.wrapped)
+		override def div(x: RoundingDouble, y: RoundingDouble): RoundingDouble = RoundingDouble(x.value / y.value)
+		override def negate(x: RoundingDouble): RoundingDouble = RoundingDouble(-x.value)
 		
 		override def fromInt(x: Int): RoundingDouble = RoundingDouble(x)
 		override def parseString(str: String): Option[RoundingDouble] = str.toDoubleOption.map { RoundingDouble(_) }
@@ -63,21 +67,21 @@ object RoundingDouble
   * @author Mikko Hilpinen
   * @since 28.7.2023, v1.3.1
   */
-case class RoundingDouble(wrapped: Double, logic: RoundingFunction = Round)
-	extends DoubleLike[RoundingDouble] with CanBeAboutZero[Double, RoundingDouble]
+case class RoundingDouble(value: Double, logic: RoundingFunction = Round)
+	extends DoubleLike[RoundingDouble] with CanBeAboutZero[Double, RoundingDouble] with ValueConvertible with View[Double]
 {
 	// ATTRIBUTES   ------------------------
 	
 	/**
 	  * This number as an integer
 	  */
-	lazy val int = logic(wrapped).toInt
+	lazy val int = logic(value).toInt
 	/**
 	  * This number as a double (rounded)
 	  */
 	lazy val double = int.toDouble
 	
-	override lazy val sign: SignOrZero = Sign.of(wrapped)
+	override lazy val sign: SignOrZero = Sign.of(value)
 	
 	
 	// COMPUTED ----------------------------
@@ -105,31 +109,34 @@ case class RoundingDouble(wrapped: Double, logic: RoundingFunction = Round)
 	
 	override def length = double
 	
+	override implicit def toValue: Value = int
+	override def toString = int.toString
+	
 	override def compareTo(o: RoundingDouble) = {
 		val intCompare = int - o.int
 		if (intCompare == 0)
-			wrapped.compareTo(o.wrapped)
+			value.compareTo(o.value)
 		else
 			intCompare
 	}
 	
-	override def *(mod: Double) = RoundingDouble(wrapped * mod)
 	override def +(other: RoundingDouble) = {
-		val resultingLogic = {
-			if (logic == other.logic)
-				logic
-			else if ((wrapped - double).abs >= (other.wrapped - other.double).abs)
-				logic
-			else
-				other.logic
-		}
-		RoundingDouble(wrapped + other.wrapped, resultingLogic)
+		val resultingLogic = logicBetween(other)
+		RoundingDouble(value + other.value, resultingLogic)
 	}
+	override def *(mod: Double) = RoundingDouble(value * mod)
+	override def /(div: Double) = copy(value / div)
 	
 	override def ~==(other: Double): Boolean = int == other.round
 	
 	
 	// OTHER    --------------------------
+	
+	def +(d: Double) = copy(value + d)
+	def -(d: Double) = copy(value - d)
+	def -(other: RoundingDouble) = RoundingDouble(value - other.value, logicBetween(other))
+	def *(mod: RoundingDouble) = RoundingDouble(value * mod.value, logicBetween(mod))
+	def /(div: RoundingDouble) = copy(value / div.value)
 	
 	/**
 	  * @param logic Rounding logic to apply
@@ -143,4 +150,13 @@ case class RoundingDouble(wrapped: Double, logic: RoundingFunction = Round)
 	  * @return Whether these numbers round to the same number
 	  */
 	def ~==(other: RoundingDouble) = int == other.int
+	
+	private def logicBetween(other: RoundingDouble) = {
+		if (logic == other.logic)
+			logic
+		else if ((value - double).abs >= (other.value - other.double).abs)
+			logic
+		else
+			other.logic
+	}
 }

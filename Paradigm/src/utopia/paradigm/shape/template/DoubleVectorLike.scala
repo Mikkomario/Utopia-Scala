@@ -4,18 +4,17 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.{EqualsExtensions, EqualsFunction, HasLength, LinearScalable}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.shape2d.{Point, Size, Vector2D}
-import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * This trait is implemented by simple shape classes that can be represented as an vector of double numbers, each
   * matching an axis (X, Y, Z, ...)
   * @tparam Repr the concrete implementing class
-  * @tparam Transformed Type of the vector result when applying a matrix-based transformation or a direction-change function
   */
-trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength, +Transformed]
-	extends NumericVectorLike[Double, Repr, Transformed] with LinearScalable[Repr]
+trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength]
+	extends NumericVectorLike[Double, Repr, Repr] with LinearScalable[Repr]
 {
 	// COMPUTED ---------------------
 	
@@ -61,6 +60,7 @@ trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength, +Transformed
 	
 	// IMPLEMENTED	-----------------
 	
+	override protected def fromDoublesFactory = factory
 	override implicit def dimensionApproxEquals: EqualsFunction[Double] = EqualsExtensions.doubleEquals
 	
 	/**
@@ -72,6 +72,21 @@ trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength, +Transformed
 	override def along(axis: Axis) = Vector1D(apply(axis), axis)
 	
 	override def /(div: Double) = super[NumericVectorLike]./(div)
+	
+	override def scaledBy(mod: Double) = this * mod
+	override def scaledBy(other: HasDoubleDimensions) = this * other
+	override def dividedBy(div: Double) = this / div
+	override def dividedBy(other: HasDoubleDimensions) = this / other
+	
+	override def scaled(xScaling: Double, yScaling: Double) = this * Dimensions.double(xScaling, yScaling)
+	override def scaled(modifier: Double) = this * modifier
+	override def translated(translation: HasDoubleDimensions) = this + translation
+	
+	// Slightly optimized overrides
+	override def transformedWith(transformation: Matrix2D) =
+		factory.from(transformation(dimensions.padTo(2, 1.0)))
+	override def transformedWith(transformation: Matrix3D) =
+		factory.from(transformation(dimensions.padTo(3, 1.0)))
 	
 	
 	// OTHER	--------------------------

@@ -11,7 +11,7 @@ trait DoubleVectorFactory[+V] extends NumericVectorFactory[Double, V]
 {
 	// IMPLEMENTED  ---------------------
 	
-	override implicit def n: Numeric[Double] = DoubleIsFractional
+	override implicit def n: Fractional[Double] = DoubleIsFractional
 	override protected def dimensionsFactory = Dimensions.double
 	
 	override def dimensionFrom(double: Double): Double = double

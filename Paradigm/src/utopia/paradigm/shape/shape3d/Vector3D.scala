@@ -11,8 +11,8 @@ import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
-import utopia.paradigm.shape.shape2d.{DoubleVectorLike2D, Vector2D}
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, HasDimensions}
+import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, HasDimensions}
 
 import scala.concurrent.duration.Duration
 
@@ -27,7 +27,7 @@ object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[
     /**
      * The zero vector (0, 0, 0)
      */
-    val zero = empty
+    override val zero = empty
     /**
      * A vector with the length of 1
      */
@@ -148,7 +148,7 @@ object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[
  * @since Genesis 24.12.2016
  */
 class Vector3D private(override val dimensions: Dimensions[Double])
-	extends DoubleVectorLike2D[Vector3D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
+	extends DoubleVectorLike[Vector3D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
 {
     // COMPUTED PROPERTIES    ----------
 	
@@ -171,18 +171,14 @@ class Vector3D private(override val dimensions: Dimensions[Double])
 	
 	// IMPLEMENTED	--------------------
 	
+	override def self = this
+	override protected def factory = Vector3D
 	override protected def equalsProperties = dimensions
 	
 	override def zero = Vector3D.zero
 	
-	override protected def factory = Vector3D
-	
 	override def toString = s"($x, $y, $z)"
-	
-	override def self = this
-	
 	override def toValue = new Value(Some(this), Vector3DType)
-	
 	override def toModel = Model.fromMap(Map("x" -> x, "y" -> y, "z" -> z).filterNot { _._2 ~== 0.0 })
     
     

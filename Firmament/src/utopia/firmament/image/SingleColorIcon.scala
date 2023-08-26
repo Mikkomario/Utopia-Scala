@@ -11,7 +11,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet, ColorShade, FromShadeFactory}
 import utopia.paradigm.shape.shape2d.{Size, Sized}
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 
 import scala.language.implicitConversions
 

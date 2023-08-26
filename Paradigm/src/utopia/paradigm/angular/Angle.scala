@@ -7,7 +7,7 @@ import utopia.flow.operator.{Combinable, SelfComparable}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.generic.ParadigmDataType.AngleType
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 
 object Angle
 {
@@ -129,7 +129,7 @@ object Angle
  * @since Genesis 30.6.2017
  */
 case class Angle private(radians: Double)
-    extends SizeAdjustable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle] with ValueConvertible
+    extends LinearSizeAdjustable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle] with ValueConvertible
 {
     // ATTRIBUTES    ------------------
     

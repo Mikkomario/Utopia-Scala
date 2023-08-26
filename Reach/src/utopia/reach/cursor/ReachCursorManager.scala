@@ -38,7 +38,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 	
 	private val cursorCache = TryCache.releasing[Image, java.awt.Cursor](1.minutes, 5.minutes) { image =>
 		// Applies the image with proper os-supported measurements and applied alpha value. Will not crop the image.
-		val osCursorSize = Try { Size.of(Toolkit.getDefaultToolkit.getBestCursorSize(
+		val osCursorSize = Try { Size(Toolkit.getDefaultToolkit.getBestCursorSize(
 			image.width.round.toInt, image.height.round.toInt)) }
 		val correctedImage = osCursorSize match {
 			case Success(targetSize) => image.fittingWithin(targetSize).paintedToCanvas(targetSize)

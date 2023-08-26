@@ -5,8 +5,6 @@ import utopia.firmament.component.stack.{Stackable, StackableWrapper}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 
-import scala.math.Ordering.Double.TotalOrdering
-
 /**
  * A common trait for containers that place their contents inside separate "collections"
   * (Eg. rows & columns or boxes inside rows etc.)

@@ -1,14 +1,14 @@
 package utopia.firmament.model.enumeration
 
 import utopia.firmament.model.enumeration.SizeCategory.Custom
-import utopia.paradigm.transform.{Adjustment, SizeAdjustable}
+import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 /**
   * An enumeration for different levels of sizes, such as large, small and medium
   * @author Mikko Hilpinen
   * @since 3.5.2023, v1.1
   */
-trait SizeCategory extends SizeAdjustable[SizeCategory]
+trait SizeCategory extends LinearSizeAdjustable[SizeCategory]
 {
 	// ABSTRACT ------------------------
 	

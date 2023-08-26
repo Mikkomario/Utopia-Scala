@@ -11,7 +11,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
-import utopia.paradigm.transform.{Adjustment, SizeAdjustable}
+import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 /**
   * A trait common for basic component context implementations
@@ -20,7 +20,7 @@ import utopia.paradigm.transform.{Adjustment, SizeAdjustable}
   * @tparam Repr This context type
   * @tparam ColorSensitive A color sensitive version of this context
   */
-trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr] with SizeAdjustable[Repr]
+trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT	-------------------------
 	

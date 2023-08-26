@@ -14,10 +14,10 @@ import utopia.paradigm.shape.template.{HasDimensions, NumericVectorLike}
   *
   * @tparam D Type of the length of this vector
   * @tparam Repr Implementing type of this vector
-  * @tparam Transformed Type of this vector once a transformation or a direction-change function has been applied
+  * @tparam FromDoubles Type of this vector once a transformation or a direction-change function has been applied
   */
-trait Vector1DLike[D, +Repr <: HasDimensions[D] with HasLength, +Transformed]
-	extends Dimension[D] with NumericVectorLike[D, Repr, Transformed] with SignedOrZero[Repr]
+trait Vector1DLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDoubles]
+	extends Dimension[D] with NumericVectorLike[D, Repr, FromDoubles] with SignedOrZero[Repr]
 {
 	// ABSTRACT ------------------------------
 	
@@ -63,20 +63,15 @@ trait Vector1DLike[D, +Repr <: HasDimensions[D] with HasLength, +Transformed]
 	override def nonZero = !isZero
 	
 	override def zero = factory.zeroAlong(axis)
-	override def toUnit = factory.unitAlong(axis)
+	override def unary_- = factory(n.negate(value), axis)
 	
 	override def components = Vector(this)
 	
-	override def +(n: Double) = factory(this.n.plus(value, factory.dimensionFrom(n)), axis)
-	override def -(n: Double) = this + (-n)
 	override def *(n: D) = factory(this.n.times(value, n), axis)
-	override def scaledBy(n: Double) = factory(factory.scale(value, n), axis)
-	override def /(div: Double) = factory(factory.div(value, div), axis)
+	override def /(div: D) = factory(n.div(value, div), axis)
 	
 	override def isParallelWith(axis: Axis) = this.axis == axis
 	override def isPerpendicularTo(axis: Axis) = this.axis != axis
-	
-	override def withLength(length: Double) = factory(factory.dimensionFrom(length), axis)
 	
 	
 	// OTHER    -----------------------------

@@ -15,7 +15,7 @@ trait NumericVectorFactory[D, +V] extends DimensionsWrapperFactory[D, V]
 	/**
 	  * @return Numeric implementation for the wrapped dimensions
 	  */
-	implicit def n: Numeric[D]
+	implicit def n: Fractional[D]
 	
 	/**
 	  * @param double A double number
@@ -37,6 +37,14 @@ trait NumericVectorFactory[D, +V] extends DimensionsWrapperFactory[D, V]
 	  * @return A divided copy of the specified dimension
 	  */
 	def div(d: D, div: Double): D
+	
+	
+	// COMPUTED -------------------------
+	
+	/**
+	  * @return A zero vector (where each axis is set to 0)
+	  */
+	def zero = apply()
 	
 	
 	// IMPLEMENTED  ---------------------

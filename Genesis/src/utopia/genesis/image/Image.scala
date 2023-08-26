@@ -10,16 +10,15 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape1d.{Dimension, Vector1D}
 import utopia.paradigm.shape.shape2d._
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}
 import javax.imageio.ImageIO
-import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
 
 object Image
@@ -149,7 +148,7 @@ object Image
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: Lazy[Pixels])
-	extends ImageLike with SizeAdjustable[Image] with Sized[Image] with MaybeEmpty[Image]
+	extends ImageLike with LinearSizeAdjustable[Image] with Sized[Image] with MaybeEmpty[Image]
 {
 	// ATTRIBUTES	----------------
 	
@@ -299,11 +298,11 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			crop(Insets.symmetric(requiredCropping))
 		}
 	}
-	override def croppedToFitWithin(maxLength: Vector1D) = {
+	override def croppedToFitWithin(maxLength: Dimension[Double]) = {
 		if (fitsWithin(maxLength))
 			this
 		else {
-			val requiredCropping = lengthAlong(maxLength.axis) - maxLength.length
+			val requiredCropping = lengthAlong(maxLength.axis) - maxLength.value
 			crop(Insets.symmetric(Vector1D(requiredCropping, maxLength.axis)))
 		}
 	}

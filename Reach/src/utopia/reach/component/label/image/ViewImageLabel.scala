@@ -15,7 +15,7 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
@@ -209,7 +209,7 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
   * @since 30.05.2023, v1.1
   */
 trait ViewImageLabelFactoryLike[+Repr]
-	extends ViewImageLabelSettingsWrapper[Repr] with FramedFactory[Repr] with SizeAdjustable[Repr]
+	extends ViewImageLabelSettingsWrapper[Repr] with FramedFactory[Repr] with LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT ------------------------------
 	

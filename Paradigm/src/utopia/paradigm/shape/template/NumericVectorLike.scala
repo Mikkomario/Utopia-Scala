@@ -6,11 +6,13 @@ import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, HasLeng
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
-import utopia.paradigm.shape.shape1d.{Dimension, Vector1D}
+import utopia.paradigm.shape.shape1d.Dimension
 import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.Transformable
+
+import scala.math.Fractional.Implicits.infixFractionalOps
 
 /**
   * This trait is implemented by simple shape classes that can be represented as an vector of numbers,
@@ -23,12 +25,12 @@ import utopia.paradigm.transform.Transformable
   *
   * @tparam D Type of dimensions used by this vector
   * @tparam Repr the concrete implementing class
-  * @tparam Transformed Type of vector returned in matrix-based transformation functions and direction changes
+  * @tparam FromDoubles Type of vector returned in case of double number input / precision
   */
-trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transformed]
+trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDoubles]
 	extends Dimensional[D, Repr]
 		with Scalable[D, Repr] with Combinable[HasDimensions[D], Repr] with Reversible[Repr] with HasLength
-		with VectorProjectable[Transformed] with CanBeAboutZero[HasDimensions[D], Repr] with Transformable[Transformed]
+		with VectorProjectable[FromDoubles] with CanBeAboutZero[HasDimensions[D], Repr] with Transformable[FromDoubles]
 {
 	// ABSTRACT ---------------------
 	
@@ -39,7 +41,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	/**
 	  * @return Factory used for building transformed vectors that are based on double precision numbers
 	  */
-	protected def fromDoublesFactory: FromDimensionsFactory[Double, Transformed]
+	protected def fromDoublesFactory: FromDimensionsFactory[Double, FromDoubles]
 	
 	/**
 	  * @return Approximate function used for comparing individual dimensions
@@ -52,7 +54,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	/**
 	  * @return Numeric implementation for the dimensions used in this vector
 	  */
-	implicit def n: Numeric[D] = factory.n
+	implicit def n: Fractional[D] = factory.n
 	
 	/**
 	  * @return Direction of this vector in x-y -plane
@@ -70,7 +72,10 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	/**
 	  * A 2D normal for this vector
 	  */
-	def normal2D = Vector2D(-n.toDouble(y), n.toDouble(x)).toUnit
+	def normal2D = {
+		val scaling = 1.0 / length
+		fromDoublesFactory(Dimensions.double(-n.toDouble(y) * scaling, n.toDouble(x) * scaling))
+	}
 	
 	/**
 	  * @return A 2x2 matrix representation of this vector (1x2 matrix [x,y] extended to 2x2).
@@ -98,7 +103,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	/**
 	  * This vector with length of 1
 	  */
-	def toUnit = this / length
+	def toUnit = dividedBy(length)
 	
 	/**
 	  * A version of this vector where all values are at least 0
@@ -146,6 +151,11 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	  */
 	def map(f: D => D) = mapEachDimension(f)
 	/**
+	  * @param f A mapping function applied for all dimensions of this element
+	  * @return A mapped copy of this element
+	  */
+	def mapToDouble(f: D => Double) = fromDoublesFactory(dimensions.mapWithZero(0.0)(f))
+	/**
 	  * @param f A mapping function that also takes dimension index (0 for the first dimension)
 	  * @return A mapped copy of this vector
 	  */
@@ -162,40 +172,56 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +Transforme
 	def -(other: HasDimensions[D]) = mergeWith(other)(n.minus)
 	
 	/**
-	  * @param n A scaling modifier
-	  * @return A copy of this vector where each dimension is scaled by the specified amount
-	  */
-	def scaledBy(n: Double) = map { factory.scale(_, n) }
-	/**
 	  * @param other Another vector-like element
 	  * @return This element multiplied on each axis of the provided element
 	  */
 	def *(other: HasDimensions[D]): Repr = mergeWith(other)(n.times)
 	/**
+	  * @param mod mod scaling modifier
+	  * @return A copy of this vector where each dimension is scaled by the specified amount
+	  */
+	def scaledBy(mod: Double) = mapToDouble { n.toDouble(_) * mod }
+	/**
+	  * @param other A scaling vector
+	  * @return A copy of this vector where each dimension is scaled using the specified vector's matching dimension
+	  */
+	def scaledBy(other: HasDoubleDimensions) =
+		fromDoublesFactory(dimensions.mergeWith(other, 0.0) { n.toDouble(_) * _ })
+	/**
+	  * Scales this vector along a singular axis. The other axes remain unaffected.
+	  * @param mod A one-dimensional scaling modifier
+	  * @return A copy of this vector scaled along the specified dimension by the specified amount
+	  */
+	def scaledAlong(mod: Dimension[D]) = mapDimension(mod.axis) { _ * mod.value }
+	/**
 	  * @param div A dividing factor
 	  * @return Copy of this vector where each dimension is divided using the specified division factor
 	  */
-	def /(div: Double) = map { factory.div(_, div) }
+	def /(div: D) = map { n.div(_, div) }
 	/**
 	  * @param other Another vector-like element
 	  * @return This element divided on each axis of the provided element.
 	  */
-	def /(other: HasDoubleDimensions): Repr = mergeWith(other)(factory.div)
-	
+	def /(other: HasDimensions[D]): Repr = mergeWith(other)(n.div)
 	/**
-	  * Scales this vector along a singular axis. The other axes remain unaffected.
-	  * @param vector A vector that determines the scaling factor (via length) and the affected axis (vector's axis)
-	  * @return A copy of this vector where one component has been scaled using the specified modifier
+	  * @param div A dividing factor
+	  * @return Copy of this vector where each dimension is divided using the specified division factor
 	  */
-	def scaledAlong(vector: Vector1D) = mapDimension(vector.axis) { factory.scale(_, vector.length) }
+	def dividedBy(div: Double) = mapToDouble { n.toDouble(_) / div }
+	/**
+	  * @param other A dividing vector
+	  * @return Copy of this vector where each dimension is divided using the specified vector.
+	  *         Zero dimensions (of the other vector) are ignored.
+	  */
+	def dividedBy(other: HasDoubleDimensions) =
+		fromDoublesFactory(
+			dimensions.mergeWith(other, 0.0) { (a, d) => if (d == 0.0) n.toDouble(a) else n.toDouble(a) / d })
 	/**
 	  * Divides this vector along a singular axis. The other axes remain unaffected.
-	  * Please note that this vector will remain unaffected if divided by zero.
-	  * @param vector A vector that determines the dividing factor (via length) and the affected axis (vector's axis)
-	  * @return A copy of this vector where one component has been divided with the specified modifier
+	  * @param div A one-dimensional divider
+	  * @return A copy of this vector divided along the specified axis by the specified amount
 	  */
-	def dividedAlong(vector: Vector1D) =
-		if (vector.isZero) self else mapDimension(vector.axis) { factory.div(_, vector.length) }
+	def dividedAlong(div: Dimension[D]) = mapDimension(div.axis) { _ / div.value }
 	
 	/**
 	  * Calculates this vectors direction around the specified axis

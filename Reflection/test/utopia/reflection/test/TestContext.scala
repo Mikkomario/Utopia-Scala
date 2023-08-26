@@ -34,7 +34,7 @@ object TestContext
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colorScheme, margins)
 	
 	implicit val logger: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
+	implicit val exc: ExecutionContext = new ThreadPool("Reflection")
 	GlobalKeyboardEventHandler.specifyExecutionContext(exc)
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)

@@ -18,7 +18,7 @@ object Screen
 	
 	private var screenSizeMod: Option[Vector2D] = None
 	
-	private lazy val standardSize = Try { Size of toolkit.getScreenSize }.getOrElse(Size.zero)
+	private lazy val standardSize = Try { Size(toolkit.getScreenSize) }.getOrElse(Size.zero)
 	
 	
 	// COMPUTED ---------------------------

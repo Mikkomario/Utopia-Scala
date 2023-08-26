@@ -2,14 +2,14 @@ package utopia.firmament.model
 
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Small, VeryLarge, VerySmall}
-import utopia.paradigm.transform.{Adjustment, SizeAdjustable}
+import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 /**
   * Common trait for objects that define a standard size, and which can create copies of themselves with different sizes
   * @author Mikko Hilpinen
   * @since 4.5.2023, v1.1
   */
-trait StandardSizeAdjustable[+Repr] extends SizeAdjustable[Repr]
+trait StandardSizeAdjustable[+Repr] extends LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT ----------------------
 	

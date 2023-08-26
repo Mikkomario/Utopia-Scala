@@ -2,7 +2,7 @@ package utopia.paradigm.shape.shape2d.rounding
 
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.shape.shape1d.rounding.RoundingDouble
-import utopia.paradigm.shape.template.{Dimensions, HasDimensions, RoundingVector, RoundingVectorFactory}
+import utopia.paradigm.shape.template.{Dimensions, HasDimensions, RoundingVector, RoundingVectorFactory, RoundingVectorLike}
 
 object RoundingVector2D extends RoundingVectorFactory[RoundingVector2D]
 {
@@ -11,7 +11,7 @@ object RoundingVector2D extends RoundingVectorFactory[RoundingVector2D]
 	/**
 	  * A zero length vector
 	  */
-	val zero = empty
+	override val zero = empty
 	/**
 	  * A unit (1) length vector along the X-axis
 	  */
@@ -38,7 +38,7 @@ object RoundingVector2D extends RoundingVectorFactory[RoundingVector2D]
   * @since 24.8.2023, v1.4
   */
 class RoundingVector2D private(override val dimensions: Dimensions[RoundingDouble])
-	extends RoundingVectorLike2D[RoundingVector2D] with RoundingVector with EqualsBy
+	extends RoundingVectorLike[RoundingVector2D] with RoundingVector with EqualsBy
 {
 	override def self: RoundingVector2D = this
 	override protected def factory: RoundingVectorFactory[RoundingVector2D] = RoundingVector2D

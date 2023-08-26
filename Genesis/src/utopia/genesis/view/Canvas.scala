@@ -45,8 +45,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size,
       * @return The preferred game world size of this canvas
       */
     def prefferedGameWorldSize = _prefferedGameWorldSize
-    def prefferedGameWorldSize_=(newSize: Size) = 
-    {
+    def prefferedGameWorldSize_=(newSize: Size) = {
         _prefferedGameWorldSize = newSize
         updateScaling()
     }
@@ -68,16 +67,14 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size,
     setBackground(Color.WHITE)
     
     // Adds a component adapter that updates scaling whenever this panel is resized
-    addComponentListener(new ComponentAdapter
-    {
+    addComponentListener(new ComponentAdapter {
         override def componentResized(e: ComponentEvent) = updateScaling()
     })
     
     
     // IMPLEMENTED METHODS    --------
     
-    override def paintComponent(g: Graphics) =
-    {
+    override def paintComponent(g: Graphics) = {
         super.paintComponent(g)
 
         Drawer(g.asInstanceOf[Graphics2D]).consume { drawer =>
@@ -98,10 +95,8 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size,
       * @param maxFPS The maximum frames (draws) per second
       * @param context Asynchronous execution context
       */
-    def startAutoRefresh(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger): Unit =
-    {
-        if (refreshLoop.isEmpty)
-        {
+    def startAutoRefresh(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger): Unit = {
+        if (refreshLoop.isEmpty) {
             val loop = new RepaintLoop(this, maxFPS)
             loop.runAsync()
             refreshLoop = Some(loop)
@@ -113,27 +108,21 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size,
       */
     def stopAutoRefresh() = refreshLoop.map { _.stop() } getOrElse Future.successful(())
     
-    private def updateScaling() =
-    {
-        val size = Size of getSize()
+    private def updateScaling() = {
+        val size = Size(getSize())
         
         if (scalingPolicy == Project)
             _gameWorldSize = (prefferedGameWorldSize.toVector projectedOver size.toVector).toSize
-        else
-        {
+        else {
             val prefferedXYRatio = prefferedGameWorldSize.width / prefferedGameWorldSize.height
             val newXYRatio = size.width / size.height
             
             val preserveX = if (scalingPolicy == Crop) prefferedXYRatio <= newXYRatio else prefferedXYRatio > newXYRatio
             
             if (preserveX)
-            {
                 _gameWorldSize = prefferedGameWorldSize * Vector3D(1, size.height / size.width, 1)
-            }
             else
-            {
                 _gameWorldSize = prefferedGameWorldSize * Vector3D(size.width / size.height, 1, 1)
-            }
         }
         
         _scaling = (size / gameWorldSize).x

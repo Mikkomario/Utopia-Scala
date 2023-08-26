@@ -293,7 +293,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private val _positionPointer = new EventfulPointer(Point.origin)
 	// Pre-initializes the window size based on container size.
 	// Won't take into account the window insets. Actual size is initialized after pack() in the AWT event thread
-	private val _sizePointer = new EventfulPointer(Size.of(container.getSize))
+	private val _sizePointer = new EventfulPointer(Size(container.getSize))
 	
 	// Stores calculated anchor, which is used in repositioning after size changes
 	// This pointer is cleared after the anchor has been resolved / actuated
@@ -442,7 +442,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		
 		// Initializes position and size
 		_positionPointer.value = Point.of(component.getLocation)
-		_sizePointer.value = Size.of(component.getSize)
+		_sizePointer.value = Size(component.getSize)
 			
 		// Registers to update the state when the wrapped window updates
 		component.addComponentListener(WindowComponentStateListener)
@@ -1088,7 +1088,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		
 		override def componentMoved(e: ComponentEvent) = _positionPointer.value = Point.of(component.getLocation)
 		override def componentResized(e: ComponentEvent) = {
-			val newSize = Size.of(component.getSize)
+			val newSize = Size(component.getSize)
 			_sizePointer.value = newSize
 			
 			// Updates content layout (only while visible)

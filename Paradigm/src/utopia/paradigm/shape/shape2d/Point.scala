@@ -10,7 +10,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.PointType
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, HasDimensions}
 
 import java.awt.geom.Point2D
 import scala.collection.immutable.HashMap
@@ -69,8 +69,8 @@ object Point extends DoubleVectorFactory[Point] with FromModelFactory[Point]
 * @since Genesis 20.11.2018
 **/
 class Point private(override val dimensions: Dimensions[Double])
-	extends DoubleVectorLike2D[Point] with DoubleVector with ValueConvertible with ModelConvertible
-		with EqualsBy
+	extends PointLike[Double, Point] with DoubleVectorLike[Point] with DoubleVector
+		with ValueConvertible with ModelConvertible with EqualsBy
 {
     // IMPLEMENTED    -----------------
 	
@@ -81,8 +81,6 @@ class Point private(override val dimensions: Dimensions[Double])
 	
 	override def toValue = new Value(Some(this), PointType)
 	override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
-	
-	override def toString = xyPair.toString()
 	
 	override protected def factory = Point
 	
@@ -98,15 +96,6 @@ class Point private(override val dimensions: Dimensions[Double])
 	  */
 	@deprecated("Please use .toVector3D instead", "v1.2")
 	def in3D = Vector3D(x, y)
-	
-	/**
-	  * An awt representation of this point
-	  */
-	def toAwtPoint = new java.awt.Point(x.round.toInt, y.round.toInt)
-	/**
-	  * An awt geom representation of this point
-	  */
-	def toAwtPoint2D = new Point2D.Double(x, y)
     
     
     // OTHER    -----------------------

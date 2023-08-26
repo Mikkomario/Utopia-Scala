@@ -30,10 +30,9 @@ class EmptyJComponent private() extends JLabel with CustomDrawComponent
 	
 	// IMPLEMENTED	-----------------
 	
-	override def drawBounds = Bounds(Point.origin, Size.of(getSize()))
+	override def drawBounds = Bounds(Point.origin, Size(getSize()))
 	
-	override def paintComponent(g: Graphics) =
-	{
+	override def paintComponent(g: Graphics) = {
 		_isWaitingRepaint = false
 		customPaintComponent(g, super.paintComponent)
 	}
@@ -42,11 +41,9 @@ class EmptyJComponent private() extends JLabel with CustomDrawComponent
 	
 	override def isPaintingOrigin = shouldPaintOrigin()
 	
-	override def repaint() =
-	{
+	override def repaint() = {
 		// This component won't request repaint while the previous request is still in effect
-		if (!_isWaitingRepaint)
-		{
+		if (!_isWaitingRepaint) {
 			_isWaitingRepaint = true
 			super.repaint()
 		}

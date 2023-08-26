@@ -63,7 +63,7 @@ private class CustomPanel extends JPanel with CustomDrawComponent
 	
 	// IMPLEMENTED	-----------------
 	
-	override def drawBounds = Bounds(Point.origin, Size.of(getSize()))
+	override def drawBounds = Bounds(Point.origin, Size(getSize()))
 	
 	override def paintComponent(g: Graphics) = customPaintComponent(g, super.paintComponent)
 	

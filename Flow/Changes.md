@@ -11,6 +11,7 @@
 - `Sign.of(...)` now returns **SignOrZero** instead of **Sign**
 - Renamed **PointerWithEvents** to **EventfulPointer** and **IteratorWithEvents** to **EventfulIterator**
 - Updated the abstract functions in **Changing**
+  - Added two new required abstract functions: `.hasListeners` and `.numberOfListeners`
   - `.addListener(ChangeListener)` and `.addDependency(ChangeDependency)` are no longer abstract and is instead 
     replaced with `.addListenerOfPriority(End)(ChangeListener)`
   - `.addListenerAndSimulateEvent(...)` is no longer abstract and now contains an additional parameter

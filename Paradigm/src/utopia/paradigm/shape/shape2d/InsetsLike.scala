@@ -6,7 +6,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.shape.template.{Dimensional, Dimensions}
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 
 import scala.collection.immutable.HashMap
 
@@ -124,7 +124,7 @@ trait InsetsFactory[-L, +I]
   * @tparam S Type of 2-dimensional sizes acquired by combining lengths
   * @tparam Repr Concrete implementation class of these insets
 **/
-trait InsetsLike[L, +S, +Repr] extends Dimensional[Pair[L], Repr] with SizeAdjustable[Repr]
+trait InsetsLike[L, +S, +Repr] extends Dimensional[Pair[L], Repr] with LinearSizeAdjustable[Repr]
 {
     // ABSTRACT ------------------
     

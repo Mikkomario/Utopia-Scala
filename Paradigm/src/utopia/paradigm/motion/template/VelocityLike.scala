@@ -15,7 +15,7 @@ import scala.concurrent.duration.Duration
   * @tparam X Type of transition / position
   * @tparam Repr Concrete velocity type
   */
-trait VelocityLike[X <: NumericVectorLike[Double, X, _], +Repr <: Change[X, Repr]]
+trait VelocityLike[X <: NumericVectorLike[Double, X, X], +Repr <: Change[X, Repr]]
 	extends Change[X, Repr] with LinearScalable[Repr] with Combinable[Change[HasDoubleDimensions, _], Repr]
 		with CanBeAboutZero[Change[HasDoubleDimensions, _], Repr] with Dimensional[LinearVelocity, Repr]
 		with VectorProjectable[Repr]

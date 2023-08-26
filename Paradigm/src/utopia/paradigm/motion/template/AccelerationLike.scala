@@ -17,7 +17,7 @@ import scala.concurrent.duration.Duration
   * @tparam V    Type of velocity information
   * @tparam Repr A concrete implementation of this trait
   */
-trait AccelerationLike[X <: NumericVectorLike[Double, X, _], V <: VelocityLike[X, V], +Repr <: Change[V, _]]
+trait AccelerationLike[X <: NumericVectorLike[Double, X, X], V <: VelocityLike[X, V], +Repr <: Change[V, _]]
 	extends Change[V, Repr] with Combinable[Change[V, _], Repr] with Dimensional[LinearAcceleration, Repr]
 		with VectorProjectable[Repr] with CanBeAboutZero[Change[Change[HasDoubleDimensions, _], _], Repr]
 {

@@ -3,7 +3,7 @@ package utopia.firmament.model.stack
 import utopia.flow.operator.EqualsBy
 import utopia.flow.collection.CollectionExtensions._
 import utopia.firmament.model.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 
 object StackLength
 {
@@ -144,7 +144,7 @@ object StackLength
 **/
 class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None,
 				  val priority: LengthPriority = Normal)
-	extends EqualsBy with StackInsetsConvertible with SizeAdjustable[StackLength]
+	extends EqualsBy with StackInsetsConvertible with LinearSizeAdjustable[StackLength]
 {
     // ATTRIBUTES    ------------------------
 	

@@ -64,7 +64,7 @@ object AnimatedLinearTransformation
 	  * @param amount Scaling amount
 	  * @return An animation that scales the specified amount over time
 	  */
-	def scaling[V <: DoubleVectorLike[V, _]](amount: V): AnimatedLinearTransformation = {
+	def scaling[V <: DoubleVectorLike[V]](amount: V): AnimatedLinearTransformation = {
 		val change = amount - Vector2D.identity
 		apply { p => Matrix2D.scaling(change.map { 1 + _ * p }) }
 	}
@@ -81,7 +81,7 @@ object AnimatedLinearTransformation
 	  * @param amount Shearing amount
 	  * @return An animation that shears the specified amount over time
 	  */
-	def shearing[V <: DoubleVectorLike[V, _]](amount: V): AnimatedLinearTransformation =
+	def shearing[V <: DoubleVectorLike[V]](amount: V): AnimatedLinearTransformation =
 		apply { p => Matrix2D.shearing(amount * p) }
 }
 

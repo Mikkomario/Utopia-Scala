@@ -3,8 +3,6 @@
 ## v1.4 (in development)
 ### Breaking Changes
 - Renamed **VectorFactory** to **DoubleVectorFactory**
-- **DoubleVectorLike** now accepts two generic type parameters instead of one
-  - Certain transformation- and direction-altering functions now return a different type for one-dimensional vectors
 - **VectorProjectable**`.projectedOver(...)` now accepts **DoubleVector** instead of **DoubleVectorLike**
 - **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**
 - **LinearTransformable** now longer requires the implementation of `.self`
@@ -25,6 +23,8 @@
   - Added `.round`
 - **InsetsLike**
   - Added `-(Axis2D)`
+### Other Changes
+- Added new generic traits for vector classes and other related classes
 
 ## v1.3 - 01.05.2023
 This update introduces new color classes (which are originally from **Reflection**), as well as some 

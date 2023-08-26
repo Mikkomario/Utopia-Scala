@@ -9,7 +9,7 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackS
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.paradigm.transform.SizeAdjustable
+import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -150,7 +150,7 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 }
 
 trait ImageLabelFactoryLike[+Repr]
-	extends ImageLabelSettingsWrapper[Repr] with SizeAdjustable[Repr]
+	extends ImageLabelSettingsWrapper[Repr] with LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT ---------------------------
 	

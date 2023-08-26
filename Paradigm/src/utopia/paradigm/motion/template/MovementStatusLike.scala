@@ -9,7 +9,7 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */
-trait MovementStatusLike[X <: NumericVectorLike[Double, X, _], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A], +Repr]
+trait MovementStatusLike[X <: NumericVectorLike[Double, X, X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A], +Repr]
 {
 	// ABSTRACT	-------------------------
 	

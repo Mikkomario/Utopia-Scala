@@ -5,7 +5,7 @@ import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.shape.shape2d.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, FromDimensionsFactory, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, HasDimensions}
 
 object Vector1D extends Vector1DFactoryLike[Double, Vector1D] with DoubleVectorFactory[Vector1D]
 {
@@ -27,7 +27,7 @@ object Vector1D extends Vector1DFactoryLike[Double, Vector1D] with DoubleVectorF
 	
 	override def from(other: HasDimensions[Double]): Vector1D = other match {
 		case v: Vector1D => v
-		case v: DoubleVectorLike[_, _] => v.components.find { _.nonZero }.getOrElse(zero)
+		case v: DoubleVectorLike[_] => v.components.find { _.nonZero }.getOrElse(zero)
 		case o => apply(o.dimensions)
 	}
 }
@@ -38,7 +38,7 @@ object Vector1D extends Vector1DFactoryLike[Double, Vector1D] with DoubleVectorF
   * @since 16.9.2022, v1.1
   */
 case class Vector1D(override val length: Double, axis: Axis)
-	extends Vector1DLike[Double, Vector1D, Vector2D] with DoubleVectorLike[Vector1D, Vector2D] with DoubleVector
+	extends Vector1DLike[Double, Vector1D, Vector1D] with DoubleVectorLike[Vector1D] with DoubleVector
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -67,16 +67,16 @@ case class Vector1D(override val length: Double, axis: Axis)
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def unary_- = copy(length = -length)
-	
-	override def *(n: Double) = copy(length = length * n)
-	override def /(div: Double) = super[Vector1DLike]./(div)
-	
 	override def self = this
 	override protected def factory = Vector1D
-	override protected def fromDoublesFactory: FromDimensionsFactory[Double, Vector2D] = Vector2D
-	
 	override def value = length
 	
 	override def components = Vector(this)
+	
+	override def toUnit = factory(1.0, axis)
+	
+	override def +(n: Double) = factory(value + n, axis)
+	override def -(n: Double) = factory(value - n, axis)
+	
+	override def withLength(length: Double) = factory(factory.dimensionFrom(length), axis)
 }

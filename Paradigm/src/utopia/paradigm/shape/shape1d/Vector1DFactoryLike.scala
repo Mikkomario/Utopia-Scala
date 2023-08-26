@@ -29,10 +29,14 @@ trait Vector1DFactoryLike[D, +V] extends NumericVectorFactory[D, V]
 	  * A unit (1.0) vector (along the X-axis)
 	  */
 	def unit = apply(n.fromInt(1), X)
+	
+	
+	// IMPLEMENTED  ----------------------
+	
 	/**
 	  * A zero vector (along the X-axis)
 	  */
-	def zero = apply(n.zero, X)
+	override def zero = apply(n.zero, X)
 	
 	
 	// OTHER    -------------------------

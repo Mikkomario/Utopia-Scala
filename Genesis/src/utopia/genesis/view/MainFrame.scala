@@ -75,7 +75,7 @@ class MainFrame(initialContent: Component, val originalSize: Size, title: String
      */
     def setFullScreen(showTaskBar: Boolean = false) = 
     {
-        var newSize = Size of Toolkit.getDefaultToolkit.getScreenSize
+        var newSize = Size(Toolkit.getDefaultToolkit.getScreenSize)
         var position = Point.origin
         
         if (showTaskBar)
@@ -96,7 +96,7 @@ class MainFrame(initialContent: Component, val originalSize: Size, title: String
     private def updateContentSize() =
     {
         val insets = getInsets
-        val actualSize = (Size of getSize()) - (Size of insets)
+        val actualSize = Size(getSize()) - (Size of insets)
         
         if (usePadding)
         {

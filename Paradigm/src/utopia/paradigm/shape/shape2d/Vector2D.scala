@@ -12,7 +12,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.Vector2DType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, HasDimensions}
 
 import scala.concurrent.duration.Duration
 
@@ -23,15 +23,15 @@ object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[
 	/**
 	  * A (0,0) vector
 	  */
-	val zero = Vector2D()
+	override val zero = super.zero
 	/**
 	  * A (1,1) vector
 	  */
-	val identity = Vector2D(1, 1)
+	val identity = apply(1, 1)
 	/**
 	  * A (1,0) vector
 	  */
-	val unit = Vector2D(1)
+	val unit = apply(1)
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -69,7 +69,7 @@ object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[
   * @since Genesis 14.7.2020, v2.3
   */
 class Vector2D private(override val dimensions: Dimensions[Double])
-	extends DoubleVectorLike2D[Vector2D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
+	extends DoubleVectorLike[Vector2D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
 {
 	// COMPUTED   -----------------------------
 	
