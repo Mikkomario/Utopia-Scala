@@ -21,7 +21,7 @@ object IssueOccurrenceData extends FromModelFactoryWithSchema[IssueOccurrenceDat
 		PropertyDeclaration("details", ModelType, isOptional = true),
 		PropertyDeclaration("count", IntType, Vector(), 1),
 		PropertyDeclaration("occurrencePeriod", PairType, Vector("earliest", "latest", "occurrence_period"),
-			Span.singleValue[Instant](Now).toPair.map[Value] { v => v })
+			Span.singleValue[Instant](Now).ends.map[Value] { v => v })
 	))
 	
 	
@@ -79,6 +79,6 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Vector[String] = Vect
 	override def toModel = 
 		Model(Vector("caseId" -> caseId, "errorMessages" -> errorMessages.map[Value] { v => v }, 
 			"details" -> details, "count" -> count, 
-			"occurrencePeriod" -> occurrencePeriod.toPair.map[Value] { v => v }))
+			"occurrencePeriod" -> occurrencePeriod.ends.map[Value] { v => v }))
 }
 

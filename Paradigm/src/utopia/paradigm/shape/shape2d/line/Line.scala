@@ -1,41 +1,42 @@
-package utopia.paradigm.shape.shape2d
+package utopia.paradigm.shape.shape2d.line
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
-import utopia.flow.generic.model.template
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.HasLength
+import utopia.flow.operator.ApproxEquals
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
-import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.ParadigmDataType.LineType
+import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.path.LinearPathLike
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.{Matrix2D, Projectable, ShapeConvertible}
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.shape.template.DimensionalFactory
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.Transformable
 
 import java.awt.geom.Line2D
-import scala.collection.mutable.ListBuffer
+import scala.math.Numeric.DoubleIsFractional
 import scala.util.Success
 
-object Line extends FromModelFactory[Line]
+object Line extends LineFactoryLike[Double, Point, Line] with FromModelFactory[Line]
 {
     // ATTRIBUTES   -------------------------
     
-    /**
-      * A line between (0, 0) and (0, 0)
-      */
-    val zero = Line(Point.origin, Point.origin)
+    override val zero = super.zero
     
     
-    // OPERATORS    -------------------------
+    // IMPLEMENTED    -----------------------
+    
+    override protected def pointFactory: DimensionalFactory[Double, Point] = Point
     
     override def apply(model: template.ModelLike[Property]) =
         Success(Line(model("start").getPoint, model("end").getPoint))
@@ -44,19 +45,13 @@ object Line extends FromModelFactory[Line]
     // OTHER METHODS    ---------------------
     
     /**
-      * @param start Line start point
-      * @param end Line end point
-      * @return A new line
-      */
-    def apply(start: Point, end: Point): Line = apply(Pair(start, end))
-    
-    /**
      * Creates a new line from position and vector combo
      * @param position The starting position of the line
      * @param vector The vector portion of the line
      * @return A line with the provided position and vector part
      */
-    def ofVector(position: Point, vector: HasDoubleDimensions) = Line(position, position + vector)
+    @deprecated("Renamed to .fromVector(...)", "v1.4")
+    def ofVector(position: Point, vector: HasDoubleDimensions) = fromVector(position, vector)
     
     /**
      * Creates a new line that goes to the specified direction with the specified length end-points
@@ -65,36 +60,7 @@ object Line extends FromModelFactory[Line]
      * @return A new line
      */
     def lenDir(length: HasInclusiveEnds[Double], direction: Angle) =
-        apply(length.toPair.map { len => Point.lenDir(len, direction) })
-    
-    /**
-     * Creates a set of edges for the provided vertices. The vertices are iterated in order and an 
-     * edge is placed between them.
-     * @param vertices An ordered collection of vertices
-     * @param close Should the shape be closed by connecting the last and the first vertex. Defaults
-     * to true
-     * @return The edges that were formed between the vertices. Empty if there were less than 2
-     * vertices
-     */
-    // TODO: Add a 3D version separately
-    def edgesForVertices(vertices: Seq[Point], close: Boolean = true) =
-    {
-        if (vertices.size < 2)
-            Vector()
-        else
-        {
-            var lastVertex = vertices.head
-            val buffer = ListBuffer[Line]()
-            // TODO: Add 3D support for 3D version of this class
-            vertices.foreach( vertex => { buffer += Line(lastVertex, vertex); lastVertex = vertex } )
-            if (close)
-            {
-                buffer += Line(lastVertex, vertices.head)
-            }
-            
-            buffer.toVector
-        }
-    }
+        apply(length.ends.map { len => Point.lenDir(len, direction) })
 }
 
 /**
@@ -102,72 +68,43 @@ object Line extends FromModelFactory[Line]
  * @author Mikko Hilpinen
  * @since Genesis 13.12.2016
  */
-case class Line(points: Pair[Point])
-    extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
-        with HasLength with Transformable[Line] with HasBounds
+case class Line(override val ends: Pair[Point])
+    extends LineLike[Double, Point, Vector2D, Vector2D, Line]
+        with ShapeConvertible with ValueConvertible with ModelConvertible
+        with Projectable with LinearPathLike[Point]
+        with Transformable[Line] with HasBounds
+        with ApproxEquals[HasInclusiveEnds[HasDoubleDimensions]]
 {
     // ATTRIBUTES    -------------------
     
-    /**
-     * The vector portion of this line (position information not included)
-     */
-    lazy val vector = (end - start).toVector
+    override lazy val vector = super.vector
     
     /**
      * A function for calculating the y-coordinate on this line when the x-coordinate is known
      */
-    lazy val yForX =
-    {
-        // y = kx + a
-        // Where k = Vy / Vx where V is the vector format of this line
-        // a is the y of this function at 0 x
-        val k = vector.y / vector.x
-        val a = start.y - k * start.x
-        x: Double => k * x + a
-    }
+    override lazy val yForX = super.yForX
     /**
      * A function for calculating the x-coordinate on this line when the y-coordinate is known
      */
-    lazy val xForY =
-    {
-        val k = vector.x / vector.y
-        val a = start.x - k * start.y
-        y: Double => k * y + a
-    }
+    override lazy val xForY = super.xForY
     
     
     // COMPUTED PROPERTIES    ----------
     
-    /**
-     * This line with inverted / reversed direction
-     */
-    def reverse = Line(points.reverse)
-    
-    /**
-     * The axes that are necessary to include when checking collisions for this line
-     */
-    def collisionAxes = Vector(vector, vector.normal2D)
-    
-    /**
-     * The center of the line segment
-     */
-    def center = (start + end) / 2
-    
-    /**
-      * @return The direction of this line
-      */
-    def direction = vector.direction
+    @deprecated("Renamed to .ends", "v1.4")
+    def points: Pair[Point] = ends
     
     
     // IMPLEMENTED METHODS    ----------
     
-    override def start = points.first
-    override def end = points.second
+    override implicit def n: Fractional[Double] = DoubleIsFractional
     
-    override def length = vector.length
-    /**
-      * @return The bounds around this line
-      */
+    override protected def factory = Line
+    override protected def vectorFactory = Vector2D
+    
+    override def start = ends.first
+    override def end = ends.second
+    
     override def bounds = Bounds.between(start, end)
     
     override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
@@ -175,22 +112,16 @@ case class Line(points: Pair[Point])
     override def toValue = new Value(Some(this), LineType)
     override def toModel = Model(Vector("start" -> start, "end" -> end))
     
-    def ~==(other: Line) = (start ~== other.start) && (end ~== other.end)
+    override def ~==(other: HasInclusiveEnds[HasDoubleDimensions]) =
+        (start ~== other.start) && (end ~== other.end)
     
     override def transformedWith(transformation: Matrix3D) = map { transformation(_).toPoint }
     override def transformedWith(transformation: Matrix2D) = map { transformation(_).toPoint }
     
-    override def projectedOver(axis: Vector2D) = Line(start.toVector.projectedOver(axis).toPoint,
-            end.toVector.projectedOver(axis).toPoint)
+    override def projectedOver(axis: Vector2D) = Line(start.projectedOver(axis), end.projectedOver(axis))
     
     
     // OTHER METHODS    ----------------
-    
-    /**
-      * @param f A mapping function for both the start and end point of this line
-      * @return A mapped copy of this line
-      */
-    def map(f: Point => Point) = Line(points.map(f))
     
     /**
      * Calculates the intersection point between this and another line
@@ -214,7 +145,7 @@ case class Line(points: Pair[Point])
             None
         else {
             // a = |right| / |left|, negative if they have opposite directions
-            val a = if (leftVector.direction ~== rightVector.direction) 
+            val a = if (leftVector.direction ~== rightVector.direction)
                 rightVector.length / leftVector.length else -rightVector.length / leftVector.length
             lazy val intersectionPoint = apply(a)
             
@@ -235,24 +166,24 @@ case class Line(points: Pair[Point])
      * Calculates the intersection points between a line and a sphere in 3D. There are from 0 to 2
      * intersection points
      * @param circle The circle / sphere this line may intersect with
-     * @param onlyPointsInSegment Determines whether only points that lie in this specific line 
-     * segment should be included. If false, finds the intersection points as if the line had 
+     * @param onlyPointsInSegment Determines whether only points that lie in this specific line
+     * segment should be included. If false, finds the intersection points as if the line had
      * infinite length. Defaults to true.
      * @return The intersection points between this line (segment) and the circle
      */
-    def circleIntersection(circle: Circle, onlyPointsInSegment: Boolean = true) = 
+    def circleIntersection(circle: Circle, onlyPointsInSegment: Boolean = true) =
     {
-        /* Circle Equation: |x - c|^2 = r^2 
+        /* Circle Equation: |x - c|^2 = r^2
          * where x is a point on the circle, c is circle origin and r is circle radius
-         * 
+         *
          * Line Equation: x = o + vt
          * where x is point on the line, o is the line start point and v is the line's vector
          * portion. t is a scale for the vector portion ([0, 1] are on the line segment)
-         * 
+         *
          * From these we get: |o + vt - c|^2 = r^2
          * -> ... -> t^2(v . v) + 2t(v . (o - c)) + (o - c) . (o - c) - r^2 = 0
          * And if we add L = o - c...
-         * 
+         *
          * Using quadratic formula we get the terms
          * a = v . v
          * b = 2(v . L)

@@ -5,8 +5,8 @@ import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.line.Line
 
 /**
  * This object contains extensions that are used in the conflict project

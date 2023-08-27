@@ -341,7 +341,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				}
 				// Case: Variable delay
 				else {
-					lazy val process = PostponingRevalidationProcess(window, canvas, delay.toPair)
+					lazy val process = PostponingRevalidationProcess(window, canvas, delay.ends)
 					() => process.requestRevalidation()
 				}
 		}

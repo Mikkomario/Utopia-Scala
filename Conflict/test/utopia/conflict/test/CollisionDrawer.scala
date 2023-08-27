@@ -8,8 +8,8 @@ import utopia.genesis.util.DepthRange
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.line.Line
 
 import scala.concurrent.duration.FiniteDuration
 

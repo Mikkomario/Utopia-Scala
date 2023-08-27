@@ -6,7 +6,8 @@ import utopia.genesis.handling.mutable.MouseButtonStateListener
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Line, Projectable}
+import utopia.paradigm.shape.shape2d.Projectable
+import utopia.paradigm.shape.shape2d.line.Line
 
 /**
  * This object visually displays shape projection on a line drawn by the user

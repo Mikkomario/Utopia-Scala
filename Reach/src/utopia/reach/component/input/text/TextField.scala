@@ -8,7 +8,7 @@ import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localize
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, HasInclusiveOrderedEnds, NumericSpan}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.generic.casting.ValueConversions._
@@ -374,7 +374,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  *                          displayed as a hint.
 	  * @return A new text field
 	  */
-	def int(allowedRange: HasInclusiveEnds[Int] = NumericSpan(Int.MinValue, Int.MaxValue),
+	def int(allowedRange: HasInclusiveOrderedEnds[Int] = NumericSpan(Int.MinValue, Int.MaxValue),
 	        initialValue: Option[Int] = None, validate: Option[Option[Int] => InputValidationResult] = None,
 	        disableLengthHint: Boolean = false) =
 	{
@@ -403,7 +403,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  *                 Accepts the input value or None if this field is empty. Returns an input validation result.
 	  * @return A new text field
 	  */
-	def validatedInt(allowedRange: HasInclusiveEnds[Int] = NumericSpan(Int.MinValue, Int.MaxValue),
+	def validatedInt(allowedRange: HasInclusiveOrderedEnds[Int] = NumericSpan(Int.MinValue, Int.MaxValue),
 	                 initialValue: Option[Int] = None, disableLengthHint: Boolean = false)
 	                (validate: Option[Int] => InputValidationResult) =
 		int(allowedRange, initialValue, Some(validate), disableLengthHint)
@@ -446,7 +446,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  *                          Please note that a minimum value of 0 is never displayed as a hint.
 	  * @return A new text field
 	  */
-	def double(allowedRange: HasInclusiveEnds[Double], initialValue: Option[Double] = None,
+	def double(allowedRange: HasInclusiveOrderedEnds[Double], initialValue: Option[Double] = None,
 	           expectedNumberOfDecimals: Int = 4, validate: Option[Option[Double] => InputValidationResult] = None,
 	           disableLengthHint: Boolean = false) =
 	{
@@ -484,7 +484,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  *                 Accepts the input value or None if this field is empty. Returns an input validation result.
 	  * @return A new text field
 	  */
-	def validatedDouble(allowedRange: HasInclusiveEnds[Double], initialValue: Option[Double] = None,
+	def validatedDouble(allowedRange: HasInclusiveOrderedEnds[Double], initialValue: Option[Double] = None,
 	                    expectedNumberOfDecimals: Int = 4, disableLengthHint: Boolean = false)
 	                   (validate: Option[Double] => InputValidationResult) =
 		double(allowedRange, initialValue, expectedNumberOfDecimals, Some(validate), disableLengthHint)
@@ -532,7 +532,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam A Type of numeric values provided by this field
 	  * @return A new input field that yields numeric values
 	  */
-	def number[A](allowedRange: HasInclusiveEnds[A], initialValue: Option[A] = None, extraInputLength: Int = 0,
+	def number[A](allowedRange: HasInclusiveOrderedEnds[A], initialValue: Option[A] = None, extraInputLength: Int = 0,
 	              inputFilter: Regex = settings.inputFilter.getOrElse(Regex.decimalParts),
 	              resultFilter: Regex = settings.resultFilter.getOrElse(Regex.decimal),
 	              validate: Option[Option[A] => InputValidationResult] = None,
@@ -542,7 +542,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 		implicit def localizer: Localizer = contextPointer.value.localizer
 		
 		// Field width is based on minimum and maximum values and their lengths
-		val minMaxStrings = allowedRange.toPair.map { _.toString }
+		val minMaxStrings = allowedRange.ends.map { _.toString }
 		val extraCharsString = String.valueOf(Vector.fill(extraInputLength)('0'))
 		val maxLength = minMaxStrings.map { _.length }.max + extraInputLength
 		// TODO: Uses a static default width, although the context is variable => May require refactoring
@@ -556,7 +556,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 				val autoHint = {
 					if (markMinMax.second) {
 						if (markMinMax.first)
-							allowedRange.toPair.mkString(" - ").noLanguageLocalizationSkipped
+							allowedRange.ends.mkString(" - ").noLanguageLocalizationSkipped
 						else
 							s"Up to %s".autoLocalized.interpolated(Vector(allowedRange.end))
 					}
@@ -635,7 +635,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam A Type of numeric values provided by this field
 	  * @return A new input field that yields numeric values
 	  */
-	def validatedNumber[A](allowedRange: HasInclusiveEnds[A], initialValue: Option[A] = None, extraInputLength: Int = 0,
+	def validatedNumber[A](allowedRange: HasInclusiveOrderedEnds[A], initialValue: Option[A] = None, extraInputLength: Int = 0,
 	                       inputFilter: Regex = settings.inputFilter.getOrElse(Regex.decimalParts),
 	                       resultFilter: Regex = settings.resultFilter.getOrElse(Regex.decimal),
 	                       markMinMax: Pair[Boolean] = Pair.twice(false))

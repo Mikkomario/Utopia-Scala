@@ -3,6 +3,7 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.Projectable.PointOrdering
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions

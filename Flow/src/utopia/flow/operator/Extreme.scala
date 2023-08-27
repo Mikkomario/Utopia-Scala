@@ -1,7 +1,7 @@
 package utopia.flow.operator
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.collection.immutable.range.HasInclusiveOrderedEnds
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
@@ -91,7 +91,7 @@ sealed trait Extreme extends Binary[Extreme]
 	  * @tparam A Type of ends in that item
 	  * @return The end that corresponds with this extreme
 	  */
-	def from[A](ended: HasInclusiveEnds[A]): A = apply(ended.start, ended.end)(ended.ordering)
+	def from[A](ended: HasInclusiveOrderedEnds[A]): A = apply(ended.start, ended.end)(ended.ordering)
 	
 	/**
 	  * @param first  An item

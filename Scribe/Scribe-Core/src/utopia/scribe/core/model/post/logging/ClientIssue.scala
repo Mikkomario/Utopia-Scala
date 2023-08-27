@@ -94,11 +94,11 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	override def toModel: Model = Model.from(
 		"version" -> version.toString, "context" -> context, "severityLevel" -> severity.level,
 		"variantDetails" -> variantDetails, "error" -> error, "message" -> message,
-		"storeDurations" -> storeDuration.toPair, "instances" -> instances
+		"storeDurations" -> storeDuration.ends, "instances" -> instances
 	)
 	
 	override def toString = {
-		val header = s"${storeDuration.toPair.map { d=> (Now - d).toLocalDateTime }}: $context${
+		val header = s"${storeDuration.ends.map { d=> (Now - d).toLocalDateTime }}: $context${
 			variantDetails.mapIfNotEmpty { d => s"/$d" }} ($version)${message.mapIfNotEmpty { msg => s": $msg" }}${
 			if (instances > 1) s" ($instances instances)" else "" }"
 		error match {

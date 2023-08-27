@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.template.vector
 
-import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.collection.immutable.range.HasInclusiveOrderedEnds
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, HasLength, Reversible, Scalable}
 import utopia.paradigm.angular.{Angle, Rotation}
@@ -37,6 +37,11 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	// ABSTRACT ---------------------
 	
 	/**
+	  * @return Approximate function used for comparing individual dimensions
+	  */
+	implicit def dimensionApproxEquals: EqualsFunction[D]
+	
+	/**
 	  * @return Factory used for building more copies of this vector
 	  */
 	protected def factory: NumericVectorFactory[D, Repr]
@@ -46,9 +51,9 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	protected def fromDoublesFactory: FromDimensionsFactory[Double, FromDoubles]
 	
 	/**
-	  * @return Approximate function used for comparing individual dimensions
+	  * @return A copy of this vector that uses double number precision
 	  */
-	implicit def dimensionApproxEquals: EqualsFunction[D]
+	def toDoublePrecision: FromDoubles
 	
 	
 	// COMPUTED ---------------------
@@ -328,13 +333,14 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	  * @param area An area to which this vector shall remain within
 	  * @return A copy of this vector that lies within the specified area
 	  */
-	def shiftedInto(area: HasDimensions[HasInclusiveEnds[D]]) = mergeWith(area) { (p, area) => area.restrict(p) }
+	def shiftedInto(area: HasDimensions[HasInclusiveOrderedEnds[D]]) =
+		mergeWith(area) { (p, area) => area.restrict(p) }
 	/**
 	  * Moves this vector into a specific area with minimal movement
 	  * @param area A 1-dimensional area
 	  * @return A copy of this vector that lies within that area along that dimension
 	  */
-	def shiftedInto(area: Dimension[HasInclusiveEnds[D]]) = mapDimension(area.axis)(area.value.restrict)
+	def shiftedInto(area: Dimension[HasInclusiveOrderedEnds[D]]) = mapDimension(area.axis)(area.value.restrict)
 	
 	private def calculateDirection(x: Double, y: Double) = math.atan2(y, x)
 }

@@ -4,9 +4,10 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape2d.area.{Area2D, Circle, polygon}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Line, Matrix2D, Projectable, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{Matrix2D, Projectable, ShapeConvertible}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.VectorProjectable

@@ -8,8 +8,8 @@ import utopia.flow.operator.End.{EndingSequence, First, Last}
 import utopia.flow.operator.Extreme.{Max, Min}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{CombinedOrdering, End, EqualsFunction, Extreme, Identity, Sign}
-import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.Flag
 

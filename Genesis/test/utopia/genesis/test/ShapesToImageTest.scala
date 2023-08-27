@@ -8,9 +8,9 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.shape.shape2d.area.polygon.Triangle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.line.Line
 
 import java.nio.file.Path
 

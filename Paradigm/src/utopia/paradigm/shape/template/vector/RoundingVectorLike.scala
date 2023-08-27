@@ -22,7 +22,9 @@ trait RoundingVectorLike[+Repr <: HasDimensions[RoundingDouble] with HasLength]
 	// IMPLEMENTED  -------------------
 	
 	override implicit def dimensionApproxEquals: EqualsFunction[RoundingDouble] = RoundingDouble.equals
+	
 	override protected def fromDoublesFactory: FromDimensionsFactory[Double, Repr] = factory.forDoubles
+	override def toDoublePrecision: Repr = self
 	
 	override def components: IndexedSeq[RoundingVector1D] =
 		dimensions.zipWithAxis.map { case (d, axis) => RoundingVector1D(d, axis) }

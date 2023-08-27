@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4.bounds
 
-import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.collection.immutable.range.HasOrderedEnds
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.area.Area2D
@@ -131,12 +131,12 @@ trait HasBounds extends HasSize with Area2D
 	  * @param bounds A set of bounds
 	  * @return Whether this item's bounds overlap with the other set of bounds
 	  */
-	def overlapsWith(bounds: HasDimensions[HasEnds[Double]]) =
+	def overlapsWith(bounds: HasDimensions[HasOrderedEnds[Double]]) =
 		this.bounds.forAllDimensionsWith(bounds) { _ overlapsWith _ }
 	/**
 	  * @param bounds A set of bounds
 	  * @return Whether this item lies completely within the specified set of bounds
 	  */
-	def liesCompletelyWithin(bounds: HasDimensions[HasEnds[Double]]) =
+	def liesCompletelyWithin(bounds: HasDimensions[HasOrderedEnds[Double]]) =
 		this.bounds.forAllDimensionsWith(bounds) { (my, their) => their.contains(my) }
 }

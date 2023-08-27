@@ -2,11 +2,11 @@ package utopia.conflict.test
 
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.enumeration.Axis._
-import utopia.paradigm.shape.shape2d.Line
 import utopia.conflict.collision.Extensions._
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size

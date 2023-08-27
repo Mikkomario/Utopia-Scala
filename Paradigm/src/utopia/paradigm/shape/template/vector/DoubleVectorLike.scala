@@ -63,8 +63,10 @@ trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength]
 	
 	// IMPLEMENTED	-----------------
 	
-	override protected def fromDoublesFactory = factory
 	override implicit def dimensionApproxEquals: EqualsFunction[Double] = EqualsExtensions.doubleEquals
+	
+	override protected def fromDoublesFactory = factory
+	override def toDoublePrecision: Repr = self
 	
 	/**
 	  * @return This vector separated to individual 1-dimensional components

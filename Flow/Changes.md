@@ -2,6 +2,8 @@
 
 ## v2.2 (in development)
 ### Breaking Changes
+- Renamed **HasEnds** to **HasOrderedEnds** and **HasInclusiveEnds** to **HasInclusiveOrderedEnds**
+  - Added new more generic traits to replace the old name versions
 - Multiple changes relating to **Signed**, **SignedOrZero** and **BinarySigned**:
   - **Signed** now requires the implementation of `.sign: SignOrZero` 
     instead of separately defining `.isPositive` and `.isNegative`
@@ -29,6 +31,7 @@
   - It may be appropriate to review the uses of this method and to see whether 
     `.strongMap(...)` or `.mapWhile(...)` would be more appropriate options. 
 ### Deprecations
+- Deprecated **HasEnds**`.toPair` in favor of `.ends`
 - Deprecated **ChangeDependency** and **DetachmentChoice** (see breaking changes)
 - Deprecated certain listener properties in **AbstractChanging** in favor of new listener style properties
 - Deprecated `.fireChangeEvent(...)` in **AbstractChanging** in favor of new `.fireEvent(...)` variants

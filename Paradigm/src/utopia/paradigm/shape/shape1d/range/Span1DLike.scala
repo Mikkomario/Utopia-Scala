@@ -59,5 +59,5 @@ trait Span1DLike[D, +Repr <: NumericSpan[D], +V]
 	override def isAboutZero = (start ~== n.zero) && (end ~== n.zero)
 	
 	override def ~==(other: Dimension[HasEnds[D]]): Boolean =
-		axis == other.axis && toPair.forallWith(other.value.toPair) { _ ~== _ }
+		axis == other.axis && ends.forallWith(other.value.ends) { _ ~== _ }
 }

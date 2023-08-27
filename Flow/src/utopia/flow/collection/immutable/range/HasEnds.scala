@@ -1,51 +1,68 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
-
-import scala.math.Ordered.orderingToOrdered
 
 object HasEnds
 {
-	// OTHER    ------------------------
+	// OTHER    -------------------------
 	
 	/**
-	  * Creates a new range
-	  * @param start First value (inclusive)
-	  * @param end Ending value (inclusive or exclusive)
-	  * @param exclusive Whether the ending value is exclusive (default = false)
-	  * @param ord Implicit ordering to apply
-	  * @tparam P Type of range end values
+	  * @param start The starting point to use
+	  * @param end The ending point to use
+	  * @param isInclusive Whether the specified ending point is inclusive (true) or exclusive (false)
+	  * @tparam P Type of range endpoints
 	  * @return A new range
 	  */
-	def apply[P](start: P, end: P, exclusive: Boolean = false)(implicit ord: Ordering[P]): HasEnds[P] =
-		_HasEnds[P](start, end, !exclusive)
+	def apply[P](start: P, end: P, isInclusive: Boolean): HasEnds[P] = _HasEnds(start, end, isInclusive)
+	/**
+	  * @param ends The start and end points to use
+	  * @param isInclusive Whether the specified ending point is inclusive (true) or exclusive (false)
+	  * @tparam P Type of range endpoints
+	  * @return A new range
+	  */
+	def apply[P](ends: Pair[P], isInclusive: Boolean): HasEnds[P] = PairHasEnds(ends, isInclusive)
 	
 	/**
-	  * Creates a new inclusive range
-	  * @param start     First value (inclusive)
-	  * @param end       Ending value (inclusive)
-	  * @param ord       Implicit ordering to apply
-	  * @tparam P Type of range end values
+	  * @param start       The starting point to use
+	  * @param end         The ending point to use
+	  * @tparam P Type of range endpoints
 	  * @return A new range
 	  */
-	def inclusive[P](start: P, end: P)(implicit ord: Ordering[P]) = apply(start, end)
+	def inclusive[P](start: P, end: P) = HasInclusiveEnds(start, end)
 	/**
-	  * Creates a new exclusive range
-	  * @param start     First value (inclusive)
-	  * @param end       Ending value (exclusive)
-	  * @param ord       Implicit ordering to apply
-	  * @tparam P Type of range end values
+	  * @param ends        The start and end points to use
+	  * @tparam P Type of range endpoints
 	  * @return A new range
 	  */
-	def exclusive[P](start: P, end: P)(implicit ord: Ordering[P]) = apply(start, end, exclusive = true)
+	def inclusive[P](ends: Pair[P]) = HasInclusiveEnds(ends)
+	
+	/**
+	  * @param start       The starting point to use
+	  * @param end         The ending point to use (exclusive)
+	  * @tparam P Type of range endpoints
+	  * @return A new range
+	  */
+	def exclusive[P](start: P, end: P) = apply(start, end, isInclusive = false)
+	/**
+	  * @param ends The start and end points to use, where the second point is exclusive
+	  * @tparam P Type of range endpoints
+	  * @return A new range
+	  */
+	def exclusive[P](ends: Pair[P]) = apply(ends, isInclusive = false)
 	
 	
-	// NESTED   ------------------------
+	// NESTED   -------------------------
 	
-	private case class _HasEnds[P](start: P, end: P, isInclusive: Boolean)(implicit override val ordering: Ordering[P])
-		extends HasEnds[P]
+	private case class _HasEnds[+P](start: P, end: P, isInclusive: Boolean) extends HasEnds[P]
+	{
+		override lazy val ends = super.ends
+	}
+	
+	private case class PairHasEnds[+P](override val ends: Pair[P], isInclusive: Boolean) extends HasEnds[P]
+	{
+		override def start: P = ends.first
+		override def end: P = ends.second
+	}
 }
 
 /**
@@ -55,22 +72,17 @@ object HasEnds
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait HasEnds[P]
+trait HasEnds[+P]
 {
 	// ABSTRACT -----------------------
 	
 	/**
-	  * @return Ordering used for the end-points of this range
-	  */
-	implicit def ordering: Ordering[P]
-	
-	/**
-	  * @return The starting point of this span
+	  * @return The starting point of this range
 	  */
 	def start: P
 	/**
 	  * @return The ending point of this range
-	  * @see .isInclusive
+	  * @see [[isInclusive]]
 	  */
 	def end: P
 	
@@ -89,23 +101,14 @@ trait HasEnds[P]
 	def isExclusive = !isInclusive
 	
 	/**
-	  * @return Whether this range moves from a smaller 'start' into a larger 'end'
+	  * @return A pair containing the start and end points of this range
 	  */
-	def isAscending = end >= start
-	/**
-	  * @return Whether this range moves from a larger 'start' into a smaller 'end'
-	  */
-	def isDescending = end <= start
-	
-	/**
-	  * @return Positive if values increase along this range, Negative if they decrease
-	  */
-	def direction: Sign = if (isAscending) Positive else Negative
-	
+	def ends = Pair(start, end)
 	/**
 	  * @return A pair containing the start and end points of this range
 	  */
-	def toPair = Pair(start, end)
+	@deprecated("Please use .ends instead", "v2.2")
+	def toPair = ends
 	
 	/**
 	  * @return Whether this is an empty range
@@ -120,32 +123,4 @@ trait HasEnds[P]
 	// IMPLEMENTED  ---------------------
 	
 	override def toString = if (isInclusive) s"$start to $end" else s"$start until $end"
-	
-	
-	// OTHER    -------------------------
-	
-	/**
-	  * @param point A point
-	  * @return Whether that point lies within this range
-	  */
-	def contains(point: P) = {
-		val compares = toPair.map { ordering.compare(point, _).sign }
-		if (isInclusive)
-			compares.isAsymmetric || compares.contains(0)
-		else
-			compares.second != 0 && compares.isAsymmetric
-	}
-	/**
-	  * @param other Another range
-	  * @return Whether this range contains all items in that range
-	  */
-	def contains(other: HasEnds[P]): Boolean =
-		other.nonEmpty && (contains(other.start) &&
-			(contains(other.end) || (isExclusive && other.isExclusive && end == other.end)))
-	/**
-	  * @param other Another range
-	  * @return Whether these two ranges overlap at some point
-	  */
-	def overlapsWith(other: HasEnds[P]) =
-		other.nonEmpty && (contains(other.start) || other.contains(start))
 }

@@ -8,8 +8,8 @@ import utopia.flow.util.StringExtensions._
 import utopia.genesis.graphics.TextDrawHeight.LineHeight
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
-import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -115,7 +115,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  */
 	lazy val carets = lines.zip(lineBounds).map { case (line, (bounds, _)) =>
 		context.caretCoordinatesFrom(line).map { relativeX =>
-			Line.ofVector(bounds.topLeft + X(relativeX), Vector2D(0, bounds.height))
+			Line.fromVector(bounds.topLeft + X(relativeX), Vector2D(0, bounds.height))
 		}
 	}
 	

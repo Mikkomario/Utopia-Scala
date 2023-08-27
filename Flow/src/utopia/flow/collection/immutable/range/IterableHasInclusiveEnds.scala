@@ -6,7 +6,7 @@ package utopia.flow.collection.immutable.range
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait IterableHasInclusiveEnds[P] extends HasInclusiveEnds[P] with IterableHasEnds[P]
+trait IterableHasInclusiveEnds[P] extends HasInclusiveOrderedEnds[P] with IterableHasEnds[P]
 {
 	// COMPUTED -----------------------
 	
@@ -23,9 +23,9 @@ trait IterableHasInclusiveEnds[P] extends HasInclusiveEnds[P] with IterableHasEn
 	
 	override def isEmpty = false
 	
-	override def min[B >: P](implicit ord: Ordering[B]) = super[HasInclusiveEnds].min
+	override def min[B >: P](implicit ord: Ordering[B]) = super[HasInclusiveOrderedEnds].min
 	override def minOption[B >: P](implicit ord: Ordering[B]) = Some(min)
 	
-	override def max[B >: P](implicit ord: Ordering[B]) = super[HasInclusiveEnds].max
+	override def max[B >: P](implicit ord: Ordering[B]) = super[HasInclusiveOrderedEnds].max
 	override def maxOption[B >: P](implicit ord: Ordering[B]) = Some(max)
 }

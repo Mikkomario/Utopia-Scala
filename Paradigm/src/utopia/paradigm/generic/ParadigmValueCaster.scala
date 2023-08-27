@@ -24,6 +24,7 @@ import utopia.paradigm.shape.shape2d._
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -440,7 +441,7 @@ object ParadigmValueCaster extends ValueCaster
     
     private def polygonOf(value: Value): Option[Polygonic] = value.dataType match {
         case VectorType => Some(Polygon(value.getVector.map { _.getPoint }))
-        case LineType => Some(Polygon(value.getLine.points.toVector))
+        case LineType => Some(Polygon(value.getLine.ends.toVector))
         case CircleType => Some(value.getCircle.toPolygon(12))
         case _ => None
     }
@@ -458,7 +459,7 @@ object ParadigmValueCaster extends ValueCaster
     
     private def matrix2DOf(value: Value): Option[Matrix2D] = value.dataType match {
         case PairType => value.tryPairWith { _.tryVector2D }.toOption.map(Matrix2D.apply)
-        case LineType => Some(Matrix2D(value.getLine.points.map { _.toVector }))
+        case LineType => Some(Matrix2D(value.getLine.ends.map { _.toVector }))
         case BoundsType =>
             val b = value.getBounds
             Some(Matrix2D(b.position.toVector, b.size.toVector))
@@ -621,7 +622,7 @@ object ParadigmValueCaster extends ValueCaster
         case Vector3DType =>
             val v = value.getVector3D
             Some(Hsl(v.direction, v.toVector2D.length, v.z + 0.5))
-        case AngleType => Some(Hsl(value.getAngle, 1, 0.5))
+        case AngleType => Some(Hsl(value.getAngle))
         case RgbType => Some(value.getRgb.toHSL)
         case ColorType => Some(value.getColor.hsl)
         case ModelType => Hsl(value.getModel).toOption

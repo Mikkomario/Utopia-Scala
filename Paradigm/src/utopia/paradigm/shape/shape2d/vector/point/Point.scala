@@ -9,7 +9,7 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.PointType
-import utopia.paradigm.shape.shape2d.Line
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
 import utopia.paradigm.shape.template.{Dimensions, HasDimensions}

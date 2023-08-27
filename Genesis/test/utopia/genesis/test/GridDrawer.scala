@@ -3,8 +3,8 @@ package utopia.genesis.test
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.Drawable
 import utopia.inception.handling.mutable.Handleable
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.Color
@@ -39,10 +39,10 @@ class GridDrawer(worldSize: Size, val squareSize: Size) extends Drawable with Ha
     def draw(drawer: Drawer) =
     {
         for (x <- 0 to squareAmounts.x.toInt) {
-            drawer.draw(Line.ofVector(squarePosition(x, 0).toVector.toPoint, size.toVector.yProjection))
+            drawer.draw(Line.fromVector(squarePosition(x, 0).toVector.toPoint, size.toVector.yProjection))
         }
         for (y <- 0 to squareAmounts.y.toInt) {
-            drawer.draw(Line.ofVector(squarePosition(0, y).toVector.toPoint, size.toVector.xProjection))
+            drawer.draw(Line.fromVector(squarePosition(0, y).toVector.toPoint, size.toVector.xProjection))
         }
     }
     

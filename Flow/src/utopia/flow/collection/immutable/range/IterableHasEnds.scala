@@ -44,7 +44,7 @@ object IterableHasEnds
 	  * @tparam P Type of range end-points
 	  * @return A new iterable copy of that range
 	  */
-	implicit def wrap[P <: Steppable[P]](other: HasEnds[P]): IterableHasEnds[P] =
+	implicit def wrap[P <: Steppable[P]](other: HasOrderedEnds[P]): IterableHasEnds[P] =
 		apply(other.start, other.end, other.isExclusive)(other.ordering)
 	
 	
@@ -65,7 +65,7 @@ object IterableHasEnds
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait IterableHasEnds[P] extends HasEnds[P] with Iterable[P]
+trait IterableHasEnds[P] extends HasOrderedEnds[P] with Iterable[P]
 {
 	// ABSTRACT -----------------------
 	
@@ -81,8 +81,8 @@ trait IterableHasEnds[P] extends HasEnds[P] with Iterable[P]
 	
 	override def iterator = _iterator(start, end)
 	
-	override def isEmpty = super[HasEnds].isEmpty
-	override def nonEmpty = super[HasEnds].nonEmpty
+	override def isEmpty = super[HasOrderedEnds].isEmpty
+	override def nonEmpty = super[HasOrderedEnds].nonEmpty
 	
 	
 	// OTHER    -------------------------

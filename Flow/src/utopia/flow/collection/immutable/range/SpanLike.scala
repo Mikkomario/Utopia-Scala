@@ -65,7 +65,7 @@ object SpanLike
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
+trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 {
 	// ABSTRACT -------------------------
 	
@@ -186,7 +186,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return A copy of this span that is extended to include all of the specified points
 	  */
 	def including(points: IterableOnce[P]): Repr = points match {
-		case span: HasInclusiveEnds[P] => _including(span.minMax)
+		case span: HasInclusiveOrderedEnds[P] => _including(span.minMax)
 		case i: Iterable[P] =>
 			if (i.knownSize == 1)
 				including(i.head)
@@ -214,12 +214,12 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return The overlapping portion between these two spans with the same direction this span has.
 	  *         None if these spans don't overlap.
 	  */
-	def overlapWith(other: HasInclusiveEnds[P]) = {
+	def overlapWith(other: HasInclusiveOrderedEnds[P]) = {
 		lazy val otherPoints = {
 			if (other.direction == direction)
-				other.toPair
+				other.ends
 			else
-				other.toPair.reverse
+				other.ends.reverse
 		}
 		Some(start).filter(other.contains).orElse { Some(otherPoints.first).filter(contains) }.map { newStart =>
 			val newEnd = Some(end).filter(other.contains).getOrElse(otherPoints.second)
@@ -232,7 +232,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveEnds[P]
 	  * @return The overlapping portion between these two spans with the same direction this span has.
 	  *         None if these spans don't overlap.
 	  */
-	def &(other: HasInclusiveEnds[P]) = overlapWith(other)
+	def &(other: HasInclusiveOrderedEnds[P]) = overlapWith(other)
 	
 	/**
 	  * @param distance A distance to move this span

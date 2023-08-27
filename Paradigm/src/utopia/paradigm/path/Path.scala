@@ -1,5 +1,6 @@
 package utopia.paradigm.path
 
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.operator.HasLength
 import utopia.paradigm.animation.AnimationLike
 import utopia.paradigm.path.Path.{CurvedPath, RepeatingPath, ReversePath}
@@ -65,20 +66,8 @@ object Path
   * @author Mikko Hilpinen
   * @since Genesis 19.6.2019, v2.1+
   */
-trait Path[+P] extends AnimationLike[P, Path]
+trait Path[+P] extends AnimationLike[P, Path] with HasInclusiveEnds[P]
 {
-	// ABSTRACT	----------------
-	
-	/**
-	  * @return The starting point of this path
-	  */
-	def start: P
-	/**
-	  * @return The end point of this path
-	  */
-	def end: P
-	
-	
 	// IMPLEMENTED	-----------------
 	
 	override def reversed: Path[P] = new ReversePath[P](this)

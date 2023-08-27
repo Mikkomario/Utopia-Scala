@@ -721,7 +721,7 @@ object UncertainNumber
 								// Case: The other number is a closed range =>
 								// Tests against both ends of that range separately
 								case UncertainNumberRange(range) =>
-									val comparisons = range.toPair.map { compareWith(_, comparison) }
+									val comparisons = range.ends.map { compareWith(_, comparison) }
 									if (comparisons.isSymmetric)
 										comparisons.first
 									else
@@ -831,7 +831,7 @@ object UncertainNumber
 		
 		override lazy val sign: UncertainSign = {
 			// Checks the covered number signs
-			val signs = range.toPair.map { Sign.of(_) }.toSet
+			val signs = range.ends.map { Sign.of(_) }.toSet
 			// Case: Only one sign is covered => Sign is certain
 			if (signs.size == 1)
 				signs.head
@@ -854,7 +854,7 @@ object UncertainNumber
 		
 		override def unary_- : UncertainNumber[N] = map { -_ }
 		override def abs: UncertainNumber[N] = {
-			if (range.toPair.isAsymmetricBy { _.sign })
+			if (range.ends.isAsymmetricBy { _.sign })
 				UncertainNumberRange(NumericSpan(n.zero, range.mapEnds { _.abs }.max))
 			else
 				map { n.abs(_) }
@@ -872,8 +872,8 @@ object UncertainNumber
 							// Case: Multiplying by a range of values =>
 							//       Determines the most extreme possible values and forms a range between them
 							case UncertainNumberRange(r2) =>
-								val v1 = range.toPair
-								val v2 = r2.toPair
+								val v1 = range.ends
+								val v2 = r2.ends
 								UncertainNumberRange(
 									NumericSpan((v1.mergeWith(v2) { _ * _ } ++ v1.mergeWith(v2.reverse) { _ * _ }).minMax))
 							// Case: Multiplying by some positive or negative number =>
@@ -944,7 +944,7 @@ object UncertainNumber
 		}
 		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean = {
 			// Checks separately against both ends
-			val results = range.toPair.map { comparison(_, other) }
+			val results = range.ends.map { comparison(_, other) }
 			// Case: The result is the same regardless of side => Returns that resul
 			if (results.isSymmetric)
 				CertainBoolean(results.first)
@@ -958,7 +958,7 @@ object UncertainNumber
 				// Case: Comparing against an uncertain value =>
 				// Delegates to the other number, comparing with both ends of this range
 				case None =>
-					val results = range.toPair.map { other.compareWith(_, -comparison) }
+					val results = range.ends.map { other.compareWith(_, -comparison) }
 					// Case: Both ends yield the same result => Returns that result
 					if (results.isSymmetric)
 						results.first
@@ -984,7 +984,7 @@ object UncertainNumber
 		}
 		
 		override def toStringWith(formatting: N => String): String =
-			range.ascending.toPair.map(formatting).mkString(" - ")
+			range.ascending.ends.map(formatting).mkString(" - ")
 		
 		
 		// OTHER    -----------------------

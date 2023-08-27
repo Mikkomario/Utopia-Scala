@@ -1,8 +1,7 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4.bounds
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
+import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -16,31 +15,28 @@ import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape1d.range.Span1D
 import utopia.paradigm.shape.shape1d.vector.Vector1D
+import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.Rectangular
 import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.Line
-import utopia.paradigm.shape.shape2d.area.Circle
-import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
+import utopia.paradigm.shape.template.vector.NumericVectorFactory
+import utopia.paradigm.shape.template.{Dimensional, Dimensions, HasDimensions}
 
 import java.awt.geom.RoundRectangle2D
 import scala.language.implicitConversions
+import scala.math.Numeric.DoubleIsFractional
 import scala.util.Success
 
-object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with FromModelFactory[Bounds]
+object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromModelFactory[Bounds]
 {
     // ATTRIBUTES    ----------------------
     
-    override val zeroDimension = NumericSpan(0.0, 0.0)
-    override protected val dimensionsFactory = Dimensions(zeroDimension)
-    
-    /**
-     * A zero bounds
-     */
-    val zero = new Bounds(dimensionsFactory.zero2D)
+    override protected val dimensionsFactory = super.dimensionsFactory
+    override val zeroDimension = super.zeroDimension
+    override val zero = super.zero
     
     /**
       * Collision axes used when testing for containment / overlap with Bounds
@@ -50,11 +46,14 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
     
     // IMPLICIT ---------------------------
     
-    implicit def fromAwt(awtBounds: java.awt.Rectangle): Bounds =
-        Bounds(Point(awtBounds.x, awtBounds.y), Size(awtBounds.width, awtBounds.height))
+    implicit def fromAwt(awtBounds: java.awt.Rectangle): Bounds = apply(awtBounds)
     
     
     // IMPLEMENTED  -----------------------
+    
+    override implicit def n: Fractional[Double] = DoubleIsFractional
+    override protected def pointFactory: NumericVectorFactory[Double, Point] = Point
+    override protected def sizeFactory: NumericVectorFactory[Double, Size] = Size
     
     override def apply(dimensions: Dimensions[NumericSpan[Double]]) =
         new Bounds(dimensions.withLength(2))
@@ -71,41 +70,11 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
     // OTHER    -----------------------
     
     /**
-      * @param position The top-left corner of these bounds
-      * @param size The size of these bounds
-      * @return A set of bounds that combines these two values
+      * Creates a set of bounds around a circle
       */
-    def apply(position: Point, size: Size) =
-        new Bounds(position.dimensions.mergeWith(size.dimensions, zeroDimension) { (s, len) => NumericSpan(s, s + len) })
-    
-    /**
-      * Creates a new set of bounds
-      * @param x Top-left x-coordinate
-      * @param y Top-left y-coordinate
-      * @param width Area width
-      * @param height Area height
-      * @return A new set of bounds
-      */
-    def apply(x: Double, y: Double, width: Double, height: Double): Bounds = apply(Point(x, y), Size(width, height))
-    
-    /**
-     * Creates a rectangle that contains the area between the two coordinates. The order 
-     * of the coordinates does not matter.
-     */
-    def between(p1: Point, p2: Point) =
-        from(p1.dimensions.zipIteratorWith(p2.dimensions).map { case (s, e) => NumericSpan(s, e) })
-    /**
-     * @param points Two points
-     * @return A set of bounds that just contains the two specified points
-     */
-    def between(points: Pair[Point]): Bounds = between(points.first, points.second)
-    
-    /**
-     * Creates a set of bounds around a circle so that the whole sphere is contained.
-     */
-    def around(circle: Circle) = {
-        val r = Vector3D(circle.radius, circle.radius, circle.radius)
-        Bounds(circle.origin - r, (r * 2).toSize)
+    def around(circle: Circle) = fromFunction2D { axis =>
+        val o = circle.origin(axis)
+        NumericSpan(o - circle.radius, o + circle.radius)
     }
     
     /**
@@ -130,14 +99,6 @@ object Bounds extends DimensionsWrapperFactory[NumericSpan[Double], Bounds] with
      * Creates a rectangle around line so that the line becomes one of the rectangle's diagonals
      */
     def aroundDiagonal(diagonal: Line) = between(diagonal.start, diagonal.end)
-    
-    /**
-      * Creates a set of bounds centered around a specific point
-      * @param center The center point of these bounds
-      * @param size The size of these bounds
-      * @return A new set of bounds
-      */
-    def centered(center: Point, size: Size) = Bounds(center - size / 2, size)
 }
 
 /**
@@ -310,7 +271,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     /**
      * Checks whether the line completely lies within the rectangle bounds
      */
-    def contains(line: Line): Boolean = line.points.forall(contains)
+    def contains(line: Line): Boolean = line.ends.forall(contains)
     /**
      * Checks whether a set of bounds is contained within this bounds' area
      */
@@ -357,7 +318,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @param other Another area
       * @return The intersection between these two areas. None if there is no intersection.
       */
-    def overlapWith(other: HasDimensions[HasInclusiveEnds[Double]]) = {
+    def overlapWith(other: HasDimensions[HasInclusiveOrderedEnds[Double]]) = {
         x.overlapWith(other.x).flatMap { xOverlap =>
             y.overlapWith(other.y).map { yOverlap => Bounds(xOverlap, yOverlap) }
         }

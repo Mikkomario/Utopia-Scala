@@ -9,8 +9,8 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.line.Line
 
 import java.awt.Color
 import java.awt.event.KeyEvent
@@ -69,10 +69,10 @@ object KeyTest extends App
         {
             // Draws the grid first
             for (x <- 0 to gridSquares.width.toInt) {
-                drawer.draw(Line.ofVector(gridPosition + X(squareSide * x), gridSize.yProjection.toVector))(StrokeSettings.default)
+                drawer.draw(Line.fromVector(gridPosition + X(squareSide * x), gridSize.yProjection.toVector))(StrokeSettings.default)
             }
             for (y <- 0 to gridSquares.height.toInt) {
-                drawer.draw(Line.ofVector(gridPosition + Y(squareSide * y), gridSize.xProjection.toVector))(StrokeSettings.default)
+                drawer.draw(Line.fromVector(gridPosition + Y(squareSide * y), gridSize.xProjection.toVector))(StrokeSettings.default)
             }
             
             // Then draws the object

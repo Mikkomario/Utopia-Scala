@@ -1,6 +1,6 @@
 package utopia.vault.nosql.view
 
-import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.collection.immutable.range.HasInclusiveOrderedEnds
 import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 
@@ -44,7 +44,7 @@ trait ChronoRowFactoryView[+A, +Sub] extends RowFactoryView[A] with FilterableVi
 	  * @param period A time period
 	  * @return Access to items that were created during the specified time period
 	  */
-	def createdDuring(period: HasInclusiveEnds[Instant]) = {
+	def createdDuring(period: HasInclusiveOrderedEnds[Instant]) = {
 		val minMax = period.minMax
 		createdBetween(minMax.first, minMax.second)
 	}

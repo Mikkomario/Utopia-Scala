@@ -12,9 +12,10 @@ import utopia.paradigm.generic.ParadigmDataType.CircleType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Line, Projectable, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{Projectable, ShapeConvertible}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.LinearSizeAdjustable
