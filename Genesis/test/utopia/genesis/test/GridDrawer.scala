@@ -3,7 +3,9 @@ package utopia.genesis.test
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.Drawable
 import utopia.inception.handling.mutable.Handleable
-import utopia.paradigm.shape.shape2d.{Line, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.Line
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.Color
 

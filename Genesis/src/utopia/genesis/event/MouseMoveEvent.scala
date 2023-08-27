@@ -4,8 +4,8 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.inception.util.Filter
-import utopia.paradigm.shape.shape2d.Point
-import utopia.paradigm.shape.shape2d.Area2D
+import utopia.paradigm.shape.shape2d.area.Area2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.duration.FiniteDuration
 

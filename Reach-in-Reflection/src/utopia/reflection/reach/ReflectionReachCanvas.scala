@@ -6,7 +6,8 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult

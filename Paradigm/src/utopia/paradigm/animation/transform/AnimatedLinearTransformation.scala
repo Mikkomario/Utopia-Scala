@@ -2,9 +2,10 @@ package utopia.paradigm.animation.transform
 
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Matrix3D
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.vector.DoubleVectorLike
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 
 object AnimatedLinearTransformation

@@ -3,6 +3,7 @@ package utopia.paradigm.shape.template
 import utopia.flow.operator.LinearScalable
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 /**
   * A common trait for matrix implementations

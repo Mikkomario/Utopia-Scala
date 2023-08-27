@@ -6,7 +6,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.time.Now
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default

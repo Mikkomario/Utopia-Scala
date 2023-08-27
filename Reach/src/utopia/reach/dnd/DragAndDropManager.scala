@@ -6,7 +6,7 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 import utopia.reach.dnd.DragAndDropEvent._

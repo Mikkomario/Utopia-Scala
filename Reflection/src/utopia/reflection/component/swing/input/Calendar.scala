@@ -10,7 +10,6 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.shape.shape2d.Size
 import utopia.firmament.drawing.view.SelectionCircleViewDrawer
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{CustomDrawableButtonLike, ImageButton}
@@ -26,6 +25,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.time._
 import scala.collection.immutable.HashMap

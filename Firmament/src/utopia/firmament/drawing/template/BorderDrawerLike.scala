@@ -3,7 +3,10 @@ package utopia.firmament.drawing.template
 import utopia.firmament.model.Border
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.shape.shape2d.{Bounds, Insets, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.insets.Insets
 
 import scala.collection.immutable.VectorBuilder
 

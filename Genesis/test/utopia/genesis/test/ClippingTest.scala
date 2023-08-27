@@ -6,7 +6,10 @@ import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.genesis.util.{DefaultSetup, DepthRange}
 import utopia.inception.handling.immutable.Handleable
-import utopia.paradigm.shape.shape2d.{Circle, Point, ShapeConvertible, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.ShapeConvertible
+import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import java.awt.Color

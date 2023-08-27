@@ -1,7 +1,7 @@
 package utopia.paradigm.motion.motion2d
 
 import utopia.paradigm.motion.template.MovementHistoryLike
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 import java.time.Instant
 

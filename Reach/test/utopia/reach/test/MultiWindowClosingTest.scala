@@ -3,7 +3,8 @@ package utopia.reach.test
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.genesis.util.Screen
-import utopia.paradigm.shape.shape2d.{Size, Vector2D}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.window.ReachWindow
 

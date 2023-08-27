@@ -2,7 +2,9 @@ package utopia.genesis.util
 
 import utopia.paradigm.measurement
 import utopia.paradigm.measurement.{Distance, Ppi}
-import utopia.paradigm.shape.shape2d.{Insets, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.{GraphicsConfiguration, Toolkit}
 import scala.util.Try

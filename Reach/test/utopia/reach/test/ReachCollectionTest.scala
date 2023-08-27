@@ -4,7 +4,7 @@ import utopia.firmament.model.enumeration.SizeCategory.Large
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.util.Screen
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.container.multi.Collection
 import utopia.reach.window.ReachWindow

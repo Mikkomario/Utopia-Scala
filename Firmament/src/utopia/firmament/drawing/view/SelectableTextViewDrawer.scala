@@ -6,11 +6,13 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.drawing.template.{DrawLevel, SelectableTextDrawerLike}
 import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
   * A view-based implementation of a text drawer that supports text selection

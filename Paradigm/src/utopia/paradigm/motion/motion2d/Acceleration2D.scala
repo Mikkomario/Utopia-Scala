@@ -6,8 +6,9 @@ import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.motion.motion3d.Acceleration3D
 import utopia.paradigm.motion.template.{AccelerationLike, ChangeFromModelFactory, ModelConvertibleChange}
-import utopia.paradigm.shape.shape2d.Vector2D
-import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, DoubleVector, HasDimensions}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.template.vector.DoubleVector
+import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 

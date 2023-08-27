@@ -1,10 +1,12 @@
 package utopia.reflection.component.swing
 
 import utopia.firmament.awt.AwtEventThread
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import java.awt.Graphics
 
 import javax.swing.JLabel
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.template.CustomDrawComponent
 
 object EmptyJComponent

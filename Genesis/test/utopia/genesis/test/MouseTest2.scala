@@ -8,10 +8,13 @@ import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.genesis.handling.{ActorLoop, Drawable, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
-import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.Line
 import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, MainFrame}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
  * This is a visual test for mouse event features. In the test, the two lines should point to the

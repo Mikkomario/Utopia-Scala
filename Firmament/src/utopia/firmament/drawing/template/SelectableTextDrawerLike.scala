@@ -4,10 +4,12 @@ import utopia.flow.view.mutable.Pointer
 import utopia.genesis.graphics.{DrawSettings, Drawer, MeasuredText}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.paradigm.transform.AffineTransformation
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
   * Common trait for custom drawers that draw interactive text over a component

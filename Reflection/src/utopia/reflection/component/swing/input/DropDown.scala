@@ -12,7 +12,6 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Direction2D.Up
-import utopia.paradigm.shape.shape2d.Insets
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
@@ -24,6 +23,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reflection.text.Prompt
 
 import scala.concurrent.ExecutionContext

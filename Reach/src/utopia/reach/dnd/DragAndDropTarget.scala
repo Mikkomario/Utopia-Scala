@@ -1,6 +1,8 @@
 package utopia.reach.dnd
 
-import utopia.paradigm.shape.shape2d.{Bounds, HasSize, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.HasSize
 import utopia.reach.component.template.ReachComponentLike
 
 object DragAndDropTarget

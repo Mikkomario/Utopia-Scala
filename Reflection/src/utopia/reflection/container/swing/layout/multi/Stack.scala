@@ -9,13 +9,15 @@ import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.firmament.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
 import utopia.reflection.container.stack.template.layout.ReflectionStackLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.collection.immutable.VectorBuilder
 

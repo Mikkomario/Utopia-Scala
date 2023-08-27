@@ -1,7 +1,7 @@
 package utopia.paradigm.transform
 
 import utopia.paradigm.angular.Rotation
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 /**
  * A transformation state that consists of a scaling, a rotation and a shear factors

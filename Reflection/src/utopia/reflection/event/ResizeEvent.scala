@@ -1,6 +1,6 @@
 package utopia.reflection.event
 
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
 * Resize events are generated when a component, or other element, is resized

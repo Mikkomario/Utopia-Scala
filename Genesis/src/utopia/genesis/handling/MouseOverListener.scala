@@ -1,7 +1,7 @@
 package utopia.genesis.handling
 
 import utopia.genesis.event.MouseMoveEvent
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.duration.FiniteDuration
 

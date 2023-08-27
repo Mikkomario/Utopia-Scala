@@ -1,7 +1,7 @@
 package utopia.firmament.drawing.template
 
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * This trait is extended by components that use custom drawing

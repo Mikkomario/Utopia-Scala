@@ -3,7 +3,8 @@ package utopia.genesis.test
 import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Matrix3D
 
 /**

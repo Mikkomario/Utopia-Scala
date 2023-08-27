@@ -1,7 +1,7 @@
 package utopia.reach.dnd
 
 import utopia.flow.event.model.ChangeEvent
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import java.nio.file.Path
 

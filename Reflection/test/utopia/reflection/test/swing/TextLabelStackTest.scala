@@ -8,7 +8,6 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -20,6 +19,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.StackInsets
 import utopia.genesis.text.FontStyle.Plain
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.test.TestContext._
 
 /**

@@ -4,7 +4,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.flow.operator.ScopeUsable
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.Insets
+import utopia.paradigm.shape.shape2d.insets.Insets
 
 /**
   * Common trait for context items that specify information for window-creation

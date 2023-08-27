@@ -3,7 +3,8 @@ package utopia.paradigm.shape.shape3d
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.enumeration.Axis
-import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions, MatrixLike}
 import utopia.paradigm.transform.{AffineTransformable, JavaAffineTransformConvertible, LinearTransformable}

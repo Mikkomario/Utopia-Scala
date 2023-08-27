@@ -2,7 +2,8 @@ package utopia.reach.drawing
 
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.color.ColorShade
-import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.reach.drawing.Priority.Normal
 
 /**

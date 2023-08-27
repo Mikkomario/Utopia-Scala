@@ -8,7 +8,11 @@ import utopia.flow.util.StringExtensions._
 import utopia.genesis.graphics.TextDrawHeight.LineHeight
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
-import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.Line
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.collection.immutable.VectorBuilder
 
@@ -174,19 +178,16 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param indexOnLine Index of targeted character on that line
 	  * @return Caret line at the specified location
 	  */
-	def caretAt(lineIndex: Int, indexOnLine: Int) =
-	{
+	def caretAt(lineIndex: Int, indexOnLine: Int) = {
 		// TODO: lineHeight might not be the correct function to call (see heightSettings)
 		if (isEmpty)
 			Line(Point.origin, Point(0, context.lineHeight))
-		else
-		{
+		else {
 			if (lineIndex < 0)
 				carets.head.head
 			else if (lineIndex >= carets.size)
 				carets.last.last
-			else
-			{
+			else {
 				val line = carets(lineIndex)
 				if (indexOnLine < 0)
 					line.head

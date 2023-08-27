@@ -4,12 +4,12 @@ import java.nio.file.Paths
 
 import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.test.TestContext._
 
 /**

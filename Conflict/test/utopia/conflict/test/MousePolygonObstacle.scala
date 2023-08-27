@@ -7,7 +7,7 @@ import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.inception.handling.immutable.Handleable
-import utopia.paradigm.shape.shape2d.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.transform.AffineTransformation
 
 import scala.collection.immutable.HashSet

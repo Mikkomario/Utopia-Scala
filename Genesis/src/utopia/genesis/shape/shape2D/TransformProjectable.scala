@@ -1,7 +1,7 @@
 package utopia.genesis.shape.shape2D
 
 import utopia.paradigm.angular.Rotation
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**

@@ -4,10 +4,10 @@ import utopia.genesis.graphics.{Drawer, MeasuredText}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.paradigm.transform.AffineTransformation
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * This custom drawer draws text over a component. This is a common trait for both mutable and immutable implementations.

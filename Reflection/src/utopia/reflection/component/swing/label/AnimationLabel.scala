@@ -15,13 +15,15 @@ import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point}
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.transform.AffineTransformation
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration

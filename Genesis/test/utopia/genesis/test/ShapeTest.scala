@@ -4,7 +4,13 @@ import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Matrix2D, Parallelogram, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.Parallelogram
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.{Line, Matrix2D}
 
 /**
  * This test is for some intersection methods and other shape (line, circle) specific methods

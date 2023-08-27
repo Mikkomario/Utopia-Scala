@@ -21,7 +21,7 @@ import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.measurement.DistanceExtensions._
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.input.check.CheckBox
 import utopia.reach.component.input.selection.RadioButtonGroup

@@ -3,7 +3,7 @@ package utopia.paradigm.motion.template
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.AbstractChanging
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}

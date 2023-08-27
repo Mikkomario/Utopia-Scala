@@ -4,10 +4,11 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.util.logging.Logger
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.DrawableHandler
-import utopia.paradigm.shape.shape2d.{Bounds, Size}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.genesis.util.Fps
 import utopia.genesis.view.ScalingPolicy.{Crop, Project}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.{Color, Graphics, Graphics2D}
 import java.awt.event.{ComponentAdapter, ComponentEvent}

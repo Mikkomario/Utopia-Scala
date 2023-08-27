@@ -4,9 +4,10 @@ import utopia.firmament.model.GuiElementStatus
 import utopia.flow.view.immutable.View
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Circle}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Background
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * Used for drawing selection state using a simple circle on item background

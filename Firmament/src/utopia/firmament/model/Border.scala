@@ -3,7 +3,8 @@ package utopia.firmament.model
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
-import utopia.paradigm.shape.shape2d.{Insets, Size}
+import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import javax.swing.BorderFactory
 import javax.swing.border.{EmptyBorder, MatteBorder}

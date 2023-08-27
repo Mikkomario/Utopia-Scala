@@ -4,12 +4,13 @@ import utopia.firmament.component.container.many.MultiContainer
 import utopia.firmament.component.stack.StackSizeCalculating
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
 import utopia.firmament.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
   * A template trait for containers which hold multiple overlaid layers of components

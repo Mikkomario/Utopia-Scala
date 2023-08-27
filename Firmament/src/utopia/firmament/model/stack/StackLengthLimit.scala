@@ -2,7 +2,7 @@ package utopia.firmament.model.stack
 
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.collection.immutable.HashMap
 

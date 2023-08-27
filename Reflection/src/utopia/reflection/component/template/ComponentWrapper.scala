@@ -1,7 +1,8 @@
 package utopia.reflection.component.template
 
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Point, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.event.ResizeListener
 
 /**

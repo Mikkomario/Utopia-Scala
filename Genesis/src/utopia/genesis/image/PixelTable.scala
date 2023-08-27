@@ -3,7 +3,10 @@ package utopia.genesis.image
 import java.awt.image.BufferedImage
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.area.Area2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 @deprecated("Replaced with Pixels", "v3.2")
 object PixelTable

@@ -10,7 +10,10 @@ import utopia.flow.operator.SignOrZero.Neutral
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.{Alignment, Axis2D, LinearAlignment}
 import utopia.paradigm.measurement.{Distance, Ppi}
-import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.insets.Insets
 
 /**
   * These extensions allow easier creation of stack lengths & stack sizes

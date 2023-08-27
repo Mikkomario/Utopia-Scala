@@ -1,7 +1,7 @@
 package utopia.genesis.handling
 
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.shape.shape2d.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.shape.shape3d.Matrix3D
 
 /**

@@ -5,7 +5,6 @@ import utopia.genesis.util.Fps
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.path.ProjectilePath
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper}
@@ -15,6 +14,7 @@ import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.duration.FiniteDuration

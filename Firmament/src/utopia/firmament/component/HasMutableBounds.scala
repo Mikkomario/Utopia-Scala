@@ -2,8 +2,10 @@ package utopia.firmament.component
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.shape2d.{Bounds, HasBounds, Point, Size}
+import utopia.paradigm.shape.shape1d.vector.Vector1D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 

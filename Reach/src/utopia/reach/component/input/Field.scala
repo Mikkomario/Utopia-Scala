@@ -20,7 +20,7 @@ import utopia.genesis.graphics.MeasuredText
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
-import utopia.paradigm.shape.shape2d.Insets
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy

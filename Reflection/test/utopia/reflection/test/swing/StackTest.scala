@@ -1,12 +1,12 @@
 package utopia.reflection.test.swing
 
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * This test creates a simple stack and sees whether the components are positioned properly

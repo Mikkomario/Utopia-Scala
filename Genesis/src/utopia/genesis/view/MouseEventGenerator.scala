@@ -8,9 +8,9 @@ import java.awt.event.{MouseEvent, MouseListener, MouseWheelListener}
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.Actor
-import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.mutable.Killable
 import utopia.inception.handling.{HandlerType, Mortal}
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

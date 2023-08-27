@@ -7,7 +7,8 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.shape.shape2d.{Point, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.AlignFrame

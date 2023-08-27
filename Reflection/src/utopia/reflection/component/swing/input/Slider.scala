@@ -21,7 +21,6 @@ import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.path.{ProjectilePath, SegmentedPath}
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -29,6 +28,10 @@ import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import scala.concurrent.duration.{Duration, FiniteDuration}

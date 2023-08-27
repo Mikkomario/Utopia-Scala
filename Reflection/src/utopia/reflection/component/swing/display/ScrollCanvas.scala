@@ -13,7 +13,6 @@ import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.swing.template._
@@ -23,6 +22,9 @@ import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.concurrent.ExecutionContext
 

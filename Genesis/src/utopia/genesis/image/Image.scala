@@ -10,8 +10,15 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape1d.{Dimension, Vector1D}
+import utopia.paradigm.shape.shape1d.Dimension
+import utopia.paradigm.shape.shape1d.vector.Vector1D
 import utopia.paradigm.shape.shape2d._
+import utopia.paradigm.shape.shape2d.area.Area2D
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.{Size, Sized}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.LinearSizeAdjustable
 

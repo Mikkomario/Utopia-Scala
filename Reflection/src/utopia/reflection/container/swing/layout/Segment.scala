@@ -5,7 +5,6 @@ import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
@@ -14,6 +13,9 @@ import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths

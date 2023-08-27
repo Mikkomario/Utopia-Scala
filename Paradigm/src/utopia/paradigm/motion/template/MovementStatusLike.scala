@@ -1,7 +1,6 @@
 package utopia.paradigm.motion.template
 
-import utopia.paradigm.shape.template.NumericVectorLike
-
+import utopia.paradigm.shape.template.vector.NumericVectorLike
 import scala.concurrent.duration.Duration
 
 /**

@@ -2,7 +2,8 @@ package utopia.reflection.component.template
 
 import utopia.firmament.component.Component
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.event.ResizeListener
 
 /**

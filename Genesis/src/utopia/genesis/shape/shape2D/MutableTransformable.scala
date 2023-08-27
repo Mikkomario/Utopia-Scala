@@ -3,7 +3,8 @@ package utopia.genesis.shape.shape2D
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.shape.shape2d.{Point, Vector2D}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 

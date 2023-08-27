@@ -4,8 +4,8 @@ import utopia.flow.operator.Sign
 import utopia.flow.operator.SignOrZero.Neutral
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
-import utopia.paradigm.shape.shape2d.{Insets, InsetsFactory, InsetsLike}
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.insets.{Insets, InsetsFactory, InsetsLike}
 
 object StackInsets extends InsetsFactory[StackLength, StackInsets]
 {

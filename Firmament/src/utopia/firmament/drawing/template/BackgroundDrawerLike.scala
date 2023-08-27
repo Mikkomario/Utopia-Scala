@@ -1,7 +1,7 @@
 package utopia.firmament.drawing.template
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * A template for background custom drawer implementations

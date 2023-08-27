@@ -5,7 +5,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorShade}
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 object Cursor
 {

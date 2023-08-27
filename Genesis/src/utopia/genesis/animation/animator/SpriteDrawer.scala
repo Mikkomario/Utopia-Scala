@@ -5,7 +5,7 @@ import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.shape.shape2D.MutableTransformable
 import utopia.paradigm.animation.TimedAnimation
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.transform.AffineTransformation
 
 import scala.concurrent.duration.Duration

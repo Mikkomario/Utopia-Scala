@@ -1,7 +1,7 @@
 package utopia.paradigm.animation
 
 import utopia.paradigm.path.{BezierFunction, CubicBezier, ProjectilePath, SPath}
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 object AnimationLike
 {

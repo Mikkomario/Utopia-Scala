@@ -7,13 +7,13 @@ import utopia.paradigm.color.{Color, Rgb}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
 

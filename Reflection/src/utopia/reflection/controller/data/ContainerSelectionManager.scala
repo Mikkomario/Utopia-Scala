@@ -14,8 +14,8 @@ import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack

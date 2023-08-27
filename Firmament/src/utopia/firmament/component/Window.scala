@@ -30,7 +30,10 @@ import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
 import utopia.inception.util.Filter
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.insets.Insets
 
 import java.awt.Frame
 import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent, WindowAdapter, WindowEvent}

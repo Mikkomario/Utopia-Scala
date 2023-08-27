@@ -6,7 +6,11 @@ import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.mutable.DrawableHandler
 import utopia.genesis.view.{Canvas, MainFrame, RepaintLoop}
 import utopia.inception.handling.HandlerType
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, ShapeConvertible, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.ShapeConvertible
+import utopia.paradigm.shape.shape2d.area.Circle
 
 import java.awt.Color
 

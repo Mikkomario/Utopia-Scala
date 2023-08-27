@@ -2,6 +2,7 @@
 
 ## v1.4 (in development)
 ### Breaking Changes
+- Refactored **shape** package structure
 - Renamed **VectorFactory** to **DoubleVectorFactory**
 - **VectorProjectable**`.projectedOver(...)` now accepts **DoubleVector** instead of **DoubleVectorLike**
 - **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**

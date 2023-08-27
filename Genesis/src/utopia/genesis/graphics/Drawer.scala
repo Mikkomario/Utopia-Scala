@@ -2,7 +2,9 @@ package utopia.genesis.graphics
 
 import utopia.flow.operator.ScopeUsable
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.ShapeConvertible
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.{Font, Graphics2D, RenderingHints, Shape}

@@ -11,10 +11,12 @@ import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
 import utopia.paradigm.generic.ParadigmDataType.AffineTransformationType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.DoubleVector
+import utopia.paradigm.shape.template.vector.DoubleVector
 
 object AffineTransformation extends SureFromModelFactory[AffineTransformation]
 {

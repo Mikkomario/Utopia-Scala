@@ -2,8 +2,8 @@ package utopia.paradigm.test
 
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.enumeration.Axis._
-import utopia.paradigm.shape.shape1d.Vector1D
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape1d.vector.Vector1D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.Dimensions
 

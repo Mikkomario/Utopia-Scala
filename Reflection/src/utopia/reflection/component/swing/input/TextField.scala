@@ -13,7 +13,6 @@ import utopia.paradigm.color.{Color, ColorSet}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
-import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.drawing.template.TextDrawerLike
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
@@ -26,6 +25,10 @@ import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.text.Prompt
 
 import java.awt.Graphics

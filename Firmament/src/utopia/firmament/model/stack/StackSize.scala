@@ -6,7 +6,8 @@ import utopia.flow.operator.Combinable.SelfCombinable
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Insets, Size}
+import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
 import utopia.paradigm.transform.LinearSizeAdjustable
 

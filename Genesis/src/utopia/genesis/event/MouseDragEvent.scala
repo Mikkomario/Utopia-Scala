@@ -2,7 +2,7 @@ package utopia.genesis.event
 
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.util.Filter
-import utopia.paradigm.shape.shape2d.{Point, RelativePoint}
+import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
 
 object MouseDragEvent
 {

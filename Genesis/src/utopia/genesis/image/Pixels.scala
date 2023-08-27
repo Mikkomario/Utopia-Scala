@@ -4,7 +4,10 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Matrix, MatrixLike, Pair}
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.area.Area2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import java.awt.image.BufferedImage
 

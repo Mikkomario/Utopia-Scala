@@ -1,7 +1,9 @@
 package utopia.reach.container
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.paradigm.shape.shape2d.{Bounds, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager

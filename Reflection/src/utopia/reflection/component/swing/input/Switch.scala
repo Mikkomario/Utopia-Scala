@@ -13,7 +13,6 @@ import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -24,6 +23,9 @@ import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.duration.FiniteDuration
 

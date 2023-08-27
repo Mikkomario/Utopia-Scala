@@ -4,7 +4,8 @@ import utopia.flow.operator.HasLength
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
-import utopia.paradigm.shape.shape2d.{Circle, Point}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
   * This path traverses along circle edge

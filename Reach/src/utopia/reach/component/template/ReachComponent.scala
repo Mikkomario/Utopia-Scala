@@ -3,7 +3,9 @@ package utopia.reach.component.template
 import utopia.firmament.component.stack.CachingStackable
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * A common trait for <b>non-wrapping</b> reach components that handle the actual component implementation

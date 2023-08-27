@@ -8,7 +8,13 @@ import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
 import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Matrix2D, Point, Polygonic, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.{Line, Matrix2D}
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 

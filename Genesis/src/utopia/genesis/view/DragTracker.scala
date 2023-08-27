@@ -4,7 +4,7 @@ import utopia.flow.view.mutable.Pointer
 import utopia.genesis.event.{ConsumeEvent, KeyStatus, MouseButton, MouseButtonStateEvent, MouseDragEvent, MouseMoveEvent}
 import utopia.genesis.handling.{MouseButtonStateListener, MouseDragListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
-import utopia.paradigm.shape.shape2d.RelativePoint
+import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 /**
  * Used for generating mouse drag events based on mouse button and mouse move events.

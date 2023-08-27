@@ -5,7 +5,7 @@ import utopia.genesis.event.{ConsumeEvent, KeyStatus, MouseButton, MouseButtonSt
 import utopia.genesis.handling.{MouseButtonStateListener, MouseDragListener, MouseMoveListener, MouseWheelListener, mutable}
 import utopia.inception.handling.{Handleable, HandlerType}
 import utopia.inception.handling.mutable.HandlerRelay
-import utopia.paradigm.shape.shape2d.RelativePoint
+import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 /**
   * Used for distributing "global" mouse events inside the application, regardless of active window.

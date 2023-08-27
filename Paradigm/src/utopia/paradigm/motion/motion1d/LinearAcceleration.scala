@@ -11,7 +11,7 @@ import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion2d.Acceleration2D
 import utopia.paradigm.motion.motion3d.Acceleration3D
 import utopia.paradigm.motion.template.{Change, ChangeFromModelFactory, ModelConvertibleChange}
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import scala.concurrent.duration.{Duration, TimeUnit}

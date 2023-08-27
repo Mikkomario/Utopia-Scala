@@ -1,7 +1,7 @@
 package utopia.paradigm.path
 
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
  * Used for creating curved x-y mapping functions

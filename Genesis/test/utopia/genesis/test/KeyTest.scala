@@ -7,7 +7,10 @@ import utopia.genesis.handling.{Drawable, KeyStateListener, KeyTypedListener}
 import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis._
-import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.Line
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import java.awt.Color
 import java.awt.event.KeyEvent

@@ -6,9 +6,9 @@ import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.shape2d.Vector2D
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.motion3d.Velocity3D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 /**
   * Used for testing velocity-related classes

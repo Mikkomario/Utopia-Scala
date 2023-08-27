@@ -9,7 +9,10 @@ import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, MainFrame}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * Tests drawing on an image.

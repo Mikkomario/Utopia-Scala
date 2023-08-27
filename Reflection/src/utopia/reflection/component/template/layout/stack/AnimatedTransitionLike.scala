@@ -10,13 +10,13 @@ import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.animation.{Animation, AnimationLike}
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.event.TransitionState
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import java.time.Instant
 import scala.concurrent.Promise

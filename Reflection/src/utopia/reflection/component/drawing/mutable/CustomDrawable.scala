@@ -1,9 +1,9 @@
 package utopia.reflection.component.drawing.mutable
 
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.drawing.template.{CustomDrawer, DrawLevel}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * This trait is extended by components that allow custom drawing

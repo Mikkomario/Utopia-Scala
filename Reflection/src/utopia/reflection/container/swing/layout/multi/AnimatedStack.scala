@@ -9,13 +9,13 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Point
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.AnimatedChangesContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

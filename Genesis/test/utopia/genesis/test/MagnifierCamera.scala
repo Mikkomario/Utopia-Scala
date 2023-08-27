@@ -6,7 +6,8 @@ import utopia.genesis.handling.mutable.DrawableHandler
 import utopia.genesis.handling.{Camera, Drawable, MouseMoveListener}
 import utopia.genesis.util.DepthRange
 import utopia.inception.handling.mutable.Handleable
-import utopia.paradigm.shape.shape2d.{Circle, Point}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.transform.LinearTransformation
 
 /**

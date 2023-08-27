@@ -11,7 +11,6 @@ import utopia.inception.handling.Mortal
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.TopLeft
-import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -19,6 +18,8 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.{Never, WhenAnyKeyPressed, WhenClickedOutside, WhenEscPressed, WhenFocusLost}
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.localization.LocalString._
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.event.{WindowEvent, WindowFocusListener}
 import scala.concurrent.ExecutionContext

@@ -1,5 +1,6 @@
 package utopia.genesis.view
 
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import javax.swing.{JFrame, JPanel, WindowConstants}
 import java.awt.BorderLayout
 import java.awt.Color
@@ -8,9 +9,8 @@ import java.awt.Dimension
 import scala.collection.immutable.HashMap
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 import java.awt.Component
-import utopia.paradigm.shape.shape2d.Size
-import utopia.paradigm.shape.shape2d.Point
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
  * This class is used for displaying game contents in a frame. The implementation supports

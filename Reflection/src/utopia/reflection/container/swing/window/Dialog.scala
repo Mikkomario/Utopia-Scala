@@ -1,11 +1,12 @@
 package utopia.reflection.container.swing.window
 
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import javax.swing.JDialog
 

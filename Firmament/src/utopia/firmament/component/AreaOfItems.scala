@@ -1,6 +1,7 @@
 package utopia.firmament.component
 
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
   * A common trait for various containers that have a specific area reserved for each item

@@ -3,7 +3,7 @@ package utopia.genesis.handling
 import utopia.genesis.event.{ConsumeEvent, MouseButton, MouseButtonStateEvent, MouseEvent}
 import utopia.inception.handling.Handleable
 import utopia.inception.util.{AnyFilter, Filter}
-import utopia.paradigm.shape.shape2d.Area2D
+import utopia.paradigm.shape.shape2d.area.Area2D
 
 object MouseButtonStateListener
 {

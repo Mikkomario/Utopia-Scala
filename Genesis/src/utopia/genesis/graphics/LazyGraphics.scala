@@ -2,7 +2,10 @@ package utopia.genesis.graphics
 
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Polygonic, Size}
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
 

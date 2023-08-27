@@ -13,6 +13,10 @@ import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.path.LinearPathLike
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.Transformable

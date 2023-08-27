@@ -5,7 +5,8 @@ import utopia.firmament.component.container.many.StackLike
 import utopia.firmament.component.stack.Stackable
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.View
-import utopia.paradigm.shape.shape2d.{Bounds, HasBounds, Point}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 
 object StackItemAreas
 {

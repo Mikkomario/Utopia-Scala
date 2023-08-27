@@ -4,7 +4,9 @@ import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.flow.util.NotEmpty
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.template.{AwtComponentRelated, CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.container.template.Container

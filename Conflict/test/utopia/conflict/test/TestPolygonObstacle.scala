@@ -6,7 +6,8 @@ import utopia.conflict.test.TestCollisionGroups.Obstacle
 import utopia.genesis.graphics.{Drawer, StrokeSettings}
 import utopia.genesis.handling.Drawable
 import utopia.inception.handling.immutable.Handleable
-import utopia.paradigm.shape.shape2d.{Line, Polygonic}
+import utopia.paradigm.shape.shape2d.Line
+import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 
 import java.awt.Color
 import scala.collection.immutable.HashSet

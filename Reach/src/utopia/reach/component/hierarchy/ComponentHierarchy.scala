@@ -5,7 +5,8 @@ import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.text.Font
-import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 import utopia.reach.drawing.Priority

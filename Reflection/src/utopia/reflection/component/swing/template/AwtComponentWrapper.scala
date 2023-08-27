@@ -8,11 +8,12 @@ import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.mutable._
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.util.ComponentToImage
 
 import java.awt.event.MouseEvent

@@ -1,12 +1,16 @@
 package utopia.genesis.test
 
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.generic.ParadigmDataType.{BoundsType, CircleType, LineType, PointType, SizeType, Vector3DType}
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.shape3d.Vector3D
 
 /**

@@ -2,7 +2,7 @@ package utopia.firmament.context
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.Insets
+import utopia.paradigm.shape.shape2d.insets.Insets
 
 /**
   * A context instance that wraps a window context

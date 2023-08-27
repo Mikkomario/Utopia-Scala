@@ -2,6 +2,7 @@ package utopia.paradigm.shape.template
 
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
+import utopia.paradigm.shape.template.vector.DoubleVector
 
 /**
   * These items can be projected over vectors

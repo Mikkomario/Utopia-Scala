@@ -3,7 +3,7 @@ package utopia.genesis.image.transform
 import java.awt.image.{ConvolveOp, Kernel}
 
 import utopia.genesis.image.{Image, MutableImage}
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * This image transform uses java's ConvolveOp

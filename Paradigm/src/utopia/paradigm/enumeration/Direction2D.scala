@@ -5,7 +5,7 @@ import utopia.flow.operator.{Reversible, Scalable, Sign}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
-import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape1d.vector.Vector1D
 
 sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Parallel] with Scalable[Double, Vector1D]
 {

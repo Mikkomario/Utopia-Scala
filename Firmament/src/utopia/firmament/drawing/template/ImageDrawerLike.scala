@@ -3,9 +3,9 @@ package utopia.firmament.drawing.template
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * A common trait for image drawer implementations

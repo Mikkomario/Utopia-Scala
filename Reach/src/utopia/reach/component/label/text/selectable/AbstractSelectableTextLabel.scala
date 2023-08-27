@@ -19,7 +19,7 @@ import utopia.genesis.handling._
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}

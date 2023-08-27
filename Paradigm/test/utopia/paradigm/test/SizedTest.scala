@@ -2,7 +2,7 @@ package utopia.paradigm.test
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.{Size, Sized}
+import utopia.paradigm.shape.shape2d.vector.size.{Size, Sized}
 
 /**
   * Used for testing size functions

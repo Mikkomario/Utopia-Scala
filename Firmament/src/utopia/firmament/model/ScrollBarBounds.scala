@@ -2,7 +2,7 @@ package utopia.firmament.model
 
 import utopia.flow.operator.Combinable
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**

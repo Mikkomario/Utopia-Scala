@@ -1,6 +1,6 @@
 package utopia.genesis.image.transform
 
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 object Sharpen
 {

@@ -4,13 +4,13 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import java.awt.event.KeyEvent
 import utopia.genesis.handling.KeyStateListener
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.{EmptyLabel, TextLabel}
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.AnimatedSwitchPanel
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.util.SingleFrameSetup
 
 /**

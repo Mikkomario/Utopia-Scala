@@ -5,7 +5,9 @@ import utopia.firmament.component.HasMutableBounds
 import utopia.firmament.component.stack.Stackable
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.template.AwtComponentRelated
 
 import java.awt.Frame

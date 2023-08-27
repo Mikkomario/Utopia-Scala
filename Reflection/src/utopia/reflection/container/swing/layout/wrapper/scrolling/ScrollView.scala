@@ -6,8 +6,8 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.paradigm.shape.shape2d.Size
 import utopia.firmament.drawing.template.ScrollBarDrawerLike
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.template.scrolling.ReflectionScrollViewLike

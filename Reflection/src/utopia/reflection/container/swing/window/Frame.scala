@@ -4,7 +4,6 @@ import utopia.firmament.context.ComponentCreationDefaults
 import utopia.flow.async.process
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtComponentWrapperWrapper}
 import utopia.reflection.component.template.layout.stack.{ReflectionStackLeaf, ReflectionStackable}
 import utopia.firmament.model.enumeration.WindowResizePolicy.{Program, User}
@@ -12,6 +11,8 @@ import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import javax.swing.JFrame
 import scala.concurrent.ExecutionContext

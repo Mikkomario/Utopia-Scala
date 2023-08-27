@@ -2,9 +2,12 @@ package utopia.genesis.test
 
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.operator.EqualsExtensions._
-import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Vector2D}
+import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
  * This test makes sure circle and line class projection and collision algorithms are working 

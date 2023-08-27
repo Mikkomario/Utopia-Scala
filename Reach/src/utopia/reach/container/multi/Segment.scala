@@ -8,11 +8,13 @@ import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.firmament.drawing.template.DrawLevel
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths

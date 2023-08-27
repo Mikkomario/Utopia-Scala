@@ -2,7 +2,9 @@ package utopia.genesis.event
 
 import utopia.inception.util.Filter
 import utopia.genesis.event.MouseButton._
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, RelativePoint}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
+import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 object MouseEvent

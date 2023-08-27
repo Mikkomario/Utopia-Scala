@@ -7,7 +7,7 @@ import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateH
 import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, GlobalKeyboardEventHandler, GlobalMouseEventHandler, MainFrame}
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.concurrent.ExecutionContext
 

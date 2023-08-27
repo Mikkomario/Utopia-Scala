@@ -3,7 +3,8 @@ package utopia.reach.context
 import utopia.firmament.context.{TextContext, WindowContext}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.container.RevalidationStyle.Immediate
 import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorSet

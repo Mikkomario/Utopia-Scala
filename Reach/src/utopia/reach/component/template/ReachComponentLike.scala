@@ -12,7 +12,12 @@ import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.area
+import utopia.paradigm.shape.shape2d.area.polygon.c4
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.context.ReachWindowContext
@@ -93,7 +98,7 @@ trait ReachComponentLike extends Stackable
 	  * @return The bounds of this component on the screen (provided this component is connected to a hierarchy
 	  *         reaching a window)
 	  */
-	def absoluteBounds = Bounds(absolutePosition, size)
+	def absoluteBounds = c4.bounds.Bounds(absolutePosition, size)
 	
 	/**
 	  * @return The position of this component inside the so called top component (the canvas element)

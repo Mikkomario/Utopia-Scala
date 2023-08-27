@@ -1,9 +1,9 @@
 package utopia.genesis.handling
 
 import utopia.genesis.event.{ConsumeEvent, MouseWheelEvent}
-import utopia.paradigm.shape.shape2d.Area2D
 import utopia.inception.handling.Handleable
 import utopia.inception.util.{AnyFilter, Filter}
+import utopia.paradigm.shape.shape2d.area.Area2D
 
 object MouseWheelListener
 {

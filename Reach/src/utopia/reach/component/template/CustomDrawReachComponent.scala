@@ -2,10 +2,10 @@ package utopia.reach.component.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer, DrawLevel}
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 object CustomDrawReachComponent
 {

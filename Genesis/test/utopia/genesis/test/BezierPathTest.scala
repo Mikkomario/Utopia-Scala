@@ -9,7 +9,10 @@ import utopia.genesis.util.DefaultSetup
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.path.{BezierPath, CircularPath, CompoundPath, CubicBezier, Path}
-import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.Line
+import utopia.paradigm.shape.shape2d.area.Circle
 
 import scala.concurrent.duration.FiniteDuration
 

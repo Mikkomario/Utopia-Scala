@@ -5,7 +5,8 @@ import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{Dimensional, NumericVectorLike, VectorProjectable}
+import utopia.paradigm.shape.template.vector.NumericVectorLike
+import utopia.paradigm.shape.template.{Dimensional, VectorProjectable}
 
 import scala.concurrent.duration.Duration
 

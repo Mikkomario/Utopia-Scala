@@ -6,7 +6,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext

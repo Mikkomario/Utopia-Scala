@@ -6,10 +6,12 @@ import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper}
 import utopia.reflection.container.stack.template.MultiStackContainer
 import utopia.firmament.model.stack.StackLength
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
 * A stack holds multiple stackable components in a stack-like manner either horizontally or vertically

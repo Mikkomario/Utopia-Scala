@@ -1,8 +1,8 @@
 package utopia.firmament.model.stack.modifier
 
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Size
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * A stack size modifier which places a maximum limit on the optimal stack size

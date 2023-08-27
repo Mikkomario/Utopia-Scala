@@ -1,8 +1,11 @@
 package utopia.reflection.text
 
 import utopia.paradigm.enumeration.LinearAlignment.Close
-import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.Line
 import utopia.paradigm.enumeration.LinearAlignment
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * A common trait for context information that allows deduction of string widths and heights

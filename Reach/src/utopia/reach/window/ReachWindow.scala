@@ -22,7 +22,8 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy

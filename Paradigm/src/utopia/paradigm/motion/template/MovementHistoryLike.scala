@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.shape.template.DoubleVectorLike
+import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration

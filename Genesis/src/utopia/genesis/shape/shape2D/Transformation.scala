@@ -3,8 +3,12 @@ package utopia.genesis.shape.shape2D
 import java.awt.geom.AffineTransform
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.shape.shape2d
+import utopia.paradigm.shape.shape2d.vector
+import utopia.paradigm.shape.shape2d.vector.{Vector2D, point}
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.{Dimensional, DoubleVectorLike}
+import utopia.paradigm.shape.template.Dimensional
+import utopia.paradigm.shape.template.vector.DoubleVectorLike
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 @deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
@@ -23,37 +27,37 @@ object Transformation
     /**
      * This transformation moves the coordinates of the target by the provided amount
      */
-    def translation(amount: shape2d.Vector2D) = Transformation(translation = amount)
+    def translation(amount: Vector2D) = Transformation(translation = amount)
     
     /**
       * @param amount Translation vector
       * @return A new transformation with only translation included
       */
-    def translation(amount: HasDoubleDimensions): Transformation = translation(shape2d.Vector2D.from(amount))
+    def translation(amount: HasDoubleDimensions): Transformation = translation(vector.Vector2D.from(amount))
     
     /**
       * @param x Translation x-wise
       * @param y Translation y-wise
       * @return A new translation transformation
       */
-    def translation(x: Double, y: Double): Transformation = translation(shape2d.Vector2D(x, y))
+    def translation(x: Double, y: Double): Transformation = translation(vector.Vector2D(x, y))
     
     /**
       * @param amount Translation amount (position)
       * @return A transformation that sets an object to specified position
       */
-    def position(amount: shape2d.Point) = translation(amount.toVector)
+    def position(amount: Point) = translation(amount.toVector)
     
     /**
      * This transformation scales the target by the provided amount
      */
-    def scaling(amount: shape2d.Vector2D) = Transformation(scaling = amount)
+    def scaling(amount: Vector2D) = Transformation(scaling = amount)
     
     /**
      * This transformation scales the target by the provided amount. Each coordinate is scaled with
      * the same factor 
      */
-    def scaling(amount: Double) = Transformation(scaling = shape2d.Vector2D(amount, amount))
+    def scaling(amount: Double) = Transformation(scaling = vector.Vector2D(amount, amount))
     
     /**
      * This transformation rotates the target around the zero origin (z-axis) by the provided amount
@@ -75,7 +79,7 @@ object Transformation
     /**
      * This transformation shears the target by the provided amount
      */
-    def shear(amount: shape2d.Vector2D) = Transformation(shear = amount)
+    def shear(amount: Vector2D) = Transformation(shear = amount)
 }
 
 /**
@@ -85,8 +89,8 @@ object Transformation
  * @since 29.12.2016
  */
 @deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
-case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero, scaling: shape2d.Vector2D = shape2d.Vector2D.identity,
-                          rotation: Rotation = Rotation.zero, shear: shape2d.Vector2D = shape2d.Vector2D.zero,
+case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling: Vector2D = vector.Vector2D.identity,
+                          rotation: Rotation = Rotation.zero, shear: Vector2D = vector.Vector2D.zero,
                           useReverseOrder: Boolean = false)
     extends JavaAffineTransformConvertible
 {
@@ -186,7 +190,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
     /**
      * Inverts this transformation
      */
-    def unary_- = Transformation(-translation, shape2d.Vector2D.identity / scaling, -rotation, -shear, !useReverseOrder)
+    def unary_- = Transformation(-translation, vector.Vector2D.identity / scaling, -rotation, -shear, !useReverseOrder)
     
     /**
      * Combines the two transformations together. The applied translation is not depended of the 
@@ -218,14 +222,14 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * Transforms a <b>relative</b> point <b>into an absolute</b> point
      * @param relative a relative point that will be transformed
      */
-    def apply(relative: shape2d.Point) = shape2d.Point of toAffineTransform.transform(relative.toAwtPoint2D, null)
+    def apply(relative: Point) = point.Point of toAffineTransform.transform(relative.toAwtPoint2D, null)
     
     /**
      * Transforms a <b>relative</b> point <b>into an absolute</b> point
      * @param relative a relative point that will be transformed
      */
     def apply[V <: Dimensional[Double, V]](relative: V): V =
-        relative.withDimensions(apply(shape2d.Point(relative.x, relative.y)).dimensions)
+        relative.withDimensions(apply(point.Point(relative.x, relative.y)).dimensions)
     
     /**
      * Transforms a shape <b>from relative space to absolute space</b>
@@ -250,7 +254,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * @param absolute a vector in absolute world space
      * @return The absolute point in relative world space
      */
-    def invert(absolute: shape2d.Point) = shape2d.Point of toInvertedAffineTransform.transform(absolute.toAwtPoint2D, null)
+    def invert(absolute: Point) = point.Point of toInvertedAffineTransform.transform(absolute.toAwtPoint2D, null)
     
     /**
      * Inverse transforms an <b>absolute</b> coordinate point <b>into relative</b> space
@@ -258,7 +262,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * @return The absolute point in relative world space
      */
     def invert[V <: Dimensional[Double, V]](absolute: V): V =
-        absolute.withDimensions(invert(shape2d.Point(absolute.x, absolute.y)).dimensions)
+        absolute.withDimensions(invert(point.Point(absolute.x, absolute.y)).dimensions)
     
     /**
      * Transforms a shape <b>from absolute space to relative space</b>
@@ -268,12 +272,12 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
     /**
      * Converts an absolute coordinate into a relative one. Same as calling invert(Vector3D)
      */
-    def toRelative(absolute: shape2d.Point) = invert(absolute)
+    def toRelative(absolute: Point) = invert(absolute)
     
     /**
      * Converts an absolute coordinate into a relative one. Same as calling invert(Vector3D)
      */
-    def toRelative(absolute: shape2d.Vector2D) = invert(absolute)
+    def toRelative(absolute: Vector2D) = invert(absolute)
     
     /**
      * Converts an absolute shape to a relative one. Same as calling invert(...)
@@ -283,12 +287,12 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
     /**
      * Converts a relative coordinate into an absolute one. Same as calling apply(Point)
      */
-    def toAbsolute(relative: shape2d.Point) = apply(relative)
+    def toAbsolute(relative: Point) = apply(relative)
     
     /**
      * Converts a relative coordinate into an absolute one. Same as calling apply(Point)
      */
-    def toAbsolute(relative: shape2d.Vector2D) = apply(relative)
+    def toAbsolute(relative: Vector2D) = apply(relative)
     
     /**
      * Converts a relative shape to an absolute one. Same as calling apply(...)
@@ -301,7 +305,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * @param origin the point of origin around which the transformation is rotated
      * @return the rotated transformation
      */
-    def absoluteRotated(rotation: Rotation, origin: shape2d.Point) =
+    def absoluteRotated(rotation: Rotation, origin: Point) =
             withTranslation(translation.rotatedAround(rotation, origin.toVector)).rotated(rotation)
     
     /**
@@ -310,34 +314,34 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
      * @param origin the point of origin around which the transformation is rotated
      * @return the rotated transformation
      */
-    def relativeRotated(rotation: Rotation, origin: shape2d.Point) = absoluteRotated(rotation, apply(origin))
+    def relativeRotated(rotation: Rotation, origin: Point) = absoluteRotated(rotation, apply(origin))
     
     /**
      * Copies this transformation, giving it a new translation vector
      */
-    def withTranslation(translation: shape2d.Vector2D) = copy(translation = translation)
+    def withTranslation(translation: Vector2D) = copy(translation = translation)
     
     /**
       * @param translation A new translation value
       * @return A copy of this transformation with new translation
       */
     def withTranslation(translation: HasDoubleDimensions) =
-        copy(translation = shape2d.Vector2D.from(translation))
+        copy(translation = vector.Vector2D.from(translation))
     
     /**
      * Copies this transformation, giving it a new position
      */
-    def withPosition(position: shape2d.Point) = withTranslation(position.toVector)
+    def withPosition(position: Point) = withTranslation(position.toVector)
     
     /**
      * Copies this transformation, giving it a new scaling
      */
-    def withScaling(scaling: shape2d.Vector2D) = copy(scaling = scaling)
+    def withScaling(scaling: Vector2D) = copy(scaling = scaling)
     
     /**
      * Copies this transformation, giving it a new scaling
      */
-    def withScaling(scaling: Double): Transformation = withScaling(shape2d.Vector2D(scaling, scaling))
+    def withScaling(scaling: Double): Transformation = withScaling(vector.Vector2D(scaling, scaling))
     
     /**
      * Copies this transformation, using a different rotation
@@ -359,7 +363,7 @@ case class Transformation(translation: shape2d.Vector2D = shape2d.Vector2D.zero,
     /**
      * Copies this transformation, giving it a new shearing
      */
-    def withShear(shear: shape2d.Vector2D) = copy(shear = shear)
+    def withShear(shear: Vector2D) = copy(shear = shear)
     
     /**
      * Copies this transformation, changing the translation by the provided amount

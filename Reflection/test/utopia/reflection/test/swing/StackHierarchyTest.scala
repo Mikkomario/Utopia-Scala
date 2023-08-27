@@ -6,7 +6,6 @@ import utopia.flow.generic.model.mutable.DataType
 import java.awt.Color
 import javax.swing.JLabel
 import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.template.{JStackableWrapper, JWrapper}
 import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -14,6 +13,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.test.TestContext._
 
 /**

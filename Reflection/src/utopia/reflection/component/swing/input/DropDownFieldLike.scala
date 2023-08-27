@@ -9,7 +9,6 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType, MouseButtonStateListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.enumeration.Axis.Y
-import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.firmament.drawing.template.CustomDrawer
@@ -27,6 +26,7 @@ import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext
 

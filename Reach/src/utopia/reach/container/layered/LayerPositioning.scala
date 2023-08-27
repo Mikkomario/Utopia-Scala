@@ -2,11 +2,11 @@ package utopia.reach.container.layered
 
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.template.ReachComponentLike
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * An enumeration for different ways to place layers in a layered view

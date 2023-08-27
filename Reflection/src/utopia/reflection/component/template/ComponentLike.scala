@@ -7,8 +7,9 @@ import utopia.paradigm.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.inception.handling.Handleable
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.event.ResizeListener
 
 /**

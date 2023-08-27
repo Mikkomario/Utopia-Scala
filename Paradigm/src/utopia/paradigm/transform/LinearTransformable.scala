@@ -3,7 +3,7 @@ package utopia.paradigm.transform
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape1d.vector.Vector1D
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 

@@ -5,11 +5,12 @@ import utopia.firmament.context.BaseContext
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.model.stack.StackSize
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 object ImageLabel
 {

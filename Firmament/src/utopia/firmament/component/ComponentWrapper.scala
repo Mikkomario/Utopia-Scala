@@ -1,7 +1,8 @@
 package utopia.firmament.component
 
 import utopia.genesis.text.Font
-import utopia.paradigm.shape.shape2d.{Point, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * These wrappers look like components, but only wrap another component

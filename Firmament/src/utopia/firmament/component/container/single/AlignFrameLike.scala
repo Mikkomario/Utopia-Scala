@@ -3,7 +3,7 @@ package utopia.firmament.component.container.single
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * Contains a single item, which is aligned to a single side or corner, or the center

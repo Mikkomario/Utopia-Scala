@@ -11,8 +11,9 @@ import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
-import utopia.paradigm.shape.shape2d.Vector2D
-import utopia.paradigm.shape.template.{Dimensions, DoubleVector, DoubleVectorFactory, DoubleVectorLike, HasDimensions}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
+import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
 
 import scala.concurrent.duration.Duration
 

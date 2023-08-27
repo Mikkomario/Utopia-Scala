@@ -9,7 +9,11 @@ import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.area.Area2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.image.{BufferedImage, BufferedImageOp}

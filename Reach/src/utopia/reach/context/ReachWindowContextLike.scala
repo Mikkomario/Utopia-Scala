@@ -4,7 +4,8 @@ import utopia.firmament.context.{BaseContext, TextContext, WindowContextWrapper}
 import utopia.flow.collection.immutable.range.Span
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
 import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}

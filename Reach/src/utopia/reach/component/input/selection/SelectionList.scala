@@ -25,7 +25,8 @@ import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy

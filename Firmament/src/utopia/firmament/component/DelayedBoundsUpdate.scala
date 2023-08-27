@@ -2,7 +2,9 @@ package utopia.firmament.component
 
 import utopia.firmament.component.stack.HasStackSize
 import utopia.firmament.model.stack.StackSize
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 object DelayedBoundsUpdate
 {

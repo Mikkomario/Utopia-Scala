@@ -2,6 +2,9 @@ package utopia.conflict.collision
 
 import utopia.paradigm.shape.shape2d._
 import utopia.conflict.collision.Extensions._
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.transform.Transformable
 import utopia.paradigm.shape.shape3d.Matrix3D
 

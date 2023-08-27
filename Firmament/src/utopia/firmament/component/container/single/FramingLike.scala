@@ -5,7 +5,7 @@ import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import scala.annotation.tailrec
 

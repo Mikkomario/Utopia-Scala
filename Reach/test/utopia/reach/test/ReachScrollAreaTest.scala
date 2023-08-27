@@ -10,7 +10,7 @@ import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.Hsl
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas

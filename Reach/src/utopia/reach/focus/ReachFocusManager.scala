@@ -4,11 +4,11 @@ import utopia.flow.operator.{CombinedOrdering, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
 import utopia.firmament.awt.AwtComponentExtensions._
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import java.awt.event.{FocusEvent, WindowAdapter, WindowEvent}
 import scala.collection.immutable.HashMap

@@ -3,8 +3,8 @@ package utopia.reflection.component.swing.button
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.firmament.model.GuiElementStatus
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
   * Extended by button implementations that wish to represent their state by using a button state drawer

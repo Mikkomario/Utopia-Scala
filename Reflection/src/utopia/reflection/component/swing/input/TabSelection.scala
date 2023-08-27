@@ -14,7 +14,6 @@ import utopia.genesis.text.Font
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.paradigm.shape.shape2d.Bounds
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.template.DrawLevel.Background
 import utopia.reflection.component.swing.label.TextLabel
@@ -23,6 +22,7 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import scala.collection.immutable.HashMap
 

@@ -10,7 +10,7 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.Font
 

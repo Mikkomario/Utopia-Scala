@@ -1,6 +1,6 @@
 package utopia.genesis.event
 
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
  * These mouse events are generated whenever the mouse wheel turns

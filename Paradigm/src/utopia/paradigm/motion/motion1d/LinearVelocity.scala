@@ -15,7 +15,7 @@ import utopia.paradigm.generic.ParadigmDataType.LinearVelocityType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.motion.template.Change
-import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import scala.concurrent.duration.{Duration, TimeUnit}

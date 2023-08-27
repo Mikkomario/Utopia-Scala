@@ -6,7 +6,6 @@ import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.ColorShade
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -17,6 +16,7 @@ import utopia.reach.focus.FocusListener
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]
 {

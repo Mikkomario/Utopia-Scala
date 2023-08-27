@@ -3,7 +3,7 @@ package utopia.paradigm.enumeration
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{RichComparable, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.paradigm.shape.shape1d.Vector1D
+import utopia.paradigm.shape.shape1d.vector.Vector1D
 
 /**
   * An axis specifies the plane or the binary direction on which a length applies,

@@ -9,7 +9,10 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import java.nio.file.Paths
 

@@ -1,8 +1,10 @@
 package utopia.genesis.image
 
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.genesis.util.Fps
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
   * A strip consists of multiple sequential images

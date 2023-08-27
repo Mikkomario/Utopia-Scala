@@ -6,7 +6,7 @@ import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.text.Font
 import utopia.inception.handling.Handleable
-import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
 * This trait describes basic component features without any implementation
