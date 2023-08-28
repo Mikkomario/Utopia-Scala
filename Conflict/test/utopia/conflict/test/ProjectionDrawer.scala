@@ -6,7 +6,7 @@ import utopia.genesis.handling.mutable.MouseButtonStateListener
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.Projectable
+import utopia.paradigm.shape.shape2d.LineProjectable
 import utopia.paradigm.shape.shape2d.line.Line
 
 /**
@@ -14,7 +14,7 @@ import utopia.paradigm.shape.shape2d.line.Line
  * @author Mikko Hilpinen
  * @since 5.8.2017
  */
-class ProjectionDrawer(val target: Projectable) extends Drawable with MouseButtonStateListener
+class ProjectionDrawer(val target: LineProjectable) extends Drawable with MouseButtonStateListener
         with MouseMoveListener
 {
     // ATTRIBUTES    ---------------------

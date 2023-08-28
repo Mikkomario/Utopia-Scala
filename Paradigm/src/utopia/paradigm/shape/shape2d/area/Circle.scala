@@ -15,7 +15,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Projectable, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{LineProjectable, ShapeConvertible}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.LinearSizeAdjustable
@@ -40,7 +40,7 @@ object Circle extends FromModelFactory[Circle]
  * @since Genesis 1.1.2017
  */
 case class Circle(origin: Point = Point.origin, radius: Double)
-    extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
+    extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with LineProjectable
         with LinearSizeAdjustable[Circle] with Combinable[HasDoubleDimensions, Circle] with HasBounds
 {
     // COMPUTED PROPERTIES    ---------
@@ -87,7 +87,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
     
     override def contains(point: DoubleVector) = point.distanceFrom(origin) <= radius
     
-    override def projectedOver(axis: Vector2D) = {
+    override def projectedOver(axis: DoubleVector) = {
         val projectedOrigin = origin.projectedOver(axis)
         val radiusVector = axis.withLength(radius)
         Line(projectedOrigin - radiusVector, projectedOrigin + radiusVector)

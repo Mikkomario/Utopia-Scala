@@ -5,6 +5,8 @@
 - Refactored **shape** package structure
 - Renamed **VectorFactory** to **DoubleVectorFactory**
 - **VectorProjectable**`.projectedOver(...)` now accepts **DoubleVector** instead of **DoubleVectorLike**
+- Renamed **Projectable** to **LineProjectable**, and changed the `.projectedOver(...)` 
+  parameter type from **Vector2D** to **DoubleVector**.
 - **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**
 - **LinearTransformable** now longer requires the implementation of `.self`
 - Renamed **VectorProjectable2** to **VectorProjectable** (leftover from an earlier update)

@@ -17,10 +17,11 @@ import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Matrix2D, Projectable, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{LineProjectable, Matrix2D, ShapeConvertible}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.DimensionalFactory
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.Transformable
 
 import java.awt.geom.Line2D
@@ -71,7 +72,7 @@ object Line extends LineFactoryLike[Double, Point, Line] with FromModelFactory[L
 case class Line(override val ends: Pair[Point])
     extends LineLike[Double, Point, Vector2D, Vector2D, Line]
         with ShapeConvertible with ValueConvertible with ModelConvertible
-        with Projectable with LinearPathLike[Point]
+        with LineProjectable with LinearPathLike[Point]
         with Transformable[Line] with HasBounds
         with ApproxEquals[HasInclusiveEnds[HasDoubleDimensions]]
 {
@@ -118,7 +119,7 @@ case class Line(override val ends: Pair[Point])
     override def transformedWith(transformation: Matrix3D) = map { transformation(_).toPoint }
     override def transformedWith(transformation: Matrix2D) = map { transformation(_).toPoint }
     
-    override def projectedOver(axis: Vector2D) = Line(start.projectedOver(axis), end.projectedOver(axis))
+    override def projectedOver(axis: DoubleVector) = Line(start.projectedOver(axis), end.projectedOver(axis))
     
     
     // OTHER METHODS    ----------------

@@ -7,7 +7,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Matrix2D, Projectable, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{Matrix2D, LineProjectable, ShapeConvertible}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.VectorProjectable
@@ -22,7 +22,7 @@ import java.awt.Shape
   * @since Genesis 14.4.2019, v2+
   */
 // TODO: Handle cases where there are 0 corners
-trait Polygonic extends ShapeConvertible with Projectable with Transformable[Polygonic] with HasBounds with Area2D
+trait Polygonic extends ShapeConvertible with LineProjectable with Transformable[Polygonic] with HasBounds with Area2D
 {
 	// ABSTRACT	----------------
 	
@@ -207,7 +207,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Transformable[Pol
 		new java.awt.Polygon(x, y, c.size)
 	}
 	
-	override def projectedOver(axis: Vector2D) = {
+	override def projectedOver(axis: DoubleVector) = {
 		val projectedCorners = corners.map { _.toVector.projectedOver(axis).toPoint }
 		val start = projectedCorners.min
 		val end = projectedCorners.max

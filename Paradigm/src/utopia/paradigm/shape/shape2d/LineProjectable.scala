@@ -1,15 +1,14 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.paradigm.enumeration.Axis2D
-import utopia.paradigm.shape.shape2d.Projectable.PointOrdering
+import utopia.paradigm.shape.shape2d.LineProjectable.PointOrdering
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.VectorProjectable
 
-object Projectable
+object LineProjectable
 {
     private object PointOrdering extends Ordering[Point]
     {
@@ -27,20 +26,12 @@ object Projectable
 }
 
 /**
- * This trait is extended by shapes that can be projected over a specified axis
+ * This trait is extended by shapes that can be projected over a specified axis, forming a double-precision line.
  * @author Mikko Hilpinen
  * @since Genesis 18.7.2017
  */
-trait Projectable
+trait LineProjectable extends VectorProjectable[Line]
 {
-    // ABSTRACT METHODS    --------------------
-    
-    /**
-     * Projects this shape, creating a line parallel to the provided axis
-     */
-    def projectedOver(axis: Vector2D): Line
-    
-    
     // COMPUTED -------------------------------
     
     /**
@@ -52,25 +43,19 @@ trait Projectable
     // OTHER METHODS    -----------------------
     
     /**
-      * Projects this shape, creating a line parallel to the provided axis
-      */
-    def projectedOver(axis: Axis2D): Line = projectedOver(axis.unit.toVector2D)
-    
-    /**
     * Calculates if / how much the projections of the two shapes overlap on the specified axis
     * @param other the other projectable shape
     * @param axis the axis along which the overlap is checked
     * @return the mtv for the specified axis, if there is overlap
     */
-    def projectionOverlapWith(other: Projectable, axis: Vector2D) = {
+    def projectionOverlapWith(other: LineProjectable, axis: Vector2D) = {
         val projection = orderedProjectionOver(axis)
         val otherProjection = other.orderedProjectionOver(axis)
         
-        if (comparePoints(projection.end, otherProjection.start) <= 0 || 
+        if (comparePoints(projection.end, otherProjection.start) <= 0 ||
                 comparePoints(projection.start, otherProjection.end) >= 0)
             None
-        else 
-        {
+        else {
             val forwardsMtv = (otherProjection.end - projection.start).toVector
             val backwardsMtv = (otherProjection.start - projection.end).toVector
             
@@ -79,14 +64,14 @@ trait Projectable
     }
     
     /**
-     * Calculates the minimum translation vector that would get the two projectable shapes out of 
+     * Calculates the minimum translation vector that would get the two projectable shapes out of
      * a collision situation
      * @param other the other projectable instance
      * @param axes the axes along which the collision is checked
-     * @return The minimum translation vector that gets the two shapes out of a collision situation 
+     * @return The minimum translation vector that gets the two shapes out of a collision situation
      * or none if there is no collision
      */
-    def collisionMtvWith(other: Projectable, axes: Iterable[Vector2D]) = {
+    def collisionMtvWith(other: LineProjectable, axes: Iterable[Vector2D]) = {
         // If there is collision, there must be overlap on each axis
         val mtvs = axes.lazyMap { projectionOverlapWith(other, _) }
         if (mtvs.forall { _.isDefined })

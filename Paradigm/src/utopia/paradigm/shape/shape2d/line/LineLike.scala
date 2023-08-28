@@ -94,10 +94,6 @@ trait LineLike[D, P <: NumericVectorLike[D, P, _], +V <: NumericVectorLike[D, V,
     
     override def length = vector.length
     
-    // override def bounds = Bounds.between(start, end)
-    
-    // override def projectedOver(axis: Vector2D) = factory(start.projectedOver(axis), end.projectedOver(axis))
-    
     
     // OTHER METHODS    ----------------
     
