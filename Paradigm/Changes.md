@@ -22,6 +22,8 @@
 ### New Methods
 - **Dimensions**
   - Added `.mapWithZero(...)(...)`
+- **Distance** (object)
+  - Added `.zero`
 - **Insets**
   - Added `.round`
 - **InsetsLike**

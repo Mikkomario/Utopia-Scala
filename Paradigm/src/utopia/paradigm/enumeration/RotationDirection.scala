@@ -60,8 +60,7 @@ object RotationDirection
       * @param sign A sign
       * @return A rotation direction with the same sign
       */
-    def apply(sign: Sign) = sign match
-    {
+    def apply(sign: Sign): RotationDirection = sign match {
         case Positive => positive
         case Negative => negative
     }

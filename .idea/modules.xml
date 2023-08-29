@@ -29,6 +29,7 @@
       <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe-Api/Scribe-Api.iml" filepath="$PROJECT_DIR$/Scribe/Scribe-Api/Scribe-Api.iml" />
       <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe-Client/Scribe-Client.iml" filepath="$PROJECT_DIR$/Scribe/Scribe-Client/Scribe-Client.iml" />
       <module fileurl="file://$PROJECT_DIR$/Scribe/Scribe-Core/Scribe-Core.iml" filepath="$PROJECT_DIR$/Scribe/Scribe-Core/Scribe-Core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Terra/Terra.iml" filepath="$PROJECT_DIR$/Terra/Terra.iml" />
       <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />
       <module fileurl="file://$PROJECT_DIR$/Utopia-Coder/Utopia-Coder.iml" filepath="$PROJECT_DIR$/Utopia-Coder/Utopia-Coder.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault/Vault.iml" filepath="$PROJECT_DIR$/Vault/Vault.iml" />

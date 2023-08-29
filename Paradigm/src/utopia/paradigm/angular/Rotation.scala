@@ -215,8 +215,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	/**
 	  * Returns a multiplied version of this rotation
 	  */
-	def *(modifier: Double) =
-	{
+	def *(modifier: Double) = {
 		if (modifier >= 0)
 			Rotation(radians * modifier, direction)
 		else
@@ -226,8 +225,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	/**
 	  * Combines two rotations
 	  */
-	def +(other: Rotation) =
-	{
+	def +(other: Rotation) = {
 		if (direction == other.direction)
 			Rotation(radians + other.radians, direction)
 		else if (radians >= other.radians)

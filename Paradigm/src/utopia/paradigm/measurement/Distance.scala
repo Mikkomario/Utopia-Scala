@@ -5,6 +5,16 @@ import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, Meter, 
 
 object Distance
 {
+	// ATTRIBUTES   -----------------
+	
+	/**
+	 * A distance of 0m
+	 */
+	val zero = apply(0.0, Meter)
+	
+	
+	// OTHER    ---------------------
+	
 	/**
 	 * @param millis Amount of millimeters
 	 * @return A distance
