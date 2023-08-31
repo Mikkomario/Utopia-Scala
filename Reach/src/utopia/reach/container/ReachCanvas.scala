@@ -35,7 +35,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
-import utopia.reach.drawing.RealTimeReachPaintManager
+import utopia.reach.drawing.{PaintManager, RealTimeReachPaintManager}
 import utopia.reach.focus.ReachFocusManager
 
 import java.awt.event.KeyEvent
@@ -345,7 +345,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	// IMPLEMENTED	---------------------------
 	
 	override protected def currentContent = contentPointer.value
-	override protected def currentPainter = painterPointer.value
+	override protected def currentPainter: Option[RealTimeReachPaintManager] = painterPointer.value
 	
 	override def stackSize = currentContent match {
 		case Some(content) => content.stackSize

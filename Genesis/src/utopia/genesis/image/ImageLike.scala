@@ -94,8 +94,7 @@ trait ImageLike extends HasSize
 	  * @param direction Direction towards which the distance is counted
 	  * @return Starting from this image's origin, the length of this image towards that direction
 	  */
-	def lengthTowards(direction: Direction2D) = direction.sign match
-	{
+	def lengthTowards(direction: Direction2D) = direction.sign match {
 		case Positive => size(direction.axis) - origin(direction.axis)
 		case Negative => origin(direction.axis)
 	}
@@ -103,11 +102,9 @@ trait ImageLike extends HasSize
 	
 	// IMPLEMENTED	----------------
 	
-	override def toString =
-	{
+	override def toString = {
 		val alphaPortion = if (alpha == 1) "" else s" ${(alpha * 100).toInt}% Alpha"
-		val originPortion = specifiedOrigin match
-		{
+		val originPortion = specifiedOrigin match {
 			case Some(origin) => s" Origin at ${origin * scaling}"
 			case None => ""
 		}

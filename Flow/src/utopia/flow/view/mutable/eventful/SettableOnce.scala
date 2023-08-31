@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.AbstractChanging
+import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
 object SettableOnce
 {
@@ -30,7 +30,7 @@ object SettableOnce
   * @author Mikko Hilpinen
   * @since 16.11.2022, v2.0
   */
-class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[A]]
+class SettableOnce[A]() extends AbstractMayStopChanging[Option[A]] with Pointer[Option[A]]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -64,6 +64,7 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 	// IMPLEMENTED  -------------------------
 	
 	override def isChanging = _value.isEmpty
+	override def mayStopChanging: Boolean = true
 	
 	override def value = _value
 	@throws[IllegalStateException]("If this pointer has already been set")
@@ -73,7 +74,7 @@ class SettableOnce[A]() extends AbstractChanging[Option[A]] with Pointer[Option[
 		else if (newValue.isDefined) {
 			_value = newValue
 			fireEventIfNecessary(None, newValue).foreach { _() }
-			clearListeners()
+			declareChangingStopped()
 		}
 	}
 	

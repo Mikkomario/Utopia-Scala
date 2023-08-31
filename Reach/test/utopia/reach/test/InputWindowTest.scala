@@ -74,8 +74,7 @@ object InputWindowTest extends App
 		
 		override protected def log: Logger = ReachTestContext.log
 		
-		override protected def inputTemplate =
-		{
+		override protected def inputTemplate = {
 			val nameErrorPointer = new EventfulPointer(LocalizedString.empty)
 			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF =>
 				val textPointer = new EventfulPointer[String]("")
@@ -96,7 +95,7 @@ object InputWindowTest extends App
 			
 			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) {
 				_.withFieldName("Last Name").withHint("Optional").string(defaultFieldWidth) }
-			
+				
 			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex",
 				Alignment.BottomLeft) { _(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female")) }
 			
@@ -113,6 +112,9 @@ object InputWindowTest extends App
 			Vector(RowGroups(RowGroup(firstNameField, lastNameField),
 				RowGroup.singleRow(sexField), RowGroup.singleRow(durationField)),
 				RowGroups.singleRow(acceptTermsField)) -> ()
+				
+			
+			// Vector() -> ()
 		}
 		
 		override protected def buildLayout(factories: ContextualMixed[TextContext],
@@ -180,13 +182,12 @@ object InputWindowTest extends App
 	// Displays a number of windows sequentially (testing memory use)
 	Iterator.continually {
 		val window = TestWindows.display()
-		Delay(1.seconds) {
-			printMemoryStatus()
-			window.close()
-			System.gc()
-		}
-		Wait(3.seconds)
-	}.take(20).foreach { _ => () }
+		Wait(0.5.seconds)
+		printMemoryStatus()
+		window.close()
+		System.gc()
+		Wait(0.3.seconds)
+	}.take(40).foreach { _ => () }
 	
 	// Displays a dialog
 	/*

@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
 object Mirror
 {
@@ -63,7 +63,7 @@ object Mirror
  */
 class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Boolean] = AlwaysTrue)
                    (f: (R, ChangeEvent[O]) => R)
-	extends AbstractChanging[R]
+	extends AbstractMayStopChanging[R]
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -75,10 +75,13 @@ class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Bo
 	// Mirrors the source pointer
 	startMirroring(source, condition)(f) { _value = _ }
 	
+	stopOnceSourceStops(source)
+	
 	
 	// IMPLEMENTED  ------------------------------
 	
 	override def value = _value
 	
 	override def isChanging = source.isChanging
+	override def mayStopChanging: Boolean = source.mayStopChanging
 }

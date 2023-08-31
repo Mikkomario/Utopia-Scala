@@ -1,5 +1,6 @@
 package utopia.flow.generic.model.mutable
 
+import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.Property
@@ -98,6 +99,9 @@ object Variable
         }
     
         override def isChanging = true
+        override def mayStopChanging: Boolean = false
+        
+        override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
         
         
         // OTHER    ---------------------

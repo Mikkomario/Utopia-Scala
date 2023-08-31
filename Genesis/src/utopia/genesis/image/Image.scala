@@ -269,8 +269,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	/**
 	  * @return A buffered image copied from the source data of this image. None if this image is empty.
 	  */
-	def toAwt =
-	{
+	def toAwt = {
 		withMinimumResolution.source.map { img =>
 			val colorModel = img.getColorModel
 			val isAlphaPremultiplied = colorModel.isAlphaPremultiplied
@@ -406,12 +405,12 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			}
 		case None => this
 	}
-	// Only works when specified area is inside the original image's bounds
-	private def _subImage(img: BufferedImage, relativeArea: Bounds) =
-	{
+	// Only works when specified area is inside the original image's bounds and scaled according to source resolution
+	private def _subImage(img: BufferedImage, relativeArea: Bounds) = {
 		val newSource = img.getSubimage(relativeArea.leftX.toInt, relativeArea.topY.toInt, relativeArea.width.toInt,
 			relativeArea.height.toInt)
-		Image(newSource, scaling, alpha, specifiedOrigin.map { _ - relativeArea.position })
+		new Image(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - relativeArea.position },
+			Lazy { _pixels.value.view(relativeArea) })
 	}
 	
 	/**

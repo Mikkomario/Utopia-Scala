@@ -30,19 +30,12 @@ object Pixels
 		
 		// Case: Initializes the pixels lazily, one by one
 		if (lazily)
-			apply(Matrix.withColumns((0 until w)
-				.map { x => (0 until h).lazyMap { y => Color.fromInt(image.getRGB(x, y)) } }))
+			apply(Matrix.lazyFill(w, h) { p => Color.fromInt(image.getRGB(p.first, p.second)) })
 		// Case: Initializes the images all at once
 		else {
 			val rawPixels = new Array[Int](w * h)
 			image.getRGB(0, 0, w, h, rawPixels, 0, w)
-			
-			val pixelVector = rawPixels.toVector.map(Color.fromInt)
-			
-			// color = array[y * scansize + x]
-			// First y-coordinate, then x-coordinate
-			apply(Matrix.withRows(
-				(0 until h).map { y => (0 until w).map { x => pixelVector(y * w + x) }.toVector }.toVector))
+			apply(Matrix.fill(w, h) { p => Color.fromInt(rawPixels(p.second * w + p.first)) })
 		}
 	}
 }
@@ -176,8 +169,7 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	  * @param image The target image
 	  * @param topLeft The coordinate of the top-left corner of this table in the target image (default = (0, 0))
 	  */
-	def writeToImage(image: BufferedImage, topLeft: Point = Point.origin) =
-	{
+	def writeToImage(image: BufferedImage, topLeft: Point = Point.origin) = {
 		val imageBounds = Bounds(Point.origin, Size(image.getWidth, image.getHeight))
 		val writeBounds = Bounds(topLeft, area)
 		

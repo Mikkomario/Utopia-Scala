@@ -7,6 +7,8 @@
 - Bugfix to **MeasuredText**`.caretIndexToCharacterIndex(Int)`
 ### New Features
 - Added automatic line-splitting -feature to **MeasuredText**
+### Other Changes
+- Improved `Pixels.fromBufferedImage(...)` performance slightly
 
 ## v3.3 - 01.05.2023
 This version introduces a completely rewritten **Drawer** implementation with a new interface.

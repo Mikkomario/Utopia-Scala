@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.eventful.FlagView
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, FlagLike}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, FlagLike}
 
 import scala.concurrent.Future
 
@@ -33,7 +33,7 @@ object Flag
 	  * @author Mikko Hilpinen
 	  * @since 18.9.2022, v1.17
 	  */
-	private class _Flag extends AbstractChanging[Boolean] with Flag
+	private class _Flag extends AbstractMayStopChanging[Boolean] with Flag
 	{
 		// ATTRIBUTES   ---------------------
 		
@@ -47,17 +47,17 @@ object Flag
 		
 		override def value = _value
 		override def isChanging = isNotSet
+		override def mayStopChanging: Boolean = true
 		
 		// Can't be set twice, so asking for nextFuture after set is futile
 		override def nextFuture = if (isSet) Future.never else future
-		
 		
 		override def set() = {
 			if (isNotSet) {
 				_value = true
 				fireEvent(ChangeEvent(false, true)).foreach { _() }
 				// Forgets all the listeners at this point, because no more change events will be fired
-				clearListeners()
+				declareChangingStopped()
 				true
 			}
 			else

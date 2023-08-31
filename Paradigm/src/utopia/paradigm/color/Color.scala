@@ -80,8 +80,8 @@ object Color
 	  * @param awtColor An awt color
 	  * @return A color
 	  */
-	implicit def fromAwt(awtColor: java.awt.Color): Color = Color(Right(Rgb.withValues(awtColor.getRed,
-		awtColor.getGreen, awtColor.getBlue)), awtColor.getAlpha / 255.0)
+	implicit def fromAwt(awtColor: java.awt.Color): Color =
+		Color(Right(Rgb.withValues(awtColor.getRed, awtColor.getGreen, awtColor.getBlue)), awtColor.getAlpha / 255.0)
 	
 	
 	// OPERATORS	--------------------
@@ -125,7 +125,16 @@ object Color
 	  * @param rgba An rgb value with alpha
 	  * @return A color based on the rgb value
 	  */
-	def fromInt(rgba: Int) = fromAwt(new java.awt.Color(rgba, true))
+	def fromInt(rgba: Int) = {
+		// Extracts the RGB and alpha values from the specified bits
+		// Logic is from: https://stackoverflow.com/questions/25761438/understanding-bufferedimage-getrgb-output-values
+		//                laplasz's answer
+		//                Referenced 31.8.2023
+		apply(
+			Right(Rgb.withValues((rgba & 0xff0000) >> 16, (rgba & 0xff00) >> 8, rgba & 0xff)),
+			((rgba & 0xff000000) >>> 24) / 255.0
+		)
+	}
 	
 	/**
 	 * Converts a hex value to a color value
@@ -138,12 +147,10 @@ object Color
 	  * @param colors A set of colors
 	  * @return The average color
 	  */
-	def average(colors: Iterable[Color]) =
-	{
+	def average(colors: Iterable[Color]) = {
 		if (colors.isEmpty)
 			transparentBlack
-		else
-		{
+		else {
 			// Combines the total rgb and alpha values of the colors (weights by color alpha)
 			val totals = RgbChannel.values.map { _ -> Pointer(0.0) }.toMap
 			var totalAlpha = 0.0
@@ -259,11 +266,9 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	
 	override implicit def toValue: Value = new Value(Some(this), ColorType)
 	
-	override def ~==(other: Color) =
-	{
+	override def ~==(other: Color) = {
 		// Alphas must match
-		if (alpha ~== other.alpha)
-		{
+		if (alpha ~== other.alpha) {
 			// Usually tests with RGB
 			if (data.isRight || other.data.isRight)
 				rgb ~== other.rgb
@@ -290,11 +295,9 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	
 	def withLuminosity(luminosity: Double) = withHSL(hsl.withLuminosity(luminosity))
 	
-	override def contrastAgainst(other: RgbLike[_]) =
-	{
+	override def contrastAgainst(other: RgbLike[_]) = {
 		// Takes alpha value into account
-		if (transparent)
-		{
+		if (transparent) {
 			val rawContrast = super.contrastAgainst(other)
 			// Multiplies the contrast above the 1.0 (same color) level by alpha
 			(rawContrast - 1.0) * alpha + 1.0
@@ -303,8 +306,7 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 			super.contrastAgainst(other)
 	}
 	
-	override def toString =
-	{
+	override def toString = {
 		val base = data.fold(_.toString, _.toString)
 		if (transparent)
 			s"$base, $alphaPercentage% Alpha"
@@ -361,10 +363,8 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  * @param other Another color
 	  * @return An average between these colors (rgb-wise)
 	  */
-	def average(other: Color) =
-	{
-		if (other.alpha == 0.0)
-		{
+	def average(other: Color) = {
+		if (other.alpha == 0.0) {
 			if (alpha == 0.0)
 				Color(Right(rgb.average(other.rgb)), 0.0)
 			else
@@ -381,11 +381,9 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  * @param weight A weight modifier for <b>this</b> color
 	  * @return A weighted average between these colors (rgb-wise)
 	  */
-	def average(other: Color, weight: Double) =
-	{
+	def average(other: Color, weight: Double) = {
 		def newAlpha = (alpha * weight + other.alpha) / (1 + weight)
-		if (other.alpha == 0.0)
-		{
+		if (other.alpha == 0.0) {
 			if (alpha == 0.0)
 				Color(Right(rgb.average(other.rgb, weight)), 0.0)
 			else

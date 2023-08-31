@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
@@ -40,6 +41,7 @@ class EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with Point
 	// IMPLEMENTED	----------------
 	
 	override def isChanging = true
+	override def mayStopChanging: Boolean = false
 	
 	/**
 	  * @return The current value in this mutable
@@ -53,6 +55,9 @@ class EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with Point
 		_value = newValue
 		fireEventIfNecessary(oldValue, newValue).foreach { _() }
 	}
+	
+	// Can never stop changing, so listener assignment is not needed either
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	
 	
 	// OTHER	--------------------

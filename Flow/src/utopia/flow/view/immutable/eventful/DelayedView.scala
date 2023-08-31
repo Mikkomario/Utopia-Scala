@@ -2,10 +2,10 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.Wait
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.mutable.async.{Volatile, VolatileFlag, VolatileOption}
+import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import java.time.Instant
@@ -84,7 +84,8 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	
 	private val queuedValuePointer = VolatileOption[(A, Instant)]()
 	private val valuePointer = Volatile(source.value)
-	private val isWaitingFlag = new VolatileFlag()
+	
+	private var stopListeners = Vector[ChangingStoppedListener]()
 	
 	
 	// INITIAL CODE -------------------------
@@ -115,10 +116,25 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 			}
 	})
 	
+	// Once the source stops changing, removes listeners and informs stop listeners (delayed)
+	source.addChangingStoppedListener {
+		queuedValuePointer.onNextChangeWhere { _.newValue.isEmpty } { e =>
+			valuePointer.once { v => e.oldValue.forall { _._1 == v } } { _ =>
+				valuePointer.clearListeners()
+				stopListeners.foreach { _.onChangingStopped() }
+				stopListeners = Vector()
+			}
+		}
+	}
+	
 	
 	// IMPLEMENTED -----------------------------
 	
 	override protected def wrapped = valuePointer
 	
-	override def isChanging = source.isChanging || isWaitingFlag.isSet
+	override def isChanging = source.isChanging || queuedValuePointer.nonEmpty
+	override def mayStopChanging = source.mayStopChanging
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) =
+		stopListeners :+= listener
 }

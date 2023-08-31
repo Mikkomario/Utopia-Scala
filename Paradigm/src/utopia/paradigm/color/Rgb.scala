@@ -158,8 +158,7 @@ case class Rgb private(override val ratios: Map[RgbChannel, Double])
 		val min = minRatio
 		val max = maxRatio
 		
-		val hue =
-		{
+		val hue = {
 			if (max == min)
 				0.0
 			else if (max == r)
@@ -172,8 +171,7 @@ case class Rgb private(override val ratios: Map[RgbChannel, Double])
 		
 		val luminosity = (max + min) / 2
 		
-		val saturation =
-		{
+		val saturation = {
 			if (max == min)
 				0
 			else if (luminosity <= 0.5)

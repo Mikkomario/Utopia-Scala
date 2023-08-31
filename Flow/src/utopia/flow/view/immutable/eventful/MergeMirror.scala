@@ -1,7 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
 object MergeMirror
 {
@@ -87,9 +88,11 @@ object MergeMirror
 class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing[O2], initialValue: R,
                                condition: Changing[Boolean] = AlwaysTrue)
                               (merge: (R, O1, O2, Either[ChangeEvent[O1], ChangeEvent[O2]]) => R)
-	extends AbstractChanging[R]
+	extends AbstractMayStopChanging[R]
 {
 	// ATTRIBUTES   ------------------------------
+	
+	private val sources = Pair(firstSource, secondSource)
 	
 	private var _value = initialValue
 	
@@ -100,10 +103,14 @@ class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing
 	startMirroring(firstSource, condition) { (v, e1) => merge(v, e1.newValue, secondSource.value, Left(e1)) } { _value = _ }
 	startMirroring(secondSource, condition) { (v, e2) => merge(v, firstSource.value, e2.newValue, Right(e2)) } { _value = _ }
 	
+	// Handles the situation where the pointers stop changing
+	stopOnceAllSourcesStop(sources)
+	
 	
 	// IMPLEMENTED  ------------------------------
 	
 	override def value = _value
 	
-	override def isChanging = firstSource.isChanging || secondSource.isChanging
+	override def isChanging = sources.exists { _.isChanging }
+	override def mayStopChanging: Boolean = sources.forall { _.mayStopChanging }
 }

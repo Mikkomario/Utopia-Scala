@@ -1,6 +1,6 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.End
 import utopia.flow.util.logging.Logger
@@ -41,6 +41,7 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def value = wrapped.value
 	
 	override def isChanging = wrapped.isChanging
+	override def mayStopChanging: Boolean = wrapped.mayStopChanging
 	
 	override def hasListeners: Boolean = wrapped.hasListeners
 	override def numberOfListeners: Int = wrapped.numberOfListeners
@@ -55,6 +56,9 @@ trait ChangingWrapper[+A] extends Changing[A]
 		wrapped.addListenerAndSimulateEvent(simulatedOldValue, isHighPriority)(changeListener)
 	
 	override def removeListener(changeListener: Any) = wrapped.removeListener(changeListener)
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
+		wrapped.addChangingStoppedListener(listener)
 	
 	override def map[B](f: A => B) = wrapped.map(f)
 	override def lazyMap[B](f: A => B) = wrapped.lazyMap(f)

@@ -49,10 +49,17 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	private val inputs = Pair(input1, input2)
 	
 	
+	// INITIAL CODE -------------------
+	
+	// Handles the situation where the inputs stop from changing (if possible)
+	stopOnceAllSourcesStop(inputs.map { _.origin })
+	
+	
 	// IMPLEMENTED  -------------------
 	
 	override def value: R = merge(input1.value, input2.value)
 	override def isChanging: Boolean = inputs.exists { _.origin.isChanging }
+	override def mayStopChanging: Boolean = inputs.forall { _.origin.mayStopChanging }
 	
 	
 	// NESTED   ----------------------

@@ -54,7 +54,8 @@ object ReachTestContext
 	val font = Font("Arial", (cm * 0.75).round.toInt, Plain)
 	val margins = Margins((cm * 0.5).round.toInt)
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
-	implicit val windowContext: ReachContentWindowContext = ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
+	implicit val windowContext: ReachContentWindowContext = ReachWindowContext(
+		WindowContext(actorHandler), colors.primary.light)
 		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
 		.withContentContext(baseContext)
 	

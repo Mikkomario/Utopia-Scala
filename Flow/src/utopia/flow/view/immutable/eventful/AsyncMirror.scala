@@ -1,11 +1,11 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AsyncMirror.AsyncMirrorValue
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, MayStopChanging}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
@@ -174,6 +174,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
                                              (merge: (Reflection, Try[Result]) => Reflection)
                                              (implicit exc: ExecutionContext)
 	extends ChangingWrapper[AsyncMirrorValue[Origin, Reflection]]
+		with MayStopChanging[AsyncMirrorValue[Origin, Reflection]]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -185,6 +186,8 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	private val pointer = Volatile[Value](
 		AsyncMirrorValue(initialPlaceHolder, if (skipInitialProcess) None else Some(source.value)))
 	
+	private var stopListeners = Vector[ChangingStoppedListener]()
+	
 	
 	// INITIAL CODE ---------------------
 	
@@ -195,10 +198,27 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	// Whenever source value changes, requests an asynchronous status update
 	source.addListenerWhile(condition)(ChangeListener.continuous { event => requestCalculation(event.newValue) })
 	
+	// Once (if) the source stops changing, discards all listeners and informs the stop listeners
+	source.addChangingStoppedListener {
+		once { _.isNotProcessing } { _ => declareChangingStopped() }
+	}
+	
 	
 	// IMPLEMENTED  ---------------------
 	
 	override protected def wrapped = pointer
+	
+	override def isChanging = source.isChanging || value.isProcessing
+	override def mayStopChanging = source.mayStopChanging
+	
+	override protected def declareChangingStopped(): Unit = {
+		pointer.clearListeners()
+		stopListeners.foreach { _.onChangingStopped() }
+		stopListeners = Vector()
+	}
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) =
+		stopListeners :+= listener
 	
 	
 	// OTHER    -------------------------

@@ -84,8 +84,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 	  * @param shadeOf A function for calculating the overall shade of the targeted area
 	  * @return Cursor image to use over that position
 	  */
-	def cursorImageAt(position: Point)(shadeOf: Bounds => ColorShade) =
-	{
+	def cursorImageAt(position: Point)(shadeOf: Bounds => ColorShade) = {
 		// Checks whether any of the registered components is controlling the specified position
 		cursorComponents.findMap { c =>
 			val bounds = c.cursorBounds
@@ -93,8 +92,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 				Some(c -> bounds)
 			else
 				None
-		} match
-		{
+		} match {
 			// Case: Component manages area => lets the component decide cursor styling
 			case Some((component, bounds)) =>
 				component.cursorToImage(cursors(component.cursorType), position - bounds.position)
@@ -110,7 +108,6 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 	  * @param component A component to affect cursor selection from now on
 	  */
 	def registerComponent(component: CursorDefining) = cursorComponents :+= component
-	
 	/**
 	  * Removes a component from affecting the selected cursor
 	  * @param component A component to no longer consider when selecting cursor
@@ -122,7 +119,6 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 	  * @param component A component to affect cursor selection from now on
 	  */
 	def +=(component: CursorDefining) = registerComponent(component)
-	
 	/**
 	  * Removes a component from affecting the selected cursor
 	  * @param component A component to no longer consider when selecting cursor

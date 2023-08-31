@@ -13,7 +13,9 @@
 - `Sign.of(...)` now returns **SignOrZero** instead of **Sign**
 - Renamed **PointerWithEvents** to **EventfulPointer** and **IteratorWithEvents** to **EventfulIterator**
 - Updated the abstract functions in **Changing**
-  - Added two new required abstract functions: `.hasListeners` and `.numberOfListeners`
+  - Added four new required abstract functions:
+    - `.hasListeners: Boolean` and `.numberOfListeners: Int`
+    - `.mayStopChanging: Boolean` and `_addChangingStoppedListener(=> ChangingStoppedListener): Unit`
   - `.addListener(ChangeListener)` and `.addDependency(ChangeDependency)` are no longer abstract and is instead 
     replaced with `.addListenerOfPriority(End)(ChangeListener)`
   - `.addListenerAndSimulateEvent(...)` is no longer abstract and now contains an additional parameter
@@ -50,6 +52,9 @@
   - The **Positive** and **Negative** options are still available as a binary pair under trait **Sign**
 - Added **UncertainSign** enumeration and **UncertainNumber** class
 - **ChangeListeners** can now cause after-effects to be triggered after the completion of a change event
+- Added **ChangingStoppedListener** trait, which is supported by all **Changing** instances
+  - For the **Changing** implementations, added **MayStopChanging** trait and **AbstractMayStopChanging** class
+  - Also optimized change listener handling in many pointers
 - Added **ConditionalChangeReaction** class/object for creating **ChangeListeners** that attach or detach themselves when 
   an external condition is met
   - These are utilized in **Changing**`.mapWhile(...)` and as optional features in other map-like functions, 
@@ -116,7 +121,7 @@
 ### Other
 - Added a **Sided[A]** type alias for **Either[A, A]** to **CollectionExtensions**
 - Added a **Mutate[A]** type alias for **A => A** functions
-- Added a couple new constructor for **Span** classes
+- Added a couple new constructors for **Span** classes
 - **Pair**`.separateMatching` now uses `EqualsFunction.default` by default
 - **Tree**`.map(...)` and `.flatMap(...)` now use `EqualsFunction.default` by default
 - Added a low-priority conversion from **LocalTime** values to **LocalDateTime** values (assigns the current date as the date)

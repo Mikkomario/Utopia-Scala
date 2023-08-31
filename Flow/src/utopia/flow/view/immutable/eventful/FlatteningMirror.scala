@@ -1,6 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -55,6 +55,10 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	// Pointer that contains the currently simulated value
 	private val pointer = new EventfulPointer[R](pointerPointer.value.value)
 	
+	// Stop listeners are stored here while the source pointer is changing
+	// Once (if) the source stops changing, transfers these over to the resulting pointer
+	private var queuedStopListeners = Vector[ChangingStoppedListener]()
+	
 	// Listener that listens to mid-pointers and updates the simulated value
 	private val valueUpdatingListener = ChangeListener[R] { event => pointer.value = event.newValue }
 	
@@ -71,10 +75,32 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 		Continue.and { pointer.value = event.newValue.value }
 	}
 	
+	// Handles source pointer stopped -case
+	source.addChangingStoppedListener {
+		// Transfers the stop-listeners over
+		val finalPointer = pointerPointer.value
+		queuedStopListeners.foreach { finalPointer.addChangingStoppedListenerAndSimulateEvent(_) }
+		queuedStopListeners = Vector()
+	}
+	
 	
 	// IMPLEMENTED  -----------------------
 	
 	override def isChanging = source.isChanging || pointerPointer.value.isChanging
+	override def mayStopChanging = {
+		// It is uncertain whether the final mapped pointer may stop changing, but there is a chance for it
+		if (source.isChanging)
+			source.mayStopChanging
+		else
+			pointerPointer.value.mayStopChanging
+	}
 	
 	override protected def wrapped = pointer
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) = {
+		if (source.isChanging)
+			queuedStopListeners :+= listener
+		else
+			pointerPointer.value.addChangingStoppedListener(listener)
+	}
 }

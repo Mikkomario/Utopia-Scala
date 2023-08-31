@@ -1,7 +1,8 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.view.immutable.eventful.FlagView
-import utopia.flow.view.mutable.{Resettable, Pointer}
+import utopia.flow.view.mutable.{Pointer, Resettable}
 import utopia.flow.view.template.eventful.AbstractChanging
 
 object ResettableFlag
@@ -31,8 +32,6 @@ object ResettableFlag
 		
 		override def value = _value
 		override def value_=(newValue: Boolean) = _set(newValue)
-		
-		override def isChanging = true
 		
 		override def set() = {
 			if (isNotSet) {
@@ -79,5 +78,10 @@ trait ResettableFlag extends Flag with Resettable with Pointer[Boolean]
 	
 	// IMPLEMENTED  ----------------------
 	
+	override def isChanging: Boolean = true
+	override def mayStopChanging: Boolean = false
+	
 	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 }

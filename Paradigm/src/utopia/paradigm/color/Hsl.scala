@@ -74,13 +74,11 @@ case class Hsl private(override val hue: Angle, override val saturation: Double,
 	/**
 	  * @return An RGB representation of this color
 	  */
-	def toRGB =
-	{
+	def toRGB = {
 		//  Formula needs all values between 0 - 1.
 		val h = hue.degrees / 360
 		
-		val q =
-		{
+		val q = {
 			if (luminosity < 0.5)
 				luminosity * (1 + saturation)
 			else
@@ -132,8 +130,7 @@ case class Hsl private(override val hue: Angle, override val saturation: Double,
 	
 	// OTHER	------------------
 	
-	private def hueToRGB(p: Double, q: Double, h0: Double) =
-	{
+	private def hueToRGB(p: Double, q: Double, h0: Double) = {
 		// Sets h to range 0-1
 		val h = if (h0 < 0) h0 + 1 else if (h0 > 1) h0 - 1 else h0
 		

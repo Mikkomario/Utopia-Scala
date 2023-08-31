@@ -1,12 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.{ChangeListener, LazyListener}
-import utopia.flow.event.model.ChangeEvent
-import utopia.flow.operator.End
-import utopia.flow.view.immutable.View
+import utopia.flow.event.listener.LazyListener
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.template.eventful.{Changing, ChangingView}
 
 import scala.concurrent.{Future, Promise}
 
@@ -34,6 +31,9 @@ object ListenableLazy
 		private var queuedListeners = Vector[LazyListener[A]]()
 		private var generated: Option[A] = None
 		
+		private val _stateView = SettableOnce[A]()
+		override val stateView = new ChangingView[Option[A]](_stateView)
+		
 		// Value future is generated only once
 		override lazy val valueFuture = generated match {
 			case Some(value) => Future.successful(value)
@@ -46,8 +46,6 @@ object ListenableLazy
 		
 		// IMPLEMENTED  -------------------------------
 		
-		override def stateView: Changing[Option[A]] = StateView
-		
 		override def current = generated
 		
 		override def value = generated.getOrElse {
@@ -57,7 +55,7 @@ object ListenableLazy
 			// Informs the listeners
 			queuedListeners.foreach { _.onValueGenerated(newValue) }
 			queuedListeners = Vector()
-			StateView.unqueueListeners(newValue)
+			_stateView.set(newValue)
 			// Returns the new value
 			newValue
 		}
@@ -68,46 +66,6 @@ object ListenableLazy
 			queuedListeners = queuedListeners.filterNot { _ == listener }
 		
 		override def mapToListenable[B](f: A => B) = ListenableLazy { f(value) }
-		
-		
-		// NESTED   --------------------------------
-		
-		// TODO: Utilize FlatteningOncePointer
-		private object StateView extends Changing[Option[A]]
-		{
-			// ATTRIBUTES   ------------------------
-			
-			private var queuedListeners = Pair.twice(Vector.empty[ChangeListener[Option[A]]])
-			
-			
-			// IMPLEMENTED  ------------------------
-			
-			override def value = current
-			override def isChanging = nonInitialized
-			
-			override def hasListeners: Boolean = queuedListeners.exists { _.nonEmpty }
-			override def numberOfListeners: Int = queuedListeners.map { _.size }.sum
-			
-			// WET WET
-			override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Option[A]]]): Unit = {
-				if (nonInitialized)
-					queuedListeners = queuedListeners.mapSide(priority) { q =>
-						if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
-					}
-			}
-			override def removeListener(changeListener: Any) =
-				queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
-			
-			
-			// OTHER    -------------------------------
-			
-			def unqueueListeners(newValue: A) = {
-				val event = ChangeEvent(None, Some(newValue))
-				val queued = queuedListeners
-				queuedListeners = Pair.twice(Vector.empty)
-				queued.flatten.flatMap { _.onChangeEvent(event).afterEffects }.foreach { _() }
-			}
-		}
 	}
 }
 

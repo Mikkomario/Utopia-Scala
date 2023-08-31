@@ -40,12 +40,10 @@ class MutatingOnce[+A](initialValue: A, nextValue: => A) extends View[A]
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def value =
-	{
+	override def value = {
 		if (isConsumed)
 			cachedNext
-		else
-		{
+		else {
 			consumed = true
 			initialValue
 		}

@@ -1,7 +1,7 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.operator.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -12,7 +12,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
   * @author Mikko Hilpinen
   * @since 24.7.2023, v2.2
   */
-abstract class OptimizedChanging[A] extends ChangingWithListeners[A]
+abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MayStopChanging[A]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -22,6 +22,8 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A]
 	  * A pointer that contains true while this pointer has listeners attached
 	  */
 	protected val hasListenersFlag = listenersPointer.strongMap { _.exists { _.nonEmpty } }
+	
+	private var stopListeners = Vector[ChangingStoppedListener]()
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -38,4 +40,26 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A]
 		listenersPointer.update { _.map { _.filterNot { _ == changeListener } } }
 	override protected def removeListeners(priority: End, listenersToRemove: Vector[ChangeListener[A]]): Unit =
 		listenersPointer.update { _.mapSide(priority) { _.filterNot(listenersToRemove.contains) } }
+	
+	override protected def declareChangingStopped(): Unit = {
+		clearListeners()
+		if (stopListeners.nonEmpty) {
+			stopListeners.foreach { _.onChangingStopped() }
+			stopListeners = Vector()
+		}
+	}
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
+		stopListeners :+= listener
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * Removes all listeners that have been assigned to this pointer
+	  */
+	def clearListeners() = {
+		if (hasListeners)
+			listenersPointer.value = Pair.twice(Vector.empty)
+	}
 }

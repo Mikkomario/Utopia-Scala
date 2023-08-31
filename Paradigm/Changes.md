@@ -30,6 +30,7 @@
   - Added `-(Axis2D)`
 ### Other Changes
 - Added new generic traits for vector classes and other related classes
+- Rewrote `Color.fromInt(Int)` implementation
 
 ## v1.3 - 01.05.2023
 This update introduces new color classes (which are originally from **Reflection**), as well as some 

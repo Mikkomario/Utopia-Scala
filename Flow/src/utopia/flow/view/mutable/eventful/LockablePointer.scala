@@ -1,7 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
 object LockablePointer
 {
@@ -27,7 +27,7 @@ object LockablePointer
   * @author Mikko Hilpinen
   * @since 26.7.2023, v2.2
   */
-class LockablePointer[A](initialValue: A) extends AbstractChanging[A] with Pointer[A]
+class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] with Pointer[A]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -55,6 +55,7 @@ class LockablePointer[A](initialValue: A) extends AbstractChanging[A] with Point
 	}
 	
 	override def isChanging: Boolean = !_locked
+	override def mayStopChanging: Boolean = true
 	
 	
 	// OTHER    ---------------------------
@@ -65,7 +66,7 @@ class LockablePointer[A](initialValue: A) extends AbstractChanging[A] with Point
 	def lock() = {
 		_locked = true
 		// Discards all listeners, since they won't be informed about anything anymore
-		clearListeners()
+		declareChangingStopped()
 	}
 	
 	/**

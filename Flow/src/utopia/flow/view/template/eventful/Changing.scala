@@ -2,7 +2,7 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ConditionalChangeReaction}
+import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 import utopia.flow.operator.{End, Identity}
@@ -105,9 +105,14 @@ trait Changing[+A] extends Any with View[A]
 	// ABSTRACT	---------------------
 	
 	/**
-	  * @return Whether this item will <b>ever</b> change its value.
+	  * @return Whether this item will ever change its value.
 	  */
 	def isChanging: Boolean
+	/**
+	  * @return Whether this item might stop changing at some point in the future.
+	  *         Also returns true if this item has already stopped changing.
+	  */
+	def mayStopChanging: Boolean
 	
 	/**
 	  * @return Whether this pointer is being listened to at the moment
@@ -131,6 +136,16 @@ trait Changing[+A] extends Any with View[A]
 	  * @param changeListener A listener to no longer be informed
 	  */
 	def removeListener(changeListener: Any): Unit
+	
+	/**
+	  * Assigns a new listener to be informed in case this pointer stops from changing
+	  * (i.e. isChanging becomes false).
+	  *
+	  * This method is only called for pointers where isChanging is true and mayStopChanging is true.
+	  *
+	  * @param listener A listener to assign, if appropriate (call-by-name)
+	  */
+	protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit
 	
 	
 	// COMPUTED	--------------------
@@ -222,6 +237,35 @@ trait Changing[+A] extends Any with View[A]
 			addListenerOfPriority(if (isHighPriority) First else Last)(lazyNewListener.value)
 		// Triggers the caused after-effects
 		simulationResult.afterEffects.foreach { _() }
+	}
+	
+	/**
+	  * Assigns a new listener to be informed in case this pointer stops from changing
+	  * (i.e. isChanging becomes false).
+	  *
+	  * The listener won't be called if this pointer had already stopped from changing.
+	  * If you wish to receive events in these situations as well, please use
+	  * [[addChangingStoppedListenerAndSimulateEvent]] instead.
+	  *
+	  * @param listener A listener to assign, if appropriate (call-by-name)
+	  */
+	def addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = {
+		if (isChanging && mayStopChanging)
+			_addChangingStoppedListener(listener)
+	}
+	/**
+	  * Assigns a new listener to be informed in case this pointer stops from changing
+	  * (i.e. isChanging becomes false).
+	  * If this pointer had already stopped from changing, calls the listener immediately.
+	  * @param listener A listener to assign, if appropriate (call-by-name)
+	  */
+	def addChangingStoppedListenerAndSimulateEvent(listener: => ChangingStoppedListener): Unit = {
+		if (isChanging) {
+			if (mayStopChanging)
+				_addChangingStoppedListener(listener)
+		}
+		else
+			listener.onChangingStopped()
 	}
 	
 	/**

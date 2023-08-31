@@ -3,7 +3,7 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.operator.End
 import utopia.flow.view.immutable.View
@@ -55,6 +55,8 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	
 	// The listeners are stored until the pointer is appropriated
 	private var queuedListeners = Pair.twice(Vector[ChangeListener[A]]())
+	private var queuedStopListeners = Vector[ChangingStoppedListener]()
+	
 	private var pointer: Option[Changing[A]] = None
 	
 	
@@ -65,6 +67,7 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 		case None => placeholderValue
 	}
 	override def isChanging: Boolean = pointer.forall { _.isChanging }
+	override def mayStopChanging: Boolean = pointer.forall { _.mayStopChanging }
 	
 	override def hasListeners: Boolean = pointer match {
 		case Some(p) => p.hasListeners
@@ -89,6 +92,11 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	override def removeListener(changeListener: Any): Unit = pointer match {
 		case Some(p) => p.removeListener(changeListener)
 		case None => queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
+	}
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = pointer match {
+		case Some(p) => p.addChangingStoppedListener(listener)
+		case None => queuedStopListeners :+= listener
 	}
 	
 	
@@ -135,6 +143,10 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 				// Discards the listeners from this instance afterwards
 				queuedListeners = Pair.twice(Vector.empty)
 			}
+			
+			// Moves the stop listeners over as well
+			queuedStopListeners.foreach { pointer.addChangingStoppedListenerAndSimulateEvent(_) }
+			queuedStopListeners = Vector()
 		}
 		else if (!this.pointer.contains(pointer))
 			throw new IllegalStateException("Pointer had already been assigned")

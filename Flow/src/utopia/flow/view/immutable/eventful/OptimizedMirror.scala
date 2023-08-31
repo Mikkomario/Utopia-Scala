@@ -44,8 +44,14 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, cachingDisabled: Boo
 	private val bridge = OptimizedBridge.map(origin, hasListenersFlag, cachingDisabled)(f)(fireEvent)
 	
 	
+	// INITIAL CODE -------------------------
+	
+	stopOnceSourceStops(origin)
+	
+	
 	// IMPLEMENTED  -------------------------
 	
 	override def value: R = bridge.value
 	override def isChanging: Boolean = origin.isChanging
+	override def mayStopChanging: Boolean = origin.mayStopChanging
 }

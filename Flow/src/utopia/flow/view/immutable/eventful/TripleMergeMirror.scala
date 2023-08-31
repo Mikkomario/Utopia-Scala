@@ -1,6 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
 object TripleMergeMirror
 {
@@ -105,9 +105,11 @@ object TripleMergeMirror
 class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changing[O2], source3: Changing[O3],
                                           initialValue: R, condition: Changing[Boolean] = AlwaysTrue)
                                          (merge: (R, O1, O2, O3) => R)
-	extends AbstractChanging[R]
+	extends AbstractMayStopChanging[R]
 {
 	// ATTRIBUTES   -----------------------------
+	
+	private val sources = Vector(source1, source2, source3)
 	
 	private var _value = initialValue
 	
@@ -119,10 +121,13 @@ class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changi
 	startMirroring(source2, condition) { (v, e2) => merge(v, source1.value, e2.newValue, source3.value) } { _value = _ }
 	startMirroring(source3, condition) { (v, e3) => merge(v, source1.value, source2.value, e3.newValue) } { _value = _ }
 	
+	stopOnceAllSourcesStop(sources)
+	
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def isChanging = source1.isChanging || source2.isChanging || source3.isChanging
-	
 	override def value = _value
+	
+	override def isChanging = sources.exists { _.isChanging }
+	override def mayStopChanging: Boolean = sources.forall { _.mayStopChanging }
 }

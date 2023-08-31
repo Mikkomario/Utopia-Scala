@@ -2,6 +2,7 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileOption
@@ -85,6 +86,8 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	
 	private val resultPointer = VolatileOption[A]()
 	
+	private var stopListeners = Vector[ChangingStoppedListener]()
+	
 	
 	// INITIAL CODE	------------------------------
 	
@@ -98,8 +101,12 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 		if (v != placeHolder)
 			fireEvent(ChangeEvent(placeHolder, v)).foreach { _() }
 		
+		// Informs the stop listeners
+		stopListeners.foreach { _.onChangingStopped() }
+		
 		// Forgets about the listeners and dependencies afterwards
 		clearListeners()
+		stopListeners = Vector()
 	}
 	
 	
@@ -115,6 +122,10 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	
 	override def value = resultPointer.value.getOrElse(placeHolder)
 	override def isChanging = !isCompleted
+	override def mayStopChanging: Boolean = true
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
+		stopListeners :+= listener
 	
 	override def findMapNextFuture[B](f: A => Option[B]) =
 		if (isCompleted) Future.never else findMapFuture(f)

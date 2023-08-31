@@ -1,6 +1,6 @@
 package utopia.flow.view.mutable.caching
 
-import utopia.flow.event.listener.{LazyListener, LazyResetListener, ResettableLazyListener}
+import utopia.flow.event.listener.{ChangingStoppedListener, LazyListener, LazyResetListener, ResettableLazyListener}
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, ResetListenable}
@@ -112,8 +112,11 @@ object ListenableResettableLazy
 			// IMPLEMENTED  ----------------------
 			
 			override def isChanging = true
+			override def mayStopChanging: Boolean = false
 			
 			override def value = current
+			
+			override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 			
 			
 			// OTHER    --------------------------

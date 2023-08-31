@@ -1,7 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.AbstractChanging
+import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
 /**
   * A pointer that, besides the initial value, may only be set once
@@ -9,7 +9,7 @@ import utopia.flow.view.template.eventful.AbstractChanging
   * @since 22.12.2022, v2.0
   * @tparam A Type of value held within this pointer
   */
-class MutableOnce[A](initialValue: A) extends AbstractChanging[A] with Pointer[A]
+class MutableOnce[A](initialValue: A) extends AbstractMayStopChanging[A] with Pointer[A]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -34,6 +34,7 @@ class MutableOnce[A](initialValue: A) extends AbstractChanging[A] with Pointer[A
 	// IMPLEMENTED  -----------------------
 	
 	override def isChanging = _setFlag.isNotSet
+	override def mayStopChanging: Boolean = true
 	
 	override def value = _value
 	override def value_=(newValue: A) = {
@@ -44,6 +45,7 @@ class MutableOnce[A](initialValue: A) extends AbstractChanging[A] with Pointer[A
 			_value = newValue
 			_setFlag.set()
 			fireEventIfNecessary(oldValue, newValue).foreach { _() }
+			declareChangingStopped()
 		}
 	}
 	
