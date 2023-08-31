@@ -1,9 +1,9 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.distance
 
 import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.measurement.DistanceUnit.Meter
-import utopia.terra.model.vector.AerialPoint
+import utopia.terra.model.world.AerialPoint
 
 /**
  * Used for calculating travel distances between two locations which include altitude information.

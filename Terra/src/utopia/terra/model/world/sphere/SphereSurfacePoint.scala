@@ -1,11 +1,12 @@
-package utopia.terra.model.vector.sphere
+package utopia.terra.model.world.sphere
 
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.terra.controller.coordinate.{DistanceOps, SphericalEarth, SurfaceHaversineDistanceOps}
+import utopia.terra.controller.coordinate.distance.{DistanceOps, SurfaceHaversineDistanceOps}
+import utopia.terra.controller.coordinate.world.SphericalEarth
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.vector.SurfacePoint
+import utopia.terra.model.world.SurfacePoint
 
 object SphereSurfacePoint
 {

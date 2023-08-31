@@ -1,4 +1,4 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.world
 
 import utopia.paradigm.measurement.Distance
 import utopia.terra.model.angular.LatLong

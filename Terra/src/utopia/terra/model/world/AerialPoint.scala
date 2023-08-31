@@ -1,4 +1,4 @@
-package utopia.terra.model.vector
+package utopia.terra.model.world
 
 import utopia.paradigm.measurement.Distance
 

@@ -1,9 +1,9 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.distance
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{Combinable, HasLength, Reversible}
 import utopia.paradigm.measurement.Distance
-import utopia.terra.model.vector.WorldPoint
+import utopia.terra.model.world.WorldPoint
 
 /**
  * Distance-calculation algorithm for calculating linear distance between two points using their vector forms.

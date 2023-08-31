@@ -1,11 +1,12 @@
-package utopia.terra.model.vector.circle
+package utopia.terra.model.world.circle
 
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.terra.controller.coordinate.{CircleOfEarth, DistanceOps, VectorDistanceOps}
+import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
+import utopia.terra.controller.coordinate.world.CircleOfEarth
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.vector.SurfacePoint
+import utopia.terra.model.world.SurfacePoint
 
 object CircleSurfacePoint
 {

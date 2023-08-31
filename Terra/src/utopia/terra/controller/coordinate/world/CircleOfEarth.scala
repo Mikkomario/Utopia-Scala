@@ -1,11 +1,12 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.world
 
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.enumeration.CompassDirection.South
-import utopia.terra.model.vector.circle.{CirclePoint, CircleSurfacePoint}
+import utopia.terra.model.world.circle.{CirclePoint, CircleSurfacePoint}
 
 /**
  * A world view where the (real) north pole (i.e. the one under Polaris) lies at the center (0,0)

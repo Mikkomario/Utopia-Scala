@@ -1,8 +1,9 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.distance
 
 import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.measurement.Distance
-import utopia.terra.model.vector.SurfacePoint
+import utopia.terra.controller.coordinate.GlobeMath
+import utopia.terra.model.world.SurfacePoint
 
 object SurfaceHaversineDistanceOps
 {

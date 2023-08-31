@@ -1,4 +1,4 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.distance
 
 import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.measurement.Distance

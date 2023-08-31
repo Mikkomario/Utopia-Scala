@@ -1,11 +1,12 @@
-package utopia.terra.controller.coordinate
+package utopia.terra.controller.coordinate.world
 
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.vector.sphere.{SpherePoint, SphereSurfacePoint}
+import utopia.terra.model.world.sphere.{SpherePoint, SphereSurfacePoint}
 
 /**
  * This world view assumes that the Earth is a perfect symmetric sphere on the sea level.

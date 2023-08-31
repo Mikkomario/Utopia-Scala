@@ -56,7 +56,7 @@ object ReachTestContext
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colors, margins)
 	implicit val windowContext: ReachContentWindowContext = ReachWindowContext(
 		WindowContext(actorHandler), colors.primary.light)
-		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
+		.withResizeLogic(UserAndProgram)//.withCursors(TestCursors.cursors)
 		.withContentContext(baseContext)
 	
 	private val actionLoop = new ActorLoop(actorHandler, 5 to 60)
