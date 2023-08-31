@@ -6,6 +6,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{RowGroup, RowGroups}
+import utopia.flow.async.process.{Delay, Loop, Wait}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -43,6 +44,8 @@ import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
 object InputWindowTest extends App
 {
 	import ReachTestContext._
+	
+	Changing.listenerDebuggingLimit = 100
 	
 	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
 	val selectedBoxIcon = icons("check-box-selected.png")
@@ -165,10 +168,31 @@ object InputWindowTest extends App
 		override protected def title = "Test"
 	}
 	
-	// Displays a dialog
+	val runTime = Runtime.getRuntime
+	val maxMemory = runTime.maxMemory()
+	def printMemoryStatus() = {
+		val used = runTime.totalMemory()
+		println(s"${ used * 100 / maxMemory }% (${used/100000} M) used")
+	}
+	
 	start()
+	
+	// Displays a number of windows sequentially (testing memory use)
+	Iterator.continually {
+		val window = TestWindows.display()
+		Delay(1.seconds) {
+			printMemoryStatus()
+			window.close()
+			System.gc()
+		}
+		Wait(3.seconds)
+	}.take(20).foreach { _ => () }
+	
+	// Displays a dialog
+	/*
 	val result = TestWindows.displayBlocking().get
 	println(s"Dialog completed with result: $result")
 	
 	println(result("durationSeconds").getLong.seconds.description)
+	 */
 }

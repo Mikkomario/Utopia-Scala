@@ -34,8 +34,8 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
 {
     // ATTRIBUTES    ----------------------
     
-    override protected val dimensionsFactory = super.dimensionsFactory
     override val zeroDimension = super.zeroDimension
+    override protected val dimensionsFactory = super.dimensionsFactory
     override val zero = super.zero
     
     /**

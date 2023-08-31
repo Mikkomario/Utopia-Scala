@@ -98,5 +98,27 @@ object ChangingTest extends App
 	assert(merged3Changed == 3, merged3Changed)
 	assert(merged3.value == 1)
 	
+	// Tests light merging
+	val lmo1 = EventfulPointer(1)
+	val lmo2 = EventfulPointer(2)
+	val lm = lmo1.lightMergeWith(lmo2) { _ + _ }
+	
+	assert(lmo1.hasNoListeners)
+	assert(lmo2.hasNoListeners)
+	assert(lm.value == 3)
+	assert(lmo1.hasNoListeners)
+	assert(lmo2.hasNoListeners)
+	
+	lmo1.value = 3
+	
+	assert(lm.value == 5)
+	
+	val lmm = lm.strongMap { -_ }
+	
+	assert(lmo1.numberOfListeners == 1)
+	assert(lmo2.numberOfListeners == 1)
+	assert(lm.numberOfListeners == 1)
+	assert(lmm.value == -5)
+	
 	println("Done!")
 }

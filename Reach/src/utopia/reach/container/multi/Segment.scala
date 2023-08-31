@@ -40,13 +40,11 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	
 	// COMPUTED	--------------------------------
 	
-	private def calculatedLength: StackLength =
-	{
+	private def calculatedLength: StackLength = {
 		containers.map { _.wrappedComponent.stackSize.along(alignAxis) }.reduceOption { (a, b) =>
 			val min = a.min max b.min
 			val max = (a.max ++ b.max).reduceOption { _ min _ }
-			val optimal =
-			{
+			val optimal = {
 				val baseOptimal = a.optimal max b.optimal
 				if (baseOptimal < min)
 					min
@@ -74,21 +72,18 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		component.attachTo(container)
 	}
 	
-	private def updateContainers() =
-	{
+	private def updateContainers() = {
 		lengthCache.reset()
 		containers.foreach { _.isUpdatingFlag.set() }
 		containers.foreach { _.revalidate() }
 	}
 	
-	private def registerContainer(container: SegmentContainer) =
-	{
+	private def registerContainer(container: SegmentContainer) = {
 		containers :+= container
 		updateContainers()
 	}
 	
-	private def removeContainer(container: Any) =
-	{
+	private def removeContainer(container: Any) = {
 		containers = containers.filterNot { _ == container }
 		updateContainers()
 	}
@@ -126,8 +121,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		override def children = Vector(wrappedComponent)
 		
-		override def resetCachedSize() =
-		{
+		override def resetCachedSize() = {
 			super.resetCachedSize()
 			// If needs to reset cached size while not in update mode, revalidates all segment containers and not
 			// just this one
@@ -135,8 +129,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 				updateContainers()
 		}
 		
-		override def updateLayout() =
-		{
+		override def updateLayout() = {
 			// Ends possible update process in updateLayout()
 			isUpdatingFlag.reset()
 			// Sets component position and size
@@ -146,14 +139,12 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		// OTHER	----------------------------------
 		
-		private def setContentBounds() =
-		{
+		private def setContentBounds() = {
 			val mySize = size
 			val myLength = size(alignAxis)
 			val contentLength = wrappedComponent.stackSize(alignAxis)
 			// May reposition content if it would be scaled above optimal length
-			if (layout != Fit && contentLength.optimal < myLength)
-			{
+			if (layout != Fit && contentLength.optimal < myLength) {
 				val newContentLength = contentLength.optimal
 				val newLocation = if (layout == Leading) 0.0 else myLength - newContentLength
 				val myBreadth = size(direction)

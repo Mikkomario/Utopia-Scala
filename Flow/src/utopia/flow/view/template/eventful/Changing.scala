@@ -20,6 +20,20 @@ import scala.util.{Failure, Success, Try}
 
 object Changing
 {
+	// ATTRIBUTES   ----------------------
+	
+	/**
+	  * A limit to place on the number of listeners that may be assigned to an individual pointer.
+	  * Setting this value to >= 0 will cause this software to throw errors when too many listeners are assigned.
+	  *
+	  * Please note that this feature is NOT INDENTED FOR USE IN PRODUCTION
+	  * and is merely for testing and debugging purposes.
+	  */
+	var listenerDebuggingLimit = -1
+	
+	
+	// OTHER    --------------------------
+	
 	/**
 	  * Creates a changing item that changes its value once a future resolves (successfully or unsuccessfully)
 	  * @param placeholder A placeholder value returned until the future resolves
@@ -167,8 +181,13 @@ trait Changing[+A] extends Any with View[A]
 	  * @param listener A listener to assign to this item,
 	  *                 if appropriate (i.e. this item will still change) (call-by-name)
 	  */
-	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit =
+	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = {
+		// Debugging feature: May follow the maximum number of listeners
+		if (Changing.listenerDebuggingLimit >= 0 && numberOfListeners >= Changing.listenerDebuggingLimit)
+			throw new IllegalStateException(s"Maximum (debugging) limit (${Changing.listenerDebuggingLimit}) of change event listeners reached.")
 		_addListenerOfPriority(priority, Lazy(listener))
+	}
+	
 	/**
 	  * Registers a new listener to be informed whenever this item's value changes
 	  * @param changeListener A listener that should be informed (call by name)
