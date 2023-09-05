@@ -233,7 +233,6 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 		else
 			Rotation(other.radians - radians, other.direction)
 	}
-	
 	/**
 	  * Subtracts a rotation from this one
 	  */
@@ -241,6 +240,25 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	
 	
 	// OTHER	--------------------------
+	
+	/**
+	  * @param direction Targeted rotation direction
+	  * @return This rotation as radians towards that direction.
+	  *         Negative if this rotation is towards the opposite direction.
+	  */
+	def radiansTowards(direction: RotationDirection) = direction match {
+		case Clockwise => clockwiseRadians
+		case Counterclockwise => counterClockwiseRadians
+	}
+	/**
+	  * @param direction Targeted rotation direction
+	  * @return This rotation as degrees towards that direction.
+	  *         Negative if this rotation is towards the opposite direction.
+	  */
+	def degreesTowards(direction: RotationDirection) = direction match {
+		case Clockwise => clockwiseDegrees
+		case Counterclockwise => counterClockwiseDegrees
+	}
 	
 	/**
 	  * @param direction New rotation direction

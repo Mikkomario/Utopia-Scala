@@ -28,8 +28,11 @@
   - Added `.round`
 - **InsetsLike**
   - Added `-(Axis2D)`
+- **Rotation**
+  - Added `.degreesTowards(RotationDirection)` and `.radiansTowards(RotationDirection)`
 ### Other Changes
 - Added new generic traits for vector classes and other related classes
+- **Distance** now extends **SignedOrZero**
 - Rewrote `Color.fromInt(Int)` implementation
 
 ## v1.3 - 01.05.2023

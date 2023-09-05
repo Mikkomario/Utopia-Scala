@@ -12,6 +12,11 @@ sealed trait DistanceUnit
 	// ABSTRACT ------------------------------
 	
 	/**
+	  * @return The abbreviation used for this unit
+	  */
+	def abbreviation: String
+	
+	/**
 	 * @param targetUnit Another unit
 	 * @return A modifier that must be applied to a number when converting from this unit to the other unit
 	 */
@@ -51,6 +56,11 @@ sealed trait DistanceUnit
 	 * @return A modifier from this unit to feet
 	 */
 	def toFeet = conversionModifierFor(Feet)
+	
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def toString = abbreviation
 }
 
 object DistanceUnit
@@ -62,8 +72,9 @@ object DistanceUnit
 	 */
 	case object MilliMeter extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "mm"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case MilliMeter => 1.0
 			case CentiMeter => 0.1
 			case Meter => 0.001
@@ -75,8 +86,9 @@ object DistanceUnit
 	 */
 	case object CentiMeter extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "cm"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case CentiMeter => 1.0
 			case MilliMeter => 10.0
 			case Meter => 0.01
@@ -90,8 +102,9 @@ object DistanceUnit
 	 */
 	case object Meter extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "m"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case Meter => 1.0
 			case MilliMeter => 0.001
 			case CentiMeter => 0.01
@@ -106,8 +119,9 @@ object DistanceUnit
 	 */
 	case object KiloMeter extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "km"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case KiloMeter => 1.0
 			case Meter => 1000.0
 			case Mile => 0.621371192
@@ -121,8 +135,9 @@ object DistanceUnit
 	 */
 	case object Inch extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "in"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case Inch => 1.0
 			case Feet => 0.0833333333
 			case Mile => toFeet * Feet.conversionModifierFor(targetUnit)
@@ -135,8 +150,9 @@ object DistanceUnit
 	 */
 	case object Feet extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "ft"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case Feet => 1.0
 			case Inch => 12.0
 			case Mile => 0.000189393939
@@ -149,8 +165,9 @@ object DistanceUnit
 	 */
 	case object Mile extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override def abbreviation: String = "mi"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case Mile => 1.0
 			case Feet => 5280.0
 			case KiloMeter => 1.609344
@@ -164,8 +181,9 @@ object DistanceUnit
 	 */
 	case object NauticalMile extends DistanceUnit
 	{
-		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match
-		{
+		override val abbreviation: String = "NM"
+		
+		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case NauticalMile => 1.0
 			case Meter => 1852.0
 			case KiloMeter => 1.852

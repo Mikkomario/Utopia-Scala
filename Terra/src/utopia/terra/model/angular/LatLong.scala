@@ -3,9 +3,8 @@ package utopia.terra.model.angular
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{Combinable, Sign}
 import utopia.paradigm.angular.{Angle, Rotation}
-import utopia.paradigm.enumeration.RotationDirection.Counterclockwise
 import utopia.terra.model.enumeration.CompassDirection
-import utopia.terra.model.enumeration.CompassDirection.{CompassAxis, EastWest, NorthSouth}
+import utopia.terra.model.enumeration.CompassDirection.{CompassAxis, East, EastWest, North, NorthSouth}
 
 object LatLong
 {
@@ -26,7 +25,7 @@ object LatLong
 	 * @return A new map point
 	 */
 	def fromDegrees(latitude: Double, longitude: Double): LatLong =
-		apply(Rotation.ofDegrees(latitude, Counterclockwise), Angle.ofDegrees(-longitude))
+		apply(Rotation.ofDegrees(latitude, North.rotationDirection), Angle.ofDegrees(East.sign * longitude))
 }
 /**
  * A point on the earth's surface expressed as latitude and longitude angular values
@@ -47,13 +46,13 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 	 * The latitude portion of this coordinate as degrees of rotation from the equator towards the NORTH [-90, 90].
 	 * Negative values are used for south-side points.
 	 */
-	lazy val latitudeDegrees = {
+	lazy val latitudeDegrees: Double = {
 		// Corrects the amount to [-90, 90] degree range
-		val base = latitude.counterClockwiseDegrees
+		val base = latitude.degreesTowards(North.rotationDirection)
 		val div = base.abs / 90.0
 		val segment = div.toInt
-		val remainder = div - segment
-		val corrected = segment % 4 match {
+		val remainder = base % 90.0
+		/*val corrected = */segment % 4 match {
 			// Case: 0-90 degrees => Returns value as is
 			case 0 => remainder
 			// Case: 90-180 degrees => Goes from the "pole" towards the equator
@@ -63,19 +62,17 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 			// Case: 270-360 degrees => Goes from the opposite "pole" towards the equator
 			case 3 => -(90.0 - remainder)
 		}
-		// Applies the correct direction
-		Sign.of(base) * corrected
 	}
 	/**
 	 * The longitude portion of this coordinate as rotation from Greenwich, England towards EAST [-180,180].
 	 * Negative values represent points towards the west.
 	 */
-	lazy val longitudeDegrees = {
+	lazy val longitudeDegrees: Double = {
 		val base = longitude.degrees
 		// Corrects to [-180, 180] range
 		val corrected = if (base <= 180) base else base - 360
 		// Returns in correct direction (EASTWARD)
-		-corrected
+		East.sign * corrected
 	}
 	
 	
@@ -89,6 +86,9 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 	
 	
 	// IMPLEMENTED  -------------------
+	
+	override def toString = s"${latitudeDegrees.abs} ${NorthSouth.of(latitudeDegrees)}, ${
+		longitudeDegrees.abs} ${EastWest.of(longitudeDegrees)}"
 	
 	/**
 	 * @param rotation Amount of rotation to apply (north-to-south & east-to-west)

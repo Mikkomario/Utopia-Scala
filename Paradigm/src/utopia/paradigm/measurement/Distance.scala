@@ -1,6 +1,6 @@
 package utopia.paradigm.measurement
 
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.{SelfComparable, Sign, SignOrZero, SignedOrZero}
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, Meter, MilliMeter}
 
 object Distance
@@ -56,7 +56,7 @@ object Distance
  * @author Mikko Hilpinen
  * @since Genesis 24.6.2020, v2.3
  */
-case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[Distance]
+case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[Distance] with SignedOrZero[Distance]
 {
 	// COMPUTED ---------------------
 	
@@ -70,22 +70,18 @@ case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[D
 	 * @return This distance in millimeters
 	 */
 	def toMm = toUnit(MilliMeter)
-	
 	/**
 	 * @return This distance in centimeters
 	 */
 	def toCm = toUnit(CentiMeter)
-	
 	/**
 	 * @return This distance in meters
 	 */
 	def toM = toUnit(Meter)
-	
 	/**
 	 * @return This distance in inches
 	 */
 	def toInches = toUnit(Inch)
-	
 	/**
 	 * @return This distance in feet
 	 */
@@ -96,8 +92,12 @@ case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[D
 	
 	override def self = this
 	
-	override def compareTo(o: Distance) =
-	{
+	override def sign: SignOrZero = Sign.of(amount)
+	override def zero: Distance = Distance.zero
+	
+	override def toString = s"$amount $unit"
+	
+	override def compareTo(o: Distance) = {
 		val diff = amount - o.toUnit(unit)
 		if (diff > 0)
 			1
@@ -126,7 +126,6 @@ case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[D
 	 * @return A combination of these distances
 	 */
 	def +(other: Distance) = copy(amount = amount + other.toUnit(unit))
-	
 	/**
 	 * @param other Another instance
 	 * @return A subtraction of these instances

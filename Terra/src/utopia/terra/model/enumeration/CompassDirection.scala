@@ -2,7 +2,7 @@ package utopia.terra.model.enumeration
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{BinarySigned, Sign}
+import utopia.flow.operator.{BinarySigned, Sign, Signed}
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.terra.model.enumeration.CompassDirection.CompassAxis
@@ -57,11 +57,32 @@ object CompassDirection
 	 */
 	sealed trait CompassAxis
 	{
+		// ABSTRACT ------------------------
+		
 		/**
 		 * @param sign targeted sign (positive | negative)
 		 * @return Direction that matches that sign on this axis
 		 */
 		def apply(sign: Sign): CompassDirection
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		  * @param a A signed item
+		  * @return Compass direction that matches that item's sign
+		  */
+		def of(a: BinarySigned[_]) = apply(a.sign)
+		/**
+		  * @param a A signed item
+		  * @return Compass direction that matches that item's sign. None if that item is zero.
+		  */
+		def of(a: Signed[_]) = a.sign.binary.map(apply)
+		/**
+		  * @param n A number
+		  * @return Compass direction that matches that numbers's sign. None if the number is zero.
+		  */
+		def of(n: Double) = Sign.of(n).binary.map(apply)
 	}
 	
 	/**
