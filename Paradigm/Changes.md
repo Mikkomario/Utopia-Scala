@@ -10,6 +10,8 @@
 - **LinearAlignment**`.direction` now returns **SignOrZero** instead of **Option[Sign]**
 - **LinearTransformable** now longer requires the implementation of `.self`
 - Renamed **VectorProjectable2** to **VectorProjectable** (leftover from an earlier update)
+### Bugfixes
+- Bugfixes to distance conversions when converting from a **Meter** to a smaller unit
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
 - Added **FromDirectionFactory** and **FromAlignmentFactory** -traits

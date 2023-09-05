@@ -106,8 +106,8 @@ object DistanceUnit
 		
 		override def conversionModifierFor(targetUnit: DistanceUnit) = targetUnit match {
 			case Meter => 1.0
-			case MilliMeter => 0.001
-			case CentiMeter => 0.01
+			case MilliMeter => 1000
+			case CentiMeter => 100
 			case KiloMeter => 0.001
 			case Feet => 3.2808399
 			case NauticalMile => toKm * KiloMeter.conversionModifierFor(NauticalMile)
