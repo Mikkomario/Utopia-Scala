@@ -4,11 +4,12 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
-import utopia.terra.controller.coordinate.world.CircleOfEarth
+import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToSurfacePoint, VectorToSurfacePoint}
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.world.SurfacePoint
 
 object CircleSurfacePoint
+	extends VectorToSurfacePoint[Vector2D, CircleSurfacePoint] with LatLongToSurfacePoint[CircleSurfacePoint]
 {
 	// ATTRIBUTES   ---------------------
 	
@@ -17,15 +18,16 @@ object CircleSurfacePoint
 	 */
 	implicit val distanceOps: DistanceOps[CircleSurfacePoint] =
 		new VectorDistanceOps[Vector2D](CircleOfEarth.unitDistance)
+		
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def apply(latLong: LatLong): CircleSurfacePoint = new LatLongOnCircle(latLong)
+	override def surfaceVector(vector: Vector2D): CircleSurfacePoint = apply(vector)
 	
 	
 	// OTHER    -------------------------
 	
-	/**
-	 * @param latLong A latitude-longitude coordinate
-	 * @return That point on the Circle of Earth -system
-	 */
-	def apply(latLong: LatLong): CircleSurfacePoint = new LatLongOnCircle(latLong)
 	/**
 	 * @param vector A vector in the Circle of Earth -system
 	 * @return A point representation of that vector
@@ -50,7 +52,7 @@ object CircleSurfacePoint
  * Represents a point on the "Circle of Earth".
  *
  * The (0,0) vector coordinate lies on the "real" north pole, under the Polaris.
- * A unit length (1.0) represents the distance from the north pole to the equator.
+ * Length of 100 000 represents the distance from the north pole to the equator.
  * The X axis runs along the 0 longitude line (Greenwich, England) towards south (right).
  *
  * @author Mikko Hilpinen

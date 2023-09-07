@@ -4,11 +4,12 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.distance.{DistanceOps, SurfaceHaversineDistanceOps}
-import utopia.terra.controller.coordinate.world.SphericalEarth
+import utopia.terra.controller.coordinate.world.{LatLongToSurfacePoint, SphericalEarth}
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.world.SurfacePoint
 
 object SphereSurfacePoint
+	extends LatLongToSurfacePoint[SphereSurfacePoint]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -19,13 +20,13 @@ object SphereSurfacePoint
 	implicit val distanceOps: DistanceOps[SphereSurfacePoint] = SurfaceHaversineDistanceOps.atMeanSeaLevel
 	
 	
-	// OTHER    ----------------------------
+	// IMPLEMENTED  ------------------------
 	
 	/**
 	 * @param latLong A latitude-longitude coordinate
 	 * @return a point on the spherical Earth's surface (i.e. at the sea level) that matches those coordinates
 	 */
-	def apply(latLong: LatLong): SphereSurfacePoint = new LatLongOnSphere(latLong)
+	override def apply(latLong: LatLong): SphereSurfacePoint = new LatLongOnSphere(latLong)
 	
 	
 	// NESTED   ----------------------------

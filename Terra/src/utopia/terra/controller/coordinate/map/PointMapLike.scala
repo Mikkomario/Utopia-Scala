@@ -4,7 +4,7 @@ import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.MatrixLike
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
-import utopia.terra.controller.coordinate.world.WorldView
+import utopia.terra.controller.coordinate.world.{LatLongToSurfacePoint, LatLongToWorldPoint}
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.map.MapPoint
 import utopia.terra.model.world.WorldPoint
@@ -14,8 +14,10 @@ import utopia.terra.model.world.WorldPoint
  * vector locations on a 2D map
  * @author Mikko Hilpinen
  * @since 31.8.2023, v1.0
+  * @tparam V Type of vector representations used by this map
+  * @tparam M Type of matrices used by this map
  */
-trait PointMapLike[V <: DoubleVectorLike[V], M <: MatrixLike[V, M]]
+trait PointMapLike[V <: DoubleVectorLike[V], +M <: MatrixLike[V, M]]
 {
 	// ABSTRACT ----------------------------
 	
@@ -63,7 +65,7 @@ trait PointMapLike[V <: DoubleVectorLike[V], M <: MatrixLike[V, M]]
 	  * @param worldView Implied world view
 	  * @return That location on this map (in the image coordinate space), relative to the map's origin
 	  */
-	def latLongOnMap(latLong: LatLong)(implicit worldView: WorldView[_, _, WorldPoint[V], _]) =
+	def latLongOnMap(latLong: LatLong)(implicit worldView: LatLongToSurfacePoint[WorldPoint[V]]) =
 		pointOnMap(worldView(latLong))
 	/**
 	  * @param latLong A latitude-longitude coordinate
@@ -71,6 +73,6 @@ trait PointMapLike[V <: DoubleVectorLike[V], M <: MatrixLike[V, M]]
 	  * @param worldView Implied world view
 	  * @return That location on this map (in the image coordinate space), relative to the map's origin
 	  */
-	def latLongOnMap(latLong: LatLong, altitude: Distance)(implicit worldView: WorldView[_, _, _, WorldPoint[V]]) =
+	def latLongOnMap(latLong: LatLong, altitude: Distance)(implicit worldView: LatLongToWorldPoint[_, WorldPoint[V]]) =
 		pointOnMap(worldView(latLong, altitude))
 }

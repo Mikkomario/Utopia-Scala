@@ -4,7 +4,9 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{BinarySigned, Sign, Signed}
 import utopia.paradigm.angular.Rotation
-import utopia.paradigm.enumeration.RotationDirection
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Axis2D, RotationDirection}
+import utopia.terra.model.angular.{CompassRotation, EastWestRotation, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.CompassAxis
 
 /**
@@ -44,29 +46,30 @@ object CompassDirection
 {
 	// NESTED   ------------------------------
 	
-	object CompassAxis
-	{
-		/**
-		 * All compass axes (east-west & north-south)
-		 */
-		val values = Pair(EastWest, NorthSouth)
-	}
-	/**
-	 * Common trait for the two axes used in compass directions,
-	 * i.e. the north-to-south axis and the east-to-west axis.
-	 */
-	sealed trait CompassAxis
+	sealed trait AxisToDirection[+D, +R]
 	{
 		// ABSTRACT ------------------------
 		
 		/**
-		 * @param sign targeted sign (positive | negative)
-		 * @return Direction that matches that sign on this axis
-		 */
-		def apply(sign: Sign): CompassDirection
+		  * @param sign targeted sign (positive | negative)
+		  * @return Direction that matches that sign on this axis
+		  */
+		def apply(sign: Sign): D
+		
+		/**
+		  * @param rotation Amount of rotation to apply along this axis
+		  * @return The specified rotation along this axis
+		  */
+		def apply(rotation: Rotation): R
 		
 		
 		// OTHER    ------------------------
+		
+		/**
+		  * @param direction Rotation direction
+		  * @return Matching direction on this axis
+		  */
+		def apply(direction: RotationDirection): D = apply(direction.sign)
 		
 		/**
 		  * @param a A signed item
@@ -83,6 +86,45 @@ object CompassDirection
 		  * @return Compass direction that matches that numbers's sign. None if the number is zero.
 		  */
 		def of(n: Double) = Sign.of(n).binary.map(apply)
+		
+		/**
+		  * @param degrees Number of degrees of turn or travel
+		  * @return A rotation that matches that turn along this axis
+		  */
+		def degrees(degrees: Double) = apply(Rotation.ofDegrees(degrees))
+	}
+	
+	object CompassAxis
+	{
+		// ATTRIBUTES   ------------------------
+		
+		/**
+		 * All compass axes (east-west & north-south)
+		 */
+		val values = Pair(EastWest, NorthSouth)
+		
+		
+		// OTHER    ----------------------------
+		
+		/**
+		  * @param axis A "traditional" 2D axis
+		  * @return Compass axis that matches that axis
+		  */
+		def apply(axis: Axis2D): CompassAxis = axis match {
+			case X => NorthSouth
+			case Y => EastWest
+		}
+	}
+	/**
+	 * Common trait for the two axes used in compass directions,
+	 * i.e. the north-to-south axis and the east-to-west axis.
+	 */
+	sealed trait CompassAxis extends AxisToDirection[CompassDirection, CompassRotation]
+	{
+		/**
+		  * @return A 2D axis that matches this compass direction
+		  */
+		def axis: Axis2D
 	}
 	
 	/**
@@ -90,7 +132,7 @@ object CompassDirection
 	 * Used in latitude coordinates.
 	 * Zero is considered to be at the equator.
 	 */
-	case object NorthSouth extends CompassAxis
+	case object NorthSouth extends CompassAxis with AxisToDirection[NorthSouth, NorthSouthRotation]
 	{
 		// ATTRIBUTES   -----------------
 		
@@ -102,10 +144,14 @@ object CompassDirection
 		
 		// IMPLEMENTED  -----------------
 		
+		// X because of the word "latitude", which implies lateral shift, which implies horizontal movement
+		override def axis: Axis2D = X
+		
 		override def apply(sign: Sign): NorthSouth = sign match {
 			case Positive => South
 			case Negative => North
 		}
+		override def apply(rotation: Rotation) = NorthSouthRotation(rotation)
 	}
 	/**
 	 * Common trait for the north-to-south directions (i.e. northward and southward)
@@ -137,7 +183,7 @@ object CompassDirection
 	/**
 	 * A circular axis that goes from the east (-) to the west (+)
 	 */
-	case object EastWest extends CompassAxis
+	case object EastWest extends CompassAxis with AxisToDirection[EastWest, EastWestRotation]
 	{
 		// ATTRIBUTES   ----------------------
 		
@@ -149,10 +195,13 @@ object CompassDirection
 		
 		// IMPLEMENTED  ----------------------
 		
+		override def axis: Axis2D = Y
+		
 		override def apply(sign: Sign): EastWest = sign match {
 			case Positive => West
 			case Negative => East
 		}
+		override def apply(rotation: Rotation) = EastWestRotation(rotation)
 	}
 	/**
 	 * Common trait for east-to-west directions

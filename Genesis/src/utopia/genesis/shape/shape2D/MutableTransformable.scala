@@ -50,7 +50,7 @@ trait MutableTransformable
 	  * @return Current direction / angle of this instance
 	  */
 	def angle = transformation.rotation.toAngle
-	def angle_=(newAngle: Angle) = transformation = transformation.withRotation(newAngle.toRotation)
+	def angle_=(newAngle: Angle) = transformation = transformation.withRotation(newAngle.toShortestRotation)
 	
 	/**
 	  * @return Current scaling of this instance (x and y scaling separately)

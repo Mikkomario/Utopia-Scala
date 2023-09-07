@@ -1,10 +1,10 @@
 package utopia.terra.model.angular
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{Combinable, Sign}
+import utopia.flow.operator.Combinable
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.terra.model.enumeration.CompassDirection
-import utopia.terra.model.enumeration.CompassDirection.{CompassAxis, East, EastWest, North, NorthSouth}
+import utopia.terra.model.enumeration.CompassDirection._
 
 object LatLong
 {
@@ -38,7 +38,7 @@ object LatLong
  *                  0 means Greenwich, England. Positive ]0, 180[ values are towards the WEST
  *                  and negative ]180, 360[ towards the EAST.
   */
-case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair[Rotation], LatLong]
+case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[LatLongRotation, LatLong]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -75,6 +75,25 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 		East.sign * corrected
 	}
 	
+	/**
+	  * The side of the equator on which this location resides (North or South).
+	  * If this location resides exactly at the equator, returns North.
+	  */
+	lazy val northSouth = latitude.sign.binary match {
+		case Some(sign) =>
+			// Handles cases where the rotation is > 90 degrees or < -90 degrees
+			// After 180 degrees rotation, the targeted hemisphere "flips"
+			val absQuarter = if ((latitude.radians / math.Pi).toInt % 4 < 2) North else South
+			absQuarter * sign
+		// 0 degrees latitude is considered to be on the North side
+		case None => North
+	}
+	/**
+	  * This location's relative direction from longitude 0 (i.e. Greenwich, England)
+	  */
+	// 0 degrees is considered West, 180 degrees is considered East
+	lazy val eastWest: EastWest = if (longitude.radians < math.Pi) West else East
+	
 	
 	// COMPUTED -----------------------
 	
@@ -84,17 +103,23 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 	 */
 	def latLongDegrees = Pair(latitudeDegrees, longitudeDegrees)
 	
+	/**
+	  * @return A two-dimensional rotation based on this location.
+	  *         Same as calling this - LatLong.origin
+	  */
+	def toRotation = LatLongRotation(NorthSouth(latitude), EastWest(longitude.toShortestRotation))
+	
 	
 	// IMPLEMENTED  -------------------
 	
-	override def toString = s"${latitudeDegrees.abs} ${NorthSouth.of(latitudeDegrees)}, ${
-		longitudeDegrees.abs} ${EastWest.of(longitudeDegrees)}"
+	override def toString = s"${latitudeDegrees.abs} $northSouth, ${longitudeDegrees.abs} $eastWest"
 	
 	/**
 	 * @param rotation Amount of rotation to apply (north-to-south & east-to-west)
 	 * @return Copy of this coordinate shifted by the specified amount
 	 */
-	override def +(rotation: Pair[Rotation]) = copy(latitude + rotation.first, longitude + rotation.second)
+	override def +(rotation: LatLongRotation) =
+		copy(latitude + rotation.northSouth, longitude + rotation.eastWest)
 	
 	
 	// OTHER    -----------------------
@@ -103,26 +128,28 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 	 * @param amount Targeted axis and the rotation to apply
 	 * @return Copy of this coordinate shifted by the specified amount
 	 */
-	def +(amount: (CompassAxis, Rotation)) = amount._1 match {
-		case NorthSouth => copy(latitude = latitude + amount._2)
-		case EastWest => copy(longitude = longitude + amount._2)
+	def +(amount: CompassRotation) = amount.compassAxis match {
+		case NorthSouth => copy(latitude = latitude + amount)
+		case EastWest => copy(longitude = longitude + amount)
 	}
 	
 	/**
 	 * @param other Another latitude longitude -coordinate
-	 * @return The angular difference between these two coordinate points
+	 * @return The angular difference between these two coordinate points.
+	  *        I.e. the amount of rotation required so that 'other' + rotation = this.
 	 */
-	def -(other: LatLong) = Pair(latitude - other.latitude, longitude - other.longitude)
+	def -(other: LatLong) =
+		LatLongRotation(NorthSouth(latitude - other.latitude), EastWest(longitude - other.longitude))
 	/**
 	 * @param rotation Amount of rotation to subtract (north-to-south & east-to-west)
 	 * @return Copy of this coordinate shifted by the specified amount (to opposite direction)
 	 */
-	def -(rotation: Pair[Rotation]) = this + rotation.map { -_ }
+	def -(rotation: LatLongRotation) = this + (-rotation)
 	/**
 	 * @param amount Targeted axis and the rotation to subtract
 	 * @return Copy of this coordinate shifted by the specified amount (to the opposite direction)
 	 */
-	def -(amount: (CompassAxis, Rotation)) = this + (amount._1 -> -amount._2)
+	def -(amount: CompassRotation) = this + (-amount)
 	
 	/**
 	 * @param direction Targeted direction
@@ -131,6 +158,6 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[Pair
 	 */
 	def apply(direction: CompassDirection) = direction.axis match {
 		case NorthSouth => latitude
-		case EastWest => longitude.toRotation
+		case EastWest => longitude.toShortestRotation
 	}
 }

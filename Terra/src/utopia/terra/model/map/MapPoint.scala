@@ -3,7 +3,7 @@ package utopia.terra.model.map
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.terra.controller.coordinate.world.WorldView
+import utopia.terra.controller.coordinate.world.{LatLongToSurfacePoint, LatLongToWorldPoint}
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.world.WorldPoint
 
@@ -38,7 +38,7 @@ object MapPoint
 	  * @return A new map point
 	  */
 	def apply[V <: Combinable[V, V] with LinearScalable[V]](latLong: LatLong, mapLocation: Point)
-	                                                       (implicit worldView: WorldView[_, _, WorldPoint[V], _]): MapPoint[V] =
+	                                                       (implicit worldView: LatLongToSurfacePoint[WorldPoint[V]]): MapPoint[V] =
 		apply(worldView(latLong), mapLocation)
 	/**
 	  * Creates a new map point
@@ -50,7 +50,7 @@ object MapPoint
 	  * @return A new map point representing the specified (aerial) location
 	  */
 	def apply[V <: Combinable[V, V] with LinearScalable[V]](latLong: LatLong, altitude: Distance, mapLocation: Point)
-	                                                       (implicit worldView: WorldView[_, _, _, WorldPoint[V]]): MapPoint[V] =
+	                                                       (implicit worldView: LatLongToWorldPoint[_, WorldPoint[V]]): MapPoint[V] =
 		apply(worldView(latLong, altitude), mapLocation)
 	
 	

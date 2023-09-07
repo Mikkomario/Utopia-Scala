@@ -509,7 +509,7 @@ object ParadigmValueCaster extends ValueCaster
     private def rotationOf(value: Value): Option[Rotation] = value.dataType match {
         case DoubleType => Some(Rotation.ofRadians(value.getDouble))
         case DurationType => Some(Rotation.ofCircles(value.getDuration.toPreciseHours / 24))
-        case AngleType => Some(value.getAngle.toRotation)
+        case AngleType => Some(value.getAngle.toShortestRotation)
         case LinearTransformationType => Some(value.getLinearTransformation.rotation)
         case StringType =>
             val s = value.getString

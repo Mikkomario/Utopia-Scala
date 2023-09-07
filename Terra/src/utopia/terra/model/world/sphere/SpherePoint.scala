@@ -4,11 +4,13 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.distance.{AerialHaversineDistanceOps, DistanceOps}
-import utopia.terra.controller.coordinate.world.SphericalEarth
+import utopia.terra.controller.coordinate.world.{LatLongToWorldPoint, SphericalEarth, VectorToWorldPoint}
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.world.AerialPoint
 
 object SpherePoint
+	extends VectorToWorldPoint[Vector3D, Vector3D, SphereSurfacePoint, SpherePoint]
+		with LatLongToWorldPoint[SphereSurfacePoint, SpherePoint]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -16,6 +18,15 @@ object SpherePoint
 	 * Logic for calculating distance between points of this type
 	 */
 	implicit val distanceOps: DistanceOps[SpherePoint] = AerialHaversineDistanceOps
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def apply(latLong: LatLong): SphereSurfacePoint = SphereSurfacePoint(latLong)
+	override def apply(latLong: LatLong, altitude: Distance): SpherePoint = apply(SphereSurfacePoint(latLong), altitude)
+	
+	override def surfaceVector(vector: Vector3D): SphereSurfacePoint = apply(vector).toSurfacePoint
+	override def aerialVector(vector: Vector3D): SpherePoint = apply(vector)
 	
 	
 	// OTHER    ----------------------------
@@ -27,13 +38,6 @@ object SpherePoint
 	 */
 	def apply(surfacePoint: SphereSurfacePoint, altitude: Distance): SpherePoint =
 		new _SpherePoint(surfacePoint, altitude)
-	
-	/**
-	 * @param latLong A latitude-longitude coordinate
-	 * @param altitude Altitude above the sea level
-	 * @return A point matching those coordinates
-	 */
-	def apply(latLong: LatLong, altitude: Distance): SpherePoint = apply(SphereSurfacePoint(latLong), altitude)
 	
 	/**
 	 * @param vector A vector in the spherical Earth system

@@ -159,9 +159,25 @@ case class Angle private(radians: Double)
     def toDegrees = degrees
     
     /**
-      * @return A rotation that will turn an item from 0 radians to this angle
+      * @return A clockwise rotation that will turn an item from 0 radians to this angle
       */
-    def toRotation = Rotation(radians)
+    def toClockwiseRotation = Rotation.ofRadians(radians)
+    /**
+      * @return A clockwise rotation that will turn an item from 0 radians to this angle
+      */
+    @deprecated("Renamed to .toClockwiseRotation. Also consider using .toShortestRotation", "v1.4")
+    def toRotation = toClockwiseRotation
+    /**
+      * @return A rotation that will turn an item from 0 radians to this angle,
+      *         using the shorter route / direction.
+      *         Zero rotation is clockwise, 180 degree rotation is counter-clockwise
+      */
+    def toShortestRotation = {
+        if (radians < math.Pi)
+            toClockwiseRotation
+        else
+            Rotation.ofRadians(math.Pi * 2 - radians, Counterclockwise)
+    }
     
     /**
       * @return Sine of this angle

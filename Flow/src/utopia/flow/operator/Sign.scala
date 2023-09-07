@@ -170,11 +170,10 @@ sealed trait Sign extends SignOrZero with Reversible[Sign]
 	
 	/**
 	  * @param r a reversible instance
-	  * @tparam R2 Repr of that instance
-	  * @tparam R instance type
+	  * @tparam R instance 'Repr' type
 	  * @return 'r' if this is positive, -r otherwise
 	  */
-	def *[R2, R <: Reversible[R2]](r: R) = if (isPositive) r.self else -r
+	def *[R](r: Reversible[R]) = if (isPositive) r.self else -r
 	/**
 	  * @param ordering An ordering to possibly reverse
 	  * @tparam A Type of ordered items

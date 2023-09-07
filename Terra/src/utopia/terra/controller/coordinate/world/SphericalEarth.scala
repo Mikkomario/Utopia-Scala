@@ -24,6 +24,16 @@ import utopia.terra.model.world.sphere.{SpherePoint, SphereSurfacePoint}
  */
 object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, SpherePoint]
 {
+	// ATTRIBUTES   -------------------------
+	
+	/**
+	  * The radius of the spherical globe in vector coordinate system
+	  */
+	val globeVectorRadius = 100000.0
+	
+	override val unitDistance: Distance = GlobeMath.meanRadius / globeVectorRadius
+	
+	
 	// IMPLEMENTED  -------------------------
 	
 	override def apply(latLong: LatLong): SphereSurfacePoint = SphereSurfacePoint(latLong)
@@ -36,19 +46,13 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 	// OTHER    -----------------------------
 	
 	/**
-	 * @param distance A distance
-	 * @return A vector length distance matching that specified distance
-	 */
-	def vectorLengthOf(distance: Distance) = distance / GlobeMath.meanRadius
-	
-	/**
 	 * @param latLong A latitude-longitude coordinate
 	 * @return A vector representing that same point on the spherical Earth's surface at the sea level.
 	 */
 	def latLongToVector(latLong: LatLong) = {
 		// Calculates the position on the X-Z plane based on latitude, which determines the east-west radius,
 		// as well as the final Z-coordinate
-		val xz = Vector2D.lenDir(1.0, latLong.latitude.toAngle)
+		val xz = Vector2D.lenDir(globeVectorRadius, latLong.latitude.toAngle)
 		val eastWestRadius = xz.x
 		val z = xz.y
 		
@@ -58,7 +62,6 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 		// Combines the two positions, forming a 3D vector
 		Vector3D(xy.dimensions.withZ(z))
 	}
-	
 	/**
 	 * @param vector A vector coordinate in the spherical Earth system
 	 * @return A latitude-longitude coordinate that matches that same location
@@ -79,7 +82,7 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 	 * @param vector A vector coordinate in the spherical Earth system
 	 * @return The altitude of that point above the mean sea level
 	 */
-	def altitudeAt(vector: Vector3D) = GlobeMath.meanRadius * (vector.length - 1.0)
+	def altitudeAt(vector: Vector3D) = GlobeMath.meanRadius * (vector.length / globeVectorRadius - 1.0)
 	
 	/**
 	 * @param vector A vector position to modify

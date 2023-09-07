@@ -12,6 +12,9 @@
 - Renamed **VectorProjectable2** to **VectorProjectable** (leftover from an earlier update)
 ### Bugfixes
 - Bugfixes to distance conversions when converting from a **Meter** to a smaller unit
+### Deprecations
+- Deprecated `.toRotation` in **Angle**
+  - Please use `.toShortestRotation` or `.toClockwiseRotation` instead
 ### New Features
 - Added **Adjustment** and **SizeAdjustable** for more convenient size change functions
 - Added **FromDirectionFactory** and **FromAlignmentFactory** -traits
@@ -22,6 +25,8 @@
   - **NumericVectorLike** trait, based on the **DoubleVectorLike** -trait
   - **NumericVectorFactory**, based on **VectorFactory**
 ### New Methods
+- **Angle**
+  - Added `.toShortestRotation` and `.toClockwiseRotation` (which matches previous `.toRotation`)
 - **Dimensions**
   - Added `.mapWithZero(...)(...)`
 - **Distance** (object)
@@ -35,6 +40,8 @@
 ### Other Changes
 - Added new generic traits for vector classes and other related classes
 - **Distance** now extends **SignedOrZero**
+- Value conversion from **Angle** to **Rotation** now uses `.toShortestRotation` instead of `.toRotation`. 
+  As a consequence, the resulting rotation amounts may be smaller.
 - Rewrote `Color.fromInt(Int)` implementation
 
 ## v1.3 - 01.05.2023

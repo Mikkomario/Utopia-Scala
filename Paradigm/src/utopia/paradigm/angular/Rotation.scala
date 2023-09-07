@@ -3,8 +3,8 @@ package utopia.paradigm.angular
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.Combinable.SelfCombinable
-import utopia.flow.operator.{ApproxEquals, CanBeZero, LinearScalable, SelfComparable}
 import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.{ApproxEquals, LinearScalable, SelfComparable, SignOrZero, SignedOrZero}
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.generic.ParadigmDataType.RotationType
@@ -108,7 +108,7 @@ object Rotation
 **/
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
 	extends LinearScalable[Rotation] with SelfCombinable[Rotation]
-		with CanBeZero[Rotation] with SelfComparable[Rotation] with ApproxEquals[Rotation]
+		with SignedOrZero[Rotation] with SelfComparable[Rotation] with ApproxEquals[Rotation]
 		with ValueConvertible
 {
 	// PROPS    --------------------------
@@ -195,36 +195,26 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	
 	// IMPLEMENTED    --------------------
 	
-	override def zero = Rotation.zero
+	override def self = this
 	
-	/**
-	  * @return Whether this rotation is exactly zero
-	  */
+	override def sign: SignOrZero = direction.sign
+	
+	override def zero = Rotation.zero
 	override def isZero = radians == 0
 	
+	override def toString = f"$degrees%1.2f degrees $direction"
 	override implicit def toValue: Value = new Value(Some(this), RotationType)
 	
 	override def compareTo(o: Rotation) = clockwiseRadians.compareTo(o.clockwiseRadians)
 	
-	override def toString = f"$degrees%1.2f degrees $direction"
-	
 	def ~==(other: Rotation) = radians * direction.modifier ~== other.radians * direction.modifier
 	
-	override def self = this
-	
-	/**
-	  * Returns a multiplied version of this rotation
-	  */
 	def *(modifier: Double) = {
 		if (modifier >= 0)
 			Rotation(radians * modifier, direction)
 		else
 			Rotation(radians * -1 * modifier, direction.opposite)
 	}
-	
-	/**
-	  * Combines two rotations
-	  */
 	def +(other: Rotation) = {
 		if (direction == other.direction)
 			Rotation(radians + other.radians, direction)
@@ -233,9 +223,6 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 		else
 			Rotation(other.radians - radians, other.direction)
 	}
-	/**
-	  * Subtracts a rotation from this one
-	  */
 	def -(other: Rotation) = this + (-other)
 	
 	

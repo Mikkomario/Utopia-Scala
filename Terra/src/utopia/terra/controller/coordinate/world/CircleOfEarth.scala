@@ -23,12 +23,15 @@ import utopia.terra.model.world.circle.{CirclePoint, CircleSurfacePoint}
  */
 object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, CirclePoint]
 {
-	// COMPUTED   -------------------------
+	// ATTRIBUTES   -------------------------
 	
 	/**
-	 * Distance that matches vector length of 1.0
-	 */
-	def unitDistance = GlobeMath.earthRadiusAtEquator
+	  * Radius of the equator circle in this world view,
+	  * in vector coordinate system.
+	  */
+	val equatorVectorRadius = 100000.0
+	
+	override val unitDistance = GlobeMath.earthRadiusAtEquator / equatorVectorRadius
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -43,38 +46,26 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 	// OTHER    -----------------------------
 	
 	/**
-	 * @param distance A distance on Earth
-	 * @return A vector length matching that distance (assuming a certain Earth radius)
-	 */
-	def vectorLengthOf(distance: Distance) = distance / unitDistance
-	/**
-	 * @param length A vector system length value
-	 * @return A real life distance matching that value (assuming a certain Earth radius).
-	 */
-	def vectorLengthToDistance(length: Double) = unitDistance * length
-	
-	/**
 	 * @param latLong A latitude-longitude coordinate
 	 * @return A 2D vector representation of that coordinate along the circular plane
 	 */
 	def latLongToVector(latLong: LatLong) = {
 		// Distance is 0 at the north pole (-90 latitude),
-		// 1.0 at the equator (0.0 latitude) and
-		// 2.0 at the southern rim (90 latitude)
-		val distance = (latLong(South) - South.degrees(90)).degrees / 90.0
+		// 100 000 at the equator (0.0 latitude) and
+		// 200 000 at the southern rim (90 latitude)
+		val distance = (latLong(South) - South.degrees(90)).degrees * equatorVectorRadius / 90.0
 		
 		// Direction matches the longitude, because 0 angle (right) matches the longitude of 0 (Greenwich, England)
 		Vector2D.lenDir(distance, latLong.longitude)
 	}
-	
 	/**
 	 * @param vector A vector relative to the circle origin along the X-Y plane
 	 *               (where X axis runs from the north pole towards Greenwich, England)
 	 * @return A latitude-longitude coordinate that matches that vector position
 	 */
 	def vectorToLatLong(vector: Vector2D) = {
-		// 0.0 latitude is at the equator, which lies at length 1.0
-		val latitude = South.degrees((1 - vector.length) * 90.0)
+		// 0.0 latitude is at the equator, which lies at length 100 000
+		val latitude = South.degrees((1 - vector.length / equatorVectorRadius) * 90.0)
 		// Longitude matches the vector direction exactly
 		LatLong(latitude, vector.direction)
 	}
