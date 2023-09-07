@@ -7,11 +7,16 @@ import utopia.terra.model.world.SurfacePoint
 
 object SurfaceHaversineDistanceOps
 {
+	// ATTRIBUTES   ----------------------
+	
 	/**
-	 * @return An algorithm for calculating distances, assuming a perfectly spherical Earth..
-	 *         Assumes that travelling occurs at the mean sea level
+	 * An algorithm for calculating distances, assuming a perfectly spherical Earth..
+	 * Assumes that travelling occurs at the mean sea level
 	 */
-	def atMeanSeaLevel = new SurfaceHaversineDistanceOps(GlobeMath.meanRadius)
+	lazy val atMeanSeaLevel = new SurfaceHaversineDistanceOps(GlobeMath.meanRadius)
+	
+	
+	// OTHER    -------------------------
 	
 	/**
 	 * @param altitude Travel altitude above the mean sea level

@@ -37,6 +37,7 @@
   - Added `-(Axis2D)`
 - **Rotation**
   - Added `.degreesTowards(RotationDirection)` and `.radiansTowards(RotationDirection)`
+  - Added couple of methods related to arc lengths
 ### Other Changes
 - Added new generic traits for vector classes and other related classes
 - **Distance** now extends **SignedOrZero**

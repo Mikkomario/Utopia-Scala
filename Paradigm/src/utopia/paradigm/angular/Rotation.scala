@@ -41,8 +41,7 @@ object Rotation
     /**
      * Converts a radian amount to a rotation
      */
-    def ofRadians(rads: Double, direction: RotationDirection = Clockwise) =
-	{
+    def ofRadians(rads: Double, direction: RotationDirection = Clockwise) = {
 		if (rads >= 0)
 			Rotation(rads, direction)
 		else
@@ -67,16 +66,12 @@ object Rotation
 	  * @param direction The rotation direction used
 	  * @return A rotation from start to end with specified direction
 	  */
-	def between(start: Angle, end: Angle, direction: RotationDirection) =
-	{
+	def between(start: Angle, end: Angle, direction: RotationDirection) = {
 		if (start ~== end)
 			ofRadians(2 * math.Pi, direction)
-		else
-		{
-			val rotationAmount =
-			{
-				if (direction == Clockwise)
-				{
+		else {
+			val rotationAmount = {
+				if (direction == Clockwise) {
 					if (end > start) end.radians - start.radians else end.radians + math.Pi * 2 - start.radians
 				}
 				else
@@ -87,11 +82,22 @@ object Rotation
 	}
 	
 	/**
+	  * @param arcLength    Targeted arc length
+	  * @param circleRadius Radius of the applicable circle
+	  * @param direction    Direction of travel matching a positive arc length
+	  * @return Rotation that is required for producing the specified arc length over the specified travel radius
+	  */
+	def forArcLength(arcLength: Double, circleRadius: Double, direction: RotationDirection = Clockwise) = {
+		// Whole circle diameter is 2*Pi*r. Length of the arc is (a / 2*Pi) * r, where a is the targeted angle
+		// Therefore a = l/r, where l is the desired arc length
+		ofRadians(arcLength / circleRadius, direction)
+	}
+	
+	/**
 	  * @param rotations A number of rotations
 	  * @return An average between the rotations
 	  */
-	def average(rotations: Iterable[Rotation]) =
-	{
+	def average(rotations: Iterable[Rotation]) = {
 		if (rotations.isEmpty)
 			zero
 		else
@@ -252,4 +258,18 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return A copy of this rotation with the specified direction
 	  */
 	def towards(direction: RotationDirection) = copy(direction = direction)
+	
+	/**
+	  * Calculates the length of an arc produced by this rotation / angle over a specific circle
+	  * @param circleRadius Radius of the circle
+	  * @param positiveDirection Rotation direction that produces a positive arc length.
+	  *                          Default = direction of this rotation,
+	  *                          which means that by default every result is positive.
+	  * @return Length of the arc produced by this rotation.
+	  *         Negative if 'positiveDirection' was set to that opposite to this rotation's direction.
+	  */
+	// Arc length = L * a/2*Pi, where L is the total circle radius 2*Pi*r and a is the angle produced by this rotation
+	// Therefore arc length = r * a
+	def arcLengthOver(circleRadius: Double, positiveDirection: RotationDirection = direction) =
+		circleRadius * radiansTowards(positiveDirection)
 }

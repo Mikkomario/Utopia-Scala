@@ -3,6 +3,7 @@ package utopia.terra.model.world.sphere
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.terra.controller.coordinate.distance.{AerialHaversineDistanceOps, DistanceOps}
 import utopia.terra.controller.coordinate.world.{LatLongToWorldPoint, SphericalEarth, VectorToWorldPoint}
 import utopia.terra.model.angular.LatLong
@@ -98,7 +99,13 @@ object SpherePoint
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-trait SpherePoint extends AerialPoint[Vector3D, SphereSurfacePoint] with EqualsBy
+trait SpherePoint extends AerialPoint[Vector3D, SphereSurfacePoint]
+	with SpherePointOps[AerialPoint[HasDoubleDimensions, _], SpherePoint] with EqualsBy
 {
 	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
+	
+	override protected def at(latLong: LatLong): SpherePoint = SpherePoint(latLong, altitude)
+	
+	override def arcingDistanceFrom(other: AerialPoint[HasDoubleDimensions, _]): Distance =
+		AerialHaversineDistanceOps.distanceBetween(other, this)
 }

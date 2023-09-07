@@ -6,6 +6,8 @@ import utopia.flow.operator.{BinarySigned, Sign, Signed}
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, RotationDirection}
+import utopia.paradigm.measurement.Distance
+import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.{CompassRotation, EastWestRotation, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.CompassAxis
 
@@ -40,6 +42,11 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection]
 	 * @return A rotation instance based with this direction and the specified amount
 	 */
 	def degrees(rotation: Double) = Rotation.ofDegrees(rotation, rotationDirection)
+	/**
+	  * @param distance Travel distance
+	  * @return Specified length of travel towards this direction
+	  */
+	def apply(distance: Distance) = CompassTravel(axis, sign * distance)
 }
 
 object CompassDirection

@@ -6,6 +6,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToWorldPoint, VectorToWorldPoint}
+import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.world.AerialPoint
 
@@ -87,7 +88,11 @@ object CirclePoint
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-trait CirclePoint extends AerialPoint[Vector3D, CircleSurfacePoint] with EqualsBy
+trait CirclePoint
+	extends AerialPoint[Vector3D, CircleSurfacePoint] with CirclePointOps[Vector3D, CirclePoint] with EqualsBy
 {
 	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
+	
+	override protected def at(latLong: LatLong): CirclePoint = CirclePoint(CircleSurfacePoint(latLong), altitude)
+	override def +(travel: CompassTravel): CirclePoint = CirclePoint(toSurfacePoint + travel, altitude)
 }

@@ -3,6 +3,7 @@ package utopia.terra.model.world.sphere
 import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.terra.controller.coordinate.distance.{DistanceOps, SurfaceHaversineDistanceOps}
 import utopia.terra.controller.coordinate.world.{LatLongToSurfacePoint, SphericalEarth}
 import utopia.terra.model.angular.LatLong
@@ -51,7 +52,14 @@ object SphereSurfacePoint
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-trait SphereSurfacePoint extends SurfacePoint[Vector3D, SpherePoint] with EqualsBy
+trait SphereSurfacePoint
+	extends SurfacePoint[Vector3D, SpherePoint]
+		with SpherePointOps[SurfacePoint[HasDoubleDimensions, _], SphereSurfacePoint] with EqualsBy
 {
 	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
+	
+	override def arcingDistanceFrom(other: SurfacePoint[HasDoubleDimensions, _]): Distance =
+		SurfaceHaversineDistanceOps.atMeanSeaLevel.distanceBetween(other, this)
+	
+	override protected def at(latLong: LatLong): SphereSurfacePoint = SphereSurfacePoint(latLong)
 }

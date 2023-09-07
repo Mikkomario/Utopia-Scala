@@ -1,11 +1,14 @@
 package utopia.terra.model.world.circle
 
 import utopia.flow.operator.EqualsBy
+import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToSurfacePoint, VectorToSurfacePoint}
+import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.LatLong
+import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth}
 import utopia.terra.model.world.SurfacePoint
 
 object CircleSurfacePoint
@@ -59,9 +62,20 @@ object CircleSurfacePoint
  * @since 29.8.2023, v1.0
  */
 trait CircleSurfacePoint
-	extends SurfacePoint[Vector2D, CirclePoint] with EqualsBy
+	extends SurfacePoint[Vector2D, CirclePoint] with CirclePointOps[Vector2D, CircleSurfacePoint] with EqualsBy
 {
 	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
 	
 	override def withAltitude(altitude: Distance): CirclePoint = CirclePoint(this, altitude)
+	override protected def at(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
+	
+	override def +(travel: CompassTravel): CircleSurfacePoint = {
+		val travelVectorLength = worldView.vectorLengthOf(travel.distance)
+		travel.compassAxis match {
+			// Case: North-South travel => Linear travel path towards or away from the center
+			case NorthSouth => CircleSurfacePoint(vector + vector.withLength(travelVectorLength))
+			// Case: East-West travel => Arcing travel staying at the same latitude line
+			case EastWest => this + EastWest(Rotation.forArcLength(travelVectorLength, vector.length))
+		}
+	}
 }
