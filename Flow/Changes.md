@@ -69,10 +69,13 @@
 - **Value**, **Constant** and **Model** now extend **ApproxEquals**
 - Added **RoundingFunction** utility trait
 ### New Methods
-- **Changing** (object)
-  - Added `.completionOf(Future)`
-  - Added `.addListenerAndPossiblySimulateEvent(...)`, a variant of `.addListenerAndSimulateEvent(...)`
-  - Added new map and merge variants (e.g. `.strongMap(...)` and `.lightMergeWith(...)`)
+- **Changing**
+  - Object
+    - Added `.completionOf(Future)`
+  - Instance
+    - Added `.nextChangeFuture: Future[ChangeEvent]`
+    - Added `.addListenerAndPossiblySimulateEvent(...)`, a variant of `.addListenerAndSimulateEvent(...)`
+    - Added new map and merge variants (e.g. `.strongMap(...)` and `.lightMergeWith(...)`)
 - **Either** (**CollectionExtensions**)
   - Added `.eitherAndSide` for symmetric Eithers
   - Added `.mapSide(End)(...)` for symmetric Eithers

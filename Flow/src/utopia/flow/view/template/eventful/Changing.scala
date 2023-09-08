@@ -164,6 +164,22 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def hasNoListeners = !hasListeners
 	
+	/**
+	  * @return A future that contains the next change event that occurs in this changing item.
+	  *         Please note that the returned future might never resolve.
+	  */
+	def nextChangeFuture = {
+		// Case: There is a possibility that this pointer will mutate => Starts waiting for the next change event
+		if (isChanging) {
+			val promise = Promise[ChangeEvent[A]]()
+			onNextChange(promise.success)
+			promise.future
+		}
+		// Case: It's impossible for this pointer to change anymore => Returns a future that never resolves
+		else
+			Future.never
+	}
+	
 	
 	// IMPLEMENTED  -----------------
 	

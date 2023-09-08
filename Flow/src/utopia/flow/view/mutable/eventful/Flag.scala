@@ -41,6 +41,7 @@ object Flag
 		
 		override lazy val view = new FlagView(this)
 		override lazy val future = super.future
+		override lazy val nextChangeFuture = super.nextChangeFuture
 		
 		
 		// IMPLEMENTED  ---------------------
