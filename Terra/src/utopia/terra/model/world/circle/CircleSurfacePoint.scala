@@ -21,6 +21,11 @@ object CircleSurfacePoint
 	 */
 	implicit val distanceOps: DistanceOps[CircleSurfacePoint] =
 		new VectorDistanceOps[Vector2D](CircleOfEarth.unitDistance)
+	
+	/**
+	  * The (geometric) north pole location
+	  */
+	val northPole = apply(Vector2D.zero)
 		
 	
 	// IMPLEMENTED  ---------------------

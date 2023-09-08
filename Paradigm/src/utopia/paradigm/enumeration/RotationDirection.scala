@@ -47,7 +47,6 @@ object RotationDirection
       * @return The positive rotation direction
       */
     def positive = Clockwise
-    
     /**
       * @return The negative rotation direction
       */

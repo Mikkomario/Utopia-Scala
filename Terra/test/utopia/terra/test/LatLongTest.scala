@@ -4,14 +4,14 @@ import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.Sign.Negative
 import utopia.paradigm.angular.Angle
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.enumeration.CompassDirection.{East, North, South}
+import utopia.terra.model.enumeration.CompassDirection.{East, North, South, West}
 
 /**
   * Tests conversion from double numbers to latitude longitude pairs
   * @author Mikko Hilpinen
   * @since 5.9.2023, v1.0
   */
-object LatLongConversionTest extends App
+object LatLongTest extends App
 {
 	val ll0 = LatLong.fromDegrees(0.0, 0.0)
 	val ll1 = LatLong.fromDegrees(60.8, 15.3)
@@ -20,6 +20,7 @@ object LatLongConversionTest extends App
 	val ll4 = LatLong.fromDegrees(60.8, -83.2)
 	
 	assert(ll0.latitude.isZero, ll0.latitude)
+	assert(ll1.latitude.sign.isNegative)
 	assert(ll1.latitude == North.degrees(60.8))
 	assert(ll2.latitude == South.degrees(30))
 	
@@ -37,6 +38,15 @@ object LatLongConversionTest extends App
 	assert(ll1.longitudeDegrees ~== 15.3)
 	assert(ll3.longitudeDegrees ~== 120.3)
 	assert(ll4.longitudeDegrees ~== -83.2)
+	
+	// Tests directions
+	assert(ll1.northSouth == North)
+	assert(ll1.eastWest == East)
+	assert(ll2.northSouth == South)
+	assert(ll2.eastWest == East)
+	assert(ll3.northSouth == North)
+	assert(ll3.eastWest == East)
+	assert(ll4.eastWest == West)
 	
 	println("Done!")
 }

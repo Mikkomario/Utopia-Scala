@@ -5,7 +5,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.enumeration.CompassDirection.South
+import utopia.terra.model.enumeration.CompassDirection.{North, South}
 import utopia.terra.model.world.circle.{CirclePoint, CircleSurfacePoint}
 
 /**
@@ -53,8 +53,7 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 		// Distance is 0 at the north pole (-90 latitude),
 		// 100 000 at the equator (0.0 latitude) and
 		// 200 000 at the southern rim (90 latitude)
-		val distance = (latLong(South) - South.degrees(90)).degrees * equatorVectorRadius / 90.0
-		
+		val distance = (latLong(South) - North.radians(math.Pi)).clockwiseRadians * equatorVectorRadius * 2.0 / math.Pi
 		// Direction matches the longitude, because 0 angle (right) matches the longitude of 0 (Greenwich, England)
 		Vector2D.lenDir(distance, latLong.longitude)
 	}

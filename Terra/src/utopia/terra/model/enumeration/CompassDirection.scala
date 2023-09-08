@@ -43,6 +43,11 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection]
 	 */
 	def degrees(rotation: Double) = Rotation.ofDegrees(rotation, rotationDirection)
 	/**
+	  * @param rotation Amount of rotation to apply towards this direction in radians
+	  * @return A rotation instance with this direction and the specified amount
+	  */
+	def radians(rotation: Double) = Rotation.ofRadians(rotation, rotationDirection)
+	/**
 	  * @param distance Travel distance
 	  * @return Specified length of travel towards this direction
 	  */
@@ -174,7 +179,6 @@ object CompassDirection
 	case object North extends NorthSouth
 	{
 		override def sign: Sign = Negative
-		
 		override def unary_- : NorthSouth = South
 	}
 	/**
@@ -183,7 +187,6 @@ object CompassDirection
 	case object South extends NorthSouth
 	{
 		override def sign: Sign = Positive
-		
 		override def unary_- : NorthSouth = North
 	}
 	
