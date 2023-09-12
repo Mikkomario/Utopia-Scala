@@ -20,7 +20,6 @@ object EqualsExtensions
 		  * @return Whether these two items may be considered equal under the specified function
 		  */
 		def ~==[B >: A](other: B)(implicit equals: EqualsFunction[B]): Boolean = equals(a, other)
-		
 		/**
 		  * Tests whether these two items don't compare with each other using a custom equals function
 		  * @param other  Another item
@@ -50,5 +49,6 @@ object EqualsExtensions
 			case Some(a) => other.exists { b => a ~== b }
 			case None => other.isEmpty
 		}
+		def !~==[B >: A](other: Option[B])(implicit eq: EqualsFunction[B]) = !(this ~== other)
 	}
 }

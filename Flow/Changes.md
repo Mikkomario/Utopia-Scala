@@ -47,6 +47,7 @@
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
 - **Pair**`.equalsUsing(EqualsFunction)` didn't work previously
+- Fixed a logic error in **PairingIterator** `:+`
 ### New Features
 - Added new **SignOrZero** enumeration with three values: **Positive**, **Negative** and **Neutral**
   - The **Positive** and **Negative** options are still available as a binary pair under trait **Sign**
@@ -89,6 +90,7 @@
   - Added `.ends` and `.endsOption`
   - Added `.mapTo(...)` for `.toMap` -conversion
 - **IterableOnce** (**CollectionExtensions**)
+  - Added `.pairedBetween(...)`
   - Added `.split` -property for collections that consist of **Tuples**
 - **IterableSpan** (object)
   - Added new constructors
@@ -96,6 +98,8 @@
   - Added `+` and `-` support for **Durations** (including `Duration.Inf`)
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
+- **PairedIterator** (object)
+  - Added new constructors
 - **Pointer**
   - Added `.mutate(...)`, which behaves exactly like `.pop(...)` in **Volatile**
 - **PostponingProcess** (object)
@@ -103,6 +107,7 @@
 - **Seq** (**CollectionExtensions**)
   - Added `.reverseSorted`, `.reverseSortBy(...)` and `.random`
   - Added `.mapEnd(End)(...)`, `.mapFirst(...)` and `.mapLast(...)`
+  - Added `.pairedFrom(...)` and `.pairedBetween(Pair)`
 - **Span** (object)
   - Added `.numeric(...)`
 - **SpanLike**
@@ -119,6 +124,7 @@
     - Added `.toCompletedAttempt: Future[A]`
   - **CollectionExtensions**
     - Added `.logToOption` and `.logToOptionWithMessage(String)`
+    - Added `.flatMapCatching(...)`, a flatMap that supports **TryCatch**
 - **Year** (**TimeExtensions**)
   - Added `.dates`
 ### Other
@@ -129,6 +135,7 @@
 - **Tree**`.map(...)` and `.flatMap(...)` now use `EqualsFunction.default` by default
 - Added a low-priority conversion from **LocalTime** values to **LocalDateTime** values (assigns the current date as the date)
 - `Sign.of(...)` now accepts a wider range of numeric classes
+- `PollableOnce.apply(...)` now accepts the parameter as call-by-name
 - **Console** now accepts its prompt as a call-by-name parameter
 
 ## v2.1 - 01.05.2023

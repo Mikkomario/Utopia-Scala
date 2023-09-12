@@ -12,7 +12,7 @@ object PollableOnce
 	  * @tparam A Type of wrapped value
 	  * @return A container which returns the value exactly once
 	  */
-	def apply[A](value: A) = new PollableOnce[A](value)
+	def apply[A](value: => A) = new PollableOnce[A](value)
 	
 	
 	// NESTED   --------------------------

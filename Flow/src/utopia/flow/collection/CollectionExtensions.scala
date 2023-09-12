@@ -1327,6 +1327,33 @@ object CollectionExtensions
 			seq.slice(range.start, if (range.isInclusive) range.end + 1 else range.end)
 		
 		/**
+		  * Forms pairs based on the contents of this collection
+		  * @param start The first element of the first pair
+		  * @tparam B Type of the items returned
+		  * @return A collection that contains the consecutive items of this collection as pairs.
+		  *         E.g. If this collection contains elements A, B and C and 'start' is defined as O,
+		  *         the resulting collection would be: [OA, AB, BC].
+		  */
+		def pairedFrom[B >: A](start: B) = seq.headOption match {
+			case Some(first) => Pair(start, first) +: paired
+			case None => Vector.empty
+		}
+		/**
+		  * Forms pairs based on the contents of this collection
+		  * @param ends The first element of the first pair and the last element of the last pair to return
+		  * @tparam B Type of the elements in the resulting collection
+		  * @return A collection that contains consecutive items of this collections as pairs.
+		  *         E.g. If this collection contains the elements A, B and C and 'ends' are defined as S and E,
+		  *         the resulting collection would be: [SA, AB, BC, CE].
+		  */
+		def pairedBetween[B >: A](ends: Pair[B]) = {
+			if (seq.isEmpty)
+				Vector(ends)
+			else
+				Pair(ends.first, seq.head) +: paired :+ Pair(seq.last, ends.second)
+		}
+		
+		/**
 		  * @param another Another sequence
 		  * @param equals  Equality function
 		  * @tparam B Type of another sequence's content
@@ -1563,14 +1590,7 @@ object CollectionExtensions
 		  *         Consumes the first item within this iterator.
 		  *         This iterator shouldn't be used after calling this function.
 		  */
-		def paired = {
-			if (i.hasNext) {
-				val start = i.next()
-				new PairingIterator[A](start, i)
-			}
-			else
-				Iterator.empty
-		}
+		def paired = PairingIterator(i)
 		
 		/**
 		  * @param item An item to prepend (call-by-name)
@@ -1696,8 +1716,7 @@ object CollectionExtensions
 		  *         iterator if the specified condition was never met.
 		  */
 		@deprecated("Please use collectTo(...) instead. Take implies returning another iterator", "v1.12")
-		def takeNextTo(stopCondition: A => Boolean) =
-		{
+		def takeNextTo(stopCondition: A => Boolean) = {
 			val builder = new VectorBuilder[A]()
 			var found = false
 			while (i.hasNext && !found) {
@@ -1739,8 +1758,7 @@ object CollectionExtensions
 		  * @tparam B Type of map result when one is found
 		  * @return The first map result found. None if no map result could be acquired.
 		  */
-		def findMapNext[B](map: A => Option[B]) =
-		{
+		def findMapNext[B](map: A => Option[B]) = {
 			var current: Option[B] = None
 			while (current.isEmpty && i.hasNext) {
 				current = map(i.next())
@@ -1755,8 +1773,7 @@ object CollectionExtensions
 		  * @param maxGroupSize Maximum number of items for a function call
 		  * @param f            A function that is called for each group of items
 		  */
-		def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) =
-		{
+		def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) = {
 			while (i.hasNext) {
 				f(collectNext(maxGroupSize))
 			}
@@ -1769,8 +1786,7 @@ object CollectionExtensions
 		  * @tparam B Type of map result
 		  * @return All map results in order
 		  */
-		def groupMap[B](groupSize: Int)(map: Vector[A] => B) =
-		{
+		def groupMap[B](groupSize: Int)(map: Vector[A] => B) = {
 			val resultBuilder = new VectorBuilder[B]()
 			foreachGroup(groupSize) { resultBuilder += map(_) }
 			resultBuilder.result()
@@ -1825,6 +1841,25 @@ object CollectionExtensions
 		  *         return [XA, AB, BC]
 		  */
 		def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
+		/**
+		  * Creates an iterator that returns the consecutive items in this collection as pairs.
+		  * @param start  The first element of the first returned Pair
+		  * @param end    The second element of last returned Pair
+		  * @tparam B Type of the returned items
+		  * @return A new pairing iterator based on the elements of this collection.
+		  *         E.g. If this collection contains elements A, B and C, 'start' is S and 'end' is E,
+		  *         the resulting iterator would return SA, AB, BC and CE.
+		  */
+		def pairedBetween[B >: A](start: => B, end: => B) = PairingIterator.between(start, i, end)
+		/**
+		  * Creates an iterator that returns the consecutive items in this collection as pairs.
+		  * @param ends The first element of the first pair and the second element of the last pair
+		  * @tparam B Type of the returned items
+		  * @return A new pairing iterator based on the elements of this collection.
+		  *         E.g. If this collection contains elements A, B and C, and 'ends' is SE,
+		  *         the resulting iterator would return SA, AB, BC and CE.
+		  */
+		def pairedBetween[B >: A](ends: Pair[B]): Iterator[Pair[B]] = pairedBetween(ends.first, ends.second)
 		
 		/**
 		  * Zips this iterator with another, possibly padding one of them.
@@ -1967,6 +2002,19 @@ object CollectionExtensions
 		def getOrElseLog[B >: A](f: => B)(implicit log: Logger): B = getOrMap { error =>
 			log(error)
 			f
+		}
+		
+		/**
+		  * Maps the value of this Try, if successful.
+		  * @param f A mapping function that accepts a successfully acquired value and returns a
+		  *          TryCatch instance.
+		  * @tparam B Type of the success value in the map function result
+		  * @return Success containing the mapping result and the possible non-critical failures,
+		  *         or a failure.
+		  */
+		def flatMapCatching[B](f: A => TryCatch[B]) = t match {
+			case Success(v) => f(v)
+			case Failure(e) => TryCatch.Failure(e)
 		}
 	}
 	
