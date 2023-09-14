@@ -457,6 +457,22 @@ object CollectionExtensions
 		def reduceLeftIterator(f: (A, A) => A) = FoldingIterator.reduce(i.iterator)(f)
 	}
 	
+	implicit class RichIterableOnceTuples[A, B](val i: IterableOnce[(A, B)]) extends AnyVal
+	{
+		/**
+		 * @return Contents of this collection split into two groups (as vectors)
+		 */
+		def split = {
+			val lBuilder = new VectorBuilder[A]()
+			val rBuilder = new VectorBuilder[B]()
+			i.iterator.foreach { case (a, b) =>
+				lBuilder += a
+				rBuilder += b
+			}
+			lBuilder.result() -> rBuilder.result()
+		}
+	}
+	
 	implicit class TriesIterableOnce[A](val tries: IterableOnce[Try[A]]) extends AnyVal
 	{
 		/**
@@ -479,7 +495,6 @@ object CollectionExtensions
 				case None => Success(successesBuilder.result())
 			}
 		}
-		
 		/**
 		  * @return Failure if all attempts in this collection failed, containing the first encountered error.
 		  *         If one or more attempts succeeded, or if no attempts were made, returns a success containing
@@ -501,10 +516,23 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * Divides this collection to two separate collections, one for failures and one for successes
+		 * @return Failures + successes
+		 */
+		def divided = {
+			val successesBuilder = new VectorBuilder[A]
+			val failuresBuilder = new VectorBuilder[Throwable]
+			tries.iterator.foreach {
+				case Success(a) => successesBuilder += a
+				case Failure(error) => failuresBuilder += error
+			}
+			failuresBuilder.result() -> successesBuilder.result()
+		}
+		
+		/**
 		  * @return An iterator that only includes failed attempts
 		  */
 		def failuresIterator = tries.iterator.flatMap { _.failure }
-		
 		/**
 		  * @return The first failure that was encountered. None if no failures were encountered.
 		  */
@@ -1901,6 +1929,29 @@ object CollectionExtensions
 		def withEvents[B >: A](initialValue: B) = new EventfulIterator[B](initialValue, i)
 	}
 	
+	implicit class TryIterator[A](val i: Iterator[Try[A]]) extends AnyVal
+	{
+		/**
+		 * Iterates until the first success is encountered.
+		 * If this iterator doesn't contain a single success, iterates over all items.
+		 * @return The first success that was encountered,
+		 *         including any failures that were encountered before that success.
+		 *         If no successes were encountered, returns the last encountered failure.
+		 *         Also fails if this iterator is empty
+		 */
+		def trySucceedOnce: TryCatch[A] = {
+			val results = i.iterator.collectTo { _.isSuccess }
+			results.lastOption match {
+				case Some(lastResult) =>
+					lastResult match {
+						case Success(a) => TryCatch.Success(a, results.flatMap { _.failure })
+						case Failure(error) => TryCatch.Failure(error)
+					}
+				case None => TryCatch.Failure(new IllegalStateException("trySucceedOnce called for an empty iterator"))
+			}
+		}
+	}
+	
 	
 	// OTHER    ------------------------------------------
 	
@@ -1946,6 +1997,14 @@ object CollectionExtensions
 		  * The failure (throwable) value of this try. None if this try was a success.
 		  */
 		def failure = t.failed.toOption
+		
+		/**
+		 * @return A TryCatch instance based on this Try
+		 */
+		def toTryCatch: TryCatch[A] = t match {
+			case Success(a) => TryCatch.Success(a)
+			case Failure(e) => TryCatch.Failure(e)
+		}
 		
 		/**
 		 * Logs the captured failure, if applicable
@@ -2270,39 +2329,6 @@ object CollectionExtensions
 			i.iterator.foreach {
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
-			}
-			lBuilder.result() -> rBuilder.result()
-		}
-	}
-	
-	implicit class RichIterableOnceTries[A](val i: IterableOnce[Try[A]]) extends AnyVal
-	{
-		/**
-		  * Divides this collection to two separate collections, one for failures and one for successes
-		  * @return Failures + successes
-		  */
-		def divided = {
-			val successesBuilder = new VectorBuilder[A]
-			val failuresBuilder = new VectorBuilder[Throwable]
-			i.iterator.foreach {
-				case Success(a) => successesBuilder += a
-				case Failure(error) => failuresBuilder += error
-			}
-			failuresBuilder.result() -> successesBuilder.result()
-		}
-	}
-	
-	implicit class RichIterableOnceTuples[A, B](val i: IterableOnce[(A, B)]) extends AnyVal
-	{
-		/**
-		  * @return Contents of this collection split into two groups (as vectors)
-		  */
-		def split = {
-			val lBuilder = new VectorBuilder[A]()
-			val rBuilder = new VectorBuilder[B]()
-			i.iterator.foreach { case (a, b) =>
-				lBuilder += a
-				rBuilder += b
 			}
 			lBuilder.result() -> rBuilder.result()
 		}

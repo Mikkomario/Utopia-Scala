@@ -28,6 +28,7 @@
   now return a **Pair** instead of a **Tuple** 
 - Renamed **UncertainBoolean.Uncertain** to **UncertainBoolean** and 
   **UncertainBoolean.Certain** to **UncertainBoolean.CertainBoolean**
+- Renamed **Value**`.trySting` to `.tryString` (typo)
 - **ListenableResettableLazy** is now a trait and not a class (i.e. the `new` keyword no longer works in this context)
 - The default implementation of **Changing**`.map(...)` now uses an **OptimizedMirror**. 
   - It may be appropriate to review the uses of this method and to see whether 
@@ -65,6 +66,7 @@
 - Added **LockablePointer** class
 - Added **ListenableMutableLazy** class and **ResetListenable** trait
 - Added new **TryCatch** utility class for handling situations that included non-critical failures
+- Added **JsonSettingsAccess** utility class for processing json settings files
 - Added new **Steppable** trait for items that provide step-based iteration
 - Added sorting support to immutable **Models**
 - **Value**, **Constant** and **Model** now extend **ApproxEquals**
@@ -94,6 +96,8 @@
   - Added `.split` -property for collections that consist of **Tuples**
 - **IterableSpan** (object)
   - Added new constructors
+- **Iterator**
+  - Added `.trySucceedOnce` for **Iterators** that contain **Tries**
 - **Instant** (**TimeExtensions**)
   - Added `+` and `-` support for **Durations** (including `Duration.Inf`)
 - **MapAccess** (object)
@@ -123,6 +127,7 @@
   - **AsyncExtensions**
     - Added `.toCompletedAttempt: Future[A]`
   - **CollectionExtensions**
+    - Added `.toTryCatch`
     - Added `.logToOption` and `.logToOptionWithMessage(String)`
     - Added `.flatMapCatching(...)`, a flatMap that supports **TryCatch**
 - **Year** (**TimeExtensions**)

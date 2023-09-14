@@ -263,7 +263,7 @@ case class Value(content: Option[Any], dataType: DataType)
     def getPair = pairOr()
     def getModel = modelOr()
     
-    def trySting = getTry(string)("String")
+    def tryString = getTry(string)("String")
     def tryInt = getTry(int)("Int")
     def tryDouble = getTry(double)("Double")
     def tryFloat = getTry(float)("Float")

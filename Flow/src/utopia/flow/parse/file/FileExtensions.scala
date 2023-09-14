@@ -80,7 +80,8 @@ object FileExtensions
 			case None => ""
 		}
 		/**
-		  * @return The name and the extension of this file
+		  * @return The name and the extension of this file.
+		 *         In case of directories, the extension is an empty string.
 		  */
 		def fileNameAndType = fileName.splitAtLast(".")
 		/**

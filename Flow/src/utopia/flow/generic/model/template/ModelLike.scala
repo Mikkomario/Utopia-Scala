@@ -2,17 +2,28 @@ package utopia.flow.generic.model.template
 
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ModelLike.nestingRegex
 import utopia.flow.parse.json.JsonConvertible
+import utopia.flow.parse.string.Regex
 
 import scala.collection.mutable
 
 object ModelLike
 {
+	// TYPES    ---------------------
+	
 	/**
 	  * The most generic model type
 	  */
 	type AnyModel = ModelLike[Property]
+	
+	
+	// ATTRIBUTES   -----------------
+	
+	private val nestingRegex = Regex.escape('/')
 }
 
 /**
@@ -202,6 +213,28 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  */
 	def apply(attName: String, secondaryAttName: String, moreAttNames: String*): Value =
 		apply(Vector(attName, secondaryAttName) ++ moreAttNames)
+	
+	/**
+	 * @param propName Name of the targeted property
+	 * @return Value of the targeted property, but only if such a property exists and contains a non-empty value.
+	 *         None otherwise.
+	 */
+	def nonEmpty(propName: String) = existing(propName).flatMap { _.value.notEmpty }
+	/**
+	 * @param propNames Names of the targeted properties
+	 * @return Value of the first targeted property that contains a non-empty value.
+	 *         None if no such property was found.
+	 */
+	def nonEmpty(propNames: IterableOnce[String]): Option[Value] = propNames.findMap(nonEmpty)
+	/**
+	 * @param propName Name of the primary targeted property
+	 * @param altName Name of the secondary targeted property
+	 * @param moreNames Names of alternative properties
+	 * @return Value of the first targeted property that contains a non-empty value.
+	 *              None if no such property was found.
+	 */
+	def nonEmpty(propName: String, altName: String, moreNames: String*): Option[Value] =
+		nonEmpty(Pair(propName, altName) ++ moreNames)
 	
 	/**
 	  * Finds an existing property from this model.

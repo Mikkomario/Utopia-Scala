@@ -2,8 +2,8 @@ package utopia.annex.model.response
 
 import utopia.access.http.StatusGroup.ServerError
 import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.http.response.BufferedResponse
+import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 
@@ -38,7 +38,6 @@ sealed trait RequestResult
 	  *         if response body was empty or if parsing failed.
 	  */
 	def singleParsedFromSuccess[A](parser: FromModelFactory[A]): Try[A]
-	
 	/**
 	  * If this is a successful response, attempts to parse its contents into a vector of entities
 	  * @param parser Parser used to interpret response body elements

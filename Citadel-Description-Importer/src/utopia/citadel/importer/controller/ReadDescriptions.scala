@@ -139,14 +139,14 @@ object ReadDescriptions
 	{
 		value.model match {
 			// Case: Target is a model => searches for "table" and "column" properties
-			case Some(model) => model("table").trySting
-				.flatMap { tableName => model("column").trySting.map { c =>
+			case Some(model) => model("table").tryString
+				.flatMap { tableName => model("column").tryString.map { c =>
 					val table = DescriptionLinkTable(Tables(tableName), c)
 					LinkedDescriptionsAccess(table)
 				} }
 			// Otherwise expects the target to be one of specified values
 			case None =>
-				value.trySting.map { _.toLowerCase }.flatMap {
+				value.tryString.map { _.toLowerCase }.flatMap {
 					case "description_role" => Success(DbDescriptionRoleDescriptions)
 					case "language" => Success(DbLanguageDescriptions)
 					case "language_familiarity" => Success(DbLanguageFamiliarityDescriptions)
