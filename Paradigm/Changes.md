@@ -44,6 +44,7 @@
 - Value conversion from **Angle** to **Rotation** now uses `.toShortestRotation` instead of `.toRotation`. 
   As a consequence, the resulting rotation amounts may be smaller.
 - Rewrote `Color.fromInt(Int)` implementation
+- Added new `-` override for **AccelerationLike**
 
 ## v1.3 - 01.05.2023
 This update introduces new color classes (which are originally from **Reflection**), as well as some 

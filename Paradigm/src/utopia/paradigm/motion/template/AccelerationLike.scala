@@ -80,4 +80,9 @@ trait AccelerationLike[X <: NumericVectorLike[Double, X, X], V <: VelocityLike[X
 	  * @return A subtraction of these accelerations. Has the same or opposite direction as this acceleration.
 	  */
 	def -(other: LinearAcceleration) = this + (-other)
+	/**
+	  * @param other Acceleration to subtract
+	  * @return Difference between these accelerations
+	  */
+	def -(other: Change[V, _]) = buildCopy(amount - other(duration))
 }

@@ -33,8 +33,7 @@ case class CubicBezier[P <: Combinable[P, P] with LinearScalable[P] with HasLeng
 {
 	// IMPLEMENTED	----------------------
 	
-	override lazy val length =
-	{
+	override lazy val length = {
 		// Approximates length using average of chord and container net lengths
 		// Source: https://stackoverflow.com/questions/29438398/cheap-way-of-calculating-cubic-bezier-length
 		val chord = (end - start).length
@@ -43,8 +42,7 @@ case class CubicBezier[P <: Combinable[P, P] with LinearScalable[P] with HasLeng
 		(containerNet + chord) / 2
 	}
 	
-	override def apply(t: Double) =
-	{
+	override def apply(t: Double) = {
 		// Mathematic function from: https://en.wikipedia.org/wiki/B%C3%A9zier_curve
 		// B(t) = (1-t)^3 P0 + 3(1-t)^2 tP1 + 3(1-t)t^2 P2 + t^3 P3
 		val p0Term = start * Math.pow(1 - t, 3)
