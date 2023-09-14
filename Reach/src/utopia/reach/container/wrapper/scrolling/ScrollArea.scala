@@ -22,6 +22,8 @@ import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponent
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonContextualWrapperContainerFactory, WrapperContainerFactory}
 
+import scala.language.implicitConversions
+
 object ScrollArea extends Cff[ScrollAreaFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ScrollAreaFactory(hierarchy)
