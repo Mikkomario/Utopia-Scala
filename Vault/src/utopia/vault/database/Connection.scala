@@ -40,6 +40,15 @@ object Connection
     private var driver: Option[Any] = None
     
     
+    // COMPUTED -----------------------------
+    
+    /**
+     * @return Whether debugging printing is currently enabled
+     */
+    def debugPrintsEnabled = settings.debugPrintsEnabled
+    def debugPrintsEnabled_=(enable: Boolean) = modifySettings(_.copy(debugPrintsEnabled = enable))
+    
+    
     // OTHER METHODS    ---------------------
     
     /**

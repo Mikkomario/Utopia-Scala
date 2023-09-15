@@ -128,7 +128,7 @@ object ColumnLengthRule
 								connectionPool { implicit connection =>
 									connection.dbName = databaseName
 									connection.execute(
-										s"ALTER TABLE ${ column.tableName } MODIFY ${ column.columnName } ${
+										s"ALTER TABLE `${ column.tableName }` MODIFY `${ column.columnName }` ${
 											largerLimit.sqlType
 										}$nullStr$incrementStr$defaultStr")
 								}
@@ -147,7 +147,7 @@ object ColumnLengthRule
 		}
 	}
 	
-	// Combines two lenght rules, uses the second one if the first one throws
+	// Combines two length rules, uses the second one if the first one throws
 	private class CombiningRule(primary: ColumnLengthRule, secondary: ColumnLengthRule) extends ColumnLengthRule
 	{
 		override def toString = s"$primary or $secondary"
