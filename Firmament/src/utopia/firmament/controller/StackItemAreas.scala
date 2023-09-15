@@ -43,7 +43,7 @@ class StackItemAreas[C <: HasBounds](stack: StackLike[_], componentsView: View[S
 		// Caches components so that indexes won't change in between
 		val c = componentsView.value
 		val direction = stack.direction
-		c.optionIndexOf(item).map { i =>
+		c.findIndexOf(item).map { i =>
 			if (c.size == 1)
 				Bounds(Point.origin, stack.size)
 			else {
@@ -65,7 +65,7 @@ class StackItemAreas[C <: HasBounds](stack: StackLike[_], componentsView: View[S
 		val p = relativePoint(direction)
 		val c = componentsView.value
 		// Finds the first item past the relative point
-		c.indexWhereOption { _.position(direction) > p }.map { nextIndex =>
+		c.findIndexWhere { _.position(direction) > p }.map { nextIndex =>
 			// Selects the next item if a) it's the first item or b) it's closer to point than the previous item
 			if (nextIndex == 0 || c(nextIndex).position(direction) - p < p - c(nextIndex - 1).maxAlong(direction))
 				c(nextIndex)

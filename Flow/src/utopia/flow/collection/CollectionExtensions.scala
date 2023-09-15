@@ -1136,9 +1136,9 @@ object CollectionExtensions
 		  */
 		def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
 		{
-			seq(coll).indexWhereOption(find) match {
-				case Some(index) => mapIndex(index)(map)
-				case None => coll
+			seq(coll).indexWhere(find) match {
+				case index if index >= 0 => mapIndex(index)(map)
+				case _ => coll
 			}
 		}
 		
@@ -1153,9 +1153,9 @@ object CollectionExtensions
 		def findAndPop[B >: seq.A](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
 		{
 			val ops = seq(coll)
-			ops.indexWhereOption(f) match {
-				case Some(index) => Some(ops(index)) -> _withoutIndex(ops.iterator, index)
-				case None => None -> coll
+			ops.indexWhere(f) match {
+				case index if index >= 0 => Some(ops(index)) -> _withoutIndex(ops.iterator, index)
+				case _ => None -> coll
 			}
 		}
 		
@@ -1266,41 +1266,6 @@ object CollectionExtensions
 		def getOrElse(index: Int, default: => A) = if (seq.isDefinedAt(index)) seq(index) else default
 		
 		/**
-		  * Finds the index of the first item that matches the predicate
-		  * @param find a function for finding the correct item
-		  * @return The index of the item in this seq or None if no such item was found
-		  */
-		def indexWhereOption(find: A => Boolean) = {
-			val result = seq.indexWhere(find)
-			if (result < 0)
-				None
-			else
-				Some(result)
-		}
-		/**
-		  * Finds the index of the last item that matches the predicate
-		  * @param find a function for finding the correct item
-		  * @return The index of the item in this seq or None if no such item was found
-		  */
-		def lastIndexWhereOption(find: A => Boolean) = {
-			val result = seq.lastIndexWhere(find)
-			if (result < 0) None else Some(result)
-		}
-		/**
-		  * Finds the index of the specified item
-		  * @param item Searched item
-		  * @tparam B Item type
-		  * @return The index of specified item or none if no such index was found
-		  */
-		def optionIndexOf[B >: A](item: B) = {
-			val result = seq.indexOf(item)
-			if (result >= 0)
-				Some(result)
-			else
-				None
-		}
-		
-		/**
 		  * Sorts this collection using mapping results.
 		  * Reverses the applied implicit ordering.
 		  * @param f A mapping function
@@ -1332,9 +1297,9 @@ object CollectionExtensions
 		  * @param f A function that tests whether items should be dropped
 		  * @return A copy of this collection with rightmost items (that satisfy provided predicate) removed
 		  */
-		def dropRightWhile(f: A => Boolean) = lastIndexWhereOption { !f(_) } match {
-			case Some(index) => seq.take(index + 1)
-			case None => seq.take(0)
+		def dropRightWhile(f: A => Boolean) = seq.lastIndexWhere { !f(_) } match {
+			case index if index >= 0 => seq.take(index + 1)
+			case _ => seq.take(0)
 		}
 		
 		/**
@@ -1455,6 +1420,55 @@ object CollectionExtensions
 		  * @return The index of the element at that end of this collection. Out of bounds if this collection is empty.
 		  */
 		def indexOf(end: End) = end.indexFrom(s)
+		/**
+		 * Finds the index of the specified item
+		 * @param item Searched item
+		 * @tparam B Item type
+		 * @return The index of specified item or none if no such index was found
+		 */
+		def findIndexOf[B >: A](item: B) = {
+			val result = s.indexOf(item)
+			if (result >= 0)
+				Some(result)
+			else
+				None
+		}
+		/**
+		 * Finds the index of the specified item
+		 * @param item Searched item
+		 * @tparam B Item type
+		 * @return The index of specified item or none if no such index was found
+		 */
+		@deprecated("Renamed to .findIndexOf(...)", "v2.2")
+		def optionIndexOf[B >: A](item: B) = findIndexOf(item)
+		
+		/**
+		 * @param f A function that returns true for the targeted item
+		 * @return Index for which the specified function returned true.
+		 *         None if no the function didn't return true.
+		 */
+		def findIndexWhere(f: A => Boolean) =
+			s.iterator.zipWithIndex.find { case (a, _) => f(a) }.map { _._2 }
+		/**
+		 * @param f A function that returns true for the targeted item
+		 * @return Index of the last / rightmost item that satisfies the specified condition.
+		 *         None if no such item was found.
+		 */
+		def findLastIndexWhere(f: A => Boolean) = Some(s.lastIndexWhere(f)).filter { _ >= 0 }
+		/**
+		 * Finds the index of the first item that matches the predicate
+		 * @param find a function for finding the correct item
+		 * @return The index of the item in this seq or None if no such item was found
+		 */
+		@deprecated("Renamed to .findIndexWhere(...)", "v2.2")
+		def indexWhereOption(find: A => Boolean) = findIndexWhere(find)
+		/**
+		 * Finds the index of the last item that matches the predicate
+		 * @param find a function for finding the correct item
+		 * @return The index of the item in this seq or None if no such item was found
+		 */
+		@deprecated("Renamed to .findLastIndexWhere(...)", "v2.2")
+		def lastIndexWhereOption(find: A => Boolean) = findLastIndexWhere(find)
 		
 		/**
 		  * @param f     A mapping function
@@ -1464,8 +1478,7 @@ object CollectionExtensions
 		  * @throws NoSuchElementException If this sequence is empty
 		  */
 		@throws[NoSuchElementException]("Throws when called for an empty sequence")
-		def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
-		{
+		def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) = {
 			var maxIndex = 0
 			var maxResult = f(s.head)
 			s.indices.drop(1).foreach { index =>

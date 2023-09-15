@@ -13,5 +13,5 @@ object MetropolisRegex
 	  * A regular expression matching to an email address (with correct formatting)
 	  */
 	lazy val email = Regex.nonWhiteSpace.oneOrMoreTimes + Regex.escape('@') + Regex.nonWhiteSpace.oneOrMoreTimes +
-		Regex.escape('.') + Regex.alphaNumeric.oneOrMoreTimes
+		Regex.escape('.') + Regex.letterOrDigit.oneOrMoreTimes
 }

@@ -96,7 +96,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 				val layerClipZone = clipZone - position
 				// Skips layers that don't overlap with the clip zone
 				val layers = overlays.map { _._1 }.filter { _.bounds.overlapsWith(layerClipZone) }
-				val layersToDraw = layers.lastIndexWhereOption { layer =>
+				val layersToDraw = layers.findLastIndexWhere { layer =>
 					layer.opaque &&
 						layer.bounds.contains(layerClipZone)
 				} match {

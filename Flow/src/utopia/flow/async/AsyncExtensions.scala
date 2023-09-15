@@ -2,6 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.async.process.{Wait, WaitTarget, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryCatch
 import utopia.flow.view.mutable.async.VolatileOption
 
 import scala.collection.immutable.VectorBuilder
@@ -271,6 +272,14 @@ object AsyncExtensions
 		 * @return This try as a future
 		 */
 		def flattenToFuture = t.getOrMap { error => Future.successful(Failure(error)) }
+	}
+	
+	implicit class TryFutureTryCatch[A](val t: Try[Future[TryCatch[A]]]) extends AnyVal
+	{
+		/**
+		 * @return This try as a future
+		 */
+		def flattenToFuture = t.getOrMap { error => Future.successful(TryCatch.Failure(error)) }
 	}
 	
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal

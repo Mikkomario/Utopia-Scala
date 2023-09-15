@@ -44,6 +44,9 @@
 - Deprecated `Pointer.withEvents(A)` in favor of `Pointer.eventful(A)`
   - Similarly, renamed **Iterator**`.withEvents(...)` to `.eventful(...)`
 - Deprecated `.isPositive` and `.isNegative` in **Signed**
+- Renamed `.indexWhereOption(...)`, `.optionIndexOf(...)` and `.lastIndexWhereOption(...) `
+  to `.findIndexWhere(...)`, `.findIndexOf(...)` and `.findLastIndexWhere(...)`
+- Renamed various prebuilt **Regex** instances
 - In **UncertainBoolean**, deprecated `.value` in favor of `.exact`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
@@ -126,6 +129,7 @@
 - **Try**
   - **AsyncExtensions**
     - Added `.toCompletedAttempt: Future[A]`
+    - Added `.flattenToFuture `variant that supports **TryCatch**
   - **CollectionExtensions**
     - Added `.toTryCatch`
     - Added `.logToOption` and `.logToOptionWithMessage(String)`

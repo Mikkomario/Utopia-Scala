@@ -371,7 +371,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			0 -> index
 		else {
 			// Finds the correct line first
-			val lineIndex = lastLineCaretIndices.indexWhereOption { _ >= index }.getOrElse(lines.size - 1)
+			val lineIndex = lastLineCaretIndices.findIndexWhere { _ >= index }.getOrElse(lines.size - 1)
 			lineIndex -> (index - firstLineCaretIndices(lineIndex))
 		}
 	}

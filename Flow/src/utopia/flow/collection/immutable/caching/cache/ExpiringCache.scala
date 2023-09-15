@@ -78,7 +78,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 					if (queue.isEmpty)
 						false -> Vector(expirationTime -> key)
 					else
-						queue.lastIndexWhereOption { case (time, _) => time < expirationTime } match {
+						queue.findLastIndexWhere { case (time, _) => time < expirationTime } match {
 							// Case: The new expiration is executed after some other expiration =>
 							// No need to modify the expiration process
 							case Some(previousIndex) =>

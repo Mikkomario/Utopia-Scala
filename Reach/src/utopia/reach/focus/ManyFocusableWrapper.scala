@@ -54,7 +54,7 @@ trait ManyFocusableWrapper extends FocusRequestable with FocusTracking
 	{
 		val targets = focusTargets
 		// Finds the current focus owner within this group (returns false if didn't have focus)
-		targets.indexWhereOption { _.hasFocus }.exists { currentFocusIndex =>
+		targets.findIndexWhere { _.hasFocus }.exists { currentFocusIndex =>
 			// Finds the next focus target within this group
 			val nextFocusIndex = currentFocusIndex + direction.modifier
 			targets.getOption(nextFocusIndex) match

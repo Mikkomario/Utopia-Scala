@@ -1,5 +1,7 @@
 package utopia.flow.async
 
+import utopia.flow.util.TryCatch
+
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
@@ -16,6 +18,10 @@ object TryFuture
 	  * An alias for Future[Try]
 	  */
 	type Attempt[A] = Future[Try[A]]
+	/**
+	 * Alias for Future[TryCatch]
+	 */
+	type CatchingAttempt[A] = Future[TryCatch[A]]
 	
 	
 	// ATTRIBUTES   -----------------------
@@ -40,6 +46,14 @@ object TryFuture
 	  * @return A completed future that resolved successfully into that value
 	  */
 	def success[A](value: A) = Future.successful(Success(value))
+	/**
+	 * @param value Success result
+	 * @param errors Caught failures (optional)
+	 * @tparam A Type of the successfully acquired value
+	 * @return A new resolved future that contains a successful TryCatch
+	 */
+	def successCatching[A](value: A, errors: Vector[Throwable] = Vector.empty) =
+		Future.successful(TryCatch.Success(value, errors))
 	/**
 	  * @param error An error / cause of failure
 	  * @tparam A Type of success value

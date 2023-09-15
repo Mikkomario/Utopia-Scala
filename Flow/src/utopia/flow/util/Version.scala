@@ -15,7 +15,7 @@ object Version
 	// v-prefix is optional and suffix is optional, but can't contain a whitespace
 	val regex = Regex("v").noneOrOnce + Regex.digit.oneOrMoreTimes +
 		(Regex.escape('.') + Regex.digit.oneOrMoreTimes).withinParenthesis.anyTimes +
-		(Regex.escape('-') + (Regex.alphaNumeric || Regex.escape('-')).withinParenthesis.oneOrMoreTimes)
+		(Regex.escape('-') + (Regex.letterOrDigit || Regex.escape('-')).withinParenthesis.oneOrMoreTimes)
 			.withinParenthesis.noneOrOnce
 	
 	

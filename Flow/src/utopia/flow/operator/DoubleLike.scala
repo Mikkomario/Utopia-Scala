@@ -6,6 +6,8 @@ import scala.language.implicitConversions
 
 object DoubleLike
 {
+	// IMPLICIT ----------------------------
+	
 	implicit def unwrapDouble(d: DoubleWrapper): Double = d.d
 	
 	implicit class DoubleWrapper(val d: Double) extends AnyVal with DoubleLike[DoubleWrapper]

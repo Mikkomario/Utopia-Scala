@@ -37,42 +37,87 @@ object Regex
 	val lowerCaseLetter = Regex("[a-zåäö]")
 	val upperCaseLetter = Regex("[A-ZÅÄÖ]")
 	/**
+	 * Accepts lower- and upper-case letters
+	 */
+	val letter = Regex("[a-zA-ZåäöÅÄÖ]")
+	/**
 	  * Accepts lower- and upper-case letters
 	  */
-	val alpha = Regex("[a-zA-ZåäöÅÄÖ]")
+	@deprecated("Renamed to .letter", "v2.2")
+	def alpha = letter
+	/**
+	 * Accepts any positive integer
+	 */
+	val positiveInteger = digit.oneOrMoreTimes
 	/**
 	  * Accepts any positive integer
 	  */
-	val numericPositive = digit.oneOrMoreTimes
+	@deprecated("Renamed to .positiveInteger", "v2.2")
+	def numericPositive = positiveInteger
+	/**
+	 * Accepts any integer (positive or negative)
+	 */
+	val integer = Regex("\\-").noneOrOnce + positiveInteger
 	/**
 	  * Accepts any integer (positive or negative)
 	  */
-	val numeric = Regex("\\-").noneOrOnce + numericPositive
+	@deprecated("Renamed to .integer", "v2.2")
+	def numeric = integer
+	/**
+	 * Accepts digits and characters
+	 */
+	val letterOrDigit = (letter || digit).withinParenthesis
 	/**
 	  * Accepts digits and characters
 	  */
-	val alphaNumeric = (alpha || digit).withinParenthesis
+	@deprecated("Renamed to .letterOrDigit", "v2.2")
+	def alphaNumeric = letterOrDigit
+	/**
+	 * Accepts positive integers and decimal numbers
+	 */
+	val positiveNumber = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParenthesis.noneOrOnce
 	/**
 	  * Accepts positive integers and decimal numbers
 	  */
-	val decimalPositive = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParenthesis.noneOrOnce
+	@deprecated("Renamed to .positiveNumber", "v2.2")
+	def decimalPositive = positiveNumber
+	/**
+	 * Accepts any integer or decimal number
+	 */
+	val number = Regex("\\-").noneOrOnce + positiveNumber
 	/**
 	  * Accepts any integer or decimal number
 	  */
-	val decimal = Regex("\\-").noneOrOnce + decimalPositive
+	@deprecated("Renamed to .number", "v2.2")
+	def decimal = number
 	
+	/**
+	 * Accepts any character that appears in a (decimal) number
+	 */
+	val numberPart = Regex("[-\\d,\\.]")
 	/**
 	  * Accepts any character that appears in a decimal number
 	  */
-	val decimalParts = Regex("[-\\d,\\.]")
+	@deprecated("Renamed to .numberPart", "v2.2")
+	def decimalParts = numberPart
+	/**
+	 * Accepts any character that accepts in a positive (decimal) number
+	 */
+	val positiveNumberPart = Regex("[\\d,\\.]")
 	/**
 	  * Accepts any character that accepts in a positive decimal number
 	  */
-	val decimalPositiveParts = Regex("[\\d,\\.]")
+	@deprecated("Renamed to positiveNumberPart", "v2.2")
+	def decimalPositiveParts = positiveNumberPart
+	/**
+	 * Accepts any character that appears in an integer (positive or negative)
+	 */
+	val integerPart = Regex("[-\\d]")
 	/**
 	  * Accepts any character that appears in an integer (positive or negative)
 	  */
-	val numericParts = Regex("[-\\d]")
+	@deprecated("Renamed to .integerPart", "v2.2")
+	def numericParts = integerPart
 	
 	/**
 	 * A regular expression that finds parenthesis ( ) content

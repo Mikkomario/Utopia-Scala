@@ -8,7 +8,7 @@ import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localize
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.range.{HasInclusiveEnds, HasInclusiveOrderedEnds, NumericSpan}
+import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.generic.casting.ValueConversions._
@@ -25,7 +25,7 @@ import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.input.InputValidationResult.Default
-import utopia.reach.component.input.{Field, FieldSettings, FieldSettingsLike, FieldState, InputValidationResult}
+import utopia.reach.component.input._
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
@@ -191,10 +191,10 @@ case class TextFieldSettings(fieldSettings: FieldSettings = FieldSettings.defaul
 {
 	// IMPLEMENTED	--------------------
 	
-	override def onlyIntegers = super.onlyIntegers.withResultFilter(Regex.numeric)
+	override def onlyIntegers = super.onlyIntegers.withResultFilter(Regex.integer)
 	override def onlyPositiveNumbers =
-		super.onlyPositiveNumbers.withResultFilter(Regex.decimalPositive)
-	override def onlyNumbers = super.onlyNumbers.withResultFilter(Regex.decimal)
+		super.onlyPositiveNumbers.withResultFilter(Regex.positiveNumber)
+	override def onlyNumbers = super.onlyNumbers.withResultFilter(Regex.number)
 	
 	override def withEditingSettings(settings: EditableTextLabelSettings) = copy(editingSettings = settings)
 	override def withFieldSettings(settings: FieldSettings) = copy(fieldSettings = settings)
@@ -379,8 +379,8 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	        disableLengthHint: Boolean = false) =
 	{
 		val allowsNegative = allowedRange.start < 0
-		val inputFilter = if (allowsNegative) Regex.numericParts else Regex.digit
-		val resultFilter = if (allowsNegative) Regex.numeric else Regex.numericPositive
+		val inputFilter = if (allowsNegative) Regex.integerPart else Regex.digit
+		val resultFilter = if (allowsNegative) Regex.integer else Regex.positiveInteger
 		val markMinMax = {
 			if (disableLengthHint)
 				Pair.twice(false)
@@ -452,8 +452,8 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	{
 		// Only accepts decimal numbers / number parts
 		val allowsNegative = allowedRange.start < 0
-		val inputFilter = if (allowsNegative) Regex.decimalParts else Regex.decimalPositiveParts
-		val resultFilter = if (allowsNegative) Regex.decimal else Regex.decimalPositive
+		val inputFilter = if (allowsNegative) Regex.numberPart else Regex.positiveNumberPart
+		val resultFilter = if (allowsNegative) Regex.number else Regex.positiveNumber
 		
 		number[Double](allowedRange, initialValue, (expectedNumberOfDecimals - 1) max 0, inputFilter, resultFilter,
 			validate,
@@ -533,8 +533,8 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new input field that yields numeric values
 	  */
 	def number[A](allowedRange: HasInclusiveOrderedEnds[A], initialValue: Option[A] = None, extraInputLength: Int = 0,
-	              inputFilter: Regex = settings.inputFilter.getOrElse(Regex.decimalParts),
-	              resultFilter: Regex = settings.resultFilter.getOrElse(Regex.decimal),
+	              inputFilter: Regex = settings.inputFilter.getOrElse(Regex.numberPart),
+	              resultFilter: Regex = settings.resultFilter.getOrElse(Regex.number),
 	              validate: Option[Option[A] => InputValidationResult] = None,
 	              markMinMax: Pair[Boolean] = Pair.twice(false))
 	             (parse: Value => Option[A]) =
@@ -636,8 +636,8 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new input field that yields numeric values
 	  */
 	def validatedNumber[A](allowedRange: HasInclusiveOrderedEnds[A], initialValue: Option[A] = None, extraInputLength: Int = 0,
-	                       inputFilter: Regex = settings.inputFilter.getOrElse(Regex.decimalParts),
-	                       resultFilter: Regex = settings.resultFilter.getOrElse(Regex.decimal),
+	                       inputFilter: Regex = settings.inputFilter.getOrElse(Regex.numberPart),
+	                       resultFilter: Regex = settings.resultFilter.getOrElse(Regex.number),
 	                       markMinMax: Pair[Boolean] = Pair.twice(false))
 	                      (parse: Value => Option[A])(validate: Option[A] => InputValidationResult) =
 		number[A](allowedRange, initialValue, extraInputLength, inputFilter, resultFilter, Some(validate),

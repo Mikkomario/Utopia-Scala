@@ -105,23 +105,23 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	/**
 	  * @return Copy of this factory that only accepts positive or negative integers as input
 	  */
-	def onlyIntegers = withInputFilter(Regex.numericParts)
+	def onlyIntegers = withInputFilter(Regex.integerPart)
 	/**
 	  * @return Copy of this factory that only accepts positive decimal and integer numbers as input
 	  */
-	def onlyPositiveNumbers = withInputFilter(Regex.decimalPositiveParts)
+	def onlyPositiveNumbers = withInputFilter(Regex.positiveNumberPart)
 	/**
 	  * @return Copy of this factory that only accepts decimal and integer numbers as input
 	  */
-	def onlyNumbers = withInputFilter(Regex.decimalParts)
+	def onlyNumbers = withInputFilter(Regex.numberPart)
 	/**
 	  * @return Copy of this factory that only accepts letters as input
 	  */
-	def onlyLetters = withInputFilter(Regex.alpha)
+	def onlyLetters = withInputFilter(Regex.letter)
 	/**
 	  * @return Copy of this factory that only accepts letters and digits as input
 	  */
-	def onlyAlphaNumeric = withInputFilter(Regex.alphaNumeric)
+	def onlyAlphaNumeric = withInputFilter(Regex.letterOrDigit)
 	
 	
 	// IMPLEMENTED	--------------------
