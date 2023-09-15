@@ -266,6 +266,17 @@ object AsyncExtensions
 			this.f.onComplete { r => f(r.flatten) }
 	}
 	
+	implicit class FutureTryCatch[A](val f: Future[TryCatch[A]]) extends AnyVal
+	{
+		/**
+		 * Waits for the result of this future (blocks) and returns it once it's ready
+		 * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
+		 * @return The result of the future. A failure if this future failed,
+		 *         if timeout was reached or if result was a failure
+		 */
+		def waitForResult(timeout: Duration = Duration.Inf): TryCatch[A] = f.waitFor(timeout).flattenCatching
+	}
+	
 	implicit class TryFutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal
 	{
 		/**
@@ -332,12 +343,7 @@ object AsyncExtensions
 		  * Blocks until all the futures in this collection have completed. Collects results.
 		  * @return Results of each future in this collection
 		  */
-		def waitForResult() =
-		{
-			val builder = new VectorBuilder[Try[A]]
-			futures.iterator.foreach { builder += _.waitForResult() }
-			builder.result()
-		}
+		def waitForResult() = Vector.from(futures.iterator.map { _.waitForResult() })
 		
 		/**
 		  * @param exc Implicit execution context

@@ -154,6 +154,29 @@ object CollectionExtensions
 			tryForeach { f(_).map { buffer += _ } }.map { _ => buffer.result() }
 		}
 		/**
+		 * Maps the contents of this collection using a mapping function that may produce a failure.
+		 * If the mapping fails for any item, the whole mapping process is cancelled and fails.
+		 * @param f A mapping function. May yield full or partial failures.
+		 *          Partial failures are recorded, full failures terminate and fail the mapping process.
+		 * @param bf Implicit buildfrom for the resulting collection
+		 * @tparam B Type of items in the resulting collection
+		 * @tparam To Type of the resulting collection
+		 * @return Success or failure.
+		 *         Success contains the mapping results (all successful) and encountered partial failures.
+		 */
+		def tryMapCatching[B, To](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]): TryCatch[To] = {
+			val caughtFailuresBuilder = new VectorBuilder[Throwable]()
+			// Maps items until the mapping function fails
+			tryMap[B, To] { a =>
+				val (result, failures) = f(a).separateToTry
+				caughtFailuresBuilder ++= failures
+				result
+			} match {
+				case Success(result) => TryCatch.Success(result, caughtFailuresBuilder.result())
+				case Failure(error) => TryCatch.Failure(error)
+			}
+		}
+		/**
 		  * FlatMaps the contents of this collection. Mapping may fail, however, cancelling all remaining mappings
 		  * @param f  A mapping function. May fail.
 		  * @param bf A build from for the final collection (implicit)
@@ -2088,6 +2111,14 @@ object CollectionExtensions
 			case Success(v) => f(v)
 			case Failure(e) => TryCatch.Failure(e)
 		}
+	}
+	
+	implicit class RichTryTryCatch[A](val t: Try[TryCatch[A]]) extends AnyVal
+	{
+		/**
+		 * @return Flattened copy of this 2-level try into a single TryCatch instance
+		 */
+		def flattenCatching: TryCatch[A] = t.getOrMap { TryCatch.Failure(_) }
 	}
 	
 	implicit class RichEither[L, R](val e: Either[L, R]) extends AnyVal

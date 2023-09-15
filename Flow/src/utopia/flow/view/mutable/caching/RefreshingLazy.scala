@@ -64,7 +64,7 @@ class RefreshingLazy[+A](generator: => A)(expirationPerItem: A => Duration) exte
 	
 	override def current =
 	{
-		if (nextResetThreshold.forall { _.forall { _.isInFuture } })
+		if (nextResetThreshold.forall { _.forall { _.isFuture } })
 			cache.current
 		else
 			None
@@ -73,7 +73,7 @@ class RefreshingLazy[+A](generator: => A)(expirationPerItem: A => Duration) exte
 	{
 		// Resets value first, if necessary
 		// Case: Current value is no longer valid => Requests a new value and schedules a new refresh
-		if (nextResetThreshold.forall { _.exists { _.isInPast } })
+		if (nextResetThreshold.forall { _.exists { _.isPast } })
 		{
 			val result = cache.newValue()
 			nextResetThreshold = Some(expirationPerItem(result).finite.map { Now + _ })

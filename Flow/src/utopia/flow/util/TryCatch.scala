@@ -16,6 +16,17 @@ sealed trait TryCatch[+A]
 	// ABSTRACT -------------------------
 	
 	/**
+	 * @return The successful value in this TryCatch.
+	 *         Throws if this is a failure.
+	 */
+	def get: A
+	
+	/**
+	 * @return Whether this is a full or partial success
+	 */
+	def isSuccess: Boolean
+	
+	/**
 	 * @return This TryCatch converted to a Try. Removes non-critical error data.
 	 */
 	def toTry: Try[A]
@@ -24,6 +35,10 @@ sealed trait TryCatch[+A]
 	 */
 	def success: Option[A]
 	/**
+	 * @return Critical failure that was encountered. None if no critical failures were encountered.
+	 */
+	def failure: Option[Throwable]
+	/**
 	 * @return Any single failure encountered. May be critical or non-critical.
 	 */
 	def anyFailure: Option[Throwable]
@@ -31,6 +46,10 @@ sealed trait TryCatch[+A]
 	 * @return All failures encountered. May be critical or non-critical.
 	 */
 	def failures: Vector[Throwable]
+	/**
+	 * @return Encountered non-critical failures.
+	 */
+	def partialFailures: Vector[Throwable]
 	
 	/**
 	 * Logs non-critical failures that were encountered and returns a Try
@@ -58,6 +77,20 @@ sealed trait TryCatch[+A]
 	  * @return Some on success, None on failure
 	  */
 	def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A]
+	
+	
+	// COMPUTED -------------------------
+	
+	/**
+	 * @return Whether this is a complete failure
+	 */
+	def isFailure = !isSuccess
+	
+	/**
+	 * @return A try based on this item that doesn't contain partial failure information +
+	 *         possible partial failures as a separate collection
+	 */
+	def separateToTry = toTry -> partialFailures
 }
 
 object TryCatch
@@ -107,10 +140,15 @@ object TryCatch
 		
 		// IMPLEMENTED  ------------------------
 		
+		override def isSuccess: Boolean = true
+		
+		override def get: A = value
 		override def toTry = scala.util.Success(value)
 		
 		override def success = Some(value)
+		override def failure: Option[Throwable] = None
 		override def anyFailure: Option[Throwable] = failures.headOption
+		override def partialFailures: Vector[Throwable] = failures
 		
 		override def logToTry(implicit log: Logger) = {
 			logFailures()
@@ -136,11 +174,16 @@ object TryCatch
 	 */
 	case class Failure[+A](cause: Throwable) extends TryCatch[A]
 	{
+		override def isSuccess: Boolean = false
+		
+		override def get: A = throw cause
 		override def toTry = scala.util.Failure[A](cause)
 		
 		override def success = None
+		override def failure: Option[Throwable] = Some(cause)
 		override def anyFailure = Some(cause)
 		override def failures: Vector[Throwable] = Vector(cause)
+		override def partialFailures: Vector[Throwable] = Vector.empty
 		
 		override def logToTry(implicit log: Logger) = toTry
 		override def logToOption(implicit log: Logger) = {

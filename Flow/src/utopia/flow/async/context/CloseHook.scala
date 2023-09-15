@@ -99,7 +99,7 @@ object CloseHook
 			// Waits until all of the completions are done
 			val shutdownDeadline = Now + maxShutdownTime
 			completions.foreach { completion =>
-				if (shutdownDeadline.isInFuture)
+				if (shutdownDeadline.isFuture)
 					completion.waitFor(shutdownDeadline - Now)
 				// TODO: Should log if not performed
 			}

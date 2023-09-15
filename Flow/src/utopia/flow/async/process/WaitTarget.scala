@@ -208,7 +208,7 @@ object WaitTarget
     {
         protected val targetTime = Right(time)
     
-        override def isPositive = time.isInFuture
+        override def isPositive = time.isFuture
     
         def breakable: Until = if (breaksOnNotify) this else Until(time)
     }

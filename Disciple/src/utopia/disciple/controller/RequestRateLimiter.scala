@@ -66,7 +66,7 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: FiniteDuration) e
 		// Case: Current requests full. Takes the first recent request and checks
 		// when enough time has passed since it was performed
 		else
-			Some(times(times.size - maxRequestAmount) + resetDuration).filter { _.isInFuture }
+			Some(times(times.size - maxRequestAmount) + resetDuration).filter { _.isFuture }
 	}
 	
 	

@@ -90,13 +90,17 @@ object TimeExtensions
 		def toUTCDateTime = i.atZone(ZoneId.of("Z")).toLocalDateTime
 		
 		/**
-		  * @return Whether this instant is in the past
-		  */
-		def isInPast = this < Now
+		 * @return Whether this instant is in the past
+		 */
+		def isPast = this < Now
 		/**
-		  * @return Whether this instant is currently in the future
-		  */
-		def isInFuture = this > Now
+		 * @return Whether this instant is currently in the future
+		 */
+		def isFuture = this > Now
+		@deprecated("Renamed to .isPast", "v2.2")
+		def isInPast = isPast
+		@deprecated("Renamed to .isFuture", "v2.2")
+		def isInFuture = isFuture
 		
 		
 		// IMPLEMENTED  ----------------------
@@ -452,6 +456,19 @@ object TimeExtensions
 		  *         to be in system default zone
 		  */
 		def toInstantInDefaultZone = d.atStartOfDay(ZoneId.systemDefault()).toInstant
+		
+		/**
+		 * @return Whether this date is still in the future
+		 */
+		def isFuture = d.isAfter(Today)
+		/**
+		 * @return Whether this date has passed already
+		 */
+		def isPast = d.isBefore(Today)
+		/**
+		 * @return Whether this date is today
+		 */
+		def isToday = d.isEqualTo(Today)
 		
 		
 		// IMPLEMENTED  --------------------

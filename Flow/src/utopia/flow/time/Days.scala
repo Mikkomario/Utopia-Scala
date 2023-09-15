@@ -94,6 +94,9 @@ case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible
 	def +(duration: Duration) = toDuration + duration
 	def -(duration: Duration) = toDuration - duration
 	
+	def +(amount: Int) = Days(length + amount)
+	def -(amount: Int) = Days(length - amount)
+	
 	def *(mod: Int) = Days(length * mod)
 	def *(mod: Double) = toDuration * mod
 	

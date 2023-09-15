@@ -58,7 +58,7 @@ trait SelectionManager[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
 		if (amount != 0) {
 			val displays = this.displays
 			if (displays.nonEmpty) {
-				val oldIndices = selectedDisplay.flatMap { displays.optionIndexOf(_) }
+				val oldIndices = selectedDisplay.flatMap { displays.findIndexOf(_) }
 				
 				if (oldIndices.nonEmpty) {
 					val oldIndex = if (amount < 0) oldIndices.min else oldIndices.max

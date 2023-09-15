@@ -47,6 +47,7 @@
 - Renamed `.indexWhereOption(...)`, `.optionIndexOf(...)` and `.lastIndexWhereOption(...) `
   to `.findIndexWhere(...)`, `.findIndexOf(...)` and `.findLastIndexWhere(...)`
 - Renamed various prebuilt **Regex** instances
+- Renamed `.isInFuture` and `.isInPast` from **Instant** (**TimeExtensions**) to `.isFuture` and `.isPast`
 - In **UncertainBoolean**, deprecated `.value` in favor of `.exact`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
@@ -103,6 +104,8 @@
   - Added `.trySucceedOnce` for **Iterators** that contain **Tries**
 - **Instant** (**TimeExtensions**)
   - Added `+` and `-` support for **Durations** (including `Duration.Inf`)
+- **LocalDate** (**TimeExtensions**)
+  - Added `.isFuture`, `.isPast` and `.isToday`
 - **MapAccess** (object)
   - Added `.apply(...)` for converting functions into map accesses
 - **PairedIterator** (object)
