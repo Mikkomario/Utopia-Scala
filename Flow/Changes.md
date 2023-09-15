@@ -83,6 +83,8 @@
     - Added `.nextChangeFuture: Future[ChangeEvent]`
     - Added `.addListenerAndPossiblySimulateEvent(...)`, a variant of `.addListenerAndSimulateEvent(...)`
     - Added new map and merge variants (e.g. `.strongMap(...)` and `.lightMergeWith(...)`)
+- **ConditionalLazy** (object)
+  - Added `.ifSuccessful(...)` that only caches successful attempts
 - **Either** (**CollectionExtensions**)
   - Added `.eitherAndSide` for symmetric Eithers
   - Added `.mapSide(End)(...)` for symmetric Eithers

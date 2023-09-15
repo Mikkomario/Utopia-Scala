@@ -1,5 +1,7 @@
 package utopia.flow.view.immutable.caching
 
+import scala.util.Try
+
 object ConditionalLazy
 {
 	/**
@@ -20,6 +22,17 @@ object ConditionalLazy
 	def apply[A](generate: => A)(test: A => Boolean): ConditionalLazy[A] = apply {
 		val value = generate
 		value -> test(value)
+	}
+	
+	/**
+	 * Creates a new lazily initialized container that only caches the generated value if it is a success
+	 * @param tryGenerate A function for generating a new value. May produce a failure.
+	 * @tparam A Type of successful values
+	 * @return A new lazy container
+	 */
+	def ifSuccessful[A](tryGenerate: => Try[A]) = apply {
+		val res = tryGenerate
+		res -> res.isSuccess
 	}
 }
 

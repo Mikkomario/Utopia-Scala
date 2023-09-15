@@ -53,7 +53,9 @@ object DatabaseCache
  */
 class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleModelAccess[A],
 							maxCacheDuration: Duration = Duration.Inf, maxFailureCacheDuration: Duration = Duration.Inf)
-						   (keyToCondition: Key => Condition)(implicit exc: ExecutionContext) extends CacheLike[Key, Try[A]]
+						   (keyToCondition: Key => Condition)
+						   (implicit exc: ExecutionContext)
+	extends CacheLike[Key, Try[A]]
 {
 	// ATTRIBUTES	-----------------------
 	
