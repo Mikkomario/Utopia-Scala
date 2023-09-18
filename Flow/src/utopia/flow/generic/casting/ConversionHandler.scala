@@ -65,8 +65,7 @@ object ConversionHandler
 	  * @param targetTypes The targeted data types
 	  * @return The value cast to one of the data types, None if casting failed or was not possible
 	  */
-	def cast(value: Value, targetTypes: Set[DataType]) =
-	{
+	def cast(value: Value, targetTypes: Set[DataType]) = {
 		// If there are no target types, no value can be produced
 		if (targetTypes.isEmpty)
 			None

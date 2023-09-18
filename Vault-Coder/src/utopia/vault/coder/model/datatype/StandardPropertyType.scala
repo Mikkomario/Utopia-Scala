@@ -681,7 +681,7 @@ object StandardPropertyType
 		
 		// Converts the value to a json string before converting it back to a value
 		override def toValueCode(instanceCode: String) =
-			CodePiece(s"$instanceCode.toJson", Set(valueConversions))
+			CodePiece(s"$instanceCode.mapIfNotEmpty { _.toJson }", Set(valueConversions))
 		override def toJsonValueCode(instanceCode: String): CodePiece = instanceCode
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) = {
 			// When the value originates from the database, expects it to be represented as a json string,
