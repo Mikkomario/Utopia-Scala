@@ -61,15 +61,15 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = {
 		// Only adds more listeners if changes are to be anticipated, and if the listener is unique
-		if (isChanging)
-			_listeners = _listeners.mapSide(priority) { q =>
-				if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
-			}
+		if (isChanging) {
+			val newListener = lazyListener.value
+			_listeners = _listeners.mapSide(priority) { q => if (q.contains(newListener)) q else q :+ newListener }
+		}
 	}
 	
 	override def removeListener(listener: Any) = _listeners = _listeners.map { _.filterNot { _ == listener } }
-	override protected def removeListeners(priority: End, listenersToRemove: Vector[ChangeListener[A]]): Unit =
-		_listeners = _listeners.mapSide(priority) { _.filterNot(listenersToRemove.contains) }
+	override protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit =
+		_listeners = _listeners.mapSide(priority) { _.filterNot { l => listenersToRemove.exists { _ == l } } }
 	
 	
 	// OTHER	--------------------
@@ -89,11 +89,12 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	private def _fireEvent(event: => Option[ChangeEvent[A]], targetedPriority: End) = {
 		// Informs the listeners and collects the after effects to trigger later
 		// (may remove some listeners in the process)
-		val (listenersToRemove, afterEffects) = fireEventFor(_listeners(targetedPriority), event)
+		val responses = fireEventFor(_listeners(targetedPriority), event)
+		val listenersToRemove = responses.flatMap { case (l, r) => if (r.shouldDetach) Some(l) else None }
 		if (listenersToRemove.nonEmpty)
-			_listeners = _listeners.mapSide(targetedPriority) { _.filterNot(listenersToRemove.contains) }
+			removeListeners(targetedPriority, listenersToRemove)
 		// Returns the scheduled after-effects
-		afterEffects
+		responses.flatMap { _._2.afterEffects }
 	}
 	
 	/**

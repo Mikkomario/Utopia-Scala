@@ -13,10 +13,14 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
+
+import java.awt.event.KeyEvent
 
 /**
   * This is a simple test implementation of text fields with content filtering
@@ -73,6 +77,8 @@ object TextFieldTest extends App
 						val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = "€")
 						(productField, amountField, priceField)
 					}
+				// amountField.textPointer.addContinuousListener { println(_) }
+				GlobalKeyboardEventHandler += KeyStateListener.onKeyPressed(KeyEvent.VK_CONTROL) { _ => println(amountField.value) }
 				
 				// Pairs the fields with matching labels
 				context.forTextComponents.withTextAlignment(Alignment.BottomLeft).withoutTextInsets.use { implicit labelC =>

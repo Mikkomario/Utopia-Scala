@@ -951,7 +951,7 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	protected def fireEventIfNecessary[B >: A](oldValue: => B, currentValue: => B)
 	                                          (acquireListeners: End => Iterable[ChangeListener[B]])
-	                                          (detachListeners: (End, Vector[ChangeListener[B]]) => Unit) =
+	                                          (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit) =
 	{
 		// Calculates the event lazily
 		// In case where the current and old value are equal, won't generate an event
@@ -981,19 +981,19 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	protected def fireEvent[B >: A](lazyEvent: View[Option[ChangeEvent[B]]])
 	                               (acquireListeners: End => Iterable[ChangeListener[B]])
-	                               (detachListeners: (End, Vector[ChangeListener[B]]) => Unit) =
+	                               (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit) =
 	{
 		// Informs the listeners in order or priority
-		val queuedActions = End.values.map { priority =>
-			priority -> fireEventFor(acquireListeners(priority), lazyEvent.value)
-		}
-		// Detaches listeners that are no longer needed
-		queuedActions.foreach { case (priority, (listenersToRemove, _)) =>
+		End.values.flatMap { priority =>
+			val responses = fireEventFor(acquireListeners(priority), lazyEvent.value)
+			// Immediately detaches the listeners that are no longer needed
+			val listenersToRemove = responses
+				.flatMap { case (l, response) => if (response.shouldDetach) Some(l) else None }
 			if (listenersToRemove.nonEmpty)
 				detachListeners(priority, listenersToRemove)
+			// Returns the scheduled after-effects
+			responses.flatMap { _._2.afterEffects }
 		}
-		// Returns the scheduled after-effects
-		queuedActions.flatMap { _._2._2 }
 	}
 	/**
 	  * Informs a specific set of change listeners of a new change event.
@@ -1002,26 +1002,25 @@ trait Changing[+A] extends Any with View[A]
 	  * @param event A view to the generated change event (call-by-name, not called if there are no listeners).
 	  *              Contains None if no change occurred after all.
 	  * @tparam B Type of change events and listeners applied
-	  * @return Listeners to remove from future change events &
-	  *         after-events to trigger once all listeners have been informed
+	  * @return The specified listeners, coupled with their responses to the change events
 	  */
 	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]]) =
 	{
 		// Case: No listeners => No events required
 		if (listeners.isEmpty)
-			Vector() -> Vector()
+			Vector.empty
 		// Case: Listeners present => Informs them and collects the after effects to trigger later
 		//       (may schedule some listeners to be removed, based on their change responses)
 		else
 			event match {
 				// Case: Event is real => Relays if to the listeners
 				case Some(event) =>
-					listeners.splitFlatMap { listener =>
+					listeners.map { listener =>
 						val response = listener.onChangeEvent(event)
-						(if (response.shouldDetach) Some(listener) else None) -> response.afterEffects
+						listener -> response
 					}
 				// Case: There wasn't a change event after all => Skips the process
-				case None => Vector() -> Vector()
+				case None => Vector.empty
 			}
 	}
 	

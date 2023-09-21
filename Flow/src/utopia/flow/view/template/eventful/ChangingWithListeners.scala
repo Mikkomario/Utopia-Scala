@@ -25,7 +25,7 @@ trait ChangingWithListeners[A] extends Changing[A]
 	  * @param priority Targeted priority group
 	  * @param listenersToRemove Listeners to remove from that priority group
 	  */
-	protected def removeListeners(priority: End, listenersToRemove: Vector[ChangeListener[A]]): Unit
+	protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit
 	
 	
 	// COMPUTED --------------------------

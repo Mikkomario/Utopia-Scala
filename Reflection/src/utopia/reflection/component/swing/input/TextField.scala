@@ -70,8 +70,8 @@ object TextField
 						alignment: Alignment = Alignment.Left) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.digit, 10),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor,  alignment, Some(Regex.numericPositive))(
-			{ _.flatMap { _.int } })
+			initialValue.map { _.toString } getOrElse "", prompt, textColor,  alignment, Some(Regex.positiveInteger))(
+			{ _.int })
 	}
 	
 	/**
@@ -87,9 +87,9 @@ object TextField
 	def forInts(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Int] = None,
 				prompt: Option[Prompt] = None, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left) =
 	{
-		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.numericParts, 11),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.numeric))(
-			{ _.flatMap { _.int } })
+		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.integerPart, 11),
+			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.integer))(
+			{ _.int })
 	}
 	
 	/**
@@ -107,9 +107,9 @@ object TextField
 						   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
 						   alignment: Alignment = Alignment.Left) =
 	{
-		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.decimalPositiveParts, 24),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.decimalPositive))(
-			{ _.flatMap { _.double } })
+		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.positiveNumberPart, 24),
+			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.positiveNumber))(
+			{ _.double })
 	}
 	
 	// TODO: A lot of WET WET here
@@ -128,9 +128,9 @@ object TextField
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
 				   alignment: enumeration.Alignment = enumeration.Alignment.Left) =
 	{
-		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.decimalParts, 24),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.decimal))(
-			{ _.flatMap { _.double } })
+		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.numberPart, 24),
+			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.number))(
+			{ _.double })
 	}
 	
 	/**
@@ -188,7 +188,7 @@ object TextField
 	                              prompt: LocalizedString = LocalizedString.empty)
 								 (implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
-			FilterDocument(Regex.digit, 10), Some(Regex.numericPositive)) { _.flatMap { _.int } }
+			FilterDocument(Regex.digit, 10), Some(Regex.positiveInteger)) { _.int }
 	
 	/**
 	  * Creates a field that is used for writing positive or negative integers. Uses component creation context.
@@ -202,7 +202,7 @@ object TextField
 	                      prompt: LocalizedString = LocalizedString.empty)
 						 (implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
-			FilterDocument(Regex.numericParts, 11), Some(Regex.numeric)) { _.flatMap { _.int } }
+			FilterDocument(Regex.integerPart, 11), Some(Regex.integer)) { _.int }
 	
 	/**
 	  * Creates a field that is used for writing positive doubles. Uses component creation context.
@@ -216,7 +216,7 @@ object TextField
 									 prompt: LocalizedString = LocalizedString.empty)
 									(implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
-			FilterDocument(Regex.decimalPositiveParts, 24), Some(Regex.decimalPositive)) { _.flatMap { _.double } }
+			FilterDocument(Regex.positiveNumberPart, 24), Some(Regex.positiveNumber)) { _.double }
 	
 	/**
 	  * Creates a field that is used for writing positive or negative doubles. Uses component creation context.
@@ -230,7 +230,7 @@ object TextField
 	                         prompt: LocalizedString = LocalizedString.empty)
 							(implicit context: TextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
-			FilterDocument(Regex.decimalParts, 24), Some(Regex.decimal)) { _.flatMap { _.double } }
+			FilterDocument(Regex.numberPart, 24), Some(Regex.number)) { _.double }
 }
 
 /**

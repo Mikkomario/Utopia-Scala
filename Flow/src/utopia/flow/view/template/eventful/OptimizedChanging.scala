@@ -38,8 +38,8 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 		}
 	override def removeListener(changeListener: Any): Unit =
 		listenersPointer.update { _.map { _.filterNot { _ == changeListener } } }
-	override protected def removeListeners(priority: End, listenersToRemove: Vector[ChangeListener[A]]): Unit =
-		listenersPointer.update { _.mapSide(priority) { _.filterNot(listenersToRemove.contains) } }
+	override protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit =
+		listenersPointer.update { _.mapSide(priority) { _.filterNot { l => listenersToRemove.exists { _ == l } } } }
 	
 	override protected def declareChangingStopped(): Unit = {
 		clearListeners()

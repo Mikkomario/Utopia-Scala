@@ -1,8 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeEvent
-import utopia.flow.event.model.ChangeResponse.{Continue, ContinueAnd, Detach, DetachAnd}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -106,35 +105,31 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 			else
 				None
 		}
-		
-		// Case: This pointer contains listeners =>
-		// Keeps the cache up-to-date and keeps this listener attached.
-		if (trackActivelyFlag.value) {
-			// Updates the cache
-			cachedValue = Some(newValue)
-			// Informs the listener about this update
-			val afterEffects = onUpdate(secondaryEvent)
-			
-			// Triggers the after-effects only after all other listeners have been informed as well
-			// TODO: Consider whether this is the optimal approach
-			// Case: Caching is disabled and all listeners detached themselves =>
-			//       Clears the cache and detaches this listener immediately
-			if (cachingDisabled && !trackActivelyFlag.value) {
-				cachedValue = None
-				if (afterEffects.isEmpty) Detach else DetachAnd(afterEffects)
+		val afterEffects = {
+			// Case: This pointer contains listeners =>
+			// Keeps the cache up-to-date and keeps this listener attached.
+			if (trackActivelyFlag.value) {
+				// Updates the cache
+				cachedValue = Some(newValue)
+				// Informs the listener about this update
+				val afterEffects = onUpdate(secondaryEvent)
+				
+				// Triggers the after-effects only after all other listeners have been informed as well
+				// TODO: Consider whether this is the optimal approach
+				// Case: Caching is disabled and all listeners detached themselves =>
+				//       Clears the cache and detaches this listener immediately
+				if (cachingDisabled && !trackActivelyFlag.value)
+					cachedValue = None
+				afterEffects
 			}
-			else if (afterEffects.isEmpty)
-				Continue
-			else
-				ContinueAnd(afterEffects)
+			// Case: This pointer doesn't contain listeners =>
+			// Detaches as early as possible, and only invalidates the cache on changes
+			else {
+				cachedValue = None
+				onUpdate(secondaryEvent)
+			}
 		}
-		// Case: This pointer doesn't contain listeners =>
-		// Detaches as early as possible, and only invalidates the cache on changes
-		else {
-			cachedValue = None
-			val afterEffects = onUpdate(secondaryEvent)
-			if (afterEffects.isEmpty) Detach else DetachAnd(afterEffects)
-		}
+		DetachIfAppropriate(afterEffects)
 	}
 	
 	
@@ -145,6 +140,13 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		if (e.newValue)
 			origin.addHighPriorityListener(originListener)
 	}
+	
+	
+	// COMPUTED ----------------------------
+	
+	// Contains true while this bridge should remain attached to the origin pointer
+	// This is true when cache needs to be cleared and/or when actively tracking the origin
+	private def shouldListen = cachedValue.isDefined || trackActivelyFlag.value
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -161,9 +163,37 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		// and assigns a listener in order to invalidate the cache once the origin pointer changes
 		if (!cachingDisabled) {
 			cachedValue = Some(currentValue)
+			// TODO: It may be better to check whether the origin already contains this listener
 			origin.addHighPriorityListener(originListener)
 		}
 		
 		currentValue
+	}
+	
+	
+	// NESTED   ----------------------------
+	
+	private object DetachIfAppropriate extends ChangeResponse
+	{
+		// IMPLEMENTED  --------------------
+		
+		override def shouldContinueListening: Boolean = shouldListen
+		override def afterEffects: Iterable[() => Unit] = Iterable.empty
+		
+		override def and[U](afterEffect: => U): ChangeResponse = new DetachIfAppropriate(Vector(() => afterEffect))
+		
+		
+		// OTHER    ------------------------
+		
+		def apply(afterEffects: Seq[() => Unit]) =
+			if (afterEffects.isEmpty) this else new DetachIfAppropriate(afterEffects)
+	}
+	
+	private class DetachIfAppropriate(override val afterEffects: Seq[() => Unit]) extends ChangeResponse
+	{
+		override def shouldContinueListening: Boolean = shouldListen
+		
+		override def and[U](afterEffect: => U): ChangeResponse =
+			new DetachIfAppropriate(afterEffects :+ { () => afterEffect })
 	}
 }
