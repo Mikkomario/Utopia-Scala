@@ -114,7 +114,9 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 	 * @tparam P2 Type of mapping results
 	 * @return A new span based on the mapping result of this span
 	 */
-	def map[P2](f: P => P2)(implicit ord: Ordering[P2]) = Span(f(start), f(end))
+	def mapTo[P2](f: P => P2)(implicit ord: Ordering[P2]) = Span(f(start), f(end))
+	@deprecated("Please use .mapTo(...) instead, as this method involves name conflicts", "v2.2")
+	def map[P2](f: P => P2)(implicit ord: Ordering[P2]) = mapTo[P2](f)
 	
 	/**
 	  * @param start A new starting point for this span

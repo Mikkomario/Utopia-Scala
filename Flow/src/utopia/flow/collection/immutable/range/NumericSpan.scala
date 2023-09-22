@@ -8,9 +8,24 @@ import scala.language.implicitConversions
 
 object NumericSpan
 {
-	// OTHER    -------------------------
+	// TYPES    -------------------------
+	
+	/**
+	  * A span between two integers
+	  */
+	type IntSpan = NumericSpan[Int]
+	/**
+	  * A span between two double numbers
+	  */
+	type DoubleSpan = NumericSpan[Double]
+	
+	
+	// IMPLICIT -------------------------
 	
 	implicit def rangeToSpan(r: Range.Inclusive): NumericSpan[Int] = apply(r.start, r.end, r.step)
+	
+	
+	// OTHER    -------------------------
 	
 	/**
 	  * @param start The starting point of this span

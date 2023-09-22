@@ -48,6 +48,7 @@
   to `.findIndexWhere(...)`, `.findIndexOf(...)` and `.findLastIndexWhere(...)`
 - Renamed various prebuilt **Regex** instances
 - Renamed `.isInFuture` and `.isInPast` from **Instant** (**TimeExtensions**) to `.isFuture` and `.isPast`
+- Renamed `.map(...)` to `.mapTo(...)` in **SpanLike** because of name conflicts
 - In **UncertainBoolean**, deprecated `.value` in favor of `.exact`
 ### Bugfixes
 - Fixed deadlock issues in **PostponingProcess**
