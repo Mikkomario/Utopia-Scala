@@ -10,6 +10,7 @@
 ### Bugfixes
 - Bugfix to conditional join syntax
 - Fixed a bug in **ClearOldData** reference processing logic
+- Generated alter table -statements now properly wrap the table name in backquotes
 ### New Features
 - Added **DatabaseActionQueue** class
 - Added specific table-targeting and joining support to `.delete()` and its variants in **View** 
