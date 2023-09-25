@@ -1,6 +1,9 @@
 # Utopia Reach - List of Changes
 
 ## v1.1 (in development)
+This update continues the major refactoring process of v1.0 update.  
+Almost every component constructor is rewritten to support a new builder-style approach.  
+This update also includes important bugfixes related to certain component-hierarchy edge-cases.
 ### Breaking Changes
 - Renamed `utopia.reach.util` to `utopia.reach.drawing`
 - Moved some classes from the `factory` package to `factory.contextual`
@@ -19,7 +22,7 @@
   - `.buildLayout(...)` now accepts **TextContext** instead of **ColorContext**
 - Removed all **Option**-wrappings of **SingleColorIcons**. 
   - Use `SingleColorIcon.empty` to represent None and `icon.notEmpty` if you want to wrap it in an **Option**.
-- Updated FieldWithSelectionPopup and DropDown constructors:
+- Updated **FieldWithSelectionPopup** and **DropDown** constructors:
   - `makeDisplay` now accepts 4 parameters instead of 2
   - Replaced `noOptionsView: Option[OpenComponent]` with `makeNoOptionsView: Option[...]`
   - Added `makeAdditionalView: Option` -parameter
@@ -27,7 +30,7 @@
 - **ViewStack** constructors now return a **Stack**
   - This was added in order to automatically optimize between the **ViewStack** and the **Stack** options
 - **ImageLabel** is now a trait
-- Removed the customDrawers -option from **ReachWindowContext** constructor, that was left there by accident
+- Removed the `customDrawers` -option from **ReachWindowContext** constructor, that was left there by accident
 - Rewrote most component constructors
 ### Deprecations
 - Deprecated existing constructors in various label classes
@@ -42,7 +45,7 @@
   (optional feature)
 - Added new constructor style to various component factories
 - Added component factory traits that utilize a variable component creation context (i.e. a context-pointer)
-- Added easier methods for adding background drawing to certain components and containers
+- Added easier methods for adding background-drawing to certain components and containers
   - In containers, the new `.withBackground(...)` functions are available implicitly (see **GenericContextualFactory**)
   - In component factories, these become available after importing **ContextualBackgroundAssignableFactory**
 - **Switches** can now be commonly scaled by modifying `ComponentCreationDefaults.switchScalingFactor`

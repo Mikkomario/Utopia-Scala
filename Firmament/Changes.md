@@ -1,6 +1,9 @@
 # Utopia Firmament - List of Changes
 
 ## v1.1 (in development)
+This update introduces a new size-altering system (**StandardSizeAdjustable**), 
+as well as certain important **Window**-related bugfixes.  
+The AWT event thread interface was also refactored for better stability. 
 ### Breaking Changes
 - **SingleColorIcon** default construction parameters changed
   - Please also note that **SingleColorIcon** is now a case class and the `new` keyword should no more be used
@@ -13,7 +16,7 @@
 - **ButtonBackgroundViewDrawer** now accepts the borderWidth as a pointer and not a static value
 ### Bug Fixes
 - The adjustment modifier in **Margins** didn't work as described in the documentary
-- Window didn't always properly update layout or repaint content - fixed
+- **Window** didn't always properly update layout or repaint content - fixed
 ### Deprecations
 - In **BaseContext**, deprecated methods that referred to stack margins as plural in favor of new renamed functions
   - E.g. `.withStackMargins(...)` is now `.withStackMargin(...)`

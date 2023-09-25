@@ -1,6 +1,10 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.4 (in development)
+This version applies major under-the-hood refactoring to vector classes, 
+in preparation of upcoming rounding shape classes (which are partially implemented here). 
+The most noticeable difference is the updated package structure.  
+There are also some utility improvements related to the **Rotation** class.
 ### Breaking Changes
 - Refactored **shape** package structure
 - Renamed **VectorFactory** to **DoubleVectorFactory**

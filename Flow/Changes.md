@@ -1,6 +1,12 @@
 # Utopia Flow - List of Changes
 
 ## v2.2 (in development)
+This update focuses on the pointer system (i.e. the **Changing** trait).  
+There are also some new numerical features, as well as a large number of utility and quality improvements.
+### Highlights
+- Updated **Changing** interface (new event types), including new pointer types
+- **Sign** & **Signed** refactoring
+- New **UncertainNumber** class
 ### Breaking Changes
 - Renamed **HasEnds** to **HasOrderedEnds** and **HasInclusiveEnds** to **HasInclusiveOrderedEnds**
   - Added new more generic traits to replace the old name versions

@@ -1,8 +1,7 @@
 # Utopia Metropolis - List of Changes
 
 ## v2.2.1 (in development)
-### Other Changes
-- Added from model conversions to a couple of classes
+Added from model -conversions to a couple of classes
 
 ## v2.2 - 01.05.2023
 This minor update reflects changes in earlier **Flow** updates.

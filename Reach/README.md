@@ -38,9 +38,9 @@ There are three ways in which you can use this library:
   but you will lose many of the auto-layout benefits.
 
 There are usually three types of container and component implementations:
-- Immutable - For components and containers which are static and don't change (very safe)
-- View - For components and containers which reflect changes in one or more pointers (flexible & controlled)
-- Mutable - For components and containers that allow mutation of their contents (easy but dangerous)
+- **Immutable** - For components and containers which are static and don't change (very safe)
+- **View** - For components and containers which reflect changes in one or more pointers (flexible & controlled)
+- **Mutable** - For components and containers that allow mutation of their contents (easy but dangerous)
 
 ### Classes to be aware of
 You will likely use these classes very often:

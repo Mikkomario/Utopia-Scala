@@ -1,11 +1,12 @@
 # Utopia Annex - List of Changes
 
 ## v1.6 (in development)
+Updated the **RequestResult** interface for easier and more concise use.
 ### Breaking Changes
 - Moved **RequestNotSent** under **RequestResult**
 - **NoConnection** is now **RequestSendingFailed**
 - Functions that previously returned or accepted **Either[RequestNotSent, Response]** now use **RequestResult**
-- Renamed Manifest to Manifestation because of Scala naming conflicts
+- Renamed **Manifest** to **Manifestation** because of Scala naming conflicts
 ### Deprecations
 - Replaced **ShrodingerState**`.signOption: Option[Sign]` with `.estimate: UncertainBinarySign`
 ### New Methods

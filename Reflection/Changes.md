@@ -1,11 +1,12 @@
 # Utopia Reflection - List of Changes
 
 ## v2.1 (in development)
+Introduces a bugfix to **Stack** component management
 ### Breaking Changes
 - **MultiStackContainer** now requires the implementation of 2 new abstract functions
   - Also, overriding `add(...)`, `remove(...)`, `insert(...)`, `insertMany(...)`, `-=(...)` and `--=(...)` is discouraged
 ### Bugfixes
-- Fixed a bug where items would not always get correctly added to stack when calling ++=
+- Fixed a bug where items would not always get correctly added to a stack when calling `++=`
 
 ## v2.0 - 01.05.2023
 This release completes the separation of the **Reach** and **Reflection** modules, and removes much of the 

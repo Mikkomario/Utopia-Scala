@@ -1,6 +1,7 @@
 # Utopia Genesis - List of Changes
 
 ## v3.4 (in development)
+Adds automated line-splitting -option to **MeasuredText**
 ### Breaking Changes
 - New parameter added to **MeasuredText** constructor 
 ### Bugfixes
