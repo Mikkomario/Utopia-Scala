@@ -327,6 +327,24 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	def get(nav: A) = children.find { _.nav ~== nav }
 	
 	/**
+	 * @param maxDepth Maximum search depth, where 1 represents the direct children under this node,
+	 *                 2 represents the children of those nodes, and so on.
+	 * @return An iterator that returns all nodes within this tree structure up to a certain depth level.
+	 *         Won't include this node.
+	 */
+	def nodesBelowIteratorUpToDepth(maxDepth: Int): Iterator[Repr] = {
+		// Case: Maximum depth reached already => Returns no more nodes
+		if (maxDepth <= 0)
+			Iterator.empty
+		// Case: This level is the last level => Returns direct children
+		else if (maxDepth == 1)
+			children.iterator
+		// Case: More levels included => Uses recursion
+		else
+			children.iterator.flatMap { _.nodesBelowIteratorUpToDepth(maxDepth - 1) }
+	}
+	
+	/**
 	  * Performs a search over the whole tree structure
 	  * @param filter A predicate for finding a node
 	  * @return The first child that satisfies the predicate. None if no such child was found.
