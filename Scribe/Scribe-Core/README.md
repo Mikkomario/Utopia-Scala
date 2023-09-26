@@ -78,12 +78,12 @@ you may specify the following information to your context-specific **Scribe** in
 5. An additional **message**, if appropriate
 6. **Situational details** in **Model** format
 
-Details 1-3 are specified using separate methods that create new Scribe instances. 
+Details 1-3 are specified using separate methods that create new **Scribe** instances. 
 You're free to save that instance to a local variable in order to copy those details between multiple entries.  
 Details 4-6 are specified when creating the exact logging entry, and are specific to that entry.
 
 Scribe instances will also need to have implicit access to the current version of your software. 
-Typical way to implement this is to define an implicit Version instance somewhere and introduce it via import. 
+Typical way to implement this is to define an implicit **Version** instance somewhere and introduce it via import. 
 This is oftentimes the same place where you might specify an implicit ConnectionPool (Vault) or 
 ExecutionContext instance as well.
 
@@ -103,44 +103,45 @@ If Severity is defined accurately within the code, the person scouring through t
 much easier time focusing on the most important items.
 
 Available Severity levels are as follows, from least to most important / severe:
-1. Debug - Used for recording situational information that is useful when debugging other issues, 
-  but of no importance by default
-2. Info - Used for recording details that might be of interest, but which don't indicate any kind of problem
-3. Warning - Used for indicating potential problems which may or may not require any action
-4. Recoverable - Used for indicating problems that are possible to overcome by the software. 
+1. **Debug** - Used for recording situational information that is useful when debugging other issues, 
+  but of **no importance by default**
+2. **Info** - Used for recording details that might be of interest, but which **don't indicate any kind of problem**
+3. **Warning** - Used for indicating **potential** problems which may or may not require any action
+4. **Recoverable** - Used for indicating problems that are **possible to overcome by the software**. 
   For example, if the software encounters a network error that causes delays but not a complete failure of the 
   sending process overall, it should use the Recoverable Severity level.
-5. Unrecoverable - Used for indicating problems from which the software can't recover from. 
+5. **Unrecoverable** - Used for indicating problems from which the software can't recover from. 
   This typically causes some function to not get completed successfully. 
-  This is also the default Severity level when no other value is defined.
-6. Critical - Used for problems that require near immediate action and those that are of special importance. 
+  This is also the **default Severity level** when no other value is defined.
+6. **Critical** - Used for problems that require near immediate action and those that are of special importance. 
   This Severity level is appropriate, for example, in situations where an error renders the whole system unusable.
 
-If you need more information about the different Severity levels, please also check the scaladocs in the source code.
+If you need more information about the different Severity levels, please also check the scaladocs in the 
+[source code](https://github.com/Mikkomario/Utopia-Scala/blob/development/Scribe/Scribe-Core/src/utopia/scribe/core/model/enumeration/Severity.scala).
 
 #### Variant details
 There is yet another way to differentiate between recorded issues, and that is by specifying different 
-Issue Variant details. These details are specified using the Model format, 
-allowing a wide range of data types to be used. Do remember to import utopia.flow.generic.casting.ValueConversions._ 
+**Issue Variant** details. These details are specified using the Model format, 
+allowing a wide range of data types to be used. Do remember to import `utopia.flow.generic.casting.ValueConversions._ `
 when specifying these values, in order to enable implicit type-casting.
 
 Each unique set of Issue Variant details creates a new Issue Variant, which is treated as separate group of 
-Issue occurrences. Because of this, you should choose such details that fulfill the following conditions:
-1. They define important distinctions between environments where an issue might occur
-2. They are limited in number (e.g. range from 2 to 20 options)
+Issue Occurrences. Because of this, you should choose such details that fulfill the following conditions:
+1. They define **important distinctions** between environments where an issue might occur
+2. They are **limited in number** (e.g. range from 2 to 20 options)
 
 If you define too many unimportant variant details, you will have too many entries to scan trough when debugging. 
 On the other hand, if you don't differentiate between the important use-case differences, you may have a hard 
 time targeting your research to those use-cases.
 
-Applicable software version always forms an implicit variant detail, so you don't need to specify it manually.
+Applicable **software version always forms an implicit variant detail**, so you don't need to specify it manually.
 
 I personally use details such as:
 - Identifier of the client which the error concerns (in case there are a small number of clients)
 - Http status code returned in the server response
 
 If a detail is common to all entries made using a client-side software instance, 
-you may choose to introduce it in your MasterScribe instance instead, but more on that in Scribe Client.
+you may choose to introduce it in your MasterScribe instance instead, but more on that in **Scribe Client**.
 
 #### Error, message and details
 The actual logging entry may consist of any combination of an encountered error (Throwable instance), 
@@ -192,3 +193,7 @@ alternative **Logger** implementations. The **Synagogue** instance delegates log
 reverting back to the specified alternatives in cases where logging fails for one reason or another. 
 This way you will have a logging implementation available even in situations where the primary implementation 
 fails or is not available.
+
+## Other implementation hints
+If you want to use the Scribe logging system with Try and TryCatch instances, please 
+import `utopia.scribe.core.util.logging.TryExtensions._`
