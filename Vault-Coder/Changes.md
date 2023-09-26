@@ -1,6 +1,7 @@
 # Utopia Vault Coder
 
 ## v1.10 (in development)
+This update introduces better json support, as well as many new data types.
 ### Breaking Changes
 - Updated json conversion to convert certain data types (**FiniteDuration** & **Days**) using direct value conversions
 - Sql column prefixes are no longer applied to json properties
