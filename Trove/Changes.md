@@ -1,5 +1,8 @@
 # Utopia Trove - List of Changes
 
+## v1.1.7 - 27.09.2023
+Rebuild due to parent module changes
+
 ## v1.1.6 - 01.05.2023
 Rebuild due to the changes in other modules.
 

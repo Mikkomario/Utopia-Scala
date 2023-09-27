@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.2.1 (in development)
+## v2.2.1 - 27.09.2023
 Added from model -conversions to a couple of classes
 
 ## v2.2 - 01.05.2023

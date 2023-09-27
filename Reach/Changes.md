@@ -1,6 +1,6 @@
 # Utopia Reach - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 27.09.2023
 This update continues the major refactoring process of v1.0 update.  
 Almost every component constructor is rewritten to support a new builder-style approach.  
 This update also includes important bugfixes related to certain component-hierarchy edge-cases.

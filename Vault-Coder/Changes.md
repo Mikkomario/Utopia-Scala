@@ -1,6 +1,6 @@
 # Utopia Vault Coder
 
-## v1.10 (in development)
+## v1.10 - 27.09.2023
 This update introduces better json support, as well as many new data types.
 ### Breaking Changes
 - Updated json conversion to convert certain data types (**FiniteDuration** & **Days**) using direct value conversions

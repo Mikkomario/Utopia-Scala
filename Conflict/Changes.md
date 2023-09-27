@@ -1,6 +1,6 @@
 # Utopia Conflict - List of Changes
 
-## v1.4.4 (in development)
+## v1.4.4 - 27.09.2023
 Supports **Paradigm v1.4**
 
 ## v1.4.3 - 01.05.2023

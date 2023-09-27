@@ -1,6 +1,6 @@
 # Utopia Paradigm - List of Changes
 
-## v1.4 (in development)
+## v1.4 - 27.09.2023
 This version applies major under-the-hood refactoring to vector classes, 
 in preparation of upcoming rounding shape classes (which are partially implemented here). 
 The most noticeable difference is the updated package structure.  

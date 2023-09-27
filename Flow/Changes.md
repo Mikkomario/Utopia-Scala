@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.2 (in development)
+## v2.2 - 27.09.2023
 This update focuses on the pointer system (i.e. the **Changing** trait).  
 There are also some new numerical features, as well as a large number of utility and quality improvements.
 ### Highlights
@@ -138,6 +138,7 @@ There are also some new numerical features, as well as a large number of utility
   - Added `.causesIterator`
 - **TreeLike**
   - Added `.bottomToTopNodesIterator`
+  - Added `.nodesBelowIteratorUpToDepth(Int)`
 - **Try**
   - **AsyncExtensions**
     - Added `.toCompletedAttempt: Future[A]`

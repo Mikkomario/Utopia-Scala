@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.1 (in development)
+## v2.1 - 27.09.2023
 Introduces a bugfix to **Stack** component management
 ### Breaking Changes
 - **MultiStackContainer** now requires the implementation of 2 new abstract functions

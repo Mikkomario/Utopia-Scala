@@ -341,7 +341,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 			children.iterator
 		// Case: More levels included => Uses recursion
 		else
-			children.iterator.flatMap { _.nodesBelowIteratorUpToDepth(maxDepth - 1) }
+			children.iterator.flatMap { c => c +: c.nodesBelowIteratorUpToDepth(maxDepth - 1) }
 	}
 	
 	/**

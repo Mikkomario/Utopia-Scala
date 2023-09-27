@@ -1,6 +1,6 @@
 # Utopia Firmament - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 27.09.2023
 This update introduces a new size-altering system (**StandardSizeAdjustable**), 
 as well as certain important **Window**-related bugfixes.  
 The AWT event thread interface was also refactored for better stability. 

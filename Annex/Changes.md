@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.6 (in development)
+## v1.6 - 27.09.2023
 Updated the **RequestResult** interface for easier and more concise use.
 ### Breaking Changes
 - Moved **RequestNotSent** under **RequestResult**

@@ -1,6 +1,6 @@
 # Utopia Disciple - List of changes
 
-## v2.1.5 (in development)
+## v2.1.5 - 27.09.2023
 Supports latest **Vault v1.17**
 
 ## v2.1.4 - 01.05.2023

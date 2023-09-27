@@ -1,6 +1,5 @@
 package utopia.flow.test.file
 
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Path
@@ -12,8 +11,6 @@ import java.nio.file.Path
  */
 object FileTest extends App
 {
-	
-	
 	val origin: Path = "test-data"
 	val dir1 = origin / "test-dir-1"
 	val dir2 = origin / "test-dir-2"

@@ -1,5 +1,8 @@
 # Utopia Ambassador - List of Changes
 
+## v2.1.5 - 27.09.2023
+Rebuild due to parent module changes
+
 ## v2.1.4 - 01.05.2023
 This update supports **Vault v1.16**
 

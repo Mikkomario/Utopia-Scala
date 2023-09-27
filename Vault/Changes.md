@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.17 (in development)
+## v1.17 - 27.09.2023
 This update introduces important bugfixes, as well as better support for DELETE statements.
 ### Breaking Changes
 - `DatabaseTableReader.apply(...)` now accepts a different function for column- to property name -mapping. 

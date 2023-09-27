@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v1.9.1 - 27.09.2023
+Rebuild due to parent module changes.
+
 ## v1.9 - 02.02.2023
 This update mostly reflects changes made in **Flow** v2.0, including similar naming and type updates.  
 In addition to this, more convenience is added with the importing of **PostContext** and with the addition of 

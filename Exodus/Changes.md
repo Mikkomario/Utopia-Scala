@@ -1,5 +1,8 @@
 # Utopia Exodus - List of Changes
 
+## v4.1.4 - 27.09.2023
+Rebuild due to parent module changes.
+
 ## v4.1.3 - 01.05.2023
 This update supports **Vault v1.16**
 
