@@ -241,6 +241,11 @@ However, as with all the other *Utopia* modules, **Reach** allows you to design 
 top of the existing capabilities. The only requirement is that you can't really rely on Swing or Awt components, 
 nor on the standard OS look-and-feel. If you would rather still use mostly Swing, consider using **Reflection** instead.
 
+### Reach Coder
+Reach Coder is a utility application for generating factory classes for your custom Reach components based on 
+json definitions. This application is most suited for customizable components, 
+like those introduced in the **Reach** library.
+
 ### Utopia Reflection
 *An AWT-based GUI framework that actually works and does what you want it to do*
 
@@ -325,6 +330,14 @@ even when the internet connection breaks.
 I would recommend you to use **Annex** in cases where you have considerable data-interaction with your server. 
 For individual requests, I would recommend you to stick with **Disciple**, since it's more light-weight.
 
+### Utopia Scribe
+The Scribe module provides a detailed logging system specifically designed for use-cases where both front and back end 
+are implemented using Scala. Logging entries are delivered from the clients to the server, and are readable using 
+a custom application.
+
+Scribe allows you to deliver very detailed logging entries, which helps in debugging. 
+This module is most suited for more complex projects, where local file logging is not enough.
+
 ### Utopia Metropolis
 *Client-Server user management and authorization made simple*
 
@@ -363,6 +376,12 @@ will be able to skip tens of hours of work in dealing with 3rd party OAuth.
 **Ambassador** comes with all rest nodes towards both 
 the web client and the 3rd party redirection, so you will only need to add your business logic.
 
+### Utopia Terra
+Utopia Terra provides tools for dealing with location and GPS data. If you find yourself in a situation 
+where you need to use latitude-longitude information, Utopia Terra is your friend. 
+This module allows you to easily convert angular latitude-longitude data into linear vector format, 
+where transitions and distances are more reasonable to calculate. 
+
 ### Utopia Journey (incomplete)
 *Leverage your Exodus server with a pre-built client interface*
 
@@ -376,20 +395,25 @@ takes you many steps ahead and saves you the trouble of worrying about a secure 
 *Utopia* modules have following dependency-hierarchy. Modules lower at the list depend on those higher in the list.
 - **Flow** - The standard library
     - **BunnyMunch** - Json parsing
+      - **Scribe Core** - Detailed logging system (generic)
     - **Courier** - Email integration
     - **Vault** - MySQL integration
         - **Trove** - Hosting MySQL DB from within an application
-    - **Inception** - Events
-        - **Genesis** - Shapes & drawing
+    - **Inception** - Event delivery support
+    - **Paradigm** - Vectors and shapes
+        - **Genesis** - Images, text and drawing (also requires Inception)
             - **Reach** - Non-Swing UI
             - **Reflection** - Swing-Wrapping UI
               - **Reach in Reflection** (also requires Reach)
             - **Conflict** - Collision handling
+        - **Terra** - Location and GPS
     - **Access** - Http base library
         - **Nexus** - Server-side http base library
             - **Nexus for Tomcat** - Nexus integration for Apache Tomcat
+            - **Scribe Api** - Server-side logging implementation (also requires Scribe Core and Vault)
         - **Disciple** - Client-side http base library
             - **Annex** - Advanced client-side http interface
+              - **Scribe Client** - Client-side logging implementation (also requires Scribe Core)
     - **Metropolis** - User management base library
         - **Citadel** (also requires Vault) - User-management DB base library
             - **Exodus** (also requires Nexus) - Server with user management
@@ -397,7 +421,7 @@ takes you many steps ahead and saves you the trouble of worrying about a secure 
         - **Journey** (also requires Annex) - Client-side user management / Exodus integration
            
 Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 
-**Access** and all 2D visual modules are dependent from **Inception** and **Genesis**. **Nexus** is the base 
+**Access** and all 2D visual modules are dependent from **Paradigm**. **Nexus** is the base 
 module for server-side operations while **Disciple** is the foundation of client-side server interactions. 
 All user-management projects extend **Metropolis**.
 

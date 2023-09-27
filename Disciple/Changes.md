@@ -1,5 +1,8 @@
 # Utopia Disciple - List of Changes
 
+## v1.6.2 - 27.09.2023
+Rebuild due to parent module changes
+
 ## v1.6.1 - 01.05.2023
 This minor update adds a utility option for SSL trust store verification skipping.
 ### New Features
