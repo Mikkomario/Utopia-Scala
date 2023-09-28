@@ -34,7 +34,7 @@ object AuthUtils
 		{
 			val providedScopeIds = availableScopeIds.toSet
 			// Makes sure all the required scopes are covered, and at least one alternative scope per service
-			val (alternativeScopes, requiredScopes) = taskScopes.divideBy { _.isRequired }
+			val (alternativeScopes, requiredScopes) = taskScopes.divideBy { _.isRequired }.toTuple
 			requiredScopes.forall { scope => providedScopeIds.contains(scope.id) } &&
 				(alternativeScopes.isEmpty || alternativeScopes.groupBy { _.serviceId }.values
 					.forall { scopes => scopes.exists { scope => providedScopeIds.contains(scope.id) } })

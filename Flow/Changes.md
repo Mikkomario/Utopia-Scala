@@ -1,5 +1,10 @@
 # Utopia Flow - List of Changes
 
+## v2.3 (in development)
+### Breaking changes
+- `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
+  - You can work around this by appending `.toTuple` after these method calls 
+
 ## v2.2 - 27.09.2023
 This update focuses on the pointer system (i.e. the **Changing** trait).  
 There are also some new numerical features, as well as a large number of utility and quality improvements.

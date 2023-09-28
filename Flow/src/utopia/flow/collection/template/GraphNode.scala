@@ -53,7 +53,7 @@ object GraphNode
 			val currentMinCost = origins.valuesIterator.map { _.currentCost }.min
 			// Selects the next iteration origins - Nodes with the lowest current cost
 			val (delayedOrigins, iterationOrigins) = origins
-				.divideBy { case (_, finder) => ord.equiv(finder.currentCost, currentMinCost) }
+				.divideBy { case (_, finder) => ord.equiv(finder.currentCost, currentMinCost) }.toTuple
 			val blockedNodes = pastNodes ++ iterationOrigins.keys
 			// Takes the next step and merges routes that arrived to the same node
 			val newFinders = iterationOrigins.values.flatMap { _.next(blockedNodes) }.groupBy { _.currentNode }
@@ -361,8 +361,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	@deprecated("Please use toTree instead", "v2.0")
 	def toTreeWithoutEdges = _toTreeWithoutEdges(Set())
 	@deprecated("Please use _toTree instead", "v2.0")
-	private def _toTreeWithoutEdges(traversedNodes: Set[Any]): Tree[N] =
-	{
+	private def _toTreeWithoutEdges(traversedNodes: Set[Any]): Tree[N] = {
 		val newTraversedNodes = traversedNodes + this
 		val children = endNodes.filterNot { traversedNodes.contains(_) }.map { _._toTreeWithoutEdges(newTraversedNodes) }
 		Tree(value, children.toVector)
@@ -689,8 +688,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	@deprecated("Please use allNodesIterator instead", "v2.0")
 	def foreach[U](operation: GNode => U): Unit = foreach(operation, Set())
 	@deprecated("Please use allNodesIterator instead", "v2.0")
-	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] =
-	{
+	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] = {
 		val newTraversedNodes = traversedNodes + this
 		operation(self)
 		endNodes.foldLeft(newTraversedNodes) { (traversed, node) =>

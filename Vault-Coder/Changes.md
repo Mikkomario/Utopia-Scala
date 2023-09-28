@@ -1,5 +1,8 @@
 # Utopia Vault Coder
 
+## v1.10.1 (in development)
+Parent module updates
+
 ## v1.10 - 27.09.2023
 This update introduces better json support, as well as many new data types.
 ### Breaking Changes

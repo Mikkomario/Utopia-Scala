@@ -228,17 +228,15 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @return Validation results that either contain the modified model or a reason for validation failure (either
       *         missing properties or failed casting)
       */
-    def validate(model: template.ModelLike[Property]): ModelValidationResult =
-    {
+    def validate(model: template.ModelLike[Property]): ModelValidationResult = {
         // First checks for missing attributes
         val missing = declarations.filter { d => d.names.forNone(model.containsNonEmpty) }
-        val (missingNonDefaults, missingDefaults) = missing.divideBy { d => d.hasDefault || d.isOptional }
+        val (missingNonDefaults, missingDefaults) = missing.divideBy { d => d.hasDefault || d.isOptional }.toTuple
         
         // Declarations with default values are replaced with their defaults
         if (missingNonDefaults.nonEmpty)
             ModelValidationResult.missing(model, missingNonDefaults)
-        else
-        {
+        else {
             // Tries to convert all declared model properties to required types
             // and checks that each declared (non-default) property has been defined
             val keepBuilder = new VectorBuilder[Constant]()

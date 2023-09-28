@@ -78,6 +78,12 @@ sealed trait TryCatch[+A]
 	  */
 	def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A]
 	
+	/**
+	 * @param failures Additional non-critical failures to assign to this item (call-by-name)
+	 * @return Copy of this item with additional failures included (if appropriate)
+	 */
+	def withAdditionalFailures(failures: => IterableOnce[Throwable]): TryCatch[A]
+	
 	
 	// COMPUTED -------------------------
 	
@@ -166,6 +172,9 @@ object TryCatch
 			logFailures(message)
 			Some(value)
 		}
+		
+		override def withAdditionalFailures(failures: => IterableOnce[Throwable]): TryCatch[A] =
+			copy(failures = this.failures ++ failures)
 	}
 	/**
 	 * Represents a failed attempt
@@ -195,5 +204,7 @@ object TryCatch
 			log(cause, message)
 			None
 		}
+		
+		override def withAdditionalFailures(failures: => IterableOnce[Throwable]): TryCatch[A] = this
 	}
 }

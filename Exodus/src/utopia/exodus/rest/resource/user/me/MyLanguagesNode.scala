@@ -124,7 +124,9 @@ object MyLanguagesNode extends LeafResource[AuthorizedContext]
 						}
 						val (modifications, duplicates) = changesInExisting
 							.divideBy { case (_, (oldFamiliarityId, newFamiliarityId)) =>
-								oldFamiliarityId == newFamiliarityId }
+								oldFamiliarityId == newFamiliarityId
+							}
+							.toTuple
 						val newLanguages = changesMap
 							.filterNot { case (languageId, _) => existingMap.contains(languageId) }
 						

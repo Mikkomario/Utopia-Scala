@@ -59,7 +59,8 @@ trait SimplyDescribed extends Described with DescribedSimpleModelConvertible
 		// Appends description properties, but takes care not to overwrite an existing property with an empty property
 		val descriptionProperties = SimplyDescribed.descriptionPropertiesFrom(
 			descriptions.map { _.description }, descriptionRoles).toVector
-		val (newProperties, overlappingProperties) = descriptionProperties.divideBy { att => base.contains(att.name) }
+		val (newProperties, overlappingProperties) = descriptionProperties
+			.divideBy { att => base.contains(att.name) }.toTuple
 		
 		base ++ (newProperties ++ overlappingProperties.filter { _.value.isDefined })
 	}

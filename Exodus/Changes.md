@@ -1,5 +1,8 @@
 # Utopia Exodus - List of Changes
 
+## v4.1.5 (in development)
+Supports **Flow v2.3**
+
 ## v4.1.4 - 27.09.2023
 Rebuild due to parent module changes.
 

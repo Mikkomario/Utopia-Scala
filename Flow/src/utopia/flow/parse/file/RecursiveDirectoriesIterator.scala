@@ -1,6 +1,7 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.Flag
 
@@ -18,9 +19,9 @@ class RecursiveDirectoriesIterator(origin: Path) extends Iterator[Try[(Path, Vec
 	
 	private val originConsumedFlag = Flag()
 	// Left side is regular children, right side is sub-directories
-	private lazy val children = origin.iterateChildren { _.toVector.divideBy { _.isDirectory } }
+	private lazy val children = origin.iterateChildren { _.divideBy { _.isDirectory }.map { _.toVector } }
 	private lazy val subDirectoriesIterator = children.toOption.iterator
-		.flatMap { case (_, dirs) => dirs.iterator.flatMap { new RecursiveDirectoriesIterator(_) } }
+		.flatMap { case Pair(_, dirs) => dirs.iterator.flatMap { new RecursiveDirectoriesIterator(_) } }
 	
 	
 	// IMPLEMENTED  ---------------------
@@ -29,7 +30,7 @@ class RecursiveDirectoriesIterator(origin: Path) extends Iterator[Try[(Path, Vec
 	
 	override def next() = {
 		if (originConsumedFlag.set())
-			children.map { case (files, _) => origin -> files }
+			children.map { case Pair(files, _) => origin -> files }
 		else
 			subDirectoriesIterator.next()
 	}

@@ -111,9 +111,12 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 			// Checks for existing tokens
 			val tokens = DbAuthTokens.forUserWithId(userId).withScopes.forServiceWithId(serviceId).pull
 			// Checks which of the scopes fulfill the set requirements
-			val (alternativeScopes, requiredScopes) = scopes.divideBy { _.isRequired }
-			val validTokens = tokens.filter { token => token.containsAllScopeIds(requiredScopes.map { _.scope.id }) &&
-				(alternativeScopes.isEmpty || token.containsAnyOfScopeIds(alternativeScopes.map { _.scope.id })) }
+			val (alternativeScopeIds, requiredScopeIds) = scopes.divideBy { _.isRequired }
+				.map { _.map { _.scope.id } }.toTuple
+			val validTokens = tokens.filter { token =>
+				token.containsAllScopeIds(requiredScopeIds) &&
+					(alternativeScopeIds.isEmpty || token.containsAnyOfScopeIds(alternativeScopeIds))
+			}
 			
 			validTokens.find { _.isSessionToken } match
 			{

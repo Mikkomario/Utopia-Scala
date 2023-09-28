@@ -32,15 +32,13 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 	
 	override def allowedMethods = Vector(Get)
 	
-	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
-	{
+	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) = {
 		context.authorizedForScope(ReadPersonalData) { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads the scopes required by the targeted task
 			val scopes = DbTask(taskId).scopes.pull
-			if (scopes.nonEmpty)
-			{
-				val (alternative, required) = scopes.divideBy { _.isRequired }
+			if (scopes.nonEmpty) {
+				val (alternative, required) = scopes.divideBy { _.isRequired }.toTuple
 				val alternativeGroups = alternative.groupBy { _.serviceId }
 				// Reads the scopes currently accessible for the user
 				// (whic is only possible when the session is tied to a user)

@@ -108,10 +108,12 @@ object SqlWriter
 				val packageClassTables = classesByTableName.keySet
 				// Writeable = Class only makes references inside this package
 				// Dependent = Class makes references to other remaining packages
-				val (writeableClasses, dependentClasses) = classesByTableName.divideBy { case (tableName, _) =>
-					references.get(tableName)
-						.exists { refs => ((refs & remainingTableNames) -- packageClassTables).nonEmpty }
-				}
+				val (writeableClasses, dependentClasses) = classesByTableName
+					.divideBy { case (tableName, _) =>
+						references.get(tableName)
+							.exists { refs => ((refs & remainingTableNames) -- packageClassTables).nonEmpty }
+					}
+					.toTuple
 				packageName -> (writeableClasses, dependentClasses)
 			}
 			// Finds the next package to target and starts writing classes within that package

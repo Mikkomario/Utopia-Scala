@@ -139,7 +139,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 								// Case: Interrupted / scheduled to close => closes as many connections as possible
 								else
 									all.divideBy { _.isInUse }
-							}
+							}.toTuple
 							val closeFutures = closing.map { _.tryClose() }
 							val lastLeaveTime = open.filterNot { _.isInUse }.map { _.lastLeaveTime }.minOption
 							

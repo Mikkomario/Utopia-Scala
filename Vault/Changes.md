@@ -1,5 +1,8 @@
 # Utopia Vault - List of Changes
 
+## v1.17.1 (in development)
+Supports **Flow v2.3**
+
 ## v1.17 - 27.09.2023
 This update introduces important bugfixes, as well as better support for DELETE statements.
 ### Breaking Changes

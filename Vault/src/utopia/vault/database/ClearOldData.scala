@@ -103,9 +103,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 								handledTables: Set[Table])(implicit connection: Connection): Unit =
 	{
 		// During this iteration, can only handle tables that don't refer to unhandled tables
-		val (nextIterationTargets, thisIterationTargets) = remainingRules.divideBy { rule =>
-			rule.restrictiveChildTables.forall(handledTables.contains)
-		}
+		val (nextIterationTargets, thisIterationTargets) = remainingRules
+			.divideBy { rule => rule.restrictiveChildTables.forall(handledTables.contains) }.toTuple
 		
 		thisIterationTargets.foreach { rule =>
 			// Checks the general deletion rule first

@@ -83,7 +83,7 @@ object InsertsWriter
 		val tableName = parentClass.tableName
 		writer.println(s"-- Inserts ${instances.size} $classDocName")
 		// Instances with ids are written separate from instances without id
-		val (instancesWithoutId, instancesWithId) = instances.divideBy { _.id.nonEmpty }
+		val (instancesWithoutId, instancesWithId) = instances.divideBy { _.id.nonEmpty }.toTuple
 		if (instancesWithId.nonEmpty)
 			writeInstanceInserts(writer, tableName, instancesWithId, Some(parentClass.idName.column))
 		if (instancesWithoutId.nonEmpty)

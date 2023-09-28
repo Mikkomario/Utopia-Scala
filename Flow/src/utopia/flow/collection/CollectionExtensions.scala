@@ -208,16 +208,13 @@ object CollectionExtensions
 		  * @param f  A function that separates the items
 		  * @param bf an implicit buildFrom for the resulting collection type
 		  * @tparam To type of the resulting collection
-		  * @return The 'false' group, followed by the 'true' group
+		  * @return A Pair that contains first the 'false' group, and then the 'true' group
 		  */
-		def divideBy[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) =
-		{
+		def divideBy[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) = {
 			val falseBuilder = bf.newBuilder(coll)
 			val trueBuilder = bf.newBuilder(coll)
-			
 			iter(coll).iterator.foreach { a => if (f(a)) trueBuilder += a else falseBuilder += a }
-			
-			falseBuilder.result() -> trueBuilder.result()
+			Pair(falseBuilder.result(), trueBuilder.result())
 		}
 		
 		/**
@@ -392,7 +389,7 @@ object CollectionExtensions
 		  * @param f A function for separating / mapping the items
 		  * @tparam L Type of left group items
 		  * @tparam R Type of right group items
-		  * @return Left group and right group
+		  * @return The Left group and then the Right group (as Vectors)
 		  */
 		def divideWith[L, R](f: A => Either[L, R]) = {
 			val lBuilder = new VectorBuilder[L]()
@@ -404,22 +401,14 @@ object CollectionExtensions
 			lBuilder.result() -> rBuilder.result()
 		}
 		/**
-		  * Divides / maps the items in this collection to two groups
-		  * @param f A function for separating / mapping the items
-		  * @tparam L Type of left group items
-		  * @tparam R Type of right group items
-		  * @return Left group and right group
-		  */
-		@deprecated("Please use .divideWith(...) instead", "v1.4.1")
-		def dividedWith[L, R](f: A => Either[L, R]) = divideWith[L, R](f)
-		/**
 		  * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
 		  * resulting group(s)
 		  * @param f A function that accepts an item in this collection and returns 0-n grouped items
 		  *          (Left(x) for a left group item x and Right(y) for a right group item y)
 		  * @tparam L Type of left group items
 		  * @tparam R Type of right group items
-		  * @return Collected left group items and collected right group items as two separate vectors
+		  * @return A Pair containing first the left group items and second the collected right group items.
+		 *         Both groups appear in Vector format.
 		  */
 		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
 			val lBuilder = new VectorBuilder[L]()
@@ -428,7 +417,7 @@ object CollectionExtensions
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
 			}
-			lBuilder.result() -> rBuilder.result()
+			Pair(lBuilder.result(), rBuilder.result())
 		}
 		/**
 		  * Maps the items in this collection into two different collections
@@ -2365,7 +2354,7 @@ object CollectionExtensions
 	{
 		/**
 		  * Divides this collection to two separate collections, one for left items and one for right items
-		  * @return Left items + right items
+		  * @return A pair containing first the Left items (1) and then the Right items (2)
 		  */
 		def divided = {
 			val lBuilder = new VectorBuilder[L]
@@ -2374,7 +2363,7 @@ object CollectionExtensions
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
 			}
-			lBuilder.result() -> rBuilder.result()
+			Pair(lBuilder.result(), rBuilder.result())
 		}
 	}
 	
