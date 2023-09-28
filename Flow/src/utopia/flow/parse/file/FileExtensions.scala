@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.{ApproxEquals, EqualsFunction}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
@@ -36,7 +36,7 @@ object FileExtensions
 	  */
 	implicit def stringToPath(pathString: String): Path = Paths.get(pathString.stripControlCharacters)
 	
-	implicit class RichPath(val p: Path) extends AnyVal
+	implicit class RichPath(val p: Path) extends AnyVal with ApproxEquals[Path]
 	{
 		// COMPUTED ----------------------------
 		
@@ -287,6 +287,12 @@ object FileExtensions
 						Vector.empty
 				}
 		}
+		
+		
+		// IMPLEMENTED  ---------------------------
+		
+		override def ~==(other: Path): Boolean =
+			Try { Files.isSameFile(p, other) }.getOrElse { p.absolute.normalize() == other.absolute.normalize() }
 		
 		
 		// OTHER    -------------------------------
@@ -555,8 +561,7 @@ object FileExtensions
 		  * @param conflictResolve How file overlap conflicts should be handled. Default = Overwrite the old file.
 		  * @return Link to the target path. Failure if file moving failed or if couldn't replace an existing file
 		  */
-		def moveTo(targetDirectory: Path, conflictResolve: FileConflictResolution = Overwrite): Try[Path] =
-		{
+		def moveTo(targetDirectory: Path, conflictResolve: FileConflictResolution = Overwrite): Try[Path] = {
 			// Might not need to move at all
 			if (parentOption.contains(targetDirectory))
 				Success(p)

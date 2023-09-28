@@ -4,6 +4,9 @@
 ### Breaking changes
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
   - You can work around this by appending `.toTuple` after these method calls 
+### Other changes
+- **Path** now extends **ApproxEquals** (after importing **FileExtensions**)
+  - `~==` checks whether the two paths target the same file
 
 ## v2.2 - 27.09.2023
 This update focuses on the pointer system (i.e. the **Changing** trait).  

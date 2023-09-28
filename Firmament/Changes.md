@@ -1,5 +1,8 @@
 # Utopia Firmament - List of Changes
 
+## v1.1.1 (in development)
+Supports **Flow v2.3**
+
 ## v1.1 - 27.09.2023
 This update introduces a new size-altering system (**StandardSizeAdjustable**), 
 as well as certain important **Window**-related bugfixes.  

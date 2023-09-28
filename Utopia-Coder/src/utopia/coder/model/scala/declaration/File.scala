@@ -165,7 +165,7 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 	
 	private def importTargetsFrom(references: Set[Reference]) = {
 		// Those of the imports which can be grouped, are grouped
-		val (individualReferences, groupableReferences) = references.divideBy { _.canBeGrouped }
+		val (individualReferences, groupableReferences) = references.divideBy { _.canBeGrouped }.toTuple
 		(individualReferences.toVector.map { _.toScala.text } ++
 			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
 				if (refs.size > 1)

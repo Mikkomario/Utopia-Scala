@@ -45,8 +45,8 @@ object AwtEventThread
 	def debugString = {
 		val now = Instant.now()
 		val currentTasks = tasks.updateAndGet { _.dropWhile { _.endTime.exists { now - _ > taskKeepDuration } } }
-		val (active, waiting) = currentTasks.divideBy { _.isWaiting }
-		val (running, completed) = active.divideBy { _.endTime.isDefined }
+		val (active, waiting) = currentTasks.divideBy { _.isWaiting }.toTuple
+		val (running, completed) = active.divideBy { _.endTime.isDefined }.toTuple
 		
 		val waitingString = {
 			if (waiting.isEmpty)

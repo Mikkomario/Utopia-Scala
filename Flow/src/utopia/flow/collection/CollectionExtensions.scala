@@ -2354,7 +2354,7 @@ object CollectionExtensions
 	{
 		/**
 		  * Divides this collection to two separate collections, one for left items and one for right items
-		  * @return A pair containing first the Left items (1) and then the Right items (2)
+		  * @return The Left items (1) and then the Right items (2)
 		  */
 		def divided = {
 			val lBuilder = new VectorBuilder[L]
@@ -2363,7 +2363,7 @@ object CollectionExtensions
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
 			}
-			Pair(lBuilder.result(), rBuilder.result())
+			lBuilder.result() -> rBuilder.result()
 		}
 	}
 	

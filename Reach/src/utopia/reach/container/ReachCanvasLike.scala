@@ -170,7 +170,7 @@ trait ReachCanvasLike
 		// Moves to the next layer of components, if there is one
 		val nextSizeChangedChildren = nextSizeChangeChildrenBuilder.result().toSet
 		val paintedChildren = nextSizeChangedChildren ++ nextPositionChangeChildrenBuilder.result()
-		val (leaves, branches) = componentQueues.divideBy { _._1.hasSize > 1 }
+		val (leaves, branches) = componentQueues.divideBy { _._1.hasSize > 1 }.toTuple
 		val nextQueues = branches.map { case (queue, wasPainted) =>
 			if (wasPainted)
 				queue.tail -> wasPainted

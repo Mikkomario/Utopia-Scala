@@ -226,9 +226,9 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 					// Checks for updates to apply, based on the targeted region
 					val (updatesToDelay, updatesToApply) = region match {
 						case Some(region) =>
-							updates.divideBy { case (image, position) =>
-								Bounds(position, image.size).overlapsWith(region)
-							}
+							updates
+								.divideBy { case (image, position) => Bounds(position, image.size).overlapsWith(region) }
+								.toTuple
 						case None => Vector() -> updates
 					}
 					// Calculates the new buffer state

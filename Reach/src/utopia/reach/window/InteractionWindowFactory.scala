@@ -129,7 +129,7 @@ trait InteractionWindowFactory[A]
 					val (mainContent, buttonBlueprints, defaultActionEnabledPointer) = createContent(factories)
 					
 					// Groups the buttons based on location
-					val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }
+					val (bottomButtons, topButtons) = buttonBlueprints.divideBy { _.location.isTop }.toTuple
 					
 					// Places the main content and the buttons in a vertical stack
 					val factoriesWithoutContext = factories.withoutContext

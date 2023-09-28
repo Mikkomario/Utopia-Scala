@@ -144,13 +144,13 @@ trait InstanceDeclaration extends Declaration with Mergeable[InstanceDeclaration
 			7) Other methods (first public)
 			8) Nested objects, then nested classes (first public)
 		*/
-		val (attributes, computed) = properties.divideBy { _.isComputed }
+		val (attributes, computed) = properties.divideBy { _.isComputed }.toTuple
 		
-		val (concreteComputed, abstractComputed) = computed.divideBy { _.isAbstract }
-		val (concreteMethods, abstractMethods) = methods.divideBy { _.isAbstract }
+		val (concreteComputed, abstractComputed) = computed.divideBy { _.isAbstract }.toTuple
+		val (concreteMethods, abstractMethods) = methods.divideBy { _.isAbstract }.toTuple
 		
-		val (newComputed, implementedComputed) = concreteComputed.divideBy { _.isOverridden }
-		val (otherMethods, implementedMethods) = concreteMethods.divideBy { _.isOverridden }
+		val (newComputed, implementedComputed) = concreteComputed.divideBy { _.isOverridden }.toTuple
+		val (otherMethods, implementedMethods) = concreteMethods.divideBy { _.isOverridden }.toTuple
 		
 		val visibilityOrdering: Ordering[Declaration] = (a, b) => -a.visibility.compareTo(b.visibility)
 		val fullOrdering = new CombinedOrdering[Declaration](Vector(

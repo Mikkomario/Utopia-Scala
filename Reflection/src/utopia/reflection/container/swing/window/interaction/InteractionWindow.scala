@@ -134,7 +134,7 @@ trait InteractionWindow[+A]
 			implicit val baseC: ColorContext = context
 			Stack.buildColumnWithContext() { mainStack =>
 				// Some of the buttons may be placed before the dialog content, some after
-				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Close }
+				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Close }.toTuple
 				if (topButtons.nonEmpty)
 					mainStack += buttonRow(topButtons, context.stackMargin.optimal)
 				mainStack += dialogContent
