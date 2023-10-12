@@ -35,8 +35,7 @@ object MailReadApp extends App
 	val emailAddress = ask("Please write your email address (user)")
 	val password = ask("Please write your (third party app) email password")
 	val auth = Authentication(emailAddress, password)
-	implicit val settings: ReadSettings =
-	{
+	implicit val settings: ReadSettings = {
 		val answer = ask("Do you want to use imap (default) or pop3 protocol (i/p)?")
 		if (answer.startsWithIgnoreCase("p"))
 			PopReadSettings(serverAddress, auth)
@@ -44,22 +43,19 @@ object MailReadApp extends App
 			ImapReadSettings(serverAddress, auth)
 	}
 	
-	val senderFilter =
-	{
+	val senderFilter = {
 		if (ask("Do you want to filter emails by sender?").startsWithIgnoreCase("y"))
 			ask("Please write sender email address that is targeted")
 		else
 			""
 	}
-	val subjectFilter =
-	{
+	val subjectFilter = {
 		if (ask("Do you want to filter emails by subject?").startsWithIgnoreCase("y"))
 			ask("Please write the subject portion that must be included")
 		else
 			""
 	}
-	val attachmentsDirectory =
-	{
+	val attachmentsDirectory = {
 		if (ask("Do you want to read attachments?").startsWithIgnoreCase("y"))
 		{
 			val answer = ask(s"Please write the relative or absolute path to the directory where the attachments will be stored (current directory = ${
