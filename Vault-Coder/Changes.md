@@ -2,6 +2,10 @@
 
 ## v1.10.1 (in development)
 Parent module updates
+### New features
+- You may now specify an extending upper length limit within the type declaration, e.g. by writing `"String(3-9)"`
+### Other changes
+- Setting `"crop": true` to a property without a length limit now sets the column length rule to `"crop"`
 
 ## v1.10 - 27.09.2023
 This update introduces better json support, as well as many new data types.

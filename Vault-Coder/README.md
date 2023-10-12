@@ -176,6 +176,7 @@ Each property object should contain following properties:
   - `"text" / "String" / "varchar"` - Results in a **String** / Varchar type (default name: `"text"`)
     - You may specify the maximum string length in either parentheses at the end of the type (e.g. `"String(32)"`) or 
       via the `"length"` property (optional feature).
+      - Additionally, you may specify a flexible limit by separating the initial and the maximum limit with `-`
     - These strings are expected to be valid when empty. They default to an empty string, 
       unless another default value is specified.
   - `"nonEmptyString" / "requiredString" / "StringNotEmpty" / "textNotEmpty"` - 
@@ -183,6 +184,7 @@ Each property object should contain following properties:
   - `"Int"` - Results in **Int** numeric type (default name: `"index"`)
     - You may specify the maximum allowed value in either parentheses at the end of the type 
       (e.g. `"Int(tiny)"` OR `"Int(100)"`) (optional feature)
+      - This also supports a flexible limit that is expanded as necessary (e.g. `"Int(20-40000)"`)
   - `"Long" / "bigint" / "number"` - Results in **Long** numeric type (default name: `"number"`)
   - `"Double"` - Results in **Double** numeric type (default name: `"amount"`)
   - `"Boolean" / "flag"` - Results in **Boolean** type (true / false) (default name: `"flag"`)

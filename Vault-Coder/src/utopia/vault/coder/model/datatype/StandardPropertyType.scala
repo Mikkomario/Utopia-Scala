@@ -40,7 +40,8 @@ object StandardPropertyType
 	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[Name] = None): Option[PropertyType] =
 	{
 		// Text length may be specified within parentheses after the type (E.g. "String(3)")
-		def appliedLength = typeName.afterFirst("(").untilFirst(")").int.orElse(length).getOrElse(255)
+		def appliedLength = typeName.afterFirst("(").untilFirst(")").untilFirst("-")
+			.int.orElse(length).getOrElse(255)
 		
 		val lowerTypeName = typeName.toLowerCase
 		lowerTypeName.untilFirst("(") match {

@@ -4,6 +4,7 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.coder.model.data
 import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.error.DataTypeException
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.operator.EqualsExtensions._
@@ -420,13 +421,19 @@ object ClassReader
 		val sqlDefault = model("sql_default", "sql_def").stringOr { default.toSql.getOrElse("") }
 		
 		val limit = {
+			// Attempts to parse the limit from the "limit" property
 			val raw = model("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
-			val base = raw.int match {
+			val base = raw.int
+				// Uses type property upper limit as a backup
+				.orElse { model("type").getString.afterFirst("(").untilFirst(")").afterFirst("-").int } match
+			{
 				case Some(max) => s"to $max"
 				case None => raw.getString
 			}
-			if (model("allow_crop", "crop").getBoolean)
-				s"$base or crop"
+			// Adds cropping, if appropriate
+			if (model("allow_crop", "crop").getBoolean) {
+				if (base.isEmpty) "crop" else s"$base or crop"
+			}
 			else
 				base
 		}
