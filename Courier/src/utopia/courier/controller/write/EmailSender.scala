@@ -1,9 +1,11 @@
 package utopia.courier.controller.write
 
+import utopia.courier.controller.write.EmailSender.CustomMimeMessage
 import utopia.courier.model.write.WriteSettings
 import utopia.courier.model.{Authentication, Email}
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 
 import java.util.Date
@@ -15,6 +17,8 @@ import scala.util.Try
 
 object EmailSender
 {
+	// OTHER    -------------------------------
+	
 	/**
 	  * Creates a new email sender
 	  * @param defaultMaxSendAttemptsPerMessage Maximum amount of attempts to send a single email by default
@@ -27,6 +31,19 @@ object EmailSender
 	def apply(defaultMaxSendAttemptsPerMessage: Int = 2, defaultDurationBetweenAttempts: FiniteDuration = 30.seconds)
 	         (implicit settings: WriteSettings) =
 		new EmailSender(settings, defaultMaxSendAttemptsPerMessage, defaultDurationBetweenAttempts)
+		
+	
+	// NESTED   ------------------------------
+	
+	private class CustomMimeMessage(session: Session, messageId: String) extends MimeMessage(session)
+	{
+		override def updateMessageID() = {
+			if (messageId.isEmpty)
+				super.updateMessageID()
+			else
+				setHeader("Message-ID", messageId.startingWith("<").endingWith(">"))
+		}
+	}
 }
 
 /**
@@ -82,7 +99,7 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 				val session = Session.getInstance(properties, authenticator.orNull)
 				session.setDebug(false)
 				
-				val message = new MimeMessage(session)
+				val message = new CustomMimeMessage(session, email.messageId)
 				message.setFrom(email.headers.sender)
 				message.addHeader("Reply-To", email.headers.replyTo)
 				message.addHeader("X-Mailer", "JavaMail API")
@@ -90,6 +107,10 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 				message.setSubject(email.subject)
 				email.headers.recipients.foreach { case (recipient, recipientType) =>
 						message.addRecipient(recipientType, new InternetAddress(recipient))
+				}
+				email.inReplyTo.notEmpty.foreach { id => message.setHeader("In-Reply-To", s"<$id>") }
+				NotEmpty((email.references ++ email.inReplyTo.notEmpty).distinct).foreach { refs =>
+					message.setHeader("References", refs.map { id => s"<$id>" }.mkString(" "))
 				}
 				val textPart = email.message.notEmpty.map { text =>
 					val part = new MimeBodyPart()
