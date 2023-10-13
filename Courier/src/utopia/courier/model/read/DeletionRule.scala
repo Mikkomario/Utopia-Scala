@@ -20,12 +20,10 @@ sealed trait DeletionRule
 	  * @return Whether messages should be deleted which failed to be processed or read
 	  */
 	def shouldDeleteFailed: Boolean
-	
 	/**
-	  * @param wasFullSuccess Whether the whole message reading succeeded
-	  * @return Whether successfully processed messages should be deleted
-	  */
-	def shouldDeleteProcessed(wasFullSuccess: Boolean): Boolean
+	 * @return Whether successfully read messages should be deleted
+	 */
+	def shouldDeleteProcessed: Boolean
 }
 
 object DeletionRule
@@ -38,27 +36,17 @@ object DeletionRule
 		override def canDelete = false
 		override def shouldDeleteSkipped = false
 		override def shouldDeleteFailed = false
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = false
+		override def shouldDeleteProcessed: Boolean = false
 	}
 	/**
 	  * A rule that deletes all messages where reading succeeded
 	  */
-	case object DeleteOnAnySuccess extends DeletionRule
+	case object DeleteProcessed extends DeletionRule
 	{
 		override def canDelete = true
 		override def shouldDeleteSkipped = false
 		override def shouldDeleteFailed = false
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = true
-	}
-	/**
-	  * A rule that deletes messages where reading succeeded, but only if no failure interrupted the process
-	  */
-	case object DeleteOnFullSuccess extends DeletionRule
-	{
-		override def canDelete = true
-		override def shouldDeleteSkipped = false
-		override def shouldDeleteFailed = false
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = wasFullSuccess
+		override def shouldDeleteProcessed: Boolean = true
 	}
 	/**
 	  * A rule that deletes messages that failed to be processed
@@ -68,7 +56,7 @@ object DeletionRule
 		override def canDelete = true
 		override def shouldDeleteSkipped = false
 		override def shouldDeleteFailed = true
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = false
+		override def shouldDeleteProcessed: Boolean = false
 	}
 	/**
 	  * A rule that deletes skipped messages only
@@ -78,7 +66,7 @@ object DeletionRule
 		override def canDelete = true
 		override def shouldDeleteSkipped = true
 		override def shouldDeleteFailed = false
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = false
+		override def shouldDeleteProcessed: Boolean = false
 	}
 	/**
 	  * A rule that deletes all non-failing messages, including those that were skipped
@@ -88,7 +76,17 @@ object DeletionRule
 		override def canDelete = true
 		override def shouldDeleteSkipped = true
 		override def shouldDeleteFailed = false
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = true
+		override def shouldDeleteProcessed: Boolean = true
+	}
+	/**
+	 * A rule that deletes read messages, whether reading succeeded or failed. Preserves messages marked as skipped.
+	 */
+	case object DeleteAllExceptSkipped extends DeletionRule
+	{
+		override def canDelete: Boolean = true
+		override def shouldDeleteSkipped: Boolean = false
+		override def shouldDeleteFailed: Boolean = true
+		override def shouldDeleteProcessed: Boolean = true
 	}
 	/**
 	  * A rule that deletes messages after they have been read or skipped, or after they have caused a read failure
@@ -98,6 +96,6 @@ object DeletionRule
 		override def canDelete = true
 		override def shouldDeleteSkipped = true
 		override def shouldDeleteFailed = true
-		override def shouldDeleteProcessed(wasFullSuccess: Boolean) = true
+		override def shouldDeleteProcessed: Boolean = true
 	}
 }

@@ -4,6 +4,13 @@
 ### Breaking changes
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
   - You can work around this by appending `.toTuple` after these method calls 
+### Deprecations
+- Renamed `Regex.parenthesis` to `.parentheses`
+### New methods
+- **Iterator**
+  - Added `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**
+- **Regex** (object)
+  - Added `.backslash`
 ### Other changes
 - **Path** now extends **ApproxEquals** (after importing **FileExtensions**)
   - `~==` checks whether the two paths target the same file

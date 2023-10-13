@@ -120,9 +120,16 @@ object Regex
 	def numericParts = integerPart
 	
 	/**
+	 * A regular expression that matches a single (non-escaped) backslash
+	 */
+	val backslash = apply("\\\\")
+	
+	/**
 	 * A regular expression that finds parenthesis ( ) content
 	 */
-	val parenthesis = escape('(').followedBy(any).followedBy(escape(')'))
+	val parentheses = escape('(').followedBy(any).followedBy(escape(')'))
+	@deprecated("Renamed to .parentheses", "v2.3")
+	def parenthesis = parentheses
 	
 	/**
 	  * Creates a regex that accepts any of the specified characters. You don't need to worry about regular expressions

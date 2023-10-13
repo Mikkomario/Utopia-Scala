@@ -1,5 +1,16 @@
 # Utopia Courier - List of Changes
 
+## v1.1 (in development)
+Folder-targeting
+### Breaking changes
+- Targeted folder or folders are now specified using a **TargetFolders** instance 
+  instead of simply using a folder name, as before
+- Removed "all reading succeeded" -condition from deletion rules
+- Iterative email reader functions don't have their iterator terminate on failures anymore
+- Removed max read count -parameter from iterative mail read methods
+### New features
+- It is now possible to target multiple folders when reading email
+
 ## v1.0.7 - 01.05.2023
 Rebuild due to the changes in other modules.
 

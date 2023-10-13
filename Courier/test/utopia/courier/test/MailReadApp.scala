@@ -1,8 +1,8 @@
 package utopia.courier.test
 
-import utopia.courier.controller.read.{EmailBuilder, EmailReader}
+import utopia.courier.controller.read.{EmailBuilder, EmailReader, TargetFolders}
 import utopia.courier.model.Authentication
-import utopia.courier.model.read.{ImapReadSettings, PopReadSettings, ReadSettings}
+import utopia.courier.model.read.{FolderPath, ImapReadSettings, PopReadSettings, ReadSettings}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.parse.file.FileExtensions._
@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
   */
 object MailReadApp extends App
 {
-	def ask(question: String = "") = {
+	private def ask(question: String = "") = {
 		if (question.nonEmpty)
 			println(question)
 		val str = StdIn.readLine()
@@ -31,11 +31,11 @@ object MailReadApp extends App
 	println("Welcome to email reader app")
 	println("You can quit at any time by typing 'exit' as input")
 	
-	val serverAddress = ask("Please write your email service provider address (host)")
-	val emailAddress = ask("Please write your email address (user)")
-	val password = ask("Please write your (third party app) email password")
-	val auth = Authentication(emailAddress, password)
-	implicit val settings: ReadSettings = {
+	private val serverAddress = ask("Please write your email service provider address (host)")
+	private val emailAddress = ask("Please write your email address (user)")
+	private val password = ask("Please write your (third party app) email password")
+	private val auth = Authentication(emailAddress, password)
+	private implicit val settings: ReadSettings = {
 		val answer = ask("Do you want to use imap (default) or pop3 protocol (i/p)?")
 		if (answer.startsWithIgnoreCase("p"))
 			PopReadSettings(serverAddress, auth)
@@ -43,19 +43,19 @@ object MailReadApp extends App
 			ImapReadSettings(serverAddress, auth)
 	}
 	
-	val senderFilter = {
+	private val senderFilter = {
 		if (ask("Do you want to filter emails by sender?").startsWithIgnoreCase("y"))
 			ask("Please write sender email address that is targeted")
 		else
 			""
 	}
-	val subjectFilter = {
+	private val subjectFilter = {
 		if (ask("Do you want to filter emails by subject?").startsWithIgnoreCase("y"))
 			ask("Please write the subject portion that must be included")
 		else
 			""
 	}
-	val attachmentsDirectory = {
+	private val attachmentsDirectory = {
 		if (ask("Do you want to read attachments?").startsWithIgnoreCase("y"))
 		{
 			val answer = ask(s"Please write the relative or absolute path to the directory where the attachments will be stored (current directory = ${
@@ -68,7 +68,7 @@ object MailReadApp extends App
 		else
 			None
 	}
-	val reader = EmailReader.filtered { headers =>
+	private val reader = EmailReader.filtered { headers =>
 		if (senderFilter.nonEmpty && headers.sender.toLowerCase != senderFilter.toLowerCase)
 			None
 		else if (subjectFilter.isEmpty || headers.subject.containsIgnoreCase(subjectFilter))
@@ -77,12 +77,17 @@ object MailReadApp extends App
 			None
 	}
 	
-	val readCount = ask("How many emails do you want to read? (default = 1)").intOr(1)
+	private val readCount = ask("How many emails do you want to read? (default = 1)").intOr(1)
+	private val targeting = TargetFolders { tree =>
+		val foldersStr = ask(s"Which folders do you wish to read?\nAvailable folders: ${
+			tree.leavesIterator.map { _.nav }.mkString(", ")}\nHint: Specify a comma-separated list")
+		foldersStr.split(',').iterator.map { s => FolderPath(s.trim) }
+	}
 	
-	reader.iterateBlocking() { iter =>
+	reader.iterateBlocking(targeting) { iter =>
 		iter.take(readCount).foreach {
 			case Success(email) =>
-				println()
+				println("\n-------------------------------")
 				println(s"Sent by ${email.sender} at ${email.sendTime.toLocalDateTime}")
 				println(s"Subject: ${email.subject}")
 				if (attachmentsDirectory.nonEmpty && email.attachmentPaths.nonEmpty)

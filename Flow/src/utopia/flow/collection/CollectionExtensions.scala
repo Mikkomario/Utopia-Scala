@@ -1975,6 +1975,17 @@ object CollectionExtensions
 				case None => TryCatch.Failure(new IllegalStateException("trySucceedOnce called for an empty iterator"))
 			}
 		}
+		
+		/**
+		 * @param f A mapping function that may yield a failure
+		 * @tparam B Type of mapping results, when successful
+		 * @return Copy of this iterator where successful results are mapped using the specified function.
+		 *         The mapping is performed on-call only.
+		 */
+		def flatMapSuccesses[B](f: A => Try[B]): Iterator[Try[B]] = i.map {
+			case Success(item) => f(item)
+			case Failure(error) => Failure(error)
+		}
 	}
 	
 	
