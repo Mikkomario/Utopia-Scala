@@ -8,6 +8,8 @@ Folder-targeting
 - Removed "all reading succeeded" -condition from deletion rules
 - Iterative email reader functions don't have their iterator terminate on failures anymore
 - Removed max read count -parameter from iterative mail read methods
+- Replaced **EmailHeadersLike** with **EmailHeaders**
+- Added new (required) email headers: **Message-ID**, **In-Reply-To** and **References**
 ### New features
 - It is now possible to target multiple folders when reading email
 

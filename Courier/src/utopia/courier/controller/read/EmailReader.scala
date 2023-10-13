@@ -447,8 +447,21 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 							}.toMap
 					def replyTo = Option(message.getReplyTo).flatMap { _.headOption }.map { _.toString }
 						.getOrElse("")
+					
+					lazy val mimeMessage = message match {
+						case m: MimeMessage => Some(m)
+						case _ => None
+					}
+					def messageId = mimeMessage match {
+						case Some(m) => m.getMessageID
+						case None => message.getHeader("Message-ID").headOption.getOrElse("")
+					}
+					def inReplyTo = message.getHeader("In-Reply-To").headOption.getOrElse("")
+					def references = message.getHeader("References").toVector
+					
 					// Creates a builder, if necessary
-					makeBuilder(new LazyEmailHeadersView(sender, subject, sentTime, recipients, replyTo))
+					makeBuilder(new LazyEmailHeadersView(sender, subject, messageId, sentTime, recipients, inReplyTo,
+						references, replyTo))
 				} match {
 					case Success(builder) =>
 						// May delete skipped messages (ignores failures)
