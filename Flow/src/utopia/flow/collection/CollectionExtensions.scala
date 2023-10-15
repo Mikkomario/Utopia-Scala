@@ -301,6 +301,8 @@ object CollectionExtensions
 	
 	implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
 	{
+		// COMPUTED -----------------------------
+		
 		/**
 		  * @return Whether all items within this collection are considered equal (comparing with ==)
 		  */
@@ -318,6 +320,24 @@ object CollectionExtensions
 		  * @return A version of this collection that caches iteration results
 		  */
 		def caching = CachingSeq.from(i)
+		
+		
+		// OTHER    --------------------------
+		
+		/**
+		 * Performs the specified operation for all elements in this collection,
+		 * but only while the specified condition returns true.
+		 * @param condition A condition that is required for the iteration to continue.
+		 *                  Called between each iteration.
+		 * @param f Function called for each item
+		 * @tparam U Arbitrary function result type
+		 */
+		def foreachWhile[U](condition: => Boolean)(f: A => U) = {
+			val iter = i.iterator
+			while (condition && iter.hasNext) {
+				f(iter.next())
+			}
+		}
 		
 		/**
 		  * Checks whether the specified condition matches none of the items in this collection
@@ -1069,6 +1089,21 @@ object CollectionExtensions
 	
 	class SeqOperations[Repr, S <: IsSeq[Repr]](coll: Repr, seq: S)
 	{
+		/**
+		 * @param item An item to append to this collection, provided it is distinct
+		 * @param buildFrom Implicit build-from
+		 * @tparam B type of items in the resulting collection
+		 * @tparam That Type of the resulting collection
+		 * @return Copy of this collection that contains the specified item
+		 */
+		def appendIfDistinct[B >: seq.A, That](item: B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
+			val ops = seq(coll)
+			if (ops.contains(item))
+				buildFrom.fromSpecific(coll)(ops)
+			else
+				buildFrom.fromSpecific(coll)(ops :+ item)
+		}
+		
 		/**
 		  * Maps a single item in this sequence
 		  * @param index     The index that should be mapped
@@ -1976,6 +2011,12 @@ object CollectionExtensions
 			}
 		}
 		
+		/**
+		 * @param f A mapping function performed for successful elements
+		 * @tparam B Mapping result type
+		 * @return Copy of this iterator where all successful elements are mapped (lazily)
+		 */
+		def mapSuccesses[B](f: A => B): Iterator[Try[B]] = i.map { _.map(f) }
 		/**
 		 * @param f A mapping function that may yield a failure
 		 * @tparam B Type of mapping results, when successful

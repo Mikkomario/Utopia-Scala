@@ -1,6 +1,6 @@
 package utopia.courier.controller.read
 
-import utopia.courier.model.Email
+import utopia.courier.model.{Email, EmailAddress}
 import utopia.courier.model.read.DeletionRule.NeverDelete
 import utopia.courier.model.read.{DeletionRule, FolderPath, ReadSettings}
 import utopia.flow.collection.CollectionExtensions._
@@ -8,6 +8,7 @@ import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 
@@ -19,10 +20,16 @@ import javax.mail.internet.MimeMessage
 import javax.mail._
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Codec
 import scala.util.{Failure, Success, Try}
 
 object EmailReader
 {
+	// ATTRIBUTES   --------------------------
+	
+	private implicit val defaultCodec: Codec = Codec.UTF8
+	
+	
 	// COMPUTED ------------------------------
 	
 	/**
@@ -229,7 +236,8 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 		private var nextMessageIndex = 1
 		private var queuedFailures: Iterator[Throwable] = Iterator.empty
 		
-		override def hasNext: Boolean = openFolder.isDefined || queuedFailures.hasNext || openNextFolder()
+		override def hasNext: Boolean = queuedFailures.hasNext || openFolder.exists { _._2 > nextMessageIndex } ||
+			openNextFolder()
 		
 		
 		// IMPLEMENTED  --------------------------
@@ -239,16 +247,11 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 			// Case: A failure was queued => Returns the queued failure
 			case Some(error) => Failure(error)
 			case None =>
-				openFolder match {
+				openFolder.filter { _._2 > nextMessageIndex } match {
 					// Case: A folder has been opened (as expected) => Reads the next message from the folder
-					case Some((folder, folderSize)) =>
+					case Some((folder, _)) =>
 						val message = Try { folder.getMessage(nextMessageIndex) }
-						// Case: There remain messages to read => Advances the index
-						if (nextMessageIndex < folderSize)
-							nextMessageIndex += 1
-						// Case: All messages have now been read => Closes the folder
-						else
-							close(folder).failure.foreach(queue)
+						nextMessageIndex += 1
 						// Returns the message read result
 						message
 					// Case: A folder has not been opened (unexpected) => Attempts to open one
@@ -276,47 +279,57 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 		
 		// Returns if this iterator may return new items afterwards
 		@tailrec
-		private def openNextFolder(): Boolean = source.nextOption() match {
-			// Case: Failed to read the next folder => Queues the encountered failure
-			case Some(Failure(error)) =>
-				queue(error)
-				true
-			// Case: Next folder is available
-			case Some(Success(folder)) =>
-				// Attempts to open the folder
-				Try { folder.open(if (deletionRule.canDelete) Folder.READ_WRITE else Folder.READ_ONLY) }
-					// Counts the messages in the folder
-					.flatMap { _ => Try { folder.getMessageCount } } match
-				{
-					// Case: Folder successfully opened
-					case Success(messageCount) =>
-						// Case: All messages in this folder are requested to be skipped
-						// => Closes the folder immediately
-						if (remainingSkipCount >= messageCount) {
-							remainingSkipCount -= messageCount
-							close(folder) match {
-								// Case: Closing succeeded => Moves to the next folder, if possible
-								case Success(_) => openNextFolder()
-								// Case: Closing failed => Prepares the closing error as the next element
+		private def openNextFolder(): Boolean = {
+			// Closes the previously open folder before opening the next folder
+			openFolder.flatMap { case (folder, _) => close(folder).failure } match {
+				// Case: Failed to close the folder => Queues the failure
+				case Some(failure) =>
+					queue(failure)
+					true
+				// Case: Previous folder closed => Opens the next folder
+				case None =>
+					source.nextOption() match {
+						// Case: Failed to read the next folder => Queues the encountered failure
+						case Some(Failure(error)) =>
+							queue(error)
+							true
+						// Case: Next folder is available
+						case Some(Success(folder)) =>
+							// Attempts to open the folder
+							Try { folder.open(if (deletionRule.canDelete) Folder.READ_WRITE else Folder.READ_ONLY) }
+								// Counts the messages in the folder
+								.flatMap { _ => Try { folder.getMessageCount } } match {
+								// Case: Folder successfully opened
+								case Success(messageCount) =>
+									// Case: All messages in this folder are requested to be skipped
+									// => Closes the folder immediately
+									if (remainingSkipCount >= messageCount) {
+										remainingSkipCount -= messageCount
+										close(folder) match {
+											// Case: Closing succeeded => Moves to the next folder, if possible
+											case Success(_) => openNextFolder()
+											// Case: Closing failed => Prepares the closing error as the next element
+											case Failure(error) =>
+												queue(error)
+												true
+										}
+									}
+									// Case: There are messages to iterate => Prepares for the iteration
+									else {
+										nextMessageIndex = 1 + remainingSkipCount
+										remainingSkipCount = 0
+										openFolder = Some(folder -> messageCount)
+										true
+									}
+								// Case: Failed to open the folder => Prepares the error as the next element
 								case Failure(error) =>
 									queue(error)
 									true
 							}
-						}
-						// Case: There are messages to iterate => Prepares for the iteration
-						else {
-							nextMessageIndex = 1 + remainingSkipCount
-							remainingSkipCount = 0
-							openFolder = Some(folder -> messageCount)
-							true
-						}
-					// Case: Failed to open the folder => Prepares the error as the next element
-					case Failure(error) =>
-						queue(error)
-						true
-				}
-			// Case: No more folders available
-			case None => false
+						// Case: No more folders available
+						case None => false
+					}
+			}
 		}
 		
 		private def close(folder: Folder) = {
@@ -443,21 +456,33 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 							.flatMap { recipientType =>
 								Option(message.getRecipients(recipientType))
 									.filter { _.length > 0 }
-									.map { recipientType -> _.toVector.map { _.toString } }
+									.map { recipientType -> _.toVector.map { a => EmailAddress(a.toString) } }
 							}.toMap
-					def replyTo = Option(message.getReplyTo).flatMap { _.headOption }.map { _.toString }
-						.getOrElse("")
+					def replyTo = Option(message.getReplyTo).flatMap { _.headOption }
+						.map { a => EmailAddress(a.toString) }
 					
 					lazy val mimeMessage = message match {
 						case m: MimeMessage => Some(m)
 						case _ => None
 					}
-					def messageId = mimeMessage match {
-						case Some(m) => m.getMessageID
-						case None => message.getHeader("Message-ID").headOption.getOrElse("")
+					def messageId = (mimeMessage match {
+						case Some(m) => Option(m.getMessageID)
+						case None => Option(message.getHeader("Message-ID")).flatMap { _.headOption }
+					}) match {
+						case Some(mId) => normalizeHeaderValue(mId)
+						case None => ""
 					}
-					def inReplyTo = message.getHeader("In-Reply-To").headOption.getOrElse("")
-					def references = message.getHeader("References").toVector
+					def inReplyTo = Option(message.getHeader("In-Reply-To")).flatMap { _.headOption } match {
+						case Some(mId) => normalizeHeaderValue(mId)
+						case None => ""
+					}
+					def references = Option(message.getHeader("References")) match {
+						case Some(refs) =>
+							refs.toVector
+								.flatMap { _.split(' ').filter { _.nonEmpty } }
+								.map(normalizeHeaderValue).filter { _.nonEmpty }
+						case None => Vector.empty
+					}
 					
 					// Creates a builder, if necessary
 					makeBuilder(new LazyEmailHeadersView(sender, subject, messageId, sentTime, recipients, inReplyTo,
@@ -476,5 +501,11 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 				}
 			}
 		}
+		
+		
+		// OTHER    --------------------------
+		
+		private def normalizeHeaderValue(value: String) =
+			value.stripControlCharacters.trim.notStartingWith("<").notEndingWith(">")
 	}
 }

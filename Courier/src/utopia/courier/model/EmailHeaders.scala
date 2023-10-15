@@ -2,7 +2,6 @@ package utopia.courier.model
 
 import utopia.courier.model.write.Recipients
 import utopia.flow.time.Now
-import utopia.flow.util.StringExtensions._
 
 import java.time.Instant
 import java.util.UUID
@@ -24,10 +23,10 @@ object EmailHeaders
 	  * @param receiveTime Time when this message was received
 	  * @return A new set of email headers
 	  */
-	def apply(sender: String, recipients: Recipients = Recipients.empty, subject: String = "No Subject",
+	def apply(sender: EmailAddress, recipients: Recipients = Recipients.empty, subject: String = "No Subject",
 	          messageId: String = UUID.randomUUID().toString, inReplyTo: String = "",
 	          references: Vector[String] = Vector(),
-	          replyTo: String = "", sendTime: Instant = Now, receiveTime: Instant = Now): EmailHeaders =
+	          replyTo: Option[EmailAddress] = None, sendTime: Instant = Now, receiveTime: Instant = Now): EmailHeaders =
 		_EmailHeaders(sender, recipients, subject, messageId, inReplyTo, references, replyTo, sendTime, receiveTime)
 	
 	/**
@@ -35,15 +34,15 @@ object EmailHeaders
 	  * @param sender Message sender (your email address)
 	  * @param recipients Message recipients
 	  * @param subject Message subject (default = "No Subject")
-	  * @param messageId Unique message id (default = random UUID)
+	  * @param messageId Unique message id (default = empty = do not assign a custom id)
 	  * @param inReplyTo Id of the message this message is a reply to. Empty if not a reply.
 	  * @param references Ids of the referenced parent messages, from oldest to most recent.
 	  * @param replyTo Custom reply-to field.
 	  * @return A new set of email headers
 	  */
-	def outgoing(sender: String, recipients: Recipients, subject: String = "No Subject",
-	             messageId: String = UUID.randomUUID().toString, inReplyTo: String = "",
-	             references: Vector[String] = Vector(), replyTo: String = "") =
+	def outgoing(sender: EmailAddress, recipients: Recipients, subject: String = "No Subject",
+	             messageId: String = "", inReplyTo: String = "",
+	             references: Vector[String] = Vector(), replyTo: Option[EmailAddress] = None) =
 		apply(sender, recipients, subject, messageId, inReplyTo, references, replyTo)
 	
 	/**
@@ -59,23 +58,23 @@ object EmailHeaders
 	  * @param receiveTime Message receive time (default = now)
 	  * @return A new set of email headers
 	  */
-	def incoming(sender: String, subject: String, messageId: String, sendTime: Instant,
+	def incoming(sender: EmailAddress, subject: String, messageId: String, sendTime: Instant,
 	             recipients: Recipients = Recipients.empty, inReplyTo: String = "",
 	             references: Vector[String] = Vector(),
-	             replyTo: String = "", receiveTime: Instant = Now) =
-		apply(sender, recipients, subject, messageId, inReplyTo, references, if (replyTo == sender) "" else replyTo,
+	             replyTo: Option[EmailAddress] = None, receiveTime: Instant = Now) =
+		apply(sender, recipients, subject, messageId, inReplyTo, references, replyTo.filterNot { _ == sender },
 			sendTime, receiveTime)
 	
 	
 	// NESTED   ----------------------------
 	
-	case class _EmailHeaders(sender: String, recipients: Recipients, subject: String,
+	case class _EmailHeaders(sender: EmailAddress, recipients: Recipients, subject: String,
 	                        messageId: String = UUID.randomUUID().toString, inReplyTo: String,
 	                        references: Vector[String],
-	                        customReplyTo: String, sendTime: Instant, receiveTime: Instant)
+	                        customReplyTo: Option[EmailAddress], sendTime: Instant, receiveTime: Instant)
 		extends EmailHeaders
 	{
-		override def replyTo = customReplyTo.nonEmptyOrElse(sender)
+		override def replyTo = customReplyTo.getOrElse(sender)
 	}
 }
 
@@ -86,6 +85,8 @@ object EmailHeaders
   */
 trait EmailHeaders
 {
+	// ABSTRACT --------------------------
+	
 	/**
 	  * @return Unique id of this message
 	  */
@@ -94,7 +95,7 @@ trait EmailHeaders
 	/**
 	  * @return Email sender email address
 	  */
-	def sender: String
+	def sender: EmailAddress
 	
 	/**
 	  * @return Email recipients
@@ -104,14 +105,13 @@ trait EmailHeaders
 	/**
 	  * @return Reply-to email address
 	  */
-	def replyTo: String
+	def replyTo: EmailAddress
 	
 	/**
 	  * @return Id of the message to which this message is a reply.
 	  *         Empty if this is not a reply.
 	  */
 	def inReplyTo: String
-	
 	/**
 	  * @return Ids of the messages referenced by this message, from oldest to most recent
 	  */

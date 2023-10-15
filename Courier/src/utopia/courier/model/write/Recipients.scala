@@ -1,7 +1,8 @@
 package utopia.courier.model.write
 
-import javax.mail.Message.RecipientType
+import utopia.courier.model.EmailAddress
 
+import javax.mail.Message.RecipientType
 import scala.language.implicitConversions
 
 object Recipients
@@ -16,9 +17,9 @@ object Recipients
 	
 	// IMPLICIT ----------------------------------
 	
-	implicit def emailToRecipients(email: String): Recipients = apply(email)
-	implicit def addressListToRecipients(list: Vector[String]): Recipients = apply(list)
-	implicit def mapToRecipients(map: Map[RecipientType, Vector[String]]): Recipients = apply(map)
+	implicit def emailToRecipients(email: EmailAddress): Recipients = apply(email)
+	implicit def addressListToRecipients(list: Vector[EmailAddress]): Recipients = apply(list)
+	implicit def mapToRecipients(map: Map[RecipientType, Vector[EmailAddress]]): Recipients = apply(map)
 	
 	
 	// OTHER    ----------------------------------
@@ -28,7 +29,7 @@ object Recipients
 	  * @param addresses Recipient email addresses
 	  * @return A new recipients list
 	  */
-	def apply(recipientType: RecipientType, addresses: Vector[String]): Recipients =
+	def apply(recipientType: RecipientType, addresses: Vector[EmailAddress]): Recipients =
 		apply(Map(recipientType -> addresses))
 	/**
 	  * @param recipientType Recipient type
@@ -36,20 +37,21 @@ object Recipients
 	  * @param moreAddresses More recipient addresses
 	  * @return A new recipients list
 	  */
-	def apply(recipientType: RecipientType, firstAddress: String, moreAddresses: String*): Recipients =
+	def apply(recipientType: RecipientType, firstAddress: EmailAddress, moreAddresses: EmailAddress*): Recipients =
 		apply(recipientType, firstAddress +: moreAddresses.toVector)
 	
 	/**
 	  * @param addresses Recipient addresses
 	  * @return A new recipients list
 	  */
-	def apply(addresses: Vector[String]): Recipients = apply(RecipientType.TO, addresses)
+	def apply(addresses: Vector[EmailAddress]): Recipients = apply(RecipientType.TO, addresses)
 	/**
 	  * @param firstAddress First recipient email address
 	  * @param moreAddresses More email addresses
 	  * @return A new recipients list
 	  */
-	def apply(firstAddress: String, moreAddresses: String*): Recipients = apply(firstAddress +: moreAddresses.toVector)
+	def apply(firstAddress: EmailAddress, moreAddresses: EmailAddress*): Recipients =
+		apply(firstAddress +: moreAddresses.toVector)
 }
 
 /**
@@ -57,8 +59,8 @@ object Recipients
   * @author Mikko Hilpinen
   * @since 13.9.2021, v0.1
   */
-case class Recipients(addressesByType: Map[RecipientType, Vector[String]])
-	extends Iterable[(String, RecipientType)]
+case class Recipients(addressesByType: Map[RecipientType, Vector[EmailAddress]])
+	extends Iterable[(EmailAddress, RecipientType)]
 {
 	// COMPUTED ---------------------------------
 	
@@ -99,8 +101,7 @@ case class Recipients(addressesByType: Map[RecipientType, Vector[String]])
 	  * @param address A new email address + recipient type -pair
 	  * @return A copy of this address list with that address included
 	  */
-	def +(address: (String, RecipientType)) =
-	{
+	def +(address: (EmailAddress, RecipientType)) = {
 		val (newAddress, recipientType) = address
 		Recipients(addressesByType + (recipientType -> (apply(recipientType) :+ newAddress)))
 	}
@@ -108,14 +109,13 @@ case class Recipients(addressesByType: Map[RecipientType, Vector[String]])
 	  * @param address A new email address to add
 	  * @return A copy of this address list with that address added as 'TO'
 	  */
-	def +(address: String): Recipients = this + (address -> RecipientType.TO)
+	def +(address: EmailAddress): Recipients = this + (address -> RecipientType.TO)
 	
 	/**
 	  * @param addresses Addresses to add + recipient type to use
 	  * @return A copy of this recipients list with those addresses added
 	  */
-	def ++(addresses: (IterableOnce[String], RecipientType)) =
-	{
+	def ++(addresses: (IterableOnce[EmailAddress], RecipientType)) = {
 		val (newAddresses, recipientType) = addresses
 		Recipients(addressesByType + (recipientType -> (apply(recipientType) ++ newAddresses)))
 	}
@@ -123,7 +123,7 @@ case class Recipients(addressesByType: Map[RecipientType, Vector[String]])
 	  * @param addresses Addresses to add
 	  * @return A copy of this recipients list with those addresses added
 	  */
-	def ++(addresses: IterableOnce[String]): Recipients = this ++ (addresses -> RecipientType.TO)
+	def ++(addresses: IterableOnce[EmailAddress]): Recipients = this ++ (addresses -> RecipientType.TO)
 	/**
 	  * @param other Another set of recipients
 	  * @return A combination of these recipients lists
@@ -135,24 +135,25 @@ case class Recipients(addressesByType: Map[RecipientType, Vector[String]])
 	  * @param addresses Email addresses
 	  * @return A copy of this recipients list with those addresses included as copies
 	  */
-	def copiedTo(addresses: IterableOnce[String]) = this ++ (addresses -> RecipientType.CC)
+	def copiedTo(addresses: IterableOnce[EmailAddress]) = this ++ (addresses -> RecipientType.CC)
 	/**
 	  * @param firstAddress Email address
 	  * @param moreAddresses More email addresses
 	  * @return A copy of this recipients list with those addresses included as copies
 	  */
-	def copiedTo(firstAddress: String, moreAddresses: String*): Recipients = copiedTo(firstAddress +: moreAddresses)
+	def copiedTo(firstAddress: EmailAddress, moreAddresses: EmailAddress*): Recipients =
+		copiedTo(firstAddress +: moreAddresses)
 	
 	/**
 	  * @param addresses Email addresses
 	  * @return A copy of this recipients list with those addresses included as hidden copies
 	  */
-	def hiddenCopiedTo(addresses: IterableOnce[String]) = this ++ (addresses -> RecipientType.BCC)
+	def hiddenCopiedTo(addresses: IterableOnce[EmailAddress]) = this ++ (addresses -> RecipientType.BCC)
 	/**
 	  * @param firstAddress Email address
 	  * @param moreAddresses More email addresses
 	  * @return A copy of this recipients list with those addresses included as hidden copies
 	  */
-	def hiddenCopiedTo(firstAddress: String, moreAddresses: String*): Recipients =
+	def hiddenCopiedTo(firstAddress: EmailAddress, moreAddresses: EmailAddress*): Recipients =
 		hiddenCopiedTo(firstAddress +: moreAddresses)
 }

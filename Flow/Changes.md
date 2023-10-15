@@ -7,10 +7,14 @@
 ### Deprecations
 - Renamed `Regex.parenthesis` to `.parentheses`
 ### New methods
-- **Iterator**
-  - Added `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.foreachWhile(=> Boolean)(...)`
+- **Iterator** (**CollectionExtensions**)
+  - Added `.mapSuccesses(...)` and `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**
 - **Regex** (object)
-  - Added `.backslash`
+  - Added a couple of new regular expression values
+- **Seq** (**CollectionExtensions**)
+  - Added `.appendIfDistinct(...)`
 ### Other changes
 - **Path** now extends **ApproxEquals** (after importing **FileExtensions**)
   - `~==` checks whether the two paths target the same file

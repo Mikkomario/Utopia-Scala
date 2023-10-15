@@ -16,6 +16,20 @@ object Regex
 	
 	val anySingle = Regex(".")
 	val any = anySingle.anyTimes
+	
+	/**
+	 * A regular expression that matches the start of a line / input
+	 */
+	val startOfLine = Regex("^")
+	/**
+	 * A regular expression that matches the start of the input string
+	 */
+	val startOfString = Regex("\\A")
+	/**
+	 * A regular expression that matches the end of input string
+	 */
+	val endOfString = Regex("\\Z")
+	
 	/**
 	  * Accepts individual digits [0-9]
 	  */
@@ -173,8 +187,7 @@ case class Regex(string: String)
 	/**
 	 * @return Inverted version of this regex
 	 */
-	def unary_! =
-	{
+	def unary_! = {
 		if (string.startsWith("(?!") && string.endsWith(")"))
 			Regex(string.substring(3, string.length - 1))
 		else if (string.startsWith("(?!") && string.endsWith("$).*"))
@@ -274,8 +287,7 @@ case class Regex(string: String)
 	  * @param more Another regex
 	  * @return A regex that accepts this regex or the other regex
 	  */
-	def ||(more: Regex) =
-	{
+	def ||(more: Regex) = {
 		if (more.isEmpty)
 			this
 		else if (isEmpty)
@@ -331,8 +343,7 @@ case class Regex(string: String)
 	  * @return A regular expression that ignores results between those characters
 	  *         (doesn't work properly for nested structures)
 	  */
-	def ignoringWithin(start: Char, end: Char) =
-	{
+	def ignoringWithin(start: Char, end: Char) = {
 		val startRegex = Regex.escape(start)
 		val endRegex = Regex.escape(end)
 		val notStart = !startRegex
@@ -431,13 +442,11 @@ case class Regex(string: String)
 	 * @param str String to split
 	 * @return Target string split by this regex
 	 */
-	def split(str: String): IndexedSeq[String] =
-	{
+	def split(str: String): IndexedSeq[String] = {
 		val ranges = rangesFrom(str)
 		if (ranges.isEmpty)
 			Vector(str)
-		else
-		{
+		else {
 			val firstPart = str.substring(0, ranges.head.start)
 			val middleParts = ranges.paired.map { case Pair(prevRange, nextRange) =>
 				str.substring(prevRange.exclusiveEnd, nextRange.start)
@@ -453,8 +462,7 @@ case class Regex(string: String)
 	  * @return A split result iterator based on the matches of this expression within that string.
 	  *         NB: Doesn't contain any empty strings.
 	  */
-	def splitIteratorIn(str: String) =
-	{
+	def splitIteratorIn(str: String) = {
 		// Finds pattern breaks (lazily), adds string start and end
 		(breakIndexIteratorIn(str).pairedFrom(0) :+ str.length).zipWithIndex
 			// Ignores matches and empty parts (because start and end were added)
@@ -564,8 +572,7 @@ private class MatcherIterator[+A](matcher: Matcher)(f: Matcher => A) extends Ite
 	
 	override def hasNext = findCache.value
 	
-	override def next() =
-	{
+	override def next() = {
 		if (findCache.pop())
 			f(matcher)
 		else

@@ -1,9 +1,8 @@
 package utopia.courier.test
 
 import utopia.courier.controller.write.EmailSender
-import utopia.courier.model.{Email, EmailContent, EmailHeaders}
 import utopia.courier.model.write.{GmailWriteSettings, Recipients}
-import utopia.flow.generic.model.mutable.DataType
+import utopia.courier.model.{Email, EmailAddress, EmailContent, EmailHeaders}
 
 import scala.io.StdIn
 import scala.util.{Failure, Success}
@@ -30,7 +29,8 @@ object MailSendApp extends App
 	println("You can quit at any time by typing 'exit' as input")
 	
 	val sender = ask("Please write your email address")
-	val recipients: Recipients = ask("Please write email recipient(s) (separated by ;)").split(';').toVector
+	val recipients: Recipients = ask("Please write email recipient(s) (separated by ;)")
+		.split(';').toVector.map { s => EmailAddress(s.trim) }
 	val subject = ask("Please write message subject")
 	val content = ask("Please write message content")
 	val email = Email(EmailHeaders.outgoing(sender, recipients, subject), EmailContent(content))

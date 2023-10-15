@@ -10,6 +10,8 @@ Folder-targeting
 - Removed max read count -parameter from iterative mail read methods
 - Replaced **EmailHeadersLike** with **EmailHeaders**
 - Added new (required) email headers: **Message-ID**, **In-Reply-To** and **References**
+- Email addresses are now represented using class **EmailAddress** instead of a **String**
+  - Implicit conversions from **String** to **EmailAddress** are available to make the migration easier
 ### New features
 - It is now possible to target multiple folders when reading email
 

@@ -100,13 +100,13 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 				session.setDebug(false)
 				
 				val message = new CustomMimeMessage(session, email.messageId)
-				message.setFrom(email.headers.sender)
-				message.addHeader("Reply-To", email.headers.replyTo)
+				message.setFrom(email.headers.sender.toString)
+				message.addHeader("Reply-To", email.headers.replyTo.toString)
 				message.addHeader("X-Mailer", "JavaMail API")
 				message.setSentDate(new Date())
 				message.setSubject(email.subject)
 				email.headers.recipients.foreach { case (recipient, recipientType) =>
-						message.addRecipient(recipientType, new InternetAddress(recipient))
+						message.addRecipient(recipientType, new InternetAddress(recipient.toString))
 				}
 				email.inReplyTo.notEmpty.foreach { id => message.setHeader("In-Reply-To", s"<$id>") }
 				NotEmpty((email.references ++ email.inReplyTo.notEmpty).distinct).foreach { refs =>

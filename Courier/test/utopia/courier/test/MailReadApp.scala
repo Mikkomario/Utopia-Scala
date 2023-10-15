@@ -69,7 +69,7 @@ object MailReadApp extends App
 			None
 	}
 	private val reader = EmailReader.filtered { headers =>
-		if (senderFilter.nonEmpty && headers.sender.toLowerCase != senderFilter.toLowerCase)
+		if (senderFilter.nonEmpty && headers.sender.addressPart.toLowerCase != senderFilter.toLowerCase)
 			None
 		else if (subjectFilter.isEmpty || headers.subject.containsIgnoreCase(subjectFilter))
 			Some(new EmailBuilder(headers.toHeaders, attachmentsDirectory))
