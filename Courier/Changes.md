@@ -14,6 +14,10 @@ Folder-targeting
   - Implicit conversions from **String** to **EmailAddress** are available to make the migration easier
 ### New features
 - It is now possible to target multiple folders when reading email
+### Other Changes
+- UTF-8 encoded email addresses are now automatically decoded
+- Attachment names are now normalized before saving them on the disk
+- EmailBuilder now uses ISO-8859 as backup decoding
 
 ## v1.0.7 - 01.05.2023
 Rebuild due to the changes in other modules.

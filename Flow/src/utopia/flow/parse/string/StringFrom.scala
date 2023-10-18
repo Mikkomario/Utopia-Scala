@@ -7,5 +7,5 @@ package utopia.flow.parse.string
   */
 object StringFrom extends SourceParser[String]
 {
-	override protected def process(linesIterator: Iterator[String]) = linesIterator.mkString
+	override protected def process(linesIterator: Iterator[String]) = linesIterator.mkString("\n")
 }

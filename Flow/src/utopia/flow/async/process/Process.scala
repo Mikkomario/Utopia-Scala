@@ -216,7 +216,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	}
 	
 	/**
-	  * Runs this process asynchronously
+	  * Runs this process asynchronously, unless running already
 	  */
 	def runAsync(loopIfRunning: Boolean = false) = {
 		// Checks whether this process should run. Applies the looping, if necessary

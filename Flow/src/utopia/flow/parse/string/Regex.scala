@@ -153,7 +153,9 @@ object Regex
 	  */
 	def anyOf(chars: String) = Regex(s"[\\Q$chars\\E]")
 	/**
-	  * @param chars A group fo characters that are not allowed
+	  * @param chars A group fo characters that are not allowed.
+	 *              All specified characters are escaped,
+	 *              so you don't need to worry about accidental regular expressions.
 	  * @return A regular expression that accepts all except the specified characters
 	  */
 	def noneOf(chars: String) = !anyOf(chars)

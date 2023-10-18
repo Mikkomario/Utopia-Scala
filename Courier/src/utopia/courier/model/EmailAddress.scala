@@ -35,7 +35,7 @@ object EmailAddress
 	private def processBase64Utf8Encoding(input: String) = {
 		val parts = input.split('?')
 		// Case: UTF-8 Base64 encoding applied => Parses the string, if possible
-		if (parts.length == 5 && (parts(1) ~== "UTF-8") && (parts(2) ~== "B")) {
+		if (parts.length >= 4 && (parts(1) ~== "UTF-8") && (parts(2) ~== "B")) {
 			Try {
 				val decodedBytes = Base64.getDecoder.decode(parts(3))
 				new String(decodedBytes, "UTF-8")

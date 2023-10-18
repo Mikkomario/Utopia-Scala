@@ -16,6 +16,7 @@ import utopia.flow.view.mutable.eventful.Flag
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
+import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
 import scala.util.{Failure, Random, Success, Try}
@@ -437,7 +438,7 @@ object CollectionExtensions
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
 			}
-			Pair(lBuilder.result(), rBuilder.result())
+			lBuilder.result() -> rBuilder.result()
 		}
 		/**
 		  * Maps the items in this collection into two different collections
@@ -1679,6 +1680,16 @@ object CollectionExtensions
 		  *         This iterator shouldn't be used after calling this function.
 		  */
 		def paired = PairingIterator(i)
+		
+		/**
+		 * Creates a copy of this iterator that asynchronously buffers the next n items before they're requested
+		 * @param prePollCount Number of items to poll in advance, at maximum
+		 * @param exc Implicit execution context used in asynchronous polling
+		 * @param logger Implicit logger used for recording non-critical failures
+		 * @return A buffering / pre-polling copy of this iterator
+		 */
+		def prePollingAsync(prePollCount: Int)(implicit exc: ExecutionContext, logger: Logger) =
+			new PrePollingIterator(i, prePollCount)
 		
 		/**
 		  * @param item An item to prepend (call-by-name)

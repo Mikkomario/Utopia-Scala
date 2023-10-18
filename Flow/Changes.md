@@ -6,11 +6,17 @@
   - You can work around this by appending `.toTuple` after these method calls 
 ### Deprecations
 - Renamed `Regex.parenthesis` to `.parentheses`
+### Bugfixes
+- **StringFrom** now correctly preserves line-breaks
+### New Features
+- Added file-related utility methods under **FileUtils**
+- Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
 ### New methods
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.foreachWhile(=> Boolean)(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.mapSuccesses(...)` and `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**
+  - Added `.prePollingAsync(Int)` that utilizes the new **PrePollingIterator**
 - **Regex** (object)
   - Added a couple of new regular expression values
 - **Seq** (**CollectionExtensions**)

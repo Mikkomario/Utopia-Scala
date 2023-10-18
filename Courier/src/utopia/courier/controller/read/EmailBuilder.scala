@@ -1,15 +1,16 @@
 package utopia.courier.controller.read
 
 import utopia.courier.model.{Email, EmailContent, EmailHeaders}
-import utopia.flow.time.Today
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.string.StringFrom
+import utopia.flow.time.TimeExtensions._
 
 import java.io.InputStream
 import java.nio.file.Path
 import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Used for parsing emails from incoming data
@@ -31,6 +32,10 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 	private val bodyBuilder = new StringBuilder()
 	private val attachmentsBuilder = attachmentsStoreDirectory.map { new AttachmentsBuilder(_) }
 	
+	/*
+	private lazy val skipMalformedInputCodec = codec.decodingReplaceWith("?")
+		.onMalformedInput(CodingErrorAction.REPLACE)*/
+	
 	
 	// IMPLEMENTED  -------------------------------
 	
@@ -40,7 +45,11 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 		Success(())
 	}
 	
-	override def appendFrom(stream: InputStream) = StringFrom.stream(stream).map { bodyBuilder ++= _ }
+	override def appendFrom(stream: InputStream) = {
+		StringFrom.stream(stream)
+			.recoverWith { e => StringFrom.stream(stream)(Codec.ISO8859).orElse(Failure(e)) }
+			.map { bodyBuilder ++= _ }
+	}
 	
 	override def attachFrom(attachmentName: String, stream: InputStream) =
 		attachmentsBuilder match {
@@ -48,10 +57,8 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 			case None => Success(())
 		}
 	
-	override def result() =
-	{
-		val attachments = attachmentsBuilder match
-		{
+	override def result() ={
+		val attachments = attachmentsBuilder match {
 			case Some(builder) => builder.result()
 			case None => Vector()
 		}
@@ -74,14 +81,19 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 		def attachFrom(attachmentName: String, stream: InputStream): Try[Unit] =
 			existingDirectory.flatMap { dir =>
 				// Determines the default file name
-				val defaultFileName =
-				{
+				val defaultFileName = {
 					if (attachmentName.isEmpty)
-						s"attachment-${Today.toLocalDate.toString}.$defaultExtension"
-					else if (attachmentName.contains('.'))
-						attachmentName
-					else
-						s"$attachmentName.$defaultExtension"
+						s"attachment-${headers.sendTime.toLocalDate}.$defaultExtension"
+					else {
+						val defaultName = {
+							if (attachmentName.contains('.'))
+								attachmentName
+							else
+								s"$attachmentName.$defaultExtension"
+						}
+						// Normalizes the file name
+						FileUtils.normalizeFileName(defaultName)
+					}
 				}
 				// Writes as a unique file
 				(dir/defaultFileName).unique.writeStream(stream).map { pathsBuilder += _ }
