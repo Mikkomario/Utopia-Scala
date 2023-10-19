@@ -5,6 +5,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.StringExtensions._
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -86,8 +87,10 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 						s"attachment-${headers.sendTime.toLocalDate}.$defaultExtension"
 					else {
 						val defaultName = {
-							if (attachmentName.contains('.'))
-								attachmentName
+							val parts = attachmentName.splitAtLast(".")
+							// Case: Attachment specifies file type => Uses that file type, but sanitizes input
+							if (parts.second.nonEmpty)
+								parts.mapSecond { _.takeWhile { c => c.isLetterOrDigit } }.mkString(".")
 							else
 								s"$attachmentName.$defaultExtension"
 						}

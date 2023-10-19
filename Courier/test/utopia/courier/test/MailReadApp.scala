@@ -7,6 +7,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.nio.file.Path
 import scala.io.StdIn
@@ -19,6 +20,8 @@ import scala.util.{Failure, Success}
   */
 object MailReadApp extends App
 {
+	private implicit val log: Logger = SysErrLogger
+	
 	private def ask(question: String = "") = {
 		if (question.nonEmpty)
 			println(question)

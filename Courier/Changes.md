@@ -12,8 +12,14 @@ Folder-targeting
 - Added new (required) email headers: **Message-ID**, **In-Reply-To** and **References**
 - Email addresses are now represented using class **EmailAddress** instead of a **String**
   - Implicit conversions from **String** to **EmailAddress** are available to make the migration easier
+- Added pointer-based email deletion option to **EmailReader**
+  - This feature breaks use-cases where `new EmailReader(...)` is called directly.
 ### New features
 - It is now possible to target multiple folders when reading email
+- Added support for pointer-based email deletion
+### New Methods
+- **EmailBuilder**
+  - Added `.mapResult(...)`
 ### Other Changes
 - UTF-8 encoded email addresses are now automatically decoded
 - Attachment names are now normalized before saving them on the disk

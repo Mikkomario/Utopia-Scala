@@ -11,6 +11,8 @@
 ### New Features
 - Added file-related utility methods under **FileUtils**
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
+- Added **CollectSingleFailureLogger** for specialized logging use-cases 
+  where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
 ### New methods
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.foreachWhile(=> Boolean)(...)`
@@ -21,6 +23,8 @@
   - Added a couple of new regular expression values
 - **Seq** (**CollectionExtensions**)
   - Added `.appendIfDistinct(...)`
+- **Try** (**CollectionExtensions**)
+  - Added `.failWith(Throwable)` and `.failIf(=> Option[Throwable])`
 ### Other changes
 - **Path** now extends **ApproxEquals** (after importing **FileExtensions**)
   - `~==` checks whether the two paths target the same file

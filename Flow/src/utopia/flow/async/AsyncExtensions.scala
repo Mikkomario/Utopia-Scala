@@ -144,8 +144,7 @@ object AsyncExtensions
 		  * @tparam U Type of the other future
 		  * @return This future, but delayed until the other future has completed
 		  */
-		def notCompletingBefore[U](another: Future[U])(implicit exc: ExecutionContext) =
-		{
+		def notCompletingBefore[U](another: Future[U])(implicit exc: ExecutionContext) = {
 			// If the other future is already completed, doesn't need to wait for it
 			if (another.isCompleted)
 				f

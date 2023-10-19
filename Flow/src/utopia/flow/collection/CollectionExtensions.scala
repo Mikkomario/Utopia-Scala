@@ -2163,6 +2163,34 @@ object CollectionExtensions
 			case Success(v) => f(v)
 			case Failure(e) => TryCatch.Failure(e)
 		}
+		
+		/**
+		 * @param error A (secondary) error
+		 * @tparam B Type of failure to yield
+		 * @return This if failure, otherwise a failure based on the specified error
+		 */
+		def failWith[B](error: Throwable) = t match {
+			case Success(_) => Failure[B](error)
+			case Failure(e) => Failure[B](e)
+		}
+		/**
+		 * @param error A potential error (call-by-name, not called if this is a failure already)
+		 * @return Success only if this is a success and the specified error is None.
+		 *         Failure otherwise, preferring an existing failure in this Try, if applicable.
+		 */
+		def failIf(error: => Option[Throwable]) = {
+			t match {
+				case Success(v) =>
+					error match {
+						// Case: This was a success but the specified function failed => Fails
+						case Some(e) => Failure(e)
+						// Case: This was a success and the specified function didn't fail => Success
+						case None => Success(v)
+					}
+				// Case: This was already a failure => Fails
+				case Failure(e) => Failure(e)
+			}
+		}
 	}
 	
 	implicit class RichTryTryCatch[A](val t: Try[TryCatch[A]]) extends AnyVal
