@@ -22,7 +22,6 @@ object Tree
 			apply(b.head, Vector(branch(b.tail)))
 	}
 	
-	
 	/**
 	  * Creates a new tree with a recursive function.
 	  * The whole tree structure is initialized at once. For lazily initialized structures,

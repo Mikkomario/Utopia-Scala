@@ -142,6 +142,19 @@ abstract class CompoundingBuilder[A, +B <: mutable.Builder[A, C], C, +To <: Iter
 	}
 	
 	
+	// OTHER    -----------------------------
+	
+	/**
+	 * Removes and returns all items from this builder
+	 * @return All items that were put in this builder
+	 */
+	def popAll() = {
+		val r = result()
+		clear()
+		r
+	}
+	
+	
 	// NESTED   -----------------------------
 	
 	private class BuilderIterator extends Iterator[A]

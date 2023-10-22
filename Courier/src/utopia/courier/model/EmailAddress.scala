@@ -1,9 +1,13 @@
 package utopia.courier.model
 
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.parse.string.Regex
+import utopia.flow.parse.string.{Regex, StringFrom}
+import utopia.flow.util.StringExtensions._
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
 import java.util.Base64
+import javax.mail.internet.MimeUtility
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -27,21 +31,33 @@ object EmailAddress
 			val addressPart = addressString.slice(addressRange.start + 1, addressRange.last)
 			apply(
 				addressPart,
-				processBase64Utf8Encoding(addressString.take(addressRange.start).trim))
+				processUtf8Encoding(addressString.take(addressRange.start).trim)
+					.notStartingWith("\"").notEndingWith("\"").trim)
 		case None => apply(addressString, "")
 	}
 	
 	// Handles UTF-8 encoded input
-	private def processBase64Utf8Encoding(input: String) = {
+	private def processUtf8Encoding(input: String) = {
 		val parts = input.split('?')
 		// Case: UTF-8 Base64 encoding applied => Parses the string, if possible
-		if (parts.length >= 4 && (parts(1) ~== "UTF-8") && (parts(2) ~== "B")) {
-			Try {
-				val decodedBytes = Base64.getDecoder.decode(parts(3))
-				new String(decodedBytes, "UTF-8")
-			}.getOrElse { input }
+		if (parts.length >= 4 && (parts(1) ~== "UTF-8")) {
+			parts(2).toUpperCase match {
+				// Case: Base64 encoding used
+				case "B" =>
+					Try {
+						val decodedBytes = Base64.getDecoder.decode(parts(3))
+						new String(decodedBytes, "UTF-8")
+					}.getOrElse { input }
+				// Case: "Quoted-printable" -encoding used
+				case "Q" =>
+					Try {
+						StringFrom.stream(MimeUtility.decode(
+							new ByteArrayInputStream(parts(3).getBytes(StandardCharsets.UTF_8)),
+							"quoted-printable"))
+					}.flatten.getOrElse(input)
+				case _ => input
+			}
 		}
-		// Case: Other type of input => Preserves the input as is
 		else
 			input
 	}

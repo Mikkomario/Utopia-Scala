@@ -16,6 +16,7 @@ import utopia.flow.view.immutable.caching.Lazy
 
 import java.awt.Desktop
 import java.io._
+import java.nio.channels.FileChannel
 import java.nio.file._
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
@@ -43,11 +44,11 @@ object FileExtensions
 		/**
 		  * @return Names of the parts that form this path
 		  */
-		def parts = (0 to p.getNameCount).map { p.getName(_).toString }
+		def parts = (0 until p.getNameCount).map { p.getName(_).toString }
 		/**
 		  * @return An iterator that returns the names of the parts that form this path
 		  */
-		def partsIterator = (0 to p.getNameCount).iterator.map { p.getName(_).toString }
+		def partsIterator = (0 until p.getNameCount).iterator.map { p.getName(_).toString }
 		
 		/**
 		  * @return The length of this path, as a number of parts
@@ -489,6 +490,43 @@ object FileExtensions
 					(child.fileName ~== childFileName) || child.containsRecursive(childFileName)
 				}
 			}.getOrElse(false)
+		}
+		
+		/**
+		 * Compares this path with another path, possibly including the file contents, and determines whether
+		 * these two files have equal content.
+		 * Doesn't mean that these paths necessarily point to the same file,
+		 * but shows if there are identical file copies.
+		 * @param other Another file
+		 * @return Whether these two files are identical. Failure in read failure.
+		 */
+		def hasSameContentAs(other: Path) = {
+			// Case: These paths are equal => Won't check their contents
+			if (p == other)
+				Success(true)
+			// Case: One or both files don't exist => Non-existing files are considered equal
+			else if (notExists)
+				Try { other.notExists }
+			// Case: Normalized paths are equal => Won't compare contents
+			else if (p.toRealPath() == other.toRealPath())
+				Success(true)
+			// Case: Paths are different => Checks whether the file contents are equal
+			else
+				Try {
+					// Compares the files on memory level
+					// See: https://www.baeldung.com/java-compare-files
+					new RandomAccessFile(p.toFile, "r").consume { file1 =>
+						new RandomAccessFile(other.toFile, "r").consume { file2 =>
+							val channels = Pair(file1, file2).map { _.getChannel }
+							val sizes = channels.map { _.size }
+							if (sizes.isAsymmetric)
+								false
+							else
+								channels.map { _.map(FileChannel.MapMode.READ_ONLY, 0L, sizes.first) }
+									.isSymmetric
+						}
+					}
+				}
 		}
 		
 		/**

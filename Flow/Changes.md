@@ -7,6 +7,7 @@
 ### Deprecations
 - Renamed `Regex.parenthesis` to `.parentheses`
 ### Bugfixes
+- Fixed a bug in **Path**`.parts` and `.partsIterator` (used to throw an **IllegalArgumentException**) 
 - **StringFrom** now correctly preserves line-breaks
 ### New Features
 - Added file-related utility methods under **FileUtils**
@@ -14,11 +15,15 @@
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
 ### New methods
+- **CompoundingBuilder**
+  - Added `.popAll()`
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.foreachWhile(=> Boolean)(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.mapSuccesses(...)` and `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**
   - Added `.prePollingAsync(Int)` that utilizes the new **PrePollingIterator**
+- **Path** (**FileExtensions**)
+  - Added `.hasSameContentAs(Path)` for identical file -searching (not yet tested)
 - **Regex** (object)
   - Added a couple of new regular expression values
 - **Seq** (**CollectionExtensions**)
