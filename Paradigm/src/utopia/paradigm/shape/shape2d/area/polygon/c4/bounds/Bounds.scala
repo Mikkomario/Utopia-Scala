@@ -113,13 +113,6 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
 {
     // ATTRIBUTES   ----------------------
     
-    /*
-    override lazy val dimensions: Dimensions[NumericSpan[Double]] = data.rightOrMap { case (position, size) =>
-        Bounds.dimensionsFactory.fromFunction2D { axis =>
-            val start = position(axis)
-            NumericSpan(start, start + size(axis))
-        }
-    }*/
     // NB: position + size seems to break in a lot of places =>
     // Will need to be careful with these, in case they break the compiler again in the future
     override lazy val position: Point = Point(dimensions.map { _.min })
@@ -209,7 +202,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     override def along(axis: Axis) = components.getOrElse(axis.index, Span1D.zeroAlong(axis))
     
     
-    // OPERATORS    --------------------
+    // OTHER    --------------------
     
     /**
       * @param insets Insets to add to these bounds
@@ -247,27 +240,6 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       */
     def /(div: HasDoubleDimensions) = mergeWith(div) { (span, div) => if (div == 0.0) span else span.mapEnds { _ / div } }
     
-    
-    // OTHER METHODS    ----------------
-    
-    /**
-     * Creates a rounded rectangle based on this rectangle shape.
-     * @param roundingFactor How much the corners are rounded. 0 Means that the corners are not
-     * rounded at all, 1 means that the corners are rounded as much as possible, so that the ends of
-     * the shape become ellipsoid. Default value is 0.5
-     */
-    def toRoundedRectangle(roundingFactor: Double = 0.5) = {
-        val rounding = math.min(width, height) * roundingFactor
-        new RoundRectangle2D.Double(position.x, position.y, width, height, rounding, rounding)
-    }
-    /**
-      * Creates a rounded rectangle based on this rectangle shape
-      * @param radius The radius to use when drawing the corners
-      * @return A new rounded rectangle
-      */
-    def toRoundedRectangleWithRadius(radius: Double) =
-        new RoundRectangle2D.Double(position.x, position.y, width, height, radius * 2, radius * 2)
-    
     /**
      * Checks whether the line completely lies within the rectangle bounds
      */
@@ -288,6 +260,76 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     def contains(circle: Circle): Boolean = contains(circle.origin) && circleIntersection(circle).isEmpty
     
     /**
+      * Converts an absolute point to a coordinate that is relative to this set of bounds.
+      * In the relative (i.e. resulting) coordinate system,
+      *     (0,0) represents the top-left corner of these bounds
+      *     and (1,1) represents the bottom-right corner of these bounds.
+      * The resulting point may be outside of this range, if it doesn't lie within these bounds
+      * @param point A point to convert into the relative coordinate system
+      * @return A relative representation of the specified point
+      */
+    def relativize(point: Point) =
+        point.mergeWith(this) { (coordinate, area) => (coordinate - area.start) / area.length }
+    /**
+      * Converts an absolute set of bounds to a set of bounds that is relative to this set of bounds.
+      * In the relative (i.e. resulting) coordinate system,
+      * (0,0) represents the top-left corner of these bounds
+      * and (1,1) represents the bottom-right corner of these bounds.
+      * The resulting set of bounds may fully or partially lay outside of this range,
+      * if it doesn't lie within these bounds
+      * @param area A set of bounds to convert into the relative coordinate system
+      * @return A relative representation of the specified bounds
+      */
+    def relativize(area: Bounds) =
+        area.mergeWith(this) { (targetArea, myArea) =>
+            val myLength = myArea.length
+            targetArea.mapEnds { coordinate => (coordinate - myArea.start) / myLength }
+        }
+    /**
+      * Converts an absolute line to a line that is relative to this set of bounds.
+      * In the relative (i.e. resulting) coordinate system,
+      * (0,0) represents the top-left corner of these bounds
+      * and (1,1) represents the bottom-right corner of these bounds.
+      * The resulting line may fully or partially lie outside of this range, if it doesn't lie within these bounds
+      * @param line A line to convert into the relative coordinate system
+      * @return A relative representation of the specified line
+      */
+    def relativize(line: Line): Line = line.map(relativize)
+    
+    /**
+      * Converts a point in the relative coordinate system to a point in the absolute coordinate system.
+      * In the relative (i.e. resulting) coordinate system,
+      *     (0,0) represents the top-left corner of these bounds
+      *     and (1,1) represents the bottom-right corner of these bounds.
+      * @param relativePoint A point that is relative to this set of bounds
+      * @return An absolute representation of the specified point
+      */
+    def relativeToAbsolute(relativePoint: Point) = relativePoint.mergeWith(this) { (relative, area) =>
+        area.start + relative * area.length
+    }
+    /**
+      * Converts a set of bounds in the relative coordinate system to a set of bounds in the absolute coordinate system.
+      * In the relative (i.e. resulting) coordinate system,
+      * (0,0) represents the top-left corner of these bounds
+      * and (1,1) represents the bottom-right corner of these bounds.
+      * @param relativeArea A set of bounds that is relative to this set of bounds
+      * @return An absolute representation of the bounds
+      */
+    def relativeToAbsolute(relativeArea: Bounds) = relativeArea.mergeWith(this) { (relativeArea, area) =>
+        val myLength = area.length
+        relativeArea.mapEnds { relative => area.start + relative * myLength }
+    }
+    /**
+      * Converts a line in the relative coordinate system to a line in the absolute coordinate system.
+      * In the relative (i.e. resulting) coordinate system,
+      * (0,0) represents the top-left corner of these bounds
+      * and (1,1) represents the bottom-right corner of these bounds.
+      * @param relativeLine A point that is relative to this set of bounds
+      * @return An absolute representation of the specified line
+      */
+    def relativeToAbsolute(relativeLine: Line): Line = relativeLine.map(relativeToAbsolute)
+    
+    /**
      * Finds the intersection points between the edges of this rectangle and the provided circle
      */
     def circleIntersection(circle: Circle) = sides.flatMap { _.circleIntersection(circle) }
@@ -296,17 +338,6 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
      * Both shapes are projected to the x-y plane before the check.
      */
     def lineIntersection(line: Line) = sides.flatMap { _.intersection(line) }
-    
-    /**
-      * @param p New position
-      * @return A copy of these bounds with specified position
-      */
-    override def withPosition(p: Point): Bounds = Bounds(p, size)
-    /**
-      * @param map A mapping function for position
-      * @return A copy of these bounds with mapped position
-      */
-    def mapPosition(map: Point => Point) = withPosition(map(position))
     
     /**
       * @param other Another area
@@ -328,6 +359,35 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @return The overlap between these two sets of bounds
       */
     def &&(other: Bounds) = overlapWith(other)
+    
+    /**
+      * Creates a rounded rectangle based on this rectangle shape.
+      * @param roundingFactor How much the corners are rounded. 0 Means that the corners are not
+      *                       rounded at all, 1 means that the corners are rounded as much as possible, so that the ends of
+      *                       the shape become ellipsoid. Default value is 0.5
+      */
+    def toRoundedRectangle(roundingFactor: Double = 0.5) = {
+        val rounding = math.min(width, height) * roundingFactor
+        new RoundRectangle2D.Double(position.x, position.y, width, height, rounding, rounding)
+    }
+    /**
+      * Creates a rounded rectangle based on this rectangle shape
+      * @param radius The radius to use when drawing the corners
+      * @return A new rounded rectangle
+      */
+    def toRoundedRectangleWithRadius(radius: Double) =
+        new RoundRectangle2D.Double(position.x, position.y, width, height, radius * 2, radius * 2)
+    
+    /**
+      * @param p New position
+      * @return A copy of these bounds with specified position
+      */
+    override def withPosition(p: Point): Bounds = Bounds(p, size)
+    /**
+      * @param map A mapping function for position
+      * @return A copy of these bounds with mapped position
+      */
+    def mapPosition(map: Point => Point) = withPosition(map(position))
     
     /**
       * @param maxHeight Maximum height of resulting bounds
