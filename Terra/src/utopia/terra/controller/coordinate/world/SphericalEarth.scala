@@ -13,7 +13,8 @@ import utopia.terra.model.world.sphere.{SpherePoint, SphereSurfacePoint}
  * Assumes mean radius. See [[GlobeMath.meanRadius]].
  *
  * In the vector form, (0,0,0) lies at the center of the Earth sphere.
- * The Z-vector pierces the sphere through the south and the north poles (where north is positive and south is negative).
+ * The Z-vector pierces the sphere through the south and the north poles
+  * (where north is positive and south is negative).
  * The X-Y plane (Z=0) covers the whole equator.
  * X-axis intersects with the equator (on the positive side) at 0 degree longitude coordinates.
  * Positive longitude moves from east to the west.
@@ -52,9 +53,7 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 	def latLongToVector(latLong: LatLong) = {
 		// Calculates the position on the X-Z plane based on latitude, which determines the east-west radius,
 		// as well as the final Z-coordinate
-		val xz = Vector2D.lenDir(globeVectorRadius, latLong.latitude.toAngle)
-		val eastWestRadius = xz.x
-		val z = xz.y
+		val (eastWestRadius, z) = GlobeMath.eastWestRadiusAtLatitude(latLong.latitude, globeVectorRadius).toTuple
 		
 		// Calculates the correct position on the east-west circle along the X-Y plane
 		val xy = Vector2D.lenDir(eastWestRadius, latLong.longitude)

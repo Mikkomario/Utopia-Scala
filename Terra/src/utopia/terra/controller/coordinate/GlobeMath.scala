@@ -1,7 +1,10 @@
 package utopia.terra.controller.coordinate
 
+import utopia.flow.collection.immutable.Pair
+import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.measurement.DistanceUnit.KiloMeter
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 /**
  * Contains constants relating to geometric mathematics concerning the Earth.
@@ -11,6 +14,8 @@ import utopia.paradigm.measurement.DistanceUnit.KiloMeter
  */
 object GlobeMath
 {
+	// ATTRIBUTES   ---------------------
+	
 	/**
 	 * The Earth's supposed radius at the equator: 6,335.439 km
 	 * Source: https://en.wikipedia.org/wiki/Earth_radius [29.8.2023]
@@ -27,4 +32,27 @@ object GlobeMath
 	 * Source: https://en.wikipedia.org/wiki/Earth_radius [29.8.2023]
 	 */
 	val meanRadius = Distance(6371.0088, KiloMeter)
+	
+	
+	// OTHER    --------------------
+	
+	/**
+	  * Calculates the radius along the east-west -plane at a certain latitude level.
+	  * @param latitude The targeted latitude level, presented as [[Rotation]],
+	  *                 where counter-clockwise is towards the north and
+	  *                 clockwise is towards the south.
+	  * @param globeVectorRadius The radius of the earth from pole to pole
+	  *                          in the vector measurement system.
+	  * @return The east-west circle radius at the specified latitude level +
+	  *         the vector length traveled along the Z axis to reach that level.
+	  *         These are returned as a Pair.
+	  */
+	def eastWestRadiusAtLatitude(latitude: Rotation, globeVectorRadius: Double) = {
+		// Calculates the position on the X-Z plane based on latitude, which determines the east-west radius,
+		// as well as the final Z-coordinate
+		// X and Y are perpendicular to the "pole" vector
+		// While Z is parallel to the "pole" vector, going up to north
+		val xz = Vector2D.lenDir(globeVectorRadius, latitude.toAngle)
+		Pair(xz.z, xz.y)
+	}
 }
