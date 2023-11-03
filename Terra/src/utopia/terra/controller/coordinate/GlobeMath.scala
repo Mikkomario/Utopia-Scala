@@ -1,6 +1,5 @@
 package utopia.terra.controller.coordinate
 
-import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.measurement.DistanceUnit.KiloMeter
@@ -53,6 +52,6 @@ object GlobeMath
 		// X and Y are perpendicular to the "pole" vector
 		// While Z is parallel to the "pole" vector, going up to north
 		val xz = Vector2D.lenDir(globeVectorRadius, latitude.toAngle)
-		Pair(xz.z, xz.y)
+		xz.xyPair
 	}
 }

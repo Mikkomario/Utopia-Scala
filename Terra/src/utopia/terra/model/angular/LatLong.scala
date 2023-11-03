@@ -1,7 +1,7 @@
 package utopia.terra.model.angular
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.{ApproxSelfEquals, Combinable, EqualsFunction}
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.terra.model.enumeration.CompassDirection
 import utopia.terra.model.enumeration.CompassDirection._
@@ -9,6 +9,12 @@ import utopia.terra.model.enumeration.CompassDirection._
 object LatLong
 {
 	// ATTRIBUTES   ------------------------
+	
+	/**
+	  * An equality function that allows for some inaccuracy
+	  */
+	val approxEquals: EqualsFunction[LatLong] =
+		(a, b) => { (a.latitude ~== b.latitude) && (a.longitude ~== b.longitude) }
 	
 	/**
 	 * A latitude longitude -coordinate that lies on the equator at the same longitude as Greenwich, England
@@ -34,11 +40,14 @@ object LatLong
  * @param latitude  The latitude coordinate of this position in the GPS system.
  *                  0 means equator. 90 COUNTER-CLOCKWISE means the NORTH pole
  *                  and 90 CLOCKWISE means the SOUTH pole or rim.
+  *                  Default = 0
  * @param longitude The longitude coordinate of this position in the GPS system.
  *                  0 means Greenwich, England. Positive ]0, 180[ values are towards the WEST
  *                  and negative ]180, 360[ towards the EAST.
+  *                  Default = 0
   */
-case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[LatLongRotation, LatLong]
+case class LatLong(latitude: Rotation = Rotation.zero, longitude: Angle = Angle.zero)
+	extends Combinable[LatLongRotation, LatLong] with ApproxSelfEquals[LatLong]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -111,6 +120,10 @@ case class LatLong(latitude: Rotation, longitude: Angle) extends Combinable[LatL
 	
 	
 	// IMPLEMENTED  -------------------
+	
+	override def self: LatLong = this
+	
+	override implicit def equalsFunction: EqualsFunction[LatLong] = LatLong.approxEquals
 	
 	override def toString = s"${latitudeDegrees.abs} $northSouth, ${longitudeDegrees.abs} $eastWest"
 	

@@ -44,11 +44,11 @@ object RotationDirection
     // COMPUTED -------------------------
     
     /**
-      * @return The positive rotation direction
+      * @return The positive rotation direction (i.e. Clockwise)
       */
     def positive = Clockwise
     /**
-      * @return The negative rotation direction
+      * @return The negative rotation direction (i.e. Counter-clockwise)
       */
     def negative = Counterclockwise
     

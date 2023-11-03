@@ -57,5 +57,7 @@ trait CompassRotationLike[+Repr]
 	override def isZero = wrapped.isZero
 	override def nonZero = !isZero
 	
+	override def toString = s"${wrapped.absoluteDegrees} $direction"
+	
 	override protected def equalsProperties: Iterable[Any] = Vector(axis, wrapped)
 }

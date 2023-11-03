@@ -1,6 +1,12 @@
 # Utopia Paradigm - List of Changes
 
-## v1.4.1 (in development)
+## v1.5 (in development)
+### Breaking changes
+- The default positive direction in **Rotation**`.arcLengthOver(...)` is now **Clockwise** instead of 
+  the direction of the **Rotation** instance.
+  - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`
+### Deprecations
+- Deprecated `.degrees` in **Rotation** in favor of `.absoluteDegrees` / `.clockwiseDegrees`
 ### New methods
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions

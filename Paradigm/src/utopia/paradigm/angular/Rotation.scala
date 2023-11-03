@@ -84,10 +84,12 @@ object Rotation
 	/**
 	  * @param arcLength    Targeted arc length
 	  * @param circleRadius Radius of the applicable circle
-	  * @param direction    Direction of travel matching a positive arc length
+	  * @param direction    Direction of travel matching a positive arc length (default = Clockwise)
 	  * @return Rotation that is required for producing the specified arc length over the specified travel radius
 	  */
-	def forArcLength(arcLength: Double, circleRadius: Double, direction: RotationDirection = Clockwise) = {
+	def forArcLength(arcLength: Double, circleRadius: Double,
+	                 direction: RotationDirection = RotationDirection.positive) =
+	{
 		// Whole circle diameter is 2*Pi*r. Length of the arc is (a / 2*Pi) * r, where a is the targeted angle
 		// Therefore a = l/r, where l is the desired arc length
 		ofRadians(arcLength / circleRadius, direction)
@@ -122,6 +124,8 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	/**
 	  * This rotation in degrees (>= 0)
 	  */
+	def absoluteDegrees = radians.toDegrees
+	@deprecated("Please use .absoluteDegrees or .clockWiseDegrees instead", "v1.4.1")
 	def degrees = radians.toDegrees
 	
 	/**
@@ -139,7 +143,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return A degree double value of this rotation to clockwise direction. Negative if this rotation is counter
 	  *         clockwise
 	  */
-	def clockwiseDegrees = degrees * direction.modifier
+	def clockwiseDegrees = absoluteDegrees * direction.modifier
 	/**
 	  * @return A radian double value of this rotation to counter clockwise direction. Negative if this direction is
 	  *         clockwise.
@@ -208,7 +212,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	override def zero = Rotation.zero
 	override def isZero = radians == 0
 	
-	override def toString = f"$degrees%1.2f degrees $direction"
+	override def toString = f"$absoluteDegrees%1.2f degrees $direction"
 	override implicit def toValue: Value = new Value(Some(this), RotationType)
 	
 	override def compareTo(o: Rotation) = clockwiseRadians.compareTo(o.clockwiseRadians)
@@ -263,13 +267,20 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * Calculates the length of an arc produced by this rotation / angle over a specific circle
 	  * @param circleRadius Radius of the circle
 	  * @param positiveDirection Rotation direction that produces a positive arc length.
-	  *                          Default = direction of this rotation,
+	  *                          Default = positive rotation direction (i.e. Clockwise),
 	  *                          which means that by default every result is positive.
 	  * @return Length of the arc produced by this rotation.
-	  *         Negative if 'positiveDirection' was set to that opposite to this rotation's direction.
+	  *         NB: May be negative.
 	  */
 	// Arc length = L * a/2*Pi, where L is the total circle radius 2*Pi*r and a is the angle produced by this rotation
 	// Therefore arc length = r * a
-	def arcLengthOver(circleRadius: Double, positiveDirection: RotationDirection = direction) =
+	def arcLengthOver(circleRadius: Double, positiveDirection: RotationDirection = RotationDirection.positive) =
 		circleRadius * radiansTowards(positiveDirection)
+	/**
+	  * Calculates the length of an arc produced by this rotation / angle over a specific circle.
+	  * NB: The returned length is always positive.
+	  * @param circleRadius      Radius of the circle
+	  * @return Length of the arc produced by this rotation.
+	  */
+	def absoluteArcLengthOver(circleRadius: Double) = arcLengthOver(circleRadius, direction)
 }

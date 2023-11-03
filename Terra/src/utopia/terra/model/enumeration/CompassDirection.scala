@@ -41,12 +41,12 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection]
 	 * @param rotation Amount of rotation to apply towards this direction in degrees
 	 * @return A rotation instance based with this direction and the specified amount
 	 */
-	def degrees(rotation: Double) = Rotation.ofDegrees(rotation, rotationDirection)
+	def degrees(rotation: Double) = CompassRotation(axis, Rotation.ofDegrees(rotation, rotationDirection))
 	/**
 	  * @param rotation Amount of rotation to apply towards this direction in radians
 	  * @return A rotation instance with this direction and the specified amount
 	  */
-	def radians(rotation: Double) = Rotation.ofRadians(rotation, rotationDirection)
+	def radians(rotation: Double) = CompassRotation(axis, Rotation.ofRadians(rotation, rotationDirection))
 	/**
 	  * @param distance Travel distance
 	  * @return Specified length of travel towards this direction

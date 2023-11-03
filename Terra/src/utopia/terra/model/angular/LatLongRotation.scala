@@ -119,6 +119,8 @@ case class LatLongRotation(northSouth: NorthSouthRotation, eastWest: EastWestRot
 	override def x = northSouth.wrapped
 	override def y = eastWest.wrapped
 	
+	override def toString = s"($northSouth, $eastWest)"
+	
 	override def withDimensions(newDimensions: Dimensions[Rotation]): LatLongRotation = LatLongRotation(newDimensions)
 	
 	

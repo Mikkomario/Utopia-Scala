@@ -129,7 +129,7 @@ trait HslLike[Repr <: HslLike[Repr]]
 		val diff = target - hue
 		if (diff.isZero)
 			this
-		else if (diff.degrees <= amountDegrees)
+		else if (diff.absoluteDegrees <= amountDegrees)
 			withHue(target)
 		else {
 			// Checks whether to go forward or backward on hue scale

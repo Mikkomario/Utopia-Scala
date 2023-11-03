@@ -1,0 +1,58 @@
+package utopia.terra.test
+
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.terra.controller.coordinate.world.GridArea
+import utopia.terra.model.angular.LatLong
+import utopia.terra.model.enumeration.CompassDirection.{East, North, South, West}
+import utopia.terra.model.world.grid.GridSurfacePoint
+
+/**
+  * Tests the grid-based world-view
+  * @author Mikko Hilpinen
+  * @since 3.11.2023, v1.0.1
+  */
+object GridAreaTest extends App
+{
+	// import utopia.flow.test.TestContext._
+	
+	private implicit val grid: GridArea = new GridArea(LatLong.origin)
+	private val unit = GridArea.oneDegreeLatitudeArcVectorLength
+	
+	val northVector = grid.latLongToVector(LatLong(North.degrees(1.0), Angle.zero))
+	assert(northVector ~== Vector2D(-unit))
+	val southVector = grid.latLongToVector(LatLong(South.degrees(1.0), Angle.zero))
+	assert(southVector ~== Vector2D(unit))
+	val eastVector = grid.latLongToVector(LatLong(Rotation.zero, East.degrees(1.0).toAngle))
+	assert(eastVector ~== Vector2D(0.0, -unit))
+	val westVector = grid.latLongToVector(LatLong(Rotation.zero, West.degrees(1.0).toAngle))
+	assert(westVector ~== Vector2D(0.0, unit))
+	
+	val northLatLong = grid.vectorToLatLong(Vector2D(-unit))
+	assert(northLatLong ~== LatLong(North.degrees(1.0)))
+	val southLatLong = grid.vectorToLatLong(Vector2D(unit))
+	assert(southLatLong ~== LatLong(South.degrees(1.0)))
+	val eastLatLong = grid.vectorToLatLong(Vector2D(0.0, -unit))
+	assert(eastLatLong ~== LatLong(longitude = East.degrees(1.0).toAngle))
+	val westLatLong = grid.vectorToLatLong(Vector2D(0.0, unit))
+	assert(westLatLong ~== LatLong(longitude = West.degrees(1.0).toAngle))
+	
+	val origin2 = LatLong(North.degrees(45))
+	val grid2 = new GridArea(origin2)
+	println(grid2.latLongToVector(origin2 + North.degrees(1.0)))
+	println(grid2.latLongToVector(origin2 + West.degrees(1.0)))
+	// println(grid2.latLongToVector(LatLong(North.degrees(90), East.degrees(45.0).toAngle)))
+	
+	private val origin = GridSurfacePoint(Vector2D(0, 0))
+	private val oneDegreeLatitudeNorth = GridSurfacePoint(LatLong(North.degrees(1.0), Angle.zero))
+	private val oneDegreeLatitudeSouth = GridSurfacePoint(LatLong(South.degrees(1.0), Angle.zero))
+	private val oneDegreeLongEast = GridSurfacePoint(LatLong(Rotation.zero, East.degrees(1.0).toAngle))
+	
+	println(s"1 degree latitude N = ${oneDegreeLatitudeNorth.vector}")
+	println(s"1 degree latitude S = ${oneDegreeLatitudeSouth.vector}")
+	println(s"1 degree longitude E = ${oneDegreeLongEast.vector}")
+	
+	assert(origin.latLong == LatLong.origin)
+	assert(oneDegreeLatitudeNorth.vector ~== Vector2D(-unit))
+	assert(oneDegreeLatitudeSouth.vector ~== Vector2D(unit))
+}

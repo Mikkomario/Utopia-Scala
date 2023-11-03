@@ -8,6 +8,22 @@ import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.{LatLong, LatLongRotation}
 import utopia.terra.model.world.grid.{GridPoint, GridSurfacePoint}
 
+object GridArea
+{
+	/**
+	  * The vector length distance covered by one degree of travel along the latitude circle (southward)
+	  */
+	val oneDegreeLatitudeArcVectorLength = 10000.0
+	/**
+	  * The assumed circumference of the earth in vector distance units
+	  */
+	val globeVectorCircumference = oneDegreeLatitudeArcVectorLength * 360.0
+	/**
+	  * The assumed (mean) radius of the earth sphere in vector distance units
+	  */
+	val globeVectorRadius = globeVectorCircumference / (math.Pi * 2.0)
+}
+
 /**
   * Represent a section of the earth,
   * that has been flattened to a 2D plane.
@@ -22,14 +38,11 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 {
 	// ATTRIBUTES   ------------------
 	
-	private val globeVectorRadius = 10000.0
-	// Length of one degree of latitude change, in vector space
-	private val oneLatitudeDegreeArcLength =
-		Rotation.ofDegrees(1.0).arcLengthOver(globeVectorRadius)
+	import GridArea._
 	
 	// Unit distance matches 0.001 degrees of travel along the north-to-south axis
 	// I.e. 100 units = 1 degree of travel
-	override val unitDistance: Distance = GlobeMath.meanRadius / globeVectorRadius / 3.60
+	override val unitDistance: Distance = GlobeMath.meanRadius / globeVectorRadius / 3.60 / oneDegreeLatitudeArcVectorLength
 	
 	// Radius of the east-to-west circle at the origin latitude level, in vector space
 	private val eastWestRadiusAtOrigin = GlobeMath
@@ -84,7 +97,7 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	}
 	
 	private def latitudeRotationToVectorLength(latitudeRotation: Rotation) =
-		latitudeRotation.degrees / oneLatitudeDegreeArcLength * 100
+		latitudeRotation.clockwiseDegrees * oneDegreeLatitudeArcVectorLength
 	private def vectorLengthToLatitudeRotation(vectorLength: Double) =
-		Rotation.ofDegrees(oneLatitudeDegreeArcLength * vectorLength / 100.0)
+		Rotation.ofDegrees(vectorLength / oneDegreeLatitudeArcVectorLength)
 }
