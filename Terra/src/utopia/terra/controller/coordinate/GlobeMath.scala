@@ -40,8 +40,7 @@ object GlobeMath
 	  * @param latitude The targeted latitude level, presented as [[Rotation]],
 	  *                 where counter-clockwise is towards the north and
 	  *                 clockwise is towards the south.
-	  * @param globeVectorRadius The radius of the earth from pole to pole
-	  *                          in the vector measurement system.
+	  * @param globeVectorRadius The radius of the earth in the vector measurement system.
 	  * @return The east-west circle radius at the specified latitude level +
 	  *         the vector length traveled along the Z axis to reach that level.
 	  *         These are returned as a Pair.
@@ -49,8 +48,8 @@ object GlobeMath
 	def eastWestRadiusAtLatitude(latitude: Rotation, globeVectorRadius: Double) = {
 		// Calculates the position on the X-Z plane based on latitude, which determines the east-west radius,
 		// as well as the final Z-coordinate
-		// X and Y are perpendicular to the "pole" vector
-		// While Z is parallel to the "pole" vector, going up to north
+		// X is perpendicular to the "pole" vector
+		// While Y is parallel to the "pole" vector, going up to north
 		val xz = Vector2D.lenDir(globeVectorRadius, latitude.toAngle)
 		xz.xyPair
 	}
