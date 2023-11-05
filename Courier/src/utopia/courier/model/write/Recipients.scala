@@ -1,6 +1,7 @@
 package utopia.courier.model.write
 
 import utopia.courier.model.EmailAddress
+import utopia.flow.util.StringExtensions._
 
 import javax.mail.Message.RecipientType
 import scala.language.implicitConversions
@@ -19,6 +20,7 @@ object Recipients
 	
 	implicit def emailToRecipients(email: EmailAddress): Recipients = apply(email)
 	implicit def addressListToRecipients(list: Vector[EmailAddress]): Recipients = apply(list)
+	implicit def stringListToRecipients(list: Vector[String]): Recipients = apply(list.map(EmailAddress.apply))
 	implicit def mapToRecipients(map: Map[RecipientType, Vector[EmailAddress]]): Recipients = apply(map)
 	
 	
@@ -84,6 +86,13 @@ case class Recipients(addressesByType: Map[RecipientType, Vector[EmailAddress]])
 	
 	
 	// IMPLEMENTED  -----------------------------
+	
+	override def toString() = {
+		val mainRecipientsStr = main.mkString(", ")
+		val copyRecipientsStr = copies.mkString(", ").mapIfNotEmpty { str => s"CC: $str" }
+		val hiddenRecipientsStr = hiddenCopies.mkString(", ").mapIfNotEmpty { str => s"BCC: $str" }
+		Vector(mainRecipientsStr, copyRecipientsStr, hiddenRecipientsStr).filter { _.nonEmpty }.mkString(", ")
+	}
 	
 	override def iterator = addressesByType.iterator
 		.flatMap { case (recipientType, addresses) => addresses.map { _ -> recipientType } }
