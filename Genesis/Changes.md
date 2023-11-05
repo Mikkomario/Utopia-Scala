@@ -1,5 +1,9 @@
 # Utopia Genesis - List of Changes
 
+## v3.4.1 (in development)
+### Other changes
+- **DrawSettings** now extends **ScopeUsable**
+
 ## v3.4 - 27.09.2023
 Adds automated line-splitting -option to **MeasuredText**
 ### Breaking Changes

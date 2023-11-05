@@ -2,6 +2,7 @@ package utopia.genesis.graphics
 
 import utopia.paradigm.color.Color
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.ScopeUsable
 
 import java.awt.Paint
 import scala.language.implicitConversions
@@ -53,6 +54,7 @@ object DrawSettings
   * @since 29.1.2022, v2.6.3
   */
 case class DrawSettings(_fill: Option[Either[Paint, Color]], strokeSettings: Option[StrokeSettings])
+	extends ScopeUsable[DrawSettings]
 {
 	// COMPUTED ---------------------------
 	
@@ -129,6 +131,11 @@ case class DrawSettings(_fill: Option[Either[Paint, Color]], strokeSettings: Opt
 	  * @return A copy of these settings where drawn strokes are sharp
 	  */
 	def withSharpStrokes = mapStrokeSettings { _.sharp }
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def self: DrawSettings = this
 	
 	
 	// OTHER    --------------------------

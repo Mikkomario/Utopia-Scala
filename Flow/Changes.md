@@ -14,6 +14,7 @@
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
+- Added **Use** object for providing scope-specific (implicit) access to certain values
 ### New methods
 - **CompoundingBuilder**
   - Added `.popAll()`
