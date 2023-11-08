@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, EqualsFunction}
+import utopia.flow.operator.{ApproxEquals, EqualsFunction, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
@@ -37,7 +37,7 @@ object FileExtensions
 	  */
 	implicit def stringToPath(pathString: String): Path = Paths.get(pathString.stripControlCharacters)
 	
-	implicit class RichPath(val p: Path) extends AnyVal with ApproxEquals[Path]
+	implicit class RichPath(val p: Path) extends AnyVal with ApproxEquals[Path] with MaybeEmpty[Path]
 	{
 		// COMPUTED ----------------------------
 		
@@ -291,6 +291,19 @@ object FileExtensions
 		
 		
 		// IMPLEMENTED  ---------------------------
+		
+		override def self: Path = p
+		
+		override def isEmpty: Boolean = {
+			// Case: Directory => Checks whether this directory contains any files
+			//                    Considered nonEmpty on file read failures
+			if (isDirectory)
+				iterateChildren { !_.hasNext }.getOrElse(false)
+			// Case: Regular file => Existing regular files are never considered empty
+			//                       Returns false on a read failure
+			else
+				!notExists
+		}
 		
 		override def ~==(other: Path): Boolean =
 			Try { Files.isSameFile(p, other) }.getOrElse { p.absolute.normalize() == other.absolute.normalize() }

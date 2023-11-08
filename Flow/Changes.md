@@ -32,8 +32,10 @@
 - **Try** (**CollectionExtensions**)
   - Added `.failWith(Throwable)` and `.failIf(=> Option[Throwable])`
 ### Other changes
-- **Path** now extends **ApproxEquals** (after importing **FileExtensions**)
+- **Path** now extends **ApproxEquals**, as well as **MayBeEmpty** (after importing **FileExtensions**)
   - `~==` checks whether the two paths target the same file
+  - `.isEmpty` checks whether the targeted directory is empty
+    - Returns false for existing regular files
 
 ## v2.2 - 27.09.2023
 This update focuses on the pointer system (i.e. the **Changing** trait).  
