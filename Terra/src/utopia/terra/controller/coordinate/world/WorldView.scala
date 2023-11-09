@@ -9,6 +9,7 @@ package utopia.terra.controller.coordinate.world
  * @tparam Surface Surface level (2D) point type
  * @tparam Aerial Aerial (3D) point type
  */
-trait WorldView[-V2D, -V3D, +Surface, +Aerial]
+trait WorldView[V2D, -V3D, +Surface, +Aerial]
 	extends LatLongToWorldPoint[Surface, Aerial] with VectorToWorldPoint[V2D, V3D, Surface, Aerial]
-		with VectorDistanceConversion
+		with VectorDistanceConversion with LatLongFromVectorFactory[V2D]
+		with VectorFromLatLongFactory[V2D]

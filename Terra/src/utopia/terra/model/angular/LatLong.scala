@@ -92,7 +92,7 @@ case class LatLong(latitude: Rotation = Rotation.zero, longitude: Angle = Angle.
 		case Some(sign) =>
 			// Handles cases where the rotation is > 90 degrees or < -90 degrees
 			// After 180 degrees rotation, the targeted hemisphere "flips"
-			val absQuarter = if ((latitude.radians / math.Pi).toInt % 4 < 2) South else North
+			val absQuarter = if ((latitude.absoluteRadians / math.Pi).toInt % 4 < 2) South else North
 			absQuarter * sign
 		// 0 degrees latitude is considered to be on the North side
 		case None => North

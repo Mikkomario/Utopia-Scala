@@ -43,14 +43,11 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 	override def surfaceVector(vector: Vector3D): SphereSurfacePoint = SpherePoint(vector).toSurfacePoint
 	override def aerialVector(vector: Vector3D): SpherePoint = SpherePoint(vector)
 	
-	
-	// OTHER    -----------------------------
-	
 	/**
-	 * @param latLong A latitude-longitude coordinate
-	 * @return A vector representing that same point on the spherical Earth's surface at the sea level.
-	 */
-	def latLongToVector(latLong: LatLong) = {
+	  * @param latLong A latitude-longitude coordinate
+	  * @return A vector representing that same point on the spherical Earth's surface at the sea level.
+	  */
+	override def latLongToVector(latLong: LatLong) = {
 		// Calculates the position on the X-Z plane based on latitude, which determines the east-west radius,
 		// as well as the final Z-coordinate
 		val (eastWestRadius, z) = GlobeMath.eastWestRadiusAtLatitude(latLong.latitude, globeVectorRadius).toTuple
@@ -62,10 +59,10 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 		Vector3D(xy.dimensions.withZ(z))
 	}
 	/**
-	 * @param vector A vector coordinate in the spherical Earth system
-	 * @return A latitude-longitude coordinate that matches that same location
-	 */
-	def vectorToLatLong(vector: Vector3D) = {
+	  * @param vector A vector coordinate in the spherical Earth system
+	  * @return A latitude-longitude coordinate that matches that same location
+	  */
+	override def vectorToLatLong(vector: Vector3D) = {
 		// Calculates the correct longitude on the X-Y plane
 		val longitude = vector.direction
 		// Also calculates the distance from the Z-axis along the X-Y plane
@@ -76,6 +73,9 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 		
 		LatLong(latitude, longitude)
 	}
+	
+	
+	// OTHER    -----------------------------
 	
 	/**
 	 * @param vector A vector coordinate in the spherical Earth system

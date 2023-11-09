@@ -32,7 +32,7 @@ case class CircularPath(circle: Circle, startAngle: Angle = Angle.up, endAngle: 
 	override def end = circle(endAngle)
 	
 	// Arc length = 2Pi*r for whole circle
-	override def length = 2 * Math.PI * circle.radius * maxRotation.radians / (2 * Math.PI)
+	override def length = 2 * Math.PI * circle.radius * maxRotation.absoluteRadians / (2 * Math.PI)
 	
 	override def apply(t: Double) = circle(startAngle + maxRotation * t)
 }

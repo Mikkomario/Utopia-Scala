@@ -32,6 +32,8 @@ trait CirclePointOps[V <: DoubleVectorLike[V], +Repr] extends WorldPointOps[V, W
 	
 	// IMPLEMENTED  ----------------------
 	
+	override def toString = s"$latLong / $vector"
+	
 	override def linearDistanceFrom(other: WorldPoint[HasDoubleDimensions]): Distance =
 		worldView.distanceOf((vector - other.vector).length)
 	override def arcingDistanceFrom(other: WorldPoint[HasDoubleDimensions]): Distance = linearDistanceFrom(other)

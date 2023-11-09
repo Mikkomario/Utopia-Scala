@@ -111,22 +111,25 @@ object Rotation
 * This class represents a rotation around a certain axis
 * @author Mikko Hilpinen
 * @since Genesis 21.11.2018
-  * @param radians The amount of radians to rotate (always positive or zero)
+  * @param absoluteRadians The amount of radians to rotate (always positive or zero)
   * @param direction The rotation direction (default = clockwise)
 **/
-case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
+case class Rotation private(absoluteRadians: Double, direction: RotationDirection = Clockwise)
 	extends LinearScalable[Rotation] with SelfCombinable[Rotation]
 		with SignedOrZero[Rotation] with SelfComparable[Rotation] with ApproxEquals[Rotation]
 		with ValueConvertible
 {
 	// PROPS    --------------------------
 	
+	@deprecated("Please use .absoluteRadians or .clockwiseRadians instead", "v1.4.1")
+	def radians = absoluteRadians
+	
 	/**
 	  * This rotation in degrees (>= 0)
 	  */
-	def absoluteDegrees = radians.toDegrees
+	def absoluteDegrees = absoluteRadians.toDegrees
 	@deprecated("Please use .absoluteDegrees or .clockWiseDegrees instead", "v1.4.1")
-	def degrees = radians.toDegrees
+	def degrees = absoluteDegrees
 	
 	/**
 	 * A radian double value of this rotation
@@ -138,7 +141,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return A radian double value of this rotation to clockwise direction. Negative if this rotation is counter
 	  *         clockwise
 	  */
-	def clockwiseRadians = radians * direction.modifier
+	def clockwiseRadians = absoluteRadians * direction.modifier
 	/**
 	  * @return A degree double value of this rotation to clockwise direction. Negative if this rotation is counter
 	  *         clockwise
@@ -157,7 +160,7 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	/**
 	  * @return Size of this rotation in complete clockwise circles
 	  */
-	def clockwiseCircles = (radians / (2 * math.Pi)) * direction.modifier
+	def clockwiseCircles = (absoluteRadians / (2 * math.Pi)) * direction.modifier
 	/**
 	  * @return Size of this rotation in complete counter-clockwise circles
 	  */
@@ -210,28 +213,29 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	override def sign: SignOrZero = direction.sign
 	
 	override def zero = Rotation.zero
-	override def isZero = radians == 0
+	override def isZero = absoluteRadians == 0
 	
 	override def toString = f"$absoluteDegrees%1.2f degrees $direction"
 	override implicit def toValue: Value = new Value(Some(this), RotationType)
 	
 	override def compareTo(o: Rotation) = clockwiseRadians.compareTo(o.clockwiseRadians)
 	
-	def ~==(other: Rotation) = radians * direction.modifier ~== other.radians * direction.modifier
+	def ~==(other: Rotation) =
+		absoluteRadians * direction.modifier ~== other.absoluteRadians * direction.modifier
 	
 	def *(modifier: Double) = {
 		if (modifier >= 0)
-			Rotation(radians * modifier, direction)
+			Rotation(absoluteRadians * modifier, direction)
 		else
-			Rotation(radians * -1 * modifier, direction.opposite)
+			Rotation(absoluteRadians * -1 * modifier, direction.opposite)
 	}
 	def +(other: Rotation) = {
 		if (direction == other.direction)
-			Rotation(radians + other.radians, direction)
-		else if (radians >= other.radians)
-			Rotation(radians - other.radians, direction)
+			Rotation(absoluteRadians + other.absoluteRadians, direction)
+		else if (absoluteRadians >= other.absoluteRadians)
+			Rotation(absoluteRadians - other.absoluteRadians, direction)
 		else
-			Rotation(other.radians - radians, other.direction)
+			Rotation(other.absoluteRadians - absoluteRadians, other.direction)
 	}
 	def -(other: Rotation) = this + (-other)
 	

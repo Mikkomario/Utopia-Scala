@@ -59,15 +59,12 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	override def aerialVector(vector: Vector3D): GridPoint = GridPoint(vector)
 	override def surfaceVector(vector: Vector2D): GridSurfacePoint = GridSurfacePoint(vector)
 	
-	
-	// OTHER    ---------------------
-	
 	/**
 	  * Converts a latitude-longitude coordinate into a grid-based vector
 	  * @param latLong A latitude longitude coordinate
 	  * @return A vector that matches that coordinate in this system
 	  */
-	def latLongToVector(latLong: LatLong) = {
+	override def latLongToVector(latLong: LatLong) = {
 		// Determines the angular position vector relative to the origin
 		val position = latLong - origin
 		val x = latitudeRotationToVectorLength(position.northSouth)
@@ -83,7 +80,7 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	  * @param vector A vector in this grid-based system
 	  * @return A latitude-longitude coordinate that matches that vector
 	  */
-	def vectorToLatLong(vector: Vector2D) = {
+	override def vectorToLatLong(vector: Vector2D) = {
 		// Converts vector length (X) to latitude angular travel
 		val northSouthPosition = vectorLengthToLatitudeRotation(vector.x)
 		// Converts vector length (Y) to latitude angular travel first
@@ -95,6 +92,9 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 		// Converts from relative-to-origin space to relative to (0,0) lat long -space
 		origin + LatLongRotation(northSouthPosition, eastWestPosition)
 	}
+	
+	
+	// OTHER    ---------------------
 	
 	private def latitudeRotationToVectorLength(latitudeRotation: Rotation) =
 		latitudeRotation.clockwiseDegrees * oneDegreeLatitudeArcVectorLength

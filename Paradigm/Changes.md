@@ -6,7 +6,8 @@
   the direction of the **Rotation** instance.
   - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`
 ### Deprecations
-- Deprecated `.degrees` in **Rotation** in favor of `.absoluteDegrees` / `.clockwiseDegrees`
+- Deprecated `.degrees` and `.radians` in **Rotation** in favor of 
+  `.absoluteDegrees` & `.clockwiseDegrees` + `.absoluteRadians` & `.clockWiseRadians`
 ### New methods
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
