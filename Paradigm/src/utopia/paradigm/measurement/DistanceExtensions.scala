@@ -20,16 +20,18 @@ object DistanceExtensions
 		 * @return this amount of millimeters
 		 */
 		def mm(implicit n: Numeric[A]) = Distance.ofMillis(double)
-		
 		/**
 		 * @return this amount of centimeters
 		 */
 		def cm(implicit n: Numeric[A]) = Distance.ofCm(double)
-		
 		/**
 		 * @return This amount of meters
 		 */
 		def m(implicit n: Numeric[A]) = Distance.ofMeters(double)
+		/**
+		  * @return This amount of kilometers
+		  */
+		def km(implicit n: Numeric[A]) = Distance.ofKilometers(double)
 		
 		/**
 		 * @return This amount of inches

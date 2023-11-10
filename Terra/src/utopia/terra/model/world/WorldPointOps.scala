@@ -1,6 +1,6 @@
 package utopia.terra.model.world
 
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.{Combinable, Reversible}
 import utopia.paradigm.measurement.Distance
 import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.{CompassRotation, LatLongRotation}
@@ -11,9 +11,11 @@ import utopia.terra.model.angular.{CompassRotation, LatLongRotation}
  * @since 7.9.2023, v1.0
  * @tparam V Vector representation of this point
   * @tparam WP Type of comparable (world) points
+  * @tparam VI Comparable vector type (generic)
   * @tparam Repr Implementing type
  */
-trait WorldPointOps[+V, -WP, +Repr] extends WorldPoint[V] with Combinable[LatLongRotation, Repr]
+trait WorldPointOps[+V, -WP, VI <: Reversible[VI], +Repr]
+	extends WorldPoint[V] with Combinable[LatLongRotation, Repr]
 {
 	// ABSTRACT ------------------------
 	
@@ -40,6 +42,11 @@ trait WorldPointOps[+V, -WP, +Repr] extends WorldPoint[V] with Combinable[LatLon
 	  * @return A point at the end of that rotational travel
 	  */
 	def +(rotation: CompassRotation): Repr
+	/**
+	  * @param vectorTravel Travel to apply, in vector form
+	  * @return A point at the end of the specified travel (from this point)
+	  */
+	def +(vectorTravel: VI): Repr
 	
 	
 	// OTHER    -----------------------
@@ -56,4 +63,9 @@ trait WorldPointOps[+V, -WP, +Repr] extends WorldPoint[V] with Combinable[LatLon
 	  * @return A point at the end of that reversed rotational travel
 	  */
 	def -(rotation: CompassRotation) = this + (-rotation)
+	/**
+	  * @param vectorTravel Travel to apply in reverse
+	  * @return A point at the end of the specified reversed travel
+	  */
+	def -(vectorTravel: VI) = this + (-vectorTravel)
 }

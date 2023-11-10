@@ -42,7 +42,7 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	
 	// Unit distance matches 0.001 degrees of travel along the north-to-south axis
 	// I.e. 100 units = 1 degree of travel
-	override val unitDistance: Distance = GlobeMath.meanRadius / globeVectorRadius / 3.60 / oneDegreeLatitudeArcVectorLength
+	override val unitDistance: Distance = GlobeMath.meanCircumference / 360.0 / oneDegreeLatitudeArcVectorLength
 	
 	// Radius of the east-to-west circle at the origin latitude level, in vector space
 	private val eastWestRadiusAtOrigin = GlobeMath

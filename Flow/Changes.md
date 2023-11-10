@@ -23,6 +23,8 @@
 - **Iterator** (**CollectionExtensions**)
   - Added `.mapSuccesses(...)` and `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**
   - Added `.prePollingAsync(Int)` that utilizes the new **PrePollingIterator**
+- **Lazy**
+  - Added `.mapCurrent(...)`
 - **Path** (**FileExtensions**)
   - Added `.hasSameContentAs(Path)` for identical file -searching (not yet tested)
 - **Regex** (object)

@@ -1,7 +1,7 @@
 package utopia.paradigm.measurement
 
 import utopia.flow.operator.{SelfComparable, Sign, SignOrZero, SignedOrZero}
-import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, Meter, MilliMeter}
+import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, KiloMeter, Meter, MilliMeter}
 
 object Distance
 {
@@ -30,6 +30,11 @@ object Distance
 	 * @return A distance
 	 */
 	def ofMeters(meters: Double) = Distance(meters, Meter)
+	/**
+	  * @param km Amount of kilometers (km)
+	  * @return A distance matching that value
+	  */
+	def ofKilometers(km: Double) = Distance(km, KiloMeter)
 	
 	/**
 	 * @param inches Amount of inhes

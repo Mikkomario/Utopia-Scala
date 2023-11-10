@@ -4,6 +4,7 @@ import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.world.SphericalEarth
 import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.{CompassRotation, LatLong, LatLongRotation}
@@ -14,7 +15,8 @@ import utopia.terra.model.world.{WorldPoint, WorldPointOps}
   * @author Mikko Hilpinen
   * @since 7.9.2023, v1.0
   */
-trait SpherePointOps[-WP <: WorldPoint[HasDoubleDimensions], +Repr] extends WorldPointOps[Vector3D, WP, Repr]
+trait SpherePointOps[-WP <: WorldPoint[HasDoubleDimensions], +Repr]
+	extends WorldPointOps[Vector3D, WP, DoubleVector, Repr]
 {
 	// ABSTRACT ------------------------------
 	
@@ -44,4 +46,5 @@ trait SpherePointOps[-WP <: WorldPoint[HasDoubleDimensions], +Repr] extends Worl
 	}
 	override def +(rotation: CompassRotation): Repr = at(latLong + rotation)
 	override def +(other: LatLongRotation): Repr = at(latLong + other)
+	override def +(vectorTravel: DoubleVector): Repr = ???
 }

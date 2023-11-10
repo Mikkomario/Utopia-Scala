@@ -4,6 +4,7 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToSurfacePoint, VectorToSurfacePoint}
 import utopia.terra.model.CompassTravel
@@ -83,4 +84,5 @@ trait CircleSurfacePoint
 			case EastWest => this + EastWest(Rotation.forArcLength(travelVectorLength, vector.length))
 		}
 	}
+	override def +(vectorTravel: DoubleVector): CircleSurfacePoint = CircleSurfacePoint(vector + vectorTravel)
 }

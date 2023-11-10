@@ -32,6 +32,12 @@ object GlobeMath
 	 */
 	val meanRadius = Distance(6371.0088, KiloMeter)
 	
+	/**
+	  * The arithmetic Earth mean circumference, which is based on the
+	  * [[meanRadius]] value
+	  */
+	lazy val meanCircumference = meanRadius * 2.0 * math.Pi
+	
 	
 	// OTHER    --------------------
 	

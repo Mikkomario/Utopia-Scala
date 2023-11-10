@@ -1,11 +1,13 @@
 package utopia.terra.controller.coordinate.world
 
+import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.enumeration.CompassDirection.South
+import utopia.terra.model.world.WorldDistance
 import utopia.terra.model.world.circle.{CirclePoint, CircleSurfacePoint}
 
 /**
@@ -75,4 +77,11 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 		// Longitude matches the vector direction exactly
 		LatLong(latitude, vector.direction)
 	}
+	
+	
+	// OTHER    ---------------------
+	
+	// TODO: Continue working on this once we have the absolute rotation class
+	def latitudeTravelToDistance(latitude: Rotation): WorldDistance =
+		distance(equatorVectorRadius * latitude.absoluteRadians * 2.0 / math.Pi)
 }

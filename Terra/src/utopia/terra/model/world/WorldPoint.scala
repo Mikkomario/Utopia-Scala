@@ -20,4 +20,16 @@ trait WorldPoint[+V]
 	 * @return The latitude-longitude coordinates of this point
 	 */
 	def latLong: LatLong
+	
+	
+	// COMPUTED ----------------------
+	
+	/**
+	  * @return The latitude (North-South) coordinate of this position
+	  */
+	def latitude = latLong.latitude
+	/**
+	  * @return The longitude (East-West) coordinate of this position
+	  */
+	def longitude = latLong.longitude
 }

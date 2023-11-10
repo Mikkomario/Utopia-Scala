@@ -147,6 +147,20 @@ trait Lazy[+A] extends View[A]
 	  */
 	def map[B](f: A => B) = Lazy { f(value) }
 	/**
+	  * Maps the contents of this container.
+	  * If the current value has already been calculated, performs the
+	  * mapping immediately.
+	  * Otherwise performs the mapping lazily.
+	  * @param f A mapping function to apply
+	  * @tparam B Type of mapping results
+	  * @return A new possibly lazily initialized container that contains
+	  *         the mapping results.
+	  */
+	def mapCurrent[B](f: A => B) = current match {
+		case Some(value) => Lazy.initialized(f(value))
+		case None => map(f)
+	}
+	/**
 	  * Lazily maps this container's content
 	  * @param f A mapping function applied lazily. Yields 0-n values (via iterator).
 	  * @tparam B Type of individual map results

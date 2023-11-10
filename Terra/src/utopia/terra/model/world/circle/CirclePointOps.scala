@@ -2,7 +2,7 @@ package utopia.terra.model.world.circle
 
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.vector.DoubleVectorLike
+import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorLike}
 import utopia.terra.controller.coordinate.world.CircleOfEarth
 import utopia.terra.model.angular.{CompassRotation, LatLong, LatLongRotation}
 import utopia.terra.model.world.{WorldPoint, WorldPointOps}
@@ -11,7 +11,8 @@ import utopia.terra.model.world.{WorldPoint, WorldPointOps}
   * @author Mikko Hilpinen
   * @since 7.9.2023, v1.0
   */
-trait CirclePointOps[V <: DoubleVectorLike[V], +Repr] extends WorldPointOps[V, WorldPoint[HasDoubleDimensions], Repr]
+trait CirclePointOps[V <: DoubleVectorLike[V] with DoubleVector, +Repr]
+	extends WorldPointOps[V, WorldPoint[HasDoubleDimensions], DoubleVector, Repr]
 {
 	// ABSTRACT --------------------------
 	

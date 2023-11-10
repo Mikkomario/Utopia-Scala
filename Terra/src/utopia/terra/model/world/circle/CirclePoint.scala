@@ -4,6 +4,7 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToWorldPoint, VectorToWorldPoint}
 import utopia.terra.model.CompassTravel
@@ -95,4 +96,5 @@ trait CirclePoint
 	
 	override protected def at(latLong: LatLong): CirclePoint = CirclePoint(CircleSurfacePoint(latLong), altitude)
 	override def +(travel: CompassTravel): CirclePoint = CirclePoint(toSurfacePoint + travel, altitude)
+	override def +(vectorTravel: DoubleVector): CirclePoint = CirclePoint(toSurfacePoint + vectorTravel, altitude)
 }
