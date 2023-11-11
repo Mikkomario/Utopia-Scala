@@ -293,7 +293,7 @@ object ParadigmValueCaster extends ValueCaster
         case Vector2DType => Some(value.getVector2D.length)
         case Vector3DType => Some(value.getVector3D.length)
         case AngleType => Some(value.getAngle.radians)
-        case RotationType => Some(value.getRotation.clockwiseRadians)
+        case RotationType => Some(value.getRotation.clockwise.radians)
         case LinearVelocityType => Some(value.getLinearVelocity.perMilliSecond)
         case LinearAccelerationType => Some(value.getLinearAcceleration.perMilliSecond.perMilliSecond)
         case _ => None
@@ -310,7 +310,7 @@ object ParadigmValueCaster extends ValueCaster
     private def durationOf(value: Value): Option[FiniteDuration] = value.dataType match {
         case RotationType =>
             // Each 360 degree rotation represents 24 hours
-            val rot = value.getRotation.clockwiseCircles
+            val rot = value.getRotation.clockwise.circles
             Some((rot * 24).hours)
         case _ => None
     }
@@ -480,8 +480,8 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def angleOf(value: Value): Option[Angle] = value.dataType match {
-        case DoubleType => Some(Angle.ofRadians(value.getDouble))
-        case LocalTimeType => Some(Angle.up + Rotation.ofCircles(value.getLocalTime.toDuration.toPreciseHours / 12))
+        case DoubleType => Some(Angle.radians(value.getDouble))
+        case LocalTimeType => Some(Angle.up + Rotation.clockwise.circles(value.getLocalTime.toDuration.toPreciseHours / 12))
         case Vector2DType => Some(value.getVector2D.direction)
         case Vector3DType => Some(value.getVector3D.direction)
         case RotationType => Some(value.getRotation.toAngle)
@@ -494,12 +494,12 @@ object ParadigmValueCaster extends ValueCaster
             val s = value.getString
             val firstLetterIndex = s.indexWhere { _.isLetter }
             if (firstLetterIndex < 0)
-                s.double.map(Angle.ofRadians)
+                s.double.map(Angle.radians)
             else {
                 val (numPart, typePart) = s.splitAt(firstLetterIndex)
                 typePart.toLowerCase.take(3) match {
-                    case "rad" => numPart.trim.double.map(Angle.ofRadians)
-                    case "deg" => numPart.trim.double.map(Angle.ofDegrees)
+                    case "rad" => numPart.trim.double.map(Angle.radians)
+                    case "deg" => numPart.trim.double.map(Angle.degrees)
                     case _ => None
                 }
             }
@@ -507,20 +507,20 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def rotationOf(value: Value): Option[Rotation] = value.dataType match {
-        case DoubleType => Some(Rotation.ofRadians(value.getDouble))
-        case DurationType => Some(Rotation.ofCircles(value.getDuration.toPreciseHours / 24))
+        case DoubleType => Some(Rotation.clockwise.radians(value.getDouble))
+        case DurationType => Some(Rotation.clockwise.circles(value.getDuration.toPreciseHours / 24))
         case AngleType => Some(value.getAngle.toShortestRotation)
         case LinearTransformationType => Some(value.getLinearTransformation.rotation)
         case StringType =>
             val s = value.getString
             val firstLetterIndex = s.indexWhere { _.isLetter }
             if (firstLetterIndex < 0)
-                s.double.map { Rotation.ofRadians(_) }
+                s.double.map(Rotation.clockwise.radians)
             else {
                 val (numPart, typePart) = s.splitAt(firstLetterIndex)
                 typePart.toLowerCase.take(3) match {
-                    case "rad" => numPart.trim.double.map { Rotation.ofRadians(_) }
-                    case "deg" => numPart.trim.double.map { Rotation.ofDegrees(_) }
+                    case "rad" => numPart.trim.double.map(Rotation.clockwise.radians)
+                    case "deg" => numPart.trim.double.map(Rotation.clockwise.degrees)
                     case _ => None
                 }
             }

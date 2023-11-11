@@ -97,6 +97,8 @@ case class Hsl private(override val hue: Angle, override val saturation: Double,
 	
 	// IMPLEMENTED	--------------
 	
+	override def self: Hsl = this
+	
 	override implicit def toValue: Value = new Value(Some(this), HslType)
 	
 	override def toModel = Model.from("hue" -> hue, "saturation" -> saturation, "luminosity" -> luminosity)

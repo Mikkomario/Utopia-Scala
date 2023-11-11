@@ -131,7 +131,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
       * @return A polygon based on this circle
       */
     def toPolygon(sidesCount: Int, startAngle: Angle = Angle.up) = {
-        val increment = Rotation.clockwiseCircle / sidesCount
+        val increment = Rotation.clockwise.circle / sidesCount
         Polygon(Iterator.iterate(startAngle) { _ + increment }.take(sidesCount - 1)
             .map { angle => origin + Vector2D.lenDir(radius, angle) }.toVector)
     }

@@ -5,56 +5,46 @@ import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.{Combinable, SelfComparable}
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.generic.ParadigmDataType.AngleType
 import utopia.paradigm.transform.LinearSizeAdjustable
 
-object Angle
+object Angle extends RotationFactory[Angle]
 {
     // ATTRIBUTES    -----------------------------
     
     /**
      * Angle that points to the left (180 degrees)
      */
-    val left = ofRadians(math.Pi)
+    val left = radians(math.Pi)
     /**
      * Angle that points to the right (0 degrees)
      */
-    val right = ofRadians(0)
+    val right = radians(0)
     /**
      * Angle that points up (270 degrees)
      */
-    val up = ofRadians(3 * math.Pi / 2)
+    val up = radians(3 * math.Pi / 2)
     /**
      * Angle that points down (90 degrees)
      */
-    val down = ofRadians(math.Pi / 2)
+    val down = radians(math.Pi / 2)
     
     /**
       * The red color angle when using HSL
       */
-    val red = ofRadians(0)
+    val red = radians(0)
     /**
       * The green color angle when using HSL
       */
-    val green = ofRadians(2 * math.Pi / 3)
+    val green = radians(2 * math.Pi / 3)
     /**
       * The blue color angle when using HSL
       */
-    val blue = ofRadians(4 * math.Pi / 3)
+    val blue = radians(4 * math.Pi / 3)
     
     
     // COMPUTED ----------------------------------
     
-    /**
-      * @return A zero degree angle
-      */
-    def zero = right
-    
-    /**
-      * @return 1/4 of a circle
-      */
-    def quarter = down
     /**
       * @return 1/2 of a circle
       */
@@ -65,29 +55,33 @@ object Angle
     def threeQuarters = up
     
     
+    // IMPLEMENTED  ----------------------
+    
+    override def radians(rads: Double): Angle = {
+        val raw = rads % (2 * math.Pi)
+        if (raw < 0) apply(raw + 2 * math.Pi) else apply(raw)
+    }
+    
+    
     // FACTORIES    ------------------------------
     
     /**
      * Converts a radian angle to an angle instance
      */
-    def ofRadians(radians: Double) =
-    {
-        val raw = radians % (2 * math.Pi)
-        if (raw < 0)
-            Angle(raw + 2 * math.Pi)
-        else
-            Angle(raw)
-    }
+    @deprecated("Please use .radians(Double) instead", "v1.5")
+    def ofRadians(radians: Double) = this.radians(radians)
     /**
      * Converts a degrees angle to an angle instance (some inaccuracy may occur since the value 
      * is converted to radians internally)
      */
-    def ofDegrees(degrees: Double) = ofRadians(degrees.toRadians)
+    @deprecated("Please use .degrees(Double) instead", "v1.5")
+    def ofDegrees(degrees: Double) = this.degrees(degrees)
     /**
      * @param circleRatio Ratio of a circle [0, 1] to the positive (clockwise) direction
      * @return That ratio as an angle
      */
-    def ofCircles(circleRatio: Double) = ofRadians(circleRatio * 2 * math.Pi)
+    @deprecated("Please use .circles(Double) instead", "v1.5")
+    def ofCircles(circleRatio: Double) = circles(circleRatio)
     
     
     // OTHER    ----------------------------------
@@ -96,8 +90,7 @@ object Angle
      * @param direction Target direction
      * @return The angle that will take an object towards specified direction
      */
-    def towards(direction: Direction2D) = direction match
-    {
+    def towards(direction: Direction2D) = direction match {
         case Direction2D.Right => right
         case Direction2D.Down => down
         case Direction2D.Left => left
@@ -108,12 +101,10 @@ object Angle
       * @param angles A number of angles
       * @return An average between the angles
       */
-    def average(angles: Iterable[Angle]) =
-    {
+    def average(angles: Iterable[Angle]) = {
         if (angles.isEmpty)
             zero
-        else
-        {
+        else {
             val start = angles.head
             val averageRotation = Rotation.average(angles.map { _ - start })
             start + averageRotation
@@ -129,7 +120,8 @@ object Angle
  * @since Genesis 30.6.2017
  */
 case class Angle private(radians: Double)
-    extends LinearSizeAdjustable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle] with ValueConvertible
+    extends LinearSizeAdjustable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle]
+        with ValueConvertible
 {
     // ATTRIBUTES    ------------------
     
@@ -161,12 +153,12 @@ case class Angle private(radians: Double)
     /**
       * @return A clockwise rotation that will turn an item from 0 radians to this angle
       */
-    def toClockwiseRotation = Rotation.ofRadians(radians)
+    @deprecated("Please use .toRotation.clockwise instead", "v1.5")
+    def toClockwiseRotation = Rotation.clockwise.radians(radians)
     /**
-      * @return A clockwise rotation that will turn an item from 0 radians to this angle
+      * @return A non-directional rotation that will turn an item from 0 radians to this angle
       */
-    @deprecated("Renamed to .toClockwiseRotation. Also consider using .toShortestRotation", "v1.4")
-    def toRotation = toClockwiseRotation
+    def toRotation = NondirectionalRotation.radians(radians)
     /**
       * @return A rotation that will turn an item from 0 radians to this angle,
       *         using the shorter route / direction.
@@ -174,9 +166,9 @@ case class Angle private(radians: Double)
       */
     def toShortestRotation = {
         if (radians < math.Pi)
-            toClockwiseRotation
+            toRotation.clockwise
         else
-            Rotation.ofRadians(math.Pi * 2 - radians, Counterclockwise)
+            Rotation.counterclockwise.radians(math.Pi * 2 - radians)
     }
     
     /**
@@ -218,18 +210,18 @@ case class Angle private(radians: Double)
     /**
       * Applies a rotation to this angle
       */
-    def +(rotation: Rotation): Angle = Angle.ofRadians(radians + rotation.clockwiseRadians)
+    def +(rotation: Rotation): Angle = Angle.radians(radians + rotation.clockwise.radians)
     
     /**
       * Applies a rotation (radians) to this angle in counter-clockwise direction
       */
     @deprecated("Please use -(Rotation) instead", "v2.3")
-    def -(rotationRads: Double) = Angle.ofRadians(radians - rotationRads)
+    def -(rotationRads: Double) = Angle.radians(radians - rotationRads)
     
     /**
       * Applies a negative rotation to this angle
       */
-    def -(rotation: Rotation): Angle = Angle.ofRadians(radians - rotation.clockwiseRadians)
+    def -(rotation: Rotation): Angle = Angle.radians(radians - rotation.clockwise.radians)
     
     /**
       * Compares two angles without the requirement of being exactly equal
@@ -241,7 +233,7 @@ case class Angle private(radians: Double)
       * @param mod A multiplier
       * @return A multiplied version of this angle
       */
-    def *(mod: Double) = Angle.ofRadians(radians * mod)
+    def *(mod: Double) = Angle.radians(radians * mod)
     
     
     // OTHER    ------------------
@@ -254,31 +246,31 @@ case class Angle private(radians: Double)
         val rawValue = radians - other.radians
         if (rawValue > math.Pi) {
             // > 180 degrees positive -> < 180 degrees negative
-            Rotation(2 * math.Pi - rawValue, Counterclockwise)
+            Rotation.counterclockwise.radians(2 * math.Pi - rawValue)
         }
         else if (rawValue < -math.Pi) {
             // > 180 degrees negative -> < 180 degrees positive
-            Rotation(rawValue + 2 * math.Pi, Clockwise)
+            Rotation.clockwise.radians(rawValue + 2 * math.Pi)
         }
         else {
             // Negative values are returned as positive counter-clockwise rotation
             if (rawValue < 0)
-                Rotation(-rawValue, Counterclockwise)
+                Rotation.counterclockwise.radians(-rawValue)
             else
-                Rotation(rawValue, Clockwise)
+                Rotation.clockwise.radians(rawValue)
         }
     }
     /**
      * @param zero The angle that is considered to be the zero angle
      * @return This angle in the coordinate system where the specified angle is considered zero
      */
-    def relativeTo(zero: Angle) = Angle.ofRadians(radians - zero.radians)
+    def relativeTo(zero: Angle) = Angle.radians(radians - zero.radians)
     
     /**
      * Applies a rotation (radians) to this angle in clockwise direction
      */
     @deprecated("Please use +(Rotation) instead", "v2.3")
-    def +(rotationRads: Double) = Angle.ofRadians(radians + rotationRads)
+    def +(rotationRads: Double) = Angle.radians(radians + rotationRads)
     
     /**
       * @param other Another angle (> 0 degrees)

@@ -45,7 +45,7 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
       * @return A new affine transformation
       */
     def apply(translation: Vector2D = Vector2D.zero, scaling: Vector2D = Vector2D.identity,
-              rotation: Rotation = Rotation.zero, shear: Vector2D = Vector2D.zero): AffineTransformation =
+              rotation: Rotation = Rotation.clockwise.zero, shear: Vector2D = Vector2D.zero): AffineTransformation =
         apply(translation, LinearTransformation(scaling, rotation, shear))
     
     /**

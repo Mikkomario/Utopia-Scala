@@ -81,7 +81,7 @@ trait CircleSurfacePoint
 			// Case: North-South travel => Linear travel path towards or away from the center
 			case NorthSouth => CircleSurfacePoint(vector + vector.withLength(travelVectorLength))
 			// Case: East-West travel => Arcing travel staying at the same latitude line
-			case EastWest => this + EastWest(Rotation.forArcLength(travelVectorLength, vector.length))
+			case EastWest => this + EastWest.forArcLength(travelVectorLength, vector.length)
 		}
 	}
 	override def +(vectorTravel: DoubleVector): CircleSurfacePoint = CircleSurfacePoint(vector + vectorTravel)

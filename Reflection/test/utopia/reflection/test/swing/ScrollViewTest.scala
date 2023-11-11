@@ -64,7 +64,7 @@ object ScrollViewTest extends App
 	
 	// Creates the main stack
 	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkenedBy(1.2)
+	stack.background = Color.yellow.minusHue(Rotation.clockwise.degrees(33)).darkenedBy(1.2)
 	
 	// Adds content management
 	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) => d.draw(b) }

@@ -53,7 +53,7 @@ object ScrollAreaTest extends App
 
 	// Creates the main stack
 	val stack = Stack.rowWithItems(columns, 16.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkened
+	stack.background = Color.yellow.minusHue(Rotation.clockwise.degrees(33)).darkened
 
 	val actorHandler = ActorHandler()
 

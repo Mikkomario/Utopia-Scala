@@ -1,6 +1,6 @@
 package utopia.paradigm.color
 
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, NondirectionalRotation, Rotation}
 
 
 /**
@@ -11,6 +11,11 @@ import utopia.paradigm.angular.{Angle, Rotation}
 trait HslLike[Repr <: HslLike[Repr]]
 {
 	// ABSTRACT	------------------
+	
+	/**
+	  * @return This instance
+	  */
+	def self: Repr
 	
 	/**
 	  * @return The hue of this color [0, 360[ where 0 is red, 120 is green and 240 is blue
@@ -86,7 +91,7 @@ trait HslLike[Repr <: HslLike[Repr]]
 	/**
 	  * @return The complementary color of this color
 	  */
-	def complementary = plusHue(Rotation.ofCircles(0.5))
+	def complementary = plusHue(Rotation.clockwise.circles(0.5))
 	
 	
 	// OPERATORS	--------------
@@ -120,22 +125,24 @@ trait HslLike[Repr <: HslLike[Repr]]
 	def plusHue(amount: Rotation) = withHue(hue + amount)
 	/**
 	  * Adjusts the hue of this color towards the specified target
-	  * @param amountDegrees The maximum hue adjustment
+	  * @param amount The maximum hue adjustment
 	  * @param target Target hue [0, 360[
 	  * @return A copy of this color with adjusted hue
 	  */
-	// TODO: Absolute rotation class would be useful here
-	def plusHueTowards(amountDegrees: Double, target: Angle) = {
+	def plusHueTowards(amount: NondirectionalRotation, target: Angle) = {
 		val diff = target - hue
 		if (diff.isZero)
-			this
-		else if (diff.absoluteDegrees <= amountDegrees)
+			self
+		else if (diff.absolute <= amount)
 			withHue(target)
 		else {
 			// Checks whether to go forward or backward on hue scale
-			plusHue(Rotation.ofDegrees(amountDegrees, diff.direction))
+			plusHue(amount.towards(diff.direction))
 		}
 	}
+	@deprecated("Please use .plusHueTowards(NonDirectionalRotation, Angle) instead", "v1.5")
+	def plusHueTowards(amountDegrees: Double, target: Angle): Repr =
+		plusHueTowards(NondirectionalRotation.degrees(amountDegrees), target)
 	
 	/**
 	  * @param amount Saturation adjustment

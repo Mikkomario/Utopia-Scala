@@ -180,7 +180,7 @@ case class Rgb private(override val ratios: Map[RgbChannel, Double])
 				(max - min) / (2 - max - min)
 		}
 		
-		Hsl(Angle.ofDegrees(hue), saturation, luminosity)
+		Hsl(Angle.degrees(hue), saturation, luminosity)
 	}
 	
 	/**

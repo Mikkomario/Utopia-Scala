@@ -25,9 +25,9 @@ object GridAreaTest extends App
 		assert(northVector ~== Vector2D(-unit))
 		val southVector = grid.latLongToVector(LatLong(South.degrees(1.0), Angle.zero))
 		assert(southVector ~== Vector2D(unit))
-		val eastVector = grid.latLongToVector(LatLong(Rotation.zero, East.degrees(1.0).toAngle))
+		val eastVector = grid.latLongToVector(LatLong(Rotation.clockwise.zero, East.degrees(1.0).toAngle))
 		assert(eastVector ~== Vector2D(0.0, -unit))
-		val westVector = grid.latLongToVector(LatLong(Rotation.zero, West.degrees(1.0).toAngle))
+		val westVector = grid.latLongToVector(LatLong(Rotation.clockwise.zero, West.degrees(1.0).toAngle))
 		assert(westVector ~== Vector2D(0.0, unit))
 		
 		val northLatLong = grid.vectorToLatLong(Vector2D(-unit))
@@ -48,7 +48,7 @@ object GridAreaTest extends App
 		val origin = GridSurfacePoint(Vector2D(0, 0))
 		val oneDegreeLatitudeNorth = GridSurfacePoint(LatLong(North.degrees(1.0), Angle.zero))
 		val oneDegreeLatitudeSouth = GridSurfacePoint(LatLong(South.degrees(1.0), Angle.zero))
-		val oneDegreeLongEast = GridSurfacePoint(LatLong(Rotation.zero, East.degrees(1.0).toAngle))
+		val oneDegreeLongEast = GridSurfacePoint(LatLong(Rotation.clockwise.zero, East.degrees(1.0).toAngle))
 		
 		println(s"1 degree latitude N = ${ oneDegreeLatitudeNorth.vector }")
 		println(s"1 degree latitude S = ${ oneDegreeLatitudeSouth.vector }")

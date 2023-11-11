@@ -34,7 +34,7 @@ object Extensions
          */
         def toPolygon(edgeAmount: Int) = Polygon((
                 for { i <- 0 until edgeAmount } yield c.origin + Vector2D.lenDir(c.radius,
-                Angle.ofRadians(math.Pi * 2 * i / edgeAmount))).toVector)
+                Angle.radians(math.Pi * 2 * i / edgeAmount))).toVector)
     }
     
     implicit class CollisionPolygon(val p: Polygonic) extends AnyVal

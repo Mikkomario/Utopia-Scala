@@ -58,7 +58,7 @@ object ParadigmValue
         def polygonOr(default: => Polygonic = Polygon(Vector())) = polygon.getOrElse(default)
         def boundsOr(default: => Bounds = Bounds.zero) = bounds.getOrElse(default)
         def angleOr(default: => Angle = Angle.zero) = angle.getOrElse(default)
-        def rotationOr(default: => Rotation = Rotation.zero) = rotation.getOrElse(default)
+        def rotationOr(default: => Rotation = Rotation.clockwise.zero) = rotation.getOrElse(default)
         def matrix2DOr(default: => Matrix2D = Matrix2D.identity) = matrix2D.getOrElse(default)
         def matrix3DOr(default: => Matrix3D = Matrix3D.identity) = matrix3D.getOrElse(default)
         def linearTransformationOr(default: => LinearTransformation = LinearTransformation.identity) =

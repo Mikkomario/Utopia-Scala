@@ -17,12 +17,10 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	/**
 	  * @return Whether this item is positive (>0)
 	  */
-	@deprecated("Please call .sign.isPositive instead", "v2.2")
 	def isPositive: Boolean = sign.isPositive
 	/**
 	  * @return Whether this item is negative (<0)
 	  */
-	@deprecated("Please call .sign.isNegative instead", "v2.2")
 	def isNegative: Boolean = sign.isNegative
 	
 	

@@ -3,7 +3,7 @@ package utopia.terra.model.enumeration
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{BinarySigned, Sign, Signed}
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{Rotation, RotationFactory}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, RotationDirection}
 import utopia.paradigm.measurement.Distance
@@ -16,7 +16,7 @@ import utopia.terra.model.enumeration.CompassDirection.CompassAxis
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-sealed trait CompassDirection extends BinarySigned[CompassDirection]
+sealed trait CompassDirection extends BinarySigned[CompassDirection] with RotationFactory[CompassRotation]
 {
 	// ABSTRACT --------------------
 	
@@ -35,18 +35,17 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection]
 	def rotationDirection = RotationDirection(sign)
 	
 	
-	// OTHER    --------------------
+	// IMPLEMENTED  ----------------
 	
-	/**
-	 * @param rotation Amount of rotation to apply towards this direction in degrees
-	 * @return A rotation instance based with this direction and the specified amount
-	 */
-	def degrees(rotation: Double) = CompassRotation(axis, Rotation.ofDegrees(rotation, rotationDirection))
 	/**
 	  * @param rotation Amount of rotation to apply towards this direction in radians
 	  * @return A rotation instance with this direction and the specified amount
 	  */
-	def radians(rotation: Double) = CompassRotation(axis, Rotation.ofRadians(rotation, rotationDirection))
+	override def radians(rotation: Double) = CompassRotation(axis, Rotation(rotationDirection).radians(rotation))
+	
+	
+	// OTHER    --------------------
+	
 	/**
 	  * @param distance Travel distance
 	  * @return Specified length of travel towards this direction
@@ -58,7 +57,7 @@ object CompassDirection
 {
 	// NESTED   ------------------------------
 	
-	sealed trait AxisToDirection[+D, +R]
+	sealed trait AxisToDirection[+D, +R] extends RotationFactory[R]
 	{
 		// ABSTRACT ------------------------
 		
@@ -73,6 +72,11 @@ object CompassDirection
 		  * @return The specified rotation along this axis
 		  */
 		def apply(rotation: Rotation): R
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def radians(rads: Double): R = apply(Rotation.clockwise.radians(rads))
 		
 		
 		// OTHER    ------------------------
@@ -98,12 +102,6 @@ object CompassDirection
 		  * @return Compass direction that matches that numbers's sign. None if the number is zero.
 		  */
 		def of(n: Double) = Sign.of(n).binary.map(apply)
-		
-		/**
-		  * @param degrees Number of degrees of turn or travel
-		  * @return A rotation that matches that turn along this axis
-		  */
-		def degrees(degrees: Double) = apply(Rotation.ofDegrees(degrees))
 	}
 	
 	object CompassAxis

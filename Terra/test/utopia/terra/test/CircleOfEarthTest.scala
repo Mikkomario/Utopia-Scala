@@ -68,12 +68,12 @@ object CircleOfEarthTest extends App
 	println(south.direction.degrees)
 	println(west.direction.degrees)
 	/*
-	assert((north.direction - south.direction).absoluteDegrees ~== 180.0)
-	assert((east.direction - west.direction).absoluteDegrees ~== 180.0)
-	assert((north.direction - east.direction).absoluteDegrees ~== 90.0)
-	assert((north.direction - west.direction).absoluteDegrees ~== 90.0)
-	assert((south.direction - east.direction).absoluteDegrees ~== 90.0)
-	assert((north.direction - west.direction).absoluteDegrees ~== 90.0)
+	assert((north.direction - south.direction).absolute.degrees ~== 180.0)
+	assert((east.direction - west.direction).absolute.degrees ~== 180.0)
+	assert((north.direction - east.direction).absolute.degrees ~== 90.0)
+	assert((north.direction - west.direction).absolute.degrees ~== 90.0)
+	assert((south.direction - east.direction).absolute.degrees ~== 90.0)
+	assert((north.direction - west.direction).absolute.degrees ~== 90.0)
 	*/
 	println("Success!")
 }

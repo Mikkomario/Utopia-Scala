@@ -33,13 +33,13 @@ object TransformationDrawTest extends App
 		new ShapeDrawer[Parallelogramic](Bounds(Point(-32, -32), Size(64, 64)), Point.origin, Point(100, 100), Matrix2D.identity),
 		new ShapeDrawer[Parallelogramic](Bounds(Point.origin, Size(64, 64)), Point(32, 32), Point(200, 100), Matrix2D.identity),
 		new ShapeDrawer[Parallelogramic](Bounds(Point(-32, -32), Size(64, 64)), Point.origin, Point(300, 100),
-			Matrix2D.rotation(Rotation.ofDegrees(45))),
+			Matrix2D.rotation(Rotation.clockwise.degrees(45))),
 		new ShapeDrawer[Parallelogramic](Bounds(Point.origin, Size(64, 64)), Point(32, 32), Point(400, 100),
-			Matrix2D.rotation(Rotation.ofDegrees(45))),
+			Matrix2D.rotation(Rotation.clockwise.degrees(45))),
 		new ShapeDrawer[Parallelogramic](Bounds(Point(-32, -32), Size(64, 64)), Point.origin, Point(500, 100),
-			Matrix2D.scaling(2, 0.5) * Matrix2D.rotation(Rotation.ofDegrees(45))),
+			Matrix2D.scaling(2, 0.5) * Matrix2D.rotation(Rotation.clockwise.degrees(45))),
 		new ShapeDrawer[Parallelogramic](Bounds(Point.origin, Size(64, 64)), Point(32, 32), Point(600, 100),
-			Matrix2D.scaling(2, 0.5) * Matrix2D.rotation(Rotation.ofDegrees(45)))
+			Matrix2D.scaling(2, 0.5) * Matrix2D.rotation(Rotation.clockwise.degrees(45)))
 	)
 	
 	setup.start()

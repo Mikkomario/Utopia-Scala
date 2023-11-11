@@ -70,7 +70,7 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 		val x = latitudeRotationToVectorLength(position.northSouth)
 		val eastWestArcLength = position.eastWest.arcLengthOver(eastWestRadiusAtOrigin)
 		// "Simulated" value based on the radius difference at the origin latitude level
-		val latitudeRotationOfEastWestTravel = Rotation.forArcLength(eastWestArcLength, globeVectorRadius)
+		val latitudeRotationOfEastWestTravel = Rotation.clockwise.forArcLength(eastWestArcLength, globeVectorRadius)
 		val y = latitudeRotationToVectorLength(latitudeRotationOfEastWestTravel)
 		
 		Vector2D(x, y)
@@ -87,7 +87,7 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 		// and then corrects for the difference in radii between the latitude and longitude circles
 		val simulatedLatitudeRotationOfX = vectorLengthToLatitudeRotation(vector.y)
 		val eastWestArcLength = simulatedLatitudeRotationOfX.arcLengthOver(globeVectorRadius)
-		val eastWestPosition = Rotation.forArcLength(eastWestArcLength, eastWestRadiusAtOrigin)
+		val eastWestPosition = Rotation.clockwise.forArcLength(eastWestArcLength, eastWestRadiusAtOrigin)
 		
 		// Converts from relative-to-origin space to relative to (0,0) lat long -space
 		origin + LatLongRotation(northSouthPosition, eastWestPosition)
@@ -97,7 +97,7 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	// OTHER    ---------------------
 	
 	private def latitudeRotationToVectorLength(latitudeRotation: Rotation) =
-		latitudeRotation.clockwiseDegrees * oneDegreeLatitudeArcVectorLength
+		latitudeRotation.clockwise.degrees * oneDegreeLatitudeArcVectorLength
 	private def vectorLengthToLatitudeRotation(vectorLength: Double) =
-		Rotation.ofDegrees(vectorLength / oneDegreeLatitudeArcVectorLength)
+		Rotation.clockwise.degrees(vectorLength / oneDegreeLatitudeArcVectorLength)
 }

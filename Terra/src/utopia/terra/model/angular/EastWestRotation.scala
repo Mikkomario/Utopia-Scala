@@ -10,7 +10,7 @@ object EastWestRotation
 	/**
 	  * A zero degree rotation along this axis
 	  */
-	val zero = apply(Rotation.zero)
+	val zero = apply(Rotation.clockwise.zero)
 	
 	
 	// OTHER    ------------------------

@@ -22,7 +22,7 @@ object LatLongRotation extends DimensionalFactory[Rotation, LatLongRotation]
 	
 	// COMPUTED ----------------------------
 	
-	private def zeroValue = Rotation.zero
+	private def zeroValue = Rotation.clockwise.zero
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -137,8 +137,14 @@ case class LatLongRotation(northSouth: NorthSouthRotation, eastWest: EastWestRot
 	
 	/**
 	  * @param direction Targeted compass direction
+	  * @return Amount of rotation applied towards that direction
+	  */
+	def towards(direction: CompassDirection) =
+		apply(direction.axis).towards(direction.rotationDirection)
+	/**
+	  * @param direction Targeted compass direction
 	  * @return Amount of rotation in degrees applied towards that direction
 	  */
-	def degreesTowards(direction: CompassDirection) =
-		apply(direction.axis).degreesTowards(direction.rotationDirection)
+	@deprecated("Please use .towards(CompassDirection).degrees instead", "v1.1")
+	def degreesTowards(direction: CompassDirection) = towards(direction).degrees
 }

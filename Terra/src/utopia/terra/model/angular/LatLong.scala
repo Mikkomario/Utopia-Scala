@@ -19,7 +19,7 @@ object LatLong
 	/**
 	 * A latitude longitude -coordinate that lies on the equator at the same longitude as Greenwich, England
 	 */
-	val origin = apply(Rotation.zero, Angle.zero)
+	val origin = apply(Rotation.clockwise.zero, Angle.zero)
 	
 	
 	// OTHER    ----------------------------
@@ -31,7 +31,7 @@ object LatLong
 	 * @return A new map point
 	 */
 	def fromDegrees(latitude: Double, longitude: Double): LatLong =
-		apply(Rotation.ofDegrees(latitude, North.rotationDirection), Angle.ofDegrees(East.sign * longitude))
+		apply(Rotation(North.rotationDirection).degrees(latitude), Angle.degrees(East.sign * longitude))
 }
 /**
  * A point on the earth's surface expressed as latitude and longitude angular values
@@ -46,7 +46,7 @@ object LatLong
  *                  and negative ]180, 360[ towards the EAST.
   *                  Default = 0
   */
-case class LatLong(latitude: Rotation = Rotation.zero, longitude: Angle = Angle.zero)
+case class LatLong(latitude: Rotation = Rotation.clockwise.zero, longitude: Angle = Angle.zero)
 	extends Combinable[LatLongRotation, LatLong] with ApproxSelfEquals[LatLong]
 {
 	// ATTRIBUTES   --------------------------
@@ -57,7 +57,7 @@ case class LatLong(latitude: Rotation = Rotation.zero, longitude: Angle = Angle.
 	 */
 	lazy val latitudeDegrees: Double = {
 		// Corrects the amount to [-90, 90] degree range
-		val base = latitude.degreesTowards(North.rotationDirection)
+		val base = latitude.towards(North.rotationDirection).degrees
 		val div = base.abs / 90.0
 		val segment = div.toInt
 		val remainder = base % 90.0
@@ -92,7 +92,7 @@ case class LatLong(latitude: Rotation = Rotation.zero, longitude: Angle = Angle.
 		case Some(sign) =>
 			// Handles cases where the rotation is > 90 degrees or < -90 degrees
 			// After 180 degrees rotation, the targeted hemisphere "flips"
-			val absQuarter = if ((latitude.absoluteRadians / math.Pi).toInt % 4 < 2) South else North
+			val absQuarter = if ((latitude.absolute.radians / math.Pi).toInt % 4 < 2) South else North
 			absQuarter * sign
 		// 0 degrees latitude is considered to be on the North side
 		case None => North

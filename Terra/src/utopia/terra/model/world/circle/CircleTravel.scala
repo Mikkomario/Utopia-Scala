@@ -23,9 +23,9 @@ trait CircleTravel[+P <: WorldPointOps[V, _, DoubleVector, P], V <: DoubleVector
 		// 90 degrees of travel = R
 		// => Vl = lat / 90 degrees * R
 		val latitudeVectorDistance = CircleOfEarth.equatorVectorRadius *
-			ll.northSouth.absoluteRadians * 2.0 / math.Pi
+			ll.northSouth.absolute.radians * 2.0 / math.Pi
 		val averageLatitudeVectorDistance = middlePoint.latitude
-		val longitudeVectorDistance = ll.eastWest.absoluteArcLengthOver(latitudeVectorDistance)
+		val longitudeVectorDistance = ll.eastWest.absolute.arcLengthOver(latitudeVectorDistance)
 		???
 	}
 }

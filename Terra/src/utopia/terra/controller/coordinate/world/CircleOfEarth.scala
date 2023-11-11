@@ -60,7 +60,7 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 		// 200 000 at the southern rim (90 latitude)
 		// V = (lat + 90 degrees) * R / 90 degrees
 		// 90 degrees = Pi/2
-		val vectorDistance = (latLong + South.radians(math.Pi / 2.0))(South).clockwiseRadians *
+		val vectorDistance = (latLong + South.radians(math.Pi / 2.0))(South).clockwise.radians *
 			equatorVectorRadius * 2.0 / math.Pi
 		// Direction matches the longitude, because 0 angle (right) matches the longitude of 0 (Greenwich, England)
 		Vector2D.lenDir(vectorDistance, latLong.longitude)
@@ -83,5 +83,5 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 	
 	// TODO: Continue working on this once we have the absolute rotation class
 	def latitudeTravelToDistance(latitude: Rotation): WorldDistance =
-		distance(equatorVectorRadius * latitude.absoluteRadians * 2.0 / math.Pi)
+		distance(equatorVectorRadius * latitude.absolute.radians * 2.0 / math.Pi)
 }

@@ -90,7 +90,7 @@ object Transformation
  */
 @deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
 case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling: Vector2D = vector.Vector2D.identity,
-                          rotation: Rotation = Rotation.zero, shear: Vector2D = vector.Vector2D.zero,
+                          rotation: Rotation = Rotation.clockwise.zero, shear: Vector2D = vector.Vector2D.zero,
                           useReverseOrder: Boolean = false)
     extends JavaAffineTransformConvertible
 {
@@ -109,7 +109,7 @@ case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling:
     /**
      * How much the target is rotated clockwise in radians
      */
-    def rotationRads = rotation.clockwiseRadians
+    def rotationRads = rotation.clockwise.radians
     
     /**
      * How much the target is rotated in degrees (clockwise)

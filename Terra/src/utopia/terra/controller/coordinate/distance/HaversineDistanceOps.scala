@@ -16,7 +16,7 @@ class HaversineDistanceOps(radius: Distance) extends DistanceOps[LatLong]
 	override def distanceBetween(points: Pair[LatLong]): Distance = {
 		import math._
 		
-		val latitudes = points.map { _.latitude.clockwiseRadians }
+		val latitudes = points.map { _.latitude.clockwise.radians }
 		val longitudes = points.map { _.longitude.radians }
 		
 		val deltaLat = latitudes.merge { _ - _ }

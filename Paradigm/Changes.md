@@ -2,6 +2,7 @@
 
 ## v1.5 (in development)
 ### Breaking changes
+- Practically rewrote the **Rotation** class
 - The default positive direction in **Rotation**`.arcLengthOver(...)` is now **Clockwise** instead of 
   the direction of the **Rotation** instance.
   - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`

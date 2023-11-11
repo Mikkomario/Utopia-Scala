@@ -53,11 +53,11 @@ trait CompassRotationLike[+Repr]
 	override def axis: Axis = compassAxis.axis
 	override def sign: SignOrZero = wrapped.sign
 	
-	override def zeroValue: Rotation = Rotation.zero
+	override def zeroValue: Rotation = Rotation.clockwise.zero
 	override def isZero = wrapped.isZero
 	override def nonZero = !isZero
 	
-	override def toString = s"${wrapped.absoluteDegrees} $direction"
+	override def toString = s"${wrapped.absolute.degrees} $direction"
 	
 	override protected def equalsProperties: Iterable[Any] = Vector(axis, wrapped)
 }

@@ -64,7 +64,8 @@ object LinearTransformation extends SureFromModelFactory[LinearTransformation]
  * @author Mikko Hilpinen
  * @since Genesis 26.12.2020, v2.4
  */
-case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation: Rotation = Rotation.zero,
+case class LinearTransformation(scaling: Vector2D = Vector2D.identity,
+                                rotation: Rotation = Rotation.clockwise.zero,
                                 shear: Vector2D = Vector2D.zero) extends LinearTransformationLike[LinearTransformation]
     with JavaAffineTransformConvertible with LinearTransformable[Matrix2D] with AffineTransformable[Matrix3D]
     with AnimatedLinearTransformable[AnimatedLinearTransformation]

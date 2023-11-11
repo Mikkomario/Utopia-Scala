@@ -27,13 +27,13 @@ object BasicColorTest extends App
 	
 	assert( hsl1.withLuminosity(0.2) == Hsl(Angle.zero, 0.5, 0.2) )
 	assert( hsl1.withSaturation(0.8) == Hsl(Angle.zero, 0.8, 0.5))
-	assert( hsl1.withHue(Angle.ofDegrees(120)) ~== Hsl(Angle.ofDegrees(120), 0.5, 0.5))
-	assert( hsl1 + Rotation.ofDegrees(200) - Rotation.ofDegrees(200) == hsl1 )
+	assert( hsl1.withHue(Angle.degrees(120)) ~== Hsl(Angle.degrees(120), 0.5, 0.5))
+	assert( hsl1 + Rotation.clockwise.degrees(200) - Rotation.clockwise.degrees(200) == hsl1 )
 	
-	assert( hsl1 + Rotation.ofDegrees(540) - Rotation.ofDegrees(540) == hsl1 )
+	assert( hsl1 + Rotation.clockwise.degrees(540) - Rotation.clockwise.degrees(540) == hsl1 )
 	assert( hsl1.grayscale.saturation == 0 )
-	assert( hsl1.plusHueTowards(30, Angle.ofDegrees(90)) == Hsl(Angle.ofDegrees(30), 0.5, 0.5) )
-	assert( hsl1.plusHueTowards(30, Angle.ofDegrees(270)) == Hsl(Angle.ofDegrees(330), 0.5, 0.5) )
+	assert( hsl1.plusHueTowards(Rotation.degrees(30), Angle.degrees(90)) == Hsl(Angle.degrees(30), 0.5, 0.5) )
+	assert( hsl1.plusHueTowards(Rotation.degrees(30), Angle.degrees(270)) == Hsl(Angle.degrees(330), 0.5, 0.5) )
 	
 	// Tests conversion
 	val rgb1hsl = rgb1.toHSL

@@ -19,7 +19,7 @@ case class HueAdjust(sourceHue: Angle, effectRange: Angle, targetHue: Angle) ext
 	override def apply(original: Color) =
 	{
 		// Checks whether pixel is within effect range
-		val hueDifference = (original.hue - sourceHue).absoluteRadians
+		val hueDifference = (original.hue - sourceHue).absolute.radians
 		
 		if (hueDifference < rangeRadians / 2)
 		{

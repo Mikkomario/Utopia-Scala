@@ -66,15 +66,15 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	/**
 	  * @return Direction of this vector in x-y -plane
 	  */
-	def direction = Angle.ofRadians(math.atan2(n.toDouble(y), n.toDouble(x)))
+	def direction = Angle.radians(math.atan2(n.toDouble(y), n.toDouble(x)))
 	/**
 	  * This vector's direction on the z-y plane
 	  */
-	def xDirection = Angle ofRadians calculateDirection(n.toDouble(z), n.toDouble(y))
+	def xDirection = Angle.radians(calculateDirection(n.toDouble(z), n.toDouble(y)))
 	/**
 	  * This vector's direction on the x-z plane
 	  */
-	def yDirection = Angle ofRadians calculateDirection(n.toDouble(x), n.toDouble(z))
+	def yDirection = Angle.radians(calculateDirection(n.toDouble(x), n.toDouble(z)))
 	
 	/**
 	  * A 2D normal for this vector
@@ -270,7 +270,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 		val x = other.projectedOver(DoubleVector(dimensions.map(n.toDouble)))
 		val y = other - x
 		
-		Angle.ofRadians(math.atan2(y.length, x.length).abs)
+		Angle.radians(math.atan2(y.length, x.length).abs)
 	}
 	/**
 	  * @param other Another vector

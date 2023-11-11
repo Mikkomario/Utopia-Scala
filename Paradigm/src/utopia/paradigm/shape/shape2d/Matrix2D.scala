@@ -42,7 +42,7 @@ object Matrix2D extends DimensionsWrapperFactory[Vector2D, Matrix2D]
 	/**
 	  * A linear rotation transformation that rotates items 180 degrees
 	  */
-	lazy val rotation180Degrees = rotation(Rotation.ofDegrees(180))
+	lazy val rotation180Degrees = rotation(Rotation.clockwise.degrees(180))
 	
 	
 	// IMPLEMENTED  ---------------------------

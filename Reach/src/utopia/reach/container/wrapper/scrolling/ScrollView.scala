@@ -188,7 +188,7 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	// WET WET (from ScrollArea)
 	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = {
-		implicit val ds: DrawSettings = StrokeSettings(Hsl(Angle.ofDegrees(math.random() * 360)))
+		implicit val ds: DrawSettings = StrokeSettings(Hsl(Angle.degrees(math.random() * 360)))
 		clipZone match {
 			case Some(clip) =>
 				clip.overlapWith(bounds).foreach { c =>

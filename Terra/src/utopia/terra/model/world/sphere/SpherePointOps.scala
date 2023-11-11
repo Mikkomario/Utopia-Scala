@@ -41,8 +41,7 @@ trait SpherePointOps[-WP <: WorldPoint[HasDoubleDimensions], +Repr]
 	
 	override def +(travel: CompassTravel): Repr = {
 		// Converts the travel distance to rotation
-		val rotation = Rotation.forArcLength(worldView.vectorLengthOf(travel.distance), vector.length)
-		this + travel.compassAxis(rotation)
+		this + travel.compassAxis.forArcLength(worldView.vectorLengthOf(travel.distance), vector.length)
 	}
 	override def +(rotation: CompassRotation): Repr = at(latLong + rotation)
 	override def +(other: LatLongRotation): Repr = at(latLong + other)

@@ -264,6 +264,8 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	
 	// IMPLEMENTED	----------------------
 	
+	override def self: Color = this
+	
 	override implicit def toValue: Value = new Value(Some(this), ColorType)
 	
 	override def ~==(other: Color) = {

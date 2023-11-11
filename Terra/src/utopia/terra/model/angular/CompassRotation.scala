@@ -10,7 +10,7 @@ object CompassRotation
 	/**
 	  * A zero degree rotation (north-to-south)
 	  */
-	lazy val zero = apply(NorthSouth, Rotation.zero)
+	lazy val zero = apply(NorthSouth, Rotation.clockwise.zero)
 	
 	
 	// OTHER    ----------------------
@@ -29,7 +29,7 @@ object CompassRotation
 		extends CompassRotation
 	{
 		override def self: CompassRotation = this
-		override def zero: CompassRotation = new _CompassRotation(compassAxis, Rotation.zero)
+		override def zero: CompassRotation = new _CompassRotation(compassAxis, Rotation.clockwise.zero)
 		
 		override def +(other: Rotation): CompassRotation = new _CompassRotation(compassAxis, wrapped + other)
 		override def *(mod: Double): CompassRotation = new _CompassRotation(compassAxis, wrapped * mod)

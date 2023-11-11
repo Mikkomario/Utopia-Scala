@@ -26,9 +26,9 @@ object LatLongTest extends App
 	
 	assert(ll0.longitude == Angle.zero)
 	assert(East.sign == Negative)
-	assert(ll1.longitude == Angle.ofDegrees(344.7))
-	assert(ll3.longitude == Angle.ofDegrees(239.7))
-	assert(ll4.longitude == Angle.ofDegrees(83.2), ll4.longitude)
+	assert(ll1.longitude == Angle.degrees(344.7))
+	assert(ll3.longitude == Angle.degrees(239.7))
+	assert(ll4.longitude == Angle.degrees(83.2), ll4.longitude)
 	
 	assert(ll0.latitudeDegrees == 0.0)
 	assert(ll1.latitudeDegrees ~== 60.8, ll1.latitudeDegrees)

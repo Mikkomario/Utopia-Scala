@@ -17,13 +17,13 @@ object TransformationTest extends App
 	
 	val translation = AffineTransformation.translation(Vector2D(10))
 	val scaling = LinearTransformation.scaling(Vector2D(2, 1))
-	val rotation = LinearTransformation.rotation(Rotation.ofDegrees(90))
+	val rotation = LinearTransformation.rotation(Rotation.clockwise.degrees(90))
  
 	// Tests - for transformations
 	
 	assert((-translation).position.x == -10)
 	assert((-scaling).scaling.x == 0.5)
-	assert((-rotation).rotation.clockwiseDegrees ~== -90.0)
+	assert((-rotation).rotation.clockwise.degrees ~== -90.0)
 	
 	// Tests transformation reversal (t * !t should be identity)
 	

@@ -15,12 +15,12 @@ object AnimatedLinearTransformation
 	/**
 	  * An animation that rotates objects 360 degrees clockwise
 	  */
-	val rotate360Clockwise = rotation(Rotation.clockwiseCircle)
+	val rotate360Clockwise = rotation(Rotation.clockwise.circle)
 	
 	/**
 	  * An animation that rotates objects 360 degrees counter-clockwise
 	  */
-	val rotate360Counterclockwise = rotation(Rotation.counterclockwiseCircle)
+	val rotate360Counterclockwise = rotation(Rotation.counterclockwise.circle)
 	
 	/**
 	  * An animation that flips objects horizontally

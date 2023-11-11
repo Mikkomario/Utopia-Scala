@@ -30,7 +30,7 @@ object ImageTest extends App
 		.withMaxSourceResolution(Size(128, 128)).withSize(Size(100, 100)).withCenterOrigin
 	val leftPartBounds = Bounds(Point.origin, Size(57, 96))
 	val leftHalf = original.subImage(leftPartBounds).withCenterOrigin
-	val partiallyMapped = original.mapArea(leftPartBounds) { _ + Rotation.ofDegrees(90) }
+	val partiallyMapped = original.mapArea(leftPartBounds) { _ + Rotation.clockwise.degrees(90) }
 	val combined = original.withOverlay(original * 0.5)
 	
 	// Sets up the program
@@ -49,7 +49,7 @@ object ImageTest extends App
 		new ImageDrawer(partiallyMapped, Point(650, 50)),
 		new ImageDrawer(original.blurred(), Point(50, 150)),
 		new ImageDrawer(original.sharpened(), Point(150, 150)),
-		new ImageDrawer(original.withAdjustedHue(Angle.red, Angle.ofDegrees(90), Angle.blue), Point(250, 150)),
+		new ImageDrawer(original.withAdjustedHue(Angle.red, Angle.degrees(90), Angle.blue), Point(250, 150)),
 		new ImageDrawer(original.withThreshold(3), Point(350, 150)),
 		new ImageDrawer(original.withoutSpecifiedOrigin * 1.5, Point(450, 150)),
 		new ImageDrawer(combined, Point(550, 150)),

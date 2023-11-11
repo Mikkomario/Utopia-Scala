@@ -132,11 +132,11 @@ object ShapeTest extends App
     
     assert(par1.translated(X(10)) == par1.copy(topLeftCorner = Point(0, -10)))
     
-    val par2 = par1 * Matrix2D.rotation(Rotation.ofDegrees(45))
+    val par2 = par1 * Matrix2D.rotation(Rotation.clockwise.degrees(45))
     println(par2)
     
     // Tests line lenDir and line translation
-    val l1 = Line.lenDir(NumericSpan(2.0, 4.0), Angle.ofDegrees(90))
+    val l1 = Line.lenDir(NumericSpan(2.0, 4.0), Angle.degrees(90))
     
     assert(l1.start ~== Point(0, 2))
     assert(l1.end ~== Point(0, 4))
