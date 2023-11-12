@@ -3,7 +3,7 @@ package utopia.paradigm.shape.template.vector
 import utopia.flow.collection.immutable.range.HasInclusiveOrderedEnds
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, HasLength, Reversible, Scalable}
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.shape.shape1d.Dimension
@@ -318,7 +318,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	  * @param origin   The point this vector is rotated around
 	  * @return The rotated version of this vector
 	  */
-	def rotatedAround(rotation: Rotation, origin: HasDoubleDimensions) = {
+	def rotatedAround(rotation: DirectionalRotation, origin: HasDoubleDimensions) = {
 		val separator = Vector2D.from(dimensions.mergeWith(origin, 0.0) { n.toDouble(_) - _ })
 		val twoDimensional = separator.withDirection(separator.direction + rotation) + origin
 		

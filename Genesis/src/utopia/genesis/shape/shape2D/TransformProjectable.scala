@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
@@ -33,7 +33,7 @@ trait TransformProjectable[+T]
       * @param rotation Amount of rotation applied
       * @return A rotated copy of this item
       */
-    def rotated(rotation: Rotation) = transformedWith(Transformation.rotation(rotation))
+    def rotated(rotation: DirectionalRotation) = transformedWith(Transformation.rotation(rotation))
     
     /**
       * @param scaling Amount of scaling applied (1 keeps this instance as is)
@@ -51,5 +51,5 @@ trait TransformProjectable[+T]
       * @param rotation Amount of rotation applied
       * @return A rotated copy of this item
       */
-    def +(rotation: Rotation) = rotated(rotation)
+    def +(rotation: DirectionalRotation) = rotated(rotation)
 }

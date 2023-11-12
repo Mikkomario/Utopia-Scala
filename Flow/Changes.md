@@ -4,6 +4,9 @@
 ### Breaking changes
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
   - You can work around this by appending `.toTuple` after these method calls 
+- **Combinable** now always specifies `-` as well as `+`
+  - This may cause some override conflicts down the class hierarchy, 
+    which may usually be resolved by simply deleting the implementing function from the subclass 
 ### Deprecations
 - Renamed `Regex.parenthesis` to `.parentheses`
 ### Bugfixes
@@ -15,6 +18,7 @@
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
 - Added **Use** object for providing scope-specific (implicit) access to certain values
+- Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
 ### New methods
 - **CompoundingBuilder**
   - Added `.popAll()`

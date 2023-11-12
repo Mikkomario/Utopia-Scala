@@ -1,7 +1,7 @@
 # Utopia Reflection - List of Changes
 
 ## v2.1.1 (in development)
-Supports **Flow v2.3**
+Supports **Flow v2.3** and **Paradigm** v1.5
 
 ## v2.1 - 27.09.2023
 Introduces a bugfix to **Stack** component management

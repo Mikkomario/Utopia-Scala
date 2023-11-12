@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v1.9.2 (in development)
+Internal refactoring based on Flow changes
+
 ## v1.9.1 - 27.09.2023
 Rebuild due to parent module changes.
 

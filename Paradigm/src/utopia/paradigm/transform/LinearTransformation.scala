@@ -7,7 +7,7 @@ import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.ApproxEquals
 import utopia.flow.util.NotEmpty
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable, AnimatedLinearTransformation}
 import utopia.paradigm.generic.ParadigmDataType.LinearTransformationType
@@ -51,7 +51,7 @@ object LinearTransformation extends SureFromModelFactory[LinearTransformation]
     /**
       * This transformation rotates the target around the zero origin (z-axis) by the provided amount
       */
-    def rotation(amount: Rotation) = apply(rotation = amount)
+    def rotation(amount: DirectionalRotation) = apply(rotation = amount)
     
     /**
       * This transformation shears the target by the provided amount
@@ -65,12 +65,13 @@ object LinearTransformation extends SureFromModelFactory[LinearTransformation]
  * @since Genesis 26.12.2020, v2.4
  */
 case class LinearTransformation(scaling: Vector2D = Vector2D.identity,
-                                rotation: Rotation = Rotation.clockwise.zero,
-                                shear: Vector2D = Vector2D.zero) extends LinearTransformationLike[LinearTransformation]
-    with JavaAffineTransformConvertible with LinearTransformable[Matrix2D] with AffineTransformable[Matrix3D]
-    with AnimatedLinearTransformable[AnimatedLinearTransformation]
-    with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproxEquals[LinearTransformation]
-    with ValueConvertible with ModelConvertible
+                                rotation: DirectionalRotation = Rotation.clockwise.zero,
+                                shear: Vector2D = Vector2D.zero)
+    extends LinearTransformationLike[LinearTransformation] with JavaAffineTransformConvertible
+        with LinearTransformable[Matrix2D] with AffineTransformable[Matrix3D]
+        with AnimatedLinearTransformable[AnimatedLinearTransformation]
+        with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproxEquals[LinearTransformation]
+        with ValueConvertible with ModelConvertible
 {
     // ATTRIBUTES   -----------------
     
@@ -129,7 +130,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity,
     override implicit def toValue: Value = new Value(Some(this), LinearTransformationType)
     override def toModel = Model.from("scaling" -> scaling, "rotation" -> rotation, "shear" -> shear)
     
-    override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
+    override protected def buildCopy(scaling: Vector2D, rotation: DirectionalRotation, shear: Vector2D) =
         LinearTransformation(scaling, rotation, shear)
     
     override def transformedWith(transformation: Matrix2D) = toMatrix.transformedWith(transformation)

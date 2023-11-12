@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape2d
 
 import utopia.flow.operator.EqualsBy
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape1d.vector.Vector1D
@@ -115,8 +115,7 @@ object Matrix2D extends DimensionsWrapperFactory[Vector2D, Matrix2D]
 	  * @return A rotation transformation matrix that rotates items by the specified amount
 	  */
 	// See: https://en.wikipedia.org/wiki/Rotation_matrix
-	def rotation(amount: Rotation) =
-	{
+	def rotation(amount: DirectionalRotation) = {
 		val cos = amount.cosine
 		val sin = amount.sine
 		apply(

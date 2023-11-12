@@ -79,7 +79,7 @@ object AccessWriter
 			case None =>
 				val end = {
 					val full = c.name.singularIn(UnderScore).split('_').toVector
-					(full.indexWhereOption { _ ~== pckName } match {
+					(full.findIndexWhere { _ ~== pckName } match {
 						case Some(idx) => full.drop(idx + 1)
 						case None => full
 					}).mkString("_")

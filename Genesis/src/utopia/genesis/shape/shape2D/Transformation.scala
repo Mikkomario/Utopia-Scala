@@ -1,7 +1,7 @@
 package utopia.genesis.shape.shape2D
 
 import java.awt.geom.AffineTransform
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.shape.shape2d
 import utopia.paradigm.shape.shape2d.vector
 import utopia.paradigm.shape.shape2d.vector.{Vector2D, point}
@@ -62,7 +62,7 @@ object Transformation
     /**
      * This transformation rotates the target around the zero origin (z-axis) by the provided amount
      */
-    def rotation(amount: Rotation) = Transformation(rotation = amount)
+    def rotation(amount: DirectionalRotation) = Transformation(rotation = amount)
     
     /**
      * This transformation rotates the target around the zero origin by the provided amount of
@@ -90,7 +90,7 @@ object Transformation
  */
 @deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
 case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling: Vector2D = vector.Vector2D.identity,
-                          rotation: Rotation = Rotation.clockwise.zero, shear: Vector2D = vector.Vector2D.zero,
+                          rotation: DirectionalRotation = Rotation.clockwise.zero, shear: Vector2D = vector.Vector2D.zero,
                           useReverseOrder: Boolean = false)
     extends JavaAffineTransformConvertible
 {
@@ -305,7 +305,7 @@ case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling:
      * @param origin the point of origin around which the transformation is rotated
      * @return the rotated transformation
      */
-    def absoluteRotated(rotation: Rotation, origin: Point) =
+    def absoluteRotated(rotation: DirectionalRotation, origin: Point) =
             withTranslation(translation.rotatedAround(rotation, origin.toVector)).rotated(rotation)
     
     /**
@@ -314,7 +314,7 @@ case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling:
      * @param origin the point of origin around which the transformation is rotated
      * @return the rotated transformation
      */
-    def relativeRotated(rotation: Rotation, origin: Point) = absoluteRotated(rotation, apply(origin))
+    def relativeRotated(rotation: DirectionalRotation, origin: Point) = absoluteRotated(rotation, apply(origin))
     
     /**
      * Copies this transformation, giving it a new translation vector
@@ -346,7 +346,7 @@ case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling:
     /**
      * Copies this transformation, using a different rotation
      */
-    def withRotation(rotation: Rotation) = copy(rotation = rotation)
+    def withRotation(rotation: DirectionalRotation) = copy(rotation = rotation)
     
     /**
      * Copies this transformation, giving it a new rotation (clockwise)
@@ -383,7 +383,7 @@ case class Transformation(translation: Vector2D = vector.Vector2D.zero, scaling:
     /**
      * Copies this transformation, changing rotation by specified amount
      */
-    def rotated(rotation: Rotation) = withRotation(this.rotation + rotation)
+    def rotated(rotation: DirectionalRotation) = withRotation(this.rotation + rotation)
     
     /**
      * Copies this transformation, changing the rotation by the provided amount (clockwise)

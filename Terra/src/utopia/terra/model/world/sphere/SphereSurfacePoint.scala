@@ -56,10 +56,10 @@ trait SphereSurfacePoint
 	extends SurfacePoint[Vector3D, SpherePoint]
 		with SpherePointOps[SurfacePoint[HasDoubleDimensions, _], SphereSurfacePoint] with EqualsBy
 {
-	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
+	override protected def at(latLong: LatLong): SphereSurfacePoint = SphereSurfacePoint(latLong)
+	override protected def at(location: HasDoubleDimensions): SphereSurfacePoint =
+		SpherePoint(Vector3D.from(location)).toSurfacePoint
 	
 	override def arcingDistanceFrom(other: SurfacePoint[HasDoubleDimensions, _]): Distance =
 		SurfaceHaversineDistanceOps.atMeanSeaLevel.distanceBetween(other, this)
-	
-	override protected def at(latLong: LatLong): SphereSurfacePoint = SphereSurfacePoint(latLong)
 }

@@ -1,6 +1,6 @@
 package utopia.paradigm.animation.transform
 
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.shape.shape2d.Matrix2D
 
@@ -47,14 +47,12 @@ trait AnimatedLinearTransformable[+Transformed]
 	  * @param rotation A rotation animation to apply to this instance
 	  * @return An animated transformed copy of this instance
 	  */
-	def rotatedOverTime(rotation: Rotation) = transformedWith(AnimatedLinearTransformation.rotation(rotation))
-	
+	def rotatedOverTime(rotation: DirectionalRotation) = transformedWith(AnimatedLinearTransformation.rotation(rotation))
 	/**
 	  * @param scaling A scaling animation to apply to this instance
 	  * @return An animated transformed copy of this instance
 	  */
 	def scaledOverTime(scaling: Double) = transformedWith(AnimatedLinearTransformation.scaling(scaling))
-	
 	/**
 	  * @param xScaling An x-wise scaling animation to apply to this instance
 	  * @param yScaling An y-wise scaling animation to apply to this instance
@@ -62,7 +60,6 @@ trait AnimatedLinearTransformable[+Transformed]
 	  */
 	def scaledOverTime(xScaling: Double, yScaling: Double) =
 		transformedWith(AnimatedLinearTransformation.scaling(xScaling, yScaling))
-	
 	/**
 	  * @param xShear x-wise shearing to apply over time
 	  * @param yShear y-wise shearing to apply over time

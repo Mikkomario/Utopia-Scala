@@ -1,6 +1,6 @@
 package utopia.paradigm.animation.transform
 
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -40,15 +40,15 @@ object AnimatedLinearTransformation
 	  * @param amount Rotation amount
 	  * @return An animation that rotates the specified amount over time
 	  */
-	def rotation(amount: Rotation) = apply { p => Matrix2D.rotation(amount * p) }
+	def rotation(amount: DirectionalRotation) =
+		apply { p => Matrix2D.rotation(amount * p) }
 	
 	/**
 	  * Creates a scaling animation
 	  * @param amount Scaling amount
 	  * @return An animation that scales the specified amount over time
 	  */
-	def scaling(amount: Double) =
-	{
+	def scaling(amount: Double) = {
 		val change = amount - 1
 		apply { p => Matrix2D.scaling(1 + change * p) }
 	}

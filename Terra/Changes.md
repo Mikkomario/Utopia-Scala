@@ -1,6 +1,7 @@
 # Utopia Terra - list of changes
 
 ## v1.1 (in development)
+TODO: Document Rotation changes, WorldPointOps changes etc.
 ### Breaking changes
 - Changed `CircleOfEarth.unitDistance` in order to match the Azimuthal Equidistant projection 
 - **WorldView** now extends two new traits: **VectorFromLatLongFactory** and **LatLongFromVectorFactory**

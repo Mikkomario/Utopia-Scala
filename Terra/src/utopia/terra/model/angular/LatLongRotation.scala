@@ -3,12 +3,13 @@ package utopia.terra.model.angular
 import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.Axis
-import utopia.paradigm.shape.template.{Dimensional, DimensionalBuilder, DimensionalFactory, Dimensions}
+import utopia.paradigm.shape.template.{Dimensional, DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}
 import utopia.terra.model.angular.LatLongRotation.dimensionsFactory
 import utopia.terra.model.enumeration.CompassDirection
-import utopia.terra.model.enumeration.CompassDirection.{CompassAxis, East, EastWest, North, NorthSouth}
+import utopia.terra.model.enumeration.CompassDirection.{CompassAxis, East, EastWest, North, NorthSouth, South, West}
 
-object LatLongRotation extends DimensionalFactory[Rotation, LatLongRotation]
+object LatLongRotation
+	extends DimensionalFactory[Rotation, LatLongRotation] with FromDimensionsFactory[Rotation, LatLongRotation]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -22,27 +23,32 @@ object LatLongRotation extends DimensionalFactory[Rotation, LatLongRotation]
 	
 	// COMPUTED ----------------------------
 	
-	private def zeroValue = Rotation.clockwise.zero
+	private def zeroValue = Rotation.zero
 	
 	
 	// IMPLEMENTED  ------------------------
 	
 	override def newBuilder: DimensionalBuilder[Rotation, LatLongRotation] =
-		dimensionsFactory.newBuilder.mapResult { apply(_) }
+		dimensionsFactory.newBuilder.mapResult(apply)
 	
 	override def apply(values: IndexedSeq[Rotation]): LatLongRotation = _apply(values)
 	override def apply(values: Map[Axis, Rotation]): LatLongRotation = apply(
-		NorthSouthRotation(values.getOrElse(NorthSouth.axis, zeroValue)),
-		EastWestRotation(values.getOrElse(EastWest.axis, zeroValue))
+		values.get(NorthSouth.axis).map { South(_) }.getOrElse(South.zero),
+		values.get(EastWest.axis).map { West(_) }.getOrElse(West.zero)
 	)
+	override def apply(dimensions: Dimensions[Rotation]): LatLongRotation = _apply(dimensions)
 	
+	override def from(other: HasDimensions[Rotation]): LatLongRotation = other match {
+		case ll: LatLongRotation => ll
+		case o => _apply(o.dimensions)
+	}
 	override def from(values: IterableOnce[Rotation]): LatLongRotation = values match {
 		case s: Seq[Rotation] => _apply(s)
 		case i =>
 			val iter = i.iterator
 			if (iter.hasNext) {
-				val ns = NorthSouthRotation(iter.next())
-				val ew = EastWestRotation(iter.nextOption().getOrElse(zeroValue))
+				val ns = South(iter.next())
+				val ew = West(iter.nextOption().getOrElse(zeroValue))
 				apply(ns, ew)
 			}
 			else
@@ -62,8 +68,8 @@ object LatLongRotation extends DimensionalFactory[Rotation, LatLongRotation]
 		case ew: EastWestRotation => apply(NorthSouthRotation.zero, ew)
 		case r =>
 			r.compassAxis match {
-				case NorthSouth => apply(NorthSouthRotation(r.wrapped))
-				case EastWest => apply(EastWestRotation(r.wrapped))
+				case NorthSouth => apply(NorthSouthRotation(r.unidirectional))
+				case EastWest => apply(EastWestRotation(r.unidirectional))
 			}
 	}
 	
@@ -73,7 +79,7 @@ object LatLongRotation extends DimensionalFactory[Rotation, LatLongRotation]
 	  * @param longitudeEast Rotation towards East in degrees
 	  * @return A new 2-dimensional rotation instance
 	  */
-	def ofDegrees(latitudeNorth: Double, longitudeEast: Double) =
+	def degrees(latitudeNorth: Double, longitudeEast: Double) =
 		apply(North.degrees(latitudeNorth), East.degrees(longitudeEast))
 	/**
 	  * @param latLong Latitude (1) and longitude (2) rotation, where
@@ -81,7 +87,7 @@ object LatLongRotation extends DimensionalFactory[Rotation, LatLongRotation]
 	  *                longitude is in degrees towards EAST.
 	  * @return A new 2-dimensional rotation instance
 	  */
-	def ofDegrees(latLong: Pair[Double]): LatLongRotation = ofDegrees(latLong.first, latLong.second)
+	def degrees(latLong: Pair[Double]): LatLongRotation = degrees(latLong.first, latLong.second)
 	
 	private def _apply(values: Seq[Rotation]) = apply(
 		NorthSouthRotation(values.headOption.getOrElse(zeroValue)),
@@ -99,7 +105,8 @@ case class LatLongRotation(northSouth: NorthSouthRotation, eastWest: EastWestRot
 {
 	// ATTRIBUTES   ------------------------
 	
-	override lazy val dimensions: Dimensions[Rotation] = dimensionsFactory(northSouth.wrapped, eastWest.wrapped)
+	override lazy val dimensions: Dimensions[Rotation] =
+		dimensionsFactory(northSouth.unidirectional, eastWest.unidirectional)
 	override lazy val components = Pair(northSouth, eastWest)
 	
 	
@@ -116,8 +123,8 @@ case class LatLongRotation(northSouth: NorthSouthRotation, eastWest: EastWestRot
 	
 	override def self: LatLongRotation = this
 	
-	override def x = northSouth.wrapped
-	override def y = eastWest.wrapped
+	override def x = northSouth.unidirectional
+	override def y = eastWest.unidirectional
 	
 	override def toString = s"($northSouth, $eastWest)"
 	
@@ -139,8 +146,7 @@ case class LatLongRotation(northSouth: NorthSouthRotation, eastWest: EastWestRot
 	  * @param direction Targeted compass direction
 	  * @return Amount of rotation applied towards that direction
 	  */
-	def towards(direction: CompassDirection) =
-		apply(direction.axis).towards(direction.rotationDirection)
+	def towards(direction: CompassDirection) = apply(direction.axis).towards(direction)
 	/**
 	  * @param direction Targeted compass direction
 	  * @return Amount of rotation in degrees applied towards that direction

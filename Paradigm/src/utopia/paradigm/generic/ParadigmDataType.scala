@@ -3,19 +3,19 @@ package utopia.paradigm.generic
 import utopia.flow.generic.casting.ConversionHandler
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.AnyType
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
 import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
@@ -101,7 +101,7 @@ object ParadigmDataType
     object RotationType extends ParadigmDataType
     {
         override def name = "Rotation"
-        override lazy val supportedClass = classOf[Rotation]
+        override lazy val supportedClass = classOf[DirectionalRotation]
         override def superType = Some(AnyType)
     }
     object LinearVelocityType extends ParadigmDataType

@@ -1,6 +1,5 @@
 package utopia.terra.model.world.grid
 
-import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
@@ -58,7 +57,7 @@ object GridSurfacePoint
 trait GridSurfacePoint
 	extends SurfacePoint[Vector2D, GridPoint] with GridPointOps[Vector2D, GridSurfacePoint]
 {
-	override protected def at(surfaceLocation: HasDoubleDimensions): GridSurfacePoint =
-		GridSurfacePoint(Vector2D.from(surfaceLocation))
+	override protected def at(location: HasDoubleDimensions): GridSurfacePoint =
+		GridSurfacePoint(Vector2D.from(location))
 	override protected def at(latLong: LatLong): GridSurfacePoint = GridSurfacePoint(latLong)
 }

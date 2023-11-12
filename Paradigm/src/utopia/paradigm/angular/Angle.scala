@@ -3,7 +3,7 @@ package utopia.paradigm.angular
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{Combinable, SelfComparable}
+import utopia.flow.operator.{ApproxSelfEquals, Combinable, EqualsFunction, SelfComparable}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.ParadigmDataType.AngleType
 import utopia.paradigm.transform.LinearSizeAdjustable
@@ -11,6 +11,11 @@ import utopia.paradigm.transform.LinearSizeAdjustable
 object Angle extends RotationFactory[Angle]
 {
     // ATTRIBUTES    -----------------------------
+    
+    /**
+      * A function that returns true when the two specified angles are approximately equal to each other
+      */
+    val approxEquals: EqualsFunction[Angle] = _.radians ~== _.radians
     
     /**
      * Angle that points to the left (180 degrees)
@@ -52,7 +57,7 @@ object Angle extends RotationFactory[Angle]
     /**
       * @return 3/4 of a circle
       */
-    def threeQuarters = up
+    override def threeQuarters = up
     
     
     // IMPLEMENTED  ----------------------
@@ -106,7 +111,7 @@ object Angle extends RotationFactory[Angle]
             zero
         else {
             val start = angles.head
-            val averageRotation = Rotation.average(angles.map { _ - start })
+            val averageRotation = DirectionalRotation.average(angles.map { _ - start })
             start + averageRotation
         }
     }
@@ -120,8 +125,8 @@ object Angle extends RotationFactory[Angle]
  * @since Genesis 30.6.2017
  */
 case class Angle private(radians: Double)
-    extends LinearSizeAdjustable[Angle] with Combinable[Rotation, Angle] with SelfComparable[Angle]
-        with ValueConvertible
+    extends LinearSizeAdjustable[Angle] with Combinable[DirectionalRotation, Angle] with SelfComparable[Angle]
+        with ValueConvertible with ApproxSelfEquals[Angle]
 {
     // ATTRIBUTES    ------------------
     
@@ -158,7 +163,7 @@ case class Angle private(radians: Double)
     /**
       * @return A non-directional rotation that will turn an item from 0 radians to this angle
       */
-    def toRotation = NondirectionalRotation.radians(radians)
+    def toRotation = Rotation.radians(radians)
     /**
       * @return A rotation that will turn an item from 0 radians to this angle,
       *         using the shorter route / direction.
@@ -202,31 +207,16 @@ case class Angle private(radians: Double)
     override def self = this
     
     override implicit def toValue: Value = new Value(Some(this), AngleType)
-    
     override def toString = f"$degrees%1.2f degrees"
     
-    override def compareTo(o: Angle) = ((radians - o.radians) * 10000).toInt
+    override implicit def equalsFunction: EqualsFunction[Angle] = Angle.approxEquals
+    
+    override def compareTo(o: Angle) = radians.compareTo(o.radians)
     
     /**
       * Applies a rotation to this angle
       */
-    def +(rotation: Rotation): Angle = Angle.radians(radians + rotation.clockwise.radians)
-    
-    /**
-      * Applies a rotation (radians) to this angle in counter-clockwise direction
-      */
-    @deprecated("Please use -(Rotation) instead", "v2.3")
-    def -(rotationRads: Double) = Angle.radians(radians - rotationRads)
-    
-    /**
-      * Applies a negative rotation to this angle
-      */
-    def -(rotation: Rotation): Angle = Angle.radians(radians - rotation.clockwise.radians)
-    
-    /**
-      * Compares two angles without the requirement of being exactly equal
-      */
-    def ~==(other: Angle) = radians ~== other.radians
+    def +(rotation: DirectionalRotation): Angle = Angle.radians(radians + rotation.clockwise.radians)
     
     /**
       * Multiplies this angle
@@ -234,6 +224,19 @@ case class Angle private(radians: Double)
       * @return A multiplied version of this angle
       */
     def *(mod: Double) = Angle.radians(radians * mod)
+    
+    
+    // OTHER    -----------------------
+    
+    /**
+      * Applies a rotation (radians) to this angle in counter-clockwise direction
+      */
+    @deprecated("Please use -(Rotation) instead", "v2.3")
+    def -(rotationRads: Double) = Angle.radians(radians - rotationRads)
+    /**
+      * Applies a negative rotation to this angle
+      */
+    def -(rotation: DirectionalRotation): Angle = Angle.radians(radians - rotation.clockwise.radians)
     
     
     // OTHER    ------------------
@@ -269,7 +272,7 @@ case class Angle private(radians: Double)
     /**
      * Applies a rotation (radians) to this angle in clockwise direction
      */
-    @deprecated("Please use +(Rotation) instead", "v2.3")
+    @deprecated("Please use +(DirectionalRotation) instead", "v2.3")
     def +(rotationRads: Double) = Angle.radians(radians + rotationRads)
     
     /**

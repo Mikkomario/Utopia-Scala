@@ -59,7 +59,6 @@ object GridPoint
 trait GridPoint
 	extends AerialPoint[Vector3D, GridSurfacePoint] with GridPointOps[Vector3D, GridPoint]
 {
-	override protected def at(surfaceLocation: HasDoubleDimensions): GridPoint =
-		GridPoint(Vector3D(surfaceLocation.x, surfaceLocation.y, vector.z))
+	override protected def at(location: HasDoubleDimensions): GridPoint = GridPoint(Vector3D.from(location))
 	override protected def at(latLong: LatLong): GridPoint = GridPoint(latLong, altitude)
 }

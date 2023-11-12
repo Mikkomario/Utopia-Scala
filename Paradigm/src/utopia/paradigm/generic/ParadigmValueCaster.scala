@@ -11,7 +11,7 @@ import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import ParadigmDataType._
 import utopia.flow.generic.model.mutable.DataType
@@ -506,7 +506,7 @@ object ParadigmValueCaster extends ValueCaster
         case _ => None
     }
     
-    private def rotationOf(value: Value): Option[Rotation] = value.dataType match {
+    private def rotationOf(value: Value): Option[DirectionalRotation] = value.dataType match {
         case DoubleType => Some(Rotation.clockwise.radians(value.getDouble))
         case DurationType => Some(Rotation.clockwise.circles(value.getDuration.toPreciseHours / 24))
         case AngleType => Some(value.getAngle.toShortestRotation)

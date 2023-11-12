@@ -1,6 +1,6 @@
 package utopia.paradigm.transform
 
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 /**
@@ -16,12 +16,10 @@ trait LinearTransformationLike[+Repr]
       * @return Scaling applied by this transformation
       */
     def scaling: Vector2D
-    
     /**
       * @return Rotation applied by this transformation
       */
-    def rotation: Rotation
-    
+    def rotation: DirectionalRotation
     /**
       * @return Shearing applied by this transformation
       */
@@ -33,7 +31,7 @@ trait LinearTransformationLike[+Repr]
       * @param shear New shear
       * @return A copy of this transformation with specified values
       */
-    protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D): Repr
+    protected def buildCopy(scaling: Vector2D, rotation: DirectionalRotation, shear: Vector2D): Repr
     
     
     // COMPUTED PROPERTIES    -------
@@ -89,17 +87,14 @@ trait LinearTransformationLike[+Repr]
      * Copies this transformation, giving it a new scaling
      */
     def withScaling(scaling: Vector2D) = buildCopy(scaling, rotation, shear)
-    
     /**
      * Copies this transformation, giving it a new scaling
      */
     def withScaling(scaling: Double): Repr = withScaling(Vector2D(scaling, scaling))
-    
     /**
      * Copies this transformation, using a different rotation
      */
-    def withRotation(rotation: Rotation) = buildCopy(scaling, rotation, shear)
-    
+    def withRotation(rotation: DirectionalRotation) = buildCopy(scaling, rotation, shear)
     /**
      * Copies this transformation, giving it a new shearing
      */

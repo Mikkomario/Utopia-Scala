@@ -105,6 +105,7 @@ trait SpherePoint extends AerialPoint[Vector3D, SphereSurfacePoint]
 	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
 	
 	override protected def at(latLong: LatLong): SpherePoint = SpherePoint(latLong, altitude)
+	override protected def at(location: HasDoubleDimensions): SpherePoint = SpherePoint(Vector3D.from(location))
 	
 	override def arcingDistanceFrom(other: AerialPoint[HasDoubleDimensions, _]): Distance =
 		AerialHaversineDistanceOps.distanceBetween(other, this)

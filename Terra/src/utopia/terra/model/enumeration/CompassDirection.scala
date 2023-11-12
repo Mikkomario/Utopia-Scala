@@ -3,8 +3,9 @@ package utopia.terra.model.enumeration
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.{BinarySigned, Sign, Signed}
-import utopia.paradigm.angular.{Rotation, RotationFactory}
+import utopia.paradigm.angular.{BidirectionalRotationFactory, DirectionalRotation, Rotation, RotationFactory}
 import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.enumeration.{Axis2D, RotationDirection}
 import utopia.paradigm.measurement.Distance
 import utopia.terra.model.CompassTravel
@@ -25,14 +26,11 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection] with Rotati
 	 */
 	def axis: CompassAxis
 	
-	
-	// COMPUTED --------------------
-	
 	/**
-	 * @return The rotation direction that matches this compass direction
-	 *         (assuming angular coordinate system)
-	 */
-	def rotationDirection = RotationDirection(sign)
+	  * @param rotation Amount of rotation to apply (towards this direction)
+	  * @return Specified rotation towards this direction
+	  */
+	def apply(rotation: Rotation): CompassRotation
 	
 	
 	// IMPLEMENTED  ----------------
@@ -41,7 +39,7 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection] with Rotati
 	  * @param rotation Amount of rotation to apply towards this direction in radians
 	  * @return A rotation instance with this direction and the specified amount
 	  */
-	override def radians(rotation: Double) = CompassRotation(axis, Rotation(rotationDirection).radians(rotation))
+	override def radians(rotation: Double) = CompassRotation(this).radians(rotation)
 	
 	
 	// OTHER    --------------------
@@ -57,7 +55,7 @@ object CompassDirection
 {
 	// NESTED   ------------------------------
 	
-	sealed trait AxisToDirection[+D, +R] extends RotationFactory[R]
+	sealed trait AxisToDirection[+D]
 	{
 		// ABSTRACT ------------------------
 		
@@ -67,25 +65,8 @@ object CompassDirection
 		  */
 		def apply(sign: Sign): D
 		
-		/**
-		  * @param rotation Amount of rotation to apply along this axis
-		  * @return The specified rotation along this axis
-		  */
-		def apply(rotation: Rotation): R
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override def radians(rads: Double): R = apply(Rotation.clockwise.radians(rads))
-		
 		
 		// OTHER    ------------------------
-		
-		/**
-		  * @param direction Rotation direction
-		  * @return Matching direction on this axis
-		  */
-		def apply(direction: RotationDirection): D = apply(direction.sign)
 		
 		/**
 		  * @param a A signed item
@@ -129,12 +110,19 @@ object CompassDirection
 	 * Common trait for the two axes used in compass directions,
 	 * i.e. the north-to-south axis and the east-to-west axis.
 	 */
-	sealed trait CompassAxis extends AxisToDirection[CompassDirection, CompassRotation]
+	sealed trait CompassAxis extends AxisToDirection[CompassDirection]
 	{
+		// ABSTRACT ------------------------
+		
 		/**
 		  * @return A 2D axis that matches this compass direction
 		  */
 		def axis: Axis2D
+		
+		/**
+		  * @return Factory used for constructing rotation instances along this axis
+		  */
+		def rotation: BidirectionalRotationFactory[_ <: CompassDirection, CompassRotation]
 	}
 	
 	/**
@@ -142,7 +130,7 @@ object CompassDirection
 	 * Used in latitude coordinates.
 	 * Zero is considered to be at the equator.
 	 */
-	case object NorthSouth extends CompassAxis with AxisToDirection[NorthSouth, NorthSouthRotation]
+	case object NorthSouth extends CompassAxis with AxisToDirection[NorthSouth]
 	{
 		// ATTRIBUTES   -----------------
 		
@@ -157,19 +145,26 @@ object CompassDirection
 		// X because of the word "latitude", which implies lateral shift, which implies horizontal movement
 		override def axis: Axis2D = X
 		
+		override def rotation = NorthSouthRotation
+		
 		override def apply(sign: Sign): NorthSouth = sign match {
 			case Positive => South
 			case Negative => North
 		}
-		override def apply(rotation: Rotation) = NorthSouthRotation(rotation)
 	}
 	/**
 	 * Common trait for the north-to-south directions (i.e. northward and southward)
 	 */
-	sealed trait NorthSouth extends CompassDirection with BinarySigned[NorthSouth]
+	sealed trait NorthSouth
+		extends CompassDirection with BinarySigned[NorthSouth] with RotationFactory[NorthSouthRotation]
 	{
+		// IMPLEMENTED  ------------------------
+		
 		override def self: NorthSouth = this
 		override def axis = NorthSouth
+		
+		override def apply(rotation: Rotation): NorthSouthRotation = NorthSouthRotation(this)(rotation)
+		override def radians(rotation: Double) = NorthSouthRotation(this).radians(rotation)
 	}
 	/**
 	 * The northward direction (negative)
@@ -191,7 +186,7 @@ object CompassDirection
 	/**
 	 * A circular axis that goes from the east (-) to the west (+)
 	 */
-	case object EastWest extends CompassAxis with AxisToDirection[EastWest, EastWestRotation]
+	case object EastWest extends CompassAxis with AxisToDirection[EastWest]
 	{
 		// ATTRIBUTES   ----------------------
 		
@@ -205,19 +200,52 @@ object CompassDirection
 		
 		override def axis: Axis2D = Y
 		
+		override def rotation = EastWestRotation
+		
 		override def apply(sign: Sign): EastWest = sign match {
 			case Positive => West
 			case Negative => East
 		}
-		override def apply(rotation: Rotation) = EastWestRotation(rotation)
+		
+		
+		// OTHER    --------------------------
+		
+		/**
+		  * @param direction A rotation direction
+		  * @return The east-west direction that matches that clock/sun rotation direction
+		  */
+		def apply(direction: RotationDirection): EastWest = direction match {
+			case Clockwise => West
+			case Counterclockwise => East
+		}
+		/**
+		  * @param rotation Rotation to convert
+		  * @return An east-west rotation that matches the specified rotation
+		  */
+		def apply(rotation: DirectionalRotation): EastWestRotation =
+			EastWestRotation(apply(rotation.direction))(rotation.absolute)
 	}
 	/**
 	 * Common trait for east-to-west directions
 	 */
-	sealed trait EastWest extends CompassDirection with BinarySigned[EastWest]
+	sealed trait EastWest extends CompassDirection with BinarySigned[EastWest] with RotationFactory[EastWestRotation]
 	{
+		// COMPUTED --------------------------
+		
+		/**
+		  * @return The rotation direction that matches this compass direction
+		  *         (assuming angular coordinate system)
+		  */
+		def rotationDirection = RotationDirection(sign)
+		
+		
+		// IMPLEMENTED  ----------------------
+		
 		override def self: EastWest = this
 		override def axis = EastWest
+		
+		override def apply(rotation: Rotation): EastWestRotation = EastWestRotation(this)(rotation)
+		override def radians(rotation: Double) = EastWestRotation(this).radians(rotation)
 	}
 	
 	/**

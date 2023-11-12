@@ -1,6 +1,6 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.operator.Sign
+import utopia.flow.operator.{BinarySigned, Sign}
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
@@ -8,14 +8,9 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 * @author Mikko Hilpinen
 * @since Genesis 21.11.2018
 **/
-sealed trait RotationDirection
+sealed trait RotationDirection extends BinarySigned[RotationDirection]
 {
     // ABSTRACT --------------------------
-    
-    /**
-      * @return Sign used with this direction
-      */
-    def sign: Sign
     
     /**
      * The opposite direction to this one
@@ -23,12 +18,18 @@ sealed trait RotationDirection
     def opposite: RotationDirection
     
     
-    // IMPLEMENTED  ----------------------
+    // COMPUTED --------------------------
     
     /**
-     * The sign modifier applied to rotation
-     */
+      * The sign modifier applied to rotation
+      */
     def modifier = sign.modifier
+    
+    
+    // IMPLEMENTED  ----------------------
+    
+    override def self: RotationDirection = this
+    override def unary_- : RotationDirection = opposite
 }
 
 object RotationDirection

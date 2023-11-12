@@ -5,7 +5,7 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.transform._
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
@@ -328,7 +328,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Adjusts the hue in this image by specified amount
 	  * @param amount Rotation to apply to image hue for all pixels
 	  */
-	def adjustHue(amount: Rotation) = updateEachPixel { _ + amount }
+	def adjustHue(amount: DirectionalRotation) = updateEachPixel { _ + amount }
 	/**
 	  * Adjusts the hue in this image
 	  * @param sourceHue Targeted hue

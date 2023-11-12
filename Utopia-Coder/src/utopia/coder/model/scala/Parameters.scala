@@ -156,7 +156,7 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 			CodePiece("()")
 		else {
 			// Doesn't specify default parameters if there are non-default parameters remaining on the right
-			val modifiedList = list.lastIndexWhereOption { _.hasNoDefault } match {
+			val modifiedList = list.findLastIndexWhere { _.hasNoDefault } match {
 				case Some(lastNonDefaultIndex) =>
 					if (lastNonDefaultIndex > 0)
 						list.take(lastNonDefaultIndex).map { _.withoutDefault } ++ list.drop(lastNonDefaultIndex)

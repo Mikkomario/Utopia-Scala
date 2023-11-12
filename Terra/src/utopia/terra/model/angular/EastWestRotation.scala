@@ -1,25 +1,23 @@
 package utopia.terra.model.angular
 
-import utopia.paradigm.angular.Rotation
-import utopia.terra.model.enumeration.CompassDirection.EastWest
+import utopia.flow.operator.Sign
+import utopia.paradigm.angular.{BidirectionalRotationFactory, DirectionalRotation, Rotation}
+import utopia.terra.model.enumeration.CompassDirection.{East, EastWest, West}
 
-object EastWestRotation
+object EastWestRotation extends BidirectionalRotationFactory[EastWest, EastWestRotation]
 {
 	// ATTRIBUTES   --------------------
 	
-	/**
-	  * A zero degree rotation along this axis
-	  */
-	val zero = apply(Rotation.clockwise.zero)
+	lazy val east = apply(East)
+	lazy val west = apply(West)
 	
 	
-	// OTHER    ------------------------
+	// IMPLEMENTED    ------------------------
 	
-	/**
-	  * @param rotation A rotation to wrap
-	  * @return Specified rotation along the East-to-West axis
-	  */
-	def apply(rotation: Rotation) = new EastWestRotation(rotation)
+	override protected def directionForSign(sign: Sign): EastWest = EastWest(sign)
+	
+	override protected def _apply(absolute: Rotation, direction: EastWest): EastWestRotation =
+		new EastWestRotation(absolute, direction)
 }
 
 /**
@@ -28,16 +26,33 @@ object EastWestRotation
   * @author Mikko Hilpinen
   * @since 6.9.2023, v1.0
   */
-class EastWestRotation(override val wrapped: Rotation)
-	extends CompassRotationLike[EastWestRotation] with CompassRotation
+class EastWestRotation(override val absolute: Rotation, override val direction: EastWest)
+	extends CompassRotationLike[EastWest, EastWestRotation] with CompassRotation
 {
-	// WET WET
+	// COMPUTED ----------------------
+	
+	/**
+	  * @return The amount of this rotation towards the east.
+	  *         May be negative
+	  */
+	def east = towards(East)
+	/**
+	  * @return The amount of this rotation towards the east.
+	  *         May be negative
+	  */
+	def west = towards(West)
+	
+	/**
+	  * @return A directional (clockwise or counter-clockwise) rotation based on this rotation.
+	  */
+	def toDirectionalRotation = DirectionalRotation(direction.rotationDirection)(absolute)
+	
+	
+	// IMPLEMENTED  ------------------
+	
 	override def self: EastWestRotation = this
 	override def zero: EastWestRotation = EastWestRotation.zero
 	
-	override def compassAxis = EastWest
-	override def direction = EastWest(wrapped.direction)
-	
-	override def +(other: Rotation): EastWestRotation = EastWestRotation(wrapped + other)
-	override def *(mod: Double): EastWestRotation = EastWestRotation(wrapped * mod)
+	override protected def copy(amount: Rotation, reverseDirection: Boolean) =
+		new EastWestRotation(amount, if (reverseDirection) -direction else direction)
 }

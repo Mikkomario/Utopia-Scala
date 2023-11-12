@@ -152,7 +152,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  */
 	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue = 
 		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, issue.occurrenceDetails,
-			issue.instances,issue.storeDuration.map { Now - _ })(connection, issue.version)
+			issue.instances,issue.storeDuration.mapTo { Now - _ })(connection, issue.version)
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield

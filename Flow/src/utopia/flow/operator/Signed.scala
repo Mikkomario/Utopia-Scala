@@ -5,25 +5,8 @@ package utopia.flow.operator
   * @author Mikko Hilpinen
   * @since 21.9.2021, v1.12
   */
-trait Signed[+Repr] extends Any with Reversible[Repr]
+trait Signed[+Repr] extends Any with HasSign with Reversible[Repr]
 {
-	// ABSTRACT -------------------------
-	
-	/**
-	  * @return The sign of this item
-	  */
-	def sign: SignOrZero
-	
-	/**
-	  * @return Whether this item is positive (>0)
-	  */
-	def isPositive: Boolean = sign.isPositive
-	/**
-	  * @return Whether this item is negative (<0)
-	  */
-	def isNegative: Boolean = sign.isNegative
-	
-	
 	// COMPUTED    ----------------------
 	
 	/**
@@ -66,17 +49,6 @@ trait Signed[+Repr] extends Any with Reversible[Repr]
 	
 	
 	// OTHER    --------------------------
-	
-	/**
-	  * @param sign A sign or zero / neutral
-	  * @return Whether this instance is of that sign.
-	  */
-	def is(sign: SignOrZero) = this.sign == sign
-	/**
-	  * @param sign A sign or zero / neutral
-	  * @return Whether this item is not of that sign
-	  */
-	def isNot(sign: SignOrZero) = this.sign != sign
 	
 	/**
 	  * @param sign A sign (+ or -)

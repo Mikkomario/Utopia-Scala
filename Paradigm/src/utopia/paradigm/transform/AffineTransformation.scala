@@ -6,7 +6,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property, ValueConvertible}
 import utopia.flow.operator.ApproxEquals
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
 import utopia.paradigm.generic.ParadigmDataType.AffineTransformationType
@@ -45,7 +45,8 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
       * @return A new affine transformation
       */
     def apply(translation: Vector2D = Vector2D.zero, scaling: Vector2D = Vector2D.identity,
-              rotation: Rotation = Rotation.clockwise.zero, shear: Vector2D = Vector2D.zero): AffineTransformation =
+              rotation: DirectionalRotation = Rotation.clockwise.zero,
+              shear: Vector2D = Vector2D.zero): AffineTransformation =
         apply(translation, LinearTransformation(scaling, rotation, shear))
     
     /**
@@ -99,7 +100,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     override implicit def toValue: Value = new Value(Some(this), AffineTransformationType)
     override def toModel: immutable.Model = linear.toModel + Constant("translation", translation)
     
-    override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
+    override protected def buildCopy(scaling: Vector2D, rotation: DirectionalRotation, shear: Vector2D) =
         copy(linear = LinearTransformation(scaling, rotation, shear))
     
     override def ~==(other: AffineTransformation) = (translation ~== other.translation) && (linear ~== other.linear)
@@ -156,7 +157,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * @param rotation Rotation to apply
       * @return Rotated copy of this transformation
       */
-    def rotatedAround(origin: DoubleVector, rotation: Rotation) = {
+    def rotatedAround(origin: DoubleVector, rotation: DirectionalRotation) = {
         if (rotation.isZero)
             toMatrix
         else if (origin.isZero)
@@ -173,7 +174,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * @param rotation Rotation to apply
       * @return Rotated copy of this transformation
       */
-    def rotatedAroundRelative(origin: DoubleVector, rotation: Rotation) =
+    def rotatedAroundRelative(origin: DoubleVector, rotation: DirectionalRotation) =
         rotatedAround(apply(origin), rotation)
     
     /**

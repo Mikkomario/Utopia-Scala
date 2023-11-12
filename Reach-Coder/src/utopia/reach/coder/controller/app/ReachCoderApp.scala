@@ -12,5 +12,5 @@ object ReachCoderApp extends App with CoderApp
 {
 	override protected val logicOptions: Iterable[AppLogic] = Some(ReachCoderAppLogic)
 	
-	run(args)
+	run(args.toIndexedSeq)
 }

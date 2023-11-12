@@ -9,6 +9,7 @@ import utopia.reflection.color.TextColorStandard.{Dark, Light}
   * @author Mikko Hilpinen
   * @since 28.1.2021, v2
   */
+@deprecated("Deprecated for removal", "v2.1.1")
 object ColorTest extends App
 {
 	assert(Color.black.relativeLuminance == 0.0)

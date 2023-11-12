@@ -29,8 +29,8 @@ object CodeLine
 			!(Regex.escape('=') + Regex.escape('>')).withinParenthesis -> false
 	)
 	private lazy val oneTimeRegexes = Vector(
-		Regex.escape('.') + Regex.alpha.oneOrMoreTimes + Regex.whiteSpace.noneOrOnce + Regex.escape('{'),
-		Regex.escape('.') + Regex.alpha.oneOrMoreTimes
+		Regex.escape('.') + Regex.letter.oneOrMoreTimes + Regex.whiteSpace.noneOrOnce + Regex.escape('{'),
+		Regex.escape('.') + Regex.letter.oneOrMoreTimes
 	)
 	
 	/**
@@ -165,7 +165,7 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 		// Calculates where the first split should occur
 		val firstLineTabWidth = indentation * tabWidth
 		val firstLineSplitIndexIndex =
-			possibleSplitIndices.lastIndexWhereOption { firstLineTabWidth + _ <= maxLineLength }.getOrElse(0)
+			possibleSplitIndices.findLastIndexWhere { firstLineTabWidth + _ <= maxLineLength }.getOrElse(0)
 		val firstLineSplitIndex = possibleSplitIndices(firstLineSplitIndexIndex)
 		// Finds the remaining splits, taking into account the increased indentation (recursive)
 		val nextLineSplitIndices = _split(possibleSplitIndices.drop(firstLineSplitIndexIndex + 1),
@@ -183,11 +183,10 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[String, C
 		// Checks whether should terminate
 		if (remainingSplitIndices.isEmpty || totalLength - lastSplitIndex <= maxLineLength)
 			Vector(totalLength)
-		else
-		{
+		else {
 			// Finds the last split index which fits to the line
 			val nextSplitIndexIndex = remainingSplitIndices
-				.lastIndexWhereOption { index => index - lastSplitIndex <= maxLineLength }.getOrElse(0)
+				.findLastIndexWhere { index => index - lastSplitIndex <= maxLineLength }.getOrElse(0)
 			// Splits the remaining portion also
 			val nextSplitIndex = remainingSplitIndices(nextSplitIndexIndex)
 			nextSplitIndex +:

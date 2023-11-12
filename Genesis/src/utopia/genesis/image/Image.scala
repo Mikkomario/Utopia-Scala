@@ -7,7 +7,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape1d.Dimension
@@ -538,7 +538,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param hueAdjust The amount of shift applied to color hue
 	  * @return A new image with adjusted hue
 	  */
-	def withAdjustedHue(hueAdjust: Rotation) = mapEachPixel { _ + hueAdjust }
+	def withAdjustedHue(hueAdjust: DirectionalRotation) = mapEachPixel { _ + hueAdjust }
 	/**
 	  * Creates a version of this image with a certain hue range adjusted
 	  * @param sourceHue The hue that is targeted

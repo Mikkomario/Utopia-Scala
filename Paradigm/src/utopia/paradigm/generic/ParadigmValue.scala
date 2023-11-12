@@ -3,7 +3,7 @@ package utopia.paradigm.generic
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.generic.ParadigmDataType._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
@@ -33,7 +33,7 @@ object ParadigmValue
         def polygon = v.objectValue(PolygonType).map { _.asInstanceOf[Polygonic] }
         def bounds = v.objectValue(BoundsType).map { _.asInstanceOf[Bounds] }
         def angle = v.objectValue(AngleType).map { _.asInstanceOf[Angle] }
-        def rotation = v.objectValue(RotationType).map { _.asInstanceOf[Rotation] }
+        def rotation = v.objectValue(RotationType).map { _.asInstanceOf[DirectionalRotation] }
         def matrix2D = v.objectValue(Matrix2DType).map { _.asInstanceOf[Matrix2D] }
         def matrix3D = v.objectValue(Matrix3DType).map { _.asInstanceOf[Matrix3D] }
         def linearTransformation =
@@ -58,7 +58,7 @@ object ParadigmValue
         def polygonOr(default: => Polygonic = Polygon(Vector())) = polygon.getOrElse(default)
         def boundsOr(default: => Bounds = Bounds.zero) = bounds.getOrElse(default)
         def angleOr(default: => Angle = Angle.zero) = angle.getOrElse(default)
-        def rotationOr(default: => Rotation = Rotation.clockwise.zero) = rotation.getOrElse(default)
+        def rotationOr(default: => DirectionalRotation = Rotation.clockwise.zero) = rotation.getOrElse(default)
         def matrix2DOr(default: => Matrix2D = Matrix2D.identity) = matrix2D.getOrElse(default)
         def matrix3DOr(default: => Matrix3D = Matrix3D.identity) = matrix3D.getOrElse(default)
         def linearTransformationOr(default: => LinearTransformation = LinearTransformation.identity) =

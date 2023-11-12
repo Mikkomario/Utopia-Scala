@@ -43,8 +43,8 @@ object ScalaParser
 	private lazy val declarationStartRegex = declarationModifierRegex.anyTimes + declarationKeywordRegex
 	private val namedDeclarationStartRegex = {
 		val operatorRegex = Regex.anyOf("!+-=/*&%?:<>|").oneOrMoreTimes.withinParenthesis
-		val nameRegex = (((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
-			(Regex.wordCharacter.anyTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+		val nameRegex = (((Regex.escape('_') + Regex.letterOrDigit).withinParenthesis || Regex.letter).withinParenthesis +
+			(Regex.wordCharacter.anyTimes + Regex.letterOrDigit).withinParenthesis.noneOrOnce +
 			(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce).withinParenthesis
 		
 		declarationStartRegex + (operatorRegex || nameRegex).withinParenthesis
@@ -545,7 +545,7 @@ object ScalaParser
 	{
 		// println(s"Reading extensions from: ${lines.map { line => s"'$line'" }.mkString(" + ") }")
 		// Finds the line that contains the extends -keyword
-		lines.indexWhereOption { line => extendsRegex.existsIn(line) || line.startsWith("extends ") ||
+		lines.findIndexWhere { line => extendsRegex.existsIn(line) || line.startsWith("extends ") ||
 			line.endsWith(" extends") } match
 		{
 			// Case: Extends -keyword found => Parses the extensions from the remaining line part + remaining lines

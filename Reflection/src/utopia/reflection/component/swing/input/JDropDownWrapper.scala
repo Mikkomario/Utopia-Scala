@@ -199,7 +199,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 		finalDisplayOptions.foreach { s => field.addItem(s.string) }
 		
 		// Updates selection
-		field.setSelectedIndex(newSelection.flatMap(newContent.optionIndexOf).getOrElse(-1) + indexMod)
+		field.setSelectedIndex(newSelection.flatMap(newContent.findIndexOf).getOrElse(-1) + indexMod)
 		value = newSelection
 		
 		revalidate()
@@ -220,7 +220,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 		override def onChangeEvent(event: ChangeEvent[Option[A]]) = {
 			isUpdatingSelection = true
 			if (event.newValue.isDefined) {
-				val newIndex = event.newValue.flatMap(content.optionIndexOf) getOrElse -1
+				val newIndex = event.newValue.flatMap(content.findIndexOf) getOrElse -1
 				
 				// Index 0 in field sometimes represents the placeholder value (not selected)
 				val trueIndex = -1 max ((-1 max newIndex) + indexMod) min (content.size - 1)

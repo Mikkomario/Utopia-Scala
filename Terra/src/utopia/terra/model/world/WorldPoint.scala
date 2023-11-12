@@ -32,4 +32,9 @@ trait WorldPoint[+V]
 	  * @return The longitude (East-West) coordinate of this position
 	  */
 	def longitude = latLong.longitude
+	
+	
+	// IMPLEMENTED  -----------------
+	
+	override def toString = s"$latLong / $vector"
 }

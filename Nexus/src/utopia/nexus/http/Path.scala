@@ -76,7 +76,7 @@ case class Path(parts: Seq[String])
     /**
      * This path as a complete url
      */
-    def toServerUrl(implicit settings: ServerSettings) = settings.address + "/" + this
+    def toServerUrl(implicit settings: ServerSettings) = s"${ settings.address }/$this"
     
     
     // IMPLEMENTED METHODS    -----------------
@@ -159,11 +159,11 @@ case class Path(parts: Seq[String])
      *         part of this path or if it was the first element in this path.
      */
     def before(element: String) =
-        parts.optionIndexOf(element).filter { _ > 0 }.map { index => Path(parts.take(index)) }
+        parts.findIndexOf(element).filter { _ > 0 }.map { index => Path(parts.take(index)) }
     /**
      * @param element Searched element
      * @return A portion of this path that ends with the specified element. None if this path didn't contain specified
      *         element.
      */
-    def until(element: String) = parts.optionIndexOf(element).map { index => Path(parts.take(index + 1)) }
+    def until(element: String) = parts.findIndexOf(element).map { index => Path(parts.take(index + 1)) }
 }

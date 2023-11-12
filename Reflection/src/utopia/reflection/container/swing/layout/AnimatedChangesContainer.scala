@@ -103,7 +103,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 		val wrapperToShow = wrappersList.pop { old =>
 			// If the component was being removed from the container, cancels the removal
 			// (may still need to reposition the wrapper)
-			old.indexWhereOption { _._1.display == component } match {
+			old.findIndexWhere { _._1.display == component } match {
 				// Case: Component was already in the container
 				case Some(wrapperIndex) =>
 					val (wrapper, wasRemoving) = old(wrapperIndex)

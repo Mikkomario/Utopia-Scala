@@ -1,7 +1,10 @@
 package utopia.reflection.component.swing.label
 
 import utopia.firmament.context.{BaseContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
@@ -11,19 +14,16 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.util.Fps
 import utopia.inception.handling.HandlerType
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.transform.AffineTransformation
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.event.StackHierarchyListener
-import utopia.firmament.model.stack.StackSize
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.transform.AffineTransformation
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
+import utopia.reflection.event.StackHierarchyListener
 
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
@@ -40,8 +40,8 @@ object AnimationLabel
 	  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
 	  * @return A new label
 	  */
-	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[Rotation],
-						  alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
+	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[DirectionalRotation],
+	                      alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
 		val animator = TransformingImageAnimator(image, rotation.map { Matrix2D.rotation(_).to3D })
 		val maxRadius = image.size.toBounds().corners.map { p => (p - image.origin).length }.max
@@ -73,7 +73,8 @@ object AnimationLabel
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[Rotation], alignment: Alignment = Center,
+	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[DirectionalRotation],
+	                                alignment: Alignment = Center,
 									maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 								   (implicit context: BaseContext) =
 		withRotatingImage(context.actorHandler, image, rotation, alignment, maxFps)

@@ -212,12 +212,6 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
         val minMax = area.minMax
         area.withEnds(minMax.first - insets.first, minMax.second + insets.second)
     }
-    
-    /**
-      * @param translation Translation applied to these bounds
-      * @return A translated set of bounds
-      */
-    def -(translation: Reversible[HasDoubleDimensions]) = translated(-translation)
     /**
       * @param insets Insets to subtract from these bounds
       * @return A copy of these bounds with the specified insets subtracted

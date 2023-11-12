@@ -34,7 +34,7 @@ trait WrappingContainer[C <: ReflectionComponentLike, Wrap] extends Container[C]
 	
 	override protected def remove(component: C) = {
 		val wrappers = this.wrappers
-		wrappers.indexWhereOption { unwrap(_) == component }.foreach { index => removeWrapper(wrappers(index), index) }
+		wrappers.findIndexWhere { unwrap(_) == component }.foreach { index => removeWrapper(wrappers(index), index) }
 	}
 	
 	

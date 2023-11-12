@@ -1,15 +1,14 @@
 package utopia.terra.model.world.circle
 
 import utopia.flow.operator.EqualsBy
-import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.paradigm.shape.template.vector.DoubleVector
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToSurfacePoint, VectorToSurfacePoint}
 import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth}
+import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth, West}
 import utopia.terra.model.world.SurfacePoint
 
 object CircleSurfacePoint
@@ -70,10 +69,10 @@ object CircleSurfacePoint
 trait CircleSurfacePoint
 	extends SurfacePoint[Vector2D, CirclePoint] with CirclePointOps[Vector2D, CircleSurfacePoint] with EqualsBy
 {
-	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
-	
 	override def withAltitude(altitude: Distance): CirclePoint = CirclePoint(this, altitude)
 	override protected def at(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
+	override protected def at(location: HasDoubleDimensions): CircleSurfacePoint =
+		CircleSurfacePoint(Vector2D.from(location))
 	
 	override def +(travel: CompassTravel): CircleSurfacePoint = {
 		val travelVectorLength = worldView.vectorLengthOf(travel.distance)
@@ -81,8 +80,7 @@ trait CircleSurfacePoint
 			// Case: North-South travel => Linear travel path towards or away from the center
 			case NorthSouth => CircleSurfacePoint(vector + vector.withLength(travelVectorLength))
 			// Case: East-West travel => Arcing travel staying at the same latitude line
-			case EastWest => this + EastWest.forArcLength(travelVectorLength, vector.length)
+			case EastWest => this + West.forArcLength(travelVectorLength, vector.length)
 		}
 	}
-	override def +(vectorTravel: DoubleVector): CircleSurfacePoint = CircleSurfacePoint(vector + vectorTravel)
 }

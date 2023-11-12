@@ -45,7 +45,7 @@ object RegexTest extends App
 	assert(combo.findFirstFrom("Mamma321").get == "a3")
 	
 	// 4) Alpha
-	val alpha = Regex.alpha
+	val alpha = Regex.letter
 	println(alpha)
 	
 	assert(alpha("A"))
@@ -66,7 +66,7 @@ object RegexTest extends App
 	assert(alphaSeq.findFirstFrom("Mamma321").get == "Mamma")
 	
 	// 5) Numeric
-	val numeric = Regex.numeric
+	val numeric = Regex.integer
 	println(numeric)
 	
 	assert(numeric("1"))
@@ -79,7 +79,7 @@ object RegexTest extends App
 	assert(numeric.findFirstFrom("-273.6 €").get == "-273")
 	
 	// 6) Alphanumeric
-	val alphaNumeric = Regex.alphaNumeric
+	val alphaNumeric = Regex.letterOrDigit
 	println(alphaNumeric)
 	
 	assert(alphaNumeric("1"))
@@ -90,7 +90,7 @@ object RegexTest extends App
 	assert(alphaNumeric.findFirstFrom("Mamma321").get == "M")
 	
 	// 7) Decimal
-	val decimal = Regex.decimal
+	val decimal = Regex.number
 	println(decimal)
 	
 	assert(decimal("1.2"))
@@ -107,7 +107,7 @@ object RegexTest extends App
 	assert(decimal.findFirstFrom("-273.6 €").get == "-273.6")
 	
 	// 8) Decimal positive
-	val decimalPositive = Regex.decimalPositive
+	val decimalPositive = Regex.positiveNumber
 	println(decimalPositive)
 	
 	assert(decimalPositive("1.2"))

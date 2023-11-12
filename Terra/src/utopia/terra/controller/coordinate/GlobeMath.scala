@@ -4,6 +4,7 @@ import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.measurement.DistanceUnit.KiloMeter
 import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.terra.model.angular.NorthSouthRotation
 
 /**
  * Contains constants relating to geometric mathematics concerning the Earth.
@@ -51,7 +52,7 @@ object GlobeMath
 	  *         the vector length traveled along the Z axis to reach that level.
 	  *         These are returned as a Pair.
 	  */
-	def eastWestRadiusAtLatitude(latitude: Rotation, globeVectorRadius: Double) = {
+	def eastWestRadiusAtLatitude(latitude: NorthSouthRotation, globeVectorRadius: Double) = {
 		// Calculates the position on the X-Z plane based on latitude, which determines the east-west radius,
 		// as well as the final Z-coordinate
 		// X is perpendicular to the "pole" vector

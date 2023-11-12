@@ -5,7 +5,7 @@ import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
-import utopia.terra.model.angular.LatLong
+import utopia.terra.model.angular.{LatLong, NorthSouthRotation}
 import utopia.terra.model.world.sphere.{SpherePoint, SphereSurfacePoint}
 
 /**
@@ -69,7 +69,7 @@ object SphericalEarth extends WorldView[Vector3D, Vector3D, SphereSurfacePoint, 
 		val poleDistance = vector.length
 		
 		// Determines the latitude based on Z and this calculated distance
-		val latitude = Vector2D(poleDistance, vector.z).direction - Angle.right
+		val latitude = NorthSouthRotation((Vector2D(poleDistance, vector.z).direction - Angle.right).unidirectional)
 		
 		LatLong(latitude, longitude)
 	}

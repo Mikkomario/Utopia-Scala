@@ -4,7 +4,7 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.vector.DoubleVector
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToWorldPoint, VectorToWorldPoint}
 import utopia.terra.model.CompassTravel
@@ -92,9 +92,8 @@ object CirclePoint
 trait CirclePoint
 	extends AerialPoint[Vector3D, CircleSurfacePoint] with CirclePointOps[Vector3D, CirclePoint] with EqualsBy
 {
-	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
-	
 	override protected def at(latLong: LatLong): CirclePoint = CirclePoint(CircleSurfacePoint(latLong), altitude)
+	override protected def at(location: HasDoubleDimensions): CirclePoint = CirclePoint(Vector3D.from(location))
+	
 	override def +(travel: CompassTravel): CirclePoint = CirclePoint(toSurfacePoint + travel, altitude)
-	override def +(vectorTravel: DoubleVector): CirclePoint = CirclePoint(toSurfacePoint + vectorTravel, altitude)
 }

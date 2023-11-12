@@ -109,11 +109,10 @@ trait ReflectionStackLike[C <: ReflectionStackable]
       * @param item An item in this stack
       * @return The bounds around the item. None if the item isn't in this stack
       */
-    override def areaOf(item: C) =
-    {
+    override def areaOf(item: C) = {
         // Caches components so that indexes won't change in between
         val c = components
-        c.optionIndexOf(item).map { i =>
+        c.findIndexOf(item).map { i =>
             if (c.size == 1)
                 Bounds(Point.origin, size)
             else {
@@ -140,7 +139,7 @@ trait ReflectionStackLike[C <: ReflectionStackable]
         val p = relativePoint(direction)
         val c = components
         // Finds the first item past the relative point
-        c.indexWhereOption { _.position(direction) > p }.map { nextIndex =>
+        c.findIndexWhere { _.position(direction) > p }.map { nextIndex =>
             // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
             if (nextIndex == 0 || c(nextIndex).position(direction) - p < p - c(nextIndex - 1).maxAlong(direction))
                 c(nextIndex)
@@ -157,7 +156,7 @@ trait ReflectionStackLike[C <: ReflectionStackable]
       * @param component A component within this stack
       * @return Current index of the component. None if there's no such component in this stack
       */
-    def indexOf(component: Any) = _components.indexWhereOption { _.source == component }
+    def indexOf(component: Any) = _components.findIndexWhere { _.source == component }
     
     /**
       * Replaces a component with a new version

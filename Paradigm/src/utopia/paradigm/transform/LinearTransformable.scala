@@ -1,6 +1,6 @@
 package utopia.paradigm.transform
 
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape1d.vector.Vector1D
@@ -99,5 +99,5 @@ trait LinearTransformable[+Transformed]
 	  * @param amount Rotation to apply to this instance
 	  * @return A rotated copy of this instance
 	  */
-	def rotated(amount: Rotation) = transformedWith(Matrix2D.rotation(amount))
+	def rotated(amount: DirectionalRotation) = transformedWith(Matrix2D.rotation(amount))
 }

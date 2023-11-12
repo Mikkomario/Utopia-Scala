@@ -7,15 +7,6 @@ object Combinable
 	  */
 	type SelfCombinable[Repr] = Combinable[Repr, Repr]
 	
-	implicit class Subtractable[A <: Reversible[A], +R](val c: Combinable[A, R]) extends AnyVal
-	{
-		/**
-		  * @param other Another item
-		  * @return A subtraction between these two items
-		  */
-		def -(other: A): R = c + (-other)
-	}
-	
 	implicit class Averaging[-A, +R <: LinearScalable[R]](val c: Combinable[A, R]) extends AnyVal
 	{
 		/**
@@ -31,11 +22,22 @@ object Combinable
   * @author Mikko Hilpinen
   * @since 20.9.2021, v1.12
   */
-trait Combinable[-Addition, +Repr] extends Any
+trait Combinable[-Addition, +Repr] extends Any with Subtractable[Reversible[Addition], Repr]
 {
+	// ABSTRACT -----------------------
+	
 	/**
 	  * @param other An item to add to this one
 	  * @return A combination of these two items
 	  */
 	def +(other: Addition): Repr
+	
+	
+	// IMPLEMENTED    -----------------
+	
+	/**
+	  * @param other An item to subtract from this one
+	  * @return A subtracted copy of this item
+	  */
+	override def -(other: Reversible[Addition]) = this + (-other)
 }

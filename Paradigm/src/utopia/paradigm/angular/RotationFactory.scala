@@ -32,6 +32,14 @@ trait RotationFactory[+R]
 	  * A 90 degrees rotation
 	  */
 	def quarter = circles(0.25)
+	/**
+	  * @return A 180 degree rotation
+	  */
+	def halfCircle = circles(0.5)
+	/**
+	  * @return A 270 degree rotation
+	  */
+	def threeQuarters = circles(0.75)
 	
 	
 	// OTHER	--------------------------

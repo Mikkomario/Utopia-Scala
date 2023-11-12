@@ -39,6 +39,7 @@ trait SegmentChangedListener
 	def onSegmentUpdated(source: Segmented): Unit
 }
 
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 private class FunctionalSegmentChangedListener(val f: Segmented => Unit) extends SegmentChangedListener
 {
 	override def onSegmentUpdated(source: Segmented) = f(source)

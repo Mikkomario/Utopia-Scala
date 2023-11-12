@@ -1,6 +1,6 @@
 package utopia.paradigm.color
 
-import utopia.paradigm.angular.{Angle, NondirectionalRotation, Rotation}
+import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 
 
 /**
@@ -100,13 +100,12 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @param rotation Hue rotation
 	  * @return A copy of this color with rotated hue
 	  */
-	def +(rotation: Rotation): Repr = plusHue(rotation)
-	
+	def +(rotation: DirectionalRotation): Repr = plusHue(rotation)
 	/**
 	  * @param rotation Hue rotation
 	  * @return A copy of this color with rotated hue
 	  */
-	def -(rotation: Rotation) = this + (-rotation)
+	def -(rotation: DirectionalRotation) = this + (-rotation)
 	
 	
 	// OTHER	------------------
@@ -122,14 +121,14 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @param amount The adjustment in hue
 	  * @return A copy of this color with ajusted hue
 	  */
-	def plusHue(amount: Rotation) = withHue(hue + amount)
+	def plusHue(amount: DirectionalRotation) = withHue(hue + amount)
 	/**
 	  * Adjusts the hue of this color towards the specified target
 	  * @param amount The maximum hue adjustment
 	  * @param target Target hue [0, 360[
 	  * @return A copy of this color with adjusted hue
 	  */
-	def plusHueTowards(amount: NondirectionalRotation, target: Angle) = {
+	def plusHueTowards(amount: Rotation, target: Angle) = {
 		val diff = target - hue
 		if (diff.isZero)
 			self
@@ -142,7 +141,7 @@ trait HslLike[Repr <: HslLike[Repr]]
 	}
 	@deprecated("Please use .plusHueTowards(NonDirectionalRotation, Angle) instead", "v1.5")
 	def plusHueTowards(amountDegrees: Double, target: Angle): Repr =
-		plusHueTowards(NondirectionalRotation.degrees(amountDegrees), target)
+		plusHueTowards(Rotation.degrees(amountDegrees), target)
 	
 	/**
 	  * @param amount Saturation adjustment
@@ -165,7 +164,7 @@ trait HslLike[Repr <: HslLike[Repr]]
 	  * @param amount Hue adjustment
 	  * @return A copy of this color with adjusted hue
 	  */
-	def minusHue(amount: Rotation) = withHue(hue - amount)
+	def minusHue(amount: DirectionalRotation) = withHue(hue - amount)
 	
 	/**
 	  * @param amount Saturation adjustment

@@ -1,5 +1,6 @@
 package utopia.flow.operator
 
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.operator.SignOrZero.Neutral
 
 /**
@@ -52,4 +53,17 @@ trait SignedOrZero[+Repr] extends Any with Signed[Repr] with CanBeZero[Repr]
 	// IMPLEMENTED  ----------------------
 	
 	override def isZero: Boolean = sign == Neutral
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * @param mod A scaling modifier (-1, 0 or 1)
+	  * @return A scaled copy of this item
+	  */
+	def *(mod: SignOrZero) = mod match {
+		case Positive => self
+		case Negative => -this
+		case Neutral => zero
+	}
 }

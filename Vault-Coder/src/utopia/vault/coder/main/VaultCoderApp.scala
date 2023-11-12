@@ -18,5 +18,5 @@ object VaultCoderApp extends App with CoderApp
 	
 	// APP CODE -------------------------
 	
-	run(args)
+	run(args.toIndexedSeq)
 }

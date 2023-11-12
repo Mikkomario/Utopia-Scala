@@ -3,12 +3,14 @@
 ## v1.5 (in development)
 ### Breaking changes
 - Practically rewrote the **Rotation** class
+  - The previous **Rotation** implementation is now named **DirectionalRotation**
+  - The new **Rotation** class is unidirectional (i.e. simply a wrapper for a positive or negative radians count) 
+    - It does not necessarily specify direction. The interpreted direction is context-specific.
 - The default positive direction in **Rotation**`.arcLengthOver(...)` is now **Clockwise** instead of 
   the direction of the **Rotation** instance.
   - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`
 ### Deprecations
-- Deprecated `.degrees` and `.radians` in **Rotation** in favor of 
-  `.absoluteDegrees` & `.clockwiseDegrees` + `.absoluteRadians` & `.clockWiseRadians`
+- Deprecated most of the existing **Rotation** (/**DirectionalRotation**) functions in favor of the new syntax
 ### New methods
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions

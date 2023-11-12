@@ -1,38 +1,26 @@
 package utopia.terra.model.angular
 
-import utopia.paradigm.angular.Rotation
-import utopia.terra.model.enumeration.CompassDirection.{CompassAxis, NorthSouth}
+import utopia.paradigm.angular.{DirectionalRotationFactory, Rotation}
+import utopia.terra.model.enumeration.CompassDirection
 
-object CompassRotation
+object CompassRotation extends DirectionalRotationFactory[CompassDirection, CompassRotation]
 {
-	// ATTRIBUTES   ------------------
+	// IMPLEMENTED  ------------------
 	
-	/**
-	  * A zero degree rotation (north-to-south)
-	  */
-	lazy val zero = apply(NorthSouth, Rotation.clockwise.zero)
-	
-	
-	// OTHER    ----------------------
-	
-	/**
-	  * @param axis Targeted rotational axis
-	  * @param rotation The amount of rotation applied
-	  * @return Specified amount of rotation along the specified axis
-	  */
-	def apply(axis: CompassAxis, rotation: Rotation): CompassRotation = new _CompassRotation(axis, rotation)
+	override protected def _apply(absolute: Rotation, direction: CompassDirection): CompassRotation =
+		new _CompassRotation(absolute, direction)
 	
 	
 	// NESTED   ----------------------
 	
-	private class _CompassRotation(override val compassAxis: CompassAxis, override val wrapped: Rotation)
+	private class _CompassRotation(override val absolute: Rotation, override val direction: CompassDirection)
 		extends CompassRotation
 	{
 		override def self: CompassRotation = this
-		override def zero: CompassRotation = new _CompassRotation(compassAxis, Rotation.clockwise.zero)
+		override def zero: CompassRotation = new _CompassRotation(Rotation.zero, direction)
 		
-		override def +(other: Rotation): CompassRotation = new _CompassRotation(compassAxis, wrapped + other)
-		override def *(mod: Double): CompassRotation = new _CompassRotation(compassAxis, wrapped * mod)
+		override protected def copy(amount: Rotation, reverseDirection: Boolean) =
+			new _CompassRotation(amount, if (reverseDirection) -direction else direction)
 	}
 }
 
@@ -43,4 +31,4 @@ object CompassRotation
   * @author Mikko Hilpinen
   * @since 6.9.2023, v1.0
   */
-trait CompassRotation extends CompassRotationLike[CompassRotation]
+trait CompassRotation extends CompassRotationLike[CompassDirection, CompassRotation]
