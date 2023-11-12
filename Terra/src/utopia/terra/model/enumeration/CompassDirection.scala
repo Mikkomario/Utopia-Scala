@@ -123,6 +123,15 @@ object CompassDirection
 		  * @return Factory used for constructing rotation instances along this axis
 		  */
 		def rotation: BidirectionalRotationFactory[_ <: CompassDirection, CompassRotation]
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		  * @param rotation A rotation to apply to this axis
+		  * @return Specified rotation along this axis
+		  */
+		def apply(rotation: Rotation) = this.rotation(rotation)
 	}
 	
 	/**
@@ -151,6 +160,8 @@ object CompassDirection
 			case Positive => South
 			case Negative => North
 		}
+		
+		override def apply(rotation: Rotation) = NorthSouthRotation(rotation)
 	}
 	/**
 	 * Common trait for the north-to-south directions (i.e. northward and southward)
@@ -218,12 +229,12 @@ object CompassDirection
 			case Clockwise => West
 			case Counterclockwise => East
 		}
+		override def apply(rotation: Rotation) = EastWestRotation(rotation)
 		/**
 		  * @param rotation Rotation to convert
 		  * @return An east-west rotation that matches the specified rotation
 		  */
-		def apply(rotation: DirectionalRotation): EastWestRotation =
-			EastWestRotation(apply(rotation.direction))(rotation.absolute)
+		def apply(rotation: DirectionalRotation): EastWestRotation = EastWestRotation(rotation)
 	}
 	/**
 	 * Common trait for east-to-west directions

@@ -2,6 +2,7 @@ package utopia.terra.model.angular
 
 import utopia.flow.operator.Sign
 import utopia.paradigm.angular.{BidirectionalRotationFactory, DirectionalRotation, Rotation}
+import utopia.paradigm.enumeration.RotationDirection
 import utopia.terra.model.enumeration.CompassDirection.{East, EastWest, West}
 
 object EastWestRotation extends BidirectionalRotationFactory[EastWest, EastWestRotation]
@@ -18,6 +19,20 @@ object EastWestRotation extends BidirectionalRotationFactory[EastWest, EastWestR
 	
 	override protected def _apply(absolute: Rotation, direction: EastWest): EastWestRotation =
 		new EastWestRotation(absolute, direction)
+		
+	
+	// OTHER    ------------------------------
+	
+	/**
+	  * @param direction A rotation direction
+	  * @return Factory used for creating rotations towards that direction along the east-to-west axis / circle
+	  */
+	def apply(direction: RotationDirection): DirectedRotationFactory = apply(EastWest(direction))
+	/**
+	  * @param rotation Rotation to convert
+	  * @return An east-west rotation that matches the specified rotation
+	  */
+	def apply(rotation: DirectionalRotation): EastWestRotation = apply(rotation.direction)(rotation.absolute)
 }
 
 /**

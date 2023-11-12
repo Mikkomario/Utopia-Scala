@@ -13,11 +13,11 @@ import utopia.terra.model.enumeration.CompassDirection.{East, North, South, West
   */
 object LatLongTest extends App
 {
-	val ll0 = LatLong.fromDegrees(0.0, 0.0)
-	val ll1 = LatLong.fromDegrees(60.8, 15.3)
-	val ll2 = LatLong.fromDegrees(-30, 15.3)
-	val ll3 = LatLong.fromDegrees(60.8, 120.3)
-	val ll4 = LatLong.fromDegrees(60.8, -83.2)
+	val ll0 = LatLong.degrees(0.0, 0.0)
+	val ll1 = LatLong.degrees(60.8, 15.3)
+	val ll2 = LatLong.degrees(-30, 15.3)
+	val ll3 = LatLong.degrees(60.8, 120.3)
+	val ll4 = LatLong.degrees(60.8, -83.2)
 	
 	assert(ll0.latitude.isZero, ll0.latitude)
 	assert(ll1.latitude.sign.isNegative)

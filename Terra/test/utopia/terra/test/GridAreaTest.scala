@@ -59,10 +59,10 @@ object GridAreaTest extends App
 		assert(oneDegreeLatitudeSouth.vector ~== Vector2D(unit))
 	}
 	
-	val helsinkiLatLong = LatLong.fromDegrees(60.192059, 24.945831)
+	val helsinkiLatLong = LatLong.degrees(60.192059, 24.945831)
 	Use(new GridArea(helsinkiLatLong)) { implicit grid =>
 		val helsinki = GridSurfacePoint(helsinkiLatLong)
-		val lahti = GridSurfacePoint(LatLong.fromDegrees(60.9827, 25.6615))
+		val lahti = GridSurfacePoint(LatLong.degrees(60.9827, 25.6615))
 		
 		println(s"Distance from Helsinki to Lahti is ${ lahti.linearDistanceFrom(helsinki) }")
 		
@@ -72,10 +72,10 @@ object GridAreaTest extends App
 		// println(s"Vector distance between Lahti and Helsinki = ${lahti - helsinki}")
 	}
 	
-	val cloncurryLatLong = LatLong.fromDegrees(-20.7110, 140.5050)
+	val cloncurryLatLong = LatLong.degrees(-20.7110, 140.5050)
 	Use(new GridArea(cloncurryLatLong)) { implicit grid =>
 		val cloncurry = GridSurfacePoint(cloncurryLatLong)
-		val richmond = GridSurfacePoint(LatLong.fromDegrees(-20.7375, 143.1290))
+		val richmond = GridSurfacePoint(LatLong.degrees(-20.7375, 143.1290))
 		
 		println(s"Distance from Cloncurry to Richmond is ${ cloncurry.linearDistanceFrom(richmond) }")
 	}

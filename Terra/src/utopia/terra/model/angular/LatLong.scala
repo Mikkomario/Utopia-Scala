@@ -1,13 +1,17 @@
 package utopia.terra.model.angular
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.{ApproxSelfEquals, Combinable, EqualsFunction}
-import utopia.paradigm.angular.Angle
-import utopia.terra.model.enumeration.CompassDirection
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.enumeration.Axis
+import utopia.paradigm.shape.template.{DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}
 import utopia.terra.model.enumeration.CompassDirection._
 
-object LatLong
+object LatLong extends DimensionalFactory[Rotation, LatLong] with FromDimensionsFactory[Rotation, LatLong]
 {
+	import LatLongLike._
+	
 	// ATTRIBUTES   ------------------------
 	
 	/**
@@ -22,6 +26,35 @@ object LatLong
 	val origin = apply(NorthSouthRotation.zero, Angle.zero)
 	
 	
+	// IMPLEMENTED  ------------------------
+	
+	override def newBuilder: DimensionalBuilder[Rotation, LatLong] = dimensionsFactory.newBuilder.mapResult(apply)
+	
+	override def apply(values: IndexedSeq[Rotation]): LatLong = _apply(values)
+	override def apply(values: Map[Axis, Rotation]): LatLong = {
+		val latitude = values.get(NorthSouth.axis) match {
+			case Some(rotation) => NorthSouth(rotation)
+			case None => NorthSouthRotation.zero
+		}
+		val longitude = values.get(EastWest.axis) match {
+			case Some(rotation) => rotation.toAngle
+			case None => Angle.zero
+		}
+		apply(latitude, longitude)
+	}
+	override def apply(dimensions: Dimensions[Rotation]): LatLong = _apply(dimensions)
+	
+	override def from(values: IterableOnce[Rotation]): LatLong = values match {
+		case s: Seq[Rotation] => _apply(s)
+		case i => _apply(i.iterator.take(2).toSeq)
+	}
+	override def from(other: HasDimensions[Rotation]): LatLong = other match {
+		case ll: LatLong => ll
+		case llr: LatLongRotation => llr.toLatLong
+		case o => _apply(o.dimensions)
+	}
+	
+	
 	// OTHER    ----------------------------
 	
 	/**
@@ -30,8 +63,27 @@ object LatLong
 	 * @param longitude Longitude as an angle relative to the Greenwich, England, where positive direction is east
 	 * @return A new map point
 	 */
-	def fromDegrees(latitude: Double, longitude: Double): LatLong =
+	def degrees(latitude: Double, longitude: Double): LatLong =
 		apply(North.degrees(latitude), Angle.degrees(East.sign * longitude))
+	/**
+	  * @param latLongDegrees A pair containing the latitude (first, north) and the longitude (second, east) as degrees
+	  * @return A coordinate that matches the specified degrees input
+	  */
+	def degrees(latLongDegrees: Pair[Double]): LatLong = degrees(latLongDegrees.first, latLongDegrees.second)
+	@deprecated("Replaced with .degrees(Double, Double)", "v1.1")
+	def fromDegrees(latitude: Double, longitude: Double): LatLong = degrees(latitude, longitude)
+	
+	private def _apply(values: Seq[Rotation]) = {
+		if (values.isEmpty)
+			origin
+		else {
+			val latitude = NorthSouthRotation(values.head)
+			if (values hasSize 1)
+				apply(latitude)
+			else
+				apply(latitude, values(1).toAngle)
+		}
+	}
 }
 /**
  * A point on the earth's surface expressed as latitude and longitude angular values
@@ -47,7 +99,7 @@ object LatLong
   *                  Default = 0
   */
 case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longitude: Angle = Angle.zero)
-	extends Combinable[LatLongRotation, LatLong] with ApproxSelfEquals[LatLong]
+	extends LatLongLike[LatLong] with Combinable[LatLongRotation, LatLong] with ApproxSelfEquals[LatLong]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -55,6 +107,9 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	  * @return The longitude component of this coordinate represented as a rotation instance
 	  */
 	lazy val longitudeRotation = EastWestRotation(longitude.toShortestRotation.unidirectional)
+	
+	override lazy val dimensions = super.dimensions
+	override lazy val components = super.components
 	
 	/**
 	 * The latitude portion of this coordinate as degrees of rotation from the equator towards the NORTH [-90, 90].
@@ -93,7 +148,7 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	  * The side of the equator on which this location resides (North or South).
 	  * If this location resides exactly at the equator, returns North.
 	  */
-	lazy val northSouth = latitude.sign.binary match {
+	lazy val northSouthSide = latitude.sign.binary match {
 		case Some(sign) =>
 			// Handles cases where the rotation is > 90 degrees or < -90 degrees
 			// After 180 degrees rotation, the targeted hemisphere "flips"
@@ -106,27 +161,10 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	  * This location's relative direction from longitude 0 (i.e. Greenwich, England)
 	  */
 	// 0 degrees is considered West, 180 degrees is considered East
-	lazy val eastWest: EastWest = if (longitude.radians < math.Pi) West else East
+	lazy val eastWestSide: EastWest = if (longitude.radians < math.Pi) West else East
 	
 	
 	// COMPUTED -----------------------
-	
-	/**
-	  * @return The north component of this coordinate
-	  */
-	def north = latitude.north
-	/**
-	  * @return The south component of this coordinate
-	  */
-	def south = latitude.south
-	/**
-	  * @return The east component of this coordinate
-	  */
-	def east = longitudeRotation.east
-	/**
-	  * @return The west component of this coordinate
-	  */
-	def west = longitudeRotation.west
 	
 	/**
 	 * @return The latitude and longitude coordinates of this point, as degrees
@@ -138,16 +176,21 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	  * @return A two-dimensional rotation based on this location.
 	  *         Same as calling this - LatLong.origin
 	  */
-	def toRotation = LatLongRotation(latitude, EastWest(longitude.toShortestRotation))
+	def toRotation = LatLongRotation(northSouth, eastWest)
 	
 	
 	// IMPLEMENTED  -------------------
 	
 	override def self: LatLong = this
 	
+	override def northSouth: NorthSouthRotation = latitude
+	override def eastWest: EastWestRotation = longitudeRotation
+	
 	override implicit def equalsFunction: EqualsFunction[LatLong] = LatLong.approxEquals
 	
 	override def toString = s"${latitudeDegrees.abs} $northSouth, ${longitudeDegrees.abs} $eastWest"
+	
+	override def withDimensions(newDimensions: Dimensions[Rotation]): LatLong = LatLong(newDimensions)
 	
 	/**
 	 * @param rotation Amount of rotation to apply (north-to-south & east-to-west)
@@ -160,41 +203,10 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	// OTHER    -----------------------
 	
 	/**
-	 * @param amount Targeted axis and the rotation to apply
-	 * @return Copy of this coordinate shifted by the specified amount
-	 */
-	def +(amount: CompassRotation) = amount.compassAxis match {
-		case NorthSouth => copy(latitude = latitude + amount.unidirectional)
-		case EastWest => copy(longitude = longitude + amount.unidirectional.clockwise)
-	}
-	
-	/**
 	 * @param other Another latitude longitude -coordinate
 	 * @return The angular difference between these two coordinate points.
 	  *        I.e. the amount of rotation required so that 'other' + rotation = this.
 	 */
 	def -(other: LatLong) =
-		LatLongRotation(latitude - other.latitude, EastWestRotation((longitude - other.longitude).unidirectional))
-	/**
-	 * @param rotation Amount of rotation to subtract (north-to-south & east-to-west)
-	 * @return Copy of this coordinate shifted by the specified amount (to opposite direction)
-	 */
-	def -(rotation: LatLongRotation) = this + (-rotation)
-	/**
-	 * @param amount Targeted axis and the rotation to subtract
-	 * @return Copy of this coordinate shifted by the specified amount (to the opposite direction)
-	 */
-	def -(amount: CompassRotation) = this + (-amount)
-	
-	/**
-	 * @param direction Targeted direction
-	 * @return The component of this coordinate that matches the specified direction,
-	 *         represented with a non-directional rotation instance
-	 */
-	def apply(direction: CompassDirection) = direction match {
-		case North => north
-		case South => south
-		case East => east
-		case West => west
-	}
+		LatLongRotation(latitude - other.latitude, EastWestRotation(longitude - other.longitude))
 }
