@@ -1,6 +1,6 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
 
 /**
   * Linear paths calculate a direct path between two items

@@ -1,6 +1,8 @@
 package utopia.paradigm.shape.template.vector
 
-import utopia.flow.operator.{EqualsExtensions, EqualsFunction, HasLength, LinearScalable}
+import utopia.flow.operator.equality.{EqualsExtensions, EqualsFunction}
+import utopia.flow.operator.HasLength
+import utopia.flow.operator.combine.LinearScalable
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.vector.Vector1D
 import utopia.paradigm.shape.shape2d.Matrix2D

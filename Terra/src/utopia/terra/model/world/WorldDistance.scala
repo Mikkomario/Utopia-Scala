@@ -1,8 +1,11 @@
 package utopia.terra.model.world
 
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator._
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.measurement.Distance
 import utopia.terra.controller.coordinate.world.VectorDistanceConversion
@@ -133,7 +136,7 @@ object WorldDistance
   * @since 10.11.2023, v1.1
   */
 trait WorldDistance
-	extends EqualsBy with CanBeAboutZero[WorldDistance, WorldDistance] with Combinable[Distance, WorldDistance]
+	extends EqualsBy with MayBeAboutZero[WorldDistance, WorldDistance] with Combinable[Distance, WorldDistance]
 		with LinearScalable[WorldDistance] with SignedOrZero[WorldDistance]
 {
 	// ABSTRACT ----------------------

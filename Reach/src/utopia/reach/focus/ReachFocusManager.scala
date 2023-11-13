@@ -1,13 +1,14 @@
 package utopia.reach.focus
 
-import utopia.flow.operator.{CombinedOrdering, Sign}
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
 import utopia.firmament.awt.AwtComponentExtensions._
+import utopia.flow.operator.ordering.CombinedOrdering
+import utopia.flow.operator.sign.Sign
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import java.awt.event.{FocusEvent, WindowAdapter, WindowEvent}

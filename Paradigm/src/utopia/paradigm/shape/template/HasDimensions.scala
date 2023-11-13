@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.shape.shape1d.Dimension

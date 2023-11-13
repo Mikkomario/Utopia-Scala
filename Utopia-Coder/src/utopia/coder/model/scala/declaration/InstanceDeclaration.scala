@@ -1,6 +1,5 @@
 package utopia.coder.model.scala.declaration
 
-import utopia.flow.operator.CombinedOrdering
 import utopia.coder.model.scala.doc.ScalaDocKeyword.{Author, Since}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
@@ -12,6 +11,7 @@ import utopia.coder.model.scala.datatype.{Extension, GenericType, ScalaType}
 import utopia.coder.model.scala.doc.ScalaDocPart
 import utopia.coder.model.scala.{Annotation, DeclarationDate, Parameters, Visibility}
 import utopia.coder.model.scala.template.CodeConvertible
+import utopia.flow.operator.ordering.CombinedOrdering
 
 import scala.collection.immutable.VectorBuilder
 

@@ -1,8 +1,11 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator._
+import utopia.flow.operator.combine.{Combinable, Scalable}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.sign.Sign
 
 import scala.language.implicitConversions
 

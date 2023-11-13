@@ -1,6 +1,6 @@
 package utopia.flow.test.operator
 
-import utopia.flow.operator.UncertainSign
+import utopia.flow.operator.sign.UncertainSign
 import utopia.flow.util.UncertainNumber.{UncertainInt, UncertainNumberRange}
 import utopia.flow.util.{UncertainBoolean, UncertainNumber}
 

@@ -3,8 +3,8 @@ package utopia.scribe.api.database.model.logging
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.operator.End
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.enumeration.End
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.factory.logging.IssueOccurrenceFactory
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData

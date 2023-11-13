@@ -2,7 +2,8 @@ package utopia.terra.model.angular
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{ApproxSelfEquals, Combinable, EqualsFunction}
+import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.template.{DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}

@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape1d.range
 
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.RoundingDouble
 import utopia.paradigm.shape.shape1d.vector.RoundingVector1D

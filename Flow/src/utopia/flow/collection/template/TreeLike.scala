@@ -2,8 +2,9 @@ package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDepthIterator, PollableOnce}
-import utopia.flow.operator.EqualsExtensions.ImplicitApproxEquals
-import utopia.flow.operator.{EqualsFunction, MaybeEmpty}
+import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsFunction
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder

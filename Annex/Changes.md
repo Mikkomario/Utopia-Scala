@@ -1,5 +1,8 @@
 # Utopia Annex - List of Changes
 
+## v1.6.1 (in development)
+Supports **Flow v2.3**
+
 ## v1.6 - 27.09.2023
 Updated the **RequestResult** interface for easier and more concise use.
 ### Breaking Changes

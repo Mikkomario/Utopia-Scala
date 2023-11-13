@@ -1,6 +1,6 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.ordering.SelfComparable
 import utopia.paradigm.enumeration.ColorContrastStandard.{largeTextThreshold, largeTextThresholdBold}
 import utopia.paradigm.measurement.Distance
 

@@ -1,8 +1,10 @@
 package utopia.paradigm.shape.template.vector
 
 import utopia.flow.collection.immutable.range.HasInclusiveOrderedEnds
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsFunction, HasLength, Reversible, Scalable}
+import utopia.flow.operator.combine.{Combinable, Scalable}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.{MayBeAboutZero, HasLength, Reversible}
 import utopia.paradigm.angular.{Angle, DirectionalRotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
@@ -32,7 +34,7 @@ import scala.math.Fractional.Implicits.infixFractionalOps
 trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDoubles]
 	extends Dimensional[D, Repr]
 		with Scalable[D, Repr] with Combinable[HasDimensions[D], Repr] with Reversible[Repr] with HasLength
-		with VectorProjectable[FromDoubles] with CanBeAboutZero[HasDimensions[D], Repr] with Transformable[FromDoubles]
+		with VectorProjectable[FromDoubles] with MayBeAboutZero[HasDimensions[D], Repr] with Transformable[FromDoubles]
 {
 	// ABSTRACT ---------------------
 	

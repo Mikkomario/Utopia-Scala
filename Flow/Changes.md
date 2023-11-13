@@ -2,6 +2,9 @@
 
 ## v2.3 (in development)
 ### Breaking changes
+- Divided the `operator` package into multiple sub-packages
+- Renamed **CanBeZero** to **MayBeZero** and **CanBeAboutZero** to **MayBeAboutZero**
+- Moved **JsonSettingsAccess** to `parse.json`
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
   - You can work around this by appending `.toTuple` after these method calls 
 - **Combinable** now always specifies `-` as well as `+`

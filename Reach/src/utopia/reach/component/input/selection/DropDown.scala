@@ -3,7 +3,7 @@ package utopia.reach.component.input.selection
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.{ScrollingContext, TextContext}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger

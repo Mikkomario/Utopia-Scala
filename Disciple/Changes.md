@@ -1,5 +1,8 @@
 # Utopia Disciple - List of Changes
 
+## v1.6.3 (in development)
+Supports **Flow v2.3**
+
 ## v1.6.2 - 27.09.2023
 Rebuild due to parent module changes
 

@@ -1,6 +1,6 @@
 package utopia.courier.model
 
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.string.{Regex, StringFrom}
 import utopia.flow.util.StringExtensions._
 

@@ -2,9 +2,9 @@ package utopia.vault.database
 
 import utopia.flow.collection.immutable.{Pair, ViewGraphNode}
 import utopia.flow.error.EnvironmentNotSetupException
-import utopia.flow.operator.Sign
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
+import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.View
 import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table}
 

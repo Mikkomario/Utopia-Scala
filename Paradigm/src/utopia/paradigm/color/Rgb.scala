@@ -6,8 +6,8 @@ import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
-import utopia.flow.operator.ApproxEquals
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.ApproxEquals
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.enumeration.RgbChannel.{Blue, Green, Red}

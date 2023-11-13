@@ -1,13 +1,13 @@
 package utopia.coder.model.scala.datatype
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.coder.model.scala.Package
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
 import utopia.coder.model.scala.template.ScalaConvertible
+import utopia.flow.operator.equality.EqualsFunction
 
 import scala.language.implicitConversions
 

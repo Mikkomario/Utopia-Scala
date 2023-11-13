@@ -1,8 +1,9 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.operator.{CanBeZero, Combinable, Reversible, Scalable}
+import utopia.flow.operator.{MayBeZero, Reversible}
 import utopia.paradigm.enumeration.Axis
 import Axis._
+import utopia.flow.operator.combine.{Combinable, Scalable}
 
 object Dimensional
 {
@@ -48,7 +49,7 @@ object Dimensional
   * @author Mikko Hilpinen
   * @since 6.11.2022, v1.2
   */
-trait Dimensional[A, +Repr] extends HasDimensions[A] with CanBeZero[Repr]
+trait Dimensional[A, +Repr] extends HasDimensions[A] with MayBeZero[Repr]
 {
 	// ABSTRACT -------------------------
 	

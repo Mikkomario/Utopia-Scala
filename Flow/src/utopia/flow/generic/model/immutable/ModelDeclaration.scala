@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.generic.model.{immutable, template}
 import utopia.flow.generic.model.mutable.{DataType, Variable}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType, VectorType}

@@ -1,7 +1,6 @@
 package utopia.flow.time
 
-import utopia.flow.operator.UsesSelfOrdering
-
+import utopia.flow.operator.ordering.UsesSelfOrdering
 import java.time.{DayOfWeek, LocalDate}
 import scala.language.implicitConversions
 

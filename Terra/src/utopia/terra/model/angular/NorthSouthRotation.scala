@@ -1,6 +1,6 @@
 package utopia.terra.model.angular
 
-import utopia.flow.operator.Sign
+import utopia.flow.operator.sign.Sign
 import utopia.paradigm.angular.{BidirectionalRotationFactory, Rotation}
 import utopia.terra.model.enumeration.CompassDirection.{North, NorthSouth, South}
 

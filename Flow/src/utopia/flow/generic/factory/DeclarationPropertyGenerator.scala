@@ -2,7 +2,7 @@ package utopia.flow.generic.factory
 
 import utopia.flow.generic.model.immutable.{ModelDeclaration, Value}
 import utopia.flow.generic.model.template.Property
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 
 /**
  * This property generator implementation uses a model declaration when creating new properties

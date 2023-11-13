@@ -2,7 +2,7 @@ package utopia.flow.async.process
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.WaitTarget.Until
-import utopia.flow.operator.CombinedOrdering
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.{Now, Today, WeekDay, WeekDays}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger

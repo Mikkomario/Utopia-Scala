@@ -1,6 +1,8 @@
 package utopia.terra.model
 
-import utopia.flow.operator.{CanBeAboutZero, Combinable, EqualsBy, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.MayBeAboutZero
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape1d.Dimension
@@ -40,7 +42,7 @@ object CompassTravel
 class CompassTravel(val compassAxis: CompassAxis, val distance: WorldDistance)
                    (implicit worldView: VectorDistanceConversion)
 	extends Combinable[Distance, CompassTravel] with LinearScalable[CompassTravel] with Dimension[WorldDistance]
-		with EqualsBy with CanBeAboutZero[CompassTravel, CompassTravel]
+		with EqualsBy with MayBeAboutZero[CompassTravel, CompassTravel]
 {
 	// IMPLEMENTED  ------------------------
 	

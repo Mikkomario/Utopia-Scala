@@ -1,6 +1,6 @@
 package utopia.reflection.event
 
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.ordering.SelfComparable
 
 /**
   * An enumeration for different general states of a transition

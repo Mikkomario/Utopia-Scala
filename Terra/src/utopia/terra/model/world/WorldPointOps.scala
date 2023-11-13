@@ -1,6 +1,7 @@
 package utopia.terra.model.world
 
-import utopia.flow.operator.{Combinable, Reversible}
+import utopia.flow.operator.Reversible
+import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.measurement.Distance
 import utopia.terra.controller.coordinate.world.VectorDistanceConversion
 import utopia.terra.model.CompassTravel

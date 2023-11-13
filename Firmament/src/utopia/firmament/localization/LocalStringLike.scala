@@ -1,6 +1,7 @@
 package utopia.firmament.localization
 
-import utopia.flow.operator.{Combinable, MaybeEmpty}
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.combine.Combinable
 import utopia.flow.util.StringExtensions._
 
 /**

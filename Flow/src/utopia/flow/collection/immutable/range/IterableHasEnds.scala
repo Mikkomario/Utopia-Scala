@@ -1,7 +1,8 @@
 package utopia.flow.collection.immutable.range
 
-import utopia.flow.operator.{Sign, Steppable}
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.Steppable
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered

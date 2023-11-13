@@ -7,7 +7,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
-import utopia.flow.operator.ApproxEquals
+import utopia.flow.operator.equality.ApproxEquals
 
 import scala.util.Try
 

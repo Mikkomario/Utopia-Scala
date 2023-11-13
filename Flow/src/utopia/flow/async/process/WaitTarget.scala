@@ -1,6 +1,6 @@
 package utopia.flow.async.process
 
-import utopia.flow.operator.CanBeZero
+import utopia.flow.operator.MayBeZero
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today, WeekDay}
 
@@ -16,7 +16,7 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
-sealed trait WaitTarget extends CanBeZero[WaitTarget]
+sealed trait WaitTarget extends MayBeZero[WaitTarget]
 {
     // ABSTRACT    --------------
     

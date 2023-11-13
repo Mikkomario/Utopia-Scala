@@ -1,7 +1,7 @@
 package utopia.flow.util.console
 
 import utopia.flow.async.process.Breakable
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._

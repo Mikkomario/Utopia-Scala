@@ -7,8 +7,8 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.ApproxEquals
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.ApproxEquals
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.generic.ParadigmValue._

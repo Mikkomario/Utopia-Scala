@@ -1,6 +1,6 @@
 package utopia.reach.drawing
 
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.ordering.SelfComparable
 
 /**
   * An enumeration for different levels of priority used in various contexts

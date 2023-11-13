@@ -3,7 +3,7 @@ package utopia.coder.model.scala.code
 import utopia.coder.model.scala.Package
 import utopia.flow.generic.factory.FromValueFactory
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.operator.Combinable.SelfCombinable
+import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.coder.model.scala.datatype.Reference

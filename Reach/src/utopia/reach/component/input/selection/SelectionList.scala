@@ -11,7 +11,7 @@ import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer

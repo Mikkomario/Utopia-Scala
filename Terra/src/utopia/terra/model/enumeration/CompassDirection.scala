@@ -1,8 +1,8 @@
 package utopia.terra.model.enumeration
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{BinarySigned, Sign, Signed}
+import utopia.flow.operator.sign.{BinarySigned, Sign, Signed}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.paradigm.angular.{BidirectionalRotationFactory, DirectionalRotation, Rotation, RotationFactory}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}

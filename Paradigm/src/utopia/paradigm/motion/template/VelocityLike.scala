@@ -1,6 +1,7 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.{CanBeAboutZero, Combinable, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
@@ -18,7 +19,7 @@ import scala.concurrent.duration.Duration
   */
 trait VelocityLike[X <: NumericVectorLike[Double, X, X], +Repr <: Change[X, Repr]]
 	extends Change[X, Repr] with LinearScalable[Repr] with Combinable[Change[HasDoubleDimensions, _], Repr]
-		with CanBeAboutZero[Change[HasDoubleDimensions, _], Repr] with Dimensional[LinearVelocity, Repr]
+		with MayBeAboutZero[Change[HasDoubleDimensions, _], Repr] with Dimensional[LinearVelocity, Repr]
 		with VectorProjectable[Repr]
 {
 	// ABSTRACT	-----------------

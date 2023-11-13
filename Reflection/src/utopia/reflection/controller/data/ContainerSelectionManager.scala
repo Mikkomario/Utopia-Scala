@@ -5,7 +5,6 @@ import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.controller.data.{ContainerContentDisplayer, ContentManager, SelectionKeyListener, SelectionManager}
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
-import utopia.flow.operator.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
@@ -15,6 +14,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable

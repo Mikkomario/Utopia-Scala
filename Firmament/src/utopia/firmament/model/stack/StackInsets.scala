@@ -1,7 +1,7 @@
 package utopia.firmament.model.stack
 
-import utopia.flow.operator.Sign
-import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.sign.Sign
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.enumeration.Alignment

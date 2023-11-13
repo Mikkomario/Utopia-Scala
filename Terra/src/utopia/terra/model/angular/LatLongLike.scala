@@ -1,7 +1,7 @@
 package utopia.terra.model.angular
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.shape.template.{Dimensional, Dimensions}
 import utopia.terra.model.enumeration.CompassDirection

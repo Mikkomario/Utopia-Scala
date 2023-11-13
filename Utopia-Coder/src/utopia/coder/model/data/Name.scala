@@ -5,8 +5,9 @@ import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.coder.model.enumeration.{NameContext, NamingConvention}
 import utopia.flow.generic.factory.FromValueFactory
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, SelfComparable}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.ApproxEquals
+import utopia.flow.operator.ordering.SelfComparable
 
 import scala.collection.immutable.StringOps
 import scala.language.implicitConversions

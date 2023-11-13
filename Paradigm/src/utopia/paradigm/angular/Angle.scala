@@ -2,8 +2,10 @@ package utopia.paradigm.angular
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxSelfEquals, Combinable, EqualsFunction, SelfComparable}
+import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.ordering.SelfComparable
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.generic.ParadigmDataType.AngleType
 import utopia.paradigm.transform.LinearSizeAdjustable

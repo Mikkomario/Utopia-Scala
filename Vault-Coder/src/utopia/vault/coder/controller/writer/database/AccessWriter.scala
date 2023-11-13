@@ -4,7 +4,7 @@ import utopia.coder.model.data
 import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, VaultProjectSetup, Property}
 import utopia.vault.coder.model.datatype.PropertyType

@@ -1,9 +1,9 @@
 package utopia.paradigm.shape.shape2d.vector.size
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.SignOrZero.Neutral
-import utopia.flow.operator.{SignOrZero, SignedOrZero}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.sign.{SignOrZero, SignedOrZero}
 import utopia.paradigm.shape.template.vector.{NumericVectorFactory, NumericVectorLike}
 import utopia.paradigm.transform.{Adjustment, SizeAdjustable}
 

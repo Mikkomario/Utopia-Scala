@@ -1,7 +1,7 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.operator.{BinarySigned, Sign}
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.{BinarySigned, Sign}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 /**
 * objects of rotation direction are used as enumerations to describe different circular directions

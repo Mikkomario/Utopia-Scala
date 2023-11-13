@@ -1,6 +1,6 @@
 package utopia.paradigm.test
 
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.measurement.Distance
 
 /**

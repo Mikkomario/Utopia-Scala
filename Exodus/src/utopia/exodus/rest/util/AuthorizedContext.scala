@@ -15,7 +15,7 @@ import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair

@@ -2,7 +2,7 @@ package utopia.reach.cursor
 
 import utopia.firmament.image.SingleColorIcon
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.combine.Combinable
 import utopia.flow.util.TryCatch
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds

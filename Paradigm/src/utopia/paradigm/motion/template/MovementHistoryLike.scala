@@ -2,7 +2,7 @@ package utopia.paradigm.motion.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.shape.template.vector.DoubleVectorLike

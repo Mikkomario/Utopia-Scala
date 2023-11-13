@@ -2,8 +2,8 @@ package utopia.firmament.model.stack
 
 import utopia.firmament.model.stack.LengthPriority.Low
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Combinable.SelfCombinable
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.combine.Combinable.SelfCombinable
+import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.insets.Insets

@@ -1,6 +1,6 @@
 package utopia.genesis.test
 
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 import utopia.paradigm.shape.shape2d.Matrix2D

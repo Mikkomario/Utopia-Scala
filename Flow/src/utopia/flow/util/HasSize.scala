@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.operator.RichComparable
+import utopia.flow.operator.ordering.RichComparable
 
 /**
   * An utility item for testing the size of some collection using .sizeCompare(...) instead of .size == ...

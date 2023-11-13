@@ -1,6 +1,6 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}

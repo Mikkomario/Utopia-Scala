@@ -3,7 +3,7 @@ package utopia.flow.util
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 

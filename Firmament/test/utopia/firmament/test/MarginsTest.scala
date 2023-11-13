@@ -2,7 +2,7 @@ package utopia.firmament.test
 
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Small, VeryLarge, VerySmall}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.transform.Adjustment
 
 /**

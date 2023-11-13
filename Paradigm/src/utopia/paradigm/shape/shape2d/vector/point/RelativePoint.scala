@@ -1,6 +1,8 @@
 package utopia.paradigm.shape.shape2d.vector.point
 
-import utopia.flow.operator.{Combinable, EqualsBy, LinearScalable, Reversible}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.Reversible
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions

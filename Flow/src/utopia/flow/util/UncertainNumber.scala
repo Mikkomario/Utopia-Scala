@@ -1,13 +1,19 @@
 package utopia.flow.util
 
+import utopia.flow
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.operator.ComparisonOperator.{Always, DirectionalComparison, Equality, Inequality, Never}
-import utopia.flow.operator.Extreme.{Max, Min}
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.SignOrZero.Neutral
-import utopia.flow.operator.UncertainSign.{CertainSign, NotNegative}
+import utopia.flow.operator
+import utopia.flow.operator.equality.ComparisonOperator.{Always, DirectionalComparison, Equality, Inequality, Never}
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.sign.UncertainSign.{CertainSign, NotNegative}
 import utopia.flow.operator._
+import utopia.flow.operator.combine.{Combinable, Scalable}
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.equality.ComparisonOperator
+import utopia.flow.operator.sign.{HasUncertainSign, Sign, UncertainSign}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.view.immutable.View
 
@@ -260,7 +266,7 @@ object UncertainNumber
 	  * @return An uncertain number that may be any number more extreme than (or possibly equal to) the specified number
 	  */
 	def moreExtremeThan[N](number: N, extreme: Extreme, includeEqual: Boolean = false)(implicit n: Numeric[N]) =
-		NumberComparison(number, DirectionalComparison(Sign(extreme), includeEqual))
+		NumberComparison(number, DirectionalComparison(sign.Sign(extreme), includeEqual))
 	/**
 	  * @param range Range of possible numbers
 	  * @tparam N Type of numeric values used
@@ -300,7 +306,7 @@ object UncertainNumber
 		
 		// Limits the number to an open range
 		override def minOrMax(other: N, extreme: Extreme): UncertainNumber[N] =
-			NumberComparison(other, DirectionalComparison(Sign(extreme), includesEqual = true))
+			NumberComparison(other, DirectionalComparison(operator.sign.Sign(extreme), includesEqual = true))
 		
 		override def toStringWith(formatting: N => String): String = "?"
 	}
@@ -466,7 +472,7 @@ object UncertainNumber
 				UncertainBoolean
 		}
 		
-		override def options(extreme: Extreme): Option[N] = if (Sign(extreme) == targetSign) None else Some(n.zero)
+		override def options(extreme: Extreme): Option[N] = if (operator.sign.Sign(extreme) == targetSign) None else Some(n.zero)
 		
 		override def minOrMax(other: N, extreme: Extreme): UncertainNumber[N] = {
 			// Case: This range may contain a more extreme item => May limit the less extreme side
@@ -743,7 +749,7 @@ object UncertainNumber
 			case Equality => CertainNumber(extreme(threshold, other))
 			// Case: Very uncertain number => Limits to an open range of numbers
 			case Always | Never | Inequality =>
-				NumberComparison(other, DirectionalComparison(Sign(extreme).opposite, includesEqual = true))
+				NumberComparison(other, DirectionalComparison(flow.operator.sign.Sign(extreme).opposite, includesEqual = true))
 			// Case: Open range
 			case DirectionalComparison(direction, _) =>
 				// Case: This range may contain the more extreme value => Limits the less extreme side

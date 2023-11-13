@@ -4,9 +4,9 @@ import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.{Sign, SignOrZero}
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator.sign.{Sign, SignOrZero}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.{Alignment, Axis2D, LinearAlignment}
 import utopia.paradigm.measurement.{Distance, Ppi}

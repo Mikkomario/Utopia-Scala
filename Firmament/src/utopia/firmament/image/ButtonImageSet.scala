@@ -2,7 +2,7 @@ package utopia.firmament.image
 
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused, Hover}
 import utopia.firmament.model.GuiElementStatus
-import utopia.flow.operator.Sign.Negative
+import utopia.flow.operator.sign.Sign.Negative
 import utopia.genesis.image.Image
 
 object ButtonImageSet

@@ -5,7 +5,8 @@ import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.ScalaType
 import utopia.coder.model.scala.template.{Documented, ScalaConvertible}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.{EqualsFunction, MaybeEmpty}
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsFunction
 
 import scala.language.implicitConversions
 

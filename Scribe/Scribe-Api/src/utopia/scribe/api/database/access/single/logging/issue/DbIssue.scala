@@ -3,7 +3,7 @@ package utopia.scribe.api.database.access.single.logging.issue
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.time.Now
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version

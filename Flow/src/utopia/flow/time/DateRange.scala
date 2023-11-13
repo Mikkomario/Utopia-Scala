@@ -8,8 +8,8 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.LocalDateType
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
 import utopia.flow.time.DateRange.dateFormat
 
 import java.time.LocalDate

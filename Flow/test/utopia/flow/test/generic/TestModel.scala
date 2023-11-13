@@ -5,7 +5,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 
 import scala.util.{Failure, Success}
 

@@ -1,6 +1,6 @@
 package utopia.flow.generic.model.enumeration
 
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.ordering.SelfComparable
 
 /**
  * A conversion reliability defines how costly a conversion between two data types is

@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape3d
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D

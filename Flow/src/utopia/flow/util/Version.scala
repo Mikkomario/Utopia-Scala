@@ -2,7 +2,7 @@ package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
 import StringExtensions._
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.parse.string.Regex
 
 object Version

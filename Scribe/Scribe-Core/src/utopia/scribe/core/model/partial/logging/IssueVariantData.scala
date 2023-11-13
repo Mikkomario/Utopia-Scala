@@ -5,7 +5,7 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{AnyType, InstantType, IntType, ModelType}
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.operator.CombinedOrdering
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.flow.util.Version
 

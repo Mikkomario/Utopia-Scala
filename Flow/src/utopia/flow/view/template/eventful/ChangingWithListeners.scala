@@ -3,7 +3,7 @@ package utopia.flow.view.template.eventful
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.operator.End
+import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
 
 /**

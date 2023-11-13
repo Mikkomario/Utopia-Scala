@@ -1,7 +1,9 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{Combinable, Sign, Signed, Steppable}
+import utopia.flow.operator.sign.{Sign, Signed}
+import utopia.flow.operator.Steppable
+import utopia.flow.operator.combine.Combinable
 
 object IterableSpan
 {

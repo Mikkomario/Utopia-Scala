@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape1d.vector
 
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.shape.shape2d.vector.Vector2D

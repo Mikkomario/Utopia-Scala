@@ -2,8 +2,8 @@ package utopia.reach.drawing
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.Positive
+import utopia.flow.operator.sign.Sign.Positive
+import utopia.flow.operator.sign.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image

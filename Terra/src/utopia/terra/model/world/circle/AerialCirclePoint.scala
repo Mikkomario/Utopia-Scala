@@ -1,6 +1,6 @@
 package utopia.terra.model.world.circle
 
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D

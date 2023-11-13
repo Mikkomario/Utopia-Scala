@@ -1,6 +1,6 @@
 package utopia.terra.model.world
 
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorLike}
 import utopia.terra.model.angular.LatLongRotation

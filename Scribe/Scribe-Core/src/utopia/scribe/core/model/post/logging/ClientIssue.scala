@@ -8,8 +8,8 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, PairType, StringType}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.{Mutate, Version}

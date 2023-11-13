@@ -1,7 +1,8 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.DoubleLike.DoubleWrapper
-import utopia.flow.operator.{Combinable, HasLength, LinearScalable}
+import utopia.flow.operator.numeric.DoubleLike.DoubleWrapper
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.HasLength
 
 object CubicBezier
 {

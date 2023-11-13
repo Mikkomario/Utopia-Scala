@@ -5,8 +5,11 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.Extreme.{Max, Min}
-import utopia.flow.operator.{Extreme, SelfComparable, Sign, Steppable}
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.Steppable
+import utopia.flow.operator.enumeration.Extreme
 
 /**
   * Represents the level of severity associated with some problem or error situation

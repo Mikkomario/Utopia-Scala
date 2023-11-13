@@ -1,6 +1,7 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.{Combinable, HasLength, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.HasLength
 
 /**
   * This path provides a direct path between two values

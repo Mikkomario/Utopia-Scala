@@ -2,7 +2,7 @@ package utopia.paradigm.shape.shape2d.line
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.shape.template.{DimensionalFactory, HasDimensions}
 
 import scala.collection.immutable.VectorBuilder

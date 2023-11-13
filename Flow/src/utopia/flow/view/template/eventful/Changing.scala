@@ -5,8 +5,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
-import utopia.flow.operator.{End, Identity}
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.Identity
+import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View

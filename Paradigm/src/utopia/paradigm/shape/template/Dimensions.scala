@@ -2,8 +2,9 @@ package utopia.paradigm.shape.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{CanBeZero, EqualsBy, EqualsFunction}
+import utopia.flow.operator.equality.{EqualsBy, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.MayBeZero
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
@@ -128,7 +129,7 @@ object Dimensions
   */
 class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, Dimensions[A]]
-		with HasDimensions[A] with CanBeZero[Dimensions[A]] with EqualsBy
+		with HasDimensions[A] with MayBeZero[Dimensions[A]] with EqualsBy
 {
 	// COMPUTED ------------------------------
 	

@@ -7,7 +7,9 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.{Combinable, EqualsBy, LinearScalable, Reversible}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.Reversible
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Direction2D}

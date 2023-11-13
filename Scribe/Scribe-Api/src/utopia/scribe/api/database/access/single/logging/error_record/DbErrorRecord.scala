@@ -2,7 +2,7 @@ package utopia.scribe.api.database.access.single.logging.error_record
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.scribe.api.database.access.single.logging.stack_trace_element_record.DbStackTraceElementRecord
 import utopia.scribe.api.database.factory.logging.ErrorRecordFactory
 import utopia.scribe.api.database.model.logging.ErrorRecordModel

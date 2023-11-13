@@ -3,7 +3,8 @@ package utopia.paradigm.angular
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.{SelfComparable, Sign}
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.Sign
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.generic.ParadigmDataType.RotationType

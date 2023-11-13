@@ -1,6 +1,7 @@
 package utopia.paradigm.transform
 
-import utopia.flow.operator.{Scalable, Sign}
+import utopia.flow.operator.combine.Scalable
+import utopia.flow.operator.sign.Sign
 
 /**
   * Used for representing the impact of an individual individual adjustment,

@@ -3,7 +3,7 @@ package utopia.firmament.model
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Small, VerySmall}
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.combine.LinearScalable
 import utopia.paradigm.transform.Adjustment
 
 object Margins

@@ -7,7 +7,7 @@ import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._

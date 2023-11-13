@@ -1,7 +1,7 @@
 package utopia.flow.test.operator
 
 import utopia.flow.time.Now
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
 
 /**

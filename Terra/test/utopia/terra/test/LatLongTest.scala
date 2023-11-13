@@ -1,7 +1,7 @@
 package utopia.terra.test
 
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.Sign.Negative
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.sign.Sign.Negative
 import utopia.paradigm.angular.Angle
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.enumeration.CompassDirection.{East, North, South, West}

@@ -9,7 +9,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
 import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}

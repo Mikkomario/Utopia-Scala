@@ -15,9 +15,11 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
-import utopia.flow.operator.End.First
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{End, EqualsFunction, Identity}
+import utopia.flow.operator.enumeration.End.First
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.Identity
+import utopia.flow.operator.enumeration.End
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty

@@ -2,7 +2,7 @@ package utopia.flow.test.parse
 
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.xml.XmlReader
 
 import scala.util.{Failure, Success}

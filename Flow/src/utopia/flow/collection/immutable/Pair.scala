@@ -2,9 +2,13 @@ package utopia.flow.collection.immutable
 
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
-import utopia.flow.operator.End.{First, Last}
-import utopia.flow.operator.Extreme.{Max, Min}
-import utopia.flow.operator.{Combinable, End, EqualsFunction, Extreme, Reversible, Sign}
+import utopia.flow.operator.enumeration.{End, Extreme}
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.Reversible
+import utopia.flow.operator.combine.Combinable
 
 import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance

@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D

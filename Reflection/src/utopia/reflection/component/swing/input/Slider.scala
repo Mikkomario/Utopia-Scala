@@ -7,8 +7,7 @@ import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
@@ -28,6 +27,7 @@ import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.operator.sign.Sign
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point

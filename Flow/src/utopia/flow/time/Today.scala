@@ -4,7 +4,7 @@ import scala.language.implicitConversions
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.RichComparable
+import utopia.flow.operator.ordering.RichComparable
 import utopia.flow.time.TimeExtensions.ExtendedLocalDate
 
 import java.time.{LocalDate, Period}

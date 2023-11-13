@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d.vector
 
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.shape.shape1d.RoundingDouble
 import utopia.paradigm.shape.template.vector.{RoundingVector, RoundingVectorFactory, RoundingVectorLike}
 import utopia.paradigm.shape.template.{Dimensions, HasDimensions}

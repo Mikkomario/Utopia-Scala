@@ -1,7 +1,8 @@
 package utopia.flow.parse.xml
 
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, EqualsFunction, MaybeEmpty, ScopeUsable}
+import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.{MaybeEmpty, ScopeUsable}
 
 object Namespace
 {

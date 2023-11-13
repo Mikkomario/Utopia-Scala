@@ -1,6 +1,6 @@
 package utopia.terra.test
 
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.terra.controller.coordinate.world.CircleOfEarth
 import utopia.terra.controller.coordinate.world.CircleOfEarth.equatorRadius

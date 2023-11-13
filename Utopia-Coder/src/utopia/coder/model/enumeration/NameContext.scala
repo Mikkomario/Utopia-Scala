@@ -4,7 +4,8 @@ import utopia.coder.model.data.{Name, NamingRules}
 import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Hyphenated, Text, UnderScore}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction, ScopeUsable}
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.ScopeUsable
 
 /**
   * A common trait for all name context values. These determine how a name should be displayed.

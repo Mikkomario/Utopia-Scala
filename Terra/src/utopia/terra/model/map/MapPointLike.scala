@@ -1,6 +1,7 @@
 package utopia.terra.model.map
 
-import utopia.flow.operator.{Combinable, EqualsBy, LinearScalable}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**

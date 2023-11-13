@@ -3,13 +3,13 @@ package utopia.vault.coder.controller.writer.database
 import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, FloatType, IntType, LongType}
-import utopia.flow.operator.CombinedOrdering
 import utopia.flow.time.Today
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.coder.model.data.{Class, Instance, VaultProjectSetup}
 import utopia.coder.model.enumeration.NameContext.DatabaseName
 import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text}
+import utopia.flow.operator.ordering.CombinedOrdering
 
 import java.io.PrintWriter
 import java.nio.file.Path

@@ -1,8 +1,8 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.End
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.enumeration.End
 
 object HasInclusiveEnds
 {

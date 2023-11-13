@@ -1,9 +1,10 @@
 package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Extreme.{Max, Min}
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{Extreme, Sign}
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
 
 /**
   * A common trait for items which, like ranges, have two ends: A start and an end. Both of these are inclusive.

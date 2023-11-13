@@ -1,7 +1,7 @@
 package utopia.flow.parse.xml
 
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, EqualsFunction, EqualsBy}
+import utopia.flow.operator.equality.{ApproxEquals, EqualsBy, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.language.implicitConversions

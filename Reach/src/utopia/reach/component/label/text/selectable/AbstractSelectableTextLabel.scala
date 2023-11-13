@@ -7,8 +7,8 @@ import utopia.firmament.drawing.view.SelectableTextViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue

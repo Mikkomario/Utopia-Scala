@@ -11,7 +11,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.End.First
+import utopia.flow.operator.enumeration.End.First
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawSettings, Drawer}

@@ -1,6 +1,6 @@
 package utopia.nexus.rest.scalable
 
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceSearchResult.Follow
 import utopia.nexus.rest.{Context, Resource, ResourceSearchResult}

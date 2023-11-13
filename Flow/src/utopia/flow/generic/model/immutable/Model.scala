@@ -6,8 +6,9 @@ import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.DataType.ModelType
 import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
-import utopia.flow.operator.{ApproxSelfEquals, EqualsBy, EqualsFunction, MaybeEmpty}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction}
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsExtensions._
 
 object Model
 {

@@ -1,7 +1,8 @@
 package utopia.terra.controller.coordinate.distance
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{Combinable, HasLength, Reversible}
+import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.{HasLength, Reversible}
 import utopia.paradigm.measurement.Distance
 import utopia.terra.controller.coordinate.world.VectorDistanceConversion
 

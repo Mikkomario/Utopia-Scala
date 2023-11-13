@@ -18,7 +18,7 @@ import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.util.{ExodusContext, PasswordHash}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.metropolis.model.combined.user.DetailedUser
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
 import utopia.metropolis.model.post.NewUser

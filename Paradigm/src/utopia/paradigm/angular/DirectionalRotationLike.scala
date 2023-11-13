@@ -1,6 +1,9 @@
 package utopia.paradigm.angular
 
 import utopia.flow.operator._
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.ordering.RichComparable
+import utopia.flow.operator.sign.{SignOrZero, Signed, SignedOrZero}
 
 
 /**
@@ -12,7 +15,7 @@ import utopia.flow.operator._
   * @tparam Repr Implementing class
 **/
 trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: DirectionalRotationLike[_, _, _], +Repr]
-	extends LinearScalable[Repr] with Combinable[C, Repr] with CanBeAboutZero[C, Repr]
+	extends LinearScalable[Repr] with Combinable[C, Repr] with MayBeAboutZero[C, Repr]
 		with SignedOrZero[Repr] with RichComparable[C]
 {
 	// ABSTRACT --------------------------

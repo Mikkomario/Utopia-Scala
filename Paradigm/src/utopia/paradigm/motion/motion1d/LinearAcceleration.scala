@@ -2,8 +2,10 @@ package utopia.paradigm.motion.motion1d
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.SignOrZero.Neutral
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike, SignOrZero}
+import utopia.flow.operator.sign.SignOrZero
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.numeric.DoubleLike
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LinearAccelerationType
@@ -41,7 +43,7 @@ object LinearAcceleration extends ChangeFromModelFactory[LinearAcceleration, Lin
   */
 case class LinearAcceleration(override val amount: LinearVelocity, override val duration: Duration)
 	extends ModelConvertibleChange[LinearVelocity, LinearAcceleration] with DoubleLike[LinearAcceleration]
-		with CanBeAboutZero[Change[LinearVelocity, _], LinearAcceleration] with ValueConvertible
+		with MayBeAboutZero[Change[LinearVelocity, _], LinearAcceleration] with ValueConvertible
 {
 	// ATTRIBUTES   -------------------
 	

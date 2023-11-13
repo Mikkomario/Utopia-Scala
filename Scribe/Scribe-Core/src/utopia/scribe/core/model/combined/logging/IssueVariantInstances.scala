@@ -1,6 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
-import utopia.flow.operator.CombinedOrdering
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.Extender
 import utopia.scribe.core.model.partial.logging.IssueVariantData

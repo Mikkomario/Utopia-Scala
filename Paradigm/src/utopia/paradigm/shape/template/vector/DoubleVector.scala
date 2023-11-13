@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.template.vector
 
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
 
 object DoubleVector extends DoubleVectorFactory[DoubleVector]

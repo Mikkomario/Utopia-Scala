@@ -1,8 +1,8 @@
 package utopia.reach.focus
 
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.Positive
+import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.sign.Sign
 
 /**
   * A component manager which tracks multiple focusable components

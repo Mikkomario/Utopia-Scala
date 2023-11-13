@@ -7,7 +7,7 @@ import utopia.flow.generic.model.mutable.DataType.InstantType
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.operator.CombinedOrdering
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable

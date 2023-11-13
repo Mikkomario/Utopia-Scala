@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 
 object Tree
 {

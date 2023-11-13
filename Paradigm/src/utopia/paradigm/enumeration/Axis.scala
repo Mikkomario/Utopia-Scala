@@ -1,8 +1,9 @@
 package utopia.paradigm.enumeration
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{RichComparable, Sign}
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.ordering.RichComparable
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.paradigm.shape.shape1d.vector.Vector1D
 
 /**

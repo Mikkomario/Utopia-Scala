@@ -6,7 +6,7 @@ import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType.ModelType
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.xml.XmlReader

@@ -1,6 +1,6 @@
 package utopia.paradigm.angular
 
-import utopia.flow.operator.Signed
+import utopia.flow.operator.sign.Signed
 
 /**
   * Common trait for factory objects that are used for constructing directed rotation instances

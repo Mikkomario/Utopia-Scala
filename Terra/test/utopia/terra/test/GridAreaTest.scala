@@ -1,6 +1,6 @@
 package utopia.terra.test
 
-import utopia.flow.operator.Use
+import utopia.flow.util.Use
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.shape.shape2d.vector.Vector2D

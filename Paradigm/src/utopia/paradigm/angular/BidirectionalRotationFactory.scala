@@ -1,7 +1,7 @@
 package utopia.paradigm.angular
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{Sign, Signed}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.{Sign, Signed}
 
 /**
   * Common trait for factory objects that are used for constructing directed rotation instances

@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape1d.vector
 
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Axis, Direction2D}
 import utopia.paradigm.shape.template.Dimensions

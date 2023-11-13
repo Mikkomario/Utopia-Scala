@@ -3,7 +3,7 @@ package utopia.flow.test.datastructure
 import utopia.flow.collection.immutable.Tree
 import utopia.flow.collection.mutable.MutableTree
 import utopia.flow.collection.template.TreeLike
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 
 /**
  *

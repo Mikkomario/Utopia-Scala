@@ -2,7 +2,7 @@ package utopia.flow.generic.factory
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.Property
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 
 /**
  * This is a simple implementation of a property generator trait. The generator uses a default 

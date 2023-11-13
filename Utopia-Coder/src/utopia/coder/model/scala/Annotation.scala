@@ -6,7 +6,7 @@ import utopia.coder.model.scala.template.ScalaConvertible
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.operator.CombinedOrdering
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.Version
 
 object Annotation

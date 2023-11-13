@@ -1,7 +1,8 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{Reversible, SelfComparable}
+import utopia.flow.operator.Reversible
+import utopia.flow.operator.ordering.SelfComparable
 
 /**
   * An enumeration for standard color shades used in various UI components

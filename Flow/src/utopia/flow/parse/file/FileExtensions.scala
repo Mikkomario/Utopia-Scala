@@ -4,8 +4,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, EqualsFunction, MaybeEmpty}
+import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible

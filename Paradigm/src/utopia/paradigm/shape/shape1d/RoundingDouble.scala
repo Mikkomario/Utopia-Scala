@@ -4,7 +4,10 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.RoundingFunction.{Ceil, Floor, Round}
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike, EqualsFunction, RoundingFunction, Sign, SignOrZero}
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.numeric.DoubleLike
+import utopia.flow.operator.sign.{Sign, SignOrZero}
+import utopia.flow.operator.{MayBeAboutZero, RoundingFunction}
 import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
@@ -68,7 +71,7 @@ object RoundingDouble
   * @since 28.7.2023, v1.3.1
   */
 case class RoundingDouble(value: Double, logic: RoundingFunction = Round)
-	extends DoubleLike[RoundingDouble] with CanBeAboutZero[Double, RoundingDouble] with ValueConvertible with View[Double]
+	extends DoubleLike[RoundingDouble] with MayBeAboutZero[Double, RoundingDouble] with ValueConvertible with View[Double]
 {
 	// ATTRIBUTES   ------------------------
 	

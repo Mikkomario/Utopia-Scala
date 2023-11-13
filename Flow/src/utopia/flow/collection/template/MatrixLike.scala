@@ -2,8 +2,8 @@ package utopia.flow.collection.template
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
 
 import scala.collection.IndexedSeqView
 

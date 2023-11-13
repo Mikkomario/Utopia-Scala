@@ -4,10 +4,14 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.collection.mutable.iterator._
-import utopia.flow.operator.End.{EndingSequence, First, Last}
-import utopia.flow.operator.Extreme.{Max, Min}
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{CombinedOrdering, End, EqualsFunction, Extreme, Identity, Sign}
+import utopia.flow.operator.enumeration.{End, Extreme}
+import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.ordering.CombinedOrdering
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy

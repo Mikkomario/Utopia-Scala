@@ -5,7 +5,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import TimeExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.RichComparable
+import utopia.flow.operator.ordering.RichComparable
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.duration.FiniteDuration

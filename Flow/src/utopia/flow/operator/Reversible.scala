@@ -1,6 +1,7 @@
 package utopia.flow.operator
 
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 /**
   * A common trait for instances which can be reversed (support the unary - -operator)

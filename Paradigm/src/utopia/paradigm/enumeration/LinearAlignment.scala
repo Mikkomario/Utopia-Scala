@@ -1,9 +1,9 @@
 package utopia.paradigm.enumeration
 
 import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.SignOrZero.Neutral
-import utopia.flow.operator.{SignOrZero, SignedOrZero}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.sign.{SignOrZero, SignedOrZero}
 import utopia.paradigm.enumeration.LinearAlignment.Middle
 
 /**

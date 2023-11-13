@@ -1,7 +1,7 @@
 package utopia.flow.test
 
-import utopia.flow.operator.EqualsFunction
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
 
 /**
   * A tests for EqualsExtensions etc.

@@ -1,6 +1,7 @@
 package utopia.paradigm.measurement
 
-import utopia.flow.operator.{DoubleLike, Sign, SignOrZero}
+import utopia.flow.operator.numeric.DoubleLike
+import utopia.flow.operator.sign.{Sign, SignOrZero}
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Inch}
 
 object Ppi

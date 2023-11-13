@@ -2,7 +2,7 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
-import utopia.flow.operator.End
+import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
 

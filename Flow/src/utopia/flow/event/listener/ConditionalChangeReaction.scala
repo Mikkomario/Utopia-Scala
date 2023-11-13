@@ -2,8 +2,8 @@ package utopia.flow.event.listener
 
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
-import utopia.flow.operator.End
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.enumeration.End
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Changing

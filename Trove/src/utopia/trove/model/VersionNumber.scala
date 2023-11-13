@@ -2,8 +2,8 @@ package utopia.trove.model
 
 import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.operator.SelfComparable
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.ordering.SelfComparable
 
 @deprecated("Replaced with Version (Flow)", "v1.1")
 object VersionNumber

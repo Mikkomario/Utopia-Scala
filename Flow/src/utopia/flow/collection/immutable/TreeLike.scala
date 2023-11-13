@@ -3,8 +3,8 @@ package utopia.flow.collection.immutable
 import utopia.flow.collection.template
 import utopia.flow.collection.template.TreeLike.AnyTree
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
 /**
   * A common trait for immutable trees
   * @author Mikko Hilpinen

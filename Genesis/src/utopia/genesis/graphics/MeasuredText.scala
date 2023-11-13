@@ -1,8 +1,9 @@
 package utopia.genesis.graphics
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{MaybeEmpty, Sign}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.sign.Sign
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.graphics.TextDrawHeight.LineHeight

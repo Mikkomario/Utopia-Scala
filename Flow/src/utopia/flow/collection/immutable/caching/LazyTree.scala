@@ -3,7 +3,7 @@ package utopia.flow.collection.immutable.caching
 import utopia.flow.collection.immutable.TreeLike
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.caching.Lazy
 
 object LazyTree

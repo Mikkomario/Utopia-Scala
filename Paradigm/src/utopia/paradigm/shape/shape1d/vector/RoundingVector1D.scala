@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape1d.vector
 
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.RoundingDouble
 import utopia.paradigm.shape.template.vector.{RoundingVector, RoundingVectorFactory, RoundingVectorLike}

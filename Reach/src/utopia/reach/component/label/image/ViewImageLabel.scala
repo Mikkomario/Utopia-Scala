@@ -9,7 +9,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.WeakCache
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image

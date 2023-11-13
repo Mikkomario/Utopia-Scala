@@ -2,8 +2,10 @@ package utopia.flow.operator
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.operator.Extreme.{Max, Min}
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 /**
   * Common trait for items that may specify a value in either direction within increments of a specific length.

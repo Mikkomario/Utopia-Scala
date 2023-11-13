@@ -2,8 +2,8 @@ package utopia.flow.time
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.IterableSpan
-import utopia.flow.operator.SelfComparable
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 import java.time._
 import java.time.format.DateTimeFormatter

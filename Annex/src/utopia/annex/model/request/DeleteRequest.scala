@@ -6,7 +6,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 
 import scala.util.{Failure, Success}
 

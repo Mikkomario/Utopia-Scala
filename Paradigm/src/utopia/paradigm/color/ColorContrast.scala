@@ -1,6 +1,7 @@
 package utopia.paradigm.color
 
-import utopia.flow.operator.{DoubleLike, Sign, SignOrZero}
+import utopia.flow.operator.numeric.DoubleLike
+import utopia.flow.operator.sign.{Sign, SignOrZero}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.{Enhanced, Minimum}
 import utopia.paradigm.measurement.Distance

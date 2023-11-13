@@ -1,8 +1,8 @@
 package utopia.annex.model.manifest
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.UncertainSign.{NotNeutral, UncertainBinarySign}
-import utopia.flow.operator.{BinarySigned, Sign}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.UncertainSign.{NotNeutral, UncertainBinarySign}
+import utopia.flow.operator.sign.{BinarySigned, Sign}
 
 import scala.language.implicitConversions
 

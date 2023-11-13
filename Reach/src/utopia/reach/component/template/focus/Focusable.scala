@@ -1,8 +1,8 @@
 package utopia.reach.component.template.focus
 
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.Positive
+import utopia.flow.operator.sign.Sign.Positive
+import utopia.flow.operator.sign.Sign
 import utopia.flow.util.logging.Logger
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.hierarchy.ComponentHierarchy

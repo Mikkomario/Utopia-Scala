@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d.vector.point
 
-import utopia.flow.operator.{CanBeAboutZero, HasLength}
+import utopia.flow.operator.{MayBeAboutZero, HasLength}
 import utopia.paradigm.shape.template.HasDimensions
 import utopia.paradigm.shape.template.vector.NumericVectorLike
 
@@ -12,7 +12,7 @@ import java.awt.geom.Point2D
 * @since 25.8.2023, v1.4
 **/
 trait PointLike[D, +Repr <: HasDimensions[D] with HasLength]
-	extends NumericVectorLike[D, Repr, Repr] with CanBeAboutZero[HasDimensions[D], Repr]
+	extends NumericVectorLike[D, Repr, Repr] with MayBeAboutZero[HasDimensions[D], Repr]
 {
     // IMPLEMENTED    -----------------
 	

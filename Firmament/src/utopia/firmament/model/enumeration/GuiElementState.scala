@@ -1,7 +1,7 @@
 package utopia.firmament.model.enumeration
 
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
 
 /**
   * An enumeration for different states / statuses a GUI element may have

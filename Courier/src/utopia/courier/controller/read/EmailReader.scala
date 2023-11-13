@@ -6,7 +6,7 @@ import utopia.courier.model.{Email, EmailAddress}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
 import utopia.flow.util.StringExtensions._

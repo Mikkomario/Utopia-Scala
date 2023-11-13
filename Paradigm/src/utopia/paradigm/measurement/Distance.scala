@@ -1,7 +1,9 @@
 package utopia.paradigm.measurement
 
-import utopia.flow.operator.{CanBeAboutZero, SelfComparable, Sign, SignOrZero, SignedOrZero}
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, KiloMeter, Meter, MilliMeter}
 
 object Distance
@@ -63,7 +65,7 @@ object Distance
  * @since Genesis 24.6.2020, v2.3
  */
 case class Distance(amount: Double, unit: DistanceUnit)
-	extends SelfComparable[Distance] with SignedOrZero[Distance] with CanBeAboutZero[Distance, Distance]
+	extends SelfComparable[Distance] with SignedOrZero[Distance] with MayBeAboutZero[Distance, Distance]
 {
 	// COMPUTED ---------------------
 	

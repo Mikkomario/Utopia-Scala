@@ -1,7 +1,7 @@
 package utopia.genesis.image
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D

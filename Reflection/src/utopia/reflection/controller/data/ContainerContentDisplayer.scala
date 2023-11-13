@@ -1,11 +1,11 @@
 package utopia.reflection.controller.data
 
 import utopia.firmament.component.container.many.MutableMultiContainer
-import utopia.flow.operator.EqualsFunction
 import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.controller.data.ContentDisplayer
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 
 @deprecated("Replaced with a new version in Firmament", "v2.0")

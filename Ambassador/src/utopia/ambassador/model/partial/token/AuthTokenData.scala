@@ -27,7 +27,7 @@ case class AuthTokenData(userId: Int, token: String, expires: Option[Instant] = 
 	/**
 	  * Whether this AuthToken has already been deprecated
 	  */
-	def isDeprecated = deprecatedAfter.isDefined || expires.exists { _.isInPast }
+	def isDeprecated = deprecatedAfter.isDefined || expires.exists { _.isPast }
 	/**
 	  * Whether this AuthToken is still valid (not deprecated)
 	  */

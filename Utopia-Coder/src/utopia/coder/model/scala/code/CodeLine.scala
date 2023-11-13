@@ -1,10 +1,11 @@
 package utopia.coder.model.scala.code
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.{Combinable, MaybeEmpty}
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.string.Regex
 import utopia.flow.collection.CollectionExtensions._
 import utopia.coder.model.scala.code.CodeLine.{maxLineLength, oneTimeRegexes, repeatableRegexes, tabWidth}
+import utopia.flow.operator.combine.Combinable
 
 object CodeLine
 {

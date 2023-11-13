@@ -6,7 +6,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.EqualsFunction
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.parse.xml.XmlElementLike.isAllowedInContent
 import utopia.flow.util.StringExtensions._
 

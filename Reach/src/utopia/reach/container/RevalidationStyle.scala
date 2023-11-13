@@ -1,7 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.collection.immutable.range.Span
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}

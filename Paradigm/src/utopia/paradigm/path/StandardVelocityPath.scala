@@ -1,7 +1,8 @@
 package utopia.paradigm.path
 
-import utopia.flow.operator.{Combinable, HasLength, Reversible}
+import utopia.flow.operator.{HasLength, Reversible}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.path.Path.PathWithDistance
 
 /**

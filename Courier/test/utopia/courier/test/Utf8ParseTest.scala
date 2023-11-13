@@ -1,7 +1,7 @@
 package utopia.courier.test
 
 import utopia.courier.model.EmailAddress
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.string.StringFrom
 
 import java.io.ByteArrayInputStream

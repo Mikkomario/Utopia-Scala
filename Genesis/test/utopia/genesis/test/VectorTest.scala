@@ -1,6 +1,6 @@
 package utopia.genesis.test
 
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.Identity
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.angular.{Angle, Rotation}

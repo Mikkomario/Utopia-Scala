@@ -8,7 +8,8 @@ import utopia.flow.time.{Days, Today}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
-import utopia.flow.operator.{ApproxSelfEquals, EqualsFunction, MaybeEmpty}
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.MaybeEmpty
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.collection.mutable

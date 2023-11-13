@@ -3,7 +3,7 @@ package utopia.paradigm.motion.template
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{ModelValidationFailedException, Value}
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.operator.CanBeAboutZero
+import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.collection.CollectionExtensions._
 
 import scala.concurrent.duration.Duration
@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 8.8.2022, v1.0
   */
-trait ChangeFromModelFactory[+A, Amount <: CanBeAboutZero[Amount, _]] extends FromModelFactory[A]
+trait ChangeFromModelFactory[+A, Amount <: MayBeAboutZero[Amount, _]] extends FromModelFactory[A]
 {
 	// ABSTRACT --------------------------
 	

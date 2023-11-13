@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape1d
 
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis

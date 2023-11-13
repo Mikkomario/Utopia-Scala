@@ -1,7 +1,7 @@
 package utopia.access.http
 
 import utopia.flow.error.EnvironmentNotSetupException
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 
 object Status
 {

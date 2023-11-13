@@ -2,8 +2,8 @@ package utopia.scribe.api.database.access.many.logging.issue_occurrence
 
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.operator.End
-import utopia.flow.operator.End.Last
+import utopia.flow.operator.enumeration.End.Last
+import utopia.flow.operator.enumeration.End
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
 import utopia.vault.nosql.view.FilterableView
 

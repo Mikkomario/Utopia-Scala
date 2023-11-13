@@ -5,7 +5,7 @@ import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property, ValueConvertible}
-import utopia.flow.operator.ApproxEquals
+import utopia.flow.operator.equality.ApproxEquals
 import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}

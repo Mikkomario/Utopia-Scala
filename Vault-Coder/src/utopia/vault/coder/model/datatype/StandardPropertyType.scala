@@ -10,7 +10,7 @@ import utopia.coder.model.scala.template.ValueConvertibleType
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.model.EnumerationWriter
 import utopia.vault.coder.model.data.{Class, Enum}

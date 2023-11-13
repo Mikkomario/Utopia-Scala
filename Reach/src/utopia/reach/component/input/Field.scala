@@ -10,8 +10,8 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.operator.End
-import utopia.flow.operator.End.{First, Last}
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer

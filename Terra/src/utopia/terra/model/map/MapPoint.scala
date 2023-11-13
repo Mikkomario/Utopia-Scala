@@ -1,6 +1,6 @@
 package utopia.terra.model.map
 
-import utopia.flow.operator.{Combinable, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.terra.controller.coordinate.world.{LatLongToSurfacePoint, LatLongToWorldPoint}

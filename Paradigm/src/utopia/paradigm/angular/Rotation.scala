@@ -1,8 +1,11 @@
 package utopia.paradigm.angular
 
-import utopia.flow.operator.Combinable.SelfCombinable
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{CanBeAboutZero, LinearScalable, SelfComparable, Sign, SignOrZero, SignedOrZero}
+import utopia.flow.operator.combine.Combinable.SelfCombinable
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
+import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.combine.LinearScalable
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 
@@ -131,7 +134,7 @@ object Rotation extends RotationFactory[Rotation]
 //noinspection SpellCheckingInspection
 case class Rotation private(radians: Double)
 	extends SelfCombinable[Rotation] with LinearScalable[Rotation]
-		with CanBeAboutZero[Rotation, Rotation]
+		with MayBeAboutZero[Rotation, Rotation]
 		with SelfComparable[Rotation] with SignedOrZero[Rotation]
 {
 	// ATTRIBUTES   ----------------------

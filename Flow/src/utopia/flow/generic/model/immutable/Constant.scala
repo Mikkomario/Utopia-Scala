@@ -2,8 +2,8 @@ package utopia.flow.generic.model.immutable
 
 import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.Property
-import utopia.flow.operator.ApproxEquals
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.ApproxEquals
 
 /**
   * Constants are named properties whose value can't be changed

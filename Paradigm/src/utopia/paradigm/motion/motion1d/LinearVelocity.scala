@@ -6,9 +6,11 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValida
 import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.SignOrZero.Neutral
-import utopia.flow.operator.{CanBeAboutZero, DoubleLike, Sign, SignOrZero}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.sign.{Sign, SignOrZero}
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.numeric.DoubleLike
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LinearVelocityType
@@ -67,7 +69,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
   */
 case class LinearVelocity(override val amount: Double, override val duration: Duration)
 	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity]
-		with CanBeAboutZero[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
+		with MayBeAboutZero[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
 {
 	// ATTRIBUTES   --------------------
 	

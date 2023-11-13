@@ -1,8 +1,9 @@
 package utopia.paradigm.shape.shape1d.range
 
 import utopia.flow.collection.immutable.range.{HasEnds, NumericSpan}
-import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, CanBeAboutZero, EqualsFunction}
+import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.MayBeAboutZero
 import utopia.paradigm.shape.shape1d.Dimension
 
 /**
@@ -12,7 +13,7 @@ import utopia.paradigm.shape.shape1d.Dimension
   */
 trait Span1DLike[D, +Repr <: NumericSpan[D], +V]
 	extends NumericSpan[D] with Dimension[NumericSpan[D]] with ApproxEquals[Dimension[HasEnds[D]]]
-		with CanBeAboutZero[Dimension[HasEnds[D]], Repr]
+		with MayBeAboutZero[Dimension[HasEnds[D]], Repr]
 {
 	// ABSTRACT -------------------------
 	

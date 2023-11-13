@@ -1,7 +1,9 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.flow.operator.{Reversible, Scalable, Sign}
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.Reversible
+import utopia.flow.operator.combine.Scalable
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}

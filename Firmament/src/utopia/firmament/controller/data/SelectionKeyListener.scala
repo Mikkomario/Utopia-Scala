@@ -1,7 +1,7 @@
 package utopia.firmament.controller.data
 
-import utopia.flow.operator.Sign
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{Actor, ActorHandlerType, KeyStateListener}

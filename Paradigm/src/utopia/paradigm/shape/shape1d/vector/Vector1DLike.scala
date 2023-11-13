@@ -1,7 +1,8 @@
 package utopia.paradigm.shape.shape1d.vector
 
-import utopia.flow.operator.Sign.Positive
-import utopia.flow.operator.{HasLength, Sign, SignOrZero, SignedOrZero}
+import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
+import utopia.flow.operator.sign.Sign.Positive
+import utopia.flow.operator.HasLength
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.shape.shape1d.Dimension

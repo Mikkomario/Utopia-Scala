@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.area.Circle

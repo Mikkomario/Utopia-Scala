@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.Resettable

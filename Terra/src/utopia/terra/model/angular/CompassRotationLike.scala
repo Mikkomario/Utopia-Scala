@@ -1,6 +1,7 @@
 package utopia.terra.model.angular
 
-import utopia.flow.operator.{EqualsBy, Signed}
+import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.sign.Signed
 import utopia.paradigm.angular.{DirectionalRotationLike, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.Dimension

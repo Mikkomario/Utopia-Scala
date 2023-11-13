@@ -2,7 +2,7 @@ package utopia.scribe.core.model.combined.logging
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.Span
-import utopia.flow.operator.CombinedOrdering
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.Extender

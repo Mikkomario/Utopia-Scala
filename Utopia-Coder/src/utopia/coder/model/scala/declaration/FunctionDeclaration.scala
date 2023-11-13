@@ -1,7 +1,7 @@
 package utopia.coder.model.scala.declaration
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.coder.model.scala.code.CodeBuilder
 import utopia.coder.model.merging.{MergeConflict, Mergeable}

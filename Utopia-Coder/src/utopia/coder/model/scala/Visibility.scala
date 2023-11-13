@@ -1,7 +1,7 @@
 package utopia.coder.model.scala
 
-import utopia.flow.operator.SelfComparable
 import utopia.coder.model.scala.template.ScalaConvertible
+import utopia.flow.operator.ordering.SelfComparable
 
 /**
   * An enumeration representing different method / property visibility options in Scala
