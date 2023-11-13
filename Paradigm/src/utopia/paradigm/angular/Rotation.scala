@@ -24,6 +24,10 @@ object Rotation extends RotationFactory[Rotation]
 	  */
 	val counterclockwise = apply(Counterclockwise)
 	
+	override lazy val quarter = super.quarter
+	override lazy val circle = super.circle
+	override lazy val halfCircle = super.halfCircle
+	
 	
 	// COMPUTED ---------------------------
 	
@@ -145,7 +149,12 @@ case class Rotation private(radians: Double)
 	/**
 	  * @return Size of this rotation in complete circles
 	  */
-	def circles = radians / (2 * math.Pi)
+	def circles = this / Rotation.circle
+	/**
+	  * @return The size of this rotation in 90 degree quarters / angles.
+	  *         E.g. If this rotation was a full circle (360 degrees), this function would return 4.0.
+	  */
+	def quarters = this / Rotation.quarter
 	
 	/**
 	  * @return Copy of this rotation that's directed to the clockwise direction
@@ -189,6 +198,11 @@ case class Rotation private(radians: Double)
 	  * @return This rotation subtracted by the other rotation.
 	  */
 	def -(other: Rotation) = Rotation(radians - other.radians)
+	/**
+	  * @param other Another rotation
+	  * @return The ratio of these rotations
+	  */
+	def /(other: Rotation) = radians / other.radians
 	
 	/**
 	  * @param direction New rotation direction

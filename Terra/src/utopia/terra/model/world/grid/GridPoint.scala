@@ -1,64 +1,37 @@
 package utopia.terra.model.world.grid
 
-import utopia.paradigm.measurement.Distance
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.terra.controller.coordinate.world.GridArea
+import utopia.terra.controller.coordinate.world.{GridArea, WorldPointFactory}
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.world.AerialPoint
+import utopia.terra.model.world.WorldDistance
 
+import scala.annotation.unused
+import scala.language.implicitConversions
+
+/**
+  * Used for constructing grid points
+  * @author Mikko Hilpinen
+  * @since 12.11.2023, v1.1
+  */
 object GridPoint
 {
-	// OTHER    ---------------------
+	// IMPLICIT ---------------------
 	
-	def apply(vector: Vector3D)(implicit grid: GridArea): GridPoint = new VectorOverGrid(vector)
-	def apply(latLong: LatLong, altitude: Distance)(implicit grid: GridArea): GridPoint =
-		new LatLongOverGrid(latLong, altitude)
+	implicit def accessFactory(@unused g: GridPoint.type)(implicit grid: GridArea): GridPointFactory =
+		new GridPointFactory()
 	
 	
 	// NESTED   ---------------------
 	
-	class VectorOverGrid(override val vector: Vector3D)(implicit override val grid: GridArea) extends GridPoint
+	class GridPointFactory(override protected implicit val worldView: GridArea)
+		extends WorldPointFactory[Vector2D, Vector3D, GridSurfacePoint, AerialGridPoint]
 	{
-		// ATTRIBUTES   -------------
+		override def apply(latLong: LatLong): GridSurfacePoint = GridSurfacePoint(latLong)
+		override def apply(latLong: LatLong, altitude: WorldDistance): AerialGridPoint =
+			AerialGridPoint(latLong, altitude)
 		
-		private lazy val surface = GridSurfacePoint(vector.in2D)
-		
-		
-		// IMPLEMENTED  -------------
-		
-		override def latLong: LatLong = surface.latLong
-		override def altitude: Distance = grid.distanceOf(vector.z)
-		
-		override def toSurfacePoint: GridSurfacePoint = surface
+		override def surfaceVector(vector: Vector2D): GridSurfacePoint = GridSurfacePoint(vector)
+		override def aerialVector(vector: Vector3D): AerialGridPoint = AerialGridPoint(vector)
 	}
-	class LatLongOverGrid(override val latLong: LatLong, override val altitude: Distance)
-	                     (implicit override val grid: GridArea)
-		extends GridPoint
-	{
-		// ATTRIBUTES   -----------------
-		
-		override lazy val vector: Vector3D = {
-			val surfaceVector = grid.latLongToVector(latLong)
-			Vector3D(surfaceVector.x, surfaceVector.y, grid.vectorLengthOf(altitude))
-		}
-		
-		
-		// IMPLEMENTED  -----------------
-		
-		override def toSurfacePoint: GridSurfacePoint = GridSurfacePoint(latLong)
-	}
-}
-
-/**
-  * Represents a world location in a grid-based model
-  * using three dimensions.
-  * @author Mikko Hilpinen
-  * @since 2.11.2023, v1.0.1
-  */
-trait GridPoint
-	extends AerialPoint[Vector3D, GridSurfacePoint] with GridPointOps[Vector3D, GridPoint]
-{
-	override protected def at(location: HasDoubleDimensions): GridPoint = GridPoint(Vector3D.from(location))
-	override protected def at(latLong: LatLong): GridPoint = GridPoint(latLong, altitude)
 }

@@ -1,7 +1,7 @@
 package utopia.terra.model.world.grid
 
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.terra.controller.coordinate.world.GridArea
+import utopia.terra.model.world.WorldDistance
 
 /**
   * Represents travel on a grid-based world view system
@@ -13,5 +13,5 @@ import utopia.terra.controller.coordinate.world.GridArea
 case class GridSurfaceTravel(start: GridSurfacePoint, end: GridSurfacePoint)
 	extends GridTravel[GridSurfacePoint, Vector2D]
 {
-	override protected def worldView: GridArea = start.grid
+	override def altitudeIncrease: WorldDistance = WorldDistance.zero
 }

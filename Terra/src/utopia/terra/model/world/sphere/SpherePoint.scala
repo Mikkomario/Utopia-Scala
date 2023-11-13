@@ -102,8 +102,6 @@ object SpherePoint
 trait SpherePoint extends AerialPoint[Vector3D, SphereSurfacePoint]
 	with SpherePointOps[AerialPoint[HasDoubleDimensions, _], SpherePoint] with EqualsBy
 {
-	override protected def equalsProperties: Iterable[Any] = Iterable.single(vector)
-	
 	override protected def at(latLong: LatLong): SpherePoint = SpherePoint(latLong, altitude)
 	override protected def at(location: HasDoubleDimensions): SpherePoint = SpherePoint(Vector3D.from(location))
 	

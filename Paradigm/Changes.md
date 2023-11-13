@@ -16,6 +16,8 @@
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
 - **Distance** (object)
   - Added `.ofKilometers(Double)`
+### Other changes
+- **Distance** now extends **CanBeAboutZero**
 
 ## v1.4 - 27.09.2023
 This version applies major under-the-hood refactoring to vector classes, 

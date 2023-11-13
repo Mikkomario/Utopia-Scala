@@ -6,7 +6,7 @@ import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.{LatLong, LatLongRotation, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth, South}
-import utopia.terra.model.world.grid.{GridPoint, GridSurfacePoint}
+import utopia.terra.model.world.grid.{AerialGridPoint, GridSurfacePoint}
 
 object GridArea
 {
@@ -34,7 +34,7 @@ object GridArea
   * @param origin The location of the "origin" of this grid area, matching the (0,0) vector coordinate.
   *               Please note that locations far from the origin will be more inaccurate.
   */
-class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfacePoint, GridPoint]
+class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfacePoint, AerialGridPoint]
 {
 	// ATTRIBUTES   ------------------
 	
@@ -53,9 +53,9 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	// IMPLEMENTED  ------------------
 	
 	override def apply(latLong: LatLong) = GridSurfacePoint(latLong)
-	override def apply(latLong: LatLong, altitude: Distance) = GridPoint(latLong, altitude)
+	override def apply(latLong: LatLong, altitude: Distance) = AerialGridPoint(latLong, altitude)
 	
-	override def aerialVector(vector: Vector3D): GridPoint = GridPoint(vector)
+	override def aerialVector(vector: Vector3D): AerialGridPoint = AerialGridPoint(vector)
 	override def surfaceVector(vector: Vector2D): GridSurfacePoint = GridSurfacePoint(vector)
 	
 	/**

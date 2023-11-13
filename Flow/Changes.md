@@ -12,6 +12,7 @@
 ### Bugfixes
 - Fixed a bug in **Path**`.parts` and `.partsIterator` (used to throw an **IllegalArgumentException**) 
 - **StringFrom** now correctly preserves line-breaks
+- **EqualsBy** now compares the equals-properties using `==` instead of using hashCodes
 ### New Features
 - Added file-related utility methods under **FileUtils**
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering

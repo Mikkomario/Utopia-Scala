@@ -4,11 +4,10 @@ import utopia.flow.operator.EqualsBy
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.distance.{DistanceOps, VectorDistanceOps}
 import utopia.terra.controller.coordinate.world.{CircleOfEarth, LatLongToSurfacePoint, VectorToSurfacePoint}
-import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.LatLong
-import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth, West}
 import utopia.terra.model.world.SurfacePoint
 
 object CircleSurfacePoint
@@ -67,20 +66,16 @@ object CircleSurfacePoint
  * @since 29.8.2023, v1.0
  */
 trait CircleSurfacePoint
-	extends SurfacePoint[Vector2D, CirclePoint] with CirclePointOps[Vector2D, CircleSurfacePoint] with EqualsBy
+	extends SurfacePoint[Vector2D, CircleSurfacePoint, DoubleVector, AerialCirclePoint, CircleSurfaceTravel]
+		with CirclePointOps[Vector2D, CircleSurfacePoint, AerialCirclePoint, CircleSurfaceTravel] with EqualsBy
 {
-	override def withAltitude(altitude: Distance): CirclePoint = CirclePoint(this, altitude)
 	override protected def at(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
 	override protected def at(location: HasDoubleDimensions): CircleSurfacePoint =
 		CircleSurfacePoint(Vector2D.from(location))
 	
-	override def +(travel: CompassTravel): CircleSurfacePoint = {
-		val travelVectorLength = worldView.vectorLengthOf(travel.distance)
-		travel.compassAxis match {
-			// Case: North-South travel => Linear travel path towards or away from the center
-			case NorthSouth => CircleSurfacePoint(vector + vector.withLength(travelVectorLength))
-			// Case: East-West travel => Arcing travel staying at the same latitude line
-			case EastWest => this + West.forArcLength(travelVectorLength, vector.length)
-		}
-	}
+	override def withAltitude(altitude: Distance): AerialCirclePoint = AerialCirclePoint(this, altitude)
+	override def withAltitude(altitude: Double): AerialCirclePoint = AerialCirclePoint(this, altitude)
+	
+	override def to(target: CircleSurfacePoint): CircleSurfaceTravel = CircleSurfaceTravel(this, target)
+	override def -(origin: CircleSurfacePoint): CircleSurfaceTravel = CircleSurfaceTravel(origin, this)
 }

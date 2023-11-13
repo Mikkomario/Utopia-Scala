@@ -12,7 +12,8 @@ trait EqualsBy extends Equals
 	
 	/**
 	  * The properties that define whether this instance equals with another instance. Two instances
-	  * of same class, which also have equal properties are considered equal
+	  * of same class, which also have equal properties are considered equal.
+	  * The ordering of the properties must also match.
 	  */
 	protected def equalsProperties: Iterable[Any]
 	
@@ -23,5 +24,9 @@ trait EqualsBy extends Equals
 	
 	override def hashCode() = equalsProperties.foldLeft(1)((result, property) => 31 * result + property.hashCode())
 	
-	override def equals(a: Any) = canEqual(a) && hashCode() == a.hashCode()
+	// Default implementation is: canEqual(a) && hashCode() == a.hashCode()
+	override def equals(a: Any) = a match {
+		case eb: EqualsBy => equalsProperties == eb.equalsProperties
+		case _ => false
+	}
 }

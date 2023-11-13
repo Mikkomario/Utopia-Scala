@@ -4,8 +4,7 @@ import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.terra.controller.coordinate.world.SphericalEarth
 import utopia.terra.model.CompassTravel
-import utopia.terra.model.world.WorldPoint
-import utopia.terra.model.world.grid.DoubleWorldPointOps
+import utopia.terra.model.world.{DoubleWorldPointOps, WorldPoint}
 
 /**
   * Common trait for world points in the Spherical world system that provide mathematical functions

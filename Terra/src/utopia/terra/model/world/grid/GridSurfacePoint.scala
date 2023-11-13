@@ -4,6 +4,7 @@ import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.world.GridArea
 import utopia.terra.model.angular.LatLong
 import utopia.terra.model.world.SurfacePoint
@@ -35,8 +36,8 @@ object GridSurfacePoint
 	{
 		override lazy val latLong: LatLong = grid.vectorToLatLong(vector)
 		
-		override def withAltitude(altitude: Distance): GridPoint =
-			GridPoint(Vector3D(vector.x, vector.y, grid.vectorLengthOf(altitude)))
+		override def withAltitude(altitude: Distance): AerialGridPoint = withAltitude(grid.vectorLengthOf(altitude))
+		override def withAltitude(altitude: Double): AerialGridPoint = AerialGridPoint(Vector3D(vector.x, vector.y, altitude))
 	}
 	
 	private class LatLongOnGrid(override val latLong: LatLong)(implicit override val grid: GridArea)
@@ -44,7 +45,8 @@ object GridSurfacePoint
 	{
 		override lazy val vector: Vector2D = grid.latLongToVector(latLong)
 		
-		override def withAltitude(altitude: Distance): GridPoint = GridPoint(latLong, altitude)
+		override def withAltitude(altitude: Distance): AerialGridPoint = AerialGridPoint(latLong, altitude)
+		override def withAltitude(altitude: Double): AerialGridPoint = AerialGridPoint(latLong, altitude)
 	}
 }
 
@@ -55,9 +57,13 @@ object GridSurfacePoint
   * @since 2.11.2023, v1.0.1
   */
 trait GridSurfacePoint
-	extends SurfacePoint[Vector2D, GridPoint] with GridPointOps[Vector2D, GridSurfacePoint]
+	extends GridPointOps[Vector2D, GridSurfacePoint, AerialGridPoint, GridSurfaceTravel]
+		with SurfacePoint[Vector2D, GridSurfacePoint, DoubleVector, AerialGridPoint, GridSurfaceTravel]
 {
 	override protected def at(location: HasDoubleDimensions): GridSurfacePoint =
 		GridSurfacePoint(Vector2D.from(location))
 	override protected def at(latLong: LatLong): GridSurfacePoint = GridSurfacePoint(latLong)
+	
+	override def to(target: GridSurfacePoint): GridSurfaceTravel = GridSurfaceTravel(this, target)
+	override def -(origin: GridSurfacePoint): GridSurfaceTravel = GridSurfaceTravel(origin, this)
 }

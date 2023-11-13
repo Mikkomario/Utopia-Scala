@@ -5,10 +5,10 @@ import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
-import utopia.terra.model.angular.LatLong
+import utopia.terra.model.angular.{LatLong, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.South
 import utopia.terra.model.world.WorldDistance
-import utopia.terra.model.world.circle.{CirclePoint, CircleSurfacePoint}
+import utopia.terra.model.world.circle.{AerialCirclePoint, CircleSurfacePoint}
 
 /**
  * A world view where the (real) north pole (i.e. the one under Polaris) lies at the center (0,0)
@@ -23,7 +23,7 @@ import utopia.terra.model.world.circle.{CirclePoint, CircleSurfacePoint}
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, CirclePoint]
+object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, AerialCirclePoint]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -31,13 +31,16 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 	  * Radius of the equator circle in this world view,
 	  * in vector coordinate system.
 	  */
-	val equatorVectorRadius = 100000.0
+	private val equatorVectorRadius = 100000.0
 	/**
 	  * Radius of the equator circle in this world view,
-	  * in "distance"
-	units
+	  * in "distance" units
 	*/
-	val equatorCircleRadius = GlobeMath.earthRadiusAtEquator * math.Pi / 2.0
+	private val equatorCircleRadius = GlobeMath.earthRadiusAtEquator * math.Pi / 2.0
+	/**
+	  * The radius of the equator
+	  */
+	val equatorRadius: WorldDistance = WorldDistance(equatorCircleRadius, equatorVectorRadius)(this)
 	
 	override val unitDistance = equatorCircleRadius / equatorVectorRadius
 	
@@ -45,10 +48,10 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 	// IMPLEMENTED  -------------------------
 	
 	override def apply(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
-	override def apply(latLong: LatLong, altitude: Distance): CirclePoint = CirclePoint(latLong, altitude)
+	override def apply(latLong: LatLong, altitude: Distance): AerialCirclePoint = AerialCirclePoint(latLong, altitude)
 	
 	override def surfaceVector(vector: Vector2D): CircleSurfacePoint = CircleSurfacePoint(vector)
-	override def aerialVector(vector: Vector3D): CirclePoint = CirclePoint(vector)
+	override def aerialVector(vector: Vector3D): AerialCirclePoint = AerialCirclePoint(vector)
 	
 	/**
 	  * @param latLong A latitude-longitude coordinate
@@ -81,7 +84,32 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, C
 	
 	// OTHER    ---------------------
 	
-	// TODO: Continue working on this once we have the absolute rotation class
-	def latitudeTravelToDistance(latitude: Rotation): WorldDistance =
-		distance(equatorVectorRadius * latitude.radians * 2.0 / math.Pi)
+	/**
+	  * Calculates the travel distance of a latitude shift
+	  * @param latitudeShift A shift in latitude coordinates
+	  * @return The distance traveled during that coordinate-shift.
+	  *         NB: Always positive.
+	  */
+	// Travel length (VL) = lat / 90 degrees * R
+	def latitudeTravelDistance(latitudeShift: NorthSouthRotation): WorldDistance =
+		distance(latitudeShift.absolute.quarters * equatorVectorRadius)
+	/**
+	  * @param southTravelDistance Amount of distance traveled towards the south
+	  * @return A latitude shift caused by that travel
+	  */
+	// Lat = VL * 90 degrees / R
+	def travelDistanceToLatitude(southTravelDistance: Double) =
+		South.quarters(southTravelDistance / equatorVectorRadius)
+	
+	/**
+	  * Calculates the east west circle radius at a specific latitude level
+	  * @param latitude Targeted latitude level
+	  * @return The radius of the east-to-west circle at that latitude level, where the circle origin lies
+	  *         at the north pole (i.e. 90 degrees north)
+	  */
+	def radiusAtLatitude(latitude: NorthSouthRotation): WorldDistance = {
+		// Latitude travel (0 degrees south) starts from the position of +90 degrees, when observed from the
+		// center of the circle (i.e. North 90 degrees)
+		latitudeTravelDistance(latitude + South.quarter)
+	}
 }

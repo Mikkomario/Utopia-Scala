@@ -53,11 +53,18 @@ trait RotationFactory[+R]
 	  * @return A new rotation
 	  */
 	def circles(circles: Double) = radians(circles * 2.0 * math.Pi)
+	/**
+	  * @param quarters The number of 90 degree quarters rotated
+	  * @return A new rotation
+	  */
+	def quarters(quarters: Double) = radians(quarters * 0.5 * math.Pi)
 	
 	/**
-	  * @param arcLength    Targeted arc length
+	  * @param arcLength    Targeted arc length (NB: May be negative)
 	  * @param circleRadius Radius of the applicable circle
-	  * @return Rotation that is required for producing the specified arc length over the specified travel radius
+	  * @return Rotation that is required for producing the specified arc length over the specified travel radius.
+	  *         The resulting rotation is negative / towards the opposite direction,
+	  *         if the specified arc length is negative.
 	  */
 	def forArcLength(arcLength: Double, circleRadius: Double) = {
 		// Whole circle diameter is 2*Pi*r. Length of the arc is (a / 2*Pi) * r, where a is the targeted angle

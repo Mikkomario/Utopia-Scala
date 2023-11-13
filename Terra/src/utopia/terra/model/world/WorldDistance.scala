@@ -1,7 +1,8 @@
 package utopia.terra.model.world
 
 import utopia.flow.operator.EqualsExtensions._
-import utopia.flow.operator.{ApproxEquals, Combinable, EqualsBy, LinearScalable}
+import utopia.flow.operator.SignOrZero.Neutral
+import utopia.flow.operator._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.measurement.Distance
 import utopia.terra.controller.coordinate.world.VectorDistanceConversion
@@ -10,31 +11,84 @@ import scala.language.implicitConversions
 
 object WorldDistance
 {
-	// OTHER    --------------------
+	// COMPUTED --------------------
 	
 	/**
-	  * @param distance The amount of "real world" distance travelled
+	  * @param conversion Implicit conversion to use in distance-altering functions
+	  * @return A zero length distance
+	  */
+	def zero(implicit conversion: VectorDistanceConversion): WorldDistance = new ZeroWorldDistance
+	
+	
+	// IMPLICIT --------------------
+	
+	/**
+	  * @param distance   The amount of "real world" distance travelled
 	  * @param conversion Implicit distance conversion to use
 	  * @return A new distance instance
 	  */
 	implicit def apply(distance: Distance)(implicit conversion: VectorDistanceConversion): WorldDistance =
 		new LazyWorldDistance(Lazy.initialized(distance), Lazy { conversion.vectorLengthOf(distance) })
 	/**
-	  * @param vectorDistance   The amount of vector distance travelled
-	  * @param conversion Implicit distance conversion to use
+	  * @param vectorDistance The amount of vector distance travelled
+	  * @param conversion     Implicit distance conversion to use
 	  * @return A new distance instance
 	  */
 	implicit def vector(vectorDistance: Double)(implicit conversion: VectorDistanceConversion): WorldDistance =
 		new LazyWorldDistance(Lazy { conversion.distanceOf(vectorDistance) }, Lazy.initialized(vectorDistance))
 	
+	/**
+	  * @param wd A world distance instance
+	  * @return The distance represented by the specified world distance
+	  */
+	implicit def autoUnwrapDistance(wd: WorldDistance): Distance = wd.distance
+	
+	
+	// OTHER    --------------------
+	
+	/**
+	  * @param distance Distance travelled in the "real world"
+	  * @param vectorLength Distance travelled in vector units
+	  * @param conversion Implicit distance conversion to use
+	  * @return A new distance instance
+	  */
+	def apply(distance: Distance, vectorLength: Double)(implicit conversion: VectorDistanceConversion): WorldDistance =
+		new _WorldDistance(distance, vectorLength)
+	
 	
 	// NESTED   --------------------
 	
-	private class LazyWorldDistance(d: Lazy[Distance], v: Lazy[Double])(implicit conversion: VectorDistanceConversion)
+	private class _WorldDistance(override val distance: Distance, override val vectorLength: Double)
+	                            (implicit override val conversion: VectorDistanceConversion)
 		extends WorldDistance
 	{
+		override def sign: SignOrZero = Sign.of(vectorLength)
+		override def isAboutZero: Boolean = vectorLength ~== 0.0
+		
+		override def +(amount: Double): WorldDistance =
+			new LazyWorldDistance(Lazy { distance + conversion.distanceOf(amount) },
+				Lazy.initialized(vectorLength + amount))
+		override def +(other: Distance): WorldDistance = new LazyWorldDistance(Lazy.initialized(distance + other),
+			Lazy { vectorLength + conversion.vectorLengthOf(other) })
+		
+		override def *(mod: Double): WorldDistance = new _WorldDistance(distance * mod, vectorLength * mod)
+	}
+	
+	private class LazyWorldDistance(d: Lazy[Distance], v: Lazy[Double])
+	                               (implicit override val conversion: VectorDistanceConversion)
+		extends WorldDistance
+	{
+		// ATTRIBUTES   ----------------------
+		
+		override lazy val sign: SignOrZero = withEither(Sign.of) { _.sign }
+		
+		
+		// IMPLEMENTED  ----------------------
+		
 		override def distance: Distance = d.value
 		override def vectorLength: Double = v.value
+		
+		override def isAboutZero: Boolean = withEither { _ ~== 0.0 } { _.isAboutZero }
 		
 		override def +(amount: Double): WorldDistance =
 			new LazyWorldDistance(Lazy { distance + conversion.distanceOf(amount) }, v.mapCurrent { _ + amount })
@@ -43,6 +97,32 @@ object WorldDistance
 		
 		override def *(mod: Double): WorldDistance =
 			new LazyWorldDistance(d.mapCurrent { _ * mod }, v.mapCurrent { _ * mod })
+			
+		
+		// OTHER    -------------------------
+		
+		private def withEither[A](vf: Double => A)(vd: Distance => A) = v.current match {
+			case Some(length) => vf(length)
+			case None =>
+				d.current match {
+					case Some(distance) => vd(distance)
+					case None => vf(vectorLength)
+				}
+		}
+	}
+	
+	private class ZeroWorldDistance(implicit override val conversion: VectorDistanceConversion) extends WorldDistance
+	{
+		override def distance: Distance = Distance.zero
+		override def vectorLength: Double = 0.0
+		
+		override def sign: SignOrZero = Neutral
+		override def isAboutZero: Boolean = true
+		
+		override def +(other: Distance): WorldDistance = WorldDistance(other)
+		override def +(amount: Double): WorldDistance = WorldDistance.vector(amount)
+		
+		override def *(mod: Double): WorldDistance = this
 	}
 }
 
@@ -52,8 +132,9 @@ object WorldDistance
   * @author Mikko Hilpinen
   * @since 10.11.2023, v1.1
   */
-trait WorldDistance extends EqualsBy with ApproxEquals[WorldDistance]
-	with Combinable[Distance, WorldDistance] with LinearScalable[WorldDistance]
+trait WorldDistance
+	extends EqualsBy with CanBeAboutZero[WorldDistance, WorldDistance] with Combinable[Distance, WorldDistance]
+		with LinearScalable[WorldDistance] with SignedOrZero[WorldDistance]
 {
 	// ABSTRACT ----------------------
 	
@@ -67,6 +148,11 @@ trait WorldDistance extends EqualsBy with ApproxEquals[WorldDistance]
 	def vectorLength: Double
 	
 	/**
+	  * @return Conversion algorithm used for converting between vector- and real world distances
+	  */
+	protected implicit def conversion: VectorDistanceConversion
+	
+	/**
 	  * @param amount Amount of distance to add
 	  * @return Copy of this distance with the specified amount added
 	  */
@@ -76,22 +162,29 @@ trait WorldDistance extends EqualsBy with ApproxEquals[WorldDistance]
 	// IMPLEMENTED  ------------------
 	
 	override def self: WorldDistance = this
+	override def zero: WorldDistance = WorldDistance.zero
 	
 	override protected def equalsProperties: Iterable[Any] = Vector(vectorLength)
 	
-	override def ~==(other: WorldDistance): Boolean = vectorLength ~== other.vectorLength
+	override def ~==(other: WorldDistance): Boolean = doubleEquals(vectorLength, other.vectorLength)
 	
 	
 	// OTHER    ----------------------
+	
+	/**
+	  * @param vectorDistance A vector distance
+	  * @return Whether this distance is somewhat equal to the specified vector distance
+	  */
+	def ~==(vectorDistance: Double): Boolean = doubleEquals(vectorLength, vectorDistance)
+	/**
+	  * @param distance A distance
+	  * @return Whether this distance is somewhat equal to the specified distance
+	  */
+	def ~==(distance: Distance): Boolean = this.distance ~== distance
 	
 	/**
 	  * @param amount Amount of distance to subtract
 	  * @return Copy of this distance with the specified amount subtracted
 	  */
 	def -(amount: Double) = this + (-amount)
-	/**
-	  * @param amount Amount of distance to subtract
-	  * @return Copy of this distance with the specified amount subtracted
-	  */
-	def -(amount: Distance) = this + (-amount)
 }
