@@ -7,10 +7,11 @@ import utopia.paradigm.angular.{BidirectionalRotationFactory, DirectionalRotatio
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.enumeration.{Axis2D, RotationDirection}
-import utopia.paradigm.measurement.Distance
+import utopia.terra.controller.coordinate.world.VectorDistanceConversion
 import utopia.terra.model.CompassTravel
 import utopia.terra.model.angular.{CompassRotation, EastWestRotation, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.CompassAxis
+import utopia.terra.model.world.WorldDistance
 
 /**
  * Common trait for the four compass directions: NORTH, SOUTH, EAST and WEST
@@ -48,7 +49,7 @@ sealed trait CompassDirection extends BinarySigned[CompassDirection] with Rotati
 	  * @param distance Travel distance
 	  * @return Specified length of travel towards this direction
 	  */
-	def apply(distance: Distance) = CompassTravel(axis, sign * distance)
+	def apply(distance: WorldDistance)(implicit worldView: VectorDistanceConversion) = CompassTravel(this, distance)
 }
 
 object CompassDirection

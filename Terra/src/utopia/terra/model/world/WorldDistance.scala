@@ -80,7 +80,7 @@ object WorldDistance
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override lazy val sign: SignOrZero = withEither(Sign.of) { _.sign }
+		override lazy val sign: SignOrZero = withEither { Sign.of(_) } { _.sign }
 		
 		
 		// IMPLEMENTED  ----------------------
@@ -165,6 +165,8 @@ trait WorldDistance
 	override def zero: WorldDistance = WorldDistance.zero
 	
 	override protected def equalsProperties: Iterable[Any] = Vector(vectorLength)
+	
+	override def toString = distance.toString
 	
 	override def ~==(other: WorldDistance): Boolean = doubleEquals(vectorLength, other.vectorLength)
 	

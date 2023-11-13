@@ -43,7 +43,7 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 	  * @return Copy of this rotation without direction information.
 	  *         The resulting rotation amount may be negative.
 	  */
-	def unidirectional = absolute * direction.sign
+	def unidirectional = direction.sign * absolute
 	
 	/**
 	 * This rotation as an angle from origin (right)

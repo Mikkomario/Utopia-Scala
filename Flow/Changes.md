@@ -36,6 +36,8 @@
   - Added a couple of new regular expression values
 - **Seq** (**CollectionExtensions**)
   - Added `.appendIfDistinct(...)`
+- **Sign**
+  - Added new `*` variant
 - **Try** (**CollectionExtensions**)
   - Added `.failWith(Throwable)` and `.failIf(=> Option[Throwable])`
 ### Other changes

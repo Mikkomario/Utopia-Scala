@@ -8,7 +8,7 @@ import utopia.terra.model.world.WorldDistance
   * @author Mikko Hilpinen
   * @since 10.11.2023, v1.1
   */
-case class AerialGridTravel(start: AerialGridPoint, end: AerialGridPoint) extends GridTravel[AerialGridPoint, Vector3D]
+case class AerialGridTravel(start: AerialGridPoint, end: AerialGridPoint) extends GridTravel[Vector3D, AerialGridPoint]
 {
 	override def altitudeIncrease: WorldDistance = end.altitude - start.altitude
 }

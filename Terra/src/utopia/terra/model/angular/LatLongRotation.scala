@@ -2,6 +2,7 @@ package utopia.terra.model.angular
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.LinearScalable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.template.{DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}
@@ -97,7 +98,7 @@ object LatLongRotation
   */
 case class LatLongRotation(northSouth: NorthSouthRotation = NorthSouthRotation.zero,
                            eastWest: EastWestRotation = EastWestRotation.zero)
-	extends LatLongLike[LatLongRotation]
+	extends LatLongLike[LatLongRotation] with LinearScalable[LatLongRotation]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -119,6 +120,8 @@ case class LatLongRotation(northSouth: NorthSouthRotation = NorthSouthRotation.z
 	override def self: LatLongRotation = this
 	
 	override def withDimensions(newDimensions: Dimensions[Rotation]): LatLongRotation = LatLongRotation(newDimensions)
+	
+	override def *(mod: Double): LatLongRotation = LatLongRotation(northSouth * mod, eastWest * mod)
 	
 	
 	// OTHER    ---------------------------

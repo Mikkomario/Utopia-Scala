@@ -65,10 +65,10 @@ object AerialGridPoint
   */
 trait AerialGridPoint
 	extends AerialPoint[Vector3D, AerialGridPoint, DoubleVector, GridSurfacePoint, AerialGridTravel]
-		with GridPointOps[Vector3D, AerialGridPoint, GridSurfacePoint, AerialGridTravel]
+		with GridPointOps[Vector3D, AerialGridPoint, AerialGridPoint, AerialGridTravel]
 {
 	override protected def at(location: HasDoubleDimensions): AerialGridPoint = AerialGridPoint(Vector3D.from(location))
-	override protected def at(latLong: LatLong): AerialGridPoint = AerialGridPoint(latLong, altitude.distance)
+	override def at(latLong: LatLong): AerialGridPoint = AerialGridPoint(latLong, altitude.distance)
 	
 	override def to(target: AerialGridPoint): AerialGridTravel = AerialGridTravel(this, target)
 	override def -(origin: AerialGridPoint): AerialGridTravel = AerialGridTravel(origin, this)

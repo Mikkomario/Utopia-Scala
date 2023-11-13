@@ -1,22 +1,22 @@
 package utopia.terra.model.world.grid
 
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorLike}
-import utopia.terra.controller.coordinate.world.GridArea
+import utopia.terra.controller.coordinate.world.{GridArea, VectorDistanceConversion}
 import utopia.terra.model.world.Travel
 
 /**
   * Represents travel on a grid-based world view system
   * @author Mikko Hilpinen
   * @since 10.11.2023, v1.1
-  * @tparam P Type of grid points used
   * @tparam V Type of vector representations used
+  * @tparam P Type of grid points used
   */
-trait GridTravel[+P <: GridPointOps[V, P, _, _], V <: DoubleVectorLike[V] with DoubleVector]
+trait GridTravel[V <: DoubleVectorLike[V] with DoubleVector, P <: GridPointOps[V, P, _, _]]
 	extends Travel[Double, P, V, DoubleVector]
 {
 	// IMPLEMENTED  -----------------
 	
-	override protected implicit def worldView: GridArea = start.grid
+	override protected implicit def worldView: VectorDistanceConversion = GridArea
 	
 	override def arcingDistance = linearDistance
 	

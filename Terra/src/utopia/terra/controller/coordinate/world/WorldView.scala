@@ -13,7 +13,7 @@ import utopia.terra.model.world.WorldDistance
  * @tparam Aerial Aerial (3D) point type
  */
 trait WorldView[V2D, -V3D, +Surface, +Aerial]
-	extends LatLongToWorldPoint[Surface, Aerial] with VectorToWorldPoint[V2D, V3D, Surface, Aerial]
+	extends WorldPointFactory[V2D, V3D, Surface, Aerial]
 		with VectorDistanceConversion with LatLongFromVectorFactory[V2D]
 		with VectorFromLatLongFactory[V2D]
 {

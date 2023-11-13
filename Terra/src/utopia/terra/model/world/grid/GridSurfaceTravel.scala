@@ -11,7 +11,7 @@ import utopia.terra.model.world.WorldDistance
   * @param end The point where this travel ends at
   */
 case class GridSurfaceTravel(start: GridSurfacePoint, end: GridSurfacePoint)
-	extends GridTravel[GridSurfacePoint, Vector2D]
+	extends GridTravel[Vector2D, GridSurfacePoint]
 {
 	override def altitudeIncrease: WorldDistance = WorldDistance.zero
 }

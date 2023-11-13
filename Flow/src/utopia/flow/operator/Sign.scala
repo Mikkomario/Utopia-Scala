@@ -41,6 +41,11 @@ sealed trait SignOrZero
 	  *             - 0 if Neutral
 	  */
 	def *[N](num: N)(implicit n: Numeric[N]): N
+	/**
+	  * @param item Item to multiply by this sign
+	  * @return A modified copy of the specified item
+	  */
+	def *[A](item: SignedOrZero[A]): A
 	
 	
 	// COMPUTED ---------------------------
@@ -129,6 +134,7 @@ object SignOrZero
 		}
 		
 		override def *[N](num: N)(implicit n: Numeric[N]) = n.zero
+		override def *[A](item: SignedOrZero[A]): A = item.zero
 	}
 }
 
@@ -159,7 +165,6 @@ sealed trait Sign extends SignOrZero with Reversible[Sign]
 	override def opposite: Sign = -this
 	override def binary: Option[Sign] = Some(this)
 	
-	override def *[N](num: N)(implicit n: Numeric[N]): N = if (isPositive) num else n.negate(num)
 	override def *(sign: Sign): Sign = sign match {
 		case Positive => this
 		case Negative => opposite
@@ -269,6 +274,9 @@ object Sign
 			case Positive => 0
 			case _ => 1
 		}
+		
+		override def *[N](num: N)(implicit n: Numeric[N]): N = num
+		override def *[A](item: SignedOrZero[A]): A = item.self
 	}
 	/**
 	  * Negative sign (-). AKA negative direction (usually left / up / counterclockwise)
@@ -286,5 +294,8 @@ object Sign
 			case Negative => 0
 			case _ => -1
 		}
+		
+		override def *[N](num: N)(implicit n: Numeric[N]): N = n.negate(num)
+		override def *[A](item: SignedOrZero[A]): A = -item
 	}
 }

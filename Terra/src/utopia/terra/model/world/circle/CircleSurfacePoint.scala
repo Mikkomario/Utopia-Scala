@@ -69,7 +69,7 @@ trait CircleSurfacePoint
 	extends SurfacePoint[Vector2D, CircleSurfacePoint, DoubleVector, AerialCirclePoint, CircleSurfaceTravel]
 		with CirclePointOps[Vector2D, CircleSurfacePoint, AerialCirclePoint, CircleSurfaceTravel] with EqualsBy
 {
-	override protected def at(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
+	override def at(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
 	override protected def at(location: HasDoubleDimensions): CircleSurfacePoint =
 		CircleSurfacePoint(Vector2D.from(location))
 	

@@ -1,10 +1,13 @@
 package utopia.terra.controller.coordinate
 
+import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.measurement.Distance
-import utopia.paradigm.measurement.DistanceUnit.KiloMeter
+import utopia.paradigm.measurement.DistanceUnit.{KiloMeter, Meter}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.terra.model.angular.NorthSouthRotation
+import utopia.terra.controller.coordinate.world.VectorDistanceConversion
+import utopia.terra.model.angular.{LatLong, NorthSouthRotation}
+import utopia.terra.model.world.WorldDistance
 
 /**
  * Contains constants relating to geometric mathematics concerning the Earth.
@@ -59,5 +62,56 @@ object GlobeMath
 		// While Y is parallel to the "pole" vector, going up to north
 		val xz = Vector2D.lenDir(globeVectorRadius, latitude.toAngle)
 		xz.xyPair
+	}
+	
+	/**
+	  * Calculates the haversine (i.e. arcing) distance between two aerial points
+	  * @param points Surface point locations to compare
+	  * @param altitudes Altitudes to compare
+	  * @param radius Radius to the mean sea level / 0 altitude
+	  * @param conversion Implicit conversion for converting distances into world distances
+	  * @return Distance between the two points
+	  */
+	def haversineDistanceBetween(points: Pair[LatLong], altitudes: Pair[WorldDistance], radius: WorldDistance)
+	                            (implicit conversion: VectorDistanceConversion): WorldDistance =
+	{
+		// Uses a mean radius, giving a greater emphasis on the higher radius value
+		// (2a + b) / 3, where a is the higher radius and b is the lower radius
+		val meanRadius = radius + (altitudes.first * 2 + altitudes.second) / 3.0
+		// Calculates the haversine (arc) distance between the two points at the mean radius
+		val arcLength = haversineDistanceBetween(points, meanRadius)
+		
+		// Adds slight accounting for the vertical travel, also
+		// Uses the Pythagorean theorem
+		val verticalDistance = altitudes.merge { _ - _ }.abs
+		
+		if (verticalDistance.isZero)
+			arcLength
+		else if (arcLength.isZero)
+			verticalDistance
+		else {
+			import math._
+			Distance(sqrt(pow(arcLength.toM, 2) + pow(verticalDistance.toM, 2)), Meter)
+		}
+	}
+	/**
+	  * Calculates the haversine (i.e. arcing) distance between two surface points over a perfectly spherical earth
+	  * @param points The points to compare
+	  * @param radius Assumed earth radius
+	  * @return The travel distance between the two points
+	  */
+	def haversineDistanceBetween(points: Pair[LatLong], radius: WorldDistance) = {
+		import math._
+		
+		val latitudes = points.map { _.latitude.unidirectional.radians }
+		val longitudes = points.map { _.longitude.radians }
+		
+		val deltaLat = latitudes.merge { _ - _ }
+		val deltaLon = longitudes.merge { _ - _ }
+		
+		val k = pow(sin(deltaLat / 2), 2) + latitudes.map(cos).merge { _ * _ } * pow(sin(deltaLon / 2), 2)
+		val c = 2 * atan2(sqrt(k), sqrt(1 - k))
+		
+		radius * c
 	}
 }

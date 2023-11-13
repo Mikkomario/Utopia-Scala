@@ -107,7 +107,7 @@ trait AerialCirclePoint
 	extends AerialPoint[Vector3D, AerialCirclePoint, DoubleVector, CircleSurfacePoint, AerialCircleTravel]
 		with CirclePointOps[Vector3D, AerialCirclePoint, AerialCirclePoint, AerialCircleTravel] with EqualsBy
 {
-	override protected def at(latLong: LatLong): AerialCirclePoint = AerialCirclePoint(CircleSurfacePoint(latLong), altitude)
+	override def at(latLong: LatLong): AerialCirclePoint = AerialCirclePoint(CircleSurfacePoint(latLong), altitude)
 	override protected def at(location: HasDoubleDimensions): AerialCirclePoint = AerialCirclePoint(Vector3D.from(location))
 	
 	override def to(target: AerialCirclePoint): AerialCircleTravel = AerialCircleTravel(this, target)

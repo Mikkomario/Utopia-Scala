@@ -5,8 +5,31 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape1d.Dimension
 import utopia.terra.controller.coordinate.world.VectorDistanceConversion
+import utopia.terra.model.enumeration.CompassDirection
 import utopia.terra.model.enumeration.CompassDirection.CompassAxis
 import utopia.terra.model.world.WorldDistance
+
+object CompassTravel
+{
+	/**
+	  * Creates a new compass travel instance
+	  * @param axis Axis along which the travel occurs
+	  * @param distance Distance traveled
+	  * @param worldView Implicit world view used in distance conversions
+	  * @return A new travel instance
+	  */
+	def apply(axis: CompassAxis, distance: WorldDistance)(implicit worldView: VectorDistanceConversion) =
+		new CompassTravel(axis, distance)(worldView)
+	/**
+	  * @param direction Targeted direction
+	  * @param distance Distance traveled towards the specified direction
+	  * @param worldView Implicit world view used in distance conversions
+	  * @return A new travel instance
+	  */
+	def apply(direction: CompassDirection, distance: WorldDistance)
+	         (implicit worldView: VectorDistanceConversion): CompassTravel =
+		apply(direction.axis, distance * direction.sign)
+}
 
 /**
   * Represents a travel distance along a specific compass axis.
@@ -31,6 +54,7 @@ class CompassTravel(val compassAxis: CompassAxis, val distance: WorldDistance)
 	
 	override def zero: CompassTravel = new CompassTravel(compassAxis, WorldDistance.zero)
 	override def isAboutZero: Boolean = distance.isAboutZero
+	override def nonZero = distance.nonZero
 	
 	override def ~==(other: CompassTravel): Boolean = compassAxis == other.compassAxis && (distance ~== other.distance)
 	

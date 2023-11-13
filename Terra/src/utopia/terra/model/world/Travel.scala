@@ -61,6 +61,15 @@ trait Travel[D, P <: WorldPointOps[V, P, VI, _, _], +V <: NumericVectorLike[D, V
 	def rotation: LatLongRotation = end.latLong - start.latLong
 	
 	/**
+	  * @return Whether this travel doesn't involve any altitude change
+	  */
+	def isSurfaceTravel = altitudeIncrease.isZero
+	/**
+	  * @return Whether this travel involves altitude change
+	  */
+	def isAerialTravel = !isSurfaceTravel
+	
+	/**
 	  * @return The length of this travel in "real world" distance,
 	  *         assuming linear travel
 	  */

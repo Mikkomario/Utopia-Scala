@@ -1,8 +1,8 @@
 package utopia.terra.test
 
 import utopia.flow.operator.Use
+import utopia.paradigm.angular.Angle
 import utopia.paradigm.measurement.DistanceExtensions._
-import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.terra.controller.coordinate.world.GridArea
 import utopia.terra.model.angular.LatLong
@@ -64,7 +64,7 @@ object GridAreaTest extends App
 		val helsinki = GridSurfacePoint(helsinkiLatLong)
 		val lahti = GridSurfacePoint(LatLong.degrees(60.9827, 25.6615))
 		
-		println(s"Distance from Helsinki to Lahti is ${ lahti.linearDistanceFrom(helsinki) }")
+		println(s"Distance from Helsinki to Lahti is ${ lahti.to(helsinki).linearDistance }")
 		
 		val aerialLahti = lahti.withAltitude(96.km)
 		
@@ -77,6 +77,6 @@ object GridAreaTest extends App
 		val cloncurry = GridSurfacePoint(cloncurryLatLong)
 		val richmond = GridSurfacePoint(LatLong.degrees(-20.7375, 143.1290))
 		
-		println(s"Distance from Cloncurry to Richmond is ${ cloncurry.linearDistanceFrom(richmond) }")
+		println(s"Distance from Cloncurry to Richmond is ${ cloncurry.to(richmond).linearDistance }")
 	}
 }

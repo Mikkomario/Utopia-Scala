@@ -1,7 +1,6 @@
 package utopia.terra.controller.coordinate.world
 
 import utopia.paradigm.angular.Rotation
-import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
@@ -37,18 +36,22 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, A
 	  * in "distance" units
 	*/
 	private val equatorCircleRadius = GlobeMath.earthRadiusAtEquator * math.Pi / 2.0
+	
+	override val unitDistance = equatorCircleRadius / equatorVectorRadius
+	
 	/**
 	  * The radius of the equator
 	  */
 	val equatorRadius: WorldDistance = WorldDistance(equatorCircleRadius, equatorVectorRadius)(this)
 	
-	override val unitDistance = equatorCircleRadius / equatorVectorRadius
-	
 	
 	// IMPLEMENTED  -------------------------
 	
+	override protected implicit def worldView: VectorDistanceConversion = this
+	
 	override def apply(latLong: LatLong): CircleSurfacePoint = CircleSurfacePoint(latLong)
-	override def apply(latLong: LatLong, altitude: Distance): AerialCirclePoint = AerialCirclePoint(latLong, altitude)
+	override def apply(latLong: LatLong, altitude: WorldDistance): AerialCirclePoint =
+		AerialCirclePoint(latLong, altitude)
 	
 	override def surfaceVector(vector: Vector2D): CircleSurfacePoint = CircleSurfacePoint(vector)
 	override def aerialVector(vector: Vector3D): AerialCirclePoint = AerialCirclePoint(vector)

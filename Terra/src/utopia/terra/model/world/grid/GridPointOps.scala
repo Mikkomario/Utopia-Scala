@@ -21,7 +21,7 @@ trait GridPointOps[+V <: DoubleVectorLike[V], P, +Aerial, +T] extends DoubleWorl
 	/**
 	  * @return The grid system used to transform coordinates
 	  */
-	implicit def grid: GridArea
+	implicit protected def grid: GridArea
 	
 	
 	// IMPLEMENTED  ------------------

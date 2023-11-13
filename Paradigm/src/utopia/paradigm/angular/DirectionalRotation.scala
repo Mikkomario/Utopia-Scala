@@ -1,5 +1,6 @@
 package utopia.paradigm.angular
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.{SelfComparable, Sign}
@@ -40,12 +41,12 @@ object DirectionalRotation extends BidirectionalRotationFactory[RotationDirectio
 	  * @param rotations A number of rotations
 	  * @return An average between the rotations
 	  */
-	def average(rotations: Iterable[DirectionalRotation]): DirectionalRotation = {
-		if (rotations.isEmpty)
-			clockwise.zero
-		else
-			clockwise.radians(rotations.map { _.clockwise.radians }.sum / rotations.size)
-	}
+	def average(rotations: Iterable[DirectionalRotation]): DirectionalRotation =
+		rotations.emptyOneOrMany match {
+			case None => clockwise.zero
+			case Some(Left(rotation)) => rotation
+			case Some(Right(rotations)) => rotations.reduce { _ + _ } / rotations.size
+		}
 }
 
 /**

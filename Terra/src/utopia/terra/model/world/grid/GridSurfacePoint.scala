@@ -62,7 +62,7 @@ trait GridSurfacePoint
 {
 	override protected def at(location: HasDoubleDimensions): GridSurfacePoint =
 		GridSurfacePoint(Vector2D.from(location))
-	override protected def at(latLong: LatLong): GridSurfacePoint = GridSurfacePoint(latLong)
+	override def at(latLong: LatLong): GridSurfacePoint = GridSurfacePoint(latLong)
 	
 	override def to(target: GridSurfacePoint): GridSurfaceTravel = GridSurfaceTravel(this, target)
 	override def -(origin: GridSurfacePoint): GridSurfaceTravel = GridSurfaceTravel(origin, this)

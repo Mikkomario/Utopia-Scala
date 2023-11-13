@@ -6,9 +6,10 @@ import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.{LatLong, LatLongRotation, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth, South}
+import utopia.terra.model.world.WorldDistance
 import utopia.terra.model.world.grid.{AerialGridPoint, GridSurfacePoint}
 
-object GridArea
+object GridArea extends VectorDistanceConversion
 {
 	/**
 	  * The vector length distance covered by one degree of travel along the latitude circle (southward)
@@ -22,6 +23,11 @@ object GridArea
 	  * The assumed (mean) radius of the earth sphere in vector distance units
 	  */
 	val globeVectorRadius = globeVectorCircumference / (math.Pi * 2.0)
+	
+	
+	// Unit distance matches 0.001 degrees of travel along the north-to-south axis
+	// I.e. 100 units = 1 degree of travel
+	override val unitDistance: Distance = GlobeMath.meanCircumference / 360.0 / oneDegreeLatitudeArcVectorLength
 }
 
 /**
@@ -42,18 +48,18 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 	
 	// Unit distance matches 0.001 degrees of travel along the north-to-south axis
 	// I.e. 100 units = 1 degree of travel
-	override val unitDistance: Distance = GlobeMath.meanCircumference / 360.0 / oneDegreeLatitudeArcVectorLength
+	override val unitDistance: Distance = GridArea.unitDistance
 	
 	// Radius of the east-to-west circle at the origin latitude level, in vector space
 	private val eastWestRadiusAtOrigin = GlobeMath.eastWestRadiusAtLatitude(origin.latitude, globeVectorRadius).first
 	
-	private implicit def me: GridArea = this
+	protected override implicit def worldView: GridArea = this
 	
 	
 	// IMPLEMENTED  ------------------
 	
 	override def apply(latLong: LatLong) = GridSurfacePoint(latLong)
-	override def apply(latLong: LatLong, altitude: Distance) = AerialGridPoint(latLong, altitude)
+	override def apply(latLong: LatLong, altitude: WorldDistance) = AerialGridPoint(latLong, altitude)
 	
 	override def aerialVector(vector: Vector3D): AerialGridPoint = AerialGridPoint(vector)
 	override def surfaceVector(vector: Vector2D): GridSurfacePoint = GridSurfacePoint(vector)

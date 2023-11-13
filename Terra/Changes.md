@@ -3,10 +3,18 @@
 ## v1.1 (in development)
 TODO: Document Rotation changes, WorldPointOps changes etc.
 ### Breaking changes
+- Greatly refactored most of the model classes
+  - Renamed **CirclePoint** to **AerialCirclePoint**
+  - Removed **SphereSurfacePoint** class altogether
+  - **CompassRotation** classes now extend the new **DirectionalRotationLike** trait instead of wrapping a 
+    **Rotation** instance
+  - Rotations are now constructed using new factory classes, 
+    and **RotationDirection** is now only applicable for east-to-west rotation.
+  - Both **LatLong** and **LatLongRotation** now extend **Dimensional[Rotation]** and share a common parent trait
+  - **Distance** and **Double** (vector distance) are now largely replaced with the new **WorldDistance** class
+  - Travel distance calculation is now performed in **Travel** classes, not directly in the **Ops** classes
 - Changed `CircleOfEarth.unitDistance` in order to match the Azimuthal Equidistant projection 
 - **WorldView** now extends two new traits: **VectorFromLatLongFactory** and **LatLongFromVectorFactory**
-- **CompassDirection**`.degrees(Double)` now returns a **CompassRotation** instance instead of a **Rotation** instance
-  - This shouldn't cause too much breaking, since there's an implicit conversion from **CompassRotation** to **Rotation**
 ### Bugfixes
 - Bugfixes to **CircleOfEarth** vector and latitude-longitude conversions
 ### New features
