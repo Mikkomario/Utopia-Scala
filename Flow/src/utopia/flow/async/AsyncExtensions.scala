@@ -1,13 +1,13 @@
 package utopia.flow.async
 
-import utopia.flow.async.process.{Wait, WaitTarget, WaitUtils}
+import utopia.flow.async.process.{Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.TryCatch
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
@@ -103,36 +103,85 @@ object AsyncExtensions
 		def current = currentResult.flatMap { _.toOption }
 		
 		/**
+		  * @param other Another future
+		  * @param exc Implicit execution context
+		  * @tparam B Type of the result in the other future
+		  * @return Future that resolves once either of these futures complete successfully.
+		  *         If the result is acquired from this future, it is Left, otherwise it is Right.
+		  *         If both futures fail, this resulting future yields a failure, also.
+		  */
+		def or[B](other: => Future[B])(implicit exc: ExecutionContext) = {
+			lazy val o = other
+			// Case: Left future already completed => Returns it
+			if (f.isSuccess)
+				f.map { Left(_) }
+			// Case: Right future already completed => Returns it
+			else if (o.isSuccess)
+				o.map { Right(_) }
+			// Case: Neither future completed yet => Waits
+			else
+				_mergeWith(o) { (left, right) =>
+					left match {
+						case Some(leftResult) =>
+							leftResult match {
+								// Case: Left future succeeded => Returns left
+								case Success(left) => Some(Left(left))
+								case Failure(error) =>
+									right.map {
+										// Case: Left future failed but right succeeded => Returns right
+										case Success(right) => Right(right)
+										// Case: Both futures failed => Throws (i.e. yields a failed future)
+										case Failure(_) => throw error
+									}
+							}
+						case None =>
+							right match {
+								// Case: Right future succeeded => Returns right
+								case Some(Success(right)) => Some(Right(right))
+								// Case: Left future pending while right future pending or failed => Waits longer
+								case _ => None
+							}
+					}
+				}
+		}
+		/**
 		 * Makes this future "race" with another future so that only the earliest result is returned
 		 * @param other Another future
 		 * @param exc Execution context (implicit)
 		 * @tparam B Type of return value
-		 * @return A future for the first completion of these two futures
+		 * @return A future for the first completion of these two futures.
+		  *         The resulting future will fail if both of these futures fail.
 		 */
-		def raceWith[B >: A](other: Future[B])(implicit exc: ExecutionContext) = {
-			if (f.isCompleted)
+		def raceWith[B >: A](other: => Future[B])(implicit exc: ExecutionContext): Future[B] = {
+			lazy val o = other
+			// Case: This already completed => Returns this
+			if (f.isSuccess)
 				f
-			else if (other.isCompleted)
-				other
+			// Case: Other already completed => Returns the other
+			else if (o.isSuccess)
+				o
+			// Case: Neither completed => Waits
 			else {
-				Future {
-					val resultPointer = VolatileOption[B]()
-					val wait = new Wait(WaitTarget.UntilNotified)
-					
-					// Both futures try to set the pointer and end the wait
-					f.foreach { r =>
-						resultPointer.setOneIfEmpty(r)
-						wait.stop()
-					}
-					other.foreach { r =>
-						resultPointer.setOneIfEmpty(r)
-						wait.stop()
-					}
-					
-					// Waits until either future completes
-					wait.run()
-					resultPointer.value.getOrElse {
-						throw new InterruptedException("Wait was interrupted before either future resolved")
+				_mergeWith(o) { (a, b) =>
+					a match {
+						case Some(resultA) =>
+							resultA match {
+								// Case: This succeeded => Returns this
+								case Success(a) => Some(a)
+								case Failure(error) =>
+									b.map {
+										// Case: This failed but other succeeded => Returns other
+										case Success(b) => b
+										// Case: Both failed => Throws
+										case Failure(_) => throw error
+									}
+							}
+						case None =>
+							b match {
+								// Case: Other succeeded => Returns other
+								case Some(Success(b)) => Some(b)
+								case _ => None
+							}
 					}
 				}
 			}
@@ -150,6 +199,25 @@ object AsyncExtensions
 				f
 			else
 				f.zipWith(another) { (result, _) => result }
+		}
+		
+		// Assumes that neither of these futures has completed yet (handle those cases separately)
+		// tryJoin should throw if the resulting future should fail
+		private def _mergeWith[B, R](other: Future[B])(tryJoin: (Option[Try[A]], Option[Try[B]]) => Option[R])
+		                            (implicit exc: ExecutionContext) =
+		{
+			// Pointer that collects the results of both futures, once they arrive
+			val resultsPointer = Volatile[(Option[Try[A]], Option[Try[B]])](None -> None)
+			// Completes the pointer asynchronously
+			f.onComplete { result1 =>
+				resultsPointer.update { case (_, otherResult) => Some(result1) -> otherResult }
+			}
+			other.onComplete { result2 =>
+				resultsPointer.update { case (otherResult, _) => otherResult -> Some(result2) }
+			}
+			
+			// Completes the future once either future successfully completes, or once both have failed
+			resultsPointer.findMapFuture { case (left, right) => tryJoin(left, right) }
 		}
 	}
 	

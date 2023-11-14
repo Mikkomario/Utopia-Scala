@@ -17,6 +17,7 @@
 ### New Features
 - Added file-related utility methods under **FileUtils**
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
+- Added new **TwoThreadBuffer** class for buffered parallel push & pull operations
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
 - Added **Use** object for providing scope-specific (implicit) access to certain values
@@ -24,6 +25,8 @@
 ### New methods
 - **CompoundingBuilder**
   - Added `.popAll()`
+- **Future** (**AsyncExtensions**)
+  - Added `.or(Future)`
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.foreachWhile(=> Boolean)(...)`
 - **Iterator** (**CollectionExtensions**)
@@ -46,6 +49,8 @@
   - `~==` checks whether the two paths target the same file
   - `.isEmpty` checks whether the targeted directory is empty
     - Returns false for existing regular files
+- **Future**`.raceWith(Future)` now handles situations where both futures fail
+- Added `.toString` implementations to **ComparisonOperator**
 - Scala version updated to 2.13.12
 
 ## v2.2 - 27.09.2023

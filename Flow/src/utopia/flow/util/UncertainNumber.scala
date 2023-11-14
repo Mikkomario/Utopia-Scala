@@ -669,6 +669,8 @@ object UncertainNumber
 				if (myComparison(other, threshold)) {
 					// Case: The other number lies exactly at the edge of this range =>
 					// Yields a certain value for non-inclusive operators
+					// FIXME: (> 1) >= 2 yields false at this time.
+					//  This is because the current logic is based around doubles, where (e.g. 1 < 1.1 < 2).
 					if (myComparison.includesEqual && other == threshold) {
 						if (myComparison.requiredDirection == comparison.requiredDirection) {
 							if (comparison.includesEqual)

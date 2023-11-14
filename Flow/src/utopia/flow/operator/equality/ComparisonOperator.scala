@@ -95,6 +95,8 @@ object ComparisonOperator
 		override def unary_! : ComparisonOperator = Inequality
 		override def unary_- : ComparisonOperator = this
 		
+		override def toString = "="
+		
 		override def apply[A](a: A, b: A)(implicit ord: Ordering[A]): Boolean = ord.equiv(a, b)
 		
 		override def ||(other: ComparisonOperator): ComparisonOperator = other match {
@@ -115,6 +117,8 @@ object ComparisonOperator
 	{
 		override def unary_! : ComparisonOperator = Equality
 		override def unary_- : ComparisonOperator = this
+		
+		override def toString = "!="
 		
 		override def apply[A](a: A, b: A)(implicit ord: Ordering[A]): Boolean = !ord.equiv(a, b)
 		
@@ -161,6 +165,17 @@ object ComparisonOperator
 		override def unary_- = copy(requiredDirection = -requiredDirection)
 		
 		override def orEqual: DirectionalComparison = if (includesEqual) this else copy(includesEqual = true)
+		
+		override def toString = {
+			val signStr = requiredDirection match {
+				case Positive => ">"
+				case Negative => "<"
+			}
+			if (includesEqual)
+				s"$signStr="
+			else
+				signStr
+		}
 		
 		override def apply[A](a: A, b: A)(implicit ord: Ordering[A]): Boolean = Sign.of(ord.compare(a, b)) match {
 			case Neutral => includesEqual

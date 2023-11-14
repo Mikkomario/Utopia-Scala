@@ -116,6 +116,9 @@ object UncertainNumbersTest extends App
 	assertTrue(gt3 > lteq3)
 	assertFalse(gt3 <= lteq3)
 	
+	// Currently this doesn't work because of no integer support
+	// assertTrue(UncertainNumber.greaterThan(1) >= 2)
+	
 	// Tests min & max value
 	assert(n1.largestPossibleValue.contains(1))
 	assert(n1.smallestPossibleValue.contains(1))

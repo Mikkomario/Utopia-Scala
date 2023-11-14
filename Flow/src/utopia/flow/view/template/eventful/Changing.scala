@@ -1,7 +1,6 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
@@ -474,17 +473,21 @@ trait Changing[+A] extends Any with View[A]
 	def nextFutureWhere(valueCondition: A => Boolean) =
 		_futureWhere(valueCondition, disableImmediateTrigger = true)
 	/**
-	  * @param f A mapping function that yields Some for the value that resolves the resulting future
+	  * @param f A mapping function that yields Some for the value that resolves the resulting future.
+	  *          Allowed to throw.
 	  * @tparam B Type of mapping result, when defined
 	  * @return A future that completes once 'f' returns Some for a value in this changing item.
 	  *         Resolves immediately if 'f' yields Some for the current value of this item.
+	  *         Fails if the specified function 'f' throws.
 	  */
 	def findMapFuture[B](f: A => Option[B]) = _findMapFuture[B](f)
 	/**
-	  * @param f A mapping function that yields Some for the value that resolves the resulting future
+	  * @param f A mapping function that yields Some for the value that resolves the resulting future.
+	  *          Allowed to throw.
 	  * @tparam B Type of mapping result, when defined
 	  * @return A future that completes once 'f' returns Some for a value in this changing item.
 	  *         The current value in this item is not tested with 'f'.
+	  *         Fails if the specified function 'f' throws.
 	  */
 	def findMapNextFuture[B](f: A => Option[B]) = _findMapFuture[B](f, disableImmediateTrigger = true)
 	
@@ -1027,32 +1030,49 @@ trait Changing[+A] extends Any with View[A]
 	
 	/**
 	  * A default implementation of the 'futureWhere' function
-	  * @param condition Condition to search for values with
+	  * @param condition Condition to search for values with. Allowed to throw.
 	  * @return A value future where the specified condition returns true (may never complete)
 	  */
 	protected def _futureWhere(condition: A => Boolean, disableImmediateTrigger: Boolean = false) =
 		_findMapFuture[A](a => Some(a).filter(condition), disableImmediateTrigger)
 	/**
 	  * A default implementation of the 'futureWhere' function
-	  * @param condition Condition to search for values with
+	  * @param condition Condition to search for values with. Allowed to throw. Returns Some for the result to return.
 	  * @return A value future where the specified condition returns true (may never complete)
 	  */
-	protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean = false) =
-	{
+	protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean = false) = {
+		// Tests with the current value first, unless disabled
 		val initialCandidate = if (disableImmediateTrigger) None else Some(value)
-		initialCandidate.flatMap(condition) match {
+		initialCandidate.flatMap { c =>
+			// Handles possible errors thrown by the test function
+			Try { condition(c) } match {
+				case Success(result) => result.map(Success.apply)
+				// Case: Testing failed => Immediately returns as a failure
+				case Failure(error) => Some(Failure(error))
+			}
+		} match {
 			// Case: Completes with the current value
-			case Some(result) => Future.successful(result)
+			case Some(result) => Future.fromTry(result)
 			case None =>
 				// Case: May change => Listens to changes until the searched state is found
 				if (isChanging) {
 					val promise = Promise[B]()
 					addListener { e =>
-						condition(e.newValue) match {
-							case Some(result) =>
-								promise.trySuccess(result)
+						// Handles possible failures thrown by the test function
+						Try { condition(e.newValue) } match {
+							case Success(result) =>
+								result match {
+									// Case: Result found => Completes the future
+									case Some(result) =>
+										promise.trySuccess(result)
+										Detach
+									// Case: No result found => Waits for the next change event
+									case None => Continue
+								}
+							// Case: Test function threw => Propagates the failure to the resulting Future
+							case Failure(error) =>
+								promise.tryFailure(error)
 								Detach
-							case None => Continue
 						}
 					}
 					promise.future
