@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="activation-1">
+  <library name="activation">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/Courier/lib/activation-1.1.1.jar!/" />
     </CLASSES>

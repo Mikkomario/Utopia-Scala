@@ -15,7 +15,7 @@
         <element id="module-output" name="Vault" />
       </element>
       <element id="library" level="application" name="scala-sdk-2.13.7" />
-      <element id="library" level="project" name="mariadb-java-client-1" />
+      <element id="library" level="project" name="mariadb-java-client" />
     </root>
   </artifact>
 </component>

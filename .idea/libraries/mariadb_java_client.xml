@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="mariadb-java-client-1">
+  <library name="mariadb-java-client">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/Vault/lib/mariadb-java-client-1.5.9.jar!/" />
     </CLASSES>

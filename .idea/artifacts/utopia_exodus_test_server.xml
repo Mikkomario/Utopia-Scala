@@ -16,7 +16,7 @@
           <element id="module-output" name="Citadel" />
         </element>
         <element id="directory" name="lib">
-          <element id="library" level="project" name="mariadb-java-client-1" />
+          <element id="library" level="project" name="mariadb-java-client" />
           <element id="library" level="application" name="scala-sdk-2.13.7" />
         </element>
         <element id="file-copy" path="$PROJECT_DIR$/Exodus-Test-Server/web.xml" />

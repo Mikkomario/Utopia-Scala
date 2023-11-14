@@ -16,7 +16,7 @@
     <orderEntry type="module" module-name="Metropolis" />
     <orderEntry type="module" module-name="Nexus" />
     <orderEntry type="module" module-name="Vault" />
-    <orderEntry type="library" name="mariadb-java-client-1" level="project" />
+    <orderEntry type="library" name="mariadb-java-client" level="project" />
     <orderEntry type="module" module-name="Disciple" />
     <orderEntry type="library" name="apache.httpcomponents.client5.httpclient5" level="project" />
     <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
