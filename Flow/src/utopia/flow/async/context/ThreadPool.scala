@@ -31,7 +31,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
     /**
      * An execution context based on this thread pool
      */
-    @deprecated("Please use this ThreadPool instance instead")
+    @deprecated("Please use this ThreadPool instance instead", "< v2.3")
     lazy implicit val executionContext: ExecutionContext = this
     
     

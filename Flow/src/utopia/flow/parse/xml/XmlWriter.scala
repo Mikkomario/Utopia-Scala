@@ -44,28 +44,6 @@ object XmlWriter
         writeToStream(stream, charset) { _.write(element) }
     
     /**
-     * Writes an xml document to the target file
-     * @param file the targeted file
-     * @param charset the used charset (default = UTF-8)
-     * @param contentWriter the function that writes the document contents
-     * @return The results of the operation
-     */
-    @deprecated("Please provide parameter in Path and not File format", "v1.9")
-    def writeFile(file: File, charset: Charset, contentWriter: XmlWriter => Unit) =
-        Try { new FileOutputStream(file, false).consume { writeToStream(_, charset)(contentWriter) } }.flatten
-    
-    /**
-     * Writes an xml document to the target file
-     * @param file the targeted file
-     * @param element The root element that is written to the document
-     * @param charset the used charset (default = UTF-8)
-     * @return The results of the operation
-     */
-    @deprecated("Please provide parameter in Path and not File format", "v1.9")
-    def writeElementToFile(file: File, element: XmlElement, charset: Charset) =
-        writeFile(file, charset, w => w.write(element))
-    
-    /**
       * Writes an xml document to the target file
       * @param file the targeted file
       * @param charset the used charset (default = UTF-8)

@@ -55,7 +55,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  * @param nav Content to test
 	  * @return Whether this node's content matches the specified content
 	  */
-	@deprecated("Please use .nav ~== nav instead")
+	@deprecated("Please use .nav ~== nav instead", "< v2.3")
 	def containsDirect(nav: A): Boolean = navEquals(this.nav, nav)
 	
 	/**
@@ -112,21 +112,15 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         This node's nav is returned first.
 	  */
 	def allNavsIterator = nav +: navsBelowIterator
-	@deprecated("Replaced with .allNavsIterator", "v2.0")
-	def allContentIterator = allNavsIterator
 	/**
 	  * @return An iterator that goes over all navigation elements within this tree, excluding this node's nav.
 	  *         Each branch is fully traversed before moving to the sibling branch.
 	  */
 	def navsBelowIterator: Iterator[A] = nodesBelowIterator.map { _.nav }
-	@deprecated("Replaced with .navsBelowIterator", "v2.0")
-	def contentBelowIterator = navsBelowIterator
 	/**
 	  * @return All navigational elements within this tree, including this node's nav.
 	  */
 	def allNavs = allNavsIterator.toVector
-	@deprecated("Replaced with .allNavs", "v2.0")
-	def allContent = allNavs
 	
 	/**
 	  * @return An iterator that returns this node, then all children of this node, then all grandchildren
@@ -164,19 +158,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         as that implementation is more more efficient in terms of memory and speed.
 	  */
 	def bottomToTopNodesIterator: Iterator[Repr] = BottomToTopIterator(self) { _.children }
-	/**
-	  * @return All nodes below this node, ordered based on depth (primary) and horizontal index (secondary)
-	  */
-	@deprecated("Please use .topDownNodesBelow instead", "v2.0")
-	def nodesBelowOrdered: Vector[Repr] = {
-		val resultBuilder = new VectorBuilder[Repr]()
-		var nextNodes = children
-		while (nextNodes.nonEmpty) {
-			resultBuilder ++= nextNodes
-			nextNodes = nextNodes.flatMap { _.children }
-		}
-		resultBuilder.result()
-	}
 	
 	/**
 	  * @return An iterator that returns all leaf nodes that appear within this tree.
@@ -262,24 +243,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         As the size of the tree increases, the number of resulting branches increases exponentially.
 	  */
 	def branchesBelow = branchesBelowIterator.toVector
-	/**
-	  * @return List of all "branches" <b>under</b> this node. Eg. If this node contains two children each of which
-	  *         have two children themselves, returns <b>4</b> vectors that each have a size of 2. The vectors only contain
-	  *         node content, not the nodes themselves. <b>This node is not included in any of the returned vectors</b>.
-	  *         In other words, the resulting number of vectors is the same as the number of leaves in this tree and
-	  *         the depth of each vector matches the length of each branch, including that leaf.
-	  */
-	@deprecated("Please use .branchesBelow instead", "v2.0")
-	def allBranches: Iterable[Vector[A]] = {
-		// Lists branches starting from each of this tree's children (includes children in the branches they found)
-		children.flatMap { child =>
-			// Leaves form the ends of the branches
-			if (child.hasChildren)
-				child.allBranches.map { branch => child.nav +: branch }
-			else
-				Vector(Vector(child.nav))
-		}
-	}
 	
 	
 	// IMPLEMENTED  ----------------
@@ -346,15 +309,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	}
 	
 	/**
-	  * Performs a search over the whole tree structure
-	  * @param filter A predicate for finding a node
-	  * @return The first child that satisfies the predicate. None if no such child was found.
-	  */
-	@deprecated("Please use .nodesBelowIterator.find(...) or other such combination", "v2.0")
-	def find(filter: Repr => Boolean): Option[Repr] =
-		children.find(filter) orElse children.findMap { _.find(filter) }
-	
-	/**
 	  * @param node Searched node
 	  * @return Whether this tree structure contains that node
 	  */
@@ -364,8 +318,6 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  * @return Whether this node or any of this node's children contains the specified navigational element
 	  */
 	def containsNav(nav: A): Boolean = (this.nav ~== nav) || navsBelowIterator.exists { _ ~== nav }
-	@deprecated("Replaced with .containsNav(A)", "v2.0")
-	def contains(content: A): Boolean = containsNav(content)
 	
 	/**
 	  * Finds the first child node from this entire tree that matches the specified condition.
@@ -416,21 +368,4 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         The node containing the specified nav element is located at the end of this path.
 	  */
 	def pathTo(nav: A) = if (this.nav ~== nav) Some(Vector()) else findWithPath { _.nav ~== nav }
-	
-	/**
-	  * Finds the highest level branches from this tree which satisfy the specified condition. Will not test the
-	  * child nodes of the accepted branches. Therefore there is no overlap in the results
-	  * (no node will be listed twice). Won't test or include this root node; Only targets children, grandchildren etc.
-	  * @param filter A function that tests a branch to see whether it should be accepted in the result
-	  * @return All the branches which were accepted by the specified filter.
-	  */
-	@deprecated("Deprecated for removal. This function didn't work correctly, yields wrong type of result and is generally ambiguous", "v2.0")
-	def findBranches(filter: Repr => Boolean): Iterable[Repr] = {
-		children.flatMap { child =>
-			if (filter(child))
-				Vector(child)
-			else
-				child.findBranches(filter)
-		}
-	}
 }

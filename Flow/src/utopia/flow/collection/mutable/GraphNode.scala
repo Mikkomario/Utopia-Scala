@@ -80,6 +80,4 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
             }
         }.foreach { _ => () }
     }
-    @deprecated("Please use .disconnectTotally(...) instead", "v2.0")
-    def disconnectAll(node: AnyNode) = disconnectTotally(node)
 }

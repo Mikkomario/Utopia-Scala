@@ -2,6 +2,8 @@
 
 ## v1.6.1 (in development)
 Supports **Flow v2.3**
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v1.6 - 27.09.2023
 Updated the **RequestResult** interface for easier and more concise use.

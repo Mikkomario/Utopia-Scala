@@ -60,16 +60,6 @@ object Variable
     def emptyWithFixedType(name: String, dataType: DataType, requireCastingSuccess: Boolean = false) =
         withFixedType(name, Value.emptyWithType(dataType), requireCastingSuccess)
     
-    /**
-      * Creates a new empty variable
-      * @param name The name of this variable
-      * @param dataType The data type of this variable
-      * @return A new empty variable
-      */
-    @deprecated("Please use .emptyWithFixedType(String, DataType, Boolean) instead", "v2.0")
-    def empty(name: String, dataType: DataType) =
-        emptyWithFixedType(name, dataType, requireCastingSuccess = true)
-    
     
     // NESTED   -----------------------
     

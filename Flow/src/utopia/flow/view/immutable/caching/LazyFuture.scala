@@ -48,12 +48,6 @@ class LazyFuture[A](generator: ExecutionContext => Future[A])
 			cached = Some(newFuture)
 			newFuture
 	}
-	/**
-	  * @param executionContext An implicit execution context. Used only when requesting for a new value.
-	  * @return Future of the eventual results
-	  */
-	@deprecated("Replaced with .value", "v1.17")
-	def get(implicit executionContext: ExecutionContext) = value
 	
 	/**
 	  * @return Currently cached results. None if the item hasn't been requested or received yet.

@@ -8,7 +8,6 @@ import java.time.{Instant, LocalTime}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
-import scala.util.Try
 
 /**
 * A wait target specifies a waiting time: either until a specified instant, 
@@ -91,59 +90,6 @@ sealed trait WaitTarget extends MayBeZero[WaitTarget]
     
     
     // OTHER    -----------------
-    
-    /**
-     * Blocks the current thread until this wait target is reached
-     * @param lock the lock on which the waiting is done
-     * @see WaitUtils.notify(AnyRef)
-     */
-    @deprecated("Please use the Wait class instead, since it provides better control over the waiting and jvm shutdowns",
-        "v1.15")
-    def waitWith(lock: AnyRef) =
-    {
-        var waitCompleted = false
-        
-        if (isFinite) {
-            val targetTime = endTime.get
-            
-            lock.synchronized {
-                var currentTime = Instant.now()
-                
-                while (!waitCompleted && (currentTime < targetTime)) {
-                    val waitDuration = targetTime - currentTime
-                    // Performs the actual wait here (nano precision)
-                    // Exceptions are ignored
-                    Try {
-                        lock.wait(waitDuration.toMillis, waitDuration.getNano / 1000)
-                        
-                        if (breaksOnNotify)
-                            waitCompleted = true
-                    }
-                    
-                    currentTime = Now
-                }
-            }
-        }
-        else {
-            lock.synchronized {
-                while (!waitCompleted)
-                {
-                    // Waits until notified, exceptions are ignored
-                    Try {
-                        lock.wait()
-                        waitCompleted = true
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Notifies a lock, possibly breaking any wait that is waiting on that lock. Unbreakable waits 
-     * won't be affected.
-     */
-    @deprecated("Please use WaitUtils.notify(AnyRef) instead", "v1.15")
-    def notify(lock: AnyRef) = lock.synchronized { lock.notifyAll() }
     
     /**
      * Creates a new wait instance based on this wait target

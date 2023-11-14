@@ -220,11 +220,6 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	// COMPUTED	--------------------------
 	
 	/**
-	  * @return Whether this color has transparency
-	  */
-	@deprecated("Please use .transparent instead", "v2.4.1")
-	def isTransparent = alpha < 1
-	/**
 	  * @return Whether this color has transparency (can be seen through partially or fully)
 	  */
 	def transparent = alpha < 1

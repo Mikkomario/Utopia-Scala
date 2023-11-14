@@ -55,13 +55,4 @@ trait HasInclusiveOrderedEnds[P] extends HasOrderedEnds[P] with HasInclusiveEnds
 		case Max => ordering.max(start, end)
 		case Min => ordering.min(start, end)
 	}
-	/**
-	 * @param side The targeted side, where negative is the start and positive is the end
-	 * @return The targeted end of this span
-	 */
-	@deprecated("Replaced with .apply(End)", "v2.0")
-	def endAt(side: Sign) = side match {
-		case Negative => start
-		case Positive => end
-	}
 }

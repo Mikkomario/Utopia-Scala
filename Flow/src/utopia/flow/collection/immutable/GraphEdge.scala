@@ -17,12 +17,6 @@ case class GraphEdge[+A, +Node](override val value: A, override val end: Node)
 	  * @param value The value of the new edge
 	  */
 	def withValue[B](value: B) = GraphEdge(value, end)
-	/**
-	  * Creates a new edge that has different content
-	  * @param content The contents of the new edge
-	  */
-	@deprecated("Replaced with .withValue(B)", "v2.0")
-	def withContent[B](content: B) = GraphEdge(content, end)
 	
 	/**
 	  * Creates a new edge that has a different end node

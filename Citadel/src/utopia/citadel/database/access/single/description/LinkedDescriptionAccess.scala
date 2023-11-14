@@ -187,15 +187,6 @@ trait LinkedDescriptionAccess extends SingleRowModelAccess[LinkedDescription] wi
 			  * @return An access point to that description
 			  */
 			def inLanguageWithId(languageId: Int) = new UniqueDescriptionAccess(languageId, roleId)
-			
-			/**
-			  * @param languageIds A set of accepted language ids, from most preferred to least preferred
-			  * @param connection Implicit DB Connection
-			  * @return This description in the most preferable available language
-			  */
-			@deprecated("Please use inPreferredLanguage instead", "v1.3")
-			def inLanguage(languageIds: Seq[Int])(implicit connection: Connection) =
-				inPreferredLanguage(connection, LanguageIds(languageIds.toVector))
 		}
 		
 		class UniqueDescriptionAccess(val languageId: Int, val roleId: Int)

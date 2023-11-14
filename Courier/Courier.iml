@@ -12,6 +12,6 @@
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="library" name="javax.mail-1" level="project" />
     <orderEntry type="library" name="activation-1" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.13.7" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
   </component>
 </module>

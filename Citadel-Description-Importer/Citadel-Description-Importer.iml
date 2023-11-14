@@ -13,6 +13,6 @@
     <orderEntry type="module" module-name="Vault" />
     <orderEntry type="library" name="mariadb-java-client-1" level="project" />
     <orderEntry type="module" module-name="BunnyMunch" />
-    <orderEntry type="library" name="scala-sdk-2.13.7" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
   </component>
 </module>

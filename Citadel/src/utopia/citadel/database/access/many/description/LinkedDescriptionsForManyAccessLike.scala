@@ -44,18 +44,6 @@ trait LinkedDescriptionsForManyAccessLike extends LinkedDescriptionsAccessLike
 		// Reads the rest of the descriptions recursively
 		readRemaining(remainingRoleIds, newAccessPoint, readDescriptions)
 	}
-	/**
-	  * Reads description data from specified targets
-	  * @param remainingTargetIds Targeted target ids (shouldn't be empty)
-	  * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
-	  * @param remainingRoleIds   Ids of the remaining description roles to read (shouldn't be empty)
-	  * @param connection         DB Connection (implicit)
-	  * @return Read descriptions, grouped by target id
-	  */
-	@deprecated("Please use findInPreferredLanguages instead", "v1.3")
-	protected def inLanguages(remainingTargetIds: Set[Int], languageIds: Seq[Int], remainingRoleIds: Set[Int])(
-		implicit connection: Connection): Map[Int, Vector[LinkedDescription]] =
-		findInPreferredLanguages(remainingTargetIds, remainingRoleIds)(connection, LanguageIds(languageIds.toVector))
 	
 	/**
 	  * Reads description data from specified targets
@@ -88,19 +76,6 @@ trait LinkedDescriptionsForManyAccessLike extends LinkedDescriptionsAccessLike
 		else
 			readDescriptions
 	}
-	/**
-	 * Reads description data from specified targets
-	 * @param roleId Id of the targeted role
-	 * @param remainingTargetIds Targeted target ids (shouldn't be empty)
-	 * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
-	 * @param connection         DB Connection (implicit)
-	 * @return Read descriptions, grouped by target id
-	 */
-	@deprecated("Please use withRoleInPreferredLanguages instead", "v1.3")
-	protected def withRoleIdInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
-	                                   (implicit connection: Connection): Map[Int, LinkedDescription] =
-		withRoleIdInPreferredLanguages(roleId, remainingTargetIds)(connection, LanguageIds(languageIds.toVector))
-	
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.
 	// LanguageIds and roles should be passed as they were at the start of the last read
 	protected def readRemaining(remainingRoleIds: Set[Int], lastAccessPoint: LinkedDescriptionsForManyAccessLike,

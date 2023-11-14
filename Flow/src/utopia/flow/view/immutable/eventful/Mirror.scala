@@ -6,22 +6,6 @@ import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 object Mirror
 {
 	/**
-	 * Creates a new mirror that reflects another changing item
-	 * @param source Changing item that generates the values in this mirror
-	 * @param f A mapping function for generating the mirrored value
-	 * @tparam O Original item type
-	 * @tparam R Reflected / mapped item type
-	 * @return A new mirror
-	 */
-	@deprecated("Please use source.map(f) instead", "v2.0")
-	def of[O, R](source: Changing[O])(f: O => R) = {
-		if (source.isChanging)
-			apply(source)(f)
-		else
-			Fixed(f(source.value))
-	}
-	
-	/**
 	  * Creates a new mirror that reflects changes in another item
 	  * @param source A source item
 	  * @param condition Condition that must be met for the mirroring to occur (default = always active)

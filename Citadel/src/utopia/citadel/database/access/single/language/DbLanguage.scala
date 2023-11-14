@@ -50,7 +50,7 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 	{
 		// IMPLEMENTED  -------------
 		
-		override def globalCondition = Some(model.withIsoCode(isoCode).toCondition)
+		override def globalCondition = Some(this.model.withIsoCode(isoCode).toCondition)
 		
 		
 		// OTHER    ------------------
@@ -60,7 +60,7 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 		  * @return This language, or a new language with this ISO code
 		  */
 		def getOrInsert()(implicit connection: Connection) =
-			pull.getOrElse { model.insert(LanguageData(isoCode)) }
+			pull.getOrElse { this.model.insert(LanguageData(isoCode)) }
 	}
 }
 

@@ -1,8 +1,11 @@
 # Utopia Genesis - List of Changes
 
 ## v3.4.1 (in development)
+### Breaking changes
+- Deleted functions and classes that were deprecated at v3.0 or earlier
 ### Other changes
 - **DrawSettings** now extends **ScopeUsable**
+- Scala version updated to 2.13.12
 
 ## v3.4 - 27.09.2023
 Adds automated line-splitting -option to **MeasuredText**

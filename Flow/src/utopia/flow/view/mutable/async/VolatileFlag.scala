@@ -25,15 +25,6 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     override lazy val view = new FlagView(this)
     
     
-    // COMPUTED    ---------------
-    
-    /**
-      * @return Whether this flag isn't currently set
-      */
-    @deprecated("Please use .isNotSet instead", "v1.15")
-    def notSet = !isSet
-    
-    
     // IMPLEMENTED  ---------------
     
     /**

@@ -205,18 +205,6 @@ class Vector3D private(override val dimensions: Dimensions[Double])
 	  * @return A 2D copy of this vector with the specified dimension dropped
 	  */
 	def withoutDimensionAtIndex(index: Int) = withoutDimension(Axis(index))
-	
-	/**
-	  * A projection of this vector for the specified axis
-	  */
-	@deprecated("Please use ProjectedOver instead", "v2")
-	def projectedAlong(axis: Axis) = {
-		axis match {
-			case X => xProjection
-			case Y => yProjection
-			case Z => zProjection
-		}
-	}
     
     /**
      * Creates a new vector with the same length as this vector

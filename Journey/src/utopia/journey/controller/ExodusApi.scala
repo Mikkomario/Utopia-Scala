@@ -4,7 +4,6 @@ import utopia.access.http.Status.Unauthorized
 import utopia.access.http.{Headers, Method}
 import utopia.annex.controller.Api
 import utopia.annex.model.error.UnauthorizedRequestException
-import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.StringBody
@@ -50,6 +49,8 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 									   modHeaders: Headers => Headers = h => h)
 									  (implicit context: ExecutionContext): Future[RequestResult] =
 	{
+		???
+		/*
 		// May acquire a new session key before making further requests
 		if (Now > resetSessionThreshold) {
 			LocalDevice.id match {
@@ -71,6 +72,8 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 		}
 		else
 			super.makeRequest(method, path, timeout, body, params, modHeaders)
+			
+		 */
 	}
 	
 	

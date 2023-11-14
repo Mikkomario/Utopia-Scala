@@ -126,18 +126,6 @@ trait LinkedDescriptionsAccessLike
 	def withRoles(firstRole: DescriptionRoleIdWrapper, secondRole: DescriptionRoleIdWrapper,
 	              moreRoles: DescriptionRoleIdWrapper*): LinkedDescriptionsAccessLike =
 		withRoles(Set(firstRole, secondRole) ++ moreRoles)
-	/**
-	 * @param roleIds    Targeted description role ids
-	 * @return An access point to Recorded descriptions for those roles (in this language & target)
-	 */
-	@deprecated("Please use withRoleIds instead", "v1.3")
-	def forRolesWithIds(roleIds: Iterable[Int]) = withRoleIds(roleIds)
-	/**
-	  * @param roles Targeted Description roles
-	  * @return An access point to Recorded descriptions for those roles (in this language & target)
-	  */
-	@deprecated("Please use withRoles instead", "v1.3")
-	def forRoles(roles: Iterable[DescriptionRoleIdWrapper]) = withRoles(roles)
 	
 	/**
 	 * Accesses descriptions of this item / items, except those in excluded description roles
@@ -153,21 +141,6 @@ trait LinkedDescriptionsAccessLike
 	 */
 	def outsideRoles(excludedRoles: Iterable[DescriptionRoleIdWrapper]) =
 		outsideRoleIds(excludedRoles.map { _.id })
-	/**
-	 * Accesses descriptions of this item / items, except those in excluded description roles
-	 * @param excludedRoleIds Ids of the excluded description roles
-	 * @return An access point to the targeted descriptions
-	 */
-	@deprecated("Please use outsideRoleIds instead", "v1.3")
-	def forRolesOutsideIds(excludedRoleIds: Iterable[Int]) = outsideRoleIds(excludedRoleIds)
-	/**
-	  * Accesses descriptions of this item / items, except those in excluded description roles
-	  * @param excludedRoles excluded description roles
-	  * @return An access point to the targeted descriptions
-	  */
-	@deprecated("Please use outsideRoles instead", "v1.3")
-	def forRolesOutside(excludedRoles: Iterable[DescriptionRoleIdWrapper]) =
-		outsideRoles(excludedRoles)
 	
 	/**
 	 * @param roleId     Targeted description role's id
@@ -179,23 +152,4 @@ trait LinkedDescriptionsAccessLike
 	 * @return Descriptions with that role for this item in targeted language
 	 */
 	def withRole(role: DescriptionRoleIdWrapper) = withRoleId(role.id)
-	/**
-	 * @param roleId     Targeted description role's id
-	 * @return Description for that role for this item in targeted language
-	 */
-	@deprecated("Please use withRoleId instead", "v1.3")
-	def forRoleWithId(roleId: Int) = withRoleId(roleId)
-	/**
-	  * @param role Targeted description role
-	  * @return Description for that role for this item in targeted language
-	  */
-	@deprecated("Please use WithRole instead", "v1.3")
-	def forRole(role: DescriptionRoleIdWrapper) = withRole(role)
-	
-	/**
-	 * @param condition A search-condition
-	 * @return A sub-view of this access point with that condition applied
-	 */
-	@deprecated("Please use filter(Condition) instead", "v2.0")
-	def subView(condition: Condition): LinkedDescriptionsAccessLike = filter(condition)
 }

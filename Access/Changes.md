@@ -2,6 +2,8 @@
 
 ## v1.4.8 (in development)
 Supports **Flow v2.3**
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v1.4.7 - 27.09.2023
 Supports latest **Flow** (v2.2) changes

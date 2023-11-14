@@ -145,12 +145,4 @@ trait PollingIterator[+A] extends Iterator[A]
 	 * @return All of the consecutive items which didn't fulfill the specified condition
 	 */
 	def collectUntil(terminator: A => Boolean) = collectWhile { !terminator(_) }
-	/**
-	 * Takes items as long as they fulfill the specified condition. After this method call, the next item will
-	 * <b>not</b> fulfill the specified condition, or there won't be any items left.
-	 * @param condition Condition that must be fulfilled for an item to be included
-	 * @return All of the consecutive items which fulfilled the specified condition
-	 */
-	@deprecated("Please use .collectWhile(...) instead - take-methods are usually meant to return iterators", "v1.12.1")
-	def takeNextWhile(condition: A => Boolean) = collectWhile(condition)
 }

@@ -91,7 +91,7 @@ object DbEmailValidationAttempt
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def filterCondition = model.withTokenId(tokenId).toCondition
+		override def filterCondition = this.model.withTokenId(tokenId).toCondition
 		
 		override protected def parent = DbEmailValidationAttempt
 	}

@@ -197,11 +197,6 @@ case class Pair[+A](first: A, second: A)
 	  * @return Whether the two values in this pair are not equal
 	  */
 	def isAsymmetric(implicit eq: EqualsFunction[A] = EqualsFunction.default) = !isSymmetric
-	/**
-	  * @return Whether the two values in this pair are not equal
-	  */
-	@deprecated("Please use .isAsymmetric instead", "v2.0")
-	def isNotSymmetric = !isSymmetric
 	
 	/**
 	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
@@ -508,14 +503,6 @@ case class Pair[+A](first: A, second: A)
 	  * @return Function result
 	  */
 	def merge[B](f: (A, A) => B) = f(first, second)
-	/**
-	  * Compares the two values in this pair using the specified function
-	  * @param f A function for comparing two values with each other
-	  * @tparam B Type of function result
-	  * @return Function result
-	  */
-	@deprecated("Renamed to .merge(...)", "v2.0")
-	def compareWith[B](f: (A, A) => B) = merge(f)
 	
 	/**
 	  * @param e An equals function

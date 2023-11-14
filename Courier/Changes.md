@@ -25,6 +25,7 @@ Folder-targeting
 - Attachment names are now normalized before saving them on the disk
 - EmailBuilder now uses ISO-8859 as backup decoding
 - Added implicit conversion from a **Vector** of **Strings** to **Recipients**
+- Scala version updated to 2.13.12
 
 ## v1.0.7 - 01.05.2023
 Rebuild due to the changes in other modules.

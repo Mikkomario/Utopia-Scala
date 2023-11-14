@@ -80,7 +80,7 @@ case class ChangeEvent[+A](values: Pair[A])
 	  * @return True if the mapped values are equal, false otherwise
 	  */
 	def equalsBy[B](map: A => B) = map(oldValue) == map(newValue)
-	@deprecated("Replaced with .equalsBy(...)")
+	@deprecated("Replaced with .equalsBy(...)", "< v2.3")
 	def compareBy[B](map: A => B) = equalsBy(map)
 	/**
 	 * Checks whether certain aspects of the old and new value are different
@@ -89,16 +89,8 @@ case class ChangeEvent[+A](values: Pair[A])
 	 * @return True if the mapped values are different, false otherwise
 	 */
 	def notEqualsBy[B](map: A => B) = !equalsBy(map)
-	@deprecated("Replaced with .notEqualsBy(...)")
+	@deprecated("Replaced with .notEqualsBy(...)", "< v2.3")
 	def differentBy[B](map: A => B) = notEqualsBy(map)
-	/**
-	  * Applies a function from the old value to the new value
-	  * @param f A function for mapping into the applied function in the old value
-	  * @tparam R Result type of the found function
-	  * @return Result value of the found function when applied with the new value
-	  */
-	@deprecated("Please use .merge(...) instead", "v2.0")
-	def compareWith[R](f: A => A => R) = f(oldValue)(newValue)
 	
 	/**
 	  * Merges the old and the new value together

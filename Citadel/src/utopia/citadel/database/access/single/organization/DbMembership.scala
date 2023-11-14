@@ -83,7 +83,7 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 		
 		override protected def parent = DbMembership
 		
-		override def filterCondition = model.withOrganizationId(organizationId).withUserId(userId).toCondition
+		override def filterCondition = this.model.withOrganizationId(organizationId).withUserId(userId).toCondition
 		
 		
 		// OTHER    ---------------------------

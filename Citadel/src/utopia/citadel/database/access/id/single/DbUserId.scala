@@ -13,14 +13,6 @@ import utopia.vault.sql.{Select, Where}
 object DbUserId
 {
 	/**
-	  * @param userName   User name
-	  * @param connection DB Connection (implicit)
-	  * @return User id matching specified user name
-	  */
-	@deprecated("Since this search may return multiple ids, DbUserIds should be used to access them instead", "v1.0")
-	def forName(userName: String)(implicit connection: Connection) = 
-		userIdFromSettings(UserSettingsModel.withName(userName))
-	/**
 	  * @param email      User email address
 	  * @param connection DB Connection (implicit)
 	  * @return User id matching specified user email address

@@ -144,19 +144,6 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 			else
 				findInPreferredLanguages(targetIds, roleIds)
 		}
-		/**
-		  * Reads descriptions for these items using the specified languages. Only up to one description per
-		  * role per target is read.
-		  * @param languageIds Ids of the targeted languages, from most preferred to least preferred (less preferred
-		  *                    language ids are used when no results can be found with the more preferred options)
-		  * @param roleIds     Ids of the description roles that are read (will not target roles outside this set)
-		  * @param connection  DB Connection (implicit)
-		  * @return Read descriptions, grouped by target id
-		  */
-		@deprecated("Please use withRolesInPreferredLanguages instead", "v1.3")
-		def inLanguages(languageIds: Seq[Int], roleIds: Set[Int])
-		               (implicit connection: Connection): Map[Int, Vector[LinkedDescription]] =
-			withRolesInPreferredLanguages(roleIds)(connection, LanguageIds(languageIds.toVector))
 		
 		/**
 		  * Reads descriptions of these items targeting a single description role. If some descriptions couldn't
@@ -176,32 +163,6 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 			else
 				withRoleIdInPreferredLanguages(roleId, targetIds)
 		}
-		/**
-		  * Reads descriptions of these items targeting a single description role. If some descriptions couldn't
-		  * be found in the first language, the second language is searched as a backup, moving to third, fourth etc.
-		  * language when/if necessary.
-		  * @param roleId Id of the targeted description role
-		  * @param languageIds Ids of the languages used in the search, from most preferred to least preferred
-		  * @param connection Implicit DB Connection
-		  * @return Description links, each mapped to their target's id
-		  */
-		@deprecated("Please use withRoleIdInPreferredLanguages instead", "v1.3")
-		def withRoleIdInLanguages(roleId: Int, languageIds: Seq[Int])
-		                         (implicit connection: Connection): Map[Int, LinkedDescription] =
-			withRoleIdInPreferredLanguages(roleId)(connection, LanguageIds(languageIds.toVector))
-		/**
-		 * Reads descriptions of these items targeting a single description role. If some descriptions couldn't
-		 * be found in the first language, the second language is searched as a backup, moving to third, fourth etc.
-		 * language when/if necessary.
-		 * @param roleId Id of the targeted description role
-		 * @param languageIds Ids of the languages used in the search, from most preferred to least preferred
-		 * @param connection Implicit DB Connection
-		 * @return Description links, each mapped to their target's id
-		 */
-		@deprecated("Please use withRoleIdInPreferredLanguages instead", "v1.3")
-		def forRoleInLanguages(roleId: Int, languageIds: Seq[Int])
-		                      (implicit connection: Connection): Map[Int, LinkedDescription] =
-			withRoleIdInPreferredLanguages(roleId)(connection, LanguageIds(languageIds.toVector))
 	}
 	
 	/**
@@ -220,8 +181,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		  */
 		def inPreferredLanguages(implicit connection: Connection, languageIds: LanguageIds): Vector[LinkedDescription] =
 		{
-			languageIds.headOption match
-			{
+			languageIds.headOption match {
 				case Some(languageId) =>
 					val allRoleIds = DbDescriptionRoleIds.all.toSet
 					val readDescriptions = inLanguageWithId(languageId).all
@@ -305,16 +265,6 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		}
 		
 		/**
-		  * @param languageIds Ids of the targeted languages (in order from most to least preferred)
-		  * @param connection  DB Connection (implicit)
-		  * @return This item's descriptions in specified languages (secondary languages are used when no primary
-		  *         language description is found)
-		  */
-		@deprecated("Please use inPreferredLanguages instead", "v1.3")
-		def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Vector[LinkedDescription] =
-			inPreferredLanguages(connection, LanguageIds(languageIds.toVector))
-		
-		/**
 		  * @param roleIds Ids of the roles that need descriptions
 		  * @param connection       DB Connection (implicit)
 		  * @param languageIds      Ids of the targeted languages (in order from most to least preferred)
@@ -338,16 +288,5 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 				case None => Vector()
 			}
 		}
-		/**
-		  * @param languageIds      Ids of the targeted languages (in order from most to least preferred)
-		  * @param remainingRoleIds Ids of the roles that need descriptions
-		  * @param connection       DB Connection (implicit)
-		  * @return This item's descriptions in specified languages (secondary languages are used when no primary
-		  *         language description is found)
-		  */
-		@deprecated("Please use withRolesInPreferredLanguages instead", "v1.3")
-		def inLanguages(languageIds: Seq[Int], remainingRoleIds: Set[Int])
-		               (implicit connection: Connection): Vector[LinkedDescription] =
-			withRolesInPreferredLanguages(remainingRoleIds)(connection, LanguageIds(languageIds.toVector))
 	}
 }

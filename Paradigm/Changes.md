@@ -9,6 +9,7 @@
 - The default positive direction in **Rotation**`.arcLengthOver(...)` is now **Clockwise** instead of 
   the direction of the **Rotation** instance.
   - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`
+- Removed classes and functions that were deprecated before v1.2
 ### Deprecations
 - Deprecated most of the existing **Rotation** (/**DirectionalRotation**) functions in favor of the new syntax
 ### New methods
@@ -17,7 +18,8 @@
 - **Distance** (object)
   - Added `.ofKilometers(Double)`
 ### Other changes
-- **Distance** now extends **CanBeAboutZero**
+- **Distance** now extends **MayBeAboutZero**
+- Scala version updated to 2.13.12
 
 ## v1.4 - 27.09.2023
 This version applies major under-the-hood refactoring to vector classes, 

@@ -56,16 +56,6 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	// OTHER    --------------------------------
 	
 	/**
-	  * @param languageIds Ids of the targeted languages, from most to least preferred
-	  * @param connection Implicit DB connection
-	  * @return All accessible items described. Descriptions are chosen from the specified languages. Only one
-	  *         description per description role is included.
-	  */
-	@deprecated("Please use described instead", "v1.3")
-	def describedInLanguages(languageIds: Seq[Int])(implicit connection: Connection) =
-		described(connection, LanguageIds(languageIds.toVector))
-	
-	/**
 	  * @param languageId Id of the target language
 	  * @param connection Implicit DB Connection
 	  * @return Described versions of all accessible items where the descriptions are in the specified language

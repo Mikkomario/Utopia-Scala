@@ -1,14 +1,12 @@
 package utopia.citadel.database.access.single.user
 
 import utopia.citadel.database.access.many.description.DbOrganizationDescriptions
-import utopia.citadel.database.access.many.device.DbClientDeviceUsers
 import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbMembershipsWithRoles, DbOrganizations, DbUserRoles}
 import utopia.citadel.database.access.many.user.DbUserLanguageLinks
-import utopia.citadel.database.access.single.device.DbClientDeviceUser
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.UserRoleWithRights
-import utopia.metropolis.model.combined.user.{DetailedUser, MyOrganization, UserWithLinks}
+import utopia.metropolis.model.combined.user.{DetailedUser, MyOrganization}
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
@@ -32,11 +30,6 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	  * @return An access point to this user's language links
 	  */
 	def languageLinks = DbUserLanguageLinks.withUserId(id)
-	/**
-	  * @return An access point to links between this user and the devices this user uses
-	  */
-	@deprecated("Device classes will be removed in a future release", "v2.1")
-	def deviceLinks = DbClientDeviceUsers.withUserId(id)
 	/**
 	  * @return An access point to this user's memberships
 	  */
@@ -82,24 +75,9 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	def languageIds(implicit connection: Connection) = LanguageIds { languageLinks.withFamiliarities.languageIds }
 	/**
 	  * @param connection Implicit DB Connection
-	  * @return Ids of the devices this user is currently using
-	  */
-	@deprecated("Device classes will be removed in a future release", "v2.1")
-	def deviceIds(implicit connection: Connection) = deviceLinks.deviceIds
-	/**
-	  * @param connection Implicit DB Connection
 	  * @return Ids of the organizations this user is a member of
 	  */
 	def organizationIds(implicit connection: Connection) = memberships.organizationIds.toSet
-	
-	/**
-	  * @param connection Implicit DB Connection
-	  * @return This user, including language links and linked device ids
-	  */
-	@deprecated("Device classes will be removed in a future release. Please use .detailed instead.", "v2.1")
-	def withLinks(implicit connection: Connection) = settings.pull.map { settings =>
-		UserWithLinks(settings, languageLinks.pull, deviceIds)
-	}
 	
 	/**
 	  * @param connection Implicit DB Connection
@@ -143,12 +121,6 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	  */
 	def membershipInOrganizationWithId(organizationId: Int) =
 		DbMembership.betweenOrganizationAndUser(organizationId, id)
-	/**
-	  * @param deviceId A device id
-	  * @return This user's device use -link with that device
-	  */
-	@deprecated("Device classes will be removed in a future release", "v2.1")
-	def linkToDeviceWithId(deviceId: Int) = DbClientDeviceUser.linkBetween(deviceId, id)
 	
 	/**
 	  * @param organizationId Id of targeted organization

@@ -310,7 +310,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	/**
 	 * @return Content of all nodes linked with this node, including the contents of this node
 	 */
-	@deprecated("Replaced with .allValues")
+	@deprecated("Replaced with .allValues", "< v2.3")
 	def allNodeContent = allValues
 	
 	/**
@@ -352,19 +352,6 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 			else
 				Some(node._toTree(newTraversed))
 		}.caching)
-	}
-	
-	/**
-	 * Converts this graph to a tree
-	 * @return A tree from this node
-	 */
-	@deprecated("Please use toTree instead", "v2.0")
-	def toTreeWithoutEdges = _toTreeWithoutEdges(Set())
-	@deprecated("Please use _toTree instead", "v2.0")
-	private def _toTreeWithoutEdges(traversedNodes: Set[Any]): Tree[N] = {
-		val newTraversedNodes = traversedNodes + this
-		val children = endNodes.filterNot { traversedNodes.contains(_) }.map { _._toTreeWithoutEdges(newTraversedNodes) }
-		Tree(value, children.toVector)
 	}
 	
 	/**
@@ -652,50 +639,4 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  * @return Whether this node is at all connected to the specified node
 	  */
 	def isConnectedTo(other: AnyNode) = allNodesIterator.contains(other)
-	
-	/**
-	  * Traverses this graph until the provided operation returns true
-	  * @param operation An operation performed on each node until it returns true
-	  * @return Whether the operation ever returned true
-	  */
-	@deprecated("Please use allNodesIterator instead", "v2.0")
-	def traverseWhile(operation: GNode => Boolean) = traverseUntil { n =>
-		val result = operation(n)
-		if (result) Some(result) else None
-	} getOrElse false
-	/**
-	  * Traverses this graph until a node is found that produces a result
-	  * @param operation An operation performed on each node until a suitable one is found
-	  * @tparam B Operation result type
-	  * @return Final operation result. None if operation returned None on all nodes
-	  */
-	@deprecated("Please use allNodesIterator instead", "v2.0")
-	def traverseUntil[B](operation: GNode => Option[B]): Option[B] = traverseUntil(operation, Set())
-	@deprecated("Please use allNodesIterator instead", "v2.0")
-	private def traverseUntil[B](operation: GNode => Option[B], traversedNodes: Set[GNode]): Option[B] = {
-		val nodes = traversedNodes + self
-		
-		// Performs the operation on self first
-		// If that didn't yield a result, tries children instead
-		operation(self).orElse(endNodes.toSet.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
-	}
-	
-	/**
-	  * Performs an operation on all of the nodes in this graph
-	  * @param operation An operation
-	  * @tparam U Arbitary result type
-	  */
-	@deprecated("Please use allNodesIterator instead", "v2.0")
-	def foreach[U](operation: GNode => U): Unit = foreach(operation, Set())
-	@deprecated("Please use allNodesIterator instead", "v2.0")
-	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] = {
-		val newTraversedNodes = traversedNodes + this
-		operation(self)
-		endNodes.foldLeft(newTraversedNodes) { (traversed, node) =>
-			if (traversed.contains(node))
-				traversed
-			else
-				node.foreach(operation, traversed)
-		}
-	}
 }

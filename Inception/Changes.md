@@ -1,5 +1,9 @@
 # Utopia Inception - List of Changes
 
+## v2.3.5 (in development)
+### Other changes
+- Scala version updated to 2.13.12
+
 ## v2.3.4 - 01.05.2023
 Rebuild due to the changes in other modules.
 

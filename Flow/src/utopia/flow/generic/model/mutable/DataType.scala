@@ -61,13 +61,6 @@ object DataType
     def introduce(dataType: DataType): Unit =
         introduce(Tree.branch(dataType.superTypesIterator.toVector.reverse :+ dataType))
     
-    /**
-      * Sets up the basic data type information. This method should be called before using any of the
-      * data types
-      */
-    @deprecated("Not needed anymore", "v2.0")
-    def setup() = ()
-    
     
     // NESTED   --------------------------------
     
@@ -84,7 +77,7 @@ object DataType
         
         // INITIAL CODE ------------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  ------------------------
@@ -104,7 +97,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -124,7 +117,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -144,7 +137,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -164,7 +157,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -184,7 +177,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -204,7 +197,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -224,7 +217,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -244,7 +237,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -264,7 +257,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -284,7 +277,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -304,7 +297,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -324,7 +317,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -344,7 +337,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -364,7 +357,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------
@@ -384,7 +377,7 @@ object DataType
         
         // INITIAL CODE -----------------------
         
-        introduce()
+        this.introduce()
         
         
         // IMPLEMENTED  -----------------------

@@ -53,7 +53,7 @@ object DbUserPassword extends SingleRowModelAccess[UserPassword] with Unconditio
 		
 		override protected def parent = DbUserPassword
 		
-		override def filterCondition = model.withUserId(userId).toCondition
+		override def filterCondition = this.model.withUserId(userId).toCondition
 		
 		
 		// OTHER    -----------------
@@ -73,10 +73,9 @@ object DbUserPassword extends SingleRowModelAccess[UserPassword] with Unconditio
 		  * @param connection Implicit DB Connection
 		  * @return Newly inserted user password instance
 		  */
-		def update(newPassword: String)(implicit connection: Connection) =
-		{
+		def update(newPassword: String)(implicit connection: Connection) = {
 			delete()
-			model.insert(UserPasswordData(userId, PasswordHash.createHash(newPassword)))
+			this.model.insert(UserPasswordData(userId, PasswordHash.createHash(newPassword)))
 		}
 	}
 }

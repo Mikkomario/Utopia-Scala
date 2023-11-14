@@ -80,7 +80,7 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 	
 	// INITIAL CODE ----------------------
 	
-	initialValue.foreach { value = _ }
+	initialValue.foreach(set)
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -113,13 +113,23 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 		// Case: Resetting this pointer
 		case None => pointer.pop().foreach { _._2.foreach { _.stopIfRunning() } }
 	}
-	def value_=(newValue: A): Unit = this.value = Some(newValue)
+	// Commented out 13.11.2023 because of a name clash introduced in Scala 2.13.12
+	// def value_=(newValue: A): Unit = this.value = Some(newValue)
 	
 	override def reset() = {
 		val current = pointer.pop()
 		current.foreach { _._2.foreach { _.stopIfRunning() } }
 		current.isDefined
 	}
+	
+	
+	// OTHER    ---------------------
+	
+	/**
+	  * Assigns a new concrete value to this pointer
+	  * @param value The value to assign
+	  */
+	def set(value: A) = this.value = Some(value)
 	
 	private def releaseProcess(after: FiniteDuration) = {
 		val p = DelayedProcess(WaitDuration(after), shutdownReaction = Some(Cancel), isRestartable = false) { _ =>

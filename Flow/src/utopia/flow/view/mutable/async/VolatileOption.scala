@@ -67,14 +67,6 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
     def setIfEmpty(newValue: => Option[A]) = setIf { _.isEmpty } (newValue)
     
     /**
-     * Sets a new value to this option (only if empty), then returns the resulting value
-     * @param newValue A new value for this option (call by name)
-     * @return This option's value after operation
-     */
-    @deprecated("Replaced with setIfEmpty, that now performs the exact same function", "v1.16")
-    def setIfEmptyAndGet(newValue: => Option[A]) = setIfEmpty(newValue)
-    
-    /**
      * Sets a new value this option, but only if there is no current value
       * @return Value after the update
      */
@@ -84,20 +76,6 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
             val newVal = newValue
             newVal -> Some(newVal)
     }
-    
-    /**
-     * Sets a new value to this option, then returns that value
-     */
-    @deprecated("SetOne now behaves exactly as this function", "v1.16")
-    def setOneAndGet(newValue: A) = setOne(newValue)
-    
-    /**
-     * Sets a new value to this option (only if empty), then returns the resulting value of this option
-     * @param newValue A new value for this option (call by name)
-     * @return This option's value after operation
-     */
-    @deprecated("SetOneIfEmpty now behaves exactly as this function", "v1.16")
-    def setOneIfEmptyAndGet(newValue: => A) = setOneIfEmpty(newValue)
     
     
     // NESTED   ---------------------

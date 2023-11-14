@@ -212,16 +212,12 @@ class Model private(override val propertyMap: Map[String, Constant],
       * but different properties
      */
     def withProperties(props: Iterable[Constant]) = Model.withConstants(props, propFactory)
-    @deprecated("Replaced with .withProperties(Iterable)", "v2.0")
-    def withAttributes(attributes: Iterable[Constant]) = withProperties(attributes)
     /**
       * @param attributes Attributes to remove from this model
       * @return A copy of this model with none of the specified attributes
       */
     def withoutProperties(attributes: Set[Constant]) =
         withProperties(this.properties.filterNot(attributes.contains))
-    @deprecated("Replaced with .withoutProperties(Set)", "v2.0")
-    def withoutAttributes(attributes: Set[Constant]) = withoutProperties(attributes)
     /**
       * @param keys Names of the keys to remove (case-insensitive)
       * @return A copy of this model with the specified keys removed
@@ -242,8 +238,6 @@ class Model private(override val propertyMap: Map[String, Constant],
      * @return A copy of this model with the specified property factory being used
      */
     def withFactory(propFactory: PropertyFactory[Constant]) = new Model(propertyMap, propertyOrder, propFactory)
-    @deprecated("Replaced with .withFactory(PropertyFactory)", "v2.0")
-    def withGenerator(generator: PropertyFactory[Constant]) = withFactory(generator)
     
     /**
      * Creates a copy of this model with filtered properties

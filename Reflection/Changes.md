@@ -2,6 +2,10 @@
 
 ## v2.1.1 (in development)
 Supports **Flow v2.3** and **Paradigm** v1.5
+### Breaking changes
+- Removed functions and classes that were deprecated at v1.2 or earlier
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v2.1 - 27.09.2023
 Introduces a bugfix to **Stack** component management

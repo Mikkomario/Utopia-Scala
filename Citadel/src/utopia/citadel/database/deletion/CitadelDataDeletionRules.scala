@@ -26,20 +26,6 @@ object CitadelDataDeletionRules
 	// COMPUTED -----------------------------------
 	
 	/**
-	  * @return Tables that should be targeted with the "clear unreferenced data" -operation,
-	  *         namely: client device
-	  */
-	@deprecated("Please use unreferencedRules instead", "v2.0.1")
-	def unreferencedDeletionTables = Vector()
-	
-	/**
-	  * @return Tables that should be targeted with "clear unreferenced data" -operation. Namely: client device.
-	  *         Client devide descriptions are not considered as references in this case.
-	  */
-	@deprecated("There are no unreferenced rules at this time")
-	def unreferencedRules = Set()
-	
-	/**
 	  * @return A set of deletion rules where all expired / deprecated items are deleted after 30 days
 	  */
 	def default = custom()

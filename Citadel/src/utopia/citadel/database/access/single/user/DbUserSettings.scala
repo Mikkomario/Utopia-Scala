@@ -62,7 +62,7 @@ object DbUserSettings
 		
 		override protected def parent = DbUserSettings
 		
-		override def filterCondition = model.withUserId(userId).toCondition
+		override def filterCondition = this.model.withUserId(userId).toCondition
 		
 		
 		// OTHER    -----------------
@@ -85,7 +85,7 @@ object DbUserSettings
 				// Deprecates the old settings
 				deprecate()
 				// Inserts new settings
-				model.insert(UserSettingsData(userId, newName, newEmail))
+				this.model.insert(UserSettingsData(userId, newName, newEmail))
 			}
 			def _userNameIsValid() = DbManyUserSettings.withName(newName).userIds.forall { _ == userId }
 			
@@ -116,7 +116,7 @@ object DbUserSettings
 		
 		override protected def parent = DbUserSettings
 		
-		override def filterCondition = model.withEmail(email).toCondition
+		override def filterCondition = this.model.withEmail(email).toCondition
 	}
 }
 

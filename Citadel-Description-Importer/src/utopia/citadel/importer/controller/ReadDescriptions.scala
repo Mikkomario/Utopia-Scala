@@ -153,7 +153,6 @@ object ReadDescriptions
 					case "organization" => Success(DbOrganizationDescriptions)
 					case "task" => Success(DbTaskDescriptions)
 					case "user_role" => Success(DbUserRoleDescriptions)
-					case "device" => Success(DbClientDeviceDescriptions)
 					case s: String =>
 						Failure(new NoSuchElementException(s"No standard description factory for key: $s"))
 				}

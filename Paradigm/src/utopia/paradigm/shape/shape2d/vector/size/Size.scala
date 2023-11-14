@@ -93,15 +93,6 @@ class Size private(override val dimensions: Dimensions[Double])
     // OTHER    -----------------------------
     
     /**
-     * A copy of this size with specified length along the target axis
-     */
-    @deprecated("Replaced with withLength(Vector1D, Boolean)", "v1.1")
-    def withLength(l: Double, axis: Axis2D) = axis match {
-        case X => withWidth(l)
-        case Y => withHeight(l)
-    }
-    
-    /**
       * @param position New position for this size (default = (0, 0))
       * @return A set of bounds with this size and specified position
       */
@@ -112,32 +103,4 @@ class Size private(override val dimensions: Dimensions[Double])
       * @return A new set of bounds which are centered on the specified point and have this size
       */
     def centeredAt(centerPosition: Point) = Bounds(centerPosition - this / 2, this)
-    
-    /**
-     * @param another Another size
-      * @param preserveShape Whether the width/height -ratio of this size should be preserved when altering size
-      *                      (default = false)
-     * @return A copy of this size that fits into specified size. If this size already fits, returns this.
-     */
-    @deprecated("Replaced with fittingWithin(Size, Boolean) and croppedToFit(Size). Notice also the different functionality.", "v1.1")
-    def fittedInto(another: Size, preserveShape: Boolean = false) = {
-        if (width <= another.width) {
-            if (height <= another.height)
-                this
-            else if (preserveShape)
-                this * (another.height / height)
-            else
-                withHeight(another.height)
-        }
-        else if (height <= another.height) {
-            if (preserveShape)
-                this * (another.width / width)
-            else
-                withWidth(another.width)
-        }
-        else if (preserveShape)
-            this * (another / this).minDimension
-        else
-            another
-    }
 }

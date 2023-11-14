@@ -45,42 +45,10 @@ object ExodusTables
 	  * Table that contains user passwords (Represents a hashed user password)
 	  */
 	def userPassword = apply("user_password")
-	
-	/**
-	  * Table that contains ApiKeys (Used for authenticating requests before session-based authentication is available)
-	  */
-	@deprecated("Will be removed in a future release", "v4.0")
-	def apiKey = apply("api_key")
-	
-	/**
-	  * Table that contains DeviceTokens (Used as a refresh token to generate device-specific session tokens on private devices)
-	  */
-	@deprecated("Will be removed in a future release", "v4.0")
-	def deviceToken = apply("device_token")
-	
 	/**
 	  * Table that contains EmailValidationPurposes (An enumeration for purposes an email validation may be used for)
 	  */
 	def emailValidationPurpose = apply("email_validation_purpose")
-	
-	/**
-	  * Table that contains EmailValidationResends (Represents a time when an email validation was sent again)
-	  */
-	@deprecated("Will be removed in a future release", "v4.0")
-	def emailValidationResend = apply("email_validation_resend")
-	
-	/**
-	  * Table that contains EmailValidatedSessions (Used for creating a temporary and limited session based on an
-	  *  authenticated email validation attempt)
-	  */
-	@deprecated("Will be removed in a future release", "v4.0")
-	def emailValidatedSession = apply("email_validated_session")
-	
-	/**
-	  * Table that contains SessionTokens (Used for authenticating temporary user sessions)
-	  */
-	@deprecated("Will be removed in a future release", "v4.0")
-	def sessionToken = apply("session_token")
 	
 	
 	// OTHER	--------------------

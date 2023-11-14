@@ -70,15 +70,6 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 */
 	def describedInLanguageWithId(languageId: Int)(implicit connection: Connection) =
 		pullDescribed(descriptions.inLanguageWithId(languageId).pull)
-	/**
-	 * @param languageIds Ids of the accepted languages, from most preferred to least preferred
-	 * @param connection Implicit DB Connection
-	 * @return A described copy of this instance, containing 0-1 descriptions per role.
-	 *         Uses the most preferred available language.
-	 */
-	@deprecated("Please use described instead", "v1.3")
-	def describedInLanguages(languageIds: Seq[Int])(implicit connection: Connection) =
-		described(connection, LanguageIds(languageIds.toVector))
 	
 	/**
 	 * @param roleIds Ids of the targeted description roles

@@ -41,14 +41,10 @@ sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] wi
 	 * @return Whether this value is known to be true
 	 */
 	def isCertainlyTrue = isCertainlyExactly(true)
-	@deprecated("Please use .isCertainlyTrue instead", "v2.0")
-	def isTrue = isCertainlyTrue
 	/**
 	 * @return Whether this boolean is known to be false
 	 */
 	def isCertainlyFalse = isCertainlyExactly(false)
-	@deprecated("Please use .isCertainlyFalse instead", "v2.0")
-	def isFalse = isCertainlyFalse
 	/**
 	  * @return If this boolean is not known to be true
 	  */
@@ -62,8 +58,6 @@ sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] wi
 	 * @return This value as a boolean. False if unknown.
 	 */
 	def toBoolean = getOrElse(false)
-	@deprecated("Please use toBoolean instead", "v2.0")
-	def get = toBoolean
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -135,8 +129,6 @@ case object UncertainBoolean extends UncertainBoolean
 	
 	// COMPUTED -------------------------
 	
-	@deprecated("Please use Uncertain instead", "v2.0")
-	def Undefined = this
 	@deprecated("Please use CertainBoolean instead", "v2.2")
 	def Certain = CertainBoolean
 	

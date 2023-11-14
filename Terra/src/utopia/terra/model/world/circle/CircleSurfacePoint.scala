@@ -39,7 +39,7 @@ object CircleSurfacePoint
 	 * @param vector A vector in the Circle of Earth -system
 	 * @return A point representation of that vector
 	 */
-	def apply(vector: Vector2D): CircleSurfacePoint = new CircleVector(vector)
+	def apply(vector: Vector2D): CircleSurfacePoint = new VectorOnCircle(vector)
 	
 	
 	// NESTED   -------------------------
@@ -49,7 +49,7 @@ object CircleSurfacePoint
 		override lazy val vector: Vector2D = CircleOfEarth.latLongToVector(latLong)
 	}
 	
-	private class CircleVector(override val vector: Vector2D) extends CircleSurfacePoint
+	private class VectorOnCircle(override val vector: Vector2D) extends CircleSurfacePoint
 	{
 		override lazy val latLong: LatLong = CircleOfEarth.vectorToLatLong(vector)
 	}

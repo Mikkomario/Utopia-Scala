@@ -2,6 +2,10 @@
 
 ## v1.17.1 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- Removed all classes and functions that were deprecated at v1.14 or earlier
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v1.17 - 27.09.2023
 This update introduces important bugfixes, as well as better support for DELETE statements.

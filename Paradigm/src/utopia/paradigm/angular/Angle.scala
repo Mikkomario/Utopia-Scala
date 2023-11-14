@@ -146,18 +146,6 @@ case class Angle private(radians: Double)
     def circleRatio = radians / (2 * math.Pi)
     
     /**
-      * This angle in radians. Between 0 and 2*Pi
-      */
-    @deprecated("Please use .radians instead", "v2.3")
-    def toRadians = radians /*{ val downscaled = rawRadians % (2 * math.Pi)
-        if (downscaled < 0) downscaled + 2 * math.Pi else downscaled }*/
-    /**
-     * This angle in degrees. between 0 and 360
-     */
-    @deprecated("Please use .degrees instead", "v2.3")
-    def toDegrees = degrees
-    
-    /**
       * @return A clockwise rotation that will turn an item from 0 radians to this angle
       */
     @deprecated("Please use .toRotation.clockwise instead", "v1.5")
@@ -231,11 +219,6 @@ case class Angle private(radians: Double)
     // OTHER    -----------------------
     
     /**
-      * Applies a rotation (radians) to this angle in counter-clockwise direction
-      */
-    @deprecated("Please use -(Rotation) instead", "v2.3")
-    def -(rotationRads: Double) = Angle.radians(radians - rotationRads)
-    /**
       * Applies a negative rotation to this angle
       */
     def -(rotation: DirectionalRotation): Angle = Angle.radians(radians - rotation.clockwise.radians)
@@ -270,12 +253,6 @@ case class Angle private(radians: Double)
      * @return This angle in the coordinate system where the specified angle is considered zero
      */
     def relativeTo(zero: Angle) = Angle.radians(radians - zero.radians)
-    
-    /**
-     * Applies a rotation (radians) to this angle in clockwise direction
-     */
-    @deprecated("Please use +(DirectionalRotation) instead", "v2.3")
-    def +(rotationRads: Double) = Angle.radians(radians + rotationRads)
     
     /**
       * @param other Another angle (> 0 degrees)

@@ -131,21 +131,4 @@ case class Strip(images: Vector[Image]) extends Animation[Image]
 	  * @return An animation based on this strip with specified animation speed
 	  */
 	def toTimedAnimation(fps: Fps) = over(images.size * fps.interval)
-	
-	/**
-	  * @param getImageOrigin A function for calculating an image origin. Default = origin at image center.
-	  * @return An animation that returns both image and origin
-	  */
-	@deprecated("Please specify the origin first and then transform this strip", "v2.4")
-	def toAnimationWithOrigin(getImageOrigin: Image => Point = _.size.toPoint / 2) =
-		map { i => i -> getImageOrigin(i) }
-	
-	/**
-	  * @param fps Animation speed in frames per second
-	  * @param getImageOrigin A function for calculating an image origin. Default = origin at image center.
-	  * @return A timed animation that returns both image and origin
-	  */
-	@deprecated("Please specify the origin first and then transform this strip", "v2.4")
-	def toTimedAnimationWithOrigin(fps: Fps, getImageOrigin: Image => Point = _.size.toPoint / 2) =
-		toTimedAnimation(fps).map { i => i -> getImageOrigin(i) }
 }

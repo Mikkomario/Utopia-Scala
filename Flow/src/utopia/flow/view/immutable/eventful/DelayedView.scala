@@ -15,39 +15,6 @@ import scala.concurrent.{ExecutionContext, Future}
 object DelayedView
 {
 	/**
-	  * Creates a delayed view into the specified item's value. This delayed view will only fire change events after
-	  * there's a long enough of period without changes in the original item
-	  * @param source A changing item
-	  * @param delay Delay to apply to item value changes
-	  * @param exc Implicit execution context
-	  * @tparam A Type of item values
-	  * @return A new delayed view into the item (where all change events are delayed at least by <i>delay</i>)
-	  */
-	@deprecated("Please use source.delayedBy(delay) instead", "v2.0")
-	def of[A](source: Changing[A], delay: => Duration)(implicit exc: ExecutionContext) =
-	{
-		// Won't wrap non-changing items
-		if (source.isChanging)
-		{
-			val cachedDelay = delay
-			// If there is no delay, there is no need to wrap the source item
-			if (cachedDelay > Duration.Zero)
-				cachedDelay.finite match
-				{
-					case Some(finiteDelay) => new DelayedView(source, finiteDelay)
-					case None =>
-						// On the other hand, if there is infinite delay, can simply simulate the
-						// end result with a fixed value
-						Fixed(source.value)
-				}
-			else
-				source
-		}
-		else
-			source
-	}
-	
-	/**
 	  * Creates a new delayed view of another changing item
 	  * @param source The viewed item
 	  * @param delay A delay to apply to each mirrored change

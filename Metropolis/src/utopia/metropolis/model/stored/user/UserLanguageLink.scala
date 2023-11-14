@@ -45,11 +45,5 @@ object UserLanguageLink extends StoredFromModelFactory[UserLanguageLink, UserLan
 case class UserLanguageLink(id: Int, data: UserLanguageLinkData)
 	extends StyledStoredModelConvertible[UserLanguageLinkData]
 {
-	/**
-	  * @return This link as a model without including user id
-	  */
-	@deprecated("Please use toSimpleModel instead", "v2.0")
-	def toModelWithoutUser = data.toModelWithoutUser + Constant("id", id)
-	
 	override protected def includeIdInSimpleModel = false
 }

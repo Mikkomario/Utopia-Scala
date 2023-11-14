@@ -66,16 +66,4 @@ class SpriteDrawer(val spritePointer: EventfulPointer[TimedAnimation[Image]],
 		if (resetProgress)
 			reset()
 	}
-	
-	/**
-	  * Changes the strip being drawn
-	  * @param newStrip New strip to draw
-	  * @param origin Origin point used when drawing the strip (relative to image top-left corner)
-	  * @param duration      Duration it takes to fully animate the strip
-	  * @param resetProgress Whether the new animation should be started from the beginning (true) or from the
-	  *                      current animation point (false). Default = true.
-	  */
-	@deprecated("Please use setSprite instead", "v2.4")
-	def setStrip(newStrip: Strip, origin: Point, duration: Duration, resetProgress: Boolean = true) =
-		setSprite(newStrip.withOrigin(origin).over(duration), resetProgress)
 }

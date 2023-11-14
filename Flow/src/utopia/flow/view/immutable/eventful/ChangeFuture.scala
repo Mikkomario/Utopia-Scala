@@ -45,32 +45,6 @@ object ChangeFuture
 				p
 			}
 		}
-	
-	/**
-	  * Wraps a future into a change future
-	  * @param future A future to wrap
-	  * @param placeHolder A placeholder value to use while the future is not completed (call by name)
-	  * @param exc Implicit execution context
-	  * @tparam A Type of future content
-	  * @return A new change future (or wrapped future result)
-	  */
-	@deprecated("Please use Changing.wrapFuture(...) instead", "v2.0")
-	def wrap[A](future: Future[A], placeHolder: => A)(implicit exc: ExecutionContext) =
-		future.current match {
-			case Some(v) => Fixed(v)
-			case None => merging[A, A](placeHolder, future) { (p, result) => result.getOrElse(p) }
-		}
-	
-	/**
-	  * Wraps a future, containing None until that future is completed
-	  * @param future A future
-	  * @param exc Implicit execution context
-	  * @tparam A Type of item this future will eventually contain
-	  * @return A new change future
-	  */
-	@deprecated("Please use Changing.wrapFutureToOption(...) instead", "v2.0")
-	def noneUntilCompleted[A](future: Future[A])(implicit exc: ExecutionContext) =
-		wrap(future.map { Some(_) }, None)
 }
 
 /**

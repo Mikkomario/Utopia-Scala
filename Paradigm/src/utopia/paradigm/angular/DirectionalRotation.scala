@@ -92,12 +92,6 @@ case class DirectionalRotation private(absolute: Rotation, direction: RotationDi
 	def degrees = absoluteDegrees
 	
 	/**
-	 * A radian double value of this rotation
-	 */
-	@deprecated("Please use clockwiseRadians instead", "v2.3")
-	def toDouble = clockwiseRadians
-	
-	/**
 	  * @return A radian double value of this rotation to clockwise direction. Negative if this rotation is counter
 	  *         clockwise
 	  */

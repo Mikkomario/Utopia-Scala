@@ -2,6 +2,10 @@
 
 ## v1.1.8 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- Removed classes that were deprecated at version v1.1 or earlier
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v1.1.7 - 27.09.2023
 Rebuild due to parent module changes

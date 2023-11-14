@@ -6,10 +6,8 @@
 - Renamed **CanBeZero** to **MayBeZero** and **CanBeAboutZero** to **MayBeAboutZero**
 - Moved **JsonSettingsAccess** to `parse.json`
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
-  - You can work around this by appending `.toTuple` after these method calls 
-- **Combinable** now always specifies `-` as well as `+`
-  - This may cause some override conflicts down the class hierarchy, 
-    which may usually be resolved by simply deleting the implementing function from the subclass 
+  - You can work around this by appending `.toTuple` after these method calls
+- Deleted classes and functions that were deprecated at v2.0 or earlier
 ### Deprecations
 - Renamed `Regex.parenthesis` to `.parentheses`
 ### Bugfixes
@@ -48,6 +46,7 @@
   - `~==` checks whether the two paths target the same file
   - `.isEmpty` checks whether the targeted directory is empty
     - Returns false for existing regular files
+- Scala version updated to 2.13.12
 
 ## v2.2 - 27.09.2023
 This update focuses on the pointer system (i.e. the **Changing** trait).  

@@ -39,22 +39,9 @@ case class AuthTokenWithScopes(token: AuthToken, scopes: Set[Scope]) extends Ext
 	def containsAllScopeIds(searchedScopeIds: Iterable[Int]) =
 		searchedScopeIds.forall { id => scopes.exists { _.id == id } }
 	/**
-	  * @param searchedScopes Scopes to search
-	  * @return Whether this token provides access to all of those scopes
-	  */
-	@deprecated("Consider using containsAllScopeIds instead", "v2.0")
-	def containsAll(searchedScopes: Iterable[Scope]) = containsAllScopeIds(searchedScopes.map { _.id })
-	
-	/**
 	  * @param searchedScopeIds Ids of the scopes to search
 	  * @return Whether this token provides access to at least one of those scopes
 	  */
 	def containsAnyOfScopeIds(searchedScopeIds: Iterable[Int]) =
 		searchedScopeIds.exists { id => scopes.exists { _.id == id } }
-	/**
-	  * @param searchedScopes scopes to search
-	  * @return Whether this token provides access to at least one of those scopes
-	  */
-	@deprecated("Consider using containsAnyOfScopeIds instead", "v2.0")
-	def containsAnyOf(searchedScopes: Iterable[Scope]) = containsAnyOfScopeIds(searchedScopes.map { _.id })
 }

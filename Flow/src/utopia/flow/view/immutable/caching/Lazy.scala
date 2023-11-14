@@ -55,13 +55,6 @@ object Lazy
 	  * @return A no-op lazy that simply wraps the value
 	  */
 	def initialized[A](value: A) = PreInitializedLazy(value)
-	/**
-	  * @param value A pre-calculated value
-	  * @tparam A Type of that value
-	  * @return That value wrapped as a lazy
-	  */
-	@deprecated("Please use .initialized instead", "v2.0")
-	def wrap[A](value: A) = PreInitializedLazy(value)
 	
 	
 	// NESTED   ------------------------
@@ -111,12 +104,6 @@ trait Lazy[+A] extends View[A]
 	// COMPUTED	------------------------
 	
 	/**
-	  * @return Value in this container (cached or generated)
-	  */
-	@deprecated("Please use .value instead", "v1.9")
-	def get = value
-	
-	/**
 	  * @return Whether this lazily initialized wrapper has already been initialized
 	  */
 	def isInitialized = current.nonEmpty
@@ -124,12 +111,6 @@ trait Lazy[+A] extends View[A]
 	  * @return Whether this lazily initialized wrapper hasn't been initialized yet
 	  */
 	def nonInitialized = current.isEmpty
-	
-	/**
-	  * @return A lazily initialized iterator based on the contents of this lazy container
-	  */
-	@deprecated("Please use .valueIterator instead", "v2.0")
-	def iterator = PollableOnce { value }
 	
 	
 	// IMPLEMENTED	---------------------

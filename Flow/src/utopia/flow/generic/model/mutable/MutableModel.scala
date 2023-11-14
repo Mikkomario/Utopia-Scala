@@ -136,18 +136,6 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
     }
     
     /**
-     * Updates the value of a single attribute within this model
-     * @param property a name value pair that will be updated or added
-     */
-    @deprecated("This method's functionality may be misleading. Please consider other options", "v2.0")
-    def update(property: Property): Unit = update(property.name, property.value)
-    /**
-     * Updates values of multiple attributes in this model
-     */
-    @deprecated("This method's functionality may be misleading. Please consider other options", "v2.0")
-    def update(data: template.ModelLike[Property]): Unit = data.properties.foreach(update)
-    
-    /**
      * Adds a new property to this model.
       * If a property with the same name already exists, it is replaced with this new property
      * @param prop The property to add to this model

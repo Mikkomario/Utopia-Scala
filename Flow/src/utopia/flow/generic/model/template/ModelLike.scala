@@ -41,8 +41,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  *         The map keys are lower case property names.
 	  */
 	def propertyMap: Map[String, P]
-	@deprecated("Will be replaced with propertyMap")
-	def attributeMap = propertyMap
 	
 	/**
 	  * @return Property names (lower case) in order.
@@ -67,8 +65,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 		val allProps = propertyMap
 		propertyOrder.flatMap(allProps.get)
 	}
-	@deprecated("Will be replaced with .properties", "v2.0")
-	def attributes = properties
 	
 	/**
 	  * @return An ordered iterator that returns the properties within this model.
@@ -82,8 +78,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * The names of the properties stored in this model. Ordered.
 	  */
 	def propertyNames = propertiesIterator.map { _.name }.toVector
-	@deprecated("Replaced with propertyNames", "v2.0")
-	def attributeNames = propertyNames
 	
 	/**
 	  * The properties within this model that have a defined (non-empty) value. Ordered.
@@ -93,8 +87,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * The properties within this model that have a defined (non-empty) value. Ordered.
 	  */
 	def nonEmptyProperties = nonEmptyPropertiesIterator.toVector
-	@deprecated("Replaced with .nonEmptyProperties", "v2.0")
-	def attributesWithValue = nonEmptyProperties
 	
 	/**
 	  * @return Whether this model contains no properties.
@@ -244,8 +236,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  *         None if no such property exists.
 	  */
 	def existing(propName: String) = propertyMap.get(propName.toLowerCase)
-	@deprecated("Replaced with .existing(String)", "v2.0")
-	def findExisting(propName: String) = existing(propName)
 	/**
 	  * Finds an existing property from this model.
 	  * No new properties will be generated.
@@ -254,8 +244,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  *         None if none of the specified keys matched an existing property.
 	  */
 	def existing(propNames: IterableOnce[String]): Option[P] = propNames.findMap(existing)
-	@deprecated("Replaced with .existing(IterableOnce)", "v2.0")
-	def findExisting(propNames: IterableOnce[String]): Option[P] = existing(propNames)
 	
 	/**
 	  * Finds a property from this model.

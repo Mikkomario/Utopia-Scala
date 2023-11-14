@@ -572,27 +572,6 @@ object FileExtensions
 		def withMappedFileName(f: String => String) = withFileName(f(fileName))
 		
 		/**
-		  * Performs an operation on all files directly under this path
-		  * @param filter    A filter applied to child paths (default = no filter)
-		  * @param operation Operation performed for each path
-		  * @return A try that may contain a failure if this operation failed
-		  */
-		@deprecated("Please use the new, more flexible, .iterateChildren(...) instead", "v1.11.2")
-		def forChildren(filter: Path => Boolean = _ => true)(operation: Path => Unit): Try[Unit] =
-			iterateChildren { _.filter(filter).foreach(operation) }
-		/**
-		  * Merges values of child paths into a single value
-		  * @param start  Starting value
-		  * @param filter A filter applied to the childre (default = no filtering)
-		  * @param f      A folding function
-		  * @tparam A Type of fold result
-		  * @return Fold result. May contain a failure.
-		  */
-		@deprecated("Please use the new, more flexible, .iterateChildren(...) instead", "v1.11.2")
-		def foldChildren[A](start: A, filter: Path => Boolean = _ => true)(f: (A, Path) => A) =
-			iterateChildren { _.filter(filter).foldLeft(start)(f) }
-		
-		/**
 		  * @param filter A filter that determines which paths will be included. Will be called once for each file
 		  *               within this directory and its sub-directories (including the directories themselves).
 		  * @return Paths accepted by the filter
@@ -832,12 +811,6 @@ object FileExtensions
 		def deleteContents() =
 			iterateChildren { _.map { _.delete() }.toVector.find { _.isFailure }.getOrElse { Success(()) } }
 				.flatten.map { _ => p }
-		/**
-		  * Deletes all child paths from under this directory. Stops deletion if any deletion fails.
-		  * @return Whether any files were deleted. May contain failure.
-		  */
-		@deprecated("Please use deleteContents instead", "v1.16")
-		def deleteChildren() = children.flatMap { _.tryMap { _.delete() } }.map { _.contains(true) }
 		
 		/**
 		  * Creates this directory (and ensures existence of parent directories as well). If this is not a directory,
@@ -891,13 +864,6 @@ object FileExtensions
 		  */
 		def write(text: String)(implicit codec: Codec) =
 			createParentDirectories().flatMap { p => Try { Files.write(p, text.getBytes(codec.charSet)) } }
-		/**
-		  * Writes a json-convertible instance to this file
-		  * @param json A json-convertible instance that will produce contents of this file
-		  * @return This path. Failure if writing failed.
-		  */
-		@deprecated("Replaced with writeJson", "v1.9")
-		def writeJSON(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
 		/**
 		  * Writes a json-convertible instance to this file
 		  * @param json A json-convertible instance that will produce contents of this file

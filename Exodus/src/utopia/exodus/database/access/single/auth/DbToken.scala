@@ -161,7 +161,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 		// ATTRIBUTES	--------------------
 		
 		// Tokens are hashed using SHA256 algorithm
-		override lazy val filterCondition = model.withHash(Sha256Hasher(tokenString)).toCondition
+		override lazy val filterCondition = this.model.withHash(Sha256Hasher(tokenString)).toCondition
 		
 		
 		// IMPLEMENTED	--------------------

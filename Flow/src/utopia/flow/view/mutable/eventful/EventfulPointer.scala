@@ -58,13 +58,4 @@ class EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with Point
 	
 	// Can never stop changing, so listener assignment is not needed either
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
-	
-	
-	// OTHER	--------------------
-	
-	@deprecated("Please use .value instead", "v1.9")
-	def get = value
-	
-	@deprecated("Please assign directly to .value instead", "v1.9")
-	def set(newVal: A) = value = newVal
 }

@@ -217,20 +217,6 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	  * @return A filtered copy of this tree
 	  */
 	def filterByNav(f: A => Boolean) = filter { n => f(n.nav) }
-	/**
-	  * Filters all content in this tree
-	  * @param f A filter function
-	  * @return A new tree with all nodes filtered
-	  */
-	@deprecated("Replaced with .filterByNav(...)", "v2.0")
-	def filterContents(f: A => Boolean): Repr = filterByNav(f)
-	/**
-	  * Filters the direct children of this tree
-	  * @param f A filter function
-	  * @return A filtered version of this tree
-	  */
-	@deprecated("Replaced with .filterDirect(...)", "v2.0")
-	def filterChildren(f: Repr => Boolean) = filterDirect(f)
 	
 	/**
 	  * @param node A node to search

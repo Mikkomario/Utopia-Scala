@@ -8,22 +8,6 @@ import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
 object LazyMirror
 {
 	/**
-	  * @param pointer Mirrored item
-	  * @param f Mapping function
-	  * @tparam O Type of item before mapping
-	  * @tparam R Type of item after mapping
-	  * @return A lazily mirrored view to specified pointer
-	  */
-	@deprecated("Please use pointer.lazyMap(f) instead", "v2.0")
-	def of[O, R](pointer: Changing[O])(f: O => R) =
-	{
-		if (pointer.isChanging)
-			new LazyMirror(pointer)(f)
-		else
-			Lazy.listenable { f(pointer.value) }
-	}
-	
-	/**
 	  * Creates a new lazy mirror, which lazily reflects the value of a source item
 	  * @param source A source item
 	  * @param f A mapping function

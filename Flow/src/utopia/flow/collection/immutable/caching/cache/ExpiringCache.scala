@@ -115,7 +115,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 		override protected def iteration() = {
 			queuedExpirationsPointer.headOption.flatMap { case (waitTarget, targetKey) =>
 				// Waits until the wait target is reached (may be interrupted)
-				if (Wait(waitTarget, waitLock)) {
+				if (Wait(waitTarget, this.waitLock)) {
 					// If target was reached, removes the key from the cache
 					// Otherwise finds a new target
 					if (Now >= waitTarget) {

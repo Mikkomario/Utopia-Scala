@@ -1,5 +1,11 @@
 # Utopia Disciple - List of changes
 
+## v2.1.6 (in development)
+### Breaking changes
+- Removed all deprecated classes and functions
+### Other changes
+- Scala version updated to 2.13.12
+
 ## v2.1.5 - 27.09.2023
 Supports latest **Vault v1.17**
 

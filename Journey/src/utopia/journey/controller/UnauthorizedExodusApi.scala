@@ -3,22 +3,15 @@ package utopia.journey.controller
 import utopia.access.http.Headers
 import utopia.access.http.Status.Unauthorized
 import utopia.annex.controller.Api
-import utopia.annex.model.response.{RequestFailure, Response}
-import utopia.annex.model.response.ResponseBody.{Content, Empty}
-import utopia.disciple.http.request.StringBody
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.CollectionExtensions._
-import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestException}
+import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.disciple.apache.Gateway
+import utopia.disciple.http.request.StringBody
 import utopia.disciple.model.error.RequestFailedException
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.journey.model.error.NoUserDataError
-import utopia.metropolis.model.combined.device.DetailedClientDevice
-import utopia.metropolis.model.combined.user.UserCreationResult
-import utopia.metropolis.model.post.{NewDevice, NewLanguageProficiency, NewUser}
+import utopia.journey.model.UserCredentials
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -42,6 +35,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	
 	// OTHER	---------------------------------
 	
+	/*
 	/**
 	  * Creates a new user and new device on the server side, then logs in as that user
 	  * @param userName Name of the new user
@@ -134,6 +128,8 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		}
 	}
 	
+	
+	 */
 	/**
 	  * Attempts to log in using a device authorization key. Remember to check for authorization failures.
 	  * @param deviceId Id of targeted device (see LocalDevice)
@@ -167,7 +163,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 				body.value.string match {
 					case Some(key) =>
 						// Registers the key, then uses it to acquire a session key
-						LocalDevice.key = key
+						// LocalDevice.key = key
 						login(Right(key), deviceId)
 					case None => asyncFailure(new EmptyResponseException(
 						s"Expected a device key but an empty response ($status) received instead"))

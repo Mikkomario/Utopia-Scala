@@ -52,41 +52,12 @@ object JsonReader extends JsonParser
 	def apply(jsonFile: File): Try[Value] = StringFrom.file(jsonFile).flatMap(apply)
 	
 	/**
-	  * Parses a model out of JSON data. The parsing will start at the first object start ('{') and
-	  * end at the end of that object. Only a single model will be parsed, even if there are multiple
-	  * siblings available
-	  * @param json The JSON string
-	  * @return The parsed model. Fails if the json was malformed
-	  */
-	@deprecated("Please use apply(String) instead", "v1.6")
-	def parseSingle(json: String) = apply(json).map { _.getModel }
-	
-	/**
-	  * Parses models out of JSON data. The parsing will start at the first object start ('{') and
-	  * continue until each of the objects have been parsed. If the data is malformed, the parsing
-	  * will be stopped.
-	  * @param json The JSON string
-	  * @return The parsed models
-	  */
-	@deprecated("Please use apply(String) instead", "v1.6")
-	def parseMany(json: String) = apply(json).map { _.getVector.map { _.getModel } }
-	
-	/**
-	  * Parses a single value from the provided JSON. Only the first value will be read, whether it
-	  * is an array, object or a simple value. Fails if the provided json is malformed.
-	  */
-	@deprecated("Please use apply(String) instead", "v1.6")
-	def parseValue(json: String) = apply(json)
-	
-	/**
 	  * Parses the json and wraps it in a value
 	  * @param json Json data
 	  * @return Parsed value or failure if json was invalid
 	  */
-	def apply(json: String) =
-	{
-		Try
-		{
+	def apply(json: String) = {
+		Try {
 			// First finds the indices of each meaningful json marker
 			val indices = allIndicesOf(Set(Quote.marker, Separator.marker, ArrayStart.marker, ArrayEnd.marker,
 				ObjectStart.marker, ObjectEnd.marker), json)

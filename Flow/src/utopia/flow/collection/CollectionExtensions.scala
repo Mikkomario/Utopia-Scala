@@ -4,14 +4,12 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.collection.mutable.iterator._
-import utopia.flow.operator.enumeration.{End, Extreme}
+import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.operator.sign.Sign
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
-import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
@@ -615,41 +613,6 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * Finds the item or items with the maximum value, based on a mapping function. Works like maxBy, except that
-		  * multiple values are returned in cases where items map to the same (maximum) value.
-		  * @param f   A function that maps items to comparable values
-		  * @param bf  An implicit buildfrom for the resulting collection
-		  * @param ord Implicit ordering for the mapped values
-		  * @tparam B  Compared type (map result type)
-		  * @tparam To Type of the resulting collection
-		  * @return A version of this collection that only contains the items that mapped to the largest available value
-		  */
-		@deprecated("Please use .filterBy(Extreme) instead", "v2.0")
-		def maxGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]): To = {
-			val iterOps = iter(coll)
-			if (iterOps.isEmpty)
-				bf.fromSpecific(coll)(Iterator.empty)
-			else {
-				val pairs = iterOps.iterator.map { a => a -> f(a) }.toVector
-				val maxValue = pairs.map { _._2 }.max
-				bf.fromSpecific(coll)(pairs.iterator.filter { _._2 == maxValue }.map { _._1 })
-			}
-		}
-		/**
-		  * Finds the item or items with the minimum value, based on a mapping function. Works like minBy, except that
-		  * multiple values are returned in cases where items map to the same (minimum) value.
-		  * @param f   A function that maps items to comparable values
-		  * @param bf  An implicit buildfrom for the resulting collection
-		  * @param ord Implicit ordering for the mapped values
-		  * @tparam B  Compared type (map result type)
-		  * @tparam To Type of the resulting collection
-		  * @return A version of this collection that only contains the items that mapped to the smallest available value
-		  */
-		@deprecated("Please use .filterBy(Extreme) instead", "v2.0")
-		def minGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
-			maxGroupBy(f)(bf, ord.reverse)
-		
-		/**
 		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
 		  * collections are included in the resulting collection.
 		  * @param other        Another collection
@@ -773,14 +736,6 @@ object CollectionExtensions
 	implicit class RichIterableLike[A, CC[X], Repr <: Iterable[_]](val t: IterableOps[A, CC, Repr]) extends AnyVal
 	{
 		/**
-		  * Performs an operation for each item in this collection. Stops if an operation fails.
-		  * @param f A function that takes an item and performs an operation that may fail
-		  * @return Failure if any of the operations failed, success otherwise.
-		  */
-		@deprecated("Please use .tryForeach(...) instead", "v1.12")
-		def tryForEach(f: A => Try[Any]): Try[Any] = t.view.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
-		
-		/**
 		  * @return An iterator that keeps repeating over and over (iterator continues infinitely or until this
 		  *         collection is empty)
 		  */
@@ -872,22 +827,6 @@ object CollectionExtensions
 		  * @return The most extreme item in this collection. None if this collection is empty.
 		  */
 		def find(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.optionFrom(t)
-		
-		/**
-		 * @param sign Targeted side, where negative is head and positive is last
-		 * @return Targeted ending item of this collection
-		 */
-		@deprecated("Replaced with .apply(End)", "v2.0")
-		def end(sign: Sign) = sign match {
-			case Negative => t.head
-			case Positive => t.last
-		}
-		/**
-		 * @param sign Targeted side, where negative is head and positive is last
-		 * @return Targeted ending item of this collection. None if this item is empty.
-		 */
-		@deprecated("Replaced with .find(End)", "v2.0")
-		def endOption(sign: Sign) = if (t.isEmpty) None else end(sign)
 		
 		/**
 		  * @return Duplicate items within this Iterable
@@ -1399,16 +1338,6 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * @param another Another sequence
-		  * @param equals  Equality function
-		  * @tparam B Type of another sequence's content
-		  * @return Whether these two sequences are equal when using specified equality function
-		  */
-		@deprecated("Replaced with ~==", "v2.0")
-		def compareWith[B, CC2[X]](another: SeqOps[B, CC2, _])(equals: (A, B) => Boolean) =
-			seq.size == another.size && seq.indices.forall { i => equals(seq(i), another(i)) }
-		
-		/**
 		  * Sorts this collection based on multiple orderings (second ordering is only used if first one fails to
 		  * differentiate the items, then third and so on)
 		  * @param firstOrdering  The first ordering to use
@@ -1799,27 +1728,6 @@ object CollectionExtensions
 		  *         iterator if the specified condition was never met.
 		  */
 		def collectTo(stopCondition: A => Boolean) = {
-			val builder = new VectorBuilder[A]()
-			var found = false
-			while (i.hasNext && !found) {
-				val nextItem = i.next()
-				builder += nextItem
-				if (stopCondition(nextItem))
-					found = true
-			}
-			builder.result()
-		}
-		
-		/**
-		  * Takes the next n items from this iterator until a specified condition is met or until the end of this
-		  * iterator is reached. The item which fulfills the specified condition is included in the result as the
-		  * last item. Advances this iterator but doesn't invalidate it.
-		  * @param stopCondition A condition that marks the last included item
-		  * @return Items to and including the one accepted by the specified condition. All remaining items of this
-		  *         iterator if the specified condition was never met.
-		  */
-		@deprecated("Please use collectTo(...) instead. Take implies returning another iterator", "v1.12")
-		def takeNextTo(stopCondition: A => Boolean) = {
 			val builder = new VectorBuilder[A]()
 			var found = false
 			while (i.hasNext && !found) {
@@ -2384,28 +2292,6 @@ object CollectionExtensions
 		  */
 		@throws[NoSuchElementException]("If this map didn't contain the specified key")
 		def mapValue[V2 >: V](key: K)(f: V => V2) = m + (key -> f(m(key)))
-		
-		/**
-		  * Merges this map with another map. If value is present only in one map, it is preserved as is.
-		  * @param another Another map
-		  * @param merge   A merge function used when both maps contain a value
-		  * @tparam V2 The resulting value type
-		  * @return A map with merged values
-		  */
-		@deprecated("Please use .mergeWith(Map)(...) instead", "v1.15")
-		def mergedWith[V2 >: V](another: Map[K, V2], merge: (V, V2) => V2) = {
-			val myKeys = m.keySet
-			val theirKeys = another.keySet
-			val onlyInMe = myKeys.diff(theirKeys)
-			val onlyInThem = theirKeys.diff(myKeys)
-			val inBoth = myKeys.intersect(theirKeys)
-			
-			val myPart = onlyInMe.map { k => k -> m(k) }.toMap
-			val theirPart = onlyInThem.map { k => k -> another(k) }.toMap
-			val ourPart = inBoth.map { k => k -> merge(m(k), another(k)) }.toMap
-			
-			myPart ++ theirPart ++ ourPart
-		}
 		
 		/**
 		  * Merges this map with another map. If value is present only in one map, it is preserved as is.

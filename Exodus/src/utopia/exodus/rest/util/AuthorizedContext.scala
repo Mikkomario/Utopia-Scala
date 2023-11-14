@@ -5,21 +5,18 @@ import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.util.CitadelContext._
+import utopia.exodus.database.access.single.auth.DbToken
 import utopia.exodus.database.access.single.auth.DbToken.DbTokenMatch
-import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbSessionToken, DbToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
 import utopia.exodus.model.combined.auth.ScopedToken
 import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, ReadOrganizationData}
 import utopia.exodus.model.enumeration.ScopeIdWrapper
-import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token}
+import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.logger
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.util.StringExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.parse.json.JsonParser
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}
@@ -167,15 +164,6 @@ abstract class AuthorizedContext extends PostContext
 		else
 			DbUser(userId).languageIds
 	}
-	/**
-	  * Reads preferred language ids list either from the Accept-Language header or from the user data
-	  * @param userId Id of targeted user (call by name)
-	  * @param connection DB Connection (implicit)
-	  * @return Ids of the requested languages in order from most to least preferred. Empty only if the user doesn't
-	  *         exist or has no linked languages
-	  */
-	@deprecated("Please use languageIds instead", "v3.0")
-	def languageIdListFor(userId: => Int)(implicit connection: Connection) = languageIds(userId)
 	
 	/**
 	  * Performs the provided function if the request has correct basic authorization (email + password)
@@ -200,109 +188,6 @@ abstract class AuthorizedContext extends PostContext
 		}
 		result.toResponse(this)
 	}
-	
-	/**
-	  * Perform the specified function if the request can be authorized using a device authentication token
-	  * @param f A function called when request is authorized.
-	  *          Accepts device token + database connection. Produces a http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("This will be removed in a future release", "v4.0")
-	def deviceTokenAuthorized(f: (DeviceToken, Connection) => Result) =
-	{
-		tokenAuthorized("device authentication token") { (token, connection) =>
-			DbDeviceToken(token).pull(connection)
-		}(f)
-	}
-	
-	/**
-	  * Perform the specified function if the request can be authorized using a session token
-	  * @param f A function called when request is authorized. Accepts user session + database connection.
-	  *          Produces a http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("This will be removed in a future release", "v4.0")
-	def sessionTokenAuthorized(f: (SessionToken, Connection) => Result) =
-	{
-		tokenAuthorized("session token") { (token, connection) =>
-			DbSessionToken(token).pull(connection)
-		}(f)
-	}
-	
-	/**
-	  * Performs the specified function if the request can be authorized using either basic authorization or a
-	  * device auth key. Used device auth key will have to match the specified device id. If not, it will be
-	  * invalidated as a safety measure.
-	  * @param requiredDeviceId Device id that the specified key must be connected to, if present
-	  * @param f Function called when request is authorized. Accepts userId + whether device key was used +
-	  *          database connection. Produces an http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("This will be removed in a future release", "v4.0")
-	def basicOrDeviceTokenAuthorized(requiredDeviceId: Int)(f: (Int, Boolean, Connection) => Result) =
-	{
-		// Checks whether basic or device authorization should be used
-		request.headers.authorization match
-		{
-			case Some(authHeader) =>
-				val authType = authHeader.untilFirst(" ")
-				if (authType ~== "basic")
-					basicAuthorized { (userId, connection) => f(userId, false, connection) }
-				else if (authType ~== "bearer")
-					deviceTokenAuthorized { (token, connection) =>
-						// Makes sure the device id in the token matches the required device id.
-						// If not, invalidates the token because it may have become compromised
-						if (token.deviceId == requiredDeviceId)
-							f(token.userId, true, connection)
-						else
-						{
-							token.access.deprecate()(connection)
-							Result.Failure(Unauthorized,
-								"The key you specified cannot be used for this resource. " +
-									"Also, your key has now been invalidated and can no longer be used.")
-						}
-					}
-				else
-					Result.Failure(Unauthorized, "Only basic and bearer authorizations are supported")
-						.toResponse(this)
-			case None => Result.Failure(Unauthorized, "Authorization header is required").toResponse(this)
-		}
-	}
-	@deprecated("Replaced with basicOrDeviceTokenAuthorized", "v3.0")
-	def basicOrDeviceKeyAuthorized(requiredDeviceId: Int)(f: (Int, Boolean, Connection) => Result) =
-		basicOrDeviceTokenAuthorized(requiredDeviceId)(f)
-	
-	/**
-	  * Authorizes the request using an api key in the bearer auth header. Uses existing database connection.
-	  * @param f A function called if the request is authorized (accepts valid api key)
-	  * @param connection Implicit database connection
-	  * @return Function result if the request was authorized, otherwise an authorization failure
-	  */
-	@deprecated("This will be removed in a future release", "v4.0")
-	def apiKeyAuthorizedWithConnection(f: ApiKey => Result)(implicit connection: Connection) =
-	{
-		// Checks the bearer auth token
-		request.headers.bearerAuthorization match
-		{
-			case Some(token) =>
-				// Makes sure the token is registered in the database
-				DbApiKey(token).pull match
-				{
-					case Some(key) => f(key)
-					case None => Result.Failure(Unauthorized, "Invalid api key")
-				}
-			case None => Result.Failure(Unauthorized, "Please provide a api key in the auth bearer header")
-		}
-	}
-	
-	/**
-	  * Authorizes the request using an api key in the bearer auth header
-	  * @param f A function called if the request is authorized (accepts valid api key and database connection)
-	  * @return Function result if the request was authorized, otherwise an authorization failure
-	  */
-	@deprecated("This will be removed in a future release", "v4.0")
-	def apiKeyAuthorized(f: (ApiKey, Connection) => Result) =
-		tokenAuthorized("api key") { (key, connection) => DbApiKey(key).pull(connection) }(f)
 	
 	/**
 	  * Performs the specified function if the user is authorized (using a token),

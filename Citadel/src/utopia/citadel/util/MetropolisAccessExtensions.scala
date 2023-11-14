@@ -1,14 +1,12 @@
 package utopia.citadel.util
 
 import utopia.citadel.database.access.single.description.{DbDescription, DbDescriptionRole}
-import utopia.citadel.database.access.single.device.{DbClientDevice, DbClientDeviceUser}
 import utopia.citadel.database.access.single.language.{DbLanguage, DbLanguageFamiliarity}
-import utopia.citadel.database.access.single.organization.{DbInvitation, DbInvitationResponse, DbMemberRoleLink, DbMembership, DbOrganization, DbOrganizationDeletion, DbOrganizationDeletionCancellation, DbTask, DbUserRole, DbUserRoleRight}
+import utopia.citadel.database.access.single.organization._
 import utopia.citadel.database.access.single.user.{DbUser, DbUserLanguageLink, DbUserSettings}
 import utopia.metropolis.model.stored.description.{Description, DescriptionRole}
-import utopia.metropolis.model.stored.device.{ClientDevice, ClientDeviceUser}
 import utopia.metropolis.model.stored.language.{Language, LanguageFamiliarity}
-import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse, MemberRoleLink, Membership, Organization, OrganizationDeletion, OrganizationDeletionCancellation, Task, UserRole, UserRoleRight}
+import utopia.metropolis.model.stored.organization._
 import utopia.metropolis.model.stored.user.{User, UserLanguageLink, UserSettings}
 
 /**
@@ -33,27 +31,6 @@ object MetropolisAccessExtensions
 		  * @return An access point to this description role in the database
 		  */
 		def access = DbDescriptionRole(a.id)
-	}
-	@deprecated("Device-related classes will be removed", "v2.1")
-	implicit class AccessibleClientDevice(val a: ClientDevice) extends AnyVal
-	{
-		/**
-		  * @return An access point to this device in the database
-		  */
-		@deprecated("Device-related classes will be removed", "v2.1")
-		def access = DbClientDevice(a.id)
-	}
-	@deprecated("Device-related classes will be removed", "v2.1")
-	implicit class AccessibleClientDeviceUser(val a: ClientDeviceUser) extends AnyVal
-	{
-		/**
-		  * @return An access point to this client device user link in the database
-		  */
-		@deprecated("Device-related classes will be removed", "v2.1")
-		def access = DbClientDeviceUser(a.id)
-		@deprecated("Device-related classes will be removed", "v2.1")
-		def deviceAccess = DbClientDevice(a.deviceId)
-		def userAccess = DbUser(a.userId)
 	}
 	implicit class AccessibleLanguage(val l: Language) extends AnyVal
 	{

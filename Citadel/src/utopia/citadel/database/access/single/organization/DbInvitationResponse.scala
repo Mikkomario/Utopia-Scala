@@ -52,7 +52,7 @@ object DbInvitationResponse
 	{
 		// IMPLEMENTED  ------------
 		
-		override def globalCondition = Some(model.withInvitationId(invitationId).toCondition)
+		override def globalCondition = Some(this.model.withInvitationId(invitationId).toCondition)
 		
 		
 		// OTHER    ---------------
@@ -69,7 +69,7 @@ object DbInvitationResponse
 		def insert(creatorId: Int, message: Option[String] = None, wasAccepted: Boolean = false,
 		           wasBlocked: Boolean = false)
 		          (implicit connection: Connection) =
-			model.insert(InvitationResponseData(invitationId, message, Some(creatorId),
+			this.model.insert(InvitationResponseData(invitationId, message, Some(creatorId),
 				accepted = wasAccepted, blocked = wasBlocked))
 		
 		/**

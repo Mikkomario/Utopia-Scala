@@ -69,12 +69,6 @@ trait HslLike[Repr <: HslLike[Repr]]
 	def darknessPercent = (darkness * 100).toInt
 	
 	/**
-	  * @return An angle representation of hue
-	  */
-	@deprecated("Simply replaced with hue", "v2.3")
-	def hueAngle = hue
-	
-	/**
 	  * @return Whether this color could be considered 'light' (luminosity above 50%)
 	  */
 	def isLight = luminosity > 0.5

@@ -35,35 +35,11 @@ object ExodusContext
 	}
 	
 	/**
-	  * @return Execution context used in this project (implicit)
-	  * @throws EnvironmentNotSetupException If setup(...) hasn't been called yet
-	  */
-	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
-	@deprecated("Please use CitadelContext to access this property", "v2.0")
-	implicit def executionContext: ExecutionContext = CitadelContext.executionContext
-	
-	/**
-	  * @return Database connection pool to use in this project (implicit)
-	  * @throws EnvironmentNotSetupException If setup(...) hasn't been called yet
-	  */
-	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
-	@deprecated("Please use CitadelContext to access this property", "v2.0")
-	implicit def connectionPool: ConnectionPool = CitadelContext.connectionPool
-	
-	/**
 	  * @return Unique user id generator to use in this project (implicit)
 	  * @throws EnvironmentNotSetupException If .setup(...) hasn't been called yet
 	  */
 	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
 	implicit def uuidGenerator: UuidGenerator = get.uuidGenerator
-	
-	/**
-	  * @return Name of the database that contains the project specific tables
-	  * @throws EnvironmentNotSetupException If .setup(...) hasn't been called yet
-	  */
-	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
-	@deprecated("Please use CitadelContext to access this property", "v2.0")
-	def databaseName = CitadelContext.databaseName
 	
 	/**
 	  * @return Model style to use by default on this project

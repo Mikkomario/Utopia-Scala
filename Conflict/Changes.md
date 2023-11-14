@@ -2,6 +2,8 @@
 
 ## v1.4.5 (in development)
 Supports **Flow v2.3**
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v1.4.4 - 27.09.2023
 Supports **Paradigm v1.4**

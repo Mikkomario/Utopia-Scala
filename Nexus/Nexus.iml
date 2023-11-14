@@ -10,6 +10,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Access" />
     <orderEntry type="module" module-name="Flow" />
-    <orderEntry type="library" name="scala-sdk-2.13.7" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
   </component>
 </module>

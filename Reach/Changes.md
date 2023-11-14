@@ -2,6 +2,8 @@
 
 ## v1.1.1 (in development)
 Supports **Flow v2.3**
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v1.1 - 27.09.2023
 This update continues the major refactoring process of v1.0 update.  

@@ -28,7 +28,7 @@ object NewInvitation extends FromModelFactory[NewInvitation]
 					Success(NewInvitation(emailAddress, model("role_id"), model("message"),
 						rawDuration.getOrElse(7).days))
 				else
-					Failure(new IllegalPostModelException(s"${rawDuration.get} days is an invalid invitation duration"))
+					Failure(new IllegalPostModelException(s"${ rawDuration.get } days is an invalid invitation duration"))
 			}
 			else
 				Failure(new IllegalPostModelException(s"'$emailAddress' is not a valid email address"))
@@ -42,30 +42,12 @@ object NewInvitation extends FromModelFactory[NewInvitation]
   * @since 5.5.2020, v1
   * @param recipientEmail Email address of the invitation recipient
   * @param startingRoleId Id of the role given to the recipient upon invitation accept
-  * @param message Message attached to this invitation (default = empty = no message)
-  * @param duration Invitation validity period length
+  * @param message        Message attached to this invitation (default = empty = no message)
+  * @param duration       Invitation validity period length
   */
 case class NewInvitation(recipientEmail: String, startingRoleId: Int, message: String = "", duration: Days = Days(7))
 	extends ModelConvertible
 {
-	// COMPUTED	--------------------------------
-	
-	/**
-	  * Checks the parameters in this post model
-	  * @return Success(this) if this model is valid. Failure otherwise.
-	  */
-	@deprecated("Moved these checks to from model parsing instead", "v2.1")
-	def validated =
-	{
-		if (!recipientEmail.contains("@"))
-			Failure(new IllegalPostModelException("recipient_email must be a valid email address"))
-		else if (duration.length <= 0)
-			Failure(new IllegalPostModelException("duration_days must be positive"))
-		else
-			Success(this)
-	}
-	
-	
 	// IMPLEMENTED	----------------------------
 	
 	override def toModel = Model(Vector("recipient_email" -> recipientEmail,

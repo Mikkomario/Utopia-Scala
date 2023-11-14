@@ -53,15 +53,6 @@ object UserLanguageLinkData extends FromModelFactoryWithSchema[UserLanguageLinkD
 case class UserLanguageLinkData(userId: Int, languageId: Int, familiarityId: Int, created: Instant = Now)
 	extends StyledModelConvertible
 {
-	// COMPUTED ------------------------
-	
-	/**
-	  * @return This link as a model without including user's id
-	  */
-	@deprecated("Please use toSimpleModel instead", "2.0")
-	def toModelWithoutUser = toModel - "user_id"
-	
-	
 	// IMPLEMENTED	--------------------
 	
 	override def toSimpleModel =

@@ -7,9 +7,8 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.combine.{Combinable, LinearScalable}
+import utopia.flow.operator.combine.{Combinable, LinearScalable, Subtractable}
 import utopia.flow.operator.equality.EqualsBy
-import utopia.flow.operator.Reversible
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Direction2D}
@@ -111,7 +110,8 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
  */
 class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     extends Dimensional[NumericSpan[Double], Bounds] with Rectangular with ValueConvertible with ModelConvertible
-        with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds] with Bounded[Bounds] with EqualsBy
+        with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds]
+        with Subtractable[HasDoubleDimensions, Bounds] with Bounded[Bounds] with EqualsBy
 {
     // ATTRIBUTES   ----------------------
     
@@ -200,6 +200,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @return A translated set of bounds
       */
     override def +(translation: HasDoubleDimensions) = mergeWith(translation) { _ + _ }
+    override def -(other: HasDoubleDimensions): Bounds = mergeWith(other) { _ - _ }
     
     override def along(axis: Axis) = components.getOrElse(axis.index, Span1D.zeroAlong(axis))
     

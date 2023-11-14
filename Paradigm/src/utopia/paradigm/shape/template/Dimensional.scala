@@ -31,7 +31,7 @@ object Dimensional
 	{
 		override def *(mod: HasDimensions[S]) = d.mergeWith(mod) { _ * _ }
 		
-		def *(mod: S) = d.mapEachDimension { _ * mod }
+		def scaledBy(mod: S) = d.mapEachDimension { _ * mod }
 	}
 	
 	implicit class ReversibleDimensional[A <: Reversible[A], +R](val d: Dimensional[A, R])

@@ -29,12 +29,6 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
 	// COMPUTED ------------------------------
 	
 	/**
-	 * @return Column that contains primary table index
-	 */
-	@deprecated("Replaced with .index", "v1.12.1")
-	def idColumn = table.primaryColumn.get
-	
-	/**
 	  * @return A condition that holds true for all deprecated items
 	  */
 	def deprecatedCondition = deprecationColumn.isNotNull

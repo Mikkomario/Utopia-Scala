@@ -7,31 +7,6 @@ import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 object MergeMirror
 {
 	/**
-	 * Creates a new mirror that reflects another changing item
-	 * @param firstSource Changing item that generates the values in this mirror
-	 * @param secondSource Another changing item that generates the values in this mirror
-	 * @param f A mapping function for generating the mirrored value
-	 * @tparam O1 Original item type
-	 * @tparam O2 Another original item type
-	 * @tparam R Merged / mapped item type
-	 * @return A new mirror
-	 */
-	@deprecated("Please use firstSource.mergeWith(secondSource)(f) instead", "v2.0")
-	def of[O1, O2, R](firstSource: Changing[O1], secondSource: Changing[O2])(f: (O1, O2) => R) = {
-		// Uses mapping functions or even a fixed value if possible
-		if (firstSource.isChanging) {
-			if (secondSource.isChanging)
-				apply(firstSource, secondSource)(f)
-			else
-				firstSource.map { f(_, secondSource.value) }
-		}
-		else if (secondSource.isChanging)
-			secondSource.map { f(firstSource.value, _) }
-		else
-			Fixed(f(firstSource.value, secondSource.value))
-	}
-	
-	/**
 	  * Creates a new mirror that merges the values of two changing items and caches the result
 	  * @param source1 First source item
 	  * @param source2 Second source item

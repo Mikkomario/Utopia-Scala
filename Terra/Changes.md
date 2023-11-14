@@ -21,6 +21,7 @@ TODO: Document Rotation changes, WorldPointOps changes etc.
 - Added a grid-based world view: **GridArea**
 ### Other changes
 - Added `.toString` implementations to **LatLongRotation** and **CompassRotation**
+- Scala version updated to 2.13.12
 
 ## v1.0 - 27.09.2023
 Initial release

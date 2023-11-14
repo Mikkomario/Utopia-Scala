@@ -1,18 +1,6 @@
 package utopia.journey.controller.user
 
 import utopia.annex.controller.QueueSystem
-import utopia.annex.model.error.EmptyResponseException
-import utopia.annex.model.request.GetRequest
-import utopia.annex.model.response.ResponseBody.{Content, Empty}
-import utopia.annex.model.schrodinger.TryFindSchrodinger
-import utopia.flow.parse.file.container.OptionObjectFileContainer
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.parse.file.FileExtensions._
-import utopia.journey.model.error.NoUserDataError
-import utopia.journey.util.JourneyContext._
-import utopia.metropolis.model.combined.user.UserWithLinks
-
-import scala.util.{Failure, Success}
 
 /**
   * Used for accessing the current user's data
@@ -26,6 +14,7 @@ class Me(queueSystem: QueueSystem, loginEmail: Option[String])
 {
 	// ATTRIBUTES	---------------------------
 	
+	/*
 	private val container = new OptionObjectFileContainer(containersDirectory/"user.json", UserWithLinks)
 	
 	private val previousUserId = container.current.map { _.id }
@@ -67,5 +56,5 @@ class Me(queueSystem: QueueSystem, loginEmail: Option[String])
 			userWasChanged = !previousUserId.contains(user.id)
 			container.current = Some(user)
 		case Failure(error) => logger(error, "User data retrieval failed")
-	}
+	}*/
 }

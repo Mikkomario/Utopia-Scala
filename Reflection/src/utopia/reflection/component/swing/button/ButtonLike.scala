@@ -62,12 +62,8 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	/**
 	  * @return Whether this button is currently enabled
 	  */
+	@deprecated("Replaced with .enabled", "v2.1.1")
 	def isEnabled = enabled
-	/**
-	  * @param newEnabled Whether this button should be enabled
-	  */
-	@deprecated("Replaced with enabled = ...", "v1.2")
-	def isEnabled_=(newEnabled: Boolean) = enabled = newEnabled
 	
 	/**
 	  * @return This button's current state

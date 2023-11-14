@@ -38,17 +38,6 @@ trait SignedOrZero[+Repr] extends Any with Signed[Repr] with MayBeZero[Repr]
 	  */
 	def maxZero = if (sign.isPositive) zero else self
 	
-	/**
-	  * @return A positive or zero value copy of this item
-	  */
-	@deprecated("Please use minZero instead", "v2.0")
-	def positiveOrZero = minZero
-	/**
-	  * @return A negative or zero value of this item
-	  */
-	@deprecated("Please use maxZero instead", "v2.0")
-	def negativeOrZero = maxZero
-	
 	
 	// IMPLEMENTED  ----------------------
 	

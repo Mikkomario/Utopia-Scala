@@ -27,12 +27,6 @@ trait JsonConvertible
 		builder.result()
 	}
 	
-	/**
-	  * A JSON Representation of this instance
-	  */
-	@deprecated("Replaced with toJson", "v1.8")
-	def toJSON = toJson
-	
 	
 	// IMPLEMENTED  ---------------------
 	

@@ -12,11 +12,6 @@ object CitadelDescriptionLinkModel
 	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Database interaction model factory for ClientDevice description links
-	  */
-	@deprecated("This class will be removed in a future release", "v2.1")
-	lazy val clientDevice = DescriptionLinkModelFactory(CitadelTables.clientDeviceDescription)
-	/**
 	  * Database interaction model factory for DescriptionRole description links
 	  */
 	lazy val descriptionRole = DescriptionLinkModelFactory(CitadelTables.descriptionRoleDescription)

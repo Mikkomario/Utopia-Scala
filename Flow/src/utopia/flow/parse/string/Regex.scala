@@ -250,8 +250,6 @@ case class Regex(string: String)
 	  * @return This regex in sequence 0-n times
 	  */
 	def anyTimes = if (isEmpty || string.endsWith("*")) this else Regex(s"$string*")
-	@deprecated("Please use .anyTimes instead", "v2.0")
-	def zeroOrMoreTimes = anyTimes
 	/**
 	  * @return This regex in sequence one or more times
 	  */

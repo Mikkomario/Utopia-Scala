@@ -314,14 +314,6 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     def tryExec(statement: SqlSegment) = Try(apply(statement))
     
     /**
-     * Opens a new database connection. This is done automatically when the connection is used, too
-     */
-    @throws(classOf[EnvironmentNotSetupException])
-    @throws(classOf[NoConnectionException])
-    @deprecated("This method will be removed. No manual connection management is necessary.", "v1.12.1")
-    def open(): Unit = openConnectionPointer.value
-    
-    /**
      * Executes a simple sql string. Does not retrieve any values from the query.
      * @param requireTargetedDb Whether a database target should be required at this point (default = false)
      */

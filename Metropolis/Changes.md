@@ -2,6 +2,10 @@
 
 ## v2.2.2 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- Removed all deprecated classes and functions
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v2.2.1 - 27.09.2023
 Added from model -conversions to a couple of classes

@@ -120,6 +120,12 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 	  * @return Copy of this rotation decreased from its current direction by the specified amount.
 	  */
 	def -(other: Rotation) = this + (-other)
+	/**
+	  * @param other Another rotation instance
+	  * @return Subtraction between these two rotations
+	  */
+	def -(other: C) =
+		if (direction == other.direction) copy(absolute - other.absolute) else copy(absolute + other.absolute)
 	
 	/**
 	  * @param direction Targeted direction

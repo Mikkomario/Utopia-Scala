@@ -49,7 +49,7 @@ trait FromModelFactory[+A]
 	  * Parses an instance from a JSON string. Returns none if either the JSON string couldn't be
 	  * parsed or if the instance couldn't be parsed from read data.
 	  */
-	@deprecated("Please use fromJson instead")
+	@deprecated("Please use fromJson instead", "< v2.3")
 	def fromJSON(json: String) = JsonReader(json).map(v => apply(v.getModel)).flatten
 	
 	/**

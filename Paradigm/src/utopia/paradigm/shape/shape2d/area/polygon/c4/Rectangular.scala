@@ -13,20 +13,6 @@ trait Rectangular extends Parallelogramic
 	def rightEdgeLength: Double
 	
 	
-	// COMPUTED	-----------------
-	
-	/**
-	  * @return The width or the height of this rectangle, whichever is larger
-	  */
-	@deprecated("Please use maxEdgeLength instead", "v1.1")
-	def maxDimension = maxEdgeLength
-	/**
-	  * @return The width or the height of this rectangle, whichever is smaller
-	  */
-	@deprecated("Please use minEdgeLength instead", "v1.1")
-	def minDimension = minEdgeLength
-	
-	
 	// IMPLEMENTED	-------------
 	
 	override def rightEdge = topEdge.normal2D.withLength(rightEdgeLength)

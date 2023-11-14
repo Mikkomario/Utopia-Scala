@@ -1,5 +1,9 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.4 (in development)
+### Other changes
+- Scala version updated to 2.13.12
+
 ## v1.0.3 - 02.02.2023
 This update supports the changes introduced in **Flow** v2.0.
 

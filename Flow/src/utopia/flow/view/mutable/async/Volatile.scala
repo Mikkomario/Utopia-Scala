@@ -32,12 +32,6 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
     // COMPUTED    -----------------
     
     /**
-     * The current value of this volatile container
-     */
-    @deprecated("Please use .value instead", "v1.9")
-    def get = value
-    
-    /**
       * @return The current value of this volatile container, accessed in a synchronized manner,
       *         meaning that this function call will block while the value is being locked from another thread,
       *         during an update or such. For non-synchronized access, which is perhaps faster but might be less
@@ -87,12 +81,6 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
     // OTHER    --------------------
     
     /**
-     * Sets a new value to this container
-     */
-    @deprecated("Please assign directly to .value instead", "v1.9")
-    def set(newValue: A) = value = newValue
-    
-    /**
       * Sets a new value to this container, but only if the specified condition is met
       * @param condition Condition checked on the value
       * @param newValue New value set for this volatile, if the condition is met. The value is call by name, so it's
@@ -108,14 +96,6 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
       * @return Value of this volatile container after the update
      */
     def updateIf(condition: A => Boolean)(mutate: A => A) = lockSetAndGet { v => if (condition(v)) mutate(v) else v }
-    /**
-     * Updates this volatile only if specified condition is met
-     * @param condition A condition for updating
-     * @param mutate A mutating function (only called if condition applies)
-     * @return Value of this volatile after operation
-     */
-    @deprecated("Replaced with updateIf, that now performs the exact same operation", "v1.16")
-    def updateIfAndGet(condition: A => Boolean)(mutate: A => A) = updateIf(condition)(mutate)
     
     /**
      * Updates a value in this container. Returns the state before the update.

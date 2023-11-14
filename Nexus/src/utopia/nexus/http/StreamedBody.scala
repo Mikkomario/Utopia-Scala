@@ -70,24 +70,6 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
         } }
     
     /**
-      * @return A buffered version of this body where contents are parsed from a JSON into a value
-      */
-    @deprecated("Please use bufferedJson instead", "v1.5")
-    def bufferedJSON = bufferedToString.map { _.flatMap { JsonReader(_) } }
-    
-    /**
-     * @return A buffered version of this body where contents are parsed from a JSON into a value
-     */
-    @deprecated("Please use BufferedJsonObject instead", "v1.5")
-    def bufferedJSONModel = bufferedToString.map { _.flatMap { JsonReader(_).map { _.getModel } } }
-    
-    /**
-      * @return A buffered version of this body where contents are parsed from a JSON array into a vector of values
-      */
-    @deprecated("Please use BufferedJsonArray instead", "v1.5")
-    def bufferedJSONArray = bufferedToString.map { _.flatMap { JsonReader(_) }.map { _.getVector } }
-    
-    /**
       * @return A buffered version of this body where contents are parsed into an xml element
       */
     def bufferedXml = buffered { XmlReader.parseWith(_) }
@@ -112,10 +94,4 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
      * @return Provided path. Failure if writing failed.
      */
     def writeTo(path: java.nio.file.Path): Try[java.nio.file.Path] = path.writeWith { stream => writeTo(stream) }
-    
-    /**
-     * Writes the contents of this body into a file
-     */
-    @deprecated("Please use writeTo(Path) instead", "v1.3")
-    def writeToFile(file: File) = new FileOutputStream(file).consume(writeTo)
 }

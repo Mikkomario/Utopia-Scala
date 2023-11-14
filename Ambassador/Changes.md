@@ -2,6 +2,8 @@
 
 ## v2.1.6 (in development)
 Supports **Flow v2.3**
+### Other changes
+- Scala version updated to 2.13.12
 
 ## v2.1.5 - 27.09.2023
 Rebuild due to parent module changes

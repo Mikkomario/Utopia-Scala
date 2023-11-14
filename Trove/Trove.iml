@@ -11,6 +11,6 @@
     <orderEntry type="library" name="ch.vorburger.mariaDB4j:mariaDB4j:2.4.0" level="project" />
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Vault" />
-    <orderEntry type="library" name="scala-sdk-2.13.7" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
   </component>
 </module>

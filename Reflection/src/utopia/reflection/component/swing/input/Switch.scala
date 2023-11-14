@@ -88,8 +88,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	  * @return Whether this switch is currently enabled (true) or disabled (false)
 	  */
 	def enabled = _enabled
-	def enabled_=(newState: Boolean) =
-	{
+	def enabled_=(newState: Boolean) = {
 		_enabled = newState
 		if (newState) label.setHandCursor() else label.setArrowCursor()
 	}
@@ -97,17 +96,13 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	/**
 	  * @return Whether this switch is currently enabled (true) or disabled (false)
 	  */
+	@deprecated("Replaced with .enabled", "v2.1.1")
 	def isEnabled = enabled
-	@deprecated("Please use enabled = _ instead", "v1.2")
-	def isEnabled_=(newState: Boolean) = enabled = newState
 	
 	/**
 	  * @return Whether this switch is currently on (value == true)
 	  */
 	def isOn = value
-	@deprecated("Please use value = _ instead", "v1.2")
-	def isOn_=(newState: Boolean) = value = newState
-	
 	/**
 	  * @return Whether this switch is currently off (value == false)
 	  */

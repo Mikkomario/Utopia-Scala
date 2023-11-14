@@ -106,10 +106,4 @@ class Point private(override val dimensions: Dimensions[Double])
 	 * Connects this point with another, forming a line
 	 */
 	def lineTo(other: Point) = Line(this, other)
-	
-    /**
-     * A copy of this point with specified coordinate
-     */
-	@deprecated("Please use the more generic .withDimension(...) instead", "v2.3")
-    def withCoordinate(c: Double, axis: Axis2D) = withDimension(axis(c))
 }

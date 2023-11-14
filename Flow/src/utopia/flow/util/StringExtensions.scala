@@ -371,17 +371,6 @@ object StringExtensions
 		}
 		
 		/**
-		 * Splits this string based on the specified regular expression, but ignores expressions which are surrounded
-		 * by quotes
-		 * @param regex A regular expression
-		 * @return Each part of this string which was separated with such an expression
-		 */
-		//noinspection LegacyStringFormatting
-		@deprecated("Please use .split(Regex), combining it with .ignoringQuotations (in Regex)", "v1.15")
-		def splitIgnoringQuotations(regex: String) =
-			s.split(regex + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
-		
-		/**
 		 * Divides this string based on the specified divider / separator string. Works much like split,
 		 * except that the divider / separator is included in the resulting strings. Also, this method
 		 * doesn't support regular expressions like split does.

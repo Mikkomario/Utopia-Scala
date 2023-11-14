@@ -284,11 +284,6 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 .getOrElse(Value.empty)
     }
     /**
-     * Finds the value for an attribute with the specified name
-     */
-    @deprecated("Renamed to valueOfAttribute", "v1.16")
-    def valueForAttribute(attName: NamespacedString) = valueOfAttribute(attName)
-    /**
       * Finds the value under a child element
       * @param childName Name of the targeted (direct) child element
       * @return Value of that child element. Empty value if no such child existed

@@ -496,7 +496,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param f A mapping function for pixel tables
 	  * @return A copy of this image with mapped pixels
 	  */
-	@deprecated("Please use .mapPixels instead")
+	@deprecated("Please use .mapPixels instead", "v3.2")
 	def mapPixelTable(f: Pixels => Pixels) = mapPixels(f)
 	/**
 	  * @param f A function that maps pixel colors

@@ -66,17 +66,6 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 			.rows.headOption.flatMap(parseIfPresent)
 	}
 	
-	/**
-	  * Retrieves an object's data from the database and parses it to a proper instance
-	  * @param where The condition with which the row is found from the database (will be limited to
-	  *              the first result row)
-	  * @return database data parsed into an instance. None if no data was found with the provided
-	  *         condition
-	  */
-	@deprecated("Please use .find(...) instead", "v1.12")
-	override def get(where: Condition, order: Option[OrderBy] = None)(implicit connection: Connection) =
-		find(where, order)
-	
 	
 	// OTHER	--------------------
 	
@@ -143,13 +132,6 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	def maxBy(orderColumn: Column)(implicit connection: Connection) =
 		firstUsing(OrderBy.descending(orderColumn))
-	/**
-	  * Finds the top / max row / model based on provided ordering column
-	  * @param orderColumn A column based on which ordering is made
-	  * @param connection  Database connection
-	  */
-	@deprecated("Please use maxBy instead", "v1.12")
-	def getMax(orderColumn: Column)(implicit connection: Connection): Option[A] = getMax(orderColumn, None)
 	
 	/**
 	  * Finds the largest available instance that fulfils the specified condition
@@ -174,40 +156,11 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 		findMaxBy(column(orderProperty), where)
 	
 	/**
-	  * Finds the top / max row / model based on provided ordering column
-	  * @param orderColumn A column based on which ordering is made
-	  * @param where       Additional search condition (optional)
-	  * @param connection  Database connection
-	  */
-	@deprecated("Please use findMaxBy instead", "v1.12")
-	def getMax(orderColumn: Column, where: Condition)(implicit connection: Connection): Option[A] =
-		findMaxBy(orderColumn, where)
-	
-	/**
 	  * @param orderingProperty Name of the property on which the ordering should be based on
 	  * @param connection Implicit DB Connection
 	  * @return The maximum / top accessible item when comparing that property
 	  */
 	def maxBy(orderingProperty: String)(implicit connection: Connection): Option[A] = maxBy(column(orderingProperty))
-	/**
-	  * Finds top / max row / model based on provided ordering property. Uses primary table's columns by default but may
-	  * use columns from other tables if such property couldn't be found from the primary table.
-	  * @param orderProperty The name of the ordering property
-	  * @param connection    Database connection
-	  */
-	@deprecated("Please use maxBy instead", "v1.12")
-	def getMax(orderProperty: String)(implicit connection: Connection): Option[A] = maxBy(orderProperty)
-	
-	/**
-	  * Finds top / max row / model based on provided ordering property. Uses primary table's columns by default but may
-	  * use columns from other tables if such property couldn't be found from the primary table.
-	  * @param orderProperty The name of the ordering property
-	  * @param where         Additional search condition (optional)
-	  * @param connection    Database connection
-	  */
-	@deprecated("Please use findMaxBy instead", "v1.12")
-	def getMax(orderProperty: String, where: Condition)(implicit connection: Connection): Option[A] =
-		findMaxBy(orderProperty, where)
 	
 	/**
 	  * Finds the bottom / min row / model based on provided ordering column
@@ -224,13 +177,6 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	def minBy(orderColumn: Column)(implicit connection: Connection) =
 		firstUsing(OrderBy.ascending(orderColumn))
-	/**
-	  * Finds the bottom / min row / model based on provided ordering column
-	  * @param orderColumn A column based on which ordering is made
-	  * @param connection  Database connection
-	  */
-	@deprecated("Please use minBy instead", "v1.12")
-	def getMin(orderColumn: Column)(implicit connection: Connection): Option[A] = getMin(orderColumn, None)
 	
 	/**
 	  * Finds the bottom / min row / model based on provided ordering column
@@ -245,28 +191,11 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 		find(where, Some(OrderBy.descending(orderColumn)), joins, joinType)
 	
 	/**
-	  * Finds the bottom / min row / model based on provided ordering column
-	  * @param orderColumn A column based on which ordering is made
-	  * @param connection  Database connection
-	  */
-	@deprecated("Please use findMinBy instead", "v1.12")
-	def getMin(orderColumn: Column, where: Condition)(implicit connection: Connection): Option[A] =
-		getMin(orderColumn, Some(where))
-	
-	/**
 	  * @param orderingProperty Property used when comparing instances
 	  * @param connection Implicit DB Connection
 	  * @return The smallest available item when comparing that property
 	  */
 	def minBy(orderingProperty: String)(implicit connection: Connection): Option[A] = minBy(column(orderingProperty))
-	/**
-	  * Finds bottom / min row / model based on provided ordering property. Uses primary table's columns by default but may
-	  * use columns from other tables if such property couldn't be found from the primary table.
-	  * @param orderProperty The name of the ordering property
-	  * @param connection    Database connection
-	  */
-	@deprecated("Please use minBy instead", "v1.12")
-	def getMin(orderProperty: String)(implicit connection: Connection): Option[A] = minBy(orderProperty)
 	
 	/**
 	  * @param orderingProperty Name of the ordering property to use
@@ -276,23 +205,6 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	def findMinBy(orderingProperty: String, where: Condition)(implicit connection: Connection): Option[A] =
 		findMinBy(column(orderingProperty), where)
-	/**
-	  * Finds bottom / min row / model based on provided ordering property. Uses primary table's columns by default but may
-	  * use columns from other tables if such property couldn't be found from the primary table.
-	  * @param orderProperty The name of the ordering property
-	  * @param connection    Database connection
-	  */
-	@deprecated("Please use findMinBy instead", "v1.12")
-	def getMin(orderProperty: String, where: Condition)(implicit connection: Connection): Option[A] =
-		findMinBy(orderProperty, where)
-	
-	/**
-	  * Finds an item from the target without any ordering or conditions
-	  * @param connection Database connection (implicit)
-	  * @return The first item found
-	  */
-	@deprecated("Please use .any instead", "v1.12")
-	def getAny()(implicit connection: Connection) = any
 	
 	/**
 	  * Finds an item using a join (for searching)
@@ -306,18 +218,6 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	def findLinked(joined: Joinable, where: Condition, order: Option[OrderBy] = None, joinType: JoinType = Inner)
 	              (implicit connection: Connection) =
 		find(where, order, Vector(joined), joinType)
-	/**
-	  * Finds an individual item from the database. Includes a single join for filtering.
-	  * @param joinedTable Table being joined
-	  * @param where       Condition to apply for filtering
-	  * @param joinType    Type of join used (default = inner)
-	  * @param connection  Implicit database connection
-	  * @return An item matching the specified condition
-	  */
-	@deprecated("Please use findLinked(...) instead", "v1.12")
-	def getWithJoin(joinedTable: Table, where: Condition, joinType: JoinType = Inner)
-	               (implicit connection: Connection) =
-		findLinked(joinedTable, where, joinType = joinType)
 	
 	/**
 	  * Performs an operation on each of the targeted entities

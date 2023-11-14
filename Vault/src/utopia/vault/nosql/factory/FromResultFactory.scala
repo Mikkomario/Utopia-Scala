@@ -107,15 +107,6 @@ trait FromResultFactory[+A]
 		}
 		apply(connection(select + Where(where) + order.orElse(defaultOrdering)))
 	}
-	/**
-	  * Finds possibly multiple instances from the database
-	  * @param where the condition with which the instances are filtered
-	 *  @param order Ordering applied to the query (optional, None by default)
-	  * @return Parsed instance data
-	  */
-	@deprecated("Please use .findMany(...) instead", "v1.12")
-	def getMany(where: Condition, order: Option[OrderBy] = None)(implicit connection: Connection) =
-		findMany(where, order)
 	
 	/**
 	  * Finds possibly multiple instances from the database. Performs a single join, but doesn't select the columns
@@ -130,21 +121,6 @@ trait FromResultFactory[+A]
 	def findManyLinked(joined: Joinable, where: Condition, order: Option[OrderBy] = None,
 	                   joinType: JoinType = Inner)(implicit connection: Connection) =
 		findMany(where, order, Vector(joined), joinType)
-	
-	/**
-	 * Finds possibly multiple instances from the database. Performs a single join, but doesn't select the columns
-	 * from the joined table.
-	 * @param joinedTable Table to join (for filtering)
-	 * @param where Condition to apply to filter results
-	 * @param order Ordering to apply (optional)
-	 * @param joinType Type of joining used (default = inner)
-	 * @param connection Implicit database connection
-	 * @return Parsed instances
-	 */
-	@deprecated("Please use findManyLinked instead", "v1.12")
-	def getManyWithJoin(joinedTable: Table, where: Condition, order: Option[OrderBy] = None,
-	                    joinType: JoinType = Inner)(implicit connection: Connection) =
-		findManyLinked(joinedTable, where, order, joinType)
 	
 	/**
 	  * Finds the instances with the specified ids
@@ -184,14 +160,6 @@ trait FromResultFactory[+A]
 	  * @return Whether that row index exists and is accessible from this factory
 	  */
 	def containsIndex(index: Value)(implicit connection: Connection) = Exists.index(table, index)
-	/**
-	  * Checks whether there exists data for the specified index
-	  * @param index An index in this factory's primary table
-	  * @param connection Database connection (implicit)
-	  * @return Whether there exists data for the specified index
-	  */
-	@deprecated("Please use containsIndex instead", "v1.12")
-	def exists(index: Value)(implicit connection: Connection) = Exists.index(table, index)
 	
 	/**
 	 * Retrieves an object's data from the database and parses it to a proper instance
@@ -212,15 +180,4 @@ trait FromResultFactory[+A]
 	def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
 	         joinType: JoinType = Inner)(implicit connection: Connection) =
 		findMany(where, order, joins, joinType).headOption
-	/**
-	 * Retrieves an object's data from the database and parses it to a proper instance
-	 * @param where The condition with which the row is found from the database (will be limited to
-	 * the first result row)
-	 * @param order Ordering applied (optional, None by default)
-	 * @return database data parsed into an instance. None if no data was found with the provided
-	 * condition
-	 */
-	@deprecated("Please use .find(...) instead", "v1.12")
-	def get(where: Condition, order: Option[OrderBy] = None)(implicit connection: Connection) =
-		find(where, order)
 }

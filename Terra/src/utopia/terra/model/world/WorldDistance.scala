@@ -73,6 +73,8 @@ object WorldDistance
 				Lazy.initialized(vectorLength + amount))
 		override def +(other: Distance): WorldDistance = new LazyWorldDistance(Lazy.initialized(distance + other),
 			Lazy { vectorLength + conversion.vectorLengthOf(other) })
+		override def +(other: WorldDistance): WorldDistance =
+			new LazyWorldDistance(Lazy { distance + other.distance }, Lazy { vectorLength + other.vectorLength })
 		
 		override def *(mod: Double): WorldDistance = new _WorldDistance(distance * mod, vectorLength * mod)
 	}
@@ -97,6 +99,8 @@ object WorldDistance
 			new LazyWorldDistance(Lazy { distance + conversion.distanceOf(amount) }, v.mapCurrent { _ + amount })
 		override def +(other: Distance): WorldDistance =
 			new LazyWorldDistance(d.mapCurrent { _ + other }, Lazy { vectorLength + conversion.vectorLengthOf(other) })
+		override def +(other: WorldDistance): WorldDistance =
+			new LazyWorldDistance(Lazy { distance + other.distance }, Lazy { vectorLength + other.vectorLength })
 		
 		override def *(mod: Double): WorldDistance =
 			new LazyWorldDistance(d.mapCurrent { _ * mod }, v.mapCurrent { _ * mod })
@@ -124,6 +128,7 @@ object WorldDistance
 		
 		override def +(other: Distance): WorldDistance = WorldDistance(other)
 		override def +(amount: Double): WorldDistance = WorldDistance.vector(amount)
+		override def +(other: WorldDistance): WorldDistance = other
 		
 		override def *(mod: Double): WorldDistance = this
 	}
@@ -160,6 +165,11 @@ trait WorldDistance
 	  * @return Copy of this distance with the specified amount added
 	  */
 	def +(amount: Double): WorldDistance
+	/**
+	  * @param other Another distance
+	  * @return Combination of these two distances
+	  */
+	def +(other: WorldDistance): WorldDistance
 	
 	
 	// IMPLEMENTED  ------------------
@@ -191,5 +201,10 @@ trait WorldDistance
 	  * @param amount Amount of distance to subtract
 	  * @return Copy of this distance with the specified amount subtracted
 	  */
-	def -(amount: Double) = this + (-amount)
+	def -(amount: Double): WorldDistance = this + (-amount)
+	/**
+	  * @param other Another world distance
+	  * @return This distance subtracted by the specified distance
+	  */
+	def -(other: WorldDistance): WorldDistance = this + (-other)
 }

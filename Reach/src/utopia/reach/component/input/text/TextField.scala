@@ -825,6 +825,6 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 	/**
 	  * Clears this field of all text
 	  */
-	@deprecated("This method will be removed, as it violates this field's capsuling principles")
+	@deprecated("This method will be removed, as it violates this field's capsuling principles", "< v1.1.1")
 	def clear() = textContentPointer.value = ""
 }

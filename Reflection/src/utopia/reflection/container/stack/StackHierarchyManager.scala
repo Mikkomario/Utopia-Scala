@@ -332,10 +332,6 @@ object StackHierarchyManager
 	
 	private def graphOptionForId(id: StackId) = graph.get(id.masterId)
 	
-	// FIXME: Throws at times
-	@deprecated("Use nodeOptionForId instead since this may trow", "v1.2")
-	private def nodeForId(id: StackId) = nodeOptionForId(id).get
-	
 	private def nodeOptionForId(id: StackId) =
 	{
 		if (id.isMasterId)

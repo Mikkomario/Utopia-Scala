@@ -3,7 +3,7 @@ package utopia.flow.collection.immutable.range
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator._
-import utopia.flow.operator.combine.{Combinable, Scalable}
+import utopia.flow.operator.combine.{Combinable, Scalable, Subtractable}
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.operator.sign.Sign
 
@@ -105,7 +105,8 @@ object NumericSpan
   * @since 17.12.2022, v2.0
   */
 trait NumericSpan[N]
-	extends IterableSpan[N] with SpanLike[N, NumericSpan[N]] with Combinable[N, NumericSpan[N]]
+	extends IterableSpan[N] with SpanLike[N, NumericSpan[N]]
+		with Combinable[N, NumericSpan[N]] with Subtractable[N, NumericSpan[N]]
 		with Reversible[NumericSpan[N]] with Scalable[N, NumericSpan[N]]
 {
 	// ABSTRACT ---------------------------
@@ -146,6 +147,7 @@ trait NumericSpan[N]
 	})
 	
 	override def +(other: N) = shiftedBy(other)
+	override def -(other: N): NumericSpan[N] = this + n.negate(other)
 	
 	override def *(mod: N) = NumericSpan(n.times(start, mod), n.times(end, mod), n.times(step, mod))(n)
 	

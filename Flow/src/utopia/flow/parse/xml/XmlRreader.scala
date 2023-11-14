@@ -49,17 +49,6 @@ object XmlReader
         readWith(new InputStreamReader(stream, charset))(contentReader)
     
     /**
-     * Reads the contents of an xml file using the specified reader function
-     * @param file the target file
-     * @param charset the charset of the file contents
-     * @param contentReader the function that uses the reader to parse the file contents
-     * @return The data parsed from the file (may fail)
-     */
-    @deprecated("Please use method version which accepts Path instead of File", "v1.9")
-    def readFile[A](file: File, charset: Charset, contentReader: XmlReader => Try[A]) =
-        Try(new FileInputStream(file).consume { readStream(_, charset)(contentReader) }).flatten
-    
-    /**
       * Reads the contents of an xml file using the specified reader function
       * @param file the target file
       * @param charset the charset of the file contents
@@ -88,16 +77,6 @@ object XmlReader
      */
     def parseStream(stream: InputStream, charset: Charset = StandardCharsets.UTF_8) =
         parseWith(new InputStreamReader(stream, charset))
-    
-    /**
-     * Parses the contents of an xml file into an xml element
-     * @param file the target file
-     * @param charset the target charset
-     * @return The element parsed from the file (may fail)
-     */
-    @deprecated("Please use the method version which accepts Path instead of File", "v1.9")
-    def parseFile(file: File, charset: Charset) =
-        Try(new FileInputStream(file).consume { parseStream(_, charset) }).flatten
     
     /**
       * Parses the contents of an xml file into an xml element
