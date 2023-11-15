@@ -135,8 +135,19 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		DetachIfAppropriate(afterEffects)
 	}
 	private val activeTrackingListener = ChangeListener.continuous { e: ChangeEvent[Boolean] =>
+		// Case: Should start tracking actively => Attaches itself to origin
 		if (e.newValue)
 			origin.addHighPriorityListener(originListener)
+		// Case: Should stop tracking actively => Clears the cache and/or detaches from origin
+		else {
+			// May forcibly clear the cache
+			if (cachingDisabled)
+				cachedValue = None
+			// If no cache-reset is required, detaches from origin
+			if (cachedValue.isEmpty)
+				origin.removeListener(originListener)
+		}
+		
 		// If the origin stops changing, won't need to track the listening status anymore
 		ChangeResponse.continueIf(origin.isChanging)
 	}

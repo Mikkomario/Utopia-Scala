@@ -53,7 +53,7 @@ trait FlagLike extends Any with Changing[Boolean]
 	/**
 	  * @return A reversed copy of this flag
 	  */
-	def unary_! = fixedValue match {
+	def unary_! : FlagLike = fixedValue match {
 		case Some(fixed) => if (fixed) AlwaysFalse else AlwaysTrue
 		case None => lightMap { !_ }
 	}
@@ -74,7 +74,7 @@ trait FlagLike extends Any with Changing[Boolean]
 	  * @param other Another flag
 	  * @return A flag that contains true when both of these flags contain true
 	  */
-	def &&(other: Changing[Boolean]) = {
+	def &&(other: Changing[Boolean]): FlagLike = {
 		// If one of the pointers is always false, returns always false
 		// If one of the pointers is always true, returns the other pointer
 		// If both are changing, returns a combination of these pointers
@@ -94,7 +94,7 @@ trait FlagLike extends Any with Changing[Boolean]
 	  * @param other Another flag
 	  * @return A flag that contains true when either one of these flags contains true
 	  */
-	def ||(other: Changing[Boolean]) = {
+	def ||(other: Changing[Boolean]): FlagLike = {
 		// If one of the pointers is always false, returns the other pointer
 		// If one of the pointers is always true, returns always true
 		// If both are changing, returns a combination of these pointers
