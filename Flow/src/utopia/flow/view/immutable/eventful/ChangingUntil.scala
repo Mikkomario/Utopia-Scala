@@ -1,6 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.process.Breakable
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.operator.Identity
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
@@ -58,10 +60,8 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	
 	// IMPLEMENTED  --------------------
 	
-	override def isChanging: Boolean = !stopped && origin.isChanging
-	override def mayStopChanging: Boolean = true
-	
 	override def value: R = bridge.value
+	override def destiny: Destiny = if (stopped) Sealed else origin.destiny.possibleToSeal
 	
 	override def stop(): Future[Any] = {
 		if (!stopped) {

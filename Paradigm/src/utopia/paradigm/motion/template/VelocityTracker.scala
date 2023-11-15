@@ -1,6 +1,8 @@
 package utopia.paradigm.motion.template
 
 import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.AbstractChanging
@@ -50,9 +52,7 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	// IMPLEMENTED	------------------------
 	
 	override def value = cachedValue.getOrElse(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
-	
-	override def isChanging = true
-	override def mayStopChanging: Boolean = false
+	override def destiny: Destiny = ForeverFlux
 	
 	override def positionHistory = _positionHistory
 	override def velocityHistory = _velocityHistory

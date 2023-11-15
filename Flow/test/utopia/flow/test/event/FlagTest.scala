@@ -64,8 +64,8 @@ object FlagTest extends App
 	assert(!lastEvent)
 	assert(ni2.hasNoListeners)
 	assert(i2.hasNoListeners)
-	assert(!i2.isChanging)
-	assert(!ni2.isChanging)
+	assert(!i2.mayChange)
+	assert(!ni2.mayChange)
 	
 	// Tests && with ! - Optimized
 	val i3 = Flag()
@@ -80,25 +80,25 @@ object FlagTest extends App
 	assert(ni3.isSet)
 	assert(piv1.isNotSet)
 	assert(and2.isNotSet)
-	assert(ni3.isChanging)
-	assert(piv1.isChanging)
-	assert(and2.isChanging)
+	assert(ni3.mayChange)
+	assert(piv1.mayChange)
+	assert(and2.mayChange)
 	
 	pi1.value = true
 	
 	assert(piv1.isSet)
 	assert(and2.isSet)
 	assert(lastEvent)
-	assert(and2.isChanging)
-	assert(piv1.isChanging)
+	assert(and2.mayChange)
+	assert(piv1.mayChange)
 	
 	i3.set()
 	
 	assert(ni3.isNotSet)
 	assert(and2.isNotSet)
 	assert(!lastEvent)
-	assert(!ni3.isChanging)
-	assert(!and2.isChanging)
+	assert(!ni3.mayChange)
+	assert(!and2.mayChange)
 	assert(ni3.hasNoListeners)
 	assert(i3.hasNoListeners)
 	assert(and2.hasNoListeners)
@@ -116,9 +116,9 @@ object FlagTest extends App
 	assert(i4.hasListeners)
 	assert(piv1.hasListeners)
 	assert(or1.hasListeners)
-	assert(i4.isChanging)
-	assert(piv1.isChanging)
-	assert(or1.isChanging)
+	assert(i4.mayChange)
+	assert(piv1.mayChange)
+	assert(or1.mayChange)
 	
 	pi1.value = false
 	
@@ -129,8 +129,8 @@ object FlagTest extends App
 	i4.set()
 	
 	assert(or1.isSet)
-	assert(!i4.isChanging)
-	assert(!or1.isChanging)
+	assert(!i4.mayChange)
+	assert(!or1.mayChange)
 	assert(i4.hasNoListeners)
 	assert(or1.hasNoListeners)
 	assert(piv1.hasNoListeners)

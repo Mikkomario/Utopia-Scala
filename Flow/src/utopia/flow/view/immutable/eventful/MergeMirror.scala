@@ -1,8 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
 object MergeMirror
@@ -86,12 +86,22 @@ class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing
 	
 	// Handles the situation where the pointers stop changing
 	stopOnceAllSourcesStop(sources)
+	// Also handles the situation where the listen condition gets fixed to false
+	onceSourceStopsAt(condition, false) { declareChangingStopped() }
+	
+	
+	// COMPUTED ----------------------------------
+	
+	private def sourceDestiny = sources.mapAndMerge { _.destiny } { _ + _ }
 	
 	
 	// IMPLEMENTED  ------------------------------
 	
 	override def value = _value
 	
-	override def isChanging = sources.exists { _.isChanging }
-	override def mayStopChanging: Boolean = sources.forall { _.mayStopChanging }
+	override def destiny: Destiny = condition.destiny match {
+		case Sealed => if (!condition.value) Sealed else sourceDestiny
+		case MaySeal => sourceDestiny.possibleToSeal
+		case ForeverFlux => sourceDestiny
+	}
 }

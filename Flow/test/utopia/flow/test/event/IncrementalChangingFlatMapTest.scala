@@ -58,13 +58,13 @@ object IncrementalChangingFlatMapTest extends App
 	def testListenerCount(context: => String) = {
 		try {
 			// Expects everything to be changing
-			assert(sourcePointer1.isChanging)
-			assert(sourcePointer2.isChanging)
-			assert(indirect1.isChanging)
-			assert(indirect2.isChanging)
-			assert(delayed1.isChanging)
-			assert(delayed2.isChanging)
-			assert(mapped.isChanging)
+			assert(sourcePointer1.mayChange)
+			assert(sourcePointer2.mayChange)
+			assert(indirect1.mayChange)
+			assert(indirect2.mayChange)
+			assert(delayed1.mayChange)
+			assert(delayed2.mayChange)
+			assert(mapped.mayChange)
 			// Source pointers are mapped to indirect pointers
 			assert(sourcePointer1.numberOfListeners == 1)
 			assert(sourcePointer2.numberOfListeners == 1)

@@ -1,5 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
@@ -33,8 +35,7 @@ class MutableOnce[A](initialValue: A) extends AbstractMayStopChanging[A] with Po
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def isChanging = _setFlag.isNotSet
-	override def mayStopChanging: Boolean = true
+	override def destiny: Destiny = if (_setFlag.isSet) Sealed else MaySeal
 	
 	override def value = _value
 	override def value_=(newValue: A) = {
@@ -67,7 +68,7 @@ class MutableOnce[A](initialValue: A) extends AbstractMayStopChanging[A] with Po
 	  * @return Whether that value was assigned
 	  */
 	def trySet(newValue: => A) = {
-		if (isChanging) {
+		if (mayChange) {
 			value = newValue
 			true
 		}

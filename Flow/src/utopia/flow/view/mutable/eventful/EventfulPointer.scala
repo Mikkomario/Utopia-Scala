@@ -1,6 +1,9 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.UncertainBoolean
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
@@ -40,8 +43,7 @@ class EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with Point
 	
 	// IMPLEMENTED	----------------
 	
-	override def isChanging = true
-	override def mayStopChanging: Boolean = false
+	override def destiny: Destiny = ForeverFlux
 	
 	/**
 	  * @return The current value in this mutable

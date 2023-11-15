@@ -2,6 +2,8 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.process.Breakable
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
@@ -83,8 +85,16 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	// IMPLEMENTED  -------------------
 	
 	override def value: R = merge(input1.value, input2.value)
-	override def isChanging: Boolean = !stopped && inputs.exists { _.origin.isChanging }
-	override def mayStopChanging: Boolean = stopCondition.isDefined || inputs.forall { _.origin.mayStopChanging }
+	
+	override def destiny: Destiny = {
+		// If stopped, it is certain that this mirror won't change
+		if (stopped)
+			Sealed
+		// Otherwise the changing is based on the origin pointers
+		// If a stop condition is specified, it brings a level of uncertainty (i.e. may always change)
+		else
+			inputs.mapAndMerge { _.origin.destiny } { _ + _ }.possibleToSealIf(stopCondition.isDefined)
+	}
 	
 	override def stop(): Future[Any] = {
 		if (!stopped) {

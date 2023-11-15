@@ -115,6 +115,27 @@ sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] wi
 		case Some(known) => this || known
 		case None => if (isCertainlyTrue) CertainBoolean(true) else UncertainBoolean
 	}
+	
+	/**
+	  * @param condition A condition that, if met, causes this value to become uncertain
+	  *                  (call-by-name, only called for certain values)
+	  * @return This value that is marked as uncertain if the specified condition is met
+	  */
+	def uncertainIf(condition: => Boolean) = if (isUncertain || !condition) this else UncertainBoolean
+	/**
+	  * @param condition A condition that, if met, causes this value to be no longer certainly true.
+	  *                  Call-by-name, only called for certainly true values.
+	  * @return This value that has been marked as uncertain if both this and the specified condition were true
+	  */
+	def notCertainlyTrueIf(condition: => Boolean) =
+		if (isCertainlyTrue && condition) UncertainBoolean else this
+	/**
+	  * @param condition A condition that, if met, causes this value to be no longer certainly false.
+	  *                  Call-by-name, only called for certainly false values.
+	  * @return This value that has been marked as uncertain if both this was false and the specified condition was true
+	  */
+	def notCertainlyFalseIf(condition: => Boolean) =
+		if (isCertainlyFalse && condition) UncertainBoolean else this
 }
 
 case object UncertainBoolean extends UncertainBoolean
@@ -122,9 +143,18 @@ case object UncertainBoolean extends UncertainBoolean
 	// ATTRIBUTES   --------------------------------
 	
 	/**
+	  * A boolean/value that is known to be true
+	  */
+	lazy val certainlyTrue = CertainBoolean(true)
+	/**
+	  * A boolean/value that is known to be false
+	  */
+	lazy val certainlyFalse = CertainBoolean(false)
+	
+	/**
 	 * All possible values of this enumeration
 	 */
-	lazy val values = Vector[UncertainBoolean](CertainBoolean(true), CertainBoolean(false), this)
+	lazy val values = Vector[UncertainBoolean](certainlyTrue, certainlyFalse, this)
 	
 	
 	// COMPUTED -------------------------
@@ -137,10 +167,11 @@ case object UncertainBoolean extends UncertainBoolean
 	
 	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.exact
 	implicit def autoConvertFromOption(value: Option[Boolean]): UncertainBoolean = value match {
-		case Some(known) => CertainBoolean(known)
+		case Some(known) => autoConvertFromBoolean(known)
 		case None => this
 	}
-	implicit def autoConvertFromBoolean(boolean: Boolean): UncertainBoolean = CertainBoolean(boolean)
+	implicit def autoConvertFromBoolean(boolean: Boolean): UncertainBoolean =
+		if (boolean) certainlyTrue else certainlyFalse
 	
 	
 	// IMPLEMENTED  --------------------------------

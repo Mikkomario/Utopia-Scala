@@ -3,6 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -86,19 +87,17 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def isChanging = source.isChanging || pointerPointer.value.isChanging
-	override def mayStopChanging = {
-		// It is uncertain whether the final mapped pointer may stop changing, but there is a chance for it
-		if (source.isChanging)
-			source.mayStopChanging
-		else
-			pointerPointer.value.mayStopChanging
+	// As long as the source pointer is changing, won't know whether the final result will be forever flux or sealed
+	// Except that, if the source never stops changing, this pointer never stops changing either
+	override def destiny = source.destiny match {
+		case Sealed => pointerPointer.value.destiny
+		case sd => sd
 	}
 	
 	override protected def wrapped = pointer
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) = {
-		if (source.isChanging)
+		if (source.mayChange)
 			queuedStopListeners :+= listener
 		else
 			pointerPointer.value.addChangingStoppedListener(listener)

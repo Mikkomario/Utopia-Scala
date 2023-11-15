@@ -4,12 +4,11 @@ import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.Wait
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 object DelayedView
@@ -99,8 +98,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	
 	override protected def wrapped = valuePointer
 	
-	override def isChanging = source.isChanging || queuedValuePointer.nonEmpty
-	override def mayStopChanging = source.mayStopChanging
+	override def destiny = source.destiny.fluxIf(queuedValuePointer.nonEmpty)
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) =
 		stopListeners :+= listener

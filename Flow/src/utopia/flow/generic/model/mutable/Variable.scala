@@ -1,7 +1,8 @@
 package utopia.flow.generic.model.mutable
 
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.Property
 import utopia.flow.view.mutable.Pointer
@@ -87,9 +88,8 @@ object Variable
                 fireEvent(event).foreach { _() }
             }
         }
-    
-        override def isChanging = true
-        override def mayStopChanging: Boolean = false
+        
+        override def destiny: Destiny = ForeverFlux
         
         override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
         

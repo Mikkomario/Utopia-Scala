@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
-import utopia.flow.event.model.{ChangeEvent, ChangeResult}
+import utopia.flow.event.model.{ChangeEvent, ChangeResult, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -97,8 +97,9 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def isChanging: Boolean = origin.isChanging && (!mayStopMapping || bridge.value.isTemporal)
-	override def mayStopChanging: Boolean = mayStopMapping || origin.mayStopChanging
+	// Seals (stops changing) if maps to a final value
+	override def destiny: Destiny =
+		origin.destiny.sealedIf(mayStopMapping && bridge.value.isTemporal).possibleToSealIf(mayStopMapping)
 	
 	override def value: ChangeResult[R] = {
 		val raw = bridge.value

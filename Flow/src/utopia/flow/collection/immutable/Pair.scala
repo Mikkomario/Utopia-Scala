@@ -503,6 +503,17 @@ case class Pair[+A](first: A, second: A)
 	  * @return Function result
 	  */
 	def merge[B](f: (A, A) => B) = f(first, second)
+	/**
+	  * Maps the values in this pair and merges them together using another function.
+	  * This yields the same result as calling .map(...) followed by .merge(...), but
+	  * is more optimized, as no additional collection is constructed in between.
+	  * @param map Value mapping function to apply
+	  * @param merge A merge function to apply to mapped values
+	  * @tparam B Type of mapping results
+	  * @tparam C Type of the merge result
+	  * @return Merge result based on the mapped values of this pair
+	  */
+	def mapAndMerge[B, C](map: A => B)(merge: (B, B) => C) = merge(map(first), map(second))
 	
 	/**
 	  * @param e An equals function

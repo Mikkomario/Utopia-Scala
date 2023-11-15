@@ -1,6 +1,8 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.{Pointer, Resettable}
 import utopia.flow.view.template.eventful.AbstractChanging
@@ -80,8 +82,7 @@ trait ResettableFlag extends Flag with Resettable with Pointer[Boolean]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def isChanging: Boolean = true
-	override def mayStopChanging: Boolean = false
+	override def destiny: Destiny = ForeverFlux
 	
 	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
 	

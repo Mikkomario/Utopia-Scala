@@ -3,6 +3,10 @@
 ## v2.3 (in development)
 ### Breaking changes
 - Divided the `operator` package into multiple sub-packages
+- Multiple breaking changes concerning Changing
+  - The abstract functions `.isChanging` and `.mayStopChanging` were replaced with `.destiny`
+  - The abstract function `_addListenerOfPriority(...)` no longer needs to account for the case
+  where the item has already stopped from changing, as it will only be called for still-changing items
 - Renamed **CanBeZero** to **MayBeZero** and **CanBeAboutZero** to **MayBeAboutZero**
 - Moved **JsonSettingsAccess** to `parse.json`
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**
@@ -14,6 +18,8 @@
 - Fixed a bug in **Path**`.parts` and `.partsIterator` (used to throw an **IllegalArgumentException**) 
 - **StringFrom** now correctly preserves line-breaks
 - **EqualsBy** now compares the equals-properties using `==` instead of using hashCodes
+- The following Changing implementations now properly take into account 
+  the listening condition for the purposes of stopping changing: **LightMergeMirror**, **MergeMirror**
 ### New Features
 - Added file-related utility methods under **FileUtils**
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
@@ -44,6 +50,8 @@
   - Added a couple of "onceNotChanging" method variants
 - **OptimizedBridge**
   - Added `.detach()`
+- **Pair**
+  - Added `.mapAndMerge(...)(...)`
 - **Path** (**FileExtensions**)
   - Added `.hasSameContentAs(Path)` for identical file -searching (not yet tested)
 - **Regex** (object)

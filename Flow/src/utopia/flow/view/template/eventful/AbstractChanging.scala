@@ -63,11 +63,9 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	override protected def listenersByPriority: Pair[Iterable[ChangeListener[A]]] = _listeners
 	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = {
-		// Only adds more listeners if changes are to be anticipated, and if the listener is unique
-		if (isChanging) {
-			val newListener = lazyListener.value
-			_listeners = _listeners.mapSide(priority) { q => if (q.contains(newListener)) q else q :+ newListener }
-		}
+		// Only adds more listeners if the listener is unique
+		val newListener = lazyListener.value
+		_listeners = _listeners.mapSide(priority) { q => if (q.contains(newListener)) q else q :+ newListener }
 	}
 	
 	override def removeListener(listener: Any) = _listeners = _listeners.map { _.filterNot { _ == listener } }

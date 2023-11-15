@@ -89,7 +89,7 @@ object AsyncProcessMirror
 	                                     (implicit exc: ExecutionContext, log: Logger): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
 		// Case: Mapping required => constructs a proper mirror
-		if (source.isChanging || !skipInitialProcess)
+		if (source.mayChange || !skipInitialProcess)
 			new AsyncProcessMirror[Origin, Result, Reflection](source, placeHolder, skipInitialProcess)(map)(merge)
 		// Case: Fixed source and no initial mapping required => Constructs a fixed pointer
 		else
@@ -172,8 +172,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	
 	override protected def wrapped = pointer
 	
-	override def isChanging = source.isChanging || value.isProcessing
-	override def mayStopChanging = source.mayStopChanging
+	override def destiny = source.destiny.fluxIf(value.isProcessing)
 	
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()

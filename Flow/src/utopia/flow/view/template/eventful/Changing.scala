@@ -3,7 +3,8 @@ package utopia.flow.view.template.eventful
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult}
+import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -105,14 +106,36 @@ trait Changing[+A] extends Any with View[A]
 	// ABSTRACT	---------------------
 	
 	/**
-	  * @return Whether this item will ever change its value.
+	  * @return The "destiny" if this item.
+	  *         Contains information on whether this item is still able to change,
+	  *         and/or whether the value of this item may become fixed at some point.
 	  */
-	def isChanging: Boolean
+	def destiny: Destiny
+	
+	/*
 	/**
-	  * @return Whether this item might stop changing at some point in the future.
-	  *         Also returns true if this item has already stopped changing.
+	  * @return Whether this item will change at some point in the future.
+	  *         True (certain) if it is known for certain that there will be at least one more change,
+	  *         False (certain) if it is known for certain that there will never be any further changes to this item,
+	  *         UncertainBoolean if it is possible that this item may still change, although uncertain whether it will
 	  */
-	def mayStopChanging: Boolean
+	def willChange: UncertainBoolean
+	/**
+	  * @return Whether this item will stop changing or has stopped changing at some point.
+	  *
+	  *         True (certain) if this item has already stopped changing,
+	  *         or if it is known for certain that it will stop changing in the future
+	  *
+	  *         False (certain) if it is impossible for this item to stop changing for certain;
+	  *         E.g. if the value of this item is based on user interaction or some other outside force,
+	  *         as is the value for mutable pointers.
+	  *
+	  *         UncertainBoolean if it is possible that this item will stop changing
+	  *         (i.e. functionality for that exists), but it is still uncertain whether that functionality
+	  *         is or will be actuated.
+	  */
+	def willStopChanging: UncertainBoolean
+	*/
 	
 	/**
 	  * @return Whether this pointer is being listened to at the moment
@@ -124,10 +147,13 @@ trait Changing[+A] extends Any with View[A]
 	def numberOfListeners: Int
 	
 	/**
+	  * Assigns a new change listener to this item.
+	  * The implementation may assume that mayChange has been tested to be true, as no listener should be applied after
+	  * changing has stopped.
 	  * @param priority Priority assigned to the specified listener, where
 	  *                 First is high priority (called first) and Last is standard priority (called afterwards)
 	  * @param lazyListener A listener to assign to this item,
-	  *                     if appropriate (i.e. if this item will still change and doesn't contain that listener already)
+	  *                     if appropriate (i.e. if this item doesn't contain that listener already)
 	  *                     (specified as a lazily initialized view)
 	  */
 	protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit
@@ -151,13 +177,31 @@ trait Changing[+A] extends Any with View[A]
 	// COMPUTED	--------------------
 	
 	/**
-	  * @return Whether this item will <b>never</b> change its value
+	  * @return Whether this item might ever change its value in the future.
 	  */
-	def isFixed: Boolean = !isChanging
+	def mayChange: Boolean = destiny.hasNotBeenSealed
 	/**
-	  * @return The current fixed value of this pointer (will continue to remain the same)
+	  * @return Whether this item will ever change its value.
 	  */
-	def fixedValue = if (isChanging) None else Some(value)
+	@deprecated("Please use mayChange instead", "v2.3")
+	def isChanging: Boolean = mayChange
+	/**
+	  * @return Whether this item might stop changing at some point in the future.
+	  *         Also returns true if this item has already stopped changing.
+	  */
+	@deprecated("Please use destiny.isPossibleToSeal instead", "v2.3")
+	def mayStopChanging: Boolean = destiny.isPossibleToSeal
+	
+	/**
+	  * @return Whether this item will not change its value anymore
+	  */
+	def isFixed: Boolean = destiny.hasBeenSealed
+	/**
+	  * @return The current fixed/static value of this pointer.
+	  *         None if it is still possible for this item to change.
+	  *         If Some, that will be the final value of this item, and will not change.
+	  */
+	def fixedValue = if (isFixed) Some(value) else None
 	
 	/**
 	  * @return Whether this pointer is not currently being listened to
@@ -170,7 +214,7 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def nextChangeFuture = {
 		// Case: There is a possibility that this pointer will mutate => Starts waiting for the next change event
-		if (isChanging) {
+		if (mayChange) {
 			val promise = Promise[ChangeEvent[A]]()
 			onNextChange(promise.success)
 			promise.future
@@ -183,12 +227,11 @@ trait Changing[+A] extends Any with View[A]
 	/**
 	  * @return Copy of this pointer that attaches the "isChanging" state to the value of this pointer
 	  */
-	def withState = diverge {
-		if (mayStopChanging)
-			StatefulValueView(this)
-		else
-			lightMap { ChangeResult(_) }
-	} { ChangeResult.finalValue(value) }
+	def withState = destiny match {
+		case Sealed => Fixed(ChangeResult.finalValue(value))
+		case MaySeal => StatefulValueView(this)
+		case ForeverFlux => lightMap(ChangeResult.temporal)
+	}
 	
 	
 	// IMPLEMENTED  -----------------
@@ -202,19 +245,12 @@ trait Changing[+A] extends Any with View[A]
 	  * @param condition A condition to test fixed values with
 	  * @return Whether this changing item is fixed to a value that fulfils the specified condition
 	  */
-	def existsFixed(condition: A => Boolean) = if (isChanging) false else condition(value)
+	def existsFixed(condition: A => Boolean) = isFixed && condition(value)
 	/**
 	  * @param condition A condition to test fixed values with
-	  * @return This item if changing or not fixed to a value the specified condition returns true for
+	  * @return This item if changing or not fixed to a value for which the specified condition returns true
 	  */
-	def notFixedWhere(condition: A => Boolean) = {
-		if (isChanging)
-			Some(this)
-		else if (condition(value))
-			None
-		else
-			Some(this)
-	}
+	def notFixedWhere(condition: A => Boolean) = if (existsFixed(condition)) None else Some(this)
 	
 	/**
 	  * @param priority Priority assigned to the specified listener, where
@@ -226,7 +262,8 @@ trait Changing[+A] extends Any with View[A]
 		// Debugging feature: May follow the maximum number of listeners
 		if (Changing.listenerDebuggingLimit >= 0 && numberOfListeners >= Changing.listenerDebuggingLimit)
 			throw new IllegalStateException(s"Maximum (debugging) limit (${Changing.listenerDebuggingLimit}) of change event listeners reached.")
-		_addListenerOfPriority(priority, Lazy(listener))
+		if (mayChange)
+			_addListenerOfPriority(priority, Lazy(listener))
 	}
 	
 	/**
@@ -276,7 +313,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @param listener A listener to assign, if appropriate (call-by-name)
 	  */
 	def addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = {
-		if (isChanging && mayStopChanging)
+		if (destiny == MaySeal)
 			_addChangingStoppedListener(listener)
 	}
 	/**
@@ -286,12 +323,14 @@ trait Changing[+A] extends Any with View[A]
 	  * @param listener A listener to assign, if appropriate (call-by-name)
 	  */
 	def addChangingStoppedListenerAndSimulateEvent(listener: => ChangingStoppedListener): Unit = {
-		if (isChanging) {
-			if (mayStopChanging)
-				_addChangingStoppedListener(listener)
+		destiny match {
+			// Case: Already stopped changing before => Informs the listener immediately
+			case Sealed => listener.onChangingStopped()
+			// Case: May stop changing in the future => Adds the listener
+			case MaySeal => _addChangingStoppedListener(listener)
+			// Case: Cannot stop changing => No point to attach a listener
+			case ForeverFlux => ()
 		}
-		else
-			listener.onChangingStopped()
 	}
 	
 	/**
@@ -380,9 +419,9 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def addListenerWhile(condition: Changing[Boolean], priority: End = Last)(listener: => ChangeListener[A]) = {
 		// Only assigns listeners to changing items, as they are useless in other situations
-		if (isChanging) {
+		if (mayChange) {
 			// Case: Variable condition => Utilizes a conditional change reaction
-			if (condition.isChanging)
+			if (condition.mayChange)
 				ConditionalChangeReaction(this, condition, priority)(listener)
 			// Case: Always listening => Assigns a continuous listener
 			else if (condition.value)
@@ -409,9 +448,9 @@ trait Changing[+A] extends Any with View[A]
 	                                            (listener: => ChangeListener[B]): Unit =
 	{
 		// Case: Variable condition
-		if (condition.isChanging) {
+		if (condition.mayChange) {
 			// Case: This item is still changing => Utilizes a conditional change reaction
-			if (isChanging)
+			if (mayChange)
 				ConditionalChangeReaction
 					.simulatingInitialValue[B](this, condition, simulatedOldValue, priority)(listener)
 			// Case: This item is fixed => Generates a simulated change event, if appropriate,
@@ -593,26 +632,14 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A pointer that contains mapped values merged with this pointer's "isChanging" status
 	  */
-	def mapWithState[B](f: A => B) =
-		diverge {
-			if (mayStopChanging)
-				StatefulValueView.map(this)(f)
-			else
-				map { v => ChangeResult.temporal(f(v)) }
-		} { ChangeResult.finalValue(f(value)) }
+	def mapWithState[B](f: A => B) = _mapWithState(f)
 	/**
 	  * A variant of [[mapWithState()]]. Use this version in case 'f' is a very simple/cheap function.
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
 	  * @return A pointer that contains mapped values merged with this pointer's "isChanging" status
 	  */
-	def lightMapWithState[B](f: A => B) =
-		diverge {
-			if (mayStopChanging)
-				StatefulValueView.map(this, cachingDisabled = true)(f)
-			else
-				lightMap { v => ChangeResult(f(v)) }
-		} { ChangeResult.finalValue(f(value)) }
+	def lightMapWithState[B](f: A => B) = _mapWithState(f, disableCaching = true)
 	/**
 	  * @param f A mapping function
 	  * @param stopCondition A condition that, if met, will end mirroring of this pointer and mark the resulting value
@@ -639,7 +666,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A view to this changing item that may terminate the linking
 	  */
 	def viewUntil(f: A => Boolean) = {
-		if (isChanging) {
+		if (mayChange) {
 			// Case: Immediately stops viewing => Wraps the current value in a fixed pointer
 			if (f(value))
 				Fixed(value)
@@ -751,8 +778,8 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def lightMergeWithUntil[B, R](other: Changing[B])(merge: (A, B) => R)(stopCondition: (A, B, R) => Boolean) =
 	{
-		if (isChanging) {
-			if (other.isChanging) {
+		if (mayChange) {
+			if (other.mayChange) {
 				val initialMerge = merge(value, other.value)
 				if (stopCondition(value, other.value, initialMerge))
 					Fixed(initialMerge)
@@ -816,12 +843,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of values in the resulting items
 	  * @return A pointer to the current value of the last map result
 	  */
-	def flatMap[B](f: A => Changing[B]) = {
-		if (isChanging)
-			FlatteningMirror(this)(f)
-		else
-			f(value)
-	}
+	def flatMap[B](f: A => Changing[B]) = if (mayChange) FlatteningMirror(this)(f) else f(value)
 	/**
 	  * Maps this changing item with a function that yields other changing items.
 	  * These are wrapped under a single "Changing" interface.
@@ -838,7 +860,7 @@ trait Changing[+A] extends Any with View[A]
 	def incrementalFlatMap[B](initialMap: A => Changing[B])
 	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B]) =
 	{
-		if (isChanging)
+		if (mayChange)
 			FlatteningMirror.incremental(this)(initialMap)(incrementMap)
 		else
 			initialMap(value)
@@ -859,7 +881,7 @@ trait Changing[+A] extends Any with View[A]
 		if (viewCondition.isAlwaysFalse)
 			Fixed(value)
 		// Case: This item may change
-		else if (isChanging)
+		else if (mayChange)
 			threshold.finite match {
 				// Case: A finite delay has been defined
 				case Some(duration) =>
@@ -1025,12 +1047,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of new changing or fixed value
 	  * @return A new changing item
 	  */
-	protected def diverge[B](ifChanging: => Changing[B])(ifNotChanging: => B) = {
-		if (isChanging)
-			ifChanging
-		else
-			Fixed(ifNotChanging)
-	}
+	protected def diverge[B](ifChanging: => Changing[B])(ifNotChanging: => B) =
+		if (mayChange) ifChanging else Fixed(ifNotChanging)
 	/**
 	  * Creates a new lazy container based on this item.
 	  * A more simple container is created if this item is no longer changing.
@@ -1039,12 +1057,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of new changing or fixed value
 	  * @return A new lazy container
 	  */
-	protected def lazyDiverge[B](ifChanging: => ListenableLazy[B])(ifNotChanging: => B) = {
-		if (isChanging)
-			ifChanging
-		else
-			Lazy.listenable(ifNotChanging)
-	}
+	protected def lazyDiverge[B](ifChanging: => ListenableLazy[B])(ifNotChanging: => B) =
+		if (mayChange) ifChanging else Lazy.listenable(ifNotChanging)
 	/**
 	  * Creates a new changing item by combining this item with another.
 	  * Uses a more simple function in case the other item doesn't change anymore.
@@ -1061,11 +1075,8 @@ trait Changing[+A] extends Any with View[A]
 	                                (ifOtherIsFixed: B => R)
 	                                (ifOnlyThisIsFixed: => R) =
 	{
-		if (other.isChanging) {
-			if (isChanging)
-				ifBothChange
-			else
-				ifOnlyThisIsFixed
+		if (other.mayChange) {
+			if (mayChange) ifBothChange else ifOnlyThisIsFixed
 		}
 		else
 			ifOtherIsFixed(other.value)
@@ -1191,7 +1202,7 @@ trait Changing[+A] extends Any with View[A]
 			case Some(result) => Future.fromTry(result)
 			case None =>
 				// Case: May change => Listens to changes until the searched state is found
-				if (isChanging) {
+				if (mayChange) {
 					val promise = Promise[B]()
 					addListener { e =>
 						// Handles possible failures thrown by the test function
@@ -1217,6 +1228,12 @@ trait Changing[+A] extends Any with View[A]
 				else
 					Future.never
 		}
+	}
+	
+	private def _mapWithState[B](f: A => B, disableCaching: Boolean = false) = destiny match {
+		case Sealed => Fixed(ChangeResult.finalValue(f(value)))
+		case MaySeal => StatefulValueView.map(this, cachingDisabled = disableCaching)(f)
+		case ForeverFlux => map { v => ChangeResult.temporal(f(v)) }
 	}
 }
 

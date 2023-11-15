@@ -1,9 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.template.eventful.AbstractChanging
@@ -95,8 +95,8 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	// IMPLEMENTED	------------------------------
 	
 	override def value = resultPointer.value.getOrElse(placeHolder)
-	override def isChanging = !isCompleted
-	override def mayStopChanging: Boolean = true
+	
+	override def destiny: Destiny = if (isCompleted) Sealed else MaySeal
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
 		stopListeners :+= listener

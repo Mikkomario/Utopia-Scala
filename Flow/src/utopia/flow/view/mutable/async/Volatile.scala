@@ -1,7 +1,8 @@
 package utopia.flow.view.mutable.async
 
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, ChangingWrapper}
 
@@ -46,8 +47,7 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
     override def value = _value
     override def value_=(newValue: A) = lockAndSet { _ => () -> newValue }
     
-    override def isChanging = true
-    override def mayStopChanging: Boolean = false
+    override def destiny: Destiny = ForeverFlux
     
     override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
     

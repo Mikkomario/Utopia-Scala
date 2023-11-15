@@ -1,7 +1,7 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -40,8 +40,7 @@ trait ChangingWrapper[+A] extends Changing[A]
 	
 	override def value = wrapped.value
 	
-	override def isChanging = wrapped.isChanging
-	override def mayStopChanging: Boolean = wrapped.mayStopChanging
+	override def destiny: Destiny = wrapped.destiny
 	
 	override def hasListeners: Boolean = wrapped.hasListeners
 	override def numberOfListeners: Int = wrapped.numberOfListeners

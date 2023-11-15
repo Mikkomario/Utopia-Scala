@@ -1,5 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
@@ -54,8 +56,7 @@ class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] wit
 			_set(newValue)
 	}
 	
-	override def isChanging: Boolean = !_locked
-	override def mayStopChanging: Boolean = true
+	override def destiny: Destiny = if (_locked) Sealed else MaySeal
 	
 	
 	// OTHER    ---------------------------

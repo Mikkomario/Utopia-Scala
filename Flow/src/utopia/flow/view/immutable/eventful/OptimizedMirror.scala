@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.event.model.Destiny
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
 object OptimizedMirror
@@ -55,6 +56,5 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, cachingDisabled: Boo
 	// IMPLEMENTED  -------------------------
 	
 	override def value: R = bridge.value
-	override def isChanging: Boolean = origin.isChanging
-	override def mayStopChanging: Boolean = origin.mayStopChanging
+	override def destiny: Destiny = origin.destiny
 }

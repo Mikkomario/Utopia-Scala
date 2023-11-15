@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
 object Mirror
@@ -60,12 +61,20 @@ class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Bo
 	startMirroring(source, condition)(f) { _value = _ }
 	
 	stopOnceSourceStops(source)
+	// If the condition becomes fixed to false, fires a stopped changing -event
+	onceSourceStopsAt(condition, false) { declareChangingStopped() }
 	
 	
 	// IMPLEMENTED  ------------------------------
 	
 	override def value = _value
-	
-	override def isChanging = source.isChanging
-	override def mayStopChanging: Boolean = source.mayStopChanging
+	override def destiny: Destiny = condition.destiny match {
+		// Case: Mirror condition is fixed => Considers this pointer as fixed if the condition is fixed to false
+		case Sealed => if (condition.value) source.destiny else Sealed
+		// Case: Mirror condition may become fixed =>
+		// Considers it possible that this mirror becomes fixed at some point, regardless of source status
+		case MaySeal => source.destiny.possibleToSeal
+		// Case: Condition is variable => Only becomes fixed if the source does
+		case ForeverFlux => source.destiny
+	}
 }

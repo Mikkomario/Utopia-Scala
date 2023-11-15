@@ -1,6 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, FlagLike}
 
@@ -49,8 +50,7 @@ object Flag
 		// IMPLEMENTED  ---------------------
 		
 		override def value = _value
-		override def isChanging = isNotSet
-		override def mayStopChanging: Boolean = true
+		override def destiny: Destiny = if (isSet) Sealed else MaySeal
 		
 		// Can't be set twice, so asking for nextFuture after set is futile
 		override def nextFuture = if (isSet) Future.never else future

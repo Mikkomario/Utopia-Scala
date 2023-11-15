@@ -1,6 +1,8 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
@@ -63,8 +65,7 @@ class SettableOnce[A]() extends AbstractMayStopChanging[Option[A]] with Pointer[
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def isChanging = _value.isEmpty
-	override def mayStopChanging: Boolean = true
+	override def destiny: Destiny = if (_value.isDefined) Sealed else MaySeal
 	
 	override def value = _value
 	@throws[IllegalStateException]("If this pointer has already been set")

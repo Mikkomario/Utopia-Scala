@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AsyncMirror.AsyncMirrorValue
 import utopia.flow.view.mutable.async.Volatile
@@ -97,7 +97,7 @@ object AsyncMirror
 	                                     (implicit exc: ExecutionContext): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
 		// Case: Mapping required => constructs a proper mirror
-		if (source.isChanging || !skipInitialProcess)
+		if (source.mayChange || !skipInitialProcess)
 			new AsyncMirror[Origin, Result, Reflection](source, placeHolder, condition, skipInitialProcess)(map)(merge)
 		// Case: Fixed source and no initial mapping required => Constructs a fixed pointer
 		else
@@ -208,8 +208,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	
 	override protected def wrapped = pointer
 	
-	override def isChanging = source.isChanging || value.isProcessing
-	override def mayStopChanging = source.mayStopChanging
+	override def destiny = source.destiny.fluxIf(value.isProcessing)
 	
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()

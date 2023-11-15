@@ -4,7 +4,8 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
-import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.Destiny.MaySeal
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.Changing
@@ -66,8 +67,10 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 		case Some(p) => p.value
 		case None => placeholderValue
 	}
-	override def isChanging: Boolean = pointer.forall { _.isChanging }
-	override def mayStopChanging: Boolean = pointer.forall { _.mayStopChanging }
+	override def destiny: Destiny = pointer match {
+		case Some(p) => p.destiny
+		case None => MaySeal
+	}
 	
 	override def hasListeners: Boolean = pointer match {
 		case Some(p) => p.hasListeners

@@ -1,6 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -9,8 +11,7 @@ case class Fixed[+A](override val value: A) extends Changing[A]
 {
 	// IMPLEMENTED	-------------
 	
-	override def isChanging = false
-	override def mayStopChanging: Boolean = true
+	override def destiny: Destiny = Sealed
 	
 	override def hasListeners: Boolean = false
 	override def numberOfListeners: Int = 0

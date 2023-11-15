@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.event.model.Destiny
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
 object TripleMergeMirror
@@ -23,32 +24,32 @@ object TripleMergeMirror
 	                     (merge: (O1, O2, O3) => R) =
 	{
 		// Uses mapping functions or even a fixed value if possible
-		if (firstSource.isChanging) {
-			if (secondSource.isChanging) {
+		if (firstSource.mayChange) {
+			if (secondSource.mayChange) {
 				// Case: All sources change => Uses triple merge mirror
-				if (thirdSource.isChanging)
+				if (thirdSource.mayChange)
 					apply(firstSource, secondSource, thirdSource, condition)(merge)
 				// Case: Sources 1 & 2 change => Uses merge mirror
 				else
 					MergeMirror(firstSource, secondSource, condition)({ (a, b) => merge(a, b, thirdSource.value) })
 			}
 			// Case: Source 1 & 3 chage => Uses merge mirror
-			else if (thirdSource.isChanging)
+			else if (thirdSource.mayChange)
 				MergeMirror(firstSource, thirdSource, condition)({ (a, c) => merge(a, secondSource.value, c) })
 			// Case: Only source 1 changes => Uses mapping
 			else
 				firstSource.mapWhile(condition) { merge(_, secondSource.value, thirdSource.value) }
 		}
-		else if (secondSource.isChanging) {
+		else if (secondSource.mayChange) {
 			// Case: Sources 2 & 3 change => Merge
-			if (thirdSource.isChanging)
+			if (thirdSource.mayChange)
 				MergeMirror(secondSource, thirdSource, condition)({ (b, c) => merge(firstSource.value, b, c) })
 			// Case: Source 2 only changes => Maps
 			else
 				secondSource.mapWhile(condition) { merge(firstSource.value, _, thirdSource.value) }
 		}
 		// Case: Source 3 changes only => Maps
-		else if (thirdSource.isChanging)
+		else if (thirdSource.mayChange)
 			thirdSource.mapWhile(condition) { merge(firstSource.value, secondSource.value, _) }
 		// Case: Nothing changes => Uses a fixed value
 		else
@@ -127,7 +128,5 @@ class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changi
 	// IMPLEMENTED  -----------------------------
 	
 	override def value = _value
-	
-	override def isChanging = sources.exists { _.isChanging }
-	override def mayStopChanging: Boolean = sources.forall { _.mayStopChanging }
+	override def destiny: Destiny = sources.map { _.destiny }.reduce { _ + _ }
 }
