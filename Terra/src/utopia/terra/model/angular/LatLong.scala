@@ -189,7 +189,7 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	
 	override implicit def equalsFunction: EqualsFunction[LatLong] = LatLong.approxEquals
 	
-	override def toString = s"${latitudeDegrees.abs} $northSouth, ${longitudeDegrees.abs} $eastWest"
+	override def toString = s"${latitudeDegrees.abs} $northSouthSide, ${longitudeDegrees.abs} $eastWestSide"
 	
 	override def withDimensions(newDimensions: Dimensions[Rotation]): LatLong = LatLong(newDimensions)
 	

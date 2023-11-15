@@ -40,13 +40,13 @@ object LatLongTest extends App
 	assert(ll4.longitudeDegrees ~== -83.2)
 	
 	// Tests directions
-	assert(ll1.northSouth == North)
-	assert(ll1.eastWest == East)
-	assert(ll2.northSouth == South)
-	assert(ll2.eastWest == East)
-	assert(ll3.northSouth == North)
-	assert(ll3.eastWest == East)
-	assert(ll4.eastWest == West)
+	assert(ll1.northSouthSide == North, ll1)
+	assert(ll1.eastWestSide == East)
+	assert(ll2.northSouthSide == South)
+	assert(ll2.eastWestSide == East)
+	assert(ll3.northSouthSide == North)
+	assert(ll3.eastWestSide == East)
+	assert(ll4.eastWestSide == West)
 	
 	println("Done!")
 }
