@@ -23,6 +23,8 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     // ATTRIBUTES   --------------
     
     override lazy val view = new FlagView(this)
+    //noinspection PostfixUnaryOperation
+    override lazy val unary_! = super.unary_!
     
     
     // IMPLEMENTED  ---------------

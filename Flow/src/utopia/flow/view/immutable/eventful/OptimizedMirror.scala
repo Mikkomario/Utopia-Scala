@@ -46,7 +46,10 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, cachingDisabled: Boo
 	
 	// INITIAL CODE -------------------------
 	
-	stopOnceSourceStops(origin)
+	onceSourceStops(origin) {
+		declareChangingStopped()
+		bridge.detach()
+	}
 	
 	
 	// IMPLEMENTED  -------------------------

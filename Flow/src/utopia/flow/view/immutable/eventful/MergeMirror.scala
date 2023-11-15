@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
 
@@ -55,7 +56,12 @@ object MergeMirror
  * @param firstSource The first original item that is being merged
  * @param secondSource The second original item that is being merged
  * @param condition A condition that must be met for the merging to occur (default = always listen & merge)
-  * @param merge A mapping function for the mirrored value
+  * @param merge A merge function.
+  *              Accepts 4 parameters:
+  *                 1. Previously acquired result
+  *                 1. Current source 1 value
+  *                 1. Current source 2 value
+  *                 1. Recent change event
  * @tparam O1 Type of the mirror origin (value from source item)
  * @tparam O2 Type of the second mirror origin (value from second source item)
  * @tparam R Type of mirror reflection (value from this item)

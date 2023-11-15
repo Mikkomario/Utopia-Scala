@@ -198,7 +198,7 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 			else
 				detachmentQueuedFlag.set()
 			
-			Continue
+			ChangeResponse.continueIf(!ended && origin.isChanging)
 		}
 	}
 	

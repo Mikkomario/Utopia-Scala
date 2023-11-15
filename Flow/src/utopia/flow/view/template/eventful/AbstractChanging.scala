@@ -21,6 +21,9 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	// First value contains high priority listeners, second contains standard priority listeners
 	private var _listeners = Pair.twice(Vector[ChangeListener[A]]())
 	
+	// Caches the withState -version
+	override lazy val withState = super.withState
+	
 	
 	// COMPUTED --------------------
 	

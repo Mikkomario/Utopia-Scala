@@ -1,8 +1,11 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.async.process.Breakable
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
+
+import scala.concurrent.Future
 
 object LightMergeMirror
 {
@@ -17,7 +20,26 @@ object LightMergeMirror
 	  * @return A new pointer
 	  */
 	def apply[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2])(merge: (O1, O2) => R) =
-		new LightMergeMirror[O1, O2, R](origin1, origin2, merge)
+		new LightMergeMirror[O1, O2, R](origin1, origin2, merge, None)
+	/**
+	  * Creates a new pointer that merges the values from two other pointers, until a certain condition is met
+	  * @param origin1 The first merge origin
+	  * @param origin2 Second merge origin
+	  * @param merge   A function for producing a merge result based on the two origin values
+	  * @param stopCondition A condition that, once met, causes this pointer to stop reflecting the values of the
+	  *                      original pointers.
+	  *                      Accepts:
+	  *                         1. Source pointer 1 value
+	  *                         1. Source pointer 2 value
+	  *                         1. Merge result
+	  * @tparam O1 Type of the first merge origin
+	  * @tparam O2 Type of the second merge origin
+	  * @tparam R  Type of merge results
+	  * @return A new pointer
+	  */
+	def until[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2])(merge: (O1, O2) => R)
+	                    (stopCondition: (O1, O2, R) => Boolean) =
+		new LightMergeMirror[O1, O2, R](origin1, origin2, merge, Some(stopCondition))
 }
 
 /**
@@ -39,8 +61,9 @@ object LightMergeMirror
   * @param origin2 Second merge origin
   * @param merge A function for producing a merge result based on the two origin values
   */
-class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], merge: (O1, O2) => R)
-	extends OptimizedChanging[R]
+class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], merge: (O1, O2) => R,
+                                  stopCondition: Option[(O1, O2, R) => Boolean])
+	extends OptimizedChanging[R] with Breakable
 {
 	// ATTRIBUTES   -------------------
 	
@@ -48,28 +71,46 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	private val input2 = new Input(origin2, merge(origin1.value, _))
 	private val inputs = Pair(input1, input2)
 	
+	private var stopped = false
+	
 	
 	// INITIAL CODE -------------------
 	
 	// Handles the situation where the inputs stop from changing (if possible)
-	stopOnceAllSourcesStop(inputs.map { _.origin })
+	onceAllSourcesStop(inputs.map { _.origin }) { stop() }
 	
 	
 	// IMPLEMENTED  -------------------
 	
 	override def value: R = merge(input1.value, input2.value)
-	override def isChanging: Boolean = inputs.exists { _.origin.isChanging }
-	override def mayStopChanging: Boolean = inputs.forall { _.origin.mayStopChanging }
+	override def isChanging: Boolean = !stopped && inputs.exists { _.origin.isChanging }
+	override def mayStopChanging: Boolean = stopCondition.isDefined || inputs.forall { _.origin.mayStopChanging }
+	
+	override def stop(): Future[Any] = {
+		if (!stopped) {
+			stopped = true
+			declareChangingStopped()
+			inputs.foreach { _.bridge.detach() }
+		}
+		Future.successful(())
+	}
 	
 	
 	// NESTED   ----------------------
 	
 	private class Input[O](val origin: Changing[O], transform: O => R) extends View[O]
 	{
-		private val bridge = OptimizedBridge(origin, hasListenersFlag) { e =>
+		val bridge = OptimizedBridge(origin, hasListenersFlag) { e =>
 			e.value match {
 				// Case: Update (expected) => Updates the merge result and fires a change event, if appropriate
-				case Some(event) => fireEventIfNecessary(transform(event.oldValue), transform(event.newValue))
+				case Some(event) =>
+					val newMergeResult = transform(event.newValue)
+					val afterEffects = fireEventIfNecessary(transform(event.oldValue), newMergeResult)
+					// Tests whether should stop changing
+					if (stopCondition.exists { _(input1.value, input2.value, newMergeResult) })
+						stop()
+					afterEffects
+				
 				// Case: No update (unexpected) => No-op
 				case None => Vector()
 			}

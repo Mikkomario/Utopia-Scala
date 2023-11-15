@@ -28,8 +28,7 @@ trait MayStopChanging[+A] extends Changing[A]
 	  * Prepares this pointer to declare a stop once the specified source pointer does the same.
 	  * @param source A source pointer to follow
 	  */
-	protected def stopOnceSourceStops(source: Changing[_]) =
-		source.addChangingStoppedListenerAndSimulateEvent { declareChangingStopped() }
+	protected def stopOnceSourceStops(source: Changing[_]) = onceSourceStops(source) { declareChangingStopped() }
 	
 	/**
 	  * Prepares this pointer to declare a stop once all of the specified source pointers have
@@ -39,10 +38,28 @@ trait MayStopChanging[+A] extends Changing[A]
 	  *
 	  * @param sources Sources to follow
 	  */
-	protected def stopOnceAllSourcesStop(sources: Iterable[Changing[_]]) = {
+	protected def stopOnceAllSourcesStop(sources: Iterable[Changing[_]]) =
+		onceAllSourcesStop(sources) { declareChangingStopped() }
+	
+	/**
+	  * Prepares this pointer to do something once the specified source pointer stops changing.
+	  * @param source A source pointer to follow
+	  * @param action Action to perform once / if the source pointer stops
+	  */
+	protected def onceSourceStops[U](source: Changing[_])(action: => U) =
+		source.addChangingStoppedListenerAndSimulateEvent { action }
+	/**
+	  * Prepares this pointer to perform an action once all of the specified source pointers have stopped.
+	  *
+	  * If no pointers are specified, performs the action immediately.
+	  *
+	  * @param sources Sources to follow
+	  * @param action Action to perform
+	  */
+	protected def onceAllSourcesStop[U](sources: Iterable[Changing[_]])(action: => U) = {
 		sources.emptyOneOrMany match {
 			// Case: Only one source pointer => Delegates to another method
-			case Some(Left(source)) => stopOnceSourceStops(source)
+			case Some(Left(source)) => onceSourceStops(source)(action)
 			// Case: Multiple source pointers => Waits on all of them, but only if it is possible that all stop changing
 			case Some(Right(sources)) =>
 				if (sources.forall { _.mayStopChanging }) {
@@ -52,12 +69,12 @@ trait MayStopChanging[+A] extends Changing[A]
 							stopCount += 1
 							// Case: All sources stopped changing
 							if (sources hasSize stopCount)
-								declareChangingStopped()
+								action
 						}
 					}
 				}
 			// Case: No sources specified => Stops immediately
-			case None => declareChangingStopped()
+			case None => action
 		}
 	}
 }

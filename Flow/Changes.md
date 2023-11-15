@@ -21,10 +21,16 @@
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
 - Added **Use** object for providing scope-specific (implicit) access to certain values
+- Added **ChangingUntil** & **StatefulValueView** **Changing** mirror classes
+- Added **ChangeResult** model, relating to other **Changing** changes
 - Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
 ### New methods
 - **CompoundingBuilder**
   - Added `.popAll()`
+- **Changing**
+  - Added multiple new until & withState methods
+- **Delay**
+  - Added `.future(...)`
 - **Future** (**AsyncExtensions**)
   - Added `.or(Future)`
 - **IterableOnce** (**CollectionExtensions**)
@@ -34,6 +40,10 @@
   - Added `.prePollingAsync(Int)` that utilizes the new **PrePollingIterator**
 - **Lazy**
   - Added `.mapCurrent(...)`
+- **MayStopChanging**
+  - Added a couple of "onceNotChanging" method variants
+- **OptimizedBridge**
+  - Added `.detach()`
 - **Path** (**FileExtensions**)
   - Added `.hasSameContentAs(Path)` for identical file -searching (not yet tested)
 - **Regex** (object)
@@ -50,6 +60,8 @@
   - `.isEmpty` checks whether the targeted directory is empty
     - Returns false for existing regular files
 - **Future**`.raceWith(Future)` now handles situations where both futures fail
+- Added stop condition support to **LightMergeMirror**
+- Added some optimizations to **Flags** and other **Changing** items
 - Added `.toString` implementations to **ComparisonOperator**
 - Scala version updated to 2.13.12
 

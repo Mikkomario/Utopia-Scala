@@ -33,7 +33,7 @@ object Flag
 	  * @author Mikko Hilpinen
 	  * @since 18.9.2022, v1.17
 	  */
-	private class _Flag extends AbstractMayStopChanging[Boolean] with Flag
+	private class _Flag() extends AbstractMayStopChanging[Boolean] with Flag
 	{
 		// ATTRIBUTES   ---------------------
 		
@@ -41,7 +41,9 @@ object Flag
 		
 		override lazy val view = new FlagView(this)
 		override lazy val future = super.future
-		override lazy val nextChangeFuture = super.nextChangeFuture
+		
+		//noinspection PostfixUnaryOperation
+		override lazy val unary_! = super.unary_!
 		
 		
 		// IMPLEMENTED  ---------------------

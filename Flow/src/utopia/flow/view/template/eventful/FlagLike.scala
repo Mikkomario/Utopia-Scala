@@ -17,6 +17,10 @@ object FlagLike
 	
 	private class FlagLikeWrapper(override protected val wrapped: Changing[Boolean])
 		extends FlagLike with ChangingWrapper[Boolean]
+	{
+		//noinspection PostfixUnaryOperation
+		override lazy val unary_! = super.unary_!
+	}
 }
 
 /**
@@ -79,7 +83,10 @@ trait FlagLike extends Any with Changing[Boolean]
 			case None =>
 				other.fixedValue match {
 					case Some(fixed) => if (fixed) this else AlwaysFalse
-					case None => lightMergeWith(other) { _ && _ }
+					case None =>
+						// Stops merging if either pointer gets stuck at false
+						withState.lightMergeWithUntil(other.withState) { _ && _ } {
+							(a, b, _) => a.containsFinal(false) || b.containsFinal(false) }
 				}
 		}
 	}
@@ -96,7 +103,10 @@ trait FlagLike extends Any with Changing[Boolean]
 			case None =>
 				other.fixedValue match {
 					case Some(fixed) => if (fixed) AlwaysTrue else this
-					case None => lightMergeWith(other) { _ || _ }
+					case None =>
+						// Stops merging if either pointer gets stuck at true
+						withState.lightMergeWithUntil(other.withState) { _ || _ } {
+							(a, b, _) => a.containsFinal(true) || b.containsFinal(true) }
 				}
 		}
 	}

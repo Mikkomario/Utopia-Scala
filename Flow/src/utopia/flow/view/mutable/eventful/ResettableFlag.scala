@@ -25,7 +25,9 @@ object ResettableFlag
 		
 		private var _value = initialValue
 		
-		lazy val view = new FlagView(this)
+		override lazy val view = new FlagView(this)
+		//noinspection PostfixUnaryOperation
+		override lazy val unary_! = super.unary_!
 		
 		
 		// IMPLEMENTED  -----------------------

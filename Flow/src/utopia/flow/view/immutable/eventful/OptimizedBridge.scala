@@ -91,6 +91,9 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 {
 	// ATTRIBUTES   -------------------------
 	
+	// Set to true once this bridge is no longer allowed to track the origin
+	private var terminated = false
+	
 	// Caches pre-calculated values on demand
 	private var cachedValue: Option[R] = None
 	
@@ -131,15 +134,18 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		}
 		DetachIfAppropriate(afterEffects)
 	}
+	private val activeTrackingListener = ChangeListener.continuous { e: ChangeEvent[Boolean] =>
+		if (e.newValue)
+			origin.addHighPriorityListener(originListener)
+		// If the origin stops changing, won't need to track the listening status anymore
+		ChangeResponse.continueIf(origin.isChanging)
+	}
 	
 	
 	// INITIAL CODE -------------------------
 	
 	// Whenever listeners are assigned to this mirror, starts following the origin pointer more carefully.
-	trackActivelyFlag.addContinuousListener { e =>
-		if (e.newValue)
-			origin.addHighPriorityListener(originListener)
-	}
+	trackActivelyFlag.addListener(activeTrackingListener)
 	
 	
 	// COMPUTED ----------------------------
@@ -159,15 +165,35 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		// Case: Needs to calculate a new value
 		val currentValue = f(origin.value)
 		
+		// Case: Mapping has terminated => Caches the value and won't schedule more updates
+		if (terminated)
+			cachedValue = Some(currentValue)
 		// Case: Caching is enabled => Keeps the value cached
 		// and assigns a listener in order to invalidate the cache once the origin pointer changes
-		if (!cachingDisabled) {
+		else if (!cachingDisabled) {
 			cachedValue = Some(currentValue)
 			// TODO: It may be better to check whether the origin already contains this listener
 			origin.addHighPriorityListener(originListener)
 		}
 		
 		currentValue
+	}
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * Terminates this bridge so that the origin value will no longer be tracked.
+	  * Stores the origin's current value and will only continue to return that value.
+	  */
+	def detach() = {
+		if (!terminated) {
+			trackActivelyFlag.removeListener(activeTrackingListener)
+			origin.removeListener(originListener)
+			if (cachedValue.isEmpty)
+				cachedValue = Some(f(origin.value))
+			terminated = true
+		}
 	}
 	
 	

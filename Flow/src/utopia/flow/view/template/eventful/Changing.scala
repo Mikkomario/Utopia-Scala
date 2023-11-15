@@ -3,7 +3,7 @@ package utopia.flow.view.template.eventful
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult}
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -179,6 +179,16 @@ trait Changing[+A] extends Any with View[A]
 		else
 			Future.never
 	}
+	
+	/**
+	  * @return Copy of this pointer that attaches the "isChanging" state to the value of this pointer
+	  */
+	def withState = diverge {
+		if (mayStopChanging)
+			StatefulValueView(this)
+		else
+			lightMap { ChangeResult(_) }
+	} { ChangeResult.finalValue(value) }
 	
 	
 	// IMPLEMENTED  -----------------
@@ -543,6 +553,23 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	def lightMap[B](f: A => B): Changing[B] = diverge { OptimizedMirror(this, disableCaching = true)(f) } { f(value) }
 	/**
+	  * Creates a new mapped view into this changing pointer.
+	  * The mapping / viewing will be terminated once the specified condition is met.
+	  * @param f A mapping function to apply
+	  * @param stopCondition A condition that, once met, terminates the mapping / viewing between these pointers
+	  * @tparam B Type of mapping results
+	  * @return A new pointer
+	  */
+	def mapUntil[B](f: A => B)(stopCondition: B => Boolean) = {
+		val initialMap = f(value)
+		diverge {
+			if (stopCondition(initialMap))
+				Fixed(initialMap)
+			else
+				ChangingUntil.map(this)(f)(stopCondition)
+		} { initialMap }
+	}
+	/**
 	  * Creates a new changing item that contains a mapped value of this item.
 	  * The mapping function used acquires additional contextual information.
 	  * @param initialMap A function to perform the initial mapping.
@@ -560,6 +587,82 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
 	def lazyMap[B](f: A => B): ListenableLazy[B] = lazyDiverge { LazyMirror(this)(f) } { f(value) }
+	
+	/**
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A pointer that contains mapped values merged with this pointer's "isChanging" status
+	  */
+	def mapWithState[B](f: A => B) =
+		diverge {
+			if (mayStopChanging)
+				StatefulValueView.map(this)(f)
+			else
+				map { v => ChangeResult.temporal(f(v)) }
+		} { ChangeResult.finalValue(f(value)) }
+	/**
+	  * A variant of [[mapWithState()]]. Use this version in case 'f' is a very simple/cheap function.
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A pointer that contains mapped values merged with this pointer's "isChanging" status
+	  */
+	def lightMapWithState[B](f: A => B) =
+		diverge {
+			if (mayStopChanging)
+				StatefulValueView.map(this, cachingDisabled = true)(f)
+			else
+				lightMap { v => ChangeResult(f(v)) }
+		} { ChangeResult.finalValue(f(value)) }
+	/**
+	  * @param f A mapping function
+	  * @param stopCondition A condition that, if met, will end mirroring of this pointer and mark the resulting value
+	  *                      as final.
+	  *                      Accepts:
+	  *                         1. The current value of this pointer (map input)
+	  *                         1. Mapping function output for that value
+	  * @tparam B Type of mapping result
+	  * @return A new pointer that stops changing if the specified condition is met,
+	  *         until which it maps the values of this pointer
+	  */
+	def mapWithStateUntil[B](f: A => B)(stopCondition: (A, B) => Boolean) = {
+		val initialMap = f(value)
+		diverge {
+			if (stopCondition(value, initialMap))
+				Fixed(ChangeResult.finalValue(initialMap))
+			else
+				StatefulValueView.mapAndStopIf(this)(f)(stopCondition)
+		} { ChangeResult.finalValue(initialMap) }
+	}
+	
+	/**
+	  * @param f A function that returns true for the first value that should terminate the following changes
+	  * @return A view to this changing item that may terminate the linking
+	  */
+	def viewUntil(f: A => Boolean) = {
+		if (isChanging) {
+			// Case: Immediately stops viewing => Wraps the current value in a fixed pointer
+			if (f(value))
+				Fixed(value)
+			// Case: Stops viewing later
+			else
+				ChangingUntil(this)(f)
+		}
+		// Case: Won't change => No need to terminate viewing
+		else
+			this
+	}
+	/**
+	  * @param f A function that returns true once the resulting pointer should stop mirroring values of this pointer
+	  * @return A pointer that, while active, mirrors the values of this pointer, adding a "isChanging" status
+	  *         to each value.
+	  */
+	def viewWithStateUntil(f: A => Boolean) =
+		diverge {
+			if (f(value))
+				Fixed(ChangeResult.finalValue(value))
+			else
+				StatefulValueView.stopIf(this)(f)
+		} { ChangeResult.finalValue(value) }
 	
 	/**
 	  * @param other Another changing item
@@ -632,6 +735,39 @@ trait Changing[+A] extends Any with View[A]
 	def lightMergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] =
 		divergeMerge[B, Changing[R]](other) { LightMergeMirror(this, other)(f) } { v2 => lightMap { f(_, v2) } } {
 			OptimizedMirror(other, disableCaching = true) { v2 => f(value, v2) } }
+	/**
+	  * Creates a pointer that merges the value of this pointer, plus the other pointer.
+	  * The merging results are not cached. Therefore this function is not well applicable to costly merging functions.
+	  * The merging process will be terminated altogether once the specified condition is met.
+	  * @param other Another pointer
+	  * @param merge A merge function that accepts the current values from both of these pointers
+	  * @param stopCondition A condition that, once met, stops the resulting pointer from reflecting changes from
+	  *                      these pointers.
+	  *                      Accepts: 1) Current value of this pointer, 2) Current value of the other pointer, and
+	  *                      3) Merge result
+	  * @tparam B Type of the values in the other pointer
+	  * @tparam R Type of merge results
+	  * @return A new pointer
+	  */
+	def lightMergeWithUntil[B, R](other: Changing[B])(merge: (A, B) => R)(stopCondition: (A, B, R) => Boolean) =
+	{
+		if (isChanging) {
+			if (other.isChanging) {
+				val initialMerge = merge(value, other.value)
+				if (stopCondition(value, other.value, initialMerge))
+					Fixed(initialMerge)
+				else
+					LightMergeMirror.until(this, other)(merge)(stopCondition)
+			}
+			else {
+				val otherValue = other.value
+				mapUntil { v => merge(v, otherValue) } { stopCondition(value, otherValue, _) }
+			}
+		}
+		else
+			other.mapUntil { v2 => merge(value, v2) } { stopCondition(value, other.value, _) }
+	}
+	
 	/**
 	  * Creates a new changing item that combines the values of this and the other item.
 	  * The merge function used acquires additional information.
