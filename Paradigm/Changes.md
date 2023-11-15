@@ -17,6 +17,8 @@
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
 - **Distance** (object)
   - Added `.ofKilometers(Double)`
+- **NumericVectorLike**
+  - Added `.mapLength(...)`
 ### Other changes
 - **Distance** now extends **MayBeAboutZero**
 - Scala version updated to 2.13.12

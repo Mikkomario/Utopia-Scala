@@ -9,6 +9,8 @@ import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.container.FileContainer
 import utopia.flow.time.Now
+import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.logging.Logger
 
 import java.time.Instant
@@ -80,7 +82,10 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 							Left(1)
 					case Response.Failure(status, message, _) =>
 						handleFailureResponse(status, message)
-						Left(if (status.isTemporary) 5 else 15)
+						Left(status.isTemporary match {
+							case CertainBoolean(isTemporary) => if (isTemporary) 5 else 50
+							case UncertainBoolean => 15
+						})
 					case _: RequestFailure => Left(2)
 				}
 			case Failure(_) => Left(2)

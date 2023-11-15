@@ -1,7 +1,9 @@
 # Utopia Access - List of Changes
 
-## v1.4.8 (in development)
+## v1.5 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- `.isTemporary` and `.doNotRepeat` in **Status** are now of type **UncertainBoolean** instead of **Boolean**
 ### Other changes
 - Scala version updated to 2.13.12
 

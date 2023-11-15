@@ -2,6 +2,7 @@ package utopia.access.http
 
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.util.UncertainBoolean
 
 object Status
 {
@@ -27,10 +28,8 @@ object Status
     /**
       * Sets up the initial status codes. This must be called before using other methods in this object.
       */
-    def setup() =
-    {
-        if (!setupDone)
-        {
+    def setup() = {
+        if (!setupDone) {
             setupDone = true
             _values = Vector(OK, Created, Accepted,
                 NoContent, MovedPermanently, Found, NotModified,
@@ -45,10 +44,8 @@ object Status
       * @throws EnvironmentNotSetupException If Status.setup() hasn't been called yet
       */
     @throws[EnvironmentNotSetupException]("Status.setup() must be called first")
-    def introduce(status: Status) =
-    {
-        if (setupDone)
-        {
+    def introduce(status: Status) = {
+        if (setupDone) {
             if (_values.forall { _.code != status.code })
                 _values :+= status
         }
@@ -63,8 +60,7 @@ object Status
       * @throws EnvironmentNotSetupException If Status.setup() hasn't been called yet
       */
     @throws[EnvironmentNotSetupException]("Status.setup() must be called first")
-    def introduce(statuses: IterableOnce[Status]) =
-    {
+    def introduce(statuses: IterableOnce[Status]) = {
         if (setupDone)
             _values ++= statuses.iterator.filterNot { s => _values.exists { _.code == s.code } }
         else
@@ -138,7 +134,8 @@ object Status
      * the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
      * since this might change the conditions under which the request was issued.
      */
-    case object MovedPermanently extends Status("Moved Permanently", 301)
+    case object MovedPermanently extends Status("Moved Permanently", 301,
+        isTemporary = false, doNotRepeat = true)
     
     /**
      * The requested resource resides temporarily under a different URI.
@@ -162,13 +159,13 @@ object Status
       * MUST NOT contain a message-body, and thus is always terminated by the first empty line after the
       * header fields.
       */
-    case object NotModified extends Status("Not Modified", 304, isTemporary = true)
+    case object NotModified extends Status("Not Modified", 304, isTemporary = true, doNotRepeat = false)
     
     /**
       * The request could not be understood by the server due to malformed syntax. The client SHOULD NOT
       * repeat the request without modifications.
       */
-    case object BadRequest extends Status("Bad Request", 400, doNotRepeat = true)
+    case object BadRequest extends Status("Bad Request", 400, isTemporary = false, doNotRepeat = true)
     
     /**
       * The request requires user authentication. The response MUST include a WWW-Authenticate header field
@@ -180,7 +177,7 @@ object Status
       * was given in the response, since that entity might include relevant diagnostic information.
       * HTTP access authentication is explained in "HTTP Authentication: Basic and Digest Access Authentication"
       */
-    case object Unauthorized extends Status("Unauthorized", 401, doNotRepeat = true)
+    case object Unauthorized extends Status("Unauthorized", 401, isTemporary = false, doNotRepeat = true)
     
     /**
       * The server understood the request, but is refusing to fulfill it. Authorization will not help
@@ -206,7 +203,8 @@ object Status
       * Request-URI. The response MUST include an Allow header containing a list of valid methods for
       * the requested resource.
       */
-    case object MethodNotAllowed extends Status("Method Not Allowed", 405, doNotRepeat = true)
+    case object MethodNotAllowed extends Status("Method Not Allowed", 405,
+        isTemporary = false, doNotRepeat = true)
     
     /**
       * The server encountered an unexpected condition which prevented it from fulfilling the request.
@@ -218,7 +216,8 @@ object Status
       * appropriate response when the server does not recognize the request method and is not
       * capable of supporting it for any resource.
       */
-    case object NotImplemented extends Status("Not Implemented", 501, doNotRepeat = true)
+    case object NotImplemented extends Status("Not Implemented", 501, isTemporary = false,
+        doNotRepeat = true)
     
     /**
       * The server is currently unable to handle the request due to a temporary overloading or
@@ -227,7 +226,8 @@ object Status
       * Retry-After header. If no Retry-After is given, the client SHOULD handle the response as it
       * would for a 500 response.
       */
-    case object ServiceUnavailable extends Status("Service Unavailable", 503, isTemporary = true)
+    case object ServiceUnavailable extends Status("Service Unavailable", 503,
+        isTemporary = true, doNotRepeat = false)
 }
 
 /**
@@ -237,16 +237,16 @@ object Status
  * @since 20.8.2017
   * @param name Status name (for human readers)
   * @param code Status code
-  * @param isTemporary Whether it is known that this status may change in future requests after a delay. False if
-  *                    status is permanent or it's not known whether it could be temporary (see 'doNotRepeat' for
-  *                    possible details)
-  * @param doNotRepeat Whether it is known that the current version of the server is very likely to never accept
+  * @param isTemporary Whether this status may change in future requests after some delay.
+  *                    False (certain) if status is known to be permanent.
+  * @param doNotRepeat Whether the current version of the server is very likely to never accept
   *                    the request as it is currently presented and therefore the client shouldn't try to re-send the
-  *                    request. False if it is unknown whether the server status may change in time or if this current
-  *                    status is only temporary (see 'isTemporary' for more details)
+  *                    request.
+  *                    UncertainBoolean if it is unknown whether the server status may change in time or if this current
+  *                    status is only temporary
  */
-// TODO: Use UncertainBoolean here
-class Status(val name: String, val code: Int, val isTemporary: Boolean = false, val doNotRepeat: Boolean = false)
+class Status(val name: String, val code: Int, val isTemporary: UncertainBoolean = UncertainBoolean,
+             val doNotRepeat: UncertainBoolean = UncertainBoolean)
     extends EqualsBy
 {
     // ATTRIBUTES    -----------------------

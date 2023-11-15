@@ -307,6 +307,15 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	  */
 	def withLength(length: Double) = scaledBy(length / this.length)
 	/**
+	  * Alters the length of this vector
+	  * @param f A mapping function applied to the length of this vector
+	  * @return Copy of this vector with mapped length
+	  */
+	def mapLength(f: Double => Double) = {
+		val myLength = length
+		scaledBy(f(myLength) / myLength)
+	}
+	/**
 	  * Creates a new vector with the same length as this vector
 	  * @param direction The direction of the new vector (on the x-y -plane)
 	  */
