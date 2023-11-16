@@ -878,13 +878,11 @@ object StandardPropertyType
 		private def colNameSuffix = enumeration.idPropName.column
 		
 		override def scalaType = enumeration.reference
-		
 		override def valueDataType = enumeration.idType.valueDataType
 		
 		override def supportsDefaultJsonValues = true
 		
 		override def optional: PropertyType = Optional
-		
 		override def concrete = this
 		
 		override def nonEmptyDefaultValue = enumeration.defaultValue match {
@@ -893,26 +891,21 @@ object StandardPropertyType
 				CodePiece(valueName, Set(enumeration.reference / valueName))
 			case None => CodePiece.empty
 		}
-		
 		override def emptyValue = CodePiece.empty
 		
 		override def defaultPropertyName = enumeration.name
 		
 		override def yieldsTryFromValue = enumeration.hasNoDefault
-		
 		override def yieldsTryFromJsonValue: Boolean = yieldsTryFromValue
 		
 		override def toValueCode(instanceCode: String) =
 			enumeration.idType.toValueCode(s"$instanceCode.${ enumeration.idPropName.prop }")
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
 		
 		// NB: Doesn't support multi-column enumeration id types
 		override def fromValueCode(valueCodes: Vector[String]) =
 			CodePiece(s"${ enumeration.name.enumName }.fromValue(${ valueCodes.head })", Set(enumeration.reference))
-		
 		override def fromJsonValueCode(valueCode: String): CodePiece = fromValueCode(Vector(valueCode))
-		
 		override def fromValuesCode(valuesCode: String) = {
 			val idFromValueCode = enumeration.idType.fromValueCode(Vector("v"))
 			idFromValueCode.mapText { convertToId =>
@@ -930,30 +923,25 @@ object StandardPropertyType
 				idType.sqlConversions.map { new EnumIdOptionSqlConversion(_) }
 			
 			override def scalaType = ScalaType.option(EnumValue.this.scalaType)
-			
 			override def valueDataType = EnumValue.this.valueDataType
 			
 			override def supportsDefaultJsonValues = false
 			
 			override def nonEmptyDefaultValue = CodePiece.empty
-			
 			override def emptyValue = CodePiece.none
 			
 			override def defaultPropertyName = EnumValue.this.defaultPropertyName
 			
 			override def optional = this
-			
 			override def concrete = EnumValue.this
 			
 			override def yieldsTryFromValue = false
-			
 			override def yieldsTryFromJsonValue: Boolean = false
 			
 			override def toValueCode(instanceCode: String) =
 				idType.toValueCode(s"e.${ enumeration.idPropName.prop }")
-					.mapText { idToValue => s"$instanceCode.map { e => $idToValue }.getOrElse(Value.empty)" }
+					.mapText { idToValue => s"$instanceCode.map[Value] { e => $idToValue }.getOrElse(Value.empty)" }
 					.referringTo(value)
-			
 			override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
 			
 			override def fromValueCode(valueCodes: Vector[String]) =
@@ -974,9 +962,7 @@ object StandardPropertyType
 						}
 					}
 					.referringTo(enumeration.reference)
-			
 			override def fromJsonValueCode(valueCode: String): CodePiece = fromValueCode(Vector(valueCode))
-			
 			override def fromValuesCode(valuesCode: String) =
 				idType.fromValuesCode(valuesCode)
 					.mapText { ids => s"$ids.flatMap($findForId)" }
@@ -1163,7 +1149,7 @@ object StandardPropertyType
 			val codesPerPart = valueCodes.size / 2
 			val splitValueCodes = Pair(valueCodes.take(codesPerPart), valueCodes.drop(codesPerPart))
 			// Forms each part from the available values
-			splitValueCodes.map(innerType.fromValueCode).merge { (firstPartCode, secondPartCode) =>
+			splitValueCodes.mapAndMerge(innerType.fromValueCode) { (firstPartCode, secondPartCode) =>
 				val codeText = {
 					// Case: Parts are provided as instances of Try => uses flatMap
 					if (innerType.yieldsTryFromValue)

@@ -2,6 +2,8 @@
 
 ## v1.10.1 (in development)
 Parent module updates
+### Bugfixes
+- Fixed `.toModel` generation involving optional enumeration values
 ### New features
 - You may now specify an extending upper length limit within the type declaration, e.g. by writing `"String(3-9)"`
 ### Other changes

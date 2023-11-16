@@ -114,7 +114,7 @@ case class IssueInstances(issue: Issue, variants: Vector[IssueVariantInstances] 
 				if (versions.isSymmetric)
 					sb ++= versions.first.toString
 				else
-					sb ++= versions.merge { (oldest, newest) => s"$oldest - $newest" }
+					sb ++= versions.mkString(" - ")
 				sb += ')'
 		}
 		val count = numberOfOccurrences

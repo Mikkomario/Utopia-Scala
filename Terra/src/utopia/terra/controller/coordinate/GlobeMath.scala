@@ -109,7 +109,7 @@ object GlobeMath
 		val deltaLat = latitudes.merge { _ - _ }
 		val deltaLon = longitudes.merge { _ - _ }
 		
-		val k = pow(sin(deltaLat / 2), 2) + latitudes.map(cos).merge { _ * _ } * pow(sin(deltaLon / 2), 2)
+		val k = pow(sin(deltaLat / 2), 2) + latitudes.mapAndMerge(cos) { _ * _ } * pow(sin(deltaLon / 2), 2)
 		val c = 2 * atan2(sqrt(k), sqrt(1 - k))
 		
 		radius * c
