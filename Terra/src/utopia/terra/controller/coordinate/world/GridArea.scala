@@ -40,6 +40,7 @@ object GridArea extends VectorDistanceConversion
   * @param origin The location of the "origin" of this grid area, matching the (0,0) vector coordinate.
   *               Please note that locations far from the origin will be more inaccurate.
   */
+// TODO: Add publicly accessible origin property
 class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfacePoint, AerialGridPoint]
 {
 	// ATTRIBUTES   ------------------

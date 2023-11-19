@@ -682,7 +682,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	{
 		// If extra icons are used, places them with the main content in a stack view
 		val framingContent = {
-			if (settings.iconPointers.exists { p => p.isChanging || p.value.nonEmpty })
+			if (settings.iconPointers.exists { _.mayBeNonEmpty })
 				Open.using(ViewStack) { stackF =>
 					stackF.row.centered.withoutMargin(Vector(
 						makeOpenViewImageLabel(settings.leftIconPointer, Direction2D.Right),

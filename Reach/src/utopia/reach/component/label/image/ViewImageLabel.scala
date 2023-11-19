@@ -251,7 +251,7 @@ trait ViewImageLabelFactoryLike[+Repr]
 					// Case: Using images => Applies color overlay over the image (optimized)
 					case Right(imagePointer) =>
 						// Case: Variables are involved => Caches color overlay results in a separate weak cache
-						if (imagePointer.isChanging || p.isChanging) {
+						if (imagePointer.mayChange || p.mayChange) {
 							val cache = WeakCache[(Image, Color), Image] { case (img, c) => img.withColorOverlay(c) }
 							imagePointer.mergeWith(p) { (image, color) => cache(image -> color) }
 						}

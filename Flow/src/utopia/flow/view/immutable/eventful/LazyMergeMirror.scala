@@ -21,14 +21,13 @@ object LazyMergeMirror
 	def of[O1, O2, Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection) =
 	{
 		// Uses lazy mapping or even lazy wrapping if possible
-		if (source1.isChanging)
-		{
-			if (source2.isChanging)
+		if (source1.mayChange) {
+			if (source2.mayChange)
 				new LazyMergeMirror(source1, source2)(merge)
 			else
 				source1.lazyMap { merge(_, source2.value) }
 		}
-		else if (source2.isChanging)
+		else if (source2.mayChange)
 			source2.lazyMap { merge(source1.value, _) }
 		else
 			Lazy.listenable { merge(source1.value, source2.value) }

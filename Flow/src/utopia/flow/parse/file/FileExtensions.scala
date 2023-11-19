@@ -12,6 +12,7 @@ import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryCatch
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -406,6 +407,16 @@ object FileExtensions
 		  *         function returned a failure.
 		  */
 		def tryIterateChildren[A](f: Iterator[Path] => Try[A]) = iterateChildren(f).flatten
+		/**
+		 * Iterates over the children of this directory
+		 * @param f A function that accepts an iterator that returns all paths that are the children of this directory.
+		 *          Receives an empty iterator in case this is not an existing directory.
+		 *          Returns a success or a failure. May catch exceptions.
+		 * @tparam A Type of returned value
+		 * @return The returned value with the possible included failures.
+		 *         Failure if something threw during this operation or if the specified function returned a full failure.
+		 */
+		def tryIterateChildrenCatching[A](f: Iterator[Path] => TryCatch[A]) = iterateChildren(f).flattenCatching
 		
 		/**
 		  * Iterates over the siblings of this file / path

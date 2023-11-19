@@ -149,7 +149,7 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		}
 		
 		// If the origin stops changing, won't need to track the listening status anymore
-		ChangeResponse.continueIf(origin.isChanging)
+		ChangeResponse.continueIf(origin.mayChange)
 	}
 	
 	

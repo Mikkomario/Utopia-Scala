@@ -5,6 +5,8 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.focus.FocusListener
 
+import java.awt.event.KeyEvent
+
 /**
   * Common trait for button factories and settings
   * @tparam Repr Implementing factory/settings type
@@ -49,6 +51,22 @@ trait ButtonSettingsLike[+Repr]
 	  * @return Copy of this factory with the specified hot keys
 	  */
 	def withHotKeys(keys: Set[HotKey]): Repr
+	
+	
+	// COMPUTED --------------------
+	
+	/**
+	 * @return Copy of this factory that builds buttons that are triggered by pressing the enter key
+	 */
+	def triggeredWithEnter = triggeredWithKeyIndex(KeyEvent.VK_ENTER)
+	/**
+	 * @return Copy of this factory that builds buttons that are triggered by pressing the space-bar
+	 */
+	def triggeredWithSpace = triggeredWithKeyIndex(KeyEvent.VK_SPACE)
+	/**
+	 * @return Copy of this factory that builds buttons that are triggered by pressing the escape key
+	 */
+	def triggeredWithEscape = triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
 	
 	
 	// OTHER	--------------------

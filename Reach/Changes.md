@@ -3,6 +3,7 @@
 ## v1.1.1 (in development)
 Supports **Flow v2.3**
 ### Other changes
+- Added a couple of new utility functions to button factories
 - Scala version updated to 2.13.12
 
 ## v1.1 - 27.09.2023

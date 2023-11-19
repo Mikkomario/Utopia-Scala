@@ -5,7 +5,7 @@ import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingSto
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
-import utopia.flow.operator.Identity
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.time.TimeExtensions._
@@ -15,6 +15,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
 import utopia.flow.view.template.eventful.FlagLike.wrap
 
+import scala.language.implicitConversions
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -92,6 +93,77 @@ object Changing
 			AlwaysTrue
 		else
 			ChangeFuture.merging[Boolean, Any](false, future) { (_, _) => true }
+	}
+	
+	
+	// NESTED   ----------------------------
+	
+	/**
+	 * This trait provides utility functions for Changing items that wrap items which may be empty
+	 * @tparam A Type of the changing values
+	 */
+	trait MayBeEmptyChangingWrapper[A] extends Any
+	{
+		// ABSTRACT -----------------------
+		
+		/**
+		 * @return The wrapped changing item
+		 */
+		protected def wrapped: Changing[A]
+		
+		/**
+		 * Tests if a value is empty
+		 * @param value A value
+		 * @return Whether the specified value is empty
+		 */
+		protected def _isEmpty(value: A): Boolean
+		
+		
+		// COMPUTED -----------------------
+		
+		/**
+		 * @return Whether the current value of this item is empty
+		 */
+		def isCurrentlyEmpty = _isEmpty(wrapped.value)
+		/**
+		 * @return Whether the current value of this item is not empty
+		 */
+		def isCurrentlyNonEmpty = !isCurrentlyEmpty
+		
+		/**
+		 * @return Whether this item is and will remain empty forever
+		 */
+		def isAlwaysEmpty = wrapped.existsFixed(_isEmpty)
+		/**
+		 * @return Whether this item is or may become non-empty
+		 */
+		def mayBeNonEmpty = !isAlwaysEmpty
+		
+		/**
+		 * @return Whether this item is and will remain non-empty forever
+		 */
+		def isAlwaysNonEmpty = wrapped.existsFixed { !_isEmpty(_) }
+		/**
+		 * @return Whether this item is or may become empty
+		 */
+		def mayBeEmpty = !isAlwaysNonEmpty
+	}
+	
+	
+	// EXTENSIONS   ------------------------
+	
+	implicit class AsMayBeEmptyChanging[A <: MaybeEmpty[A]](val c: Changing[A])
+		extends AnyVal with MayBeEmptyChangingWrapper[A]
+	{
+		override protected def wrapped: Changing[A] = c
+		override protected def _isEmpty(value: A): Boolean = value.isEmpty
+	}
+	
+	implicit class ChangingCollection[C <: Iterable[_]](val c: Changing[C])
+		extends AnyVal with MayBeEmptyChangingWrapper[C]
+	{
+		override protected def wrapped: Changing[C] = c
+		override protected def _isEmpty(value: C): Boolean = value.isEmpty
 	}
 }
 

@@ -1,5 +1,6 @@
 package utopia.flow.operator
 
+import scala.language.implicitConversions
 import scala.language.reflectiveCalls
 
 object MaybeEmpty
@@ -10,6 +11,13 @@ object MaybeEmpty
 	  * A structural type common for items which have an .isEmpty -property
 	  */
 	type HasIsEmpty = { def isEmpty: Boolean }
+	
+	
+	// IMPLICIT ----------------------------
+	
+	// Collections always have the capacity to be empty
+	implicit def collectionMayBeEmpty[C <: Iterable[_]](coll: C): MaybeEmpty[C] =
+		new MayBeEmptyCollectionWrapper[C](coll)
 	
 	
 	// OTHER    ----------------------------
@@ -26,11 +34,18 @@ object MaybeEmpty
 	  */
 	def apply(string: String): MaybeEmpty[String] = new MaybeEmptyWrapper[String](string)(string.isEmpty)
 	
+	
 	// NESTED   ----------------------------
 	
 	class MaybeEmptyWrapper[+A](wrapped: A)(testIsEmpty: => Boolean) extends MaybeEmpty[A] {
 		override def self = wrapped
 		override def isEmpty = testIsEmpty
+	}
+	
+	private class MayBeEmptyCollectionWrapper[+C <: Iterable[_]](wrapped: C) extends MaybeEmpty[C]
+	{
+		override def self: C = wrapped
+		override def isEmpty: Boolean = wrapped.isEmpty
 	}
 }
 

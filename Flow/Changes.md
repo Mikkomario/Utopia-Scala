@@ -35,6 +35,8 @@
   - Added `.popAll()`
 - **Changing**
   - Added multiple new until & withState methods
+  - Added utility functions (`.isAlwaysEmpty`, `.mayBeNonEmpty`, etc.) to **Changing** items that contain 
+    collections or **MayBeEmpty** instances
 - **Delay**
   - Added `.future(...)`
 - **Future** (**AsyncExtensions**)
@@ -54,6 +56,7 @@
   - Added `.mapAndMerge(...)(...)`
 - **Path** (**FileExtensions**)
   - Added `.hasSameContentAs(Path)` for identical file -searching (not yet tested)
+  - Added `.tryIterateChildrenCatching(...)`
 - **Regex** (object)
   - Added a couple of new regular expression values
 - **Seq** (**CollectionExtensions**)
