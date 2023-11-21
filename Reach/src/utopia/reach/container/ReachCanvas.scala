@@ -22,20 +22,20 @@ import utopia.genesis.text.Font
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorShade.Dark
-import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
-import utopia.reach.drawing.{PaintManager, RealTimeReachPaintManager}
+import utopia.reach.drawing.RealTimeReachPaintManager
 import utopia.reach.focus.ReachFocusManager
 
 import java.awt.event.KeyEvent
@@ -519,10 +519,8 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		private val minCursorDistance = 10
 		private val mousePositionPointer = new EventfulPointer(Point.origin)
 		
-		private lazy val shadeCalculatorPointer = painterPointer.map[Bounds => ColorShade] {
-			case Some(painter) => area => painter.averageShadeOf(area)
-			case None => _ => Dark
-		}
+		private lazy val defaultBackgroundShadePointer = backgroundPointer
+			.lazyMap { c => if (c.alpha > 0.0) c.shade else Dark }
 		
 		
 		// INITIAL CODE -----------------------------
@@ -533,7 +531,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 			mousePositionPointer
 				// Calculates new cursor image to use when mouse position changes
 				.mapAsync(defaultCursor, skipInitialMap = true) { position =>
-					cursorManager.cursorImageAt(position) { shadeCalculatorPointer.value(_) }
+					cursorManager.cursorImageAt(position) { _ => defaultBackgroundShadePointer.value }
 				}(swapExc, log)
 				// Whenever the image gets updated, changes the component cursor
 				.addListener { e =>

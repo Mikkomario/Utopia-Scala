@@ -1,14 +1,16 @@
 package utopia.genesis.image
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Matrix, Pair}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.util.Use
 import utopia.flow.view.immutable.caching.{Lazy, PreInitializedLazy}
-import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.paradigm.angular.{Angle, DirectionalRotation}
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorShade.Dark
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape1d.Dimension
 import utopia.paradigm.shape.shape1d.vector.Vector1D
@@ -20,7 +22,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.{Size, Sized}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.transform.LinearSizeAdjustable
+import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
@@ -33,7 +35,8 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector2D.identity, 1.0, None, PreInitializedLazy(Pixels.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, None, PreInitializedLazy(Pixels.empty),
+		PreInitializedLazy(Dark))
 	
 	/**
 	  * Creates a new image
@@ -49,14 +52,19 @@ object Image
 	  */
 	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0,
 			  origin: Option[Point] = None): Image =
-		new Image(Some(image), scaling, alpha, origin, Lazy { Pixels.fromBufferedImage(image, lazily = true) })
+	{
+		val lazyPixels = Lazy { Pixels.fromBufferedImage(image, lazily = true) }
+		new Image(Some(image), scaling, alpha, origin, lazyPixels, lazyPixels.map { _.averageShade })
+	}
 	
 	/**
 	  * @param pixels A set of pixels
 	  * @return An image based on those pixels
 	  */
 	def fromPixels(pixels: Pixels) = pixels.notEmpty match {
-		case Some(pixels) => apply(Some(pixels.toBufferedImage), Vector2D.identity, 1.0, None, PreInitializedLazy(pixels))
+		case Some(pixels) =>
+			apply(Some(pixels.toBufferedImage), Vector2D.identity, 1.0, None, PreInitializedLazy(pixels),
+				Lazy { pixels.averageShade })
 		case None => empty
 	}
 	
@@ -154,7 +162,7 @@ object Image
   */
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
-						 private val _pixels: Lazy[Pixels])
+						 private val _pixels: Lazy[Pixels], private val _shade: Lazy[ColorShade])
 	extends ImageLike with LinearSizeAdjustable[Image] with Sized[Image] with MaybeEmpty[Image]
 {
 	// ATTRIBUTES	----------------
@@ -224,9 +232,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image where x-axis is reversed
 	  */
 	def flippedHorizontally = {
-		val flipped = mapPixels { _.flippedHorizontally }
-		specifiedOrigin match
-		{
+		val flipped = _mapPixels(preserveShade = true) { _.flippedHorizontally }
+		specifiedOrigin match {
 			// If an origin has been specified, flips it as well
 			case Some(oldOrigin) =>
 				val newOrigin = Point(sourceResolution.width - oldOrigin.x, oldOrigin.y)
@@ -238,7 +245,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image where y-axis is reversed
 	  */
 	def flippedVertically = {
-		val flipped = mapPixels { _.flippedVertically }
+		val flipped = _mapPixels(preserveShade = true) { _.flippedVertically }
 		specifiedOrigin match {
 			// If an origin has been specified, flips it as well
 			case Some(oldOrigin) =>
@@ -291,6 +298,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	override def nonEmpty = !isEmpty
 	
 	override def pixels = _pixels.value
+	override def shade: ColorShade = _shade.value
 	
 	override def *(scaling: Double): Image = withScaling(this.scaling * scaling)
 	
@@ -409,8 +417,9 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) = {
 		val newSource = img.getSubimage(relativeArea.leftX.toInt, relativeArea.topY.toInt, relativeArea.width.toInt,
 			relativeArea.height.toInt)
+		val newLazyPixels = Lazy { _pixels.value.view(relativeArea) }
 		new Image(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - relativeArea.position },
-			Lazy { _pixels.value.view(relativeArea) })
+			newLazyPixels, newLazyPixels.map { _.averageShade })
 	}
 	
 	/**
@@ -484,10 +493,12 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param f A mapping function for pixel tables
 	  * @return A copy of this image with mapped pixels
 	  */
-	def mapPixels(f: Pixels => Pixels) = {
+	def mapPixels(f: Pixels => Pixels) = _mapPixels(preserveShade = false)(f)
+	private def _mapPixels(preserveShade: Boolean)(f: Pixels => Pixels) = {
 		if (source.isDefined) {
 			val newPixels = f(pixels)
-			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, PreInitializedLazy(newPixels))
+			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, PreInitializedLazy(newPixels),
+				if (preserveShade && _shade.isInitialized) _shade else Lazy { newPixels.averageShade })
 		}
 		else
 			this
@@ -554,6 +565,95 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image with limited color options
 	  */
 	def withThreshold(colorAmount: Int) = Threshold(colorAmount)(this)
+	
+	/**
+	  * Extracts the parts of this image that are placed at the edges between transparent and non-transparent areas.
+	  * @param strokeWidth Width of the edge that is formed.
+	  *                    Default = 1, meaning that only pixels adjacent to more transparent pixels will be preserved.
+	  * @param alphaThreshold The modifier that is applied to the compared alpha values when considering whether there
+	  *                       is and edge [0,1[.
+	  *                       0 Means that there must be a fully transparent surrounding pixel,
+	  *                       whereas 0.4 means that the surrounding pixel must be 60+% more transparent.
+	  *                       Default = 0.7 = the surrounding pixel must be 30+% more transparent.
+	  * @return Copy of this image where only edge pixels have been preserved.
+	  *         The other pixels are replaced with fully transparent pixels.
+	  */
+	def extractEdges(strokeWidth: Int = 1, alphaThreshold: Double = 0.7) =
+		highlightEdgesWith(strokeWidth = strokeWidth,
+			onlyEdges = true) { _.alpha < _.alpha * alphaThreshold } { (_, c) => c }
+	/**
+	  * Draws the edges of this image using the specified color / draw-settings
+	  * @param alphaThreshold Minimum difference in alpha values that qualifies as an edge.
+	  *                       Default = 30% decrease in alpha values.
+	  * @param placeInside Whether the edge should be placed inside the image area (true),
+	  *                    or to surround the image area (false, default).
+	  * @param onlyEdges Whether non-edge pixels should be replaced with fully transparent pixels.
+	  *                  Default = false = non-edge pixels will be kept as is.
+	  * @param stroke Stroke settings that determine the width of the drawn edge, as well as its color.
+	  * @return Copy of this image with edges drawn around or inside it, depending on the 'placeInside' parameter.
+	  *         If 'onlyEdges' parameter is set to true, only the drawn edges will be returned.
+	  */
+	def paintEdges(alphaThreshold: Adjustment = Adjustment(0.3), placeInside: Boolean = false,
+	               onlyEdges: Boolean = false)
+	              (implicit stroke: StrokeSettings) =
+	{
+		val findEdge: (Color, Color) => Boolean = {
+			if (placeInside)
+				(outer, inner) => { outer.alpha < inner.alpha * alphaThreshold(-1) }
+			else
+				(outer, inner) => { outer.alpha > inner.alpha * alphaThreshold(1) }
+		}
+		highlightEdgesWith(strokeWidth = stroke.strokeWidth.toInt,
+			onlyEdges = onlyEdges)(findEdge){ (_, _) => stroke.color }
+	}
+	/**
+	  * A generic function for detecting and modifying the edges in this image
+	  * @param reduceOrdering Ordering to use when selecting the edge comparison pixel.
+	  *                       None if any edge pixel will do (default).
+	  *                       The selected pixel will be passed to the 'createPixel' function.
+	  * @param strokeWidth Width of the "stroke" when detecting edges.
+	  *                    This value determines how far a pixel can be from a comparative pixel and still count
+	  *                    as an edge.
+	  *                    The default value is 1, meaning that the pixels must be adjacent in order to form an edge.
+	  * @param onlyEdges Whether non-edge areas of this image should be removed
+	  *                  (i.e. replaced with fully transparent pixels)
+	  * @param isEdge A function that compares two pixel color values and determines whether there exists an edge
+	  *               between them.
+	  *               Accepts a surrounding (compared) pixel as the first parameter and the central (targeted)
+	  *               pixel as the second value.
+	  * @param createEdgePixel A function that accepts the color of a surrounding pixel and the color of the
+	  *                        central (targeted) pixel, and returns the new color that will be given to the central
+	  *                        pixel.
+	  *                        Only called in situations where 'isEdge' has returned true for that pixel pair.
+	  *                        The surrounding pixel is either selected by taking the first surrounding pixel that
+	  *                        qualifies the 'isEdge' condition, or by reducing the surrounding pixels by finding
+	  *                        the maximum using 'reduceOrdering', if specified.
+	  * @return Copy of this image with altered edges.
+	  *         If 'onlyEdges' was set to true, non-edge pixels have been removed.
+	  */
+	def highlightEdgesWith(reduceOrdering: Option[Ordering[Color]] = None, strokeWidth: Int = 1,
+	                       onlyEdges: Boolean = false)
+	                      (isEdge: (Color, Color) => Boolean)
+	                      (createEdgePixel: (Color, Color) => Color) =
+		mapPixels { pixels =>
+			Pixels(Matrix.fill(pixels.size) { p =>
+				val original = pixels(p)
+				// Finds the pixels around the specified point that form edges with the specified point
+				val edgePixelsIter = pixels.indicesAroundIterator(p, range = strokeWidth, onlyOrthogonal = true)
+					.map { pixels(_) }
+				// Produces the "edge pixel" (representative) either by reducing all available edge pixels to one,
+				// or by selecting the first match
+				val edgePixel = reduceOrdering match {
+					case Some(ordering) =>
+						Use(ordering) { implicit ord => edgePixelsIter.filter { isEdge(_, original) }.maxOption }
+					case None => edgePixelsIter.find { isEdge(_, original) }
+				}
+				// Converts the edge into a new pixel color to assign
+				edgePixel.map { createEdgePixel(_, original) }
+					// Assigns the pixel color or possibly removes the original pixel
+					.getOrElse { if (onlyEdges) original.withAlpha(0.0) else original }
+			})
+		}
 	
 	/**
 	  * Applies a bufferedImageOp to this image, producing a new image

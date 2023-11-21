@@ -3,7 +3,7 @@ package utopia.genesis.image
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.genesis.graphics.Drawer
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -32,7 +32,6 @@ trait ImageLike extends HasSize
 	  * @return Scaling applied to this image
 	  */
 	def scaling: Vector2D
-	
 	/**
 	  * @return Alpha used when drawing this image
 	  */
@@ -42,13 +41,11 @@ trait ImageLike extends HasSize
 	  * @return Measurements of the original image data
 	  */
 	def sourceResolution: Size
-	
 	/**
 	  * The bounds of this image when origin and size are both counted. The (0,0) coordinate is at the origin
 	  * of this image.
 	  */
 	def bounds: Bounds
-	
 	/**
 	  * @return A specifically set origin for this image. None if origin is unspecified.
 	  */
@@ -63,6 +60,11 @@ trait ImageLike extends HasSize
 	  * @return Pixel data for this image.
 	  */
 	def pixels: Pixels
+	
+	/**
+	  * @return The average shade of this image
+	  */
+	def shade: ColorShade
 	
 	
 	// COMPUTED	--------------------

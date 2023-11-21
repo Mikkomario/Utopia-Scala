@@ -15,6 +15,8 @@
 ### New methods
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
+- **Color**
+  - Added `.visible` and `.invisible`
 - **Distance** (object)
   - Added `.ofKilometers(Double)`
 - **NumericVectorLike**

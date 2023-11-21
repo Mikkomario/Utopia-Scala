@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Matrix, MatrixLike, Pair}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -74,6 +74,11 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, M
 	  * @return The size of this table in pixels
 	  */
 	def area = Size(width, height)
+	
+	/**
+	  * @return The average shade of these pixels
+	  */
+	def averageShade = ColorShade.forLuminosity(averageRelativeLuminance)
 	
 	/**
 	  * @return A vector containing each pixel color rgb value

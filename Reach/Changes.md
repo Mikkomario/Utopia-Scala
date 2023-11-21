@@ -2,8 +2,17 @@
 
 ## v1.1.1 (in development)
 Supports **Flow v2.3**
+### Bugfixes
+- Fixed cursor shade calculation in **MutableImageButton**, **ViewImageButton** and **SelectionList**
+### New features
+- Added support for cursors with edges
+  - To use this, specify the `drawEdgesFor` -parameter in `CursorSet.loadIcons(...)` or use 
+    `Cursor(SingleColorIcon, Boolean)`
 ### Other changes
+- Cursor shade-detection algorithm is now much simpler, resulting in faster code and smaller memory use, 
+  with the cost of less accurate cursor color
 - Added a couple of new utility functions to button factories
+- **Checkbox** cursor shade calculation is now faster
 - Scala version updated to 2.13.12
 
 ## v1.1 - 27.09.2023

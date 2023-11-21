@@ -172,8 +172,7 @@ object Color
 	  */
 	def averageLuminosityOf(colors: IterableOnce[Color]) = colors.iterator
 		.map { c => (c.luminosity * c.alpha) -> c.alpha }
-		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
-		{
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match {
 			case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
 			case None => 0.0
 		}
@@ -184,8 +183,7 @@ object Color
 	  */
 	def averageRelativeLuminanceOf(colors: IterableOnce[Color]) = colors.iterator
 		.map { c => (c.relativeLuminance * c.alpha) -> c.alpha }
-		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
-		{
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match {
 			case Some((totalLuminance, totalAlpha)) => totalLuminance / totalAlpha
 			case None => 0.0
 		}
@@ -227,6 +225,14 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  * @return Whether this color is fully opaque (100% alpha - I.e. can't be seen through)
 	  */
 	def opaque = !transparent
+	/**
+	  * @return Whether this color is visible (i.e. is not fully transparent)
+	  */
+	def visible = alpha > 0
+	/**
+	  * @return Whether this color is not visible (i.e. is fully transpared)
+	  */
+	def invisible = !visible
 	
 	/**
 	  * @return The alpha percentage of this color [0, 100]

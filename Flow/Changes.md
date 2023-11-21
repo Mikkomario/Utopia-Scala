@@ -53,6 +53,8 @@
   - Added `.prePollingAsync(Int)` that utilizes the new **PrePollingIterator**
 - **Lazy**
   - Added `.mapCurrent(...)`
+- **MatrixLike**
+  - Added `.indicesAroundIterator(...)` for iterating over an area around a certain position
 - **MayStopChanging**
   - Added a couple of "onceNotChanging" method variants
 - **OptimizedBridge**

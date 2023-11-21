@@ -99,7 +99,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 			// Case: Cursor is outside all registered component zones => uses default cursor with modified shade
 			case None =>
 				val cursor = cursors.default
-				cursor(shadeOf(cursor.defaultBounds.translated(position)).opposite)
+				cursor.over(shadeOf(cursor.defaultBounds.translated(position)))
 		}
 	}
 	

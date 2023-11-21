@@ -1,8 +1,17 @@
 # Utopia Genesis - List of Changes
 
-## v3.4.1 (in development)
+## v3.5 (in development)
 ### Breaking changes
+- Added abstract function `.shade` to **ImageLike**
+  - Only causes build errors within custom subclasses
 - Deleted functions and classes that were deprecated at v3.0 or earlier
+### New methods
+- **Image**
+  - Added a number of functions for extracting and highlighting image edges
+- **ImageLike**
+  - Added `.shade` function
+- **Pixels**
+  - Added `.averageShade`
 ### Other changes
 - **DrawSettings** now extends **ScopeUsable**
 - Scala version updated to 2.13.12

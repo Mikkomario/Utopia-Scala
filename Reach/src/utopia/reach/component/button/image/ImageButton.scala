@@ -9,7 +9,7 @@ import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorShade}
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
@@ -318,15 +318,18 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, s
 	
 	override val focusId = hashCode()
 	
-	/**
-	  * The overall shade of this button (calculated based on the focused-state)
-	  */
-	lazy val shade = ColorShade.forLuminosity(images.focusImage.pixels.averageLuminosity)
-	
 	
 	// INITIAL CODE	-----------------------------
 	
 	setup(baseStatePointer, settings.hotKeys)
+	
+	
+	// COMPUTED ---------------------------------
+	
+	/**
+	  * The overall shade of this button (calculated based on the focused-state)
+	  */
+	def shade = images.focusImage.shade
 	
 	
 	// IMPLEMENTED	-----------------------------

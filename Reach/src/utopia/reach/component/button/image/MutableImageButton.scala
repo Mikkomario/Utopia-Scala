@@ -1,11 +1,14 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.ButtonImageSet
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.paradigm.color.ColorShade
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -13,10 +16,6 @@ import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.stack.StackInsets
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.paradigm.shape.shape2d.vector.point.Point
 
 object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]
 {
@@ -103,8 +102,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	/**
 	  * A pointer to the current overall shade of this button (based on the focused-image)
 	  */
-	val shadePointer = imagesPointer.lazyMap { images =>
-		ColorShade.forLuminosity(images.focusImage.pixels.averageLuminosity) }
+	val shadePointer = imagesPointer.lazyMap { _.focusImage.shade }
 	
 	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Vector()
@@ -153,5 +151,5 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	
 	override protected def trigger() = actions.foreach { _() }
 	
-	override def cursorToImage(cursor: Cursor, position: Point) = cursor(shade)
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(shade)
 }

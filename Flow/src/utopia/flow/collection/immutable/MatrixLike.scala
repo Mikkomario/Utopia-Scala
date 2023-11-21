@@ -112,4 +112,46 @@ trait MatrixLike[+A, +C[_], +Repr] extends utopia.flow.collection.template.Matri
 	  */
 	@throws[IndexOutOfBoundsException]("If the specified index is out of range")
 	def row(y: Int) = rows(y)
+	
+	/**
+	  * @param center Targeted center point
+	  * @param range Maximum range for the included points / indices in this matrix.
+	  *              Default = 1.
+	  * @param onlyOrthogonal Whether range calculation should use orthogonal connections instead of
+	  *                       diagonal connections.
+	  *                       Two matrix cells are orthogonally adjacent when they share an edge.
+	  *                       Two cells are diagonally adjacent when they share a point.
+	  *                       Default = false = include diagonal connections.
+	  * @return An iterator that returns the cell indices around the specified central point.
+	  *         The specified point is excluded from this collection / result.
+	  */
+	def indicesAroundIterator(center: Pair[Int], range: Int = 1, onlyOrthogonal: Boolean = false) = {
+		// Collects all indices around the specified spot (but not including that spot)
+		val aroundIterator = center
+			.mergeWith(size) { (center, length) =>
+				val start = (center - range) max 0
+				val end = (center + range) min (length - 1)
+				if (start > end)
+					Iterable.empty
+				else
+					start to end
+			}
+			.merge { (xRange, yRange) =>
+				if (xRange.isEmpty || yRange.isEmpty)
+					Iterator.empty
+				else
+					xRange.iterator.flatMap { x =>
+						val iterator = yRange.iterator.map { y => Pair(x, y) }
+						if (x == center.first)
+							iterator.filterNot { _ == center }
+						else
+							iterator
+					}
+			}
+		// May limit the results to points at certain orthogonal distance
+		if (onlyOrthogonal)
+			aroundIterator.filter { _.mergeWith(center) { (p, c) => (p - c).abs }.sum <= range }
+		else
+			aroundIterator
+	}
 }

@@ -246,8 +246,8 @@ object ImageAndTextButton extends ImageAndTextButtonSetup()
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextContext, image: Either[Image, SingleColorIcon],
-                         text: LocalizedString,
+class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextContext,
+                         image: Either[Image, SingleColorIcon], text: LocalizedString,
                          settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
                         (action: => Unit)
 	extends ReachComponentWrapper with ButtonLike
@@ -262,7 +262,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	override val focusId = hashCode()
 	
 	override protected val wrapped = {
-		val alignment = context.textAlignment
+		// val alignment = context.textAlignment
 		val borderWidth = context.buttonBorderWidth
 		val actualContext = context.mapTextInsets { original =>
 			val smallDirections = context.textAlignment.directions

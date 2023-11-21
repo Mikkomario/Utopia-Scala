@@ -2,10 +2,12 @@ package utopia.reach.cursor
 
 import utopia.firmament.context.ColorContext
 import utopia.firmament.image.SingleColorIcon
+import utopia.genesis.graphics.StrokeSettings
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.transform.Adjustment
 
 object Cursor
 {
@@ -18,9 +20,11 @@ object Cursor
 	def apply(image: Image): Cursor = StaticImageCursor(image)
 	/**
 	  * @param icon A cursor icon (should use only a single color)
+	  * @param drawEdges Whether contrasting edges should be drawn for this cursor
 	  * @return A cursor that uses the specified icon with additional colouring
 	  */
-	def apply(icon: SingleColorIcon): Cursor = SingleColorCursor(icon)
+	def apply(icon: SingleColorIcon, drawEdges: Boolean = false): Cursor =
+		if (drawEdges) CursorWithEdges(icon) else SingleColorCursor(icon)
 	
 	
 	// NESTED	----------------------------------
@@ -30,7 +34,6 @@ object Cursor
 		override def defaultBounds = image.bounds
 		
 		override def over(color: Color) = image
-		
 		override def proposing(color: Color) = image
 		
 		override def apply(shade: => ColorShade) = image
@@ -46,6 +49,35 @@ object Cursor
 		override def proposing(color: Color) = icon(color)
 		
 		override def apply(shade: => ColorShade) = icon(shade)
+	}
+	
+	private case class CursorWithEdges(icon: SingleColorIcon) extends Cursor
+	{
+		// ATTRIBUTES   -------------------------
+		
+		private val edgesIcon = icon
+			.map { _.paintEdges(Adjustment(0.7), onlyEdges = true)(StrokeSettings.default) }
+		private val lightCursor = icon.white.withOverlay(edgesIcon.black)
+		private val darkCursor = icon.black.withOverlay(edgesIcon.white)
+		
+		
+		// IMPLEMENTED  -------------------------
+		
+		override def defaultBounds: Bounds = icon.original.bounds
+		
+		override def over(color: Color): Image = over(color.shade)
+		override def proposing(color: Color): Image = {
+			if (color == Color.white)
+				lightCursor
+			else if (color == Color.black)
+				darkCursor
+			else
+				icon(color).withOverlay(edgesIcon(color.highlightedBy(2.0)))
+		}
+		override def apply(shade: => ColorShade): Image = shade match {
+			case Light => lightCursor
+			case Dark => darkCursor
+		}
 	}
 }
 
@@ -69,13 +101,11 @@ trait Cursor
 	  * @return Cursor image to display over that color
 	  */
 	def over(color: Color): Image
-	
 	/**
 	  * @param color Color proposed as the basis for the resulting cursor color / image
 	  * @return Cursor image to display when that color is recommended
 	  */
 	def proposing(color: Color): Image
-	
 	/**
 	  * @param shade Targeted color shade for the cursor (call by name)
 	  * @return An image that best applies to the specified shade

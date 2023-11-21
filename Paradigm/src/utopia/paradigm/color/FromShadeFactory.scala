@@ -33,8 +33,13 @@ trait FromShadeFactory[+A]
 	// OTHER    ---------------------
 	
 	/**
+	  * @param shade Shade of the background
+	  * @return A version of this item that is most appropriate against that shade
+	  */
+	def against(shade: ColorShade) = apply(shade.opposite)
+	/**
 	  * @param color A color
 	  * @return An item that is best visible against that color
 	  */
-	def against(color: Color) = apply(color.shade.opposite)
+	def against(color: Color): A = against(color.shade)
 }

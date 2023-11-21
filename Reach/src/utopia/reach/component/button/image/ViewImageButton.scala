@@ -10,7 +10,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorShade}
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
@@ -393,8 +393,7 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	/**
 	  * A pointer to this button's current overall shade (based on the focused-state)
 	  */
-	val shadePointer = imagesPointer.lazyMap { images =>
-		ColorShade.forLuminosity(images.focusImage.pixels.averageLuminosity) }
+	val shadePointer = imagesPointer.lazyMap { _.focusImage.shade }
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -414,5 +413,5 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	
 	override protected def trigger() = action
 	
-	override def cursorToImage(cursor: Cursor, position: Point) = cursor(shade)
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(shade)
 }

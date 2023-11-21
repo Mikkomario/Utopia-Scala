@@ -23,7 +23,7 @@ import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateLis
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
-import utopia.paradigm.color.{Color, ColorShade}
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -522,8 +522,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	override def cursorBounds = boundsInsideTop
 	
-	override def cursorToImage(cursor: Cursor, position: Point) =
-		cursor(ColorShade.forLuminosity(contextBackgroundPointer.value.luminosity))
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(contextBackgroundPointer.value.shade)
 	
 	
 	// NESTED	------------------------------------

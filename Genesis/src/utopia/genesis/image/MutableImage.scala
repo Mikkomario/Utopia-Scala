@@ -5,15 +5,15 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.transform._
-import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
-import utopia.paradigm.color.Color
+import utopia.paradigm.angular.{Angle, DirectionalRotation}
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.Area2D
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
@@ -41,7 +41,8 @@ object MutableImage
   * @since 25.11.2020, v2.4
   */
 class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2D = Vector2D.identity,
-				   initialAlpha: Double = 1.0, initialOrigin: Option[Point] = None) extends ImageLike
+				   initialAlpha: Double = 1.0, initialOrigin: Option[Point] = None)
+	extends ImageLike
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -67,8 +68,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	/**
 	  * @return An immutable copy of this image's current state
 	  */
-	def immutableCopy = source match
-	{
+	def immutableCopy = source match {
 		case Some(img) =>
 			val colorModel = img.getColorModel
 			val isAlphaPremultiplied = colorModel.isAlphaPremultiplied
@@ -90,8 +90,10 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	override def alpha = _alpha
 	def alpha_=(newAlpha: Double) = _alpha = (newAlpha max 0.0) min 1.0
 	
-	override def sourceResolution = source match
-	{
+	// TODO: Not optimized
+	override def shade: ColorShade = pixels.averageShade
+	
+	override def sourceResolution = source match {
 		case Some(s) => Size(s.getWidth, s.getHeight)
 		case None => Size.zero
 	}

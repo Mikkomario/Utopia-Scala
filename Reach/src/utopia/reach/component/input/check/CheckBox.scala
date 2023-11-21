@@ -17,10 +17,10 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary
-import utopia.paradigm.color.{Color, ColorRole, ColorShade}
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.area.Circle
-import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.ColorContextualFactory
@@ -406,8 +406,7 @@ class CheckBox(parentHierarchy: ComponentHierarchy,
 	
 	override protected def trigger() = valuePointer.update { !_ }
 	
-	override def cursorToImage(cursor: Cursor, position: Point) =
-		cursor(ColorShade.forLuminosity(imagePointer.value.pixels.averageLuminosity).opposite)
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(imagePointer.value.shade)
 	
 	
 	// NESTED	------------------------------

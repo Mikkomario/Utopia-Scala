@@ -22,11 +22,13 @@ object CursorSet
 	 * @return Failure if the default cursor couldn't be loaded. Success otherwise.
 	 *         Success also contains non-critical cursor-loading failures.
 	 */
-	def loadIcons(paths: Map[CursorType, (Path, Point)], defaultCursorType: CursorType = Default): TryCatch[CursorSet] = {
+	def loadIcons(paths: Map[CursorType, (Path, Point)], defaultCursorType: CursorType = Default,
+	              drawEdgesFor: Set[CursorType] = Set()): TryCatch[CursorSet] =
+	{
 		// Reads the images from the specified files
 		val readResults = paths.map { case (cType, (path, origin)) =>
 			cType -> Image.readFrom(path).map { img =>
-				Cursor(SingleColorIcon(img.withSourceResolutionOrigin(origin)))
+				Cursor(SingleColorIcon(img.withSourceResolutionOrigin(origin)), drawEdges = drawEdgesFor.contains(cType))
 			}
 		}
 		// The default cursor load must succeed
