@@ -60,9 +60,12 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
       */
     override def updateAndGet(mutate: A => A) = lockSetAndGet(mutate)
     
+    override def mutate[B](mutate: A => (B, A)) = lockAndSet(mutate)
+    
     /**
       * Updates a value in this container. Also returns a result value.
       */
+    @deprecated("Renamed to .mutate(...)", "v2.3")
     def pop[B](mutate: A => (B, A)) = lockAndSet(mutate)
     
     /**

@@ -25,6 +25,7 @@
 - **EqualsBy** now compares the equals-properties using `==` instead of using hashCodes
 - The following Changing implementations now properly take into account 
   the listening condition for the purposes of stopping changing: **LightMergeMirror**, **MergeMirror**
+- **Volatile**`.mutate(...)` now properly locks the wrapped item (whoops!)
 ### New Features
 - Added file-related utility methods under **FileUtils**
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
