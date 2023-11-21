@@ -8,6 +8,8 @@ object OptimizedMirror
 	/**
 	  * Creates a new mirror that reflects the value of a pointer
 	  * @param origin Origin pointer that is being reflected
+	  * @param mirrorCondition A condition that must be met for the mirroring to continue / be active.
+	  *                        Default = always keep the mirroring active.
 	  * @param disableCaching Whether mapped values should not be cached (unless strictly necessary)
 	  *                       but calculated whenever a value is requested.
 	  *
@@ -24,8 +26,10 @@ object OptimizedMirror
 	  * @tparam R Type of mapping results
 	  * @return A new pointer that returns mapped origin values
 	  */
-	def apply[O, R](origin: Changing[O], disableCaching: Boolean = false)(f: O => R) =
-		new OptimizedMirror[O, R](origin, f, disableCaching)
+	def apply[O, R](origin: Changing[O], mirrorCondition: Changing[Boolean] = AlwaysTrue,
+	                disableCaching: Boolean = false)
+	               (f: O => R) =
+		new OptimizedMirror[O, R](origin, f, mirrorCondition, cachingDisabled = disableCaching)
 }
 
 /**
@@ -37,17 +41,22 @@ object OptimizedMirror
   * @author Mikko Hilpinen
   * @since 24.7.2023, v2.2
   */
-class OptimizedMirror[O, R](origin: Changing[O], f: O => R, cachingDisabled: Boolean)
+class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Changing[Boolean] = AlwaysTrue,
+                            cachingDisabled: Boolean = false)
 	extends OptimizedChanging[R]
 {
 	// ATTRIBUTES   -------------------------
 	
-	private val bridge = OptimizedBridge.map(origin, hasListenersFlag, cachingDisabled)(f)(fireEvent)
+	private val bridge = OptimizedBridge.map(origin, hasListenersFlag && condition, cachingDisabled)(f)(fireEvent)
 	
 	
 	// INITIAL CODE -------------------------
 	
 	onceSourceStops(origin) {
+		declareChangingStopped()
+		bridge.detach()
+	}
+	onceSourceStopsAt(condition, false) {
 		declareChangingStopped()
 		bridge.detach()
 	}

@@ -21,7 +21,7 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
 	  */
-	protected val hasListenersFlag = listenersPointer.strongMap { _.exists { _.nonEmpty } }
+	protected val hasListenersFlag: FlagLike = listenersPointer.strongMap { _.exists { _.nonEmpty } }
 	
 	private var stopListeners = Vector[ChangingStoppedListener]()
 	

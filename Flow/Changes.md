@@ -32,8 +32,10 @@
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
 - Added **Use** object for providing scope-specific (implicit) access to certain values
+- Added **LockableBridge** class
 - Added **ChangingUntil** & **StatefulValueView** **Changing** mirror classes
 - Added **ChangeResult** model, relating to other **Changing** changes
+- Added conditional mirroring support to **OptimizedMirror**
 - Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
 ### New methods
 - **CompoundingBuilder**
@@ -79,6 +81,7 @@
     - Returns false for existing regular files
 - **Future**`.raceWith(Future)` now handles situations where both futures fail
 - Added stop condition support to **LightMergeMirror**
+- **Changing**`.mapWhile(...)` now uses **OptimizedMirror** instead of a **Mirror**
 - Added some optimizations to **Flags** and other **Changing** items
 - Added `.toString` implementations to **ComparisonOperator**
 - Scala version updated to 2.13.12

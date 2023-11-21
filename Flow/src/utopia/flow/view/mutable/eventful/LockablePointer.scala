@@ -1,7 +1,5 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.model.Destiny
-import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
@@ -29,20 +27,12 @@ object LockablePointer
   * @author Mikko Hilpinen
   * @since 26.7.2023, v2.2
   */
-class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] with Pointer[A]
+class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] with Lockable[A] with Pointer[A]
 {
 	// ATTRIBUTES   -------------------------
 	
 	private var _value = initialValue
 	private var _locked = false
-	
-	
-	// COMPUTED -----------------------------
-	
-	/**
-	  * @return Whether this pointer has been locked and won't change anymore
-	  */
-	def locked = _locked
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -56,19 +46,16 @@ class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] wit
 			_set(newValue)
 	}
 	
-	override def destiny: Destiny = if (_locked) Sealed else MaySeal
+	override def locked = _locked
 	
-	
-	// OTHER    ---------------------------
-	
-	/**
-	  * Locks this pointer, so that it can't be changed anymore
-	  */
-	def lock() = {
+	override def lock() = {
 		_locked = true
 		// Discards all listeners, since they won't be informed about anything anymore
 		declareChangingStopped()
 	}
+	
+	
+	// OTHER    ---------------------------
 	
 	/**
 	  * Attempts to modify the value of this pointer.

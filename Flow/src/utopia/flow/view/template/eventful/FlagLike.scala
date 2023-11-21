@@ -10,7 +10,10 @@ object FlagLike
 	// IMPLICIT ------------------
 	
 	// Wraps any Changing[Boolean] into a more specific FlagLike
-	implicit def wrap(c: Changing[Boolean]): FlagLike = new FlagLikeWrapper(c)
+	implicit def wrap(c: Changing[Boolean]): FlagLike = c match {
+		case f: FlagLike => f
+		case o => new FlagLikeWrapper(o)
+	}
 	
 	
 	// NESTED   ------------------

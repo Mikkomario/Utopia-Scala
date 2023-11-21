@@ -644,12 +644,13 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A (strongly) mirrored version of this item, using specified mapping function
 	  */
 	def mapWhile[B](condition: Changing[Boolean])(f: A => B): Changing[B] = diverge {
+		val conditionFlag: FlagLike = condition
 		// Case: Mirroring is never actually allowed => Uses a fixed value instead
-		if (condition.isAlwaysFalse)
+		if (conditionFlag.isAlwaysFalse)
 			Fixed(f(value))
 		// Case: Mirroring is allowed
 		else
-			Mirror(this, condition)(f)
+			OptimizedMirror(this, conditionFlag)(f)
 	} { f(value) }
 	/**
 	  * Creates a mirrored view into this changing item.
