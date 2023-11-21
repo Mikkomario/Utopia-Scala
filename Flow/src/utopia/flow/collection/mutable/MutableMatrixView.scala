@@ -3,6 +3,7 @@ package utopia.flow.collection.mutable
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Matrix, Pair}
 import utopia.flow.collection.template.MatrixViewLike
+import utopia.flow.operator.Identity
 import utopia.flow.view.mutable.Pointer
 
 object MutableMatrixView
@@ -40,7 +41,7 @@ object MutableMatrixView
   * @author Mikko Hilpinen
   * @since 23.1.2023, v2.0
   */
-trait MutableMatrixView[A] extends MutableMatrix[A] with MatrixViewLike[A, MutableMatrix[A]]
+trait MutableMatrixView[A] extends MutableMatrix[A] with MatrixViewLike[A, A, MutableMatrix[A]]
 {
 	// ABSTRACT -------------------------
 	
@@ -48,6 +49,11 @@ trait MutableMatrixView[A] extends MutableMatrix[A] with MatrixViewLike[A, Mutab
 	
 	
 	// IMPLEMENTED  ---------------------
+	
+	override def columnsView = originalColumnsView
+	override def rowsView = originalRowsView
+	
+	override protected def viewFunction: Either[A => A, (A, Pair[Int]) => A] = Left(Identity)
 	
 	override protected def withViewArea(area: Pair[NumericSpan[Int]]): MutableMatrix[A] =
 		new MutableMatrixView._MutableMatrixView[A](matrix, area)

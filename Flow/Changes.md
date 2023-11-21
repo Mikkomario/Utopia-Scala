@@ -7,6 +7,11 @@
   - The abstract functions `.isChanging` and `.mayStopChanging` were replaced with `.destiny`
   - The abstract function `_addListenerOfPriority(...)` no longer needs to account for the case
   where the item has already stopped from changing, as it will only be called for still-changing items
+- Rewrote some parts of the **Matrix** classes
+  - Implementing classes need to be adjusted a lot
+  - `.iterator` and `.indexIterator` ordering may have changed, use the specifically ordered variants in case your 
+    use-case is ordering-specific
+  - `.map(...)` in **MatrixView** now doesn't cache map results
 - Renamed **CanBeZero** to **MayBeZero** and **CanBeAboutZero** to **MayBeAboutZero**
 - Moved **JsonSettingsAccess** to `parse.json`
 - `.divideBy(...)` in **CollectionExtensions** now returns a **Pair** instead of a **Tuple**

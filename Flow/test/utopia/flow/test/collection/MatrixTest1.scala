@@ -8,7 +8,7 @@ import utopia.flow.collection.immutable.{Matrix, Pair}
  * @author Mikko Hilpinen
  * @since 22.1.2023, v2.0
  */
-object MatrixTest extends App
+object MatrixTest1 extends App
 {
 	val width = 8
 	val matrix = Matrix.fill(Pair.twice(width)) { case Pair(x, y) => y * width + x }
@@ -24,7 +24,7 @@ object MatrixTest extends App
 	
 	val cropped = matrix.view(Pair(7, 3).map { p => NumericSpan(p - 1, p + 1) })
 	printMatrix(cropped, "cropped sub-region")
-	println(cropped.iterator.mkString(", "))
+	println(cropped.iteratorByRows.mkString(", "))
 	
 	printMatrix(matrix.crop(Pair(1, 2)), "cropped")
 }

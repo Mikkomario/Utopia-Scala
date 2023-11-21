@@ -2,8 +2,8 @@ package utopia.flow.collection.template
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 import scala.collection.IndexedSeqView
 
@@ -75,18 +75,54 @@ trait MatrixLike[+A, +V] extends PartialFunction[Pair[Int], A]
 	def rowIndices = 0 until height
 	
 	/**
-	 * @return An iterator that returns all cell values in this matrix
+	 * @return An iterator that returns all cell values in this matrix.
+	  *         Order may be undefined. If you want specific ordering, please use [[iteratorByColumns]] or
+	  *         [[iteratorByRows]]
 	 */
 	def iterator = indexIterator.map(apply)
 	/**
+	  * @return An iterator that returns all cell values in this matrix
+	  */
+	def iteratorByColumns = indexIteratorByColumns.map(apply)
+	/**
+	  * @return An iterator that returns all cell values in this matrix
+	  */
+	def iteratorByRows = indexIteratorByRows.map(apply)
+	/**
 	 * @return An iterator that returns all the cell (x, y) indices within this matrix.
 	 */
-	def indexIterator =
+	def indexIterator = indexIteratorByColumns
+	/**
+	  * @return An iterator that returns all the cell (x, y) indices within this matrix.
+	  *         Advances one column at a time. That is, traverses all y-values first before moving the next x value.
+	  */
+	def indexIteratorByColumns =
+		(0 until width).iterator.flatMap { x => (0 until height).iterator.map { y => Pair(x, y) } }
+	/**
+	  * @return An iterator that returns all the cell (x, y) indices within this matrix.
+	  *         Advances one row at a time. That is, traverses all x-values first before moving the next y value.
+	  */
+	def indexIteratorByRows =
 		(0 until height).iterator.flatMap { y => (0 until width).iterator.map { x => Pair(x, y) } }
 	/**
 	 * @return An iterator that returns all cell values, paired with their indices, within this matrix.
 	 */
 	def iteratorWithIndex = indexIterator.map { i => apply(i) -> i }
+	/**
+	  * @return An iterator that returns all cell values, paired with their indices, within this matrix.
+	  *         Returns the values by traversing each column in order from left to right.
+	  */
+	def iteratorWithIndexByColumns = indexIteratorByColumns.map { i => apply(i) -> i }
+	/**
+	  * @return An iterator that returns all cell values, paired with their indices, within this matrix.
+	  *         Returns the values by traversing each row from top to bottom
+	  */
+	def iteratorWithIndexByRows = indexIteratorByRows.map { i => apply(i) -> i }
+	
+	/**
+	  * @return A view into this whole matrix
+	  */
+	def viewAll = view(size.map { len => NumericSpan(0, len - 1) })
 	
 	
 	// IMPLEMENTED  -----------------------
@@ -115,17 +151,26 @@ trait MatrixLike[+A, +V] extends PartialFunction[Pair[Int], A]
 	}
 	
 	/**
+	  * Reads the value of a single cell in this matrix
+	  * @param column Targeted column index [0, width[, i.e. the x-coordinate
+	  * @param row    Targeted row index [0, height[, i.e. the y-coordinate
+	  * @return The value of this matrix at the targeted cell. None if that cell is out of range.
+	  */
+	def lift(column: Int, row: Int): Option[A] = lift(Pair(column, row))
+	/**
 	 * Reads the value of a single cell in this matrix
 	 * @param column Targeted column index [0, width[, i.e. the x-coordinate
 	 * @param row    Targeted row index [0, height[, i.e. the y-coordinate
 	 * @return The value of this matrix at the targeted cell. None if that cell is out of range.
 	 */
-	def getOption(column: Int, row: Int): Option[A] = getOption(Pair(column, row))
+	@deprecated("Please use .lift(Int, Int) instead", "v2.3")
+	def getOption(column: Int, row: Int): Option[A] = lift(Pair(column, row))
 	/**
 	 * Reads the value of a single cell in this matrix
 	 * @param coordinate The targeted x-y-coordinate, as a pair
 	 * @return The value of this matrix at the targeted cell. None if that coordinate is outside of this matrix.
 	 */
+	@deprecated("Please use .lift(Pair) instead", "v2.3")
 	def getOption(coordinate: Pair[Int]): Option[A] = lift(coordinate)
 	
 	/**

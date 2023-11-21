@@ -3,6 +3,8 @@ package utopia.genesis.image
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Matrix, MatrixLike, Pair}
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -10,6 +12,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import java.awt.image.BufferedImage
+import scala.collection.IndexedSeqView
 
 object Pixels
 {
@@ -35,7 +38,7 @@ object Pixels
 		else {
 			val rawPixels = new Array[Int](w * h)
 			image.getRGB(0, 0, w, h, rawPixels, 0, w)
-			apply(Matrix.fill(w, h) { p => Color.fromInt(rawPixels(p.second * w + p.first)) })
+			apply(Matrix(Vector.from(rawPixels.view.map(Color.fromInt)), w, h, rowsToColumns = true))
 		}
 	}
 }
@@ -45,7 +48,7 @@ object Pixels
   * @author Mikko Hilpinen
   * @since 15.6.2019, v2.1+
   */
-case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, Pixels] with Matrix[Color]
+case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, Matrix, Pixels] with Matrix[Color]
 {
 	// ATTRIBUTES   -------------------
 	
@@ -62,6 +65,8 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	  */
 	lazy val averageRelativeLuminance = Color.averageRelativeLuminanceOf(matrix.iterator)
 	
+	override lazy protected val sizeView: Pair[View[Int]] = Pair(Lazy { width }, Lazy { height })
+	
 	
 	// COMPUTED	-----------------------
 	
@@ -73,7 +78,7 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	/**
 	  * @return A vector containing each pixel color rgb value
 	  */
-	private def rgbIterator = matrix.iterator.map { _.toInt }
+	private def rgbIterator = matrix.iteratorByRows.map { _.toInt }
 	
 	/**
 	  * @return A buffered image based on this pixel data
@@ -100,6 +105,9 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	override def width: Int = matrix.width
 	override def height: Int = matrix.height
 	
+	override def columnsView: IndexedSeqView[IndexedSeqView[Color]] = matrix.columnsView
+	override def rowsView: IndexedSeqView[IndexedSeqView[Color]] = matrix.rowsView
+	
 	override def columns = matrix.columns
 	override def rows = matrix.rows
 	
@@ -109,6 +117,12 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	protected override def empty = Pixels.empty
 	
 	override def view(area: Pair[NumericSpan[Int]]) = copy(matrix.view(area))
+	
+	override def map[B](f: Color => B): Matrix[B] = matrix.map(f)
+	override def mapWithIndex[B](f: (Color, Pair[Int]) => B): Matrix[B] = matrix.mapWithIndex(f)
+	
+	override def lazyMap[B](f: Color => B): Matrix[B] = matrix.lazyMap(f)
+	override def lazyMapWithIndex[B](f: (Color, Pair[Int]) => B): Matrix[B] = matrix.lazyMapWithIndex(f)
 	
 	
 	// OTHER	-----------------------
@@ -126,7 +140,7 @@ case class Pixels(private val matrix: Matrix[Color]) extends MatrixLike[Color, P
 	  * @param point Targeted point in this table
 	  * @return The color of the pixel at that location. None if this table doesn't contain such a location.
 	  */
-	def lookup(point: Point) = matrix.getOption(point.xyPair.map { _.toInt })
+	def lookup(point: Point) = matrix.lift(point.xyPair.map { _.toInt })
 	
 	/**
 	  * @param bounds Target area within this pixel table (doesn't have to be contained within this table's area)
