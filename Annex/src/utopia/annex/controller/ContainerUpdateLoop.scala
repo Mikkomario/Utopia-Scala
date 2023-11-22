@@ -77,7 +77,7 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 						requestTimeContainer.current = Some(headers.date.getOrElse(newRequestTime))
 						// If there was new data, updates container
 						if (status != NotModified && body.nonEmpty)
-							Right(container.pointer.pop { old => merge(old, body).swap })
+							Right(container.pointer.mutate { old => merge(old, body).swap })
 						else
 							Left(1)
 					case Response.Failure(status, message, _) =>

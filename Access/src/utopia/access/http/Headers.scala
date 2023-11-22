@@ -47,8 +47,7 @@ object Headers extends FromModelFactory[Headers]
     
     // IMPLEMENTED    ----------------------
     
-    override def apply(model: template.ModelLike[Property]) =
-    {
+    override def apply(model: template.ModelLike[Property]) = {
         val fields = model.nonEmptyProperties
             .flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap
         Success(new Headers(fields))
@@ -134,7 +133,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     /**
      * 	The length of the response body in octets (8-bit bytes)
      */
-    def contentLength = apply("Content-Length").flatMap(_.int).getOrElse(0)
+    def contentLength = apply("Content-Length").getInt
     /**
       * @return Whether content length information has been provided
       */
@@ -182,14 +181,15 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
       */
     def containsAuthorization = isDefined("Authorization")
     /**
-      * @return The provided authorization. Eg. "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==". None if no auth header is provided.
+      * @return The provided authorization. Eg. "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==".
+      *         An empty string if no auth header is provided.
       */
     def authorization = apply("Authorization")
     /**
      * @return Decrypted Username and password from a basic authorization header. None if the header was missing, not
      *         a basic authorization or not properly encoded
      */
-    def basicAuthorization = authorization.flatMap { auth =>
+    def basicAuthorization = authorization.notEmpty.flatMap { auth =>
         val (authType, encodedValue) = auth.splitAtFirst(" ").toTuple
         if (authType ~== "Basic")
             Try { Base64.getDecoder.decode(encodedValue) }.toOption.map {
@@ -199,20 +199,17 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     }
     /**
       * @return Non-decrypted (expected to have no encoding) token registered with the "bearer" authorization header.
-      *         None if there was no authorization header or if it was not of type "bearer".
+      *         An empty string if there was no authorization header or if it was not of type "bearer".
       */
-    def bearerAuthorization = authorization.flatMap { auth =>
+    def bearerAuthorization = authorization.mapIfNotEmpty { auth =>
         val (authType, token) = auth.splitAtFirst(" ").toTuple
-        if (authType ~== "Bearer")
-            Some(token)
-        else
-            None
+        if (authType ~== "Bearer") token else ""
     }
     /**
       * @return Whether a bearer (token) authorization has been specified in this request
       *         (Authorization header starts with 'bearer ')
       */
-    def containsBearerAuthorization = authorization.exists { _.startsWithIgnoreCase("Bearer ") }
+    def containsBearerAuthorization = authorization.startsWithIgnoreCase("Bearer ")
     
     
     // IMPLEMENTED  ---------------
@@ -231,7 +228,12 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * Finds the value associated with the specified header name. The value may contain multiple 
      * parts, depending from the header format. Returns None if the header has no value.
      */
-    def apply(headerName: String) = fields.get(headerName.toLowerCase)
+    def apply(headerName: String) = get(headerName).getOrElse("")
+    /**
+      * @param headerName Name of the targeted header
+      * @return String value of the targeted header. None if the header was not specified.
+      */
+    def get(headerName: String) = fields.get(headerName.toLowerCase)
     
     /**
      * Adds new values to a header. Will not overwrite any existing values.
@@ -275,7 +277,8 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * Returns multiple values where the original value is split into multiple parts. Returns an 
      * empty vector if there were no values for the header name
      */
-    def splitValues(headerName: String, separator: String) = apply(headerName).toVector.flatMap { _.split(separator) }
+    def splitValues(headerName: String, separator: String) =
+        apply(headerName).split(separator).view.filter { _.nonEmpty }.toVector
     /**
      * Returns multiple values where the original value is separated with a comma (,). Returns an 
      * empty vector if there were no values for the header name
@@ -313,7 +316,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * Returns a copy of these headers with a new header. Overwrites any previous values on the 
      * targeted header.
      */
-    def withHeader(headerName: String, value: String) = new Headers(fields + (headerName -> value))
+    def withHeader(headerName: String, value: String) = new Headers(fields + (headerName.toLowerCase -> value))
     /**
       * Adds new values to a header. Will not overwrite any existing values.
       */
@@ -327,21 +330,21 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
       * Adds a new value to a header. Will not overwrite any existing values.
       */
     def withHeaderAdded(headerName: String, value: String, separator: String = ",") = {
-        apply(headerName) match {
+        get(headerName) match {
             // Case: Header already exists => Appends a value
             case Some(existingValue) =>
                 val newValue = s"$existingValue$separator$value"
-                Headers(fields + (headerName -> newValue))
+                Headers(fields + (headerName.toLowerCase -> newValue))
             // Case: New header => adds it
-            case None => withHeader(headerName, value)
+            case None => withHeader(headerName.toLowerCase, value)
         }
     }
     
     /**
      * Parses a header field into a time instant
      */
-    def timeHeader(headerName: String) = apply(headerName).flatMap { dateStr => 
-            Try(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(dateStr))).toOption }
+    def timeHeader(headerName: String) = get(headerName).flatMap { dateStr =>
+            Try { Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(dateStr)) }.toOption }
     /**
      * Parses an instant into correct format and adds it as a header value. Overwrites a previous 
      * version of that header, if there is one.

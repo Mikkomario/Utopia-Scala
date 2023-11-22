@@ -1,9 +1,7 @@
 package utopia.metropolis.model.enumeration
 
-import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
-
-import java.util.NoSuchElementException
+import utopia.flow.operator.equality.EqualsExtensions._
 
 /**
   * An enumeration for different ways / formats / styles to which a model can be formed

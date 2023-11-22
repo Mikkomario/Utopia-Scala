@@ -117,7 +117,7 @@ object Scribe
 	// Follows maximum logging count
 	private def log[U](f: Connection => U)(handleFailure: Throwable => U) = {
 		// Denies logging if the maximum limit is reached
-		val (shouldLog, limitReachEvent) = logCounter.pop { count =>
+		val (shouldLog, limitReachEvent) = logCounter.mutate { count =>
 			// Case: Int.MaxValue logging entries => Resets the counter or denies logging
 			if (count == Int.MaxValue) {
 				if (logLimit.isDefined)

@@ -17,6 +17,7 @@ import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}
@@ -143,7 +144,7 @@ abstract class AuthorizedContext extends PostContext
 	/**
 	  * @return The model style specified in this request (if specified)
 	  */
-	def modelStyle = request.headers.apply("X-Style").flatMap(ModelStyle.findForKey)
+	def modelStyle = request.headers.get("X-Style").flatMap(ModelStyle.findForKey)
 		.orElse { request.parameters("style").string.flatMap(ModelStyle.findForKey) }
 	
 	
@@ -321,13 +322,11 @@ abstract class AuthorizedContext extends PostContext
 	                      (f: (K, Connection) => Result) =
 	{
 		// Checks the token from the bearer token authorization header
-		val result = request.headers.bearerAuthorization match
-		{
+		val result = request.headers.bearerAuthorization.notEmpty match {
 			case Some(token) =>
 				// Validates the device token against database
 				connectionPool.tryWith { connection =>
-					testToken(token, connection) match
-					{
+					testToken(token, connection) match {
 						case Some(authorizedToken) => f(authorizedToken, connection)
 						case None => Result.Failure(Unauthorized, s"Invalid or expired $tokenTypeName")
 					}
