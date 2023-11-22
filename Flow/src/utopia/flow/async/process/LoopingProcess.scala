@@ -170,4 +170,13 @@ abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock
 			}
 		}
 	}
+	
+	
+	// OTHER    ---------------------
+	
+	/**
+	  * Skips the current waiting process, if active.
+	  * Causes this loop to run the next iteration() function, if this loop was in waiting mode.
+	  */
+	def skipWait() = WaitUtils.notify(waitLock)
 }

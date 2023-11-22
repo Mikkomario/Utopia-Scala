@@ -56,6 +56,8 @@
   - Added `.prePollingAsync(Int)` that utilizes the new **PrePollingIterator**
 - **Lazy**
   - Added `.mapCurrent(...)`
+- **LoopingProcess**
+  - Added `.skipWait()` utility function
 - **MatrixLike**
   - Added `.indicesAroundIterator(...)` for iterating over an area around a certain position
 - **MayStopChanging**
