@@ -1,6 +1,9 @@
 package utopia.flow.test.event
 
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.event.model.ChangeResult
+import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer}
+
+import scala.util.Try
 
 /**
   * Tests various pointers
@@ -119,6 +122,41 @@ object ChangingTest extends App
 	assert(lmo2.numberOfListeners == 1)
 	assert(lm.numberOfListeners == 1)
 	assert(lmm.value == -5)
+	
+	// Tests pointer locking / lockable pointer
+	// Also tests withState mapping
+	val lp = LockablePointer(0)
+	val lps = lp.withState
+	var locked = false
+	var lastStateValue = ChangeResult.temporal(0)
+	lp.onceChangingStops { locked = true }
+	lps.addListener { e => lastStateValue = e.newValue }
+	
+	assert(lp.value == 0)
+	assert(lp.mayChange)
+	assert(lastStateValue == ChangeResult.temporal(0))
+	assert(lps.value == ChangeResult.temporal(0))
+	assert(!locked)
+	
+	println("Changes value from 0 to 1")
+	lp.value = 1
+	
+	assert(lp.value == 1)
+	assert(lp.mayChange)
+	assert(lastStateValue == ChangeResult.temporal(1))
+	assert(lps.value == ChangeResult.temporal(1))
+	
+	println("Locks the pointer")
+	lp.lock()
+	
+	assert(locked)
+	assert(lp.isFixed)
+	assert(lp.value == 1)
+	assert(lastStateValue == ChangeResult.finalValue(1))
+	assert(lps.value == ChangeResult.finalValue(1))
+	
+	assert(Try { lp.value = 2 }.isFailure)
+	assert(!lp.trySet(2))
 	
 	println("Done!")
 }

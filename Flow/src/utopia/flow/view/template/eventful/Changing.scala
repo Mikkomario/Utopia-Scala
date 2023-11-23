@@ -165,6 +165,14 @@ object Changing
 		override protected def wrapped: Changing[C] = c
 		override protected def _isEmpty(value: C): Boolean = value.isEmpty
 	}
+	
+	implicit class DeepChanging[A](val c: Changing[Changing[A]]) extends AnyVal
+	{
+		/**
+		  * @return Copy of this pointer that reflects the value of the wrapped pointer(s)
+		  */
+		def flatten = c.flatMap(Identity)
+	}
 }
 
 /**
@@ -404,6 +412,13 @@ trait Changing[+A] extends Any with View[A]
 			case ForeverFlux => ()
 		}
 	}
+	/**
+	  * Runs the specified function once/if this pointer stops from changing
+	  * (i.e. isChanging becomes false).
+	  * If this pointer had already stopped from changing, calls the function immediately.
+	  * @param f A function to be performed, when/if appropriate
+	  */
+	def onceChangingStops[U](f: => U): Unit = addChangingStoppedListenerAndSimulateEvent(ChangingStoppedListener(f))
 	
 	/**
 	  * Registers a new high-priority listener to be informed whenever this item's value changes.

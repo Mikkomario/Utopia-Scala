@@ -37,14 +37,14 @@ object TimedTasksTest extends App
 	val counter2 = Volatile(0)
 	
 	waitStart = Now
-	tasks += TimedTask { Now + 0.5.seconds } {
+	tasks += TimedTask.firstTimeAt { Now + 0.5.seconds }.completing {
 		val newVal = counter1.updateAndGet { _ + 1 }
 		if (newVal < 3)
 			Some(Now + 0.5.seconds)
 		else
 			None
 	}
-	tasks.add(Now + 0.2.seconds) {
+	tasks.addCompleting(Now + 0.2.seconds) {
 		val newVal = counter2.updateAndGet { _ + 1 }
 		if (newVal < 3)
 			Some(Now + 1.0.seconds)

@@ -109,7 +109,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	/**
 	  * Triggers this button's action. Same as if the user clicked this button (only works for enabled buttons)
 	  */
-	def trigger() = if (isEnabled) actions.foreach { _() }
+	def trigger() = if (enabled) actions.foreach { _() }
 	
 	/**
 	  * Initializes this button's listeners. Should be called when constructing this button.
@@ -195,7 +195,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 			}
 		}
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
+		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
 	private object ButtonMouseListener extends MouseButtonStateListener with MouseMoveListener
@@ -236,6 +236,6 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 				state -= Hover
 		}
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
+		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 }

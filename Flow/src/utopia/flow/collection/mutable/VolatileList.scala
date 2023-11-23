@@ -104,12 +104,12 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
 	/**
 	 * Removes and returns the first item in this list
 	 */
-	def pop(): Option[T] = pop { v => v.headOption -> v.drop(1) }
+	def pop(): Option[T] = mutate { v => v.headOption -> v.drop(1) }
 	
 	/**
 	 * Removes and returns the first item in this list that satisfies the provided predicate
 	 */
-	def popFirst(find: T => Boolean) = pop { items =>
+	def popFirst(find: T => Boolean) = mutate { items =>
 		items.findLastIndexWhere(find) match {
 			case Some(index) => Some(items(index)) -> (items.take(index) ++ items.drop(index + 1))
 			case None => None -> items

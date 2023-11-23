@@ -77,7 +77,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	}
 	
 	// Handles source pointer stopped -case
-	source.addChangingStoppedListener {
+	source.onceChangingStops {
 		// Transfers the stop-listeners over
 		val finalPointer = pointerPointer.value
 		queuedStopListeners.foreach { finalPointer.addChangingStoppedListenerAndSimulateEvent(_) }

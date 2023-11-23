@@ -3,6 +3,7 @@
 ## v2.3 (in development)
 ### Breaking changes
 - Divided the `operator` package into multiple sub-packages
+- Rewrote large portions of **TimedTask** and **TimedTasks** classes in order to add support for task rescheduling
 - Multiple breaking changes concerning Changing
   - The abstract functions `.isChanging` and `.mayStopChanging` were replaced with `.destiny`
   - The abstract function `_addListenerOfPriority(...)` no longer needs to account for the case
@@ -23,10 +24,12 @@
 - Fixed a bug in **Path**`.parts` and `.partsIterator` (used to throw an **IllegalArgumentException**) 
 - **StringFrom** now correctly preserves line-breaks
 - **EqualsBy** now compares the equals-properties using `==` instead of using hashCodes
+- **Volatile**`.mutate(...)` now properly locks the wrapped item (whoops!)
+- **PostponingProcess** now properly reacts to wait time change events that occur during the function run
 - The following Changing implementations now properly take into account 
   the listening condition for the purposes of stopping changing: **LightMergeMirror**, **MergeMirror**
-- **Volatile**`.mutate(...)` now properly locks the wrapped item (whoops!)
 ### New Features
+- **TimedTask** and **TimedTasks** now support pointer-based task-rescheduling
 - Added file-related utility methods under **FileUtils**
 - Added a new iterator class **PrePollingIterator** for asynchronous iterator buffering
 - Added new **TwoThreadBuffer** class for buffered parallel push & pull operations
@@ -45,6 +48,7 @@
   - Added multiple new until & withState methods
   - Added utility functions (`.isAlwaysEmpty`, `.mayBeNonEmpty`, etc.) to **Changing** items that contain 
     collections or **MayBeEmpty** instances
+  - Added `.flatten` function for **Changing** items that contain **Changing** values
 - **Delay**
   - Added `.future(...)`
 - **Future** (**AsyncExtensions**)

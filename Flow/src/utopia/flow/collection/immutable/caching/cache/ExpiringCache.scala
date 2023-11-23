@@ -73,7 +73,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 			expirationDuration.finite.foreach { expirationDuration =>
 				// Queues a new expiration
 				val expirationTime = Now + expirationDuration
-				val needsNotify = queuedExpirationsPointer.pop { queue =>
+				val needsNotify = queuedExpirationsPointer.mutate { queue =>
 					// Case: There were no other expirations queued
 					if (queue.isEmpty)
 						false -> Vector(expirationTime -> key)

@@ -1,21 +1,40 @@
 package utopia.flow.async.process
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.process.WaitTarget.Until
+import utopia.flow.async.process.ShutdownReaction.Cancel
+import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResult
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.time.{Now, Today, WeekDay, WeekDays}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Now, Today, WeekDay, WeekDays}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
-import scala.math.Ordered.orderingToOrdered
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object TimedTask
 {
+	// ATTRIBUTE    ------------------------
+	
+	/**
+	  * A factory that constructs timed tasks that are started immediately
+	  */
+	val immediately = firstTimeAt(Now)
+	
+	
 	// OTHER    ----------------------------
+	
+	/**
+	  * @param time The first time the created task(s) should be run (call-by-name)
+	  * @return A factory used for constructing timed tasks
+	  */
+	def firstTimeAt(time: => Instant) = new TimedTaskFactory(time)
 	
 	/**
 	  * Creates a new timed task
@@ -24,7 +43,8 @@ object TimedTask
 	  *          or None if this task shouldn't be run anymore.
 	  * @return A new timed task
 	  */
-	def apply(firstTime: => Instant = Now)(f: => Option[Instant]): TimedTask = new _TimedTask(firstTime)(Left(f))
+	@deprecated("Please use .firstTimeAt(Instant).completing(...) instead", "v2.3")
+	def apply(firstTime: => Instant = Now)(f: => Option[Instant]): TimedTask = firstTimeAt(firstTime).completing(f)
 	/**
 	  * Creates a new timed task
 	  * @param firstTime The first time this task should be run (call-by-name)
@@ -33,8 +53,10 @@ object TimedTask
 	  *                  or None if this task shouldn't be run anymore.
 	  * @return A new timed task
 	  */
-	def async(firstTime: => Instant = Now)(f: => Future[Option[Instant]]): TimedTask =
-		new _TimedTask(firstTime)(Right(f))
+	@deprecated("Please use .firstTimeAt(Instant).completingAsync(...) instead", "v2.3")
+	def async(firstTime: => Instant = Now)(f: => Future[Option[Instant]])
+	         (implicit executionContext: ExecutionContext): TimedTask =
+		firstTimeAt(firstTime).completingAsync(f)
 	
 	/**
 	  * Creates a new timed task that runs only once
@@ -43,10 +65,8 @@ object TimedTask
 	  * @tparam U Arbitrary function result type
 	  * @return A new timed task
 	  */
-	def once[U](time: => Instant)(f: => U) = apply(time) {
-		f
-		None
-	}
+	@deprecated("Please use .firstTimeAt(Instant).once(...) instead", "v2.3")
+	def once[U](time: => Instant)(f: => U) = firstTimeAt(time).once(f)
 	
 	/**
 	  * Creates a new timed task that is run at regular intervals
@@ -57,10 +77,10 @@ object TimedTask
 	  * @return A new timed task
 	  */
 	def regularly[U](interval: FiniteDuration, startImmediately: Boolean = false)(f: => U) =
-		apply { if (startImmediately) Now.toInstant else Now + interval } {
+		firstTimeAt(if (startImmediately) Now else Now + interval) {
 			val start = Now.toInstant
 			f
-			Some(start + interval)
+			start + interval
 		}
 	/**
 	  * Creates a new timed task that is run at regular intervals, as long as a condition is met
@@ -70,7 +90,7 @@ object TimedTask
 	  * @return A new timed task
 	  */
 	def regularlyWhile(interval: FiniteDuration, startImmediately: Boolean = false)(f: => Boolean) =
-		apply { if (startImmediately) Now.toInstant else Now + interval } {
+		firstTimeAt(if (startImmediately) Now else Now + interval).completing {
 			val start = Now.toInstant
 			if (f) Some(start + interval) else None
 		}
@@ -83,12 +103,12 @@ object TimedTask
 	  * @return A new timed task
 	  */
 	def dailyAt[U](time: LocalTime)(f: => U) =
-		apply {
+		firstTimeAt {
 			val today = Today.atTime(time)
 			(if (today >= Now) today else today + 1.days).toInstantInDefaultZone
 		} {
 			f
-			Some(Today.tomorrow.atTime(time).toInstantInDefaultZone)
+			Today.tomorrow.atTime(time).toInstantInDefaultZone
 		}
 	/**
 	  * Creates a new timed task that is run at specific times every day
@@ -108,10 +128,7 @@ object TimedTask
 				case None => Today.tomorrow + times.head
 			}).toInstantInDefaultZone
 		}
-		apply { nextTime } {
-			f
-			Some(nextTime)
-		}
+		firstTimeAt { nextTime } { f; nextTime }
 	}
 	
 	/**
@@ -124,7 +141,7 @@ object TimedTask
 	  * @return A new timed task
 	  */
 	def weeklyAt[U](day: WeekDay, time: LocalTime)(f: => U)(implicit w: WeekDays) = {
-		apply {
+		firstTimeAt {
 			val today = Today.weekDay
 			val daysWait = today.until(day)
 			val timeWait = time - Now.toLocalTime
@@ -132,7 +149,7 @@ object TimedTask
 		} {
 			val start = Now.toInstant
 			f
-			Some(start + 7.days)
+			start + 7.days
 		}
 	}
 	/**
@@ -150,7 +167,7 @@ object TimedTask
 		val _times = Vector.from(times).sorted(CombinedOrdering(
 			Ordering.by { p: (WeekDay, LocalTime) => p._1 }, Ordering.by { p: (WeekDay, LocalTime) => p._2 }))
 		if (_times.isEmpty)
-			apply(Now) { None }
+			immediately.once(())
 		else {
 			def nextTime = {
 				val today = Today.weekDay
@@ -162,10 +179,7 @@ object TimedTask
 				val timeWait = nextTime - currentTime
 				Now + daysWait + timeWait
 			}
-			apply(nextTime) {
-				f
-				Some(nextTime)
-			}
+			firstTimeAt (nextTime) { f; nextTime }
 		}
 	}
 	/**
@@ -188,7 +202,74 @@ object TimedTask
 	
 	// NESTED   ----------------------------
 	
-	private class _TimedTask(firstTime: => Instant)(f: => Either[Option[Instant], Future[Option[Instant]]])
+	class TimedTaskFactory(firstTime: => Instant)
+	{
+		/**
+		  * @param f A function that resolves into a future that resolves into a pointer
+		  *          that determines the next time this process should be run.
+		  *          The pointer will contain None if the run should be (temporarily) cancelled.
+		  * @return A new timed task that calls the specified function and uses a
+		  *         pointer-based rescheduling logic
+		  */
+		def cancellableAsync(f: => Future[Changing[Option[Instant]]]): TimedTask =
+			new _TimedTask(firstTime)(f)
+		/**
+		  * @param f A function that resolves into a pointer
+		  *          that determines the next time this process should be run.
+		  *          The pointer will contain None if the run should be (temporarily) cancelled.
+		  * @return A new timed task that calls the specified function and uses a
+		  *         pointer-based rescheduling logic
+		  */
+		def cancellable(f: => Changing[Option[Instant]]) = cancellableAsync { Future.successful(f) }
+		/**
+		  * @param f A function that resolves into a future that resolves into a pointer
+		  *          that determines the next time this process should be run.
+		  * @return A new timed task that calls the specified function and uses a
+		  *         pointer-based rescheduling logic
+		  */
+		def changingAsync(f: => Future[Changing[Instant]])(implicit exc: ExecutionContext) =
+			cancellableAsync { f.map { _.lightMap { Some(_) } } }
+		/**
+		  * @param f A function that resolves into a pointer
+		  *          that determines the next time this process should be run.
+		  * @return A new timed task that calls the specified function and uses a
+		  *         pointer-based rescheduling logic
+		  */
+		def changing(f: => Changing[Instant]) = cancellable { f.lightMap { Some(_) } }
+		/**
+		  * @param f A function that resolves into a future that resolves into the
+		  *          next time this process should be run, or to None, in case this process should be stopped.
+		  * @return A new timed task that calls the specified function
+		  */
+		def completingAsync(f: => Future[Option[Instant]])(implicit exc: ExecutionContext) =
+			cancellableAsync { f.map { Fixed(_) } }
+		/**
+		  * @param f A function that resolves into the
+		  *          next time this process should be run, or to None, in case this process should be stopped.
+		  * @return A new timed task that calls the specified function
+		  */
+		def completing(f: => Option[Instant]) = cancellable { Fixed(f) }
+		/**
+		  * @param f A function that resolves into a future that resolves into the
+		  *          next time this process should be run.
+		  * @return A new timed task that calls the specified function
+		  */
+		def async(f: => Future[Instant])(implicit exc: ExecutionContext) =
+			cancellableAsync { f.map { t => Fixed(Some(t)) } }
+		/**
+		  * @param f A function that resolves into the next time this process should be run
+		  * @return A new timed task that calls the specified function
+		  */
+		def apply(f: => Instant) = cancellable { Fixed(Some(f)) }
+		/**
+		  * @param f Function that should be run once
+		  * @tparam U Arbitrary function result type
+		  * @return A new timed task that runs only once
+		  */
+		def once[U](f: => U) = completing { f; None }
+	}
+	
+	private class _TimedTask(firstTime: => Instant)(f: => Future[Changing[Option[Instant]]])
 		extends TimedTask
 	{
 		override def firstRunTime = firstTime
@@ -212,12 +293,10 @@ trait TimedTask
 	
 	/**
 	  * Runs this task once
-	  * @return The next time when this task should be run. None if this task shouldn't be run anymore.
-	  *         Either:
-	  *             Left) Immediately known result, or
-	  *             Right) Future of asynchronous process completion, along with that result
+	  * @return Future that resolves into a pointer that determines the next time this task shall be run.
+	  *         The pointer will contain None in case this task should not be run anymore.
 	  */
-	def run(): Either[Option[Instant], Future[Option[Instant]]]
+	def run(): Future[Changing[Option[Instant]]]
 	
 	
 	// COMPUTED ---------------------------
@@ -229,32 +308,46 @@ trait TimedTask
 	  * @param logger Implicit logger that receives thrown errors
 	  * @return A new loop based on this task
 	  */
-	def toLoop(implicit exc: ExecutionContext, logger: Logger) =
-		LoopingProcess(Until(firstRunTime)) { hurryPointer =>
-			run() match {
-				// Case: Blocked => Returns next loop time
-				case Left(result) => result.map { Until(_) }
+	def toLoop(implicit exc: ExecutionContext, logger: Logger) = {
+		// This pointer contains the next wait target pointer
+		val waitPointerPointer = EventfulPointer[Changing[Option[Instant]]](Fixed(Some(firstRunTime)))
+		// This pointer converts that pointer value into an applicable wait target
+		val waitTargetPointer = waitPointerPointer.flatMap[WaitTarget] { _.map {
+			case Some(nextTime) => Until(nextTime)
+			case None => UntilNotified
+		} }
+		// Creates a process to facilitate the running of this task
+		val process = PostponingProcess(waitTargetPointer, shutdownReaction = Some(Cancel)) { hurryPointer =>
+			val nextTimeFuture = run()
+			nextTimeFuture.current match {
+				// Case: Blocked
+				case Some(nextTimePointer) => waitPointerPointer.value = nextTimePointer
 				// Case: Async
-				case Right(future) =>
-					// Case: Hurrying => Doesn't check the async result
-					if (hurryPointer.value)
-						None
-					// Case: Not hurrying (yet) => Waits for the async result
-					else {
-						// If has to hurry at any point, terminates the wait
-						val lock = new AnyRef
-						hurryPointer.onNextChange { _ => WaitUtils.notify(lock) }
-						future.waitWith(lock) match {
-							// Case: Success => Schedules next loop, if necessary
-							case Success(result) => result.map { Until(_) }
-							// Case: Failure => Terminates
-							case Failure(error) =>
-								logger(error)
-								None
-						}
+				case None =>
+					// If has to hurry at any point, terminates the wait
+					val lock = new AnyRef
+					hurryPointer.onNextChange { _ => WaitUtils.notify(lock) }
+					nextTimeFuture.waitWith(lock) match {
+						// Case: Success => Schedules next loop, if necessary
+						case Success(nextTimePointer) => waitPointerPointer.value = nextTimePointer
+						// Case: Failure => Terminates
+						case Failure(error) =>
+							logger(error)
+							waitPointerPointer.value = Fixed(None)
 					}
 			}
 		}
+		// If the latest wait target pointer gets fixed to None,
+		// cancels / stops this process
+		waitPointerPointer.flatMap { _.withState }
+			.addListenerAndSimulateEvent(ChangeResult.temporal(None)) { event =>
+				if (event.newValue.containsFinal(None))
+					Detach.and { process.stop() }
+				else
+					Continue
+			}
+		process
+	}
 	
 	
 	// OTHER    ---------------------------

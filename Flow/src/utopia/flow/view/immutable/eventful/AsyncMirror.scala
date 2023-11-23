@@ -199,9 +199,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	source.addListenerWhile(condition)(ChangeListener.continuous { event => requestCalculation(event.newValue) })
 	
 	// Once (if) the source stops changing, discards all listeners and informs the stop listeners
-	source.addChangingStoppedListener {
-		once { _.isNotProcessing } { _ => declareChangingStopped() }
-	}
+	source.onceChangingStops { once { _.isNotProcessing } { _ => declareChangingStopped() } }
 	
 	
 	// IMPLEMENTED  ---------------------
@@ -223,7 +221,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	// OTHER    -------------------------
 	
 	private def requestCalculation(newOrigin: Origin) = {
-		val shouldProcess = pointer.pop { current =>
+		val shouldProcess = pointer.mutate { current =>
 			// Case: A new calculation has already been queued
 			if (current.queuedOrigin.isDefined) {
 				// Case: Current calculation solves this new item => skips the previously queued item
@@ -249,7 +247,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	
 	private def resultsArrived(result: Try[Result]): Unit =
 	{
-		val queued = pointer.pop { current =>
+		val queued = pointer.mutate { current =>
 			// Determines the new value by merging the result with the previous value
 			current.queuedOrigin -> AsyncMirrorValue(merge(current.current, result), current.queuedOrigin)
 		}

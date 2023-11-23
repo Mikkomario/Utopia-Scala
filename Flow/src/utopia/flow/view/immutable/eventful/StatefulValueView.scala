@@ -1,9 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 import utopia.flow.event.model.{ChangeEvent, ChangeResult, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
 object StatefulValueView
 {
@@ -85,7 +85,7 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 			effects
 		}
 	
-	origin.addChangingStoppedListenerAndSimulateEvent {
+	origin.onceChangingStops {
 		// May update the final value
 		val rawValue = bridge.value
 		if (rawValue.isTemporal)

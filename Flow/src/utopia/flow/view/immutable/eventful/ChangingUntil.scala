@@ -55,7 +55,7 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	
 	// INITIAL CODE --------------------
 	
-	origin.addChangingStoppedListenerAndSimulateEvent { stop() }
+	origin.onceChangingStops { stop() }
 	
 	
 	// IMPLEMENTED  --------------------

@@ -67,7 +67,7 @@ class KeptOpenWriter(keepOpenDuration: FiniteDuration)(generate: => OutputStream
 	  */
 	def apply[U](f: PrintWriter => U) = {
 		lastAccessTime = Now
-		writerPointer.pop { existing =>
+		writerPointer.mutate { existing =>
 			// Uses a pre-created writer, if possible
 			val writer = existing match {
 				case Some(e) => Success(e)

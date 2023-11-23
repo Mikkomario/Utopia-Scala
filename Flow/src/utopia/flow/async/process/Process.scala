@@ -139,7 +139,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	// IMPLEMENTED  ------------------------------
 	
 	override def stop() = {
-		val shouldWait = _statePointer.pop { currentState =>
+		val shouldWait = _statePointer.mutate { currentState =>
 			if (currentState.isFinal)
 				false -> currentState
 			else
@@ -156,7 +156,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	override def run() =
 	{
 		// Updates the state and checks whether this process may actually be run
-		val shouldRun = _statePointer.pop { currentState =>
+		val shouldRun = _statePointer.mutate { currentState =>
 			// Case: Cancelled => May cancel the cancellation, but doesn't perform this iteration
 			if (currentState == Cancelled)
 				false -> (if (isRestartable) NotStarted else currentState)
@@ -220,7 +220,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  */
 	def runAsync(loopIfRunning: Boolean = false) = {
 		// Checks whether this process should run. Applies the looping, if necessary
-		val shouldRun = _statePointer.pop { state =>
+		val shouldRun = _statePointer.mutate { state =>
 			// Case: Final state => reruns if allowed
 			if (state.isFinal)
 				isRestartable -> state
@@ -272,7 +272,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  * @return Whether this process was successfully marked as broken.
 	  *         False if this process had already completed when this function was called.
 	  */
-	protected def markAsInterrupted() = _statePointer.pop { oldState =>
+	protected def markAsInterrupted() = _statePointer.mutate { oldState =>
 		if (oldState.isFinal) false -> oldState else true -> oldState.broken
 	}
 	

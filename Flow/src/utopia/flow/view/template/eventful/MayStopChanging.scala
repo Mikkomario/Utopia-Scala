@@ -57,7 +57,7 @@ trait MayStopChanging[+A] extends Changing[A]
 	  * @param action Action to perform once / if the source pointer stops
 	  */
 	protected def onceSourceStops[U](source: Changing[_])(action: => U) =
-		source.addChangingStoppedListenerAndSimulateEvent { action }
+		source.onceChangingStops { action }
 	/**
 	  * Prepares this pointer to perform an action once all of the specified source pointers have stopped.
 	  *
@@ -75,7 +75,7 @@ trait MayStopChanging[+A] extends Changing[A]
 				if (sources.forall { _.destiny.isPossibleToSeal }) {
 					var stopCount = 0
 					sources.foreach {
-						_.addChangingStoppedListenerAndSimulateEvent {
+						_.onceChangingStops {
 							stopCount += 1
 							// Case: All sources stopped changing
 							if (sources hasSize stopCount)

@@ -160,7 +160,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		}
 		
 		// Only enabled items are interactive
-		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
+		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
 	private object StatusChangeListener extends ChangeListener[Boolean]
@@ -205,8 +205,8 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			val circle = Circle(Point(minX + x * (maxX - minX), areaBounds.position.y + height / 2), r)
 			
 			// Determines the draw color
-			val baseColor = if (isEnabled) color.timesSaturation(x) else color.timesSaturation(x).timesAlpha(0.55)
-			val drawColor = if (isEnabled) knobColor else knobColor.timesAlpha(0.55)
+			val baseColor = if (enabled) color.timesSaturation(x) else color.timesSaturation(x).timesAlpha(0.55)
+			val drawColor = if (enabled) knobColor else knobColor.timesAlpha(0.55)
 			
 			// Performs the actual drawing
 			drawer.draw(areaBounds.toRoundedRectangle(1))(DrawSettings.onlyFill(baseColor))

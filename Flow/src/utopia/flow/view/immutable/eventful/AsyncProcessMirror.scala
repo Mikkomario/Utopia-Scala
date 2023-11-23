@@ -163,9 +163,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	
 	// Once (if) the source pointer stops changing, discards listeners and informs the stop listeners
 	// Waits for the async process completion first, however
-	source.addChangingStoppedListener {
-		once { _.isNotProcessing } { _ => declareChangingStopped() }
-	}
+	source.onceChangingStops { once { _.isNotProcessing } { _ => declareChangingStopped() } }
 	
 	
 	// IMPLEMENTED  ---------------------

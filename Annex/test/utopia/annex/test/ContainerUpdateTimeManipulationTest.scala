@@ -1,18 +1,21 @@
 package utopia.annex.test
 
+import utopia.access.http.Status.NoContent
 import utopia.access.http.{Headers, Status}
-import utopia.access.http.Status.OK
 import utopia.annex.controller.ContainerUpdateLoop
+import utopia.annex.model.response.ResponseBody.Empty
 import utopia.annex.model.response.{RequestResult, Response, ResponseBody}
+import utopia.flow.async.process.ProcessState.Stopped
 import utopia.flow.async.process.Wait
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
-import utopia.flow.parse.file.container.{FileContainer, SaveTiming, ValueConvertibleOptionFileContainer, ValueFileContainer}
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
+import utopia.flow.parse.file.container.{FileContainer, SaveTiming, ValueConvertibleOptionFileContainer, ValueFileContainer}
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.async.Volatile
 
 import java.nio.file.Path
 import java.time.Instant
@@ -20,11 +23,11 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 /**
-  * Tests last update time logic in ContainerUpdateLoop
+  * Tests manual container update triggering
   * @author Mikko Hilpinen
   * @since 21.11.2023, v1.6.1
   */
-object ContainerUpdateIntervalTest extends App
+object ContainerUpdateTimeManipulationTest extends App
 {
 	import utopia.flow.test.TestContext._
 	Status.setup()
@@ -33,19 +36,29 @@ object ContainerUpdateIntervalTest extends App
 	// ATTRIBUTES   ----------------
 	
 	implicit val jsonParser: JsonParser = JsonReader
-	
 	private val dataDir: Path = "Annex/data/test-data"
 	
-	private val timeIterator = Iterator.iterate(Instant.EPOCH) { _ + 10.seconds }
-	
-	private var lastTime = timeIterator.next()
+	private val counter = Volatile(0)
 	
 	
 	// TESTS    --------------------
 	
 	TestLoop.runAsync()
-	Wait(12.seconds)
+	Wait(1.seconds)
+	assert(counter.value == 1)
+	TestLoop.skipWait()
+	Wait(1.seconds)
+	assert(counter.value == 2)
+	TestLoop.skipWait()
+	Wait(1.seconds)
+	assert(counter.value == 3)
+	Wait(1.seconds)
+	assert(counter.value == 3)
 	TestLoop.stop()
+	Wait(1.seconds)
+	assert(counter.value == 3)
+	assert(TestLoop.state == Stopped)
+	
 	println("Success!")
 	
 	
@@ -56,28 +69,19 @@ object ContainerUpdateIntervalTest extends App
 	{
 		// ATTRIBUTES   ------------
 		
-		override val standardUpdateInterval: FiniteDuration = 1.seconds
+		override val standardUpdateInterval: FiniteDuration = 10.seconds
 		
 		override protected lazy val requestTimeContainer: FileContainer[Option[Instant]] =
 			new ValueConvertibleOptionFileContainer[Instant](dataDir/"test-container-update-time.json",
 				OnlyOnTrigger)
-			
-		
-		// INITIAL CODE -----------
-		
-		requestTimeContainer.current = Some(lastTime)
 		
 		
 		// IMPLEMENTED  -----------
 		
 		override protected def makeRequest(timeThreshold: Option[Instant]): Future[RequestResult] = {
-			println(s"since = $timeThreshold, expecting $lastTime")
-			assert(timeThreshold.contains(lastTime))
 			Future {
-				Wait(2.seconds)
-				val time = timeIterator.next()
-				lastTime = time
-				Response.Success(OK, ResponseBody(time), Headers.withDate(time))
+				counter.update { _ + 1 }
+				Response.Success(NoContent, Empty, Headers.empty)
 			}
 		}
 		

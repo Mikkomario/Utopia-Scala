@@ -183,7 +183,7 @@ object MasterScribe
 		override def accept(issue: ClientIssue) = pendingIssuesPointer.update { pending =>
 			// Checks whether the maximum logging velocity has been reached.
 			// Prevents additional logging, if so.
-			val (shouldLog, limitReachedEvent) = issueCounter.pop { count =>
+			val (shouldLog, limitReachedEvent) = issueCounter.mutate { count =>
 				// Case: Int.MaxValue log entries reached => Stops counting or resets counter
 				if (count == Int.MaxValue) {
 					if (maxLogVelocity.isDefined)

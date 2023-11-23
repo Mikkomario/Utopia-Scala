@@ -3,16 +3,22 @@ package utopia.flow.async.process
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ProcessState.Completed
 import utopia.flow.async.process.ShutdownReaction.Cancel
-import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.async.process.WaitTarget.{DailyTime, WeeklyTime}
-import utopia.flow.time.{Now, Today, WeekDay}
+import utopia.flow.async.process.WaitTarget.{DailyTime, UntilNotified, WeeklyTime}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponse
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Now, Today, WeekDay}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -22,107 +28,136 @@ import scala.util.{Failure, Success, Try}
   */
 class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel)
                 (implicit exc: ExecutionContext, logger: Logger)
-	extends Process(waitLock, Some(shutdownReaction))
+	extends Process(waitLock, Some(shutdownReaction)) with MaybeEmpty[TimedTasks]
 {
 	// ATTRIBUTES   ----------------------------
 	
 	// First item is the next task run time
 	// Second item is the actual operation, which may either may be asynchronous (Right)
-	private val queue = VolatileList[(Instant, () => Either[Option[Instant], Future[Option[Instant]]])]()
+	private val queue = VolatileList[(Changing[Option[Instant]], () => Future[Changing[Option[Instant]]])]()
+	private val nextWaitTarget = Volatile[WaitTarget](UntilNotified)
+	
+	private val scheduleTimeChangeListener = ChangeListener.onAnyChange {
+		val newWaitTarget = queue.mutate { queue =>
+			val sortedQueue = queue.sortBy { _._1.value }
+			// Checks what's the next wait time
+			sortedQueue.findMap { _._1.value } -> sortedQueue
+		}
+		if (nextWaitTarget.value.endTime != newWaitTarget)
+			WaitUtils.notify(waitLock)
+		// Changes in scheduled task times trigger restarts
+		if (state == Completed)
+			runAsync()
+		
+		ChangeResponse.continueIf(state.isNotBroken)
+	}
 	
 	
 	// IMPLEMENTED  ----------------------------
 	
+	override def self: TimedTasks = this
+	
 	override protected def isRestartable = true
+	
+	// This set of tasks is considered empty if none of the scheduled tasks specify a run time
+	override def isEmpty: Boolean = queue.value.forall { _._1.value.isEmpty }
 	
 	override protected def runOnce() = {
 		// Performs the next task in the ordered loops (unless empty)
-		while (!shouldHurry && queue.nonEmpty) {
+		while (!shouldHurry && nonEmpty) {
 			// Waits until its time to perform the next task
-			val expectedStartTime = queue.head._1
+			val expectedStartTime = queue.value.findMap { _._1.value }
+			expectedStartTime.foreach { nextWaitTarget.value = _ }
 			// If the wait is interrupted, this queue is also considered interrupted
-			if (!Wait(expectedStartTime, waitLock))
+			if (expectedStartTime.exists { !Wait(_, waitLock) })
 				markAsInterrupted()
 			
 			// The tasks may have been altered and a notify may have broken the wait
 			if (!shouldHurry) {
-				queue.pop().foreach { case (nextTaskTime, nextTask) =>
-					// Case: It's time to perform that task
-					if (Now >= nextTaskTime) {
-						// Performs or starts the task
-						val nextTime = Try { nextTask() }
-							// Catches errors during running / starting
-							.getOrMap { error =>
-								logger(error, "TimedTasks operation threw an exception")
-								Left(None)
-							}
-							// If this queue would become empty, won't perform the tasks asynchronously (blocks here)
-							// This is to avoid situations where this queue would accidentally become empty and
-							// terminate
-							.divergeMapRight { future =>
-								// Case: Performing last task asynchronously => Blocks until completed
-								if (queue.isEmpty)
-									future.waitFor() match {
-										case Success(nextTime) => Left(nextTime)
-										case Failure(error) =>
-											logger(error, "Timed task threw an exception")
-											Left(None)
-									}
-								// Case: There were other tasks => Continues asynchronous performance
-								else
-									Right(future)
-							}
-						// Pushes the item back into the queue when / if the next run time is known
-						nextTime match {
-							// Case: Time is immediately known (task blocked)
-							case Left(nextTime) => nextTime.foreach { nextTime => _addTask(nextTime, nextTask) }
-							// Case: Time is known later (async task)
-							case Right(nextTimeFuture) =>
-								nextTimeFuture.onComplete {
-									case Success(nextTime) =>
-										nextTime.foreach { nextTime => _addTask(nextTime, nextTask) }
-									case Failure(error) => logger(error, "Asynchronous TimedTask threw an exception")
-								}
+				val nextTaskData = queue.mutate { queue =>
+					// Finds the next task that wants to be run (i.e. next run time is defined)
+					val nextTaskData = queue.iterator.zipWithIndex
+						.findMap { case ((timePointer, task), index) =>
+							timePointer.value.map { time => (time, timePointer, task, index) }
 						}
+					nextTaskData match {
+						// Case: Found the task
+						case Some((nextTaskTime, timePointer, task, index)) =>
+							// Case: It is not yet time to perform the task => Keeps it in the queue
+							if (nextTaskTime > Now)
+								None -> queue
+							// Case: It is time to perform the task => Removes it from the queue
+							else
+								Some((timePointer, task)) -> queue.withoutIndex(index)
+						// Case: Didn't find a task that wanted to be run => Keeps the queue as is
+						case None => None -> queue
 					}
-					// Case: It wasn't time to perform the task yet
-					else
-						queue +:= (nextTaskTime -> nextTask)
+				}
+				nextTaskData.foreach { case (timePointer, nextTask) =>
+					timePointer.removeListener(scheduleTimeChangeListener)
+					// Performs or starts the task
+					val taskCompletion = Try { nextTask() }
+						// Catches errors during running / starting
+						.getOrMap { error =>
+							logger(error, "TimedTasks operation threw an exception")
+							Future.successful(Fixed(None))
+						}
+					// If this queue would become empty, won't perform the tasks asynchronously (blocks here)
+					// This is to avoid situations where this queue would accidentally become empty and
+					// terminate
+					if (isEmpty)
+						taskCompletion.waitFor()
+					// Pushes the item back into the queue when / if the next run time is known
+					taskCompletion.current match {
+						// Case: Time is immediately known (task blocked)
+						case Some(newTimePointer) => _addTask(newTimePointer, nextTask)
+						// Case: Time is known later (async task)
+						case None =>
+							taskCompletion.onComplete {
+								case Success(newTimePointer) => _addTask(newTimePointer, nextTask)
+								case Failure(error) => logger(error, "Task failed to complete")
+							}
+					}
 				}
 			}
 		}
 		// Purges the queue if hurried
-		if (shouldHurry)
-			queue.clear()
+		if (shouldHurry || state.isBroken)
+			queue.popAll().foreach { _._1.removeListener(scheduleTimeChangeListener) }
 	}
 	
 	
 	// OTHER    -----------------------------
 	
-	/**
-	  * Adds a new task. Restarts this process if it had completed.
-	  * @param time Time when this task should be performed
-	  * @param task The task that should be performed.
-	  *             Returns the next time this task should be performed or None if it shouldn't be repeated.
-	  */
-	def add(time: Instant)(task: => Option[Instant]) = {
-		_addTask(time, () => Left(task))
+	def addCancellableAsync(firstTimePointer: Changing[Option[Instant]])
+	                       (task: => Future[Changing[Option[Instant]]]) =
+	{
+		_addTask(firstTimePointer, () => task)
 		// Restarts if necessary (but not if broken)
-		if (state == Completed)
-			runAsync()
+		restartIfCompleted()
 	}
+	def addCancellable(firstTimePointer: Changing[Option[Instant]])
+	               (task: => Changing[Option[Instant]]) =
+		addCancellableAsync(firstTimePointer) { Future.successful(task) }
+	// Wraps the scheduled times into "Some", meaning that tasks won't ever be cancelled
+	def addChangingAsync(firstTimePointer: Changing[Instant])
+	                    (task: => Future[Changing[Instant]]) =
+		addCancellableAsync(firstTimePointer.lightMap { Some(_) }) { task.map { _.lightMap { Some(_) } } }
+	def addChanging(firstTimePointer: Changing[Instant])(task: => Changing[Instant]) =
+		addCancellable(firstTimePointer.lightMap { Some(_) }) { task.lightMap { Some(_) } }
+	def addCompletingAsync(firstTime: Instant)(task: => Future[Option[Instant]]) =
+		addCancellableAsync(Fixed(Some(firstTime))) { task.map { Fixed(_) } }
+	def addCompleting(firstTime: Instant)(task: => Option[Instant]) =
+		addCancellable(Fixed(Some(firstTime))) { Fixed(task) }
+	def add(time: Instant)(task: => Instant) = addCompleting(time) { Some(task) }
 	
 	/**
 	  * Adds a new timed task. Restarts this process if it had completed already.
 	  * Note: Doesn't start this process if this process has not yet started.
 	  * @param task A task to add to the performed tasks
 	  */
-	def +=(task: TimedTask): Unit = {
-		_addTask(task.firstRunTime, () => task.run())
-		// Restarts if necessary (but not if broken)
-		if (state == Completed)
-			runAsync()
-	}
+	def +=(task: TimedTask): Unit =
+		addCancellableAsync(Fixed(Some(task.firstRunTime))) { task.run() }
 	/**
 	  * Adds new timed tasks. Restarts this process if it had completed already.
 	  * Note: Doesn't start this process if this process has not yet started.
@@ -131,10 +166,9 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	def ++=(tasks: IterableOnce[TimedTask]): Unit = {
 		val iter = tasks.iterator
 		if (iter.hasNext) {
-			iter.foreach { t => _addTask(t.firstRunTime, () => t.run()) }
+			iter.foreach { t => _addTask(Fixed(Some(t.firstRunTime)), () => t.run()) }
 			// Restarts if necessary (but not if broken)
-			if (state == Completed)
-				runAsync()
+			restartIfCompleted()
 		}
 	}
 	
@@ -144,7 +178,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	  * @param task Task to run
 	  * @tparam U Arbitrary result type
 	  */
-	def addOnce[U](time: Instant)(task: => U) = add(time) {
+	def addOnce[U](time: Instant)(task: => U) = addCompleting(time) {
 		task
 		None
 	}
@@ -156,7 +190,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	  */
 	def addLoop[U](interval: FiniteDuration)(task: => U) = add(Now + interval) {
 		task
-		Some(Now + interval)
+		Now + interval
 	}
 	/**
 	  * Adds a new task. Restarts this process if it had completed.
@@ -169,7 +203,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 		DailyTime(time).endTime.foreach { firstTime =>
 			add(firstTime) {
 				task
-				Some(Today.tomorrow.atTime(time).toInstantInDefaultZone)
+				Today.tomorrow.atTime(time).toInstantInDefaultZone
 			}
 		}
 	}
@@ -185,20 +219,42 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 		WeeklyTime(weekday, time).endTime.foreach { firstTime =>
 			add(firstTime) {
 				task
-				Some(Today.next(weekday).atTime(time).toInstantInDefaultZone)
+				Today.next(weekday).atTime(time).toInstantInDefaultZone
 			}
 		}
 	}
 	
-	private def _addTask(taskTime: Instant, task: () => Either[Option[Instant], Future[Option[Instant]]]) = {
+	private def _addTask(taskTimePointer: Changing[Option[Instant]],
+	                     task: () => Future[Changing[Option[Instant]]]) =
+	{
 		// Adds the item to the correct position in the queue
-		val isFirst = queue.pop { q =>
-			val tasksBefore = q.takeWhile { _._1 <= taskTime }
-			val tasksAfter = q.drop(tasksBefore.size)
-			tasksBefore.isEmpty -> ((tasksBefore :+ (taskTime -> task)) ++ tasksAfter)
+		if (!taskTimePointer.existsFixed { _.isEmpty }) {
+			taskTimePointer.addListener(scheduleTimeChangeListener)
+			val knownTaskTime = taskTimePointer.value
+			val waitTimeChanged = queue.mutate { q =>
+				val filteredQueue = q.filterNot { _._1.existsFixed { _.isEmpty } }
+				knownTaskTime match {
+					// Case: Next task run-time is estimated => Places the task at the right place in the queue
+					case Some(knownTaskTime) =>
+						val tasksBefore = filteredQueue.takeWhile { _._1.value.forall { _ <= knownTaskTime } }
+						val tasksAfter = filteredQueue.drop(tasksBefore.size)
+						// Checks whether this affects the next task wait time
+						tasksBefore.forall { _._1.value.isEmpty } ->
+							((tasksBefore :+ (taskTimePointer -> task)) ++ tasksAfter)
+					// Case: Next task run-time is not given => Places the task at the beginning of the queue
+					// (but ignores it)
+					case None =>
+						false -> ((taskTimePointer -> task) +: filteredQueue)
+				}
+			}
+			// If the new item is the first item, reschedules the main loop
+			if (waitTimeChanged)
+				WaitUtils.notify(waitLock)
 		}
-		// If the new item is the first item, reschedules the main loop
-		if (isFirst)
-			WaitUtils.notify(waitLock)
+	}
+	
+	private def restartIfCompleted() = {
+		if (state == Completed)
+			runAsync()
 	}
 }

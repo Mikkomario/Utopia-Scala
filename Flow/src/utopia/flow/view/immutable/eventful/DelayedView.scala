@@ -59,7 +59,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	// Whenever source's value changes, delays change activation and updates future value
 	source.addListenerWhile(condition)(ChangeListener.continuous { event =>
 		val initialTarget = event.newValue -> (Now + delay)
-		val shouldStartWait = queuedValuePointer.pop(old => old.isEmpty -> Some(initialTarget))
+		val shouldStartWait = queuedValuePointer.mutate { old => old.isEmpty -> Some(initialTarget) }
 		
 		// If no waiting is currently active, starts one
 		if (shouldStartWait)
@@ -83,7 +83,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	})
 	
 	// Once the source stops changing, removes listeners and informs stop listeners (delayed)
-	source.addChangingStoppedListener {
+	source.onceChangingStops {
 		queuedValuePointer.onNextChangeWhere { _.newValue.isEmpty } { e =>
 			valuePointer.once { v => e.oldValue.forall { _._1 == v } } { _ =>
 				valuePointer.clearListeners()

@@ -129,7 +129,7 @@ class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component,
 	
 	override protected def addDisplaysFor(values: Vector[A], index: Int) = {
 		// Uses stored backup components if possible
-		val existingSlots = capacity.pop { current =>
+		val existingSlots = capacity.mutate { current =>
 			if (current.isEmpty)
 				current -> current
 			else

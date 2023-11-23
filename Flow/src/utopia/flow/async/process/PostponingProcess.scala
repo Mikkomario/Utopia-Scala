@@ -188,7 +188,7 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 						if (shouldHurry)
 							CertainBoolean(state.isNotBroken)
 						// Case: Wait target was switched during waiting => Starts over with the new wait target
-						else if (resetFlag.getAndReset())
+						else if (resetFlag.reset())
 							UncertainBoolean
 						// Case: Wait target was reached => Moves to execution
 						else
@@ -207,6 +207,8 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 		if (shouldRun) {
 			// Executes the wrapped function
 			afterDelay()
+			if (resetFlag.reset())
+				runAsync(loopIfRunning = true)
 		}
 	}
 }

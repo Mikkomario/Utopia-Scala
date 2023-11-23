@@ -44,15 +44,13 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
      * @param newValue the item item to be set
       * @return value after the update (i.e. 'newValue')
      */
-    def setOne(newValue: A) = pop { _ => newValue -> Some(newValue) }
+    def setOne(newValue: A) = mutate { _ => newValue -> Some(newValue) }
     
     /**
      * Clears any items from this option
       * @return Whether the state of this option changed
      */
-    def clear() = pop { old =>
-        old.isDefined -> None
-    }
+    def clear() = mutate { _.isDefined -> None }
     
     /**
      * Removes and returns the item in this option, if there is one
@@ -70,7 +68,7 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
      * Sets a new value this option, but only if there is no current value
       * @return Value after the update
      */
-    def setOneIfEmpty(newValue: => A) = pop {
+    def setOneIfEmpty(newValue: => A) = mutate {
         case Some(v) => v -> Some(v)
         case None =>
             val newVal = newValue
