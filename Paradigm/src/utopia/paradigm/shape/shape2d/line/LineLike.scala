@@ -101,5 +101,5 @@ trait LineLike[D, P <: NumericVectorLike[D, P, _], +V <: NumericVectorLike[D, V,
       * @param f A mapping function for both the start and end point of this line
       * @return A mapped copy of this line
       */
-    def map(f: P => P) = factory(ends.map(f))
+    def mapEnds(f: P => P) = factory(ends.map(f))
 }

@@ -21,24 +21,24 @@ object TwoThreadBufferTest extends App
 	println("Starting...")
 	val buffer = new TwoThreadBuffer[Int](3)
 	
-	assert(!buffer.output.immediately.hasNext)
+	assert(!buffer.input.immediately.hasNext)
 	assert(buffer.isCurrentlyEmpty)
 	
 	// Queues hasNext (output stuck)
 	println("Queues hasNext...")
-	val hasNext1 = Future { buffer.output.hasNext }
+	val hasNext1 = Future { buffer.input.hasNext }
 	Wait(1.0.seconds)
 	
 	assert(hasNext1.isEmpty)
-	assert(buffer.input.immediately.hasCapacity)
+	assert(buffer.output.immediately.hasCapacity)
 	assert(buffer.isNotCurrentlyFull)
 	assert(buffer.isCurrentlyEmpty)
 	
 	// Appends 3 items
 	println("Appends 3 items")
-	buffer.input.push(Vector(1, 2, 3))
+	buffer.output.push(Vector(1, 2, 3))
 	
-	assert(buffer.input.immediately.isFull)
+	assert(buffer.output.immediately.isFull)
 	assert(buffer.isCurrentlyFull)
 	assert(buffer.isNotCurrentlyEmpty)
 	
@@ -48,26 +48,26 @@ object TwoThreadBufferTest extends App
 	
 	// Reads the items one by one
 	println("Reads the 3 items")
-	assert(buffer.output.next() == 1)
+	assert(buffer.input.next() == 1)
 	
-	assert(buffer.input.immediately.hasCapacity)
+	assert(buffer.output.immediately.hasCapacity)
 	assert(buffer.isNotCurrentlyFull)
 	
-	assert(buffer.output.next() == 2)
-	assert(buffer.output.next() == 3)
+	assert(buffer.input.next() == 2)
+	assert(buffer.input.next() == 3)
 	
-	assert(!buffer.output.immediately.hasNext)
+	assert(!buffer.input.immediately.hasNext)
 	
 	// Queues next item read (output stuck)
 	println("Queues read 4")
-	val next4 = Future { buffer.output.next() }
+	val next4 = Future { buffer.input.next() }
 	Wait(1.0.seconds)
 	
 	assert(next4.isEmpty)
 	
 	// Adds one item to the buffer
 	println("Appends 4th item")
-	buffer.input.push(4)
+	buffer.output.push(4)
 	
 	Wait(1.0.seconds)
 	assert(next4.isCompleted)
@@ -75,95 +75,95 @@ object TwoThreadBufferTest extends App
 	
 	// Overfills the buffer by 2 (input stuck)
 	println("Attempts to overfill the buffer")
-	val push5to9 = Future { buffer.input.push(Vector(5, 6, 7, 8, 9)) }
+	val push5to9 = Future { buffer.output.push(Vector(5, 6, 7, 8, 9)) }
 	Wait(1.0.seconds)
 	
 	assert(push5to9.isEmpty)
 	assert(buffer.isCurrentlyFull)
-	assert(buffer.output.immediately.size == 3)
+	assert(buffer.input.immediately.size == 3)
 	
 	// Reads one element (input still stuck)
 	println("Reads one element")
-	assert(buffer.output.hasNext)
-	assert(buffer.output.next() == 5)
+	assert(buffer.input.hasNext)
+	assert(buffer.input.next() == 5)
 	
 	Wait(1.0.seconds)
-	assert(buffer.output.immediately.size == 3)
+	assert(buffer.input.immediately.size == 3)
 	assert(push5to9.isEmpty)
-	assert(buffer.input.immediately.isFull)
+	assert(buffer.output.immediately.isFull)
 	
 	// Reads one element (push completes)
 	println("Reads one more element")
-	assert(buffer.output.next() == 6)
+	assert(buffer.input.next() == 6)
 	
 	Wait(1.0.seconds)
 	assert(push5to9.isCompleted)
-	assert(buffer.output.immediately.size == 3)
+	assert(buffer.input.immediately.size == 3)
 	assert(buffer.isCurrentlyFull)
 	
 	// Attempts to push immediately and fails
 	println("Attempts push")
-	assert(buffer.input.immediately.push(10).isDefined)
+	assert(buffer.output.immediately.push(10).isDefined)
 	
 	// Immediately reads 2 elements
 	println("Reads 2 elements")
-	assert(buffer.output.immediately.collectNext(2) == Vector(7, 8))
+	assert(buffer.input.immediately.collectNext(2) == Vector(7, 8))
 	
-	assert(buffer.input.immediately.availableCapacity == 2)
-	assert(buffer.output.immediately.size == 1)
+	assert(buffer.output.immediately.availableCapacity == 2)
+	assert(buffer.input.immediately.size == 1)
 	
 	// Declares that there will be more input
 	println("Declares 1+ more input")
-	buffer.input.remainingSize = UncertainNumber.positive
+	buffer.output.remainingSize = UncertainNumber.positive
 	
-	assert((buffer.output.sizeEstimate > 1).isCertainlyTrue, buffer.output.sizeEstimate)
+	assert((buffer.input.sizeEstimate > 1).isCertainlyTrue, buffer.input.sizeEstimate)
 	
 	// Reads the next input
 	println("Reads next input")
-	assert(buffer.output.next() == 9)
+	assert(buffer.input.next() == 9)
 	
-	assert(buffer.output.sizeEstimate.isCertainlyPositive)
-	assert(buffer.output.immediately.isEmpty)
+	assert(buffer.input.sizeEstimate.isCertainlyPositive)
+	assert(buffer.input.immediately.isEmpty)
 	
-	println(s"Tests hasNext (size estimate = ${buffer.output.sizeEstimate}, buffer size = ${buffer.output.immediately.size})")
-	assert(buffer.output.hasNext)
+	println(s"Tests hasNext (size estimate = ${buffer.input.sizeEstimate}, buffer size = ${buffer.input.immediately.size})")
+	assert(buffer.input.hasNext)
 	
-	assert(buffer.output.sizeEstimate.isCertainlyPositive)
-	assert(buffer.output.immediately.isEmpty)
+	assert(buffer.input.sizeEstimate.isCertainlyPositive)
+	assert(buffer.input.immediately.isEmpty)
 	
 	// Reads the next input (output stuck)
 	println("Reads more input")
-	val read10 = Future { buffer.output.next() }
+	val read10 = Future { buffer.input.next() }
 	Wait(1.0.seconds)
 	
 	assert(read10.isEmpty)
 	
 	// Immediately pushes a value
 	println("Pushes")
-	assert(buffer.input.immediately.push(10).isEmpty)
+	assert(buffer.output.immediately.push(10).isEmpty)
 	
 	Wait(1.0.seconds)
 	assert(read10.isCompleted)
 	assert(read10.waitFor().get == 10)
-	assert(buffer.output.sizeEstimate.isPositive.isUncertain)
+	assert(buffer.input.sizeEstimate.isPositive.isUncertain)
 	
 	// Declares that there will be more values
 	println("Declares more input for now")
-	buffer.input.declareNotClosing()
+	buffer.output.declareNotClosing()
 	
 	assert(buffer.isStillFilling.isCertainlyTrue)
-	assert(buffer.output.hasNext)
-	assert(!buffer.output.immediately.hasNext)
+	assert(buffer.input.hasNext)
+	assert(!buffer.input.immediately.hasNext)
 	
 	// Pushes and reads that value + ends declaration of not closing
 	println("Processes 1 value, declares maybe input")
-	buffer.input.declarePossiblyClosing()
-	buffer.input.push(11)
-	assert(buffer.output.next() == 11)
+	buffer.output.declarePossiblyClosing()
+	buffer.output.push(11)
+	assert(buffer.input.next() == 11)
 	
 	// Queues hasNext (output stuck)
 	println("Queues hasNext")
-	val hasNext2 = Future { buffer.output.hasNext }
+	val hasNext2 = Future { buffer.input.hasNext }
 	Wait(1.0.seconds)
 	val closeFuture = buffer.closedFuture
 	
@@ -172,7 +172,7 @@ object TwoThreadBufferTest extends App
 	
 	// Closes input
 	println("Closes input")
-	buffer.input.close()
+	buffer.output.close()
 	
 	Wait(1.0.seconds)
 	assert(hasNext2.isCompleted)

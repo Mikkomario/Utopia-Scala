@@ -9,6 +9,7 @@
 - The default positive direction in **Rotation**`.arcLengthOver(...)` is now **Clockwise** instead of 
   the direction of the **Rotation** instance.
   - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`
+- Renamed **LineLike**`.map(...)` to `.mapEnds(...)` because of a name clash / compiler problems in **Line**
 - Removed classes and functions that were deprecated before v1.2
 ### Deprecations
 - Deprecated most of the existing **Rotation** (/**DirectionalRotation**) functions in favor of the new syntax

@@ -3,7 +3,7 @@ package utopia.flow.async.context
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.UncertainNumber.{UncertainInt, zeroOrMore}
 import utopia.flow.view.mutable.async.Volatile
@@ -12,6 +12,195 @@ import utopia.flow.view.template.eventful.FlagLike
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
+
+object TwoThreadBuffer
+{
+	sealed trait Output[A] extends AutoCloseable
+	{
+		// ABSTRACT ----------------------
+		
+		/**
+		 * @return Interface that provides non-blocking methods for pushing data into this buffer
+		 */
+		def immediately: ImmediateOutput[A]
+		
+		/**
+		 * @return Size of the input that is yet to be added to the buffer. May be uncertain.
+		 */
+		def remainingSize: UncertainInt
+		def remainingSize_=(newSize: UncertainInt): Unit
+		
+		/**
+		 * @return Whether all data has been read from this input.
+		 */
+		def closed: UncertainBoolean
+		def closed_=(isClosed: UncertainBoolean): Unit
+		
+		/**
+		 * Declares that this input will not close until otherwise declared.
+		 * This allows the output to return true on 'hasNext' without yet having read values.
+		 * @param allowReopen Whether this declaration should be applied even after this input has closed.
+		 *                    Default = false = ignore this declaration if this input has closed.
+		 */
+		def declareNotClosing(allowReopen: Boolean = false): Unit
+		/**
+		 * Declares that this input might close without receiving any more values (which is the initial input state).
+		 * This declaration may be cancelled by calling [[declareNotClosing()]].
+		 * @param allowReopen Whether this declaration (of uncertainty) should override a possible closed state,
+		 *                    i.e. to possibly declare this input as reopened.
+		 *                    Default = false = input will remain closed, if closed before
+		 */
+		def declarePossiblyClosing(allowReopen: Boolean = false): Unit
+		
+		/**
+		 * Specifies the number of items that will be read before this input closes.
+		 * May involve uncertainty.
+		 * @param remainingInputSize The number of items that will be read before this input closes.
+		 *                           May be uncertain.
+		 */
+		def declareRemainingInputSize(remainingInputSize: UncertainInt): Unit
+		
+		/**
+		 * Appends 0-n items to this buffer.
+		 * Blocks until all of the specified items have been successfully placed in this buffer.
+		 * If this buffer becomes full, some data has to be read before new items may be fit in.
+		 * @param items Items to place within this buffer
+		 */
+		def push(items: Iterable[A]): Unit
+		
+		
+		// OTHER    -----------------------
+		
+		/**
+		 * Appends an item into this buffer.
+		 * If this buffer is full, blocks until at least one element has been read first.
+		 * @param item An item to add to this buffer
+		 */
+		def push(item: A): Unit = push(Iterable.single(item))
+		
+		/**
+		 * Alias for [[push]]
+		 */
+		def ++=(items: Iterable[A]) = push(items)
+		/**
+		 * Alias for [[push]]
+		 */
+		def +=(item: A) = push(item)
+	}
+	
+	sealed trait ImmediateOutput[A]
+	{
+		// ABSTRACT ---------------------
+		
+		/**
+		 * @return Whether this buffer is currently full.
+		 *         Full buffers won't accept new items without blocking.
+		 */
+		def isFull: Boolean
+		/**
+		 * @return Size of the current available capacity in this buffer
+		 */
+		def availableCapacity: Int
+		
+		/**
+		 * Adds 0-n items to this buffer without blocking.
+		 * Some of the items may not get appended in this method call.
+		 * @param items Items to append to this buffer, if possible
+		 * @return Items that couldn't be appended at this time
+		 */
+		def push(items: Iterable[A]): Iterable[A]
+		/**
+		 * Appends an item to this buffer without blocking, if possible.
+		 * If this buffer is full, the item won't get appended.
+		 * @param item Item to append to this buffer
+		 * @return Some if the item was rejected. None if it was accepted.
+		 */
+		def push(item: A): Option[A]
+		
+		
+		// COMPUTED ---------------------
+		
+		/**
+		 * @return Whether this buffer has free capacity available.
+		 */
+		def hasCapacity = !isFull
+		
+		
+		// OTHER    ---------------------
+		
+		/**
+		 * Alias for [[push]]
+		 */
+		def ++=(items: Iterable[A]) = push(items)
+		/**
+		 * Alias for [[push]]
+		 */
+		def +=(item: A) = push(item)
+	}
+	
+	sealed trait Input[+A] extends Iterator[A]
+	{
+		// ABSTRACT ------------------------
+		
+		/**
+		 * @return An interface (iterator) that only returns immediately available (i.e. already buffered) items
+		 */
+		def immediately: ImmediateInput[A]
+		
+		/**
+		 * @return Number of elements that are still available to be read (although not necessarily immediately).
+		 *         May be uncertain.
+		 */
+		def sizeEstimate: UncertainInt
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		 * Collects the next min-max items from this input, if possible.
+		 * If at least 'min' items are immediately available, returns the immediately available items, up
+		 * to 'max' items.
+		 * If less than 'min' items are available, blocks until they become available,
+		 * or until no data may be read anymore.
+		 * @param min The smallest number of items that may be returned from this function,
+		 *            unless the end of input is reached.
+		 * @param max The largest number of items that may be returned from this function.
+		 * @return Next min-max items from this input.
+		 */
+		def collectNextBetween(min: Int, max: Int): Vector[A] = {
+			val immediate = immediately.collectNext(max)
+			if (immediate.hasSize < min)
+				immediate ++ this.collectNext(min - immediate.size)
+			else
+				immediate
+		}
+		
+		/**
+		 * Returns the next available item, or multiple items if such are immediately available.
+		 * Blocks if no items are currently available.
+		 * @param max The maximum number of items to return
+		 * @throws IllegalStateException If no more items are available
+		 * @return Either Left: The next available item, or Right: Many immediately available items
+		 */
+		@throws[IllegalStateException]("If no more items are available")
+		def nextOneOrMany(max: Int) = NotEmpty(immediately.collectNext(max)) match {
+			case Some(immediateValues) =>
+				if (immediateValues hasSize 1) Left(immediateValues.head) else Right(immediateValues)
+			case None => Left(next())
+		}
+	}
+	
+	sealed trait ImmediateInput[+A] extends Iterator[A]
+	{
+		/**
+		 * Retrieves the next 'n' immediately available items from this buffer.
+		 * If less than 'n' items are available, returns those.
+		 * @param n Maximum number of immediately available items to pull
+		 * @return The next immediately available items (up to 'n' items). May be empty.
+		 */
+		def collectNext(n: Int): Vector[A]
+	}
+}
 
 /**
   * A buffer that provides two interfaces:
@@ -97,11 +286,11 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 	/**
 	  * @return Interface for pushing items to this buffer
 	  */
-	def input = Input
+	def output = BufferOutput
 	/**
 	  * @return Interface for reading values from this buffer
 	  */
-	def output = Output
+	def input = BufferInput
 	
 	/**
 	  * @return Current number of items in this buffer
@@ -163,7 +352,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 	
 	// NESTED   ----------------------------
 	
-	object Input extends AutoCloseable
+	object BufferOutput extends TwoThreadBuffer.Output[A]
 	{
 		// INITIAL CODE -------------------
 		
@@ -174,53 +363,25 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 		}
 		
 		
-		// COMPUTED -----------------------
-		
-		/**
-		  * @return Interface that provides non-blocking methods for pushing data into this buffer
-		  */
-		def immediately = Immediate
-		
-		/**
-		  * @return Size of the input that is yet to be added to the buffer. May be uncertain.
-		  */
-		def remainingSize = _remainingInputSize.value
-		def remainingSize_=(newSize: UncertainInt) = _remainingInputSize.value = newSize
-		
-		/**
-		  * @return Whether all data has been read from this input.
-		  */
-		def closed = _declaredFilledPointer.value
-		def closed_=(isClosed: UncertainBoolean) = _declaredFilledPointer.value = isClosed
-		
-		
 		// IMPLEMENTED  -------------------
+		
+		override def immediately = Immediate
+		
+		override def remainingSize = _remainingInputSize.value
+		override def remainingSize_=(newSize: UncertainInt) = _remainingInputSize.value = newSize
+		
+		override def closed = _declaredFilledPointer.value
+		override def closed_=(isClosed: UncertainBoolean) = _declaredFilledPointer.value = isClosed
 		
 		override def close() = _declaredFilledPointer.value = true
 		
-		
-		// OTHER    -----------------------
-		
-		/**
-		  * Declares that this input will not close until otherwise declared.
-		  * This allows the output to return true on 'hasNext' without yet having read values.
-		  * @param allowReopen Whether this declaration should be applied even after this input has closed.
-		  *                    Default = false = ignore this declaration if this input has closed.
-		  */
-		def declareNotClosing(allowReopen: Boolean = false) = {
+		override def declareNotClosing(allowReopen: Boolean = false) = {
 			if (allowReopen)
 				_declaredFilledPointer.value = false
 			else
 				_declaredFilledPointer.update { filled => if (filled.isCertainlyTrue) filled else false }
 		}
-		/**
-		  * Declares that this input might close without receiving any more values (which is the initial input state).
-		  * This declaration may be cancelled by calling [[declareNotClosing()]].
-		  * @param allowReopen Whether this declaration (of uncertainty) should override a possible closed state,
-		  *                    i.e. to possibly declare this input as reopened.
-		  *                    Default = false = input will remain closed, if closed before
-		  */
-		def declarePossiblyClosing(allowReopen: Boolean = false) = {
+		override def declarePossiblyClosing(allowReopen: Boolean = false) = {
 			if (allowReopen)
 				_declaredFilledPointer.value = UncertainBoolean
 			else
@@ -228,23 +389,11 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 					.update { filled => if (filled.isCertainlyTrue) filled else UncertainBoolean }
 		}
 		
-		/**
-		  * Specifies the number of items that will be read before this input closes.
-		  * May involve uncertainty.
-		  * @param remainingInputSize The number of items that will be read before this input closes.
-		  *                           May be uncertain.
-		  */
-		def declareRemainingInputSize(remainingInputSize: UncertainInt) =
+		override def declareRemainingInputSize(remainingInputSize: UncertainInt) =
 			_remainingInputSize.value = remainingInputSize
 		
-		/**
-		  * Appends 0-n items to this buffer.
-		  * Blocks until all of the specified items have been successfully placed in this buffer.
-		  * If this buffer becomes full, some data has to be read before new items may be fit in.
-		  * @param items Items to place within this buffer
-		  */
 		@tailrec
-		final def push(items: Iterable[A]): Unit = {
+		override final def push(items: Iterable[A]): Unit = {
 			if (items.nonEmpty) {
 				val immediatelyAvailableCapacity = immediately.availableCapacity
 				val wasFull = immediatelyAvailableCapacity <= 0
@@ -265,49 +414,17 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 				}
 			}
 		}
-		/**
-		  * Appends an item into this buffer.
-		  * If this buffer is full, blocks until at least one element has been read first.
-		  * @param item An item to add to this buffer
-		  */
-		def push(item: A): Unit = push(Iterable.single(item))
-		
-		/**
-		  * Alias for [[push]]
-		  */
-		def ++=(items: Iterable[A]) = push(items)
-		/**
-		  * Alias for [[push]]
-		  */
-		def +=(item: A) = push(item)
 		
 		
 		// NESTED   ------------------------------
 		
-		object Immediate
+		object Immediate extends TwoThreadBuffer.ImmediateOutput[A]
 		{
-			/**
-			  * @return Whether this buffer is currently full.
-			  *         Full buffers won't accept new items without blocking.
-			  */
-			def isFull = buffer.hasSize >= capacity
-			/**
-			  * @return Whether this buffer has free capacity available.
-			  */
-			def hasCapacity = !isFull
+			override def isFull = buffer.hasSize >= capacity
 			
-			/**
-			  * @return Size of the current available capacity in this buffer
-			  */
-			def availableCapacity = capacity - buffer.size
+			override def availableCapacity = capacity - buffer.size
 			
-			/**
-			  * Adds 0-n items to this buffer without blocking.
-			  * Some of the items may not get appended in this method call.
-			  * @param items Items to append to this buffer, if possible
-			  * @return Items that couldn't be appended at this time
-			  */
-			def push(items: Iterable[A]): Iterable[A] = {
+			override def push(items: Iterable[A]): Iterable[A] = {
 				if (items.nonEmpty) {
 					// Appends as many items as possible without overfilling the buffer
 					val immediateCapacity = immediately.availableCapacity
@@ -320,13 +437,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 				else
 					items
 			}
-			/**
-			  * Appends an item to this buffer without blocking, if possible.
-			  * If this buffer is full, the item won't get appended.
-			  * @param item Item to append to this buffer
-			  * @return Some if the item was rejected. None if it was accepted.
-			  */
-			def push(item: A) = {
+			override def push(item: A) = {
 				// Case: Buffer is full => Rejects the item
 				if (isFull)
 					Some(item)
@@ -337,35 +448,16 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 					None
 				}
 			}
-			
-			/**
-			  * Alias for [[push]]
-			  */
-			def ++=(items: Iterable[A]) = push(items)
-			/**
-			  * Alias for [[push]]
-			  */
-			def +=(item: A) = push(item)
 		}
 	}
 	
-	object Output extends Iterator[A]
+	object BufferInput extends TwoThreadBuffer.Input[A]
 	{
-		// COMPUTED -----------------------------
-		
-		/**
-		  * @return An interface (iterator) that only returns immediately available (i.e. already buffered) items
-		  */
-		def immediately = Immediate
-		
-		/**
-		  * @return Number of elements that are still available to be read (although not necessarily immediately).
-		  *         May be uncertain.
-		  */
-		def sizeEstimate: UncertainInt = input.remainingSize + buffer.size
-		
-		
 		// IMPLEMENTED  -------------------------
+		
+		override def immediately = Immediate
+		
+		override def sizeEstimate: UncertainInt = output.remainingSize + buffer.size
 		
 		override def knownSize = sizeEstimate.exact.getOrElse(-1)
 		override def size = sizeEstimate.exact.getOrElse(super.size)
@@ -417,7 +509,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 		
 		// NESTED   ---------------------
 		
-		object Immediate extends Iterator[A]
+		object Immediate extends TwoThreadBuffer.ImmediateInput[A]
 		{
 			// IMPLEMENTED  -------------
 			
@@ -431,21 +523,15 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 			
 			override def nextOption() = takeFromBuffer[Option[A]](None) { b => Some(b.head) -> b.tail }
 			
-			
-			// OTHER    ---------------
-			
-			/**
-			  * Retrieves the next 'n' immediately available items from this buffer.
-			  * If less than 'n' items are available, returns those.
-			  * @param n Maximum number of immediately available items to pull
-			  * @return The next immediately available items (up to 'n' items). May be empty.
-			  */
-			def collectNext(n: Int) = {
+			override def collectNext(n: Int) = {
 				if (n <= 0)
 					Vector.empty
 				else
 					takeFromBuffer[Vector[A]](Vector.empty) { _.splitAt(n) }
 			}
+			
+			
+			// OTHER    ---------------
 			
 			private def takeFromBuffer[R](ifEmpty: => R)(ifNonEmpty: Vector[A] => (R, Vector[A])) =
 				buffer.mutate { b =>

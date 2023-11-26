@@ -116,8 +116,8 @@ case class Line(override val ends: Pair[Point])
     override def ~==(other: HasInclusiveEnds[HasDoubleDimensions]) =
         (start ~== other.start) && (end ~== other.end)
     
-    override def transformedWith(transformation: Matrix3D) = map { transformation(_).toPoint }
-    override def transformedWith(transformation: Matrix2D) = map { transformation(_).toPoint }
+    override def transformedWith(transformation: Matrix3D) = mapEnds { transformation(_).toPoint }
+    override def transformedWith(transformation: Matrix2D) = mapEnds { transformation(_).toPoint }
     
     override def projectedOver(axis: DoubleVector) = Line(start.projectedOver(axis), end.projectedOver(axis))
     

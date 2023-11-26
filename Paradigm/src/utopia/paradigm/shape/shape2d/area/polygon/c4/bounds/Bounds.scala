@@ -291,7 +291,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @param line A line to convert into the relative coordinate system
       * @return A relative representation of the specified line
       */
-    def relativize(line: Line): Line = line.map(relativize)
+    def relativize(line: Line): Line = line.mapEnds(relativize)
     
     /**
       * Converts a point in the relative coordinate system to a point in the absolute coordinate system.
@@ -324,7 +324,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @param relativeLine A point that is relative to this set of bounds
       * @return An absolute representation of the specified line
       */
-    def relativeToAbsolute(relativeLine: Line): Line = relativeLine.map(relativeToAbsolute)
+    def relativeToAbsolute(relativeLine: Line): Line = relativeLine.mapEnds(relativeToAbsolute)
     
     /**
      * Finds the intersection points between the edges of this rectangle and the provided circle
