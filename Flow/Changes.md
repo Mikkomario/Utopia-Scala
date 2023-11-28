@@ -26,6 +26,8 @@
 - **EqualsBy** now compares the equals-properties using `==` instead of using hashCodes
 - **Volatile**`.mutate(...)` now properly locks the wrapped item (whoops!)
 - **PostponingProcess** now properly reacts to wait time change events that occur during the function run
+- `PairingIterator.apply(IterableOnce)` now pre-polls the first item in order to avoid wrong sequencing between 
+  `hasNext` and `next()`
 - The following Changing implementations now properly take into account 
   the listening condition for the purposes of stopping changing: **LightMergeMirror**, **MergeMirror**
 ### New Features

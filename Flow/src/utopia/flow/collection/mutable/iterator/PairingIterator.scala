@@ -17,8 +17,10 @@ object PairingIterator
 	  */
 	def apply[A](coll: IterableOnce[A]) = {
 		val iter = coll.iterator
-		if (iter.hasNext)
-			new PairingIterator[A](iter.next(), iter)
+		if (iter.hasNext) {
+			val start = iter.next()
+			new PairingIterator[A](start, iter)
+		}
 		else
 			Iterator.empty
 	}
