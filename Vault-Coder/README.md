@@ -226,6 +226,16 @@ Each property object should contain following properties:
   - `"Span[X]"` - Results in **Span** type that represents a range between two inclusive values
     - `X` determines the span endpoint type
     - If `X` is `Int`, `Double` or `Long`, uses **NumericSpan**
+  - `"Distance[X]"` - Results in a **Distance** type from the **Paradigm** module, where `X` represents the unit used 
+    when representing the distance as a value.
+    - Valid values of `X` are:
+      - `Meter` | `m` => Meters
+      - `Centimeter` | `cm` => Centimeters
+      - `Millimeter` | `millis` | `mm` => Millimeters
+      - `Kilometer` | `km` => Kilometers
+      - `Feet` | `ft` => Feets
+      - `Inch` | `in` => Inches
+      - `NauticalMiles` | `NM` => Nautical miles
   - `"LatLong"` - Results in **LatLong** type from the **Terra** module. Uses two separate columns.
   - `"Enum[X]"` - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
     (must be specified in the `"enumerations"` -property). Uses the enumeration's name as the default property name.

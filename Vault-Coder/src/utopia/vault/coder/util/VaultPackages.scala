@@ -72,6 +72,7 @@ object VaultPackages
 		val base = utopia/"paradigm"
 		
 		lazy val generic = base/"generic"
+		lazy val measurement = base/"measurement"
 		lazy val vector2D = base/"shape.shape2d.vector"
 	}
 	object Terra

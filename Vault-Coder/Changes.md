@@ -6,7 +6,7 @@ Parent module updates
 - Fixed `.toModel` generation involving optional enumeration values
 - Fixed generated Scala type of **DateRange**
 ### New features
-- Added two new data types: **Vector2D** (from **Paradigm**) and **LatLong** (from **Terra**)
+- Added two new data types: **Vector2D** and **Distance** (from **Paradigm**) and **LatLong** (from **Terra**)
 - You may now specify an extending upper length limit within the type declaration, e.g. by writing `"String(3-9)"`
 ### Other changes
 - Setting `"crop": true` to a property without a length limit now sets the column length rule to `"crop"`

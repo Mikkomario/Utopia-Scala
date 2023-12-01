@@ -80,6 +80,8 @@ object StandardPropertyType
 						case "h" | "hour" | "hours" => TimeDuration.hours
 						case _ => TimeDuration.millis
 					})
+				else if (lowerTypeName.startsWith("distance"))
+					Some(LengthDistance(typeName.afterFirst("[").untilLast("]")))
 				else
 					BasicPropertyType.interpret(lowerTypeName, length, propertyName)
 						.orElse {
@@ -255,16 +257,14 @@ object StandardPropertyType
 			override val sqlType = SqlPropertyType("DOUBLE")
 			override lazy val valueDataTypeName = "DoubleType"
 			
-			override def supportsDefaultJsonValues = true
-			
 			override def scalaType = ScalaType.double
 			
 			override def nonEmptyDefaultValue = CodePiece.empty
-			
 			override def emptyValue = CodePiece.empty
 			
-			override def fromValuePropName = "double"
+			override def supportsDefaultJsonValues = true
 			
+			override def fromValuePropName = "double"
 			override def defaultPropertyName = "amount"
 		}
 		
@@ -1251,6 +1251,53 @@ object StandardPropertyType
 		override def toJsonValueCode(instanceCode: String) = s"$instanceCode.toValue"
 		override def fromJsonValueCode(valueCode: String) =
 			CodePiece(s"$valueCode.getVector2D", Set(paradigm.paradigmValue))
+	}
+	
+	object LengthDistance
+	{
+		def meters: LengthDistance = apply("Meter", "m")
+		def kilometers = apply("KiloMeter", "km")
+		
+		def apply(rawUnit: String): LengthDistance = rawUnit.toLowerCase match {
+			case "m" | "meter" => apply("Meter", "m")
+			case "mm" | "millimeter" | "millis" | "milli" => apply("MilliMeter", "mm")
+			case "cm" | "centimeter" => apply("CentiMeter", "cm")
+			case "km" | "kilo" | "kilometer" => apply("KiloMeter", "km")
+			case "inches" | "inch" | "in" => apply("Inch", "in")
+			case "ft" | "feet" => apply("Feet", "ft")
+			case "mile" | "mi" | "miles" => apply("Mile", "mi")
+			case "nm" | "nautical" | "nauticalmile" | "nauticalmiles" => apply("NauticalMile", "nm")
+			case _ =>
+				println(s"WARNING: Specified unit \"$rawUnit\" doesn't match any registered distance unit. Defaults to meters")
+				meters
+		}
+	}
+	case class LengthDistance(unitName: String, abbreviation: String) extends DelegatingPropertyType
+	{
+		// ATTRIBUTES   --------------------------
+		
+		override lazy val sqlConversions = super.sqlConversions.map { _.modifyTarget(columnNameSuffix = abbreviation) }
+		
+		
+		// IMPLEMENTED  --------------------------
+		
+		override protected def delegate: PropertyType = DoubleNumber
+		override def scalaType: ScalaType = paradigm.distance
+		
+		override def emptyValue: CodePiece = CodePiece.empty
+		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
+		
+		override def defaultPropertyName: Name = "distance"
+		
+		override def supportsDefaultJsonValues: Boolean = true
+		override protected def yieldsTryFromDelegate: Boolean = false
+		
+		override protected def toDelegateCode(instanceCode: String): CodePiece =
+			CodePiece(s"$instanceCode.toUnit(DistanceUnit.$unitName)", Set(paradigm.distanceUnit))
+		override protected def fromDelegateCode(delegateCode: String): CodePiece =
+			CodePiece(s"Distance($delegateCode, DistanceUnit.$unitName)", Set(paradigm.distance, paradigm.distanceUnit))
+		
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String = ""
 	}
 	
 	case object LatitudeLongitudePair extends DelegatingPropertyType

@@ -113,6 +113,8 @@ object VaultReferences
 		lazy val paradigmValue = Reference.extensions(generic, "ParadigmValue")
 		
 		lazy val dataType = Reference(generic, "ParadigmDataType")
+		lazy val distance = Reference(measurement, "Distance")
+		lazy val distanceUnit = Reference(measurement, "DistanceUnit")
 		lazy val vector2D = Reference(VaultPackages.Paradigm.vector2D, "Vector2D")
 	}
 	
