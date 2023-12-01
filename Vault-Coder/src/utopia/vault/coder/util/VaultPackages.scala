@@ -15,6 +15,8 @@ object VaultPackages
 	def bunnyMunch = BunnyMunch
 	def metropolis = Metropolis
 	def citadel = Citadel
+	def paradigm = Paradigm
+	def terra = Terra
 	
 	
 	// NESTED   -------------------------
@@ -64,5 +66,18 @@ object VaultPackages
 		lazy val access = database / "access"
 		lazy val descriptionsAccess = access / "many.description"
 		lazy val descriptionAccess = access / "single.description"
+	}
+	object Paradigm
+	{
+		val base = utopia/"paradigm"
+		
+		lazy val generic = base/"generic"
+		lazy val vector2D = base/"shape.shape2d.vector"
+	}
+	object Terra
+	{
+		val base = utopia/"terra"
+		
+		lazy val angularModels = base/"model.angular"
 	}
 }

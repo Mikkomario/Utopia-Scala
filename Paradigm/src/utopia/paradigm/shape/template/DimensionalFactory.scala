@@ -111,6 +111,11 @@ trait DimensionalFactory[-D, +R]
 		case X => apply(parallel, perpendicular)
 		case Y => apply(perpendicular, parallel)
 	}
+	/**
+	  * @param coordinate A coordinate to appear on both the X and Y axes
+	  * @return A new two dimensional item with the same (specified) X and Y coordinate
+	  */
+	def twice(coordinate: D): R = apply(Pair.twice(coordinate))
 	
 	/**
 	  * @param length Target dimensions count

@@ -55,6 +55,8 @@ object StandardPropertyType
 			case "model" | "values" => Some(GenericModel(appliedLength))
 			case "days" => Some(DayCount)
 			case "daterange" | "dates" => Some(DateRange)
+			case "vector2d" | "doublevector" => Some(DoubleVector2D)
+			case "latlong" | "latitudelongitude" | "geolocation" | "gps" => Some(LatitudeLongitudePair)
 			case _ =>
 				if (lowerTypeName.startsWith("text") || lowerTypeName.startsWith("string") || lowerTypeName.startsWith("varchar"))
 					Some(Text(appliedLength))
@@ -448,7 +450,6 @@ object StandardPropertyType
 		override protected def wrapped = CreationTime
 		
 		override def optional = DateTime.optional
-		
 		override def concrete = this
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
@@ -467,7 +468,6 @@ object StandardPropertyType
 		protected def wrapped = DateTime.OptionWrapped
 		
 		override def optional = this
-		
 		override def concrete = Expiration
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
@@ -485,7 +485,6 @@ object StandardPropertyType
 		protected def wrapped = DateTime
 		
 		override def optional = Deprecation
-		
 		override def concrete = this
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
@@ -743,7 +742,7 @@ object StandardPropertyType
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
 	
-	object TimeDuration
+	case object TimeDuration
 	{
 		private val fromValueReferences = Set(Reference.timeUnit, Reference.finiteDuration)
 		private val toValueReferences = Set(valueConversions, Reference.timeUnit)
@@ -1101,8 +1100,6 @@ object StandardPropertyType
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override lazy val scalaType: ScalaType = pairType(innerType.scalaType)
-		
 		override lazy val sqlConversions: Vector[SqlTypeConversion] =
 			propertyNames.flatMap { propName => innerType.sqlConversions.map { ElementConversion(propName, _) } }
 				.toVector
@@ -1214,6 +1211,8 @@ object StandardPropertyType
 	}
 	case class Paired(innerType: PropertyType) extends PairLikeType(innerType, pair, Pair("first", "second"), "twice")
 	{
+		override lazy val scalaType: ScalaType = pair(innerType.scalaType)
+		
 		override protected def toPairCode(instanceCode: String): CodePiece = instanceCode
 		override protected def fromPairCode(pairCode: String): CodePiece = pairCode
 	}
@@ -1222,16 +1221,56 @@ object StandardPropertyType
 			Pair("start", "end"), "singleValue")
 	{
 		private val reference = if (isNumeric) numericSpan else span
+		override lazy val scalaType: ScalaType = reference(innerType.scalaType)
 		
 		override protected def toPairCode(instanceCode: String): CodePiece = s"$instanceCode.toPair"
 		override protected def fromPairCode(pairCode: String): CodePiece = {
 			CodePiece(s"${reference.target}($pairCode)", Set(reference))
 		}
 	}
-	object DateRange extends PairLikeType(Date, dateRange, Pair("start", "end"), "single")
+	case object DateRange extends PairLikeType(Date, dateRange, Pair("start", "end"), "single")
 	{
+		override def scalaType: ScalaType = dateRange
+		
 		override protected def toPairCode(instanceCode: String): CodePiece = s"$instanceCode.toPair"
 		override protected def fromPairCode(pairCode: String): CodePiece =
 			CodePiece(s"${dateRange.target}.exclusive($pairCode)", Set(dateRange))
+	}
+	
+	case object DoubleVector2D extends PairLikeType(DoubleNumber, paradigm.vector2D, Pair("x", "y"),
+		"twice")
+	{
+		override def scalaType: ScalaType = paradigm.vector2D
+		
+		override def valueDataType = paradigm.dataType/"Vector2DType"
+		override def defaultPropertyName = "vector"
+		
+		override protected def toPairCode(instanceCode: String): CodePiece = s"$instanceCode.xyPair"
+		override protected def fromPairCode(pairCode: String): CodePiece = s"Vector2D($pairCode)"
+		
+		override def toJsonValueCode(instanceCode: String) = s"$instanceCode.toValue"
+		override def fromJsonValueCode(valueCode: String) =
+			CodePiece(s"$valueCode.getVector2D", Set(paradigm.paradigmValue))
+	}
+	
+	case object LatitudeLongitudePair extends DelegatingPropertyType
+	{
+		override protected val delegate: PropertyType = Paired(DoubleNumber)
+		
+		override def scalaType: ScalaType = terra.latLong
+		
+		override def emptyValue: CodePiece = CodePiece.none
+		override def nonEmptyDefaultValue: CodePiece = CodePiece.none
+		
+		override def defaultPropertyName: Name = "latLong"
+		
+		override def supportsDefaultJsonValues: Boolean = true
+		override protected def yieldsTryFromDelegate: Boolean = false
+		
+		override protected def toDelegateCode(instanceCode: String): CodePiece = s"$instanceCode.latLongDegrees"
+		override protected def fromDelegateCode(delegateCode: String): CodePiece =
+			CodePiece(s"LatLong.degrees($delegateCode)", Set(terra.latLong))
+		
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String = ""
 	}
 }

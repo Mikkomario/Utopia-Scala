@@ -166,6 +166,17 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @return A copy of this code piece with mapped text
 	  */
 	def mapText(f: String => String) = copy(f(text))
+	/**
+	  * Applies a mapping function to the text portion of this code piece.
+	  * The function may add new references to this code.
+	  * @param f A function that accepts the text of this code and yields a text that replaces that text +
+	  *          additional references that will be included in the resulting code.
+	  * @return A new code piece with the mapped text and including the new references
+	  */
+	def flatMapText(f: String => CodePiece) = {
+		val code = f(text)
+		copy(text = code.text, references = references ++ code.references)
+	}
 	
 	/**
 	  * @param other Another code piece

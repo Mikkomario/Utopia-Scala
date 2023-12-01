@@ -20,6 +20,21 @@ object SqlTypeConversion
 		(midConversion: String => CodePiece): SqlTypeConversion =
 		new _SqlTypeConversion(origin, intermediate, target)(midConversion)
 	
+	/**
+	  * Creates a new type conversion that utilizes/wraps another type conversion
+	  * @param lower The type conversion that handles the mid-conversion & sql type representation
+	  * @param fromType New origin scala type
+	  * @param convertToLower A function that accepts a reference to the 'fromType' scala type value and
+	  *                       returns an instance accepted by the 'lower' sql conversion.
+	  *                       E.g. If the upper type is convertible to a Double,
+	  *                       this function would perform that conversion.
+	  * @return A new SQL type conversion that delegates most functionality to another conversion instance,
+	  *         providing a wrapping interface.
+	  */
+	def delegatingTo(lower: SqlTypeConversion, fromType: ScalaType)
+	                (convertToLower: String => CodePiece): SqlTypeConversion =
+		new DelegatingTypeConversion(fromType, lower, convertToLower)
+	
 	
 	// NESTED   ---------------------
 	
@@ -29,6 +44,18 @@ object SqlTypeConversion
 		extends SqlTypeConversion
 	{
 		override def midConversion(originCode: String) = mid(originCode)
+	}
+	private class DelegatingTypeConversion(override val origin: ScalaType, delegate: SqlTypeConversion,
+	                                       conversionCode: String => CodePiece)
+		extends SqlTypeConversion
+	{
+		override def intermediate: ValueConvertibleType = delegate.intermediate
+		override def target: SqlPropertyType = delegate.target
+		
+		override def midConversion(originCode: String): CodePiece = {
+			val converted = conversionCode(originCode)
+			delegate.midConversion(converted.text).referringTo(converted.references)
+		}
 	}
 }
 
@@ -84,7 +111,8 @@ trait SqlTypeConversion
 	  * @return A modified version of this conversion
 	  */
 	def modifyTarget(defaultValue: String = target.defaultValue, columnNameSuffix: String = target.columnNameSuffix,
-	                 indexByDefault: Boolean = target.indexByDefault) = SqlTypeConversion(origin, intermediate,
-		target.copy(defaultValue = defaultValue, columnNameSuffix = columnNameSuffix, indexByDefault = indexByDefault))(
-		midConversion)
+	                 indexByDefault: Boolean = target.indexByDefault) =
+		SqlTypeConversion(origin, intermediate,
+			target.copy(defaultValue = defaultValue, columnNameSuffix = columnNameSuffix,
+				indexByDefault = indexByDefault))(midConversion)
 }

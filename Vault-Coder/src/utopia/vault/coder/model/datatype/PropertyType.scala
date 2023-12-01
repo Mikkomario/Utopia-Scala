@@ -329,3 +329,162 @@ trait SingleColumnPropertyTypeWrapper extends PropertyTypeWrapper with SingleCol
 	override def fromValueCode(valueCode: String, isFromJson: Boolean) =
 		wrapped.fromValueCode(valueCode, isFromJson)
 }
+
+/**
+  * Common trait for concrete property types that, in their SQL conversions, refer to another property type.
+  * E.g. Classes that can be represented using simple double numbers may extend this trait and delegate SQL conversions
+  * to DoubleNumber.
+  */
+trait DelegatingPropertyType extends PropertyType
+{
+	// ABSTRACT ---------------------------
+	
+	/**
+	  * @return The data type that handles the "mid-conversion" and final SQL target conversion
+	  */
+	protected def delegate: PropertyType
+	
+	/**
+	  * @return Whether [[fromDelegateCode]] yields a Try
+	  */
+	protected def yieldsTryFromDelegate: Boolean
+	
+	/**
+	  * @param instanceCode Code that refers to an instance of [[scalaType]]
+	  * @return Code that converts the specified Scala value into an instance of [[delegate]].[[scalaType]]
+	  */
+	protected def toDelegateCode(instanceCode: String): CodePiece
+	/**
+	  * @param delegateCode Code that refers to a [[delegate]].[[scalaType]] instance
+	  * @return Code that converts the specified delegate instance into [[scalaType]] (or a Try)
+	  */
+	protected def fromDelegateCode(delegateCode: String): CodePiece
+	
+	
+	// IMPLEMENTED  -----------------------
+	
+	override def optional: PropertyType = OptionWrapper
+	override def concrete: PropertyType = this
+	
+	override def valueDataType = delegate.valueDataType
+	override def sqlConversions = delegate.sqlConversions
+		.map { lowerConversion => SqlTypeConversion.delegatingTo(lowerConversion, scalaType)(toDelegateCode) }
+	
+	override def yieldsTryFromValue: Boolean = delegate.yieldsTryFromValue || yieldsTryFromDelegate
+	override def yieldsTryFromJsonValue: Boolean = delegate.yieldsTryFromJsonValue || yieldsTryFromDelegate
+	
+	override def toValueCode(instanceCode: String): CodePiece =
+		fromDelegateCode(instanceCode).flatMapText(delegate.toValueCode)
+	override def toJsonValueCode(instanceCode: String): CodePiece =
+		fromDelegateCode(instanceCode).flatMapText(delegate.toJsonValueCode)
+	
+	override def fromValueCode(valueCodes: Vector[String]): CodePiece =
+		safeFromDelegateCode(delegate.fromValueCode(valueCodes), isTry = delegate.yieldsTryFromValue)
+	override def fromValuesCode(valuesCode: String): CodePiece =
+		delegate.fromValuesCode(valuesCode).flatMapText { delegates =>
+			if (yieldsTryFromDelegate)
+				fromDelegateCode("v").mapText { tryFromDelegate =>
+					s"$delegates.flatMap { v => $tryFromDelegate.toOption }"
+				}
+			else
+				fromDelegateCode("v").mapText { fromDelegate =>
+					s"$delegates.map { v => $fromDelegate }"
+				}
+		}
+	override def fromJsonValueCode(valueCode: String): CodePiece =
+		safeFromDelegateCode(delegate.fromJsonValueCode(valueCode), isTry = delegate.yieldsTryFromJsonValue)
+	
+	
+	// OTHER    ---------------------------
+	
+	private def safeFromDelegateCode(delegateCode: CodePiece, isTry: Boolean) = {
+		// Case: Conversion to delegate may fail => Handles the result using .map from Try
+		if (isTry) {
+			delegateCode.flatMapText { delegate =>
+				// Depending on whether conversion from delegate may fail as well, uses either map or flatMap
+				val mapFunctionName = if (yieldsTryFromDelegate) "flatMap" else "map"
+				fromDelegateCode("v").mapText { fromDelegateSuccess =>
+					s"$delegate.$mapFunctionName { v => $fromDelegateSuccess }"
+				}
+			}
+		}
+		// Case: Conversion to delegate always succeeds => Simply converts the value further
+		else
+			delegateCode.flatMapText(fromDelegateCode)
+	}
+	
+	
+	// NESTED   ----------------------------
+	
+	object OptionWrapper extends PropertyType
+	{
+		// ATTRIBUTES   --------------------
+		
+		private lazy val optionDelegate = delegate.optional
+		override lazy val scalaType: ScalaType = ScalaType.option(DelegatingPropertyType.this.scalaType)
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def valueDataType: Reference = DelegatingPropertyType.this.valueDataType
+		
+		override def sqlConversions: Vector[SqlTypeConversion] =
+			optionDelegate.sqlConversions
+				.map { lowerConversion => SqlTypeConversion.delegatingTo(lowerConversion, scalaType) { delegateOption =>
+					fromDelegateCode("v")
+						.mapText { fromDelegate => s"$delegateOption.map { v => $fromDelegate }" }
+				} }
+		
+		override def emptyValue: CodePiece = CodePiece.none
+		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
+		
+		override def defaultPropertyName: Name = DelegatingPropertyType.this.defaultPropertyName
+		
+		override def optional: PropertyType = this
+		override def concrete: PropertyType = DelegatingPropertyType.this
+		
+		override def yieldsTryFromValue: Boolean = false
+		override def yieldsTryFromJsonValue: Boolean = false
+		override def supportsDefaultJsonValues: Boolean = false
+		
+		override def toValueCode(instanceCode: String): CodePiece =
+			_toValueCode(instanceCode)(DelegatingPropertyType.this.toValueCode)
+		override def toJsonValueCode(instanceCode: String): CodePiece =
+			_toValueCode(instanceCode)(DelegatingPropertyType.this.toJsonValueCode)
+		
+		override def fromValueCode(valueCodes: Vector[String]): CodePiece =
+			_fromValueCode(DelegatingPropertyType.this.fromValueCode(valueCodes),
+				isTry = DelegatingPropertyType.this.yieldsTryFromValue)
+		override def fromValuesCode(valuesCode: String): CodePiece =
+			delegate.fromValuesCode(valuesCode).flatMapText { delegates =>
+				fromDelegateCode("v").mapText { fromDelegate =>
+					if (yieldsTryFromDelegate)
+						s"$delegates.map { v => $fromDelegate.toOption }"
+					else
+						s"$delegates.map { v => Some($fromDelegate) }"
+				}
+			}
+		override def fromJsonValueCode(valueCode: String): CodePiece =
+			_fromValueCode(DelegatingPropertyType.this.fromJsonValueCode(valueCode),
+				isTry = DelegatingPropertyType.this.yieldsTryFromJsonValue)
+		
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String =
+			DelegatingPropertyType.this.writeDefaultDescription(className, propName)
+		
+		
+		// OTHER    ------------------------
+		
+		private def _toValueCode(instanceCode: String)(wrappedToValue: String => CodePiece) =
+			wrappedToValue("v").mapText { instanceToValue =>
+				s"$instanceCode match { case Some(v) => $instanceToValue; case None => Value.empty }"
+			}.referringTo(Reference.flow.value)
+		private def _fromValueCode(wrappedCode: CodePiece, isTry: Boolean) = {
+			// Case: Converting Try to Option
+			if (isTry)
+				wrappedCode.mapText { tryInstance => s"$tryInstance.toOption" }
+			// Case: Converting an instance to Option
+			else
+				wrappedCode.mapText { instance => s"Some($instance)" }
+		}
+	}
+}

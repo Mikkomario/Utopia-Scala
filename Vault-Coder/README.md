@@ -220,10 +220,13 @@ Each property object should contain following properties:
   - `"Option[X]"` - Results in **Option** / nullable type where the underlying type is determined by what `X` is
   - `"Vector[X]"` - Results in **Vector** type where the underlying type is determined by what `X` is
     - Vectors are store in the database as json strings
+  - `"Vector2D"` - Results in a **Vector2D** class from the **Paradigm** module, not to be confused with **Vector**
+    - These are stored in the database as two Double values
   - `"Pair[X]"` - Results in **Pair** type (i.e. two values of same type) where the underlying type is determined by what `X` is
   - `"Span[X]"` - Results in **Span** type that represents a range between two inclusive values
     - `X` determines the span endpoint type
     - If `X` is `Int`, `Double` or `Long`, uses **NumericSpan**
+  - `"LatLong"` - Results in **LatLong** type from the **Terra** module. Uses two separate columns.
   - `"Enum[X]"` - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
     (must be specified in the `"enumerations"` -property). Uses the enumeration's name as the default property name.
     - Can be wrapped in option

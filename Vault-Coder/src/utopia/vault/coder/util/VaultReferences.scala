@@ -15,6 +15,8 @@ object VaultReferences
 	def bunnyMunch = BunnyMunch
 	def metropolis = Metropolis
 	def citadel = Citadel
+	def paradigm = Paradigm
+	def terra = Terra
 	
 	
 	// NESTED   ---------------------------
@@ -102,5 +104,22 @@ object VaultReferences
 		lazy val singleIdDescribedAccess = Reference(descriptionAccess, "SingleIdDescribedAccess")
 		lazy val manyDescribedAccess = Reference(descriptionsAccess, "ManyDescribedAccess")
 		lazy val manyDescribedAccessByIds = Reference(descriptionsAccess, "ManyDescribedAccessByIds")
+	}
+	
+	object Paradigm
+	{
+		import VaultPackages.Paradigm._
+		
+		lazy val paradigmValue = Reference.extensions(generic, "ParadigmValue")
+		
+		lazy val dataType = Reference(generic, "ParadigmDataType")
+		lazy val vector2D = Reference(VaultPackages.Paradigm.vector2D, "Vector2D")
+	}
+	
+	object Terra
+	{
+		import VaultPackages.Terra._
+		
+		lazy val latLong = Reference(angularModels, "LatLong")
 	}
 }
