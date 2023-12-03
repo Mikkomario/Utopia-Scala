@@ -21,7 +21,8 @@
 ### Deprecations
 - Renamed `Regex.parenthesis` to `.parentheses`
 ### Bugfixes
-- Fixed a bug in **Path**`.parts` and `.partsIterator` (used to throw an **IllegalArgumentException**) 
+- **JsonSettingsAccess** settings file search algorithm was bugged, now fixed
+- Fixed a bug in **Path**`.parts` and `.partsIterator` (used to throw an **IllegalArgumentException**)
 - **StringFrom** now correctly preserves line-breaks
 - **EqualsBy** now compares the equals-properties using `==` instead of using hashCodes
 - **Volatile**`.mutate(...)` now properly locks the wrapped item (whoops!)

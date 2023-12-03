@@ -59,7 +59,7 @@ class JsonSettingsAccess(rootDirectory: Path = "", fileNameRegex: Regex = defaul
 				fileType.equalsIgnoreCase("json") && fileNameRegex(fileName)
 			}
 			// Case: No suitable file found => Fails
-			if (targetFilesIterator.hasNext)
+			if (!targetFilesIterator.hasNext)
 				Failure(new FileNotFoundException(
 					s"${rootDirectory.absolute} doesn't contain a suitable settings file"))
 			// Case: Suitable files available =>
