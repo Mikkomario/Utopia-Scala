@@ -29,6 +29,10 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	  * @return Property name to use for this type by default (when no name is specified elsewhere)
 	  */
 	def defaultPropertyName: Name
+	/**
+	  * @return Names used for multi-column parts of this type when no other names have been specified, if applicable.
+	  */
+	def defaultPartNames: Seq[Name]
 	
 	/**
 	  * @return Whether the conversion from a Value may fail, meaning that fromValueCode
@@ -156,6 +160,8 @@ trait SingleColumnPropertyType extends PropertyType
 	// IMPLEMENTED  --------------------
 	
 	override def sqlConversions = Vector(sqlConversion)
+	
+	override def defaultPartNames: Vector[Name] = Vector()
 	
 	override def fromValueCode(valueCodes: Vector[String]): CodePiece = valueCodes.headOption match {
 		case Some(valueCode) => fromValueCode(valueCode)
@@ -374,9 +380,9 @@ trait DelegatingPropertyType extends PropertyType
 	override def yieldsTryFromJsonValue: Boolean = delegate.yieldsTryFromJsonValue || yieldsTryFromDelegate
 	
 	override def toValueCode(instanceCode: String): CodePiece =
-		fromDelegateCode(instanceCode).flatMapText(delegate.toValueCode)
+		toDelegateCode(instanceCode).flatMapText(delegate.toValueCode)
 	override def toJsonValueCode(instanceCode: String): CodePiece =
-		fromDelegateCode(instanceCode).flatMapText(delegate.toJsonValueCode)
+		toDelegateCode(instanceCode).flatMapText(delegate.toJsonValueCode)
 	
 	override def fromValueCode(valueCodes: Vector[String]): CodePiece =
 		safeFromDelegateCode(delegate.fromValueCode(valueCodes), isTry = delegate.yieldsTryFromValue)
@@ -439,6 +445,7 @@ trait DelegatingPropertyType extends PropertyType
 		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
 		
 		override def defaultPropertyName: Name = DelegatingPropertyType.this.defaultPropertyName
+		override def defaultPartNames: Seq[Name] = DelegatingPropertyType.this.defaultPartNames
 		
 		override def optional: PropertyType = this
 		override def concrete: PropertyType = DelegatingPropertyType.this

@@ -51,17 +51,22 @@ case class Property(name: Name, dataType: PropertyType, customDefaultValue: Code
 			Vector(DbProperty(name, conversions.head,
 				dbPropertyOverrides.headOption.getOrElse(DbPropertyOverrides.empty)))
 		// Case: Multi-column property => generates multiple dbProperties with distinct names
-		else
+		else {
+			lazy val defaultNames = dataType.defaultPartNames
 			conversions.indices.map { i =>
 				// Makes sure custom names are defined
+				// If not, uses default provided by the datatype
+				// If not even those are available, modifies the common property name by adding a suffix
+				lazy val defaultName = defaultNames.lift(i).getOrElse { name + (i + 1).toString }
 				val overrides = dbPropertyOverrides.getOption(i) match {
 					// Case: Custom overrides exist => makes sure they include a custom name
-					case Some(o) => if (o.name.isDefined) o else o.copy(name = Some(name + (i + 1).toString))
+					case Some(o) => if (o.name.isDefined) o else o.copy(name = Some(defaultName))
 					// Case: No custom override exists => creates one that overrides the default property name
-					case None => DbPropertyOverrides(Some(name + (i + 1).toString))
+					case None => DbPropertyOverrides(Some(defaultName))
 				}
 				DbProperty(name, conversions(i), overrides)
 			}.toVector
+		}
 	}
 	
 	

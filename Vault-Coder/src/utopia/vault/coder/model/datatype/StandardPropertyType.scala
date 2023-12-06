@@ -852,6 +852,7 @@ object StandardPropertyType
 			if (referencedType.isConcrete) this else copy(referencedType = referencedType.concrete)
 		
 		override def defaultPropertyName: Name = referencedTableName + "id"
+		override def defaultPartNames: Vector[Name] = Vector()
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"${ referencedColumnName.doc.capitalize } of the ${ referencedTableName.doc } linked with this ${ className.doc }"
@@ -893,6 +894,7 @@ object StandardPropertyType
 		override def emptyValue = CodePiece.empty
 		
 		override def defaultPropertyName = enumeration.name
+		override def defaultPartNames: Vector[Name] = Vector()
 		
 		override def yieldsTryFromValue = enumeration.hasNoDefault
 		override def yieldsTryFromJsonValue: Boolean = yieldsTryFromValue
@@ -930,6 +932,7 @@ object StandardPropertyType
 			override def emptyValue = CodePiece.none
 			
 			override def defaultPropertyName = EnumValue.this.defaultPropertyName
+			override def defaultPartNames: Vector[Name] = EnumValue.this.defaultPartNames
 			
 			override def optional = this
 			override def concrete = EnumValue.this
@@ -1126,6 +1129,7 @@ object StandardPropertyType
 			val inner = innerType.defaultPropertyName
 			Name(inner.plural, inner.plural, inner.style)
 		}
+		override def defaultPartNames = propertyNames.map { Name(_) }
 		
 		// TODO: This type doesn't support option-wrapping at this time - Add when needed
 		override def optional: PropertyType = this
@@ -1209,7 +1213,8 @@ object StandardPropertyType
 				innerConversion.midConversion(s"$originCode.$propertyName").referringTo(pairType)
 		}
 	}
-	case class Paired(innerType: PropertyType) extends PairLikeType(innerType, pair, Pair("first", "second"), "twice")
+	case class Paired(innerType: PropertyType) extends PairLikeType(innerType, pair,
+		Pair("first", "second"), "twice")
 	{
 		override lazy val scalaType: ScalaType = pair(innerType.scalaType)
 		
@@ -1223,7 +1228,7 @@ object StandardPropertyType
 		private val reference = if (isNumeric) numericSpan else span
 		override lazy val scalaType: ScalaType = reference(innerType.scalaType)
 		
-		override protected def toPairCode(instanceCode: String): CodePiece = s"$instanceCode.toPair"
+		override protected def toPairCode(instanceCode: String): CodePiece = s"$instanceCode.ends"
 		override protected def fromPairCode(pairCode: String): CodePiece = {
 			CodePiece(s"${reference.target}($pairCode)", Set(reference))
 		}
@@ -1288,6 +1293,7 @@ object StandardPropertyType
 		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
 		
 		override def defaultPropertyName: Name = "distance"
+		override def defaultPartNames: Vector[Name] = Vector()
 		
 		override def supportsDefaultJsonValues: Boolean = true
 		override protected def yieldsTryFromDelegate: Boolean = false
@@ -1306,10 +1312,11 @@ object StandardPropertyType
 		
 		override def scalaType: ScalaType = terra.latLong
 		
-		override def emptyValue: CodePiece = CodePiece.none
-		override def nonEmptyDefaultValue: CodePiece = CodePiece.none
+		override def emptyValue: CodePiece = CodePiece.empty
+		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
 		
 		override def defaultPropertyName: Name = "latLong"
+		override def defaultPartNames: Vector[Name] = Vector("latitude", "longitude")
 		
 		override def supportsDefaultJsonValues: Boolean = true
 		override protected def yieldsTryFromDelegate: Boolean = false

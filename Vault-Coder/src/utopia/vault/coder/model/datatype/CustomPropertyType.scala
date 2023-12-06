@@ -16,6 +16,7 @@ import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.coder.model.scala.template.ValueConvertibleType
 import Reference.Flow._
+import utopia.coder.model.enumeration.NameContext.ClassPropName
 
 import scala.util.{Failure, Success}
 
@@ -65,6 +66,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 							model("from_json_value"), model("option_from_json_value"),
 							model("empty", "empty_value"), default,
 							model("prop_name", "property_name", "default_prop_name", "default_name"),
+							parts.flatMap { _.defaultName },
 							model("description", "doc", "desc"),
 							fromValueYieldsTry,
 							model("from_json_value_can_fail", "json_yields_try", "json_try")
@@ -111,6 +113,8 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 	
 	object CustomPartConversion extends FromModelFactory[CustomPartConversion]
 	{
+		implicit val naming: NamingRules = NamingRules.default
+		
 		// NB: Type refers to the mid-state. i.e. what the type is in the dbModel construction parameter
 		private val schema = ModelDeclaration("type" -> StringType, "sql" -> StringType)
 		
@@ -124,7 +128,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 				apply(ScalaType(model("type")), sqlTypeFrom(model), model("extract"), model("extract_from_option"),
 					toValueInput.notEmpty
 						.getOrElse { CodePiece("$v", Set(valueConversions)) },
-					emptyValue)
+					emptyValue, ClassPropName.from(model))
 				}
 			}
 	}
@@ -132,7 +136,8 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 	case class CustomPartConversion(midType: ScalaType, sqlType: SqlPropertyType, extractPart: CodePiece,
 	                                extractPartFromOption: CodePiece,
 	                                partToValue: CodePiece = CodePiece("$v", Set(valueConversions)),
-	                                emptyMidValue: CodePiece = CodePiece.none)
+	                                emptyMidValue: CodePiece = CodePiece.none,
+	                                defaultName: Option[Name] = None)
 }
 
 /**
@@ -180,6 +185,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
                               fromJsonValue: CodePiece = CodePiece.empty, optionFromJsonValue: CodePiece = CodePiece.empty,
                               emptyValue: CodePiece = CodePiece.empty,
                               nonEmptyDefaultValue: CodePiece = CodePiece.empty, defaultPropName: Option[Name] = None,
+                              defaultPartNames: Seq[Name] = Vector(),
                               autoDescription: String = "", yieldsTryFromValue: Boolean = false,
                               yieldsTryFromJsonValue: Boolean = false)
 	extends PropertyType
@@ -199,6 +205,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 	
 	override def defaultPropertyName =
 		defaultPropName.getOrElse { Name.interpret(scalaType.toString, CamelCase.capitalized) }
+	
 	override def supportsDefaultJsonValues = true
 	
 	override def toValueCode(instanceCode: String) = finalizeCode(toValue, instanceCode)
@@ -276,6 +283,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		override def nonEmptyDefaultValue = CodePiece.empty
 		
 		override def defaultPropertyName = CustomPropertyType.this.defaultPropertyName
+		override def defaultPartNames: Seq[Name] = CustomPropertyType.this.defaultPartNames
 		
 		override def optional = this
 		override def concrete = CustomPropertyType.this
