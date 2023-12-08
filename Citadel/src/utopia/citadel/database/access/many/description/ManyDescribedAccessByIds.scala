@@ -35,5 +35,5 @@ trait ManyDescribedAccessByIds[A, +D] extends ManyDescribedAccess[A, D]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def globalCondition = Some(condition)
+	override def accessCondition = Some(condition)
 }

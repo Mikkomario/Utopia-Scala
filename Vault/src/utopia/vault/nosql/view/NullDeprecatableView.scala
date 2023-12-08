@@ -31,7 +31,7 @@ trait NullDeprecatableView[+Sub] extends TimeDeprecatableView[Sub]
 	  * @param c Implicit DB Connection
 	  * @return Whether any item was targeted
 	  */
-	def deprecate()(implicit c: Connection) = globalCondition match {
+	def deprecate()(implicit c: Connection) = accessCondition match {
 		case Some(cnd) => model.nowDeprecated.updateWhere(cnd) > 0
 		case None => model.nowDeprecated.update()
 	}

@@ -25,7 +25,7 @@ trait RowFactoryView[+A] extends FactoryView[A]
 	  * @param connection DB Connection (implicit)
 	  * @tparam U Arbitrary result type
 	  */
-	def foreach[U](f: A => U)(implicit connection: Connection) = factory.foreachWhere(globalCondition)(f)
+	def foreach[U](f: A => U)(implicit connection: Connection) = factory.foreachWhere(accessCondition)(f)
 	/**
 	  * Performs an operation over a subset of items accessible from this accessor
 	  * @param additionalCondition Additional targeting condition
@@ -42,5 +42,5 @@ trait RowFactoryView[+A] extends FactoryView[A]
 	  * @param c Implicit DB connection
 	  * @return The first 'n' accessible items when using the specified ordering
 	  */
-	def take(n: Int, order: OrderBy)(implicit c: Connection) = factory.take(n, order, globalCondition)
+	def take(n: Int, order: OrderBy)(implicit c: Connection) = factory.take(n, order, accessCondition)
 }

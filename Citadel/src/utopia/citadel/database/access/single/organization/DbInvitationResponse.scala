@@ -52,7 +52,7 @@ object DbInvitationResponse
 	{
 		// IMPLEMENTED  ------------
 		
-		override def globalCondition = Some(this.model.withInvitationId(invitationId).toCondition)
+		override def accessCondition = Some(this.model.withInvitationId(invitationId).toCondition)
 		
 		
 		// OTHER    ---------------

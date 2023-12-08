@@ -37,7 +37,7 @@ object DescriptionLinksAccess
 	
 	private class SimpleDescriptionLinksAccess(override val factory: DescriptionLinkFactory,
 	                                           override val linkModel: DescriptionLinkModelFactory,
-	                                           override val globalCondition: Option[Condition])
+	                                           override val accessCondition: Option[Condition])
 		extends DescriptionLinksAccess
 }
 

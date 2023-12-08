@@ -16,5 +16,5 @@ trait ManyAccess[+A] extends Access[Vector[A]]
 	  * @param connection Implicit database connection
 	  * @return All items that can be accessed through this access point
 	  */
-	def all(implicit connection: Connection) = read(globalCondition)
+	def all(implicit connection: Connection) = read(accessCondition)
 }

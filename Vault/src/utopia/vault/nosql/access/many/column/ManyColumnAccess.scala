@@ -21,7 +21,7 @@ trait ManyColumnAccess[+V] extends ColumnAccess[V, Vector[V]] with ManyAccess[V]
 	 *         only while the connection is kept open.
 	 */
 	def iterator(implicit connection: Connection) =
-		connection.iterator(Select.index(target, table) + globalCondition.map { Where(_) })
+		connection.iterator(Select.index(target, table) + accessCondition.map { Where(_) })
 			.flatMap { _.rowValues.map(parseValue) }
 	
 	

@@ -16,7 +16,7 @@ case class DbDatabaseVersion(versionTable: Table) extends SingleRowModelAccess[D
 	
 	override val factory = DatabaseVersionFactory(versionTable)
 	
-	override def globalCondition = None
+	override def accessCondition = None
 	
 	
 	// COMPUTED	---------------------------

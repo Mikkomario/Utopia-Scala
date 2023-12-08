@@ -40,6 +40,6 @@ object DbTypedTokens extends ManyTypedTokensAccess with NonDeprecatedView[TypedT
 	{
 		override def ids(implicit connection: Connection) = _ids.toVector
 		
-		override def globalCondition = Some(index in _ids)
+		override def accessCondition = Some(index in _ids)
 	}
 }

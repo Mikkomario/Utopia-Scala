@@ -42,7 +42,7 @@ trait UniqueAuthServiceAccess
 	  * @param connection Implicit DB Connection
 	  * @return This service, along with its settings
 	  */
-	def withSettings(implicit connection: Connection) = globalCondition match
+	def withSettings(implicit connection: Connection) = accessCondition match
 	{
 		case Some(c) => AuthServiceWithSettingsFactory.find(c)
 		case None => AuthServiceWithSettingsFactory.any

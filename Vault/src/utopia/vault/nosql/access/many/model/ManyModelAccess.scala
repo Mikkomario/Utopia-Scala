@@ -24,7 +24,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	 * @return An iterator to all models accessible through this access point. The iterator is valid
 	 *         only while the connection is kept open.
 	 */
-	def iterator(implicit connection: Connection) = factory.iterator(globalCondition)
+	def iterator(implicit connection: Connection) = factory.iterator(accessCondition)
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -67,7 +67,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	 *         only while the connection is kept open.
 	 */
 	def orderedIterator(order: OrderBy)(implicit connection: Connection) =
-		factory.iterator(globalCondition, Some(order))
+		factory.iterator(accessCondition, Some(order))
 	
 	/**
 	  * Pulls a column-to-column map based on the accessible items
@@ -79,7 +79,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	  */
 	def pullColumnMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) = {
 		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
-			globalCondition.map { Where(_) }
+			accessCondition.map { Where(_) }
 		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.toMap
 	}
 	/**
@@ -92,7 +92,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	  */
 	def pullColumnMultiMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) = {
 		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
-			globalCondition.map { Where(_) }
+			accessCondition.map { Where(_) }
 		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.asMultiMap
 	}
 }

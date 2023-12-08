@@ -21,7 +21,7 @@ object DbTaskIds extends ManyIntIdAccess
 	
 	override def table = CitadelTables.task
 	
-	override def globalCondition = None
+	override def accessCondition = None
 	
 	
 	// OTHER	---------------------------

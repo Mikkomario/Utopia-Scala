@@ -27,7 +27,7 @@ trait ManyScopesAccess extends ManyScopesAccessLike[Scope, ManyScopesAccess] wit
 	/**
 	  * @return A copy of this access point which includes token link information
 	  */
-	def withTokenLinks = globalCondition match {
+	def withTokenLinks = accessCondition match {
 		case Some(condition) => DbTokenScopes.filter(condition)
 		case None => DbTokenScopes
 	}

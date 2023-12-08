@@ -20,7 +20,7 @@ object DbUserRoleIds extends ManyIntIdAccess
 	
 	override def table = CitadelTables.userRole
 	
-	override def globalCondition = None
+	override def accessCondition = None
 	
 	
 	// OTHER	----------------------------

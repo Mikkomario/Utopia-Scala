@@ -23,5 +23,5 @@ class ManyIdModelAccess[+A](ids: Iterable[Value], override val factory: FromResu
 	
 	// IMPLICIT --------------------------
 	
-	override def globalCondition = Some(condition)
+	override def accessCondition = Some(condition)
 }

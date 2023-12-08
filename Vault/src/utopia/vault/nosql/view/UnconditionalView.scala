@@ -8,5 +8,5 @@ package utopia.vault.nosql.view
 trait UnconditionalView extends View
 {
 	// Global condition is forced to be None
-	final override def globalCondition: None.type = None
+	final override def accessCondition: None.type = None
 }

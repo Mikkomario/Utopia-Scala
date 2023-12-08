@@ -26,7 +26,7 @@ object DbAuthPreparations extends ManyAuthPreparationsAccess with NonDeprecatedV
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

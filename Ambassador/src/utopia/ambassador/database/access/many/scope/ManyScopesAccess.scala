@@ -32,7 +32,7 @@ trait ManyScopesAccess
 	/**
 	  * @return A copy of this access point which includes authentication preparation linking
 	  */
-	def withAuthPreparationLinks = globalCondition match
+	def withAuthPreparationLinks = accessCondition match
 	{
 		case Some(c) => DbAuthPreparationScopes.filter(c)
 		case None=> DbAuthPreparationScopes
@@ -40,7 +40,7 @@ trait ManyScopesAccess
 	/**
 	  * @return A copy of this access point which includes task linking
 	  */
-	def withTaskLinks = globalCondition match
+	def withTaskLinks = accessCondition match
 	{
 		case Some(c) => DbTaskScopes.filter(c)
 		case None => DbTaskScopes
@@ -48,7 +48,7 @@ trait ManyScopesAccess
 	/**
 	  * @return A copy of this access point which includes authentication token linking
 	  */
-	def withTokenLinks = globalCondition match
+	def withTokenLinks = accessCondition match
 	{
 		case Some(c) => DbAuthTokenScopes.filter(c)
 		case None => DbAuthTokenScopes

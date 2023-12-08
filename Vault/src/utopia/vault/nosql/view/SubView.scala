@@ -36,5 +36,5 @@ trait SubView extends View
 	
 	override def target = parent.target
 	
-	override def globalCondition = Some(condition)
+	override def accessCondition = Some(condition)
 }

@@ -12,6 +12,7 @@ Parent module updates
   as well as support for default part names in custom data types
 ### Other changes
 - Setting `"crop": true` to a property without a length limit now sets the column length rule to `"crop"`
+- Supports **Vault v1.18**
 
 ## v1.10 - 27.09.2023
 This update introduces better json support, as well as many new data types.

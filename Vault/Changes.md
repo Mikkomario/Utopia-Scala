@@ -3,6 +3,7 @@
 ## v1.18 (in development)
 Supports **Flow v2.3**
 ### Breaking changes
+- Renamed **View**`.globalCondition` to `.accessCondition`
 - Removed all classes and functions that were deprecated at v1.14 or earlier
 ### Deprecations
 - Deprecated the `.grouped(...)` functions in **Result** in favor of the new, more clear functions

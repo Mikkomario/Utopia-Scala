@@ -28,7 +28,7 @@ trait ManyMemberRoleLinksAccess
 	/**
 	  * @return An access point to member role links including allowed task ids
 	  */
-	def withRights = globalCondition match
+	def withRights = accessCondition match
 	{
 		case Some(condition) => DbMemberRolesWithRights.filter(condition)
 		case None => DbMemberRolesWithRights

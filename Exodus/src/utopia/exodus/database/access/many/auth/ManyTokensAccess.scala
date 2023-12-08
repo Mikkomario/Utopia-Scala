@@ -30,7 +30,7 @@ trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] wit
 	def withTypeInfo = {
 		// Doesn't apply non-deprecated condition here in order to avoid applying it twice
 		val base = DbTypedTokens.includingHistory
-		globalCondition match {
+		accessCondition match {
 			case Some(condition) => base.filter(condition)
 			case None => base
 		}

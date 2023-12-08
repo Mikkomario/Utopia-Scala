@@ -23,7 +23,7 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 * @param connection Implicit database connection
 	 * @return The unique item accessed through this access point. None if no item was found.
 	 */
-	def pull(implicit connection: Connection) = read(globalCondition, factory.defaultOrdering)
+	def pull(implicit connection: Connection) = read(accessCondition, factory.defaultOrdering)
 	
 	
 	// OTHER    -----------------------------

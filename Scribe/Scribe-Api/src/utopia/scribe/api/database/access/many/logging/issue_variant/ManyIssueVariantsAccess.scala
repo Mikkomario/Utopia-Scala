@@ -14,7 +14,7 @@ object ManyIssueVariantsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -33,7 +33,7 @@ trait ManyIssueVariantsAccess
 	/**
 	  * @return Copy of this access point, which includes issue information
 	  */
-	def contextual = DbContextualIssueVariants.filter(globalCondition)
+	def contextual = DbContextualIssueVariants.filter(accessCondition)
 	
 	
 	// IMPLEMENTED	--------------------

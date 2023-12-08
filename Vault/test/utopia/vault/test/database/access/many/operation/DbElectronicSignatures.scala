@@ -25,7 +25,7 @@ object DbElectronicSignatures extends ManyElectronicSignaturesAccess with Uncond
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

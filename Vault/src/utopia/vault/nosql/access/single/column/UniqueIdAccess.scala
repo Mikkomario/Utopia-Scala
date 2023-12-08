@@ -23,7 +23,7 @@ trait UniqueIdAccess[+ID] extends SingleIdAccess[ID]
 	
 	// IMPLEMENTED   -------------------------
 	
-	override def globalCondition = Some(condition)
+	override def accessCondition = Some(condition)
 	
 	
 	// OTHER    ------------------------------
@@ -32,7 +32,7 @@ trait UniqueIdAccess[+ID] extends SingleIdAccess[ID]
 	  * @param connection Implicit database connection
 	  * @return The unique id accessed through this access point. None if no id was found.
 	  */
-	def pull(implicit connection: Connection) = read(globalCondition)
+	def pull(implicit connection: Connection) = read(accessCondition)
 	
 	/**
 	  * @param connection DB Connection (implicit)

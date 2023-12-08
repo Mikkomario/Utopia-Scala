@@ -1,7 +1,7 @@
 # Utopia Exodus - List of Changes
 
 ## v4.1.5 (in development)
-Supports **Flow v2.3**
+Supports **Flow v2.3** and **Vault v1.18**
 ### Breaking changes
 - Deleted all classes and functions that were deprecated at v4.0 or earlier
 ### Other changes

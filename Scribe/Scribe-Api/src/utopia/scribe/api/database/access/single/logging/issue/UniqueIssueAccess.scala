@@ -22,7 +22,7 @@ object UniqueIssueAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -39,7 +39,7 @@ trait UniqueIssueAccess extends UniqueIssueAccessLike[Issue] with SingleChronoRo
 	  * @return Copy of this access point where issue variants and occurrences are also included
 	  */
 	def withInstances =
-		DbIssueInstances.filterDistinct(globalCondition.getOrElse(Condition.alwaysTrue))
+		DbIssueInstances.filterDistinct(accessCondition.getOrElse(Condition.alwaysTrue))
 	
 	
 	// IMPLEMENTED	--------------------

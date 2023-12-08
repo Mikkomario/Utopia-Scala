@@ -32,7 +32,7 @@ trait ManyUserLanguageLinksAccess
 	/**
 	  * @return A version of this access point which includes language familiarity data
 	  */
-	def withFamiliarities = globalCondition match
+	def withFamiliarities = accessCondition match
 	{
 		case Some(condition) => DbUserLanguageLinksWithFamiliarities.filter(condition)
 		case None => DbUserLanguageLinksWithFamiliarities
@@ -40,7 +40,7 @@ trait ManyUserLanguageLinksAccess
 	/**
 	  * @return A version of this access point which includes language and language familiarity data
 	  */
-	def full = globalCondition match
+	def full = accessCondition match
 	{
 		case Some(condition) => DbFullUserLanguages.filter(condition)
 		case None => DbFullUserLanguages

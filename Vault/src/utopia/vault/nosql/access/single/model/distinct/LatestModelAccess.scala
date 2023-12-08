@@ -27,11 +27,11 @@ object LatestModelAccess
 	/**
 	  * A simple factory wrapper that provides access to the latest created model
 	  * @param factory Factory to wrap
-	  * @param globalCondition Global condition to apply (default = None)
+	  * @param accessCondition Global condition to apply (default = None)
 	  * @tparam A Type of accessed items
 	  */
 	class LatestModelAccessWrapper[+A](override val factory: FromRowFactoryWithTimestamps[A],
-	                                           override val globalCondition: Option[Condition] = None)
+	                                           override val accessCondition: Option[Condition] = None)
 		extends LatestModelAccess[A] with FilterableView[LatestModelAccessWrapper[A]]
 	{
 		override protected def self = this

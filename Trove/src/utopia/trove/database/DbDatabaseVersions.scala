@@ -23,7 +23,7 @@ case class DbDatabaseVersions(versionTable: Table) extends ManyRowModelAccess[Da
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def globalCondition = None
+	override def accessCondition = None
 	
 	
 	// OTHER	---------------------------

@@ -60,7 +60,7 @@ object DbAuthRedirect
 	
 	class DbRedirectForPreparation(preparationId: Int) extends UniqueAuthRedirectAccess
 	{
-		override def globalCondition = Some(model.withPreparationId(preparationId).toCondition)
+		override def accessCondition = Some(model.withPreparationId(preparationId).toCondition)
 	}
 }
 

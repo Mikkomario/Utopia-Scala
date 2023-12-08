@@ -61,7 +61,7 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	/**
 	  * @return A copy of this access point with scope data included
 	  */
-	def withScopes = globalCondition match
+	def withScopes = accessCondition match
 	{
 		case Some(c) => DbTaskScopes.filter(c)
 		case None => DbTaskScopes

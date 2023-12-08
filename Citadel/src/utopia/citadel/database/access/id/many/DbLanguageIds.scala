@@ -16,7 +16,7 @@ object DbLanguageIds extends ManyIntIdAccess
 	
 	override def table = factory.table
 	
-	override val globalCondition = None
+	override val accessCondition = None
 	
 	
 	// COMPUTED	-------------------------------

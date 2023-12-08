@@ -26,7 +26,7 @@ object DbAuthRedirects extends ManyAuthRedirectsAccess with NonDeprecatedView[Au
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

@@ -39,7 +39,7 @@ object DbTokens extends ManyTokensAccess with NonDeprecatedView[Token]
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

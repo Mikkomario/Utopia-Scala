@@ -14,7 +14,7 @@ object ManyIssuesAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -32,7 +32,7 @@ trait ManyIssuesAccess
 	/**
 	  * @return Copy of this access that includes variant and occurrence data
 	  */
-	def instances = DbManyIssueInstances.filter(globalCondition)
+	def instances = DbManyIssueInstances.filter(accessCondition)
 	
 	
 	// IMPLEMENTED	--------------------

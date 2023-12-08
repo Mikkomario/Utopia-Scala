@@ -25,7 +25,7 @@ object DbAuthTokenScopeLinks extends ManyAuthTokenScopeLinksAccess with Uncondit
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

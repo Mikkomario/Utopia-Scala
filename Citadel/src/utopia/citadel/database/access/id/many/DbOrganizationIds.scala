@@ -16,7 +16,7 @@ object DbOrganizationIds extends ManyIntIdAccess
 	
 	override def table = factory.table
 	
-	override def globalCondition = None
+	override def accessCondition = None
 	
 	
 	// COMPUTED	------------------------

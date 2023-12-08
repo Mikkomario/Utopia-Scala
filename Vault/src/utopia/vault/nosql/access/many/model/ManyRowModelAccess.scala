@@ -17,7 +17,7 @@ trait ManyRowModelAccess[+A] extends ManyModelAccess[A] with RowFactoryView[A]
 	  * @param connection DB Connection (implicit)
 	  * @return Number of items accessible from this accessor
 	  */
-	def size(implicit connection: Connection) = connection(Count(target) + globalCondition.map { Where(_) })
+	def size(implicit connection: Connection) = connection(Count(target) + accessCondition.map { Where(_) })
 		.firstValue.getInt
 	
 	
@@ -31,5 +31,5 @@ trait ManyRowModelAccess[+A] extends ManyModelAccess[A] with RowFactoryView[A]
 	 * @return The first n accessible items
 	 */
 	def take(order: OrderBy, maxSize: Int)(implicit connection: Connection) =
-		factory.take(maxSize, order, globalCondition)
+		factory.take(maxSize, order, accessCondition)
 }

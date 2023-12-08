@@ -670,7 +670,7 @@ object AccessWriter
 				ClassDeclaration(subsetClassName,
 					constructionParams = Parameter("targetIds", ScalaType.set(ScalaType.int)),
 					extensions = Vector(manyAccessTraitRef),
-					properties = Vector(ComputedProperty("globalCondition",
+					properties = Vector(ComputedProperty("accessCondition",
 						Set(flow.valueConversions), isOverridden = true)("Some(index in targetIds)"))
 				)
 		}
@@ -724,7 +724,7 @@ object AccessWriter
 			constructionParams = Parameter("condition", condition),
 			extensions = Vector(accessTraitType),
 			visibility = Private,
-			properties = Vector(ComputedProperty("globalCondition", isOverridden = true)("Some(condition)"))
+			properties = Vector(ComputedProperty("accessCondition", isOverridden = true)("Some(condition)"))
 		)
 	}
 	

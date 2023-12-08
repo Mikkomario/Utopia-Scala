@@ -51,7 +51,7 @@ trait ManyAuthTokenScopeLinksAccess
 	/**
 	  * @return A copy of this access point which includes scope data
 	  */
-	def withScopes = globalCondition match
+	def withScopes = accessCondition match
 	{
 		case Some(c) => DbAuthTokenScopes.filter(c)
 		case None => DbAuthTokenScopes

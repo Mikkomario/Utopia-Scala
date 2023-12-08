@@ -18,7 +18,7 @@ object UniqueIssueInstancesAccess
 	
 	// NESTED   --------------------------
 	
-	private class _UniqueIssueInstancesAccess(override val globalCondition: Option[Condition])
+	private class _UniqueIssueInstancesAccess(override val accessCondition: Option[Condition])
 		extends UniqueIssueInstancesAccess
 }
 

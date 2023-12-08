@@ -24,6 +24,6 @@ object DbManyIssueInstances extends ManyIssueInstancesAccess with UnconditionalV
 	
 	class DbIssueInstancesSubSet(ids: Set[Int]) extends ManyIssueInstancesAccess
 	{
-		override def globalCondition: Option[Condition] = Some(index in ids)
+		override def accessCondition: Option[Condition] = Some(index in ids)
 	}
 }

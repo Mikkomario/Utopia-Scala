@@ -1,7 +1,6 @@
 # Utopia Trove - List of Changes
 
 ## v1.1.8 (in development)
-Supports **Flow v2.3**
 ### Breaking changes
 - Removed classes that were deprecated at version v1.1 or earlier
 ### Other changes

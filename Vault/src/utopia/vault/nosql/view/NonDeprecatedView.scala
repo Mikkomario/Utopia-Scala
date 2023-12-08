@@ -18,5 +18,5 @@ trait NonDeprecatedView[+A] extends FactoryView[A]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def globalCondition = Some(factory.nonDeprecatedCondition)
+	override def accessCondition = Some(factory.nonDeprecatedCondition)
 }

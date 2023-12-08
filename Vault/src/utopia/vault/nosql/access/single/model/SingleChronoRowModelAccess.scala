@@ -16,7 +16,7 @@ trait SingleChronoRowModelAccess[+A, +Sub] extends SingleRowModelAccess[A] with 
 	/**
 	  * @return A copy of this access point that only targets the latest item
 	  */
-	def latest = LatestModelAccess[A](factory, globalCondition)
+	def latest = LatestModelAccess[A](factory, accessCondition)
 	
 	/**
 	  * @param connection Implicit DB Connection

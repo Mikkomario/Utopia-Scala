@@ -30,7 +30,7 @@ trait ManyAuthPreparationScopeLinksAccess
 	/**
 	  * @return A copy of this access point which returns scope data, also
 	  */
-	def withScopes = globalCondition match
+	def withScopes = accessCondition match
 	{
 		case Some(c) => DbAuthPreparationScopes.filter(c)
 		case None => DbAuthPreparationScopes

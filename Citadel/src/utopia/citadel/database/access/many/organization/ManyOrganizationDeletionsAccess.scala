@@ -30,7 +30,7 @@ trait ManyOrganizationDeletionsAccess
 	/**
 	  * @return An access point to organization deletions including their cancellations
 	  */
-	def withCancellations = globalCondition match
+	def withCancellations = accessCondition match
 	{
 		case Some(condition) => DbOrganizationDeletionsWithCancellations.filter(condition)
 		case None => DbOrganizationDeletionsWithCancellations

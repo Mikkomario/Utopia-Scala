@@ -50,7 +50,7 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 	{
 		// IMPLEMENTED  -------------
 		
-		override def globalCondition = Some(this.model.withIsoCode(isoCode).toCondition)
+		override def accessCondition = Some(this.model.withIsoCode(isoCode).toCondition)
 		
 		
 		// OTHER    ------------------

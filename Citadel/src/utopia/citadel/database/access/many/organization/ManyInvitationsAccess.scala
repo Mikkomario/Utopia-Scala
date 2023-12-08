@@ -25,7 +25,7 @@ trait ManyInvitationsAccess extends ManyInvitationsAccessLike[Invitation, ManyIn
 	/**
 	  * @return An access point to invitations with responses
 	  */
-	def withResponses = globalCondition match
+	def withResponses = accessCondition match
 	{
 		case Some(condition) => DbInvitationsWithResponses.filter(condition)
 		case None => DbInvitationsWithResponses
