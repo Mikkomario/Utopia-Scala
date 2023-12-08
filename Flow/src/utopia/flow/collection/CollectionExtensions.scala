@@ -74,6 +74,20 @@ object CollectionExtensions
 			distinctWith { (a, b) => f(a) == f(b) }
 		
 		/**
+		  * Zips the contents of this collection with another collection and merges the two values using
+		  * the specified function.
+		  * @param other Another collection
+		  * @param merge A function that merges the values between these collections
+		  * @param buildFrom Build-from for building the resulting collection
+		  * @tparam B Type of values in the other collection
+		  * @tparam R Type of merge results
+		  * @tparam That Type of resulting collection
+		  * @return Collection that contains merge results
+		  */
+		def zipAndMerge[B, R, That](other: IterableOnce[B])(merge: (iter.A, B) => R)
+		                           (implicit buildFrom: BuildFrom[Repr, R, That]): That =
+			buildFrom.fromSpecific(coll) { iter(coll).iterator.zip(other).map { case (a, b) => merge(a, b) } }
+		/**
 		  * Zips the values of this collection with their map results
 		  * @param f A mapping function
 		  * @param buildFrom Implicit build-from for the resulting collection
@@ -81,11 +95,8 @@ object CollectionExtensions
 		  * @tparam That Resulting collection type
 		  * @return Collection that contains all items from this collection, coupled with their map results
 		  */
-		def zipMap[B, That](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That = {
-			val builder = buildFrom.newBuilder(coll)
-			iter(coll).iterator.foreach { a => builder += (a -> f(a)) }
-			builder.result()
-		}
+		def zipMap[B, That](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That =
+			buildFrom.fromSpecific(coll)(iter(coll).iterator.map { a => (a, f(a)) })
 		/**
 		  * Joins the values of this collection with their 0-n map results, returning the values as individual pairs
 		  * @param f Mapping function
@@ -96,15 +107,7 @@ object CollectionExtensions
 		  */
 		def zipFlatMap[B, That](f: iter.A => IterableOnce[B])
 		                       (implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That =
-		{
-			val builder = buildFrom.newBuilder(coll)
-			iter(coll).iterator.foreach { a =>
-				f(a).iterator.foreach { b =>
-					builder += (a -> b)
-				}
-			}
-			builder.result()
-		}
+			buildFrom.fromSpecific(coll)(iter(coll).iterator.flatMap { a => f(a).iterator.map { a -> _ } })
 		
 		/**
 		  * This function works like foldLeft, except that it stores each step (including the start) into a seq

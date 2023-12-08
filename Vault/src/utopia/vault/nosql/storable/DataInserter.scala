@@ -1,5 +1,6 @@
 package utopia.vault.nosql.storable
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
@@ -48,9 +49,30 @@ trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Indexed
 	  * @param connection DB Connection (implicit)
 	  * @return Inserted items
 	  */
-	def insert(data: Seq[Data])(implicit connection: Connection) =
-	{
-		val ids = Insert(table, data.map { apply(_).toModel }).generatedKeys
-		ids.zip(data).map { case (id, data) => complete(id, data) }
+	def insert(data: Seq[Data])(implicit connection: Connection) = {
+		val ids = _insert(data)
+		ids.zipAndMerge(data) { (id, data) => complete(id, data) }
 	}
+	
+	/**
+	  * Extracts the data to insert from the specified set of items, inserts the extracted data,
+	  * and finally merges the inserted items with the original data.
+	  * @param data Data that contains data to insert
+	  * @param extractData Function that extracts the data to insert
+	  * @param mergeBack Function that merges an inserted entry with the original data
+	  * @param connection Implicit DB connection
+	  * @tparam O Type of the original entries
+	  * @tparam R Type of the merge results
+	  * @return Merge results
+	  */
+	def insertFrom[O, R](data: Seq[O])(extractData: O => Data)(mergeBack: (Complete, O) => R)
+	                    (implicit connection: Connection) =
+	{
+		val extractedData = data.map(extractData)
+		val ids = _insert(extractedData)
+		ids.zipWithIndex.map { case (id, i) => mergeBack(complete(id, extractedData(i)), data(i)) }
+	}
+	
+	private def _insert(data: Seq[Data])(implicit connection: Connection) =
+		Insert(table, data.map { apply(_).toModel }).generatedKeys
 }

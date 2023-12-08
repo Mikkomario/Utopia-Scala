@@ -10,6 +10,8 @@ Supports **Flow v2.3**
 - Deprecated **MultiLinkedFactory** and **PossiblyMultiLinkedFactory** traits since the 
   new **Result** functions offer similar functionality
 ### New methods
+- **DataInserter**
+  - Added `.insertFrom(...)`
 - **FromRowFactory**
   - Added `.tryParse(Row)` that functions like `.parseIfPresent(Row)`, but assumes that data is found
 - **Result**

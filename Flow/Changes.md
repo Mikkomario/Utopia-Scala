@@ -59,7 +59,7 @@
 - **Future** (**AsyncExtensions**)
   - Added `.or(Future)`
 - **IterableOnce** (**CollectionExtensions**)
-  - Added `.zipMap(...)` and `.zipFlatMap(...)`
+  - Added `.zipAndMerge(...)`,  `.zipMap(...)` and `.zipFlatMap(...)`
   - Added `.foreachWhile(=> Boolean)(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.mapSuccesses(...)` and `.flatMapSuccesses(...)` to **Iterators** containing instances of **Try**

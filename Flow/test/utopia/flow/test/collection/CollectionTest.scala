@@ -1,6 +1,7 @@
 package utopia.flow.test.collection
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.ordering.SomeBeforeNone
 
 /**
  * A test for Flow collections / collection extensions
@@ -67,6 +68,9 @@ object CollectionTest extends App
 	// Tests zipMap and zipFlatMap
 	assert(v1.take(2).zipMap { _ + 1 } == Vector((1, 2), (2, 3)))
 	assert(v1.zipFlatMap { i => if (i % 2 == 0) Some(i + 1) else None } == Vector((2, 3), (4, 5)))
+	
+	// Tests SomeBeforeNone
+	assert(Vector[Option[Int]](None, Some(1), Some(2)).sorted[Option[Int]](SomeBeforeNone) == Vector(Some(1), Some(2), None))
 	
 	println("Success!")
 }
