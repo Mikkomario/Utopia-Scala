@@ -44,6 +44,7 @@
 - Added **ChangeResult** model, relating to other **Changing** changes
 - Added conditional mirroring support to **OptimizedMirror**
 - Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
+- Added **HasExtremes** -trait
 ### New methods
 - **CompoundingBuilder**
   - Added `.popAll()`

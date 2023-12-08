@@ -4,7 +4,7 @@ import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
-import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, KiloMeter, Meter, MilliMeter}
+import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, KiloMeter, Meter, MeterUnit, MilliMeter}
 
 object Distance
 {
@@ -105,7 +105,12 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	override def zero: Distance = Distance.zero
 	override def isAboutZero: Boolean = amount ~== 0.0
 	
-	override def toString = s"$amount $unit"
+	override def toString = unit match {
+		case _: MeterUnit =>
+			val targetUnit = MeterUnit.appropriateFor(toM)
+			s"${toUnit(targetUnit)} $targetUnit"
+		case u => s"$amount $u"
+	}
 	
 	override def ~==(other: Distance): Boolean = amount ~== other.toUnit(unit)
 	override def compareTo(o: Distance) = {
@@ -125,7 +130,7 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	 * @param targetUnit Target unit
 	 * @return Length of this distance in the target unit
 	 */
-	def toUnit(targetUnit: DistanceUnit) = amount * unit.conversionModifierFor(targetUnit)
+	def toUnit(targetUnit: DistanceUnit) = amount * unit.conversionModifierTo(targetUnit)
 	
 	/**
 	 * @return A negative copy of this distance

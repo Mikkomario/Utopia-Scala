@@ -13,6 +13,9 @@
 - Removed classes and functions that were deprecated before v1.2
 ### Deprecations
 - Deprecated most of the existing **Rotation** (/**DirectionalRotation**) functions in favor of the new syntax
+### New features
+- Added more extensive metric unit support (see **MetricScale**, **MetricUnit** & **MeterUnit**), 
+  including some new **DistanceUnits** and
 ### New methods
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions

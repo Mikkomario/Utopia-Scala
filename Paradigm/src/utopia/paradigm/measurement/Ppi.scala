@@ -21,7 +21,7 @@ object Ppi
 	 * @param perUnit Unit to which the pixels are compared
 	 * @return Amount of pixels per inch in that configuration
 	 */
-	def pixelsPer(pixels: Double, perUnit: DistanceUnit) = pixels / perUnit.conversionModifierFor(Inch)
+	def pixelsPer(pixels: Double, perUnit: DistanceUnit) = pixels / perUnit.conversionModifierTo(Inch)
 	
 	/**
 	 * @param ppcm Pixels per centimeter
