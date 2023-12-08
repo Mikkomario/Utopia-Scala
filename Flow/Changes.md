@@ -45,6 +45,7 @@
 - Added conditional mirroring support to **OptimizedMirror**
 - Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
 - Added **HasExtremes** -trait
+- Added **SomeBeforeNone** utility ordering class for altered **Option**-ordering
 ### New methods
 - **CompoundingBuilder**
   - Added `.popAll()`
