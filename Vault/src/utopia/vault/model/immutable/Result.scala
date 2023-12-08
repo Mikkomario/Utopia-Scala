@@ -2,6 +2,7 @@ package utopia.vault.model.immutable
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.MaybeEmpty
 import utopia.vault.nosql.factory.row.FromRowFactory
 
@@ -150,6 +151,7 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       *         The secondary maps contain rows for each of the secondary tables (although the list may be empty).
       *         Only unique rows are preserved (based on row index)
       */
+    @deprecated("Please use groupAnd(...) instead", "v1.18")
     def grouped(primaryTable: Table, secondaryTables: Iterable[Table]) = {
         rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }.view
             .mapValues { rows =>
@@ -159,7 +161,6 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
                     }.toMap
             }.toMap
     }
-    
     /**
       * Groups the rows by a table
       * @param primaryTable The table that determines the groups
@@ -168,6 +169,7 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       *         is also included in results. Resulting lists contain only rows that include data from the secondary table,
       *         each duplicate row (based on secondary table index) is removed.
       */
+    @deprecated("Please use group(...) instead", "v1.18")
     def grouped(primaryTable: Table, secondaryTable: Table) = {
         rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
             .view.mapValues { rows =>
@@ -175,6 +177,185 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
                     .distinctBy { _.indexForTable(secondaryTable) }
             }
             .toMap
+    }
+    
+    /**
+      * Combines parsed data from this result, using two factories and one joining function
+      * @param f1 Factory for reading the primary elements
+      * @param f2 Factory for reading the secondary elements
+      * @param merge Function that joins/merges two parsed elements together
+      * @tparam P Type of the primary parsed elements
+      * @tparam C Type of the secondary parsed elements
+      * @tparam R Type of the merge results
+      * @return Merge results
+      */
+    def combine[P, C, R](f1: FromRowFactory[P], f2: FromRowFactory[C])(merge: (P, C) => R) = {
+        val tables = Pair(f1, f2).map { _.table }
+        rows.view
+            // Ignores rows that don't contain valid data
+            .filter { row => tables.forall(row.containsDataForTable) }
+            // Parses the models separately for each row and then joins them
+            .flatMap { row => f1.tryParse(row).flatMap { parent => f2.tryParse(row).map { merge(parent, _) } } }
+            .toVector
+    }
+    /**
+      * Groups the results around unique primary entries.
+      * Also parses and joins the unique secondary entries found for each primary entry.
+      * @param parentFactory Factory used for parsing the primary entries
+      * @param childFactory Factory used for parsing the secondary entries
+      * @param merge Function that marges the grouped second-level parse results with the primary entry
+      * @tparam P Type of primary parse results
+      * @tparam C Type of secondary parse results
+      * @tparam R Type of merge results
+      * @return Merge results
+      */
+    def group[P, C, R](parentFactory: FromRowFactory[P], childFactory: FromRowFactory[C])(merge: (P, Vector[C]) => R) = {
+        val tp = parentFactory.table
+        val tc = childFactory.table
+        // Processes all rows concerning a single parent index as a single group
+        rows.filter { _.containsDataForTable(tp) }.groupBy { _.indexForTable(tp) }.flatMap { case (_, rows) =>
+            parentFactory.tryParse(rows.head).map { parent =>
+                val children = rows.view
+                    .filter { _.containsDataForTable(tc) }
+                    // Makes sure the secondary entries are unique
+                    .distinctBy { _.indexForTable(tc) }
+                    .flatMap(childFactory.tryParse)
+                    .toVector
+                merge(parent, children)
+            }
+        }
+    }
+    /**
+      * Performs grouped parsing on three levels:
+      * - First groups the rows based on primary merge results
+      * - Then groups the sub-groups based on the secondary merge results
+      * - Finally parses the tertiary entries using the specified factory
+      *
+      * Joins the results together in two levels:
+      * - First joins the tertiary entries with the secondary entries
+      * - Then joins these merge results with the associated primary entry
+      *
+      * @param parentFactory Factory used for parsing the primary (top-level) entries
+      * @param midFactory Factory used for parsing the secondary (mid-level) entries
+      * @param endFactory Factory used for parsing the tertiary (bottom-level) entries
+      * @param mergeBottom Function that joins the bottom-level entries to their associated mid-level entry
+      * @param mergeTop Function that joins the 'mergeBottom' merge results with their associated top-level entry
+      *
+      * @tparam P Type of the primary level entries
+      * @tparam M Type of the secondary level entries
+      * @tparam E Type of the tertiary level entries
+      * @tparam RM Type of the lower merge results
+      * @tparam R Type of the upper merge results
+      * @return Upper merge results
+      */
+    def deepGroup[P, M, E, RM, R](parentFactory: FromRowFactory[P], midFactory: FromRowFactory[M],
+                                  endFactory: FromRowFactory[E])
+                                 (mergeBottom: (M, Vector[E]) => RM)
+                                 (mergeTop: (P, Iterable[RM]) => R) =
+    {
+        val tp = parentFactory.table
+        val tm = midFactory.table
+        val te = endFactory.table
+        // Groups the rows based on the parent index
+        rows.filter { _.containsDataForTable(tp) }.groupBy { _.indexForTable(tp) }.flatMap { case (_, rows) =>
+            // Parses one parent entry for each unique index
+            parentFactory.tryParse(rows.head).map { parent =>
+                // Groups the sub-rows based on mid table index
+                val mids = rows.filter { _.containsDataForTable(tm) }.groupBy { _.indexForTable(tm) }
+                    .flatMap { case (_, rows) =>
+                        // Again, parses a single mid-entry for each unique index
+                        midFactory.tryParse(rows.head).map { mid =>
+                            // Finally, parses an entry for each remaining sub-row
+                            val ends = rows.view
+                                .filter { _.containsDataForTable(te) }
+                                .distinctBy { _.indexForTable(te) }
+                                .flatMap(endFactory.tryParse)
+                                .toVector
+                            // Joins the 3rd level entries to 2nd level entries
+                            mergeBottom(mid, ends)
+                        }
+                    }
+                // Joins the 2nd level merge results to 1st level entries
+                mergeTop(parent, mids)
+            }
+        }
+    }
+    
+    /**
+      * Parses the rows using a factory, but leaves the post-processing open for the function-caller.
+      * Assumes that all rows represent unique entities. If they don't please use [[groupAnd]] instead.
+      * @param parentFactory Factory used for processing the primary entries
+      * @param postProcess Function that continues the processing.
+      *                    Accepts the parsed item, plus the row from which that item was parsed.
+      * @tparam P Type of the parsed items
+      * @tparam R Type of post-processed results
+      * @return Post-processed results
+      */
+    def parseAnd[P, R](parentFactory: FromRowFactory[P])(postProcess: (P, Row) => R) =
+        rows.view.zipFlatMap(parentFactory.parseIfPresent).map { case (row, parsed) => postProcess(parsed, row) }
+            .toVector
+    /**
+      * Groups and parses the rows to those related to specific items.
+      * Continues the per-item processing using the specified function.
+      * @param parentFactory Factory used for parsing the primary items.
+      * @param postProcess Function that accepts the primary item, plus the associated rows,
+      *                    and returns a processed item.
+      * @tparam P Type of the primary items
+      * @tparam R Type of the post-processed results
+      * @return Post-processed results
+      */
+    def groupAnd[P, R](parentFactory: FromRowFactory[P])(postProcess: (P, Vector[Row]) => R) = {
+        val table = parentFactory.table
+        // Groups the rows based on unique indices
+        rows.filter { _.containsDataForTable(table) }.groupBy { _.indexForTable(table) }.flatMap { case (_, rows) =>
+            // Parses one entry for each unique index
+            parentFactory.tryParse(rows.head).map { parent =>
+                // Continues processing with the specified function
+                postProcess(parent, rows)
+            }
+        }
+    }
+    /**
+      * Groups and parses the rows based on three levels of items.
+      * The first and secondary levels are processed using the specified factories,
+      * but the third level is delegated to the specified function.
+      *
+      * Post-processed secondary results are merged into groups based on the primary parse results.
+      *
+      * @param parentFactory Factory used for parsing the top-level items
+      * @param midFactory Factory used for parsing the mid-level items
+      * @param postProcessMid Function that accepts a mid-level item, as well as the associated rows,
+      *                       and returns a post-processed result.
+      * @param mergeTop Function that joins the post-processed results to their associated primary item.
+      *
+      * @tparam P Type of the primary items
+      * @tparam M Type of the secondary items
+      * @tparam RM Type of the lower level post-processed results
+      * @tparam R Type of the joined results
+      *
+      * @return Joined results
+      */
+    def deepGroupAnd[P, M, RM, R](parentFactory: FromRowFactory[P], midFactory: FromRowFactory[M])
+                                 (postProcessMid: (M, Vector[Row]) => RM)
+                                 (mergeTop: (P, Iterable[RM]) => R) =
+    {
+        val tp = parentFactory.table
+        val tm = midFactory.table
+        // Groups the rows based on primary table index
+        rows.filter { _.containsDataForTable(tp) }.groupBy { _.indexForTable(tp) }.flatMap { case (_, rows) =>
+            // Parses one entry for each unique index
+            parentFactory.tryParse(rows.head).map { parent =>
+                // Groups the sub-rows based on the mid-table index
+                val midResults = rows.filter { _.containsDataForTable(tm) }.groupBy { _.indexForTable(tm) }
+                    .flatMap { case (_, rows) =>
+                        // Again, parses one entry per index
+                        // Processes these entries using the specified function
+                        midFactory.tryParse(rows.head).map { mid => postProcessMid(mid, rows) }
+                    }
+                // Merges the results
+                mergeTop(parent, midResults)
+            }
+        }
     }
     
     /**

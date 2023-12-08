@@ -1,9 +1,22 @@
 # Utopia Vault - List of Changes
 
-## v1.17.1 (in development)
+## v1.18 (in development)
 Supports **Flow v2.3**
 ### Breaking changes
 - Removed all classes and functions that were deprecated at v1.14 or earlier
+### Deprecations
+- Deprecated the `.grouped(...)` functions in **Result** in favor of the new, more clear functions
+- Deprecated **MultiLinkedFactory** and **PossiblyMultiLinkedFactory** traits since the 
+  new **Result** functions offer similar functionality
+### New methods
+- **FromRowFactory**
+  - Added `.tryParse(Row)` that functions like `.parseIfPresent(Row)`, but assumes that data is found
+- **Result**
+  - Added multiple advanced row-processing functions:
+    - `parseAnd(...)`
+    - `combine(...)`
+    - `group(...)` and `groupAnd(...)`
+    - `deepGroup(...)` and `deepGroupAnd(...)`
 ### Other changes
 - Scala version updated to 2.13.12
 

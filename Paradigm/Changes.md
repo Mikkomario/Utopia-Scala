@@ -13,6 +13,8 @@
 - Removed classes and functions that were deprecated before v1.2
 ### Deprecations
 - Deprecated most of the existing **Rotation** (/**DirectionalRotation**) functions in favor of the new syntax
+- Deprecated **DistanceUnit**`.conversionModifierFor(DistanceUnit)` in favor of a more clearly named 
+  `.conversionModifierFrom(DistanceUnit)`
 ### New features
 - Added more extensive metric unit support (see **MetricScale**, **MetricUnit** & **MeterUnit**), 
   including some new **DistanceUnits** and
@@ -29,6 +31,7 @@
   - Added `.mapLength(...)`
 ### Other changes
 - **Distance** now extends **MayBeAboutZero**
+- Improved **Distance** `.toString`
 - Scala version updated to 2.13.12
 
 ## v1.4 - 27.09.2023

@@ -1,7 +1,7 @@
 package utopia.vault.nosql.factory.multi
 
-import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.vault.nosql.factory.CombiningFactoryLike
+import utopia.vault.model.immutable.Result
+import utopia.vault.nosql.factory.{CombiningFactoryLike, LinkedFactoryLike}
 
 /**
   * This factory class attaches multiple child instances to a parent instance by utilizing two other factory classes
@@ -12,7 +12,7 @@ import utopia.vault.nosql.factory.CombiningFactoryLike
   * @tparam Child    The child instance type
   */
 trait MultiCombiningFactory[+Combined, Parent, Child]
-	extends MultiLinkedFactory[Combined, Child] with CombiningFactoryLike[Combined, Parent, Child]
+	extends LinkedFactoryLike[Combined, Child] with CombiningFactoryLike[Combined, Parent, Child]
 {
 	// ABSTRACT ------------------------------
 	
@@ -26,6 +26,5 @@ trait MultiCombiningFactory[+Combined, Parent, Child]
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def apply(id: Value, model: Model, children: Vector[Child]) =
-		parentFactory(model).map { p => apply(p, children) }
+	override def apply(result: Result): Vector[Combined] = result.group(parentFactory, childFactory)(apply).toVector
 }

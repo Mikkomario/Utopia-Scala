@@ -3,7 +3,7 @@ package utopia.vault.nosql.factory.row
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.error.ColumnNotFoundException
-import utopia.vault.model.immutable.{Column, Result, Row, Table}
+import utopia.vault.model.immutable.{Column, Result, Row}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.JoinType.Inner
@@ -80,18 +80,19 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	/**
 	  * Parses data from a row, provided that the row contains data for the primary table
 	  * @param row Parsed row
-	  * @return parsed data. None if row didn't contain data for the primary table
+	  * @return parsed data. None if row didn't contain data for the primary table, or if parsing failed.
 	  */
-	def parseIfPresent(row: Row): Option[A] = {
-		if (row.containsDataForTable(table)) {
-			apply(row) match {
-				case Success(parsed) => Some(parsed)
-				// Lets ErrorHandling handle the possible errors
-				case Failure(error) => ErrorHandling.modelParsePrinciple.handle(error); None
-			}
-		}
-		else
-			None
+	def parseIfPresent(row: Row): Option[A] = if (row.containsDataForTable(table)) tryParse(row) else None
+	/**
+	  * Attempts to parse an item from the specified row.
+	  * Handles parse failures using [[ErrorHandling.modelParsePrinciple]]
+	  * @param row A row to parse the item from
+	  * @return Parsed item. None if no item could be parsed.
+	  */
+	def tryParse(row: Row): Option[A] = apply(row) match {
+		case Success(parsed) => Some(parsed)
+		// Lets ErrorHandling handle the possible errors
+		case Failure(error) => ErrorHandling.modelParsePrinciple.handle(error); None
 	}
 	
 	/**

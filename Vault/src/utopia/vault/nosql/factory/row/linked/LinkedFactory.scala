@@ -32,8 +32,7 @@ trait LinkedFactory[+Parent, Child] extends FromRowFactory[Parent] with LinkedFa
 	
 	override def isAlwaysLinked = true
 	
-	override def apply(row: Row) =
-	{
+	override def apply(row: Row) = {
 		if (row.containsDataForTable(childFactory.table))
 			childFactory(row).flatMap { c => apply(row(table), c) }
 		else

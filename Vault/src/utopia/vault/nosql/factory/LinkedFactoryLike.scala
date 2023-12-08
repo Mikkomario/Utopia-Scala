@@ -67,8 +67,7 @@ trait LinkedFactoryLike[+Parent, +Child] extends FromResultFactory[Parent]
 	  * @return Whether there exists a row where the specified condition is met and there exists a link
 	  *         between a parent and a child at the same time
 	  */
-	def existsLinkWhere(condition: Condition)(implicit connection: Connection) =
-	{
+	def existsLinkWhere(condition: Condition)(implicit connection: Connection) = {
 		if (isAlwaysLinked)
 			Exists(target, condition)
 		else

@@ -14,6 +14,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 21.8.2019, v1.3.1+
   */
+@deprecated("Deprecated for removal. Please inherit MultiCombiningFactory instead, or create a custom LinkedFactoryLike", "v1.18")
 trait MultiLinkedFactory[+Parent, Child] extends LinkedFactoryLike[Parent, Child]
 {
 	// ABSTRACT	--------------------

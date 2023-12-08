@@ -64,5 +64,9 @@ object CollectionTest extends App
 		case Some(Right(many)) => assert(many == words)
 	}
 	
+	// Tests zipMap and zipFlatMap
+	assert(v1.take(2).zipMap { _ + 1 } == Vector((1, 2), (2, 3)))
+	assert(v1.zipFlatMap { i => if (i % 2 == 0) Some(i + 1) else None } == Vector((2, 3), (4, 5)))
+	
 	println("Success!")
 }

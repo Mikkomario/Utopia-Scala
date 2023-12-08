@@ -74,6 +74,39 @@ object CollectionExtensions
 			distinctWith { (a, b) => f(a) == f(b) }
 		
 		/**
+		  * Zips the values of this collection with their map results
+		  * @param f A mapping function
+		  * @param buildFrom Implicit build-from for the resulting collection
+		  * @tparam B Type of mapping results
+		  * @tparam That Resulting collection type
+		  * @return Collection that contains all items from this collection, coupled with their map results
+		  */
+		def zipMap[B, That](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That = {
+			val builder = buildFrom.newBuilder(coll)
+			iter(coll).iterator.foreach { a => builder += (a -> f(a)) }
+			builder.result()
+		}
+		/**
+		  * Joins the values of this collection with their 0-n map results, returning the values as individual pairs
+		  * @param f Mapping function
+		  * @param buildFrom Implicit build-from for the resulting collection
+		  * @tparam B Type of the individual mapping results
+		  * @tparam That Type of the resulting collection
+		  * @return Collection where each map result is coupled with the original mapping input value (on the left)
+		  */
+		def zipFlatMap[B, That](f: iter.A => IterableOnce[B])
+		                       (implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That =
+		{
+			val builder = buildFrom.newBuilder(coll)
+			iter(coll).iterator.foreach { a =>
+				f(a).iterator.foreach { b =>
+					builder += (a -> b)
+				}
+			}
+			builder.result()
+		}
+		
+		/**
 		  * This function works like foldLeft, except that it stores each step (including the start) into a seq
 		  * @param start     The starting step
 		  * @param map       A function for calculating the next step, takes the previous result + the next item in this seq
@@ -82,8 +115,7 @@ object CollectionExtensions
 		  * @tparam That The type of final collection
 		  * @return All of the steps mapped into a collection
 		  */
-		def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
-		{
+		def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
 			val builder = buildFrom.newBuilder(coll)
 			var last = start
 			builder += last
@@ -2061,6 +2093,18 @@ object CollectionExtensions
 		def getOrElseLog[B >: A](f: => B)(implicit log: Logger): B = getOrMap { error =>
 			log(error)
 			f
+		}
+		
+		/**
+		  * Converts this Try into an Option.
+		  * Handles the possible failure case using the specified function.
+		  * @param f A function that handles the possible failure case
+		  * @tparam U Arbitrary function result type
+		  * @return Some if this was a success, None of failure.
+		  */
+		def handleFailure[U](f: Throwable => U) = t match {
+			case Success(v) => Some(v)
+			case Failure(error) => f(error); None
 		}
 		
 		/**
