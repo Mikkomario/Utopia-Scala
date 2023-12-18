@@ -249,8 +249,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	  * @param other Another vector
 	  * @return The dot product between these vectors, in double precision
 	  */
-	def doubleDot(other: HasDoubleDimensions) =
-		dimensions.mergeWith(other, 0.0) { n.toDouble(_) * _ }.sum
+	def doubleDot(other: HasDoubleDimensions) = dimensions.mergeWith(other, 0.0) { n.toDouble(_) * _ }.sum
 	/**
 	  * Calculates the scalar projection of this vector over the other vector.
 	  * This is the same as the length of this vector's projection over the other vector

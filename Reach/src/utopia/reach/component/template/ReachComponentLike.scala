@@ -12,7 +12,6 @@ import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.area
 import utopia.paradigm.shape.shape2d.area.polygon.c4
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D

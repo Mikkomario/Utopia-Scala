@@ -57,7 +57,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 	private def _push[A](act: Connection => Try[A]) = {
 		val action = new Action(act)
 		// Queues the action and checks whether the queue-emptying process should be initiated
-		val shouldStart = queue.pop { pending =>
+		val shouldStart = queue.mutate { pending =>
 			// Case: No actions are pending at this time => Starts the emptying process
 			if (pending.isEmpty)
 				true -> Vector(action)
@@ -73,7 +73,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 					// Retrieves new actions as long as there are some available
 					// Only removes the actions from the list once they've been completed
 					(action +: OptionsIterator.continually {
-						queue.pop { q =>
+						queue.mutate { q =>
 							// Case: Last action was just completed => Completes
 							if (q.hasSize < 2)
 								None -> Vector()

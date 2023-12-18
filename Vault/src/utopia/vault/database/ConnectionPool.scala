@@ -66,7 +66,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	// COMPUTED	---------------------------
 	
-	private def connection = connections.pop { all =>
+	private def connection = connections.mutate { all =>
 		// Returns the first reusable connection, if no such connection exists, creates a new connection
 		// Tries to use the connection with least clients
 		val reusable = if (all.nonEmpty) Some(all.minBy { _.currentClientCount }).filter {
@@ -130,7 +130,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 					Iterator.unfold(Now + connectionKeepAlive) { waitTarget =>
 						val uninterrupted = Wait(waitTarget, waitLock)
 						// Updates connection list and determines next close time
-						val (w, futures) = connections.pop { all =>
+						val (w, futures) = connections.mutate { all =>
 							// Keeps connections that are still open
 							val (closing, open) = {
 								// Case: Standard state => Keeps connections alive for a specific time
@@ -196,7 +196,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 			finally { leave() }
 		}
 		
-		def tryJoin(currentMaxCapacity: Int) = clientCount.pop { currentCount =>
+		def tryJoin(currentMaxCapacity: Int) = clientCount.mutate { currentCount =>
 			if (currentCount >= currentMaxCapacity || closed.isSet)
 				false -> currentCount
 			else

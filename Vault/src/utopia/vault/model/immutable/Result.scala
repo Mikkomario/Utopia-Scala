@@ -180,7 +180,7 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
     }
     
     /**
-      * Combines parsed data from this result, using two factories and one joining function
+      * Combines parsed data from this result, using two factories and one merge function
       * @param f1 Factory for reading the primary elements
       * @param f2 Factory for reading the secondary elements
       * @param merge Function that joins/merges two parsed elements together
@@ -197,6 +197,28 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
             // Parses the models separately for each row and then joins them
             .flatMap { row => f1.tryParse(row).flatMap { parent => f2.tryParse(row).map { merge(parent, _) } } }
             .toVector
+    }
+    /**
+      * Combines parsed data from this result, using three factories and a merge function
+      * @param f1 Factory for reading the primary elements
+      * @param f2 Factory for reading the secondary elements
+      * @param f3 Factory for reading the tertiary elements
+      * @param merge Function that joins/merges three parsed elements together
+      * @tparam P Type of the primary parsed elements
+      * @tparam C1 Type of the secondary parsed element
+      * @tparam C2 Type of the tertiary parsed element
+      * @tparam R Type of the merge results
+      * @return Merge results
+      */
+    def combine[P, C1, C2, R](f1: FromRowFactory[P], f2: FromRowFactory[C1], f3: FromRowFactory[C2])
+                             (merge: (P, C1, C2) => R) =
+    {
+        val tables = Vector(f1.table, f2.table, f3.table)
+        rows.view.filter { row => tables.forall(row.containsDataForTable) }.flatMap { row =>
+            f1.tryParse(row).flatMap { parent =>
+                f2.tryParse(row).flatMap { child1 => f3.tryParse(row).map { merge(parent, child1, _) } }
+            }
+        }.toVector
     }
     /**
       * Groups the results around unique primary entries.
