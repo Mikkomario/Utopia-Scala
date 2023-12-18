@@ -137,7 +137,7 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 	  * @param side Whether to replace the start point (First) or the end point (Last)
 	  * @return Copy of this span with the targeted end replaced
 	  */
-	def withEnd(end: P, side: End): Repr = end match {
+	def withEnd(end: P, side: End): Repr = side match {
 		case First => withStart(end)
 		case Last => withEnd(end)
 	}

@@ -5,6 +5,7 @@ Parent module updates
 ### Bugfixes
 - Fixed `.toModel` generation involving optional enumeration values
 - Fixed generated Scala type of **DateRange**
+- From model schema declaration now uses json value conversion in default value generation
 ### New features
 - Added two new data types: **Vector2D** and **Distance** (from **Paradigm**) and **LatLong** (from **Terra**)
 - You may now specify an extending upper length limit within the type declaration, e.g. by writing `"String(3-9)"`

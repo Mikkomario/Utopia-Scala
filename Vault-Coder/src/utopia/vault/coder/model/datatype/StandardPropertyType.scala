@@ -1193,7 +1193,7 @@ object StandardPropertyType
 			val toPair = toPairCode(instanceCode)
 			innerToValue("v", isForJson).mapText { innerToValue =>
 				s"$toPair.map[Value] { v => $innerToValue }"
-			}.referringTo(toPair.references + valueConversions)
+			}.referringTo(toPair.references + valueConversions + Reference.flow.value)
 		}
 		
 		
@@ -1242,8 +1242,7 @@ object StandardPropertyType
 			CodePiece(s"${dateRange.target}.exclusive($pairCode)", Set(dateRange))
 	}
 	
-	case object DoubleVector2D extends PairLikeType(DoubleNumber, paradigm.vector2D, Pair("x", "y"),
-		"twice")
+	case object DoubleVector2D extends PairLikeType(DoubleNumber, paradigm.vector2D, Pair("x", "y"), "twice")
 	{
 		override def scalaType: ScalaType = paradigm.vector2D
 		

@@ -183,7 +183,7 @@ object ModelWriter
 		val default = prop.customDefaultValue.notEmpty.orElse {
 			val dt = prop.dataType
 			if (dt.supportsDefaultJsonValues) dt.nonEmptyDefaultValue.notEmpty else None
-		}.map { v => prop.dataType.toValueCode(v.text).referringTo(v.references) }
+		}.map { v => prop.dataType.toJsonValueCode(v.text).referringTo(v.references) }
 		
 		// Writes only the necessary code parts (i.e. omits duplicate default parameters)
 		var paramsCode = CodePiece(name.quoted).append(prop.dataType.valueDataType.targetCode, ", ")
