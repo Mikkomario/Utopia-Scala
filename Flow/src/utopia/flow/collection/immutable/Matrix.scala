@@ -99,8 +99,8 @@ object Matrix
 	{
 		override lazy val columns: IndexedSeq[IndexedSeq[A]] = Vector()
 		override lazy val rows: IndexedSeq[IndexedSeq[A]] = Vector()
-		override lazy val columnsView: IndexedSeqView[IndexedSeqView[A]] = new EmptySeqView[IndexedSeqView[A]]()
-		override lazy val rowsView: IndexedSeqView[IndexedSeqView[A]] = new EmptySeqView[IndexedSeqView[A]]()
+		override lazy val columnsView: IndexedSeqView[IndexedSeqView[A]] = new EmptyIndexedSeqView[IndexedSeqView[A]]()
+		override lazy val rowsView: IndexedSeqView[IndexedSeqView[A]] = new EmptyIndexedSeqView[IndexedSeqView[A]]()
 		
 		override def width: Int = 0
 		override def height: Int = 0
@@ -262,12 +262,6 @@ object Matrix
 		extends AbstractIndexedSeqView[A]
 	{
 		override def apply(i: Int): A = values(startIndex + increment * i)
-	}
-	
-	private class EmptySeqView[+A]() extends AbstractIndexedSeqView[A]
-	{
-		override def length: Int = 0
-		override def apply(i: Int): A = throw new NoSuchElementException(s"Index $i out of bounds (0)")
 	}
 }
 

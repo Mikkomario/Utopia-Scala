@@ -2,12 +2,13 @@ package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.enumeration.End.{First, Last}
 
 import scala.math.Ordered.orderingToOrdered
 
@@ -131,6 +132,35 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 	  * @return A copy of this span with the new ending point
 	  */
 	def withEnd(end: P) = withEnds(end = end)
+	/**
+	  * @param end New start or end for this span
+	  * @param side Whether to replace the start point (First) or the end point (Last)
+	  * @return Copy of this span with the targeted end replaced
+	  */
+	def withEnd(end: P, side: End): Repr = end match {
+		case First => withStart(end)
+		case Last => withEnd(end)
+	}
+	
+	/**
+	  * @param f A mapping function to apply to the starting value of this span
+	  * @return Copy of this span with mapped starting value
+	  */
+	def mapStart(f: P => P) = withStart(f(start))
+	/**
+	  * @param f A mapping function to apply to the final value of this span
+	  * @return Copy of this span with mapped final value
+	  */
+	def mapEnd(f: P => P) = withEnd(f(end))
+	/**
+	  * @param end Targeted end (start (First) or end (Last))
+	  * @param f A mapping function to apply to the targeted value of this span
+	  * @return Copy of this span with a mapped value
+	  */
+	def mapSpecificEnd(end: End)(f: P => P) = end match {
+		case First => mapStart(f)
+		case Last => mapEnd(f)
+	}
 	
 	/**
 	  * @param min A new minimum point for this span
@@ -157,6 +187,15 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 			withEnds(_min, max)
 		else
 			withEnds(max, _min)
+	}
+	/**
+	  * @param value New minimum or maximum value for this span
+	  * @param extreme Targeted / replaced extreme
+	  * @return Copy of this span with the replaced minimum or maximum value
+	  */
+	def withExtreme(value: P, extreme: Extreme) = extreme match {
+		case Min => withMin(value)
+		case Max => withMax(value)
 	}
 	
 	/**

@@ -1,19 +1,14 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
-import utopia.flow.operator.enumeration.{End, Extreme}
-import utopia.flow.operator.enumeration.End.{First, Last}
-import utopia.flow.operator.enumeration.Extreme.{Max, Min}
-import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.equality.EqualsFunction
 
-import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{IndexedSeqOps, mutable}
+import scala.collection.mutable
 import scala.language.{implicitConversions, reflectiveCalls}
 
 object Pair
@@ -180,340 +175,33 @@ object Pair
  * @since 21.9.2021, v1.12
  */
 case class Pair[+A](first: A, second: A)
-	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, IndexedSeq[A]] with Reversible[Pair[A]]
+	extends PairOps[A, IndexedSeq, IndexedSeq[A], Pair, Pair[A]] with IndexedSeq[A]
 {
-	// COMPUTED --------------------------
-	
-	/**
-	 * @return A tuple based on this pair
-	 */
-	def toTuple = first -> second
-	
-	/**
-	  * @return Whether the two values in this pair are equal
-	  */
-	def isSymmetric(implicit eq: EqualsFunction[A] = EqualsFunction.default) = eq(first, second)
-	/**
-	  * @return Whether the two values in this pair are not equal
-	  */
-	def isAsymmetric(implicit eq: EqualsFunction[A] = EqualsFunction.default) = !isSymmetric
-	
-	/**
-	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
-	  *         Negative represents the left / first side, Positive represents the right / second side.
-	  */
-	def iteratorWithSides = iterator.zip(Sign.values)
-	
-	/**
-	  * @param ord Implicit ordering to apply
-	  * @tparam B Type of ordered values
-	  * @return A span from the first value of this pair to the second value of this pair
-	  */
-	def toSpan[B >: A](implicit ord: Ordering[B]) = Span[B](first, second)
-	
-	/**
-	  * @param ord Implicit ordering to use
-	  * @tparam B Type of compared values
-	  * @return This pair ordered with the specified ordering, so that the smaller item appears before the larger item
-	  */
-	def minMax[B >: A](implicit ord: Ordering[B]) = if (ord.lt(first, second)) reverse else self
-	
-	
 	// IMPLEMENTED  ----------------------
 	
 	override def self = this
 	
-	override def iterator: Iterator[A] = new PairIterator
+	override def unary_- = Pair(second, first)
+	override protected def _empty: IndexedSeq[A] = Vector.empty
 	
-	override def unary_- = reverse
+	override protected def only(side: End): IndexedSeq[A] = Vector(apply(side))
+	override protected def newPair[B](first: => B, second: => B): Pair[B] = Pair(first, second)
 	
-	override def length = 2
-	override def knownSize = 2
-	override def isEmpty = false
-	override def isTraversableAgain = true
+	override protected def _fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
+	override protected def _newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
 	
-	override def head = first
-	override def headOption = Some(first)
-	override def last = second
-	override def lastOption = Some(second)
 	
-	override def reverse = Pair(second, first)
-	protected override def reversed = reverse
+	// IMPLEMENTED  ----------------------
 	
-	override def toVector = Vector(first, second)
-	override def toString = s"($first, $second)"
+	override def view = new PairView[A](first, second)
 	
-	override def empty = Vector.empty[A]
+	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = super[PairOps].sorted[B]
 	
-	override def distinct = if (first == second) Vector(first) else this
-	override def distinctBy[B](f: A => B) = if (f(first) == f(second)) Vector(first) else this
-	
-	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = {
-		val cmp = ord.compare(first, second)
-		if (cmp > 0) reverse else this
-	}
-	override def sortWith(lt: (A, A) => Boolean) = if (lt(first, second)) reverse else this
-	override def sortBy[B](f: A => B)(implicit ord: Ordering[B]) =
-		if (ord.lt(f(first), f(second))) reverse else this
-	
-	override def max[B >: A](implicit ord: Ordering[B]) = ord.max(first, second)
-	override def min[B >: A](implicit ord: Ordering[B]) = ord.min(first, second)
-	
-	override def apply(index: Int) = (index: @switch) match {
-		case 0 => first
-		case 1 => second
-		case _ => throw new IndexOutOfBoundsException(s"Attempting to access index $index of a pair")
-	}
-	
-	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
-	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
-	
-	override def foreach[U](f: A => U) = {
-		f(first)
-		f(second)
-	}
-	override def forall(p: A => Boolean) = p(first) && p(second)
-	override def exists(p: A => Boolean) = p(first) || p(second)
-	override def tail = Vector(second)
-	override def contains[B >: A](item: B) = first == item || second == item
-	
-	override def map[B](f: A => B) = Pair(f(first), f(second))
-	
-	override def reduce[B >: A](op: (B, B) => B) = merge(op)
-	
-	override def maxBy[B](f: A => B)(implicit cmp: Ordering[B]) =
-		if (cmp.gt(f(second), f(first))) second else first
-	override def minBy[B](f: A => B)(implicit cmp: Ordering[B]) =
-		if (cmp.lt(f(second), f(first))) second else first
+	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = _fromSpecific(coll)
+	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = _newSpecificBuilder
 	
 	
 	// OTHER    --------------------------
-	
-	/**
-	 * @param side The targeted side
-	 * @return The item of this pair from that side
-	 */
-	def apply(side: End) = side match {
-		case First => first
-		case Last => second
-	}
-	/**
-	  * @param extreme The targeted extreme
-	  * @param ord Implicit ordering applied
-	  * @tparam B Type of the ordering used
-	  * @return The more extreme of the two available items
-	  */
-	def apply[B >: A](extreme: Extreme)(implicit ord: Ordering[B]): A = extreme match {
-		case Max => max[B]
-		case Min => min[B]
-	}
-	/**
-	  * @param sign The targeted sign, where Negative targets the smaller item and Positive targets the greater
-	  * @param ord     Implicit ordering applied
-	  * @tparam B Type of the ordering used
-	  * @return The smaller or larger of the two available items
-	  */
-	def apply[B >: A](sign: Sign)(implicit ord: Ordering[B]): A = apply[B](sign.extreme)
-	
-	/**
-	  * Calls the specified function for each value of this pair. Includes the side where that item appears.
-	  * @param f A function that processes the items. Accepts the item and the side on which it appears.
-	  * @tparam U Arbitrary function result type
-	  */
-	def foreachSide[U](f: (A, End) => U) = End.values.foreach { side => f(apply(side), side) }
-	
-	/**
-	 * @param item An item
-	 * @return The side (Negative for left / first, Positive for right / second) on which that item resides
-	 *         in this pair. None if that item is not in this pair.
-	 */
-	def sideOf[B >: A](item: B): Option[End] =
-		if (item == first) Some(First) else if (item == second) Some(Last) else None
-	/**
-	  * @param item An item
-	  * @return The item opposite to the specified item.
-	  *         None if the specified item didn't appear in this pair.
-	  */
-	def oppositeOf[B >: A](item: B) =
-		if (item == first) Some(second) else if (item == second) Some(first) else None
-	/**
-	  * Finds the item opposite to one matching a condition.
-	  * Works like find, except that this function returns the opposite item.
-	  *
-	  * I.e. if 'f' returns true for the first item, returns the second item;
-	  * If 'f' returns false for the first item and true for the second item, returns the first item;
-	  * If 'f' returns false for both items, returns None.
-	  *
-	  * @param f A find function for the targeted (not returned) item
-	  * @return The item opposite to the item for which 'f' returned true.
-	  *         None if 'f' returned false for both items.
-	  */
-	def oppositeToWhere(f: A => Boolean) =
-		if (f(first)) Some(second) else if (f(second)) Some(first) else None
-	
-	/**
-	  * @param f A mapping function that determines ordering
-	  * @param ord Implicit ordering for mapping results
-	  * @tparam B Type of mapping results
-	  * @return A copy of this pair that is ordered so that the smaller item (according to the mapping result)
-	  *         appears before the larger item.
-	  */
-	def minMaxBy[B](f: A => B)(implicit ord: Ordering[B]) = minMax(Ordering.by(f))
-	
-	/**
-	  * @param newFirst New first item
-	  * @tparam B Type of new first item
-	  * @return A copy of this pair with the first item replaced
-	  */
-	def withFirst[B >: A](newFirst: B) = Pair(newFirst, second)
-	/**
-	  * @param newSecond New second item
-	  * @tparam B Type of new second item
-	  * @return Copy of this pair with the second item replaced
-	  */
-	def withSecond[B >: A](newSecond: B) = Pair(first, newSecond)
-	/**
-	  * @param newItem New item
-	  * @param side Side on which the item will be placed
-	  * @tparam B Type of the new item
-	  * @return A copy of this pair with the specified item replacing one of the items in this pair
-	  */
-	def withSide[B >: A](newItem: B, side: End) = side match {
-		case First => withFirst(newItem)
-		case Last => withSecond(newItem)
-	}
-	
-	/**
-	  * @param f A mapping function
-	  * @tparam B Type of function result
-	  * @return A copy of this pair with the first item mapped
-	  */
-	def mapFirst[B >: A](f: A => B) = withFirst(f(first))
-	/**
-	  * @param f A mapping function
-	  * @tparam B Type of function result
-	  * @return A copy of this pair with the second item mapped
-	  */
-	def mapSecond[B >: A](f: A => B) = withSecond(f(second))
-	/**
-	  * @param side Targeted side
-	  * @param f A mapping function
-	  * @tparam B Type of function result
-	  * @return A copy of this pair with the targeted item mapped
-	  */
-	def mapSide[B >: A](side: End)(f: A => B) = side match {
-		case First => mapFirst(f)
-		case Last => mapSecond(f)
-	}
-	/**
-	  * @param f A mapping function that accepts a value from this pair, and the side on which that value appears.
-	  *          Negative is the left / first side, Positive is the right / second side.
-	  * @tparam B Type of mapping results
-	  * @return A mapped copy of this pair
-	  */
-	def mapWithSides[B](f: (A, End) => B) = Pair(f(first, First), f(second, Last))
-	
-	/**
-	  * @param f A reduce function that accepts the second item, then the first item
-	  * @tparam B Type of function result
-	  * @return Function result
-	  */
-	def reverseReduce[B](f: (A, A) => B) = f(second, first)
-	
-	/**
-	  * Combines this pair with another pair, matching first and second items together
-	  * @param other Another pair
-	  * @param f A merge function that accepts a value from both pairs.
-	  *          The values are always acquired from the same side on both pairs.
-	  * @tparam B Type of other pair
-	  * @tparam C Type of merge result
-	  * @return A combined pair
-	  */
-	def mergeWith[B, C](other: Pair[B])(f: (A, B) => C) =
-		Pair(f(first, other.first), f(second, other.second))
-	/**
-	  * Combines this pair with another pair, matching first and second items together
-	  * @param other Another pair
-	  * @param f A merge function that accepts a value from both pairs.
-	  *          The values are always acquired from the same side on both pairs.
-	  *          Returns 0-n items.
-	  * @tparam B Type of values in the other pair
-	  * @tparam C Type of individual merge results
-	  * @return All merge results as a vector
-	  */
-	def flatMergeWith[B, C](other: Pair[B])(f: (A, B) => IterableOnce[C]) = {
-		val builder = new VectorBuilder[C]()
-		builder ++= f(first, other.first)
-		builder ++= f(second, other.second)
-		builder.result()
-	}
-	/**
-	  * Attempts to merge this pair with another pair
-	  * @param other Another pair
-	  * @param f A merge function that combines values from both of these pairs.
-	  *          Returns None in cases where merging is not possible.
-	  *          Will be called 1-2 times.
-	  * @tparam B Type of values in the other pair
-	  * @tparam C Type of merged values, when successful
-	  * @return A pair with two merge result values, or None if the specified function returned None at any point.
-	  */
-	def findMergeWith[B, C](other: Pair[B])(f: (A, B) => Option[C]) =
-		f(first, other.first).flatMap { a => f(second, other.second).map { Pair(a, _) } }
-	/**
-	 * @param other Another pair
-	 * @param f A predicate that compares the values of these pairs
-	 * @tparam B Type of values in the other pair
-	 * @return Whether the specified predicate returns true for either side
-	 */
-	def existsWith[B](other: Pair[B])(f: (A, B) => Boolean) = f(first, other.first) || f(second, other.second)
-	/**
-	 * @param other Another pair
-	 * @param f     A predicate that compares the values of these pairs
-	 * @tparam B Type of values in the other pair
-	 * @return Whether the specified predicate returns true for both sides
-	 */
-	def forallWith[B](other: Pair[B])(f: (A, B) => Boolean) = f(first, other.first) && f(second, other.second)
-	/**
-	  * Merges this pair with another pair, resulting in a pair containing the entries from both
-	  * @param other Another pair
-	  * @tparam B Type of items in the other pair
-	  * @return A pair that combines the values of both of these pairs in tuples
-	  */
-	def zip[B](other: Pair[B]) = Pair((first, other.first), (second, other.second))
-	/**
-	  * @param keys A pair of keys
-	  * @tparam K Type of keys used
-	  * @return A map where the specified set of pair are the keys and this pair are the values.
-	  *         The mapping is based on ordering (first to first, second to second)
-	  */
-	def toMapWith[K](keys: Pair[K]) = keys.iterator.zip(this).toMap
-	/**
-	  * @param firstKey Key for the first (left) value in this pair
-	  * @param secondKey Key for the second (right) value in this pair
-	  * @tparam K Type of keys used
-	  * @return A map where with the specified keys and this pair's values as values
-	  */
-	def toMapWith[K](firstKey: K, secondKey: K): Map[K, A] = toMapWith(Pair(firstKey, secondKey))
-	
-	/**
-	  * Merges together the two values in this pair using a function.
-	  * Works exactly like reduce.
-	  * @param f A function that accepts the two values in this pair and yields a merge value
-	  * @tparam B Function result type
-	  * @return Function result
-	  */
-	def merge[B](f: (A, A) => B) = f(first, second)
-	/**
-	  * Maps the values in this pair and merges them together using another function.
-	  * This yields the same result as calling .map(...) followed by .merge(...), but
-	  * is more optimized, as no additional collection is constructed in between.
-	  * @param map Value mapping function to apply
-	  * @param merge A merge function to apply to mapped values
-	  * @tparam B Type of mapping results
-	  * @tparam C Type of the merge result
-	  * @return Merge result based on the mapped values of this pair
-	  */
-	def mapAndMerge[B, C](map: A => B)(merge: (B, B) => C) = merge(map(first), map(second))
 	
 	/**
 	  * @param e An equals function
@@ -527,68 +215,4 @@ case class Pair[+A](first: A, second: A)
 	  */
 	@deprecated("Renamed to .isAsymmetricWith(EqualsFunction)", "2.1")
 	def notEqualsUsing(e: EqualsFunction[A]) = e.not(first, second)
-	
-	/**
-	  * @param e An equals function
-	  * @return Whether the two values of this pair are equal when applying the specified function
-	  */
-	def isSymmetricWith(e: EqualsFunction[A]) = e(first, second)
-	/**
-	  * @param e An equals function
-	  * @return Whether the two values of this pair are unequal when applying the specified function
-	  */
-	def isAsymmetricWith(e: EqualsFunction[A]) = e.not(first, second)
-	/**
-	  * @param f A mapping function
-	  * @tparam B Type of mapping results
-	  * @return Whether the values in this pair are symmetric (i.e. equal) after applying the specified mapping function
-	  */
-	def isSymmetricBy[B](f: A => B) = merge { f(_) == f(_) }
-	/**
-	  * @param f A mapping function
-	  * @tparam B Type of mapping result
-	  * @return Whether the values in this pair are asymmetric (i.e. not equal)
-	  *         after applying the specified mapping function
-	  */
-	def isAsymmetricBy[B](f: A => B) = !isSymmetricBy(f)
-	
-	/**
-	  * @param other Another pair
-	  * @param eq Implicit equals function to use
-	  * @tparam B Type of values in the other pair
-	  * @return Whether these pairs are equal when using the specified function
-	  */
-	def ~==[B >: A](other: Pair[B])(implicit eq: EqualsFunction[B]) =
-		eq(first, other.first) && eq(second, other.second)
-	/**
-	  * @param other Another pair
-	  * @param eq    Implicit equals function to use
-	  * @tparam B Type of values in the other pair
-	  * @return Whether these pairs are not equal when using the specified function
-	  */
-	def !~==[B >: A](other: Pair[B])(implicit eq: EqualsFunction[B]) = !(this ~== other)
-	
-	
-	// NESTED   ------------------------------
-	
-	private class PairIterator extends Iterator[A]
-	{
-		// ATTRIBUTES   ----------------------
-		
-		private var nextIndex = 0
-		
-		
-		// IMPLEMENTED  ----------------------
-		
-		override def hasNext = nextIndex < 2
-		
-		override def next() = {
-			nextIndex += 1
-			nextIndex match {
-				case 1 => first
-				case 2 => second
-				case _ => throw new IllegalStateException("next() called on consumed iterator")
-			}
-		}
-	}
 }

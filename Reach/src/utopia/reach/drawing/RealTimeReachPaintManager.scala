@@ -102,7 +102,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match {
 		case Some(region) =>
 			// Extends the queue. May start the drawing process as well
-			val firstDrawArea = queuePointer.pop { case (processing, queue) =>
+			val firstDrawArea = queuePointer.mutate { case (processing, queue) =>
 				// Case: No draw process currently active => starts drawing
 				if (processing.isEmpty)
 					Some(region) -> (Some(region) -> queue)
@@ -145,7 +145,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		case None =>
 			// Paints the whole component, clearing the queue
 			val componentBounds = Bounds(Point.origin, component.size)
-			val shouldPaintNow = queuePointer.pop { case (processing, _) =>
+			val shouldPaintNow = queuePointer.mutate { case (processing, _) =>
 				if (processing.nonEmpty)
 					false -> (processing -> Map(priority -> Vector(componentBounds)))
 				else
@@ -198,7 +198,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	private def checkForSizeChanges() =
 	{
 		val currentSize = component.size
-		val sizeWasChanged = bufferSizePointer.pop { old => (old != currentSize) -> currentSize }
+		val sizeWasChanged = bufferSizePointer.mutate { old => (old != currentSize) -> currentSize }
 		if (sizeWasChanged)
 			bufferPointer.clear()
 	}
@@ -208,7 +208,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	// If Some(X), updates outside area X are not applied yet.
 	private def flatten(region: Option[Bounds] = None) = {
 		// Prepares the buffer
-		val (shouldAddUpdates, baseImage) = bufferPointer.pop {
+		val (shouldAddUpdates, baseImage) = bufferPointer.mutate {
 			// Case: There already exists a buffer => Uses it, adding updates on top
 			case Some(existing) => (true, existing) -> Some(existing)
 			// Case: No buffer exists => Repaints the whole component
@@ -220,7 +220,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		// Applies or discards updates
 		if (shouldAddUpdates) {
 			// If the update buffer was overfilled (None), recreates the buffer completely
-			queuedUpdatesPointer.pop {
+			queuedUpdatesPointer.mutate {
 				// Case: Update buffer was not overfilled
 				case Some(updates) =>
 					// Checks for updates to apply, based on the targeted region
@@ -269,7 +269,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 					case Some(region) => paintArea(drawer, region)
 					case None => paintWith(drawer)
 				}
-				nextArea = queuePointer.pop { case (_, queue) =>
+				nextArea = queuePointer.mutate { case (_, queue) =>
 					// Picks the next highest priority area (preferring smaller areas)
 					Priority.descending.find(queue.contains) match {
 						case Some(targetPriority) =>

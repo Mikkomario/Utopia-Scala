@@ -43,6 +43,7 @@
 - Added **ChangingUntil** & **StatefulValueView** **Changing** mirror classes
 - Added **ChangeResult** model, relating to other **Changing** changes
 - Added conditional mirroring support to **OptimizedMirror**
+- Added a **PairView** class, as well as a general **HasTwoEnds** -trait
 - Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
 - Added **HasExtremes** -trait
 - Added **SomeBeforeNone** utility ordering class for altered **Option**-ordering
@@ -85,6 +86,8 @@
   - Added `.appendIfDistinct(...)`
 - **Sign**
   - Added new `*` variant
+- **SpanLike**
+  - Added `.withEnd(A, End)`, as well as multiple map end variations
 - **Try** (**CollectionExtensions**)
   - Added `.failWith(Throwable)` and `.failIf(=> Option[Throwable])`
 ### Other changes
