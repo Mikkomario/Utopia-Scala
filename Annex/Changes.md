@@ -1,7 +1,25 @@
 # Utopia Annex - List of Changes
 
-## v1.6.1 (in development)
+## v1.7 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- **ApiRequest** no longer requires property `persistingModel: Option[Model]`. 
+  This is now defined in **Persisting** and **ConsistentlyPersisting**, which you may extend if you want the 
+  persisting functionality.
+- Renamed `.isDeprecated` to `.deprecated` in **ApiRequest**
+- Replaced `offlineDelayIncreaseModifier: Double` in **QueueSystem** constructor to 
+  `increaseOfflineDelay: FiniteDuration => FiniteDuration`
+- Renamed **PostRequest** to **PostSpiritRequest**
+### Deprecations
+- Renamed **QueueSystem**`.pushSynchronous(ApiRequest)` to `.pushBlocking(ApiRequest)`
+### New features
+- Added support for a new way of sending requests: **ApiRequestSeed**
+  - This allows delayed request-generation in a persisted context. 
+  - This may be useful when chaining persisting requests.
+- Persisting requests now support variable persisting formats
+### New methods
+- **QueueSystem**
+  - Added `.onlineFlag`
 ### Other changes
 - Scala version updated to 2.13.12
 

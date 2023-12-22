@@ -3,7 +3,7 @@ package utopia.scribe.client.controller.logging
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
-import utopia.annex.model.request.ApiRequest
+import utopia.annex.model.request.{ApiRequest, ConsistentlyPersisting}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
@@ -294,7 +294,8 @@ object MasterScribe
 					.map { new PostIssuesRequest(_) }
 		}
 		
-		private class PostIssuesRequest(initialIssues: Vector[(ClientIssue, Instant)]) extends ApiRequest
+		private class PostIssuesRequest(initialIssues: Vector[(ClientIssue, Instant)])
+			extends ApiRequest with ConsistentlyPersisting
 		{
 			// ATTRIBUTES   --------------------
 			
@@ -312,17 +313,17 @@ object MasterScribe
 			
 			// Removes the deprecated issues
 			// Considers this request deprecated once all issues have deprecated
-			override def isDeprecated: Boolean = deprecateOldIssues().isEmpty
+			override def deprecated: Boolean = deprecateOldIssues().isEmpty
 			
-			override def persistingModel: Option[Model] = {
+			override def persistingModel = {
 				// Updates the issue status before persisting them
 				updateStoreDurations()
 				val issues = deprecateOldIssues()
-				Some(Model.from(
+				Model.from(
 					"issues" -> issues.map { case (issue, lastUpdate) =>
 						issue.toModel + Constant("lastUpdated", lastUpdate)
 					}
-				))
+				)
 			}
 			
 			

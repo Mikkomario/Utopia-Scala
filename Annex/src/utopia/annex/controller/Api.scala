@@ -119,8 +119,7 @@ trait Api
 							  modHeaders: Headers => Headers = h => h)(implicit context: ExecutionContext) =
 	{
 		// Timeout is generated from the specified single duration
-		val fullTimeout = timeout.finite match
-		{
+		val fullTimeout = timeout.finite match {
 			case Some(time) => Timeout(time, time * 3, time * 6)
 			case None => Timeout.empty
 		}

@@ -48,7 +48,7 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 	{
 		override protected def parent = DbAuthService
 		
-		override def filterCondition = model.withName(name).toCondition
+		override def filterCondition = this.model.withName(name).toCondition
 	}
 }
 

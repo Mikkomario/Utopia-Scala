@@ -49,7 +49,7 @@ object DbIncompleteAuthLogin
 	{
 		override protected def parent = DbIncompleteAuthLogin
 		
-		override def filterCondition = model.withAuthId(incompleteAuthId).toCondition
+		override def filterCondition = this.model.withAuthId(incompleteAuthId).toCondition
 	}
 }
 

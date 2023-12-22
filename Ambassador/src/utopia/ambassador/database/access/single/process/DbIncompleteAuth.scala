@@ -49,7 +49,7 @@ object DbIncompleteAuth
 	{
 		override protected def parent = DbIncompleteAuth
 		
-		override def filterCondition = model.withToken(token).toCondition
+		override def filterCondition = this.model.withToken(token).toCondition
 	}
 }
 

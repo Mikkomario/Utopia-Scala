@@ -1,9 +1,10 @@
 package utopia.annex.controller
 
-import utopia.annex.model.request.ApiRequest
+import utopia.annex.model.request.{ApiRequest, ApiRequestSeed}
+import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 object RequestQueue
 {
@@ -41,7 +42,6 @@ trait RequestQueue
 	  * @return Action queue used for queueing request sends
 	  */
 	protected def queue: ActionQueue
-	
 	/**
 	  * @return The system that handles the queued requests
 	  */
@@ -53,8 +53,23 @@ trait RequestQueue
 	/**
 	  * Pushes a new request to this queue
 	  * @param request Request to push
-	  * @return Asynchronous request result (either received response or reason why the request wasn't continued)
+	  * @return Asynchronous final request result
 	  */
-	def push(request: ApiRequest) =
-		queue.push { master.pushSynchronous(request) }
+	def push(request: ApiRequest): Future[RequestResult] = push(Right(request))
+	/**
+	  * Pushes a new request to this queue
+	  * @param requestSeed A request seed that will be converted into a request before sending it
+	  * @return Asynchronous final request result
+	  */
+	def push(requestSeed: ApiRequestSeed): Future[RequestResult] = push(Left(requestSeed))
+	/**
+	  * Pushes a new request to this queue
+	  * @param request Request to push.
+	  *                Either
+	  *                     Left: A request seed that will be converted into a request before sending it, or
+	  *                     Right: A prepared request
+	  * @return Asynchronous final request result
+	  */
+	def push(request: Either[ApiRequestSeed, ApiRequest]) =
+		queue.push { master.pushBlocking(request) }
 }

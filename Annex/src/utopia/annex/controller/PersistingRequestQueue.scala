@@ -1,7 +1,8 @@
 package utopia.annex.controller
 
 import java.nio.file.Path
-import utopia.annex.model.request.ApiRequest
+import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, Persisting}
+import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
 import utopia.flow.parse.file.container.{FileContainer, ModelsFileContainer, SaveTiming}
@@ -9,8 +10,9 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.eventful.Flag
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object PersistingRequestQueue
@@ -49,7 +51,6 @@ object PersistingRequestQueue
 		// ATTRIBUTES	----------------
 		
 		override protected val queue = new ActionQueue(width)
-		
 		override protected val requestContainer = new ModelsFileContainer(fileLocation, saveLogic)
 	}
 }
@@ -76,16 +77,19 @@ trait PersistingRequestQueue extends RequestQueue
 	
 	// IMPLEMENTED	---------------------
 	
-	override def push(request: ApiRequest) = {
-		// Saves the requests when they are send, if necessary
-		request.persistingModel match {
-			case Some(model) =>
-				requestContainer.current :+= model
-				val result = super.push(request)
-				// Removes the model once result has been received
-				result.onComplete { _ => removePersistedRequest(model) }
-				result
-			case None => super.push(request)
+	override def push(request: Either[ApiRequestSeed, ApiRequest]) = {
+		request match {
+			// Case: Request seed => Always persists
+			case Left(seed) => pushPersisting(seed) { super.push(request) }
+			// Case: Prepared request => Only persists persisting requests
+			case Right(request) =>
+				request match {
+					// Case: Persisting request
+					case persistingRequest: Persisting =>
+						pushPersisting(persistingRequest) { super.push(Right(persistingRequest)) }
+					// Case: Non-persisting request
+					case nonPersisting => super.push(Right(nonPersisting))
+				}
 		}
 	}
 	
@@ -121,6 +125,27 @@ trait PersistingRequestQueue extends RequestQueue
 		if (persistedModels.nonEmpty)
 			persistRequests()
 		errors
+	}
+	
+	private def pushPersisting(request: Persisting)(pushRequest: => Future[RequestResult]) = {
+		// Uses pointers to determine when the data should be persisted and in which form
+		val sentFlag = Flag()
+		val modelPointer = request.persistingModelPointer
+		val storedModelPointer = modelPointer
+			.lightMergeWithUntil(sentFlag) { (model, sent) =>
+				if (sent) None else model
+			} { (_, sent, _) => sent }
+		
+		// Pushes the request to the queue
+		val resultFuture = pushRequest
+		
+		// Stores the persisted model in the container while appropriate
+		storedModelPointer.addListenerAndSimulateEvent(None) { e =>
+			e.oldValue.foreach(removePersistedRequest)
+			e.newValue.foreach { requestContainer.current :+= _ }
+		}
+		
+		resultFuture
 	}
 	
 	private def removePersistedRequest(request: Model) =

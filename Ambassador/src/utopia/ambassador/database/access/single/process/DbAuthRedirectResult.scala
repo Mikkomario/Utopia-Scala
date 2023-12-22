@@ -49,7 +49,7 @@ object DbAuthRedirectResult
 	{
 		override protected def parent = DbAuthRedirectResult
 		
-		override def filterCondition = model.withRedirectId(redirectId).toCondition
+		override def filterCondition = this.model.withRedirectId(redirectId).toCondition
 	}
 }
 

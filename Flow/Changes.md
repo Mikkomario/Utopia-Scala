@@ -48,6 +48,9 @@
 - Added **HasExtremes** -trait
 - Added **SomeBeforeNone** utility ordering class for altered **Option**-ordering
 ### New methods
+- **ActionQueue**
+  - Added `.pushAsync(=> Future)`
+  - Added `.prepend(...)` variations
 - **CompoundingBuilder**
   - Added `.popAll()`
 - **Changing**

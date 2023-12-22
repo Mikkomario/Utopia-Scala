@@ -21,7 +21,7 @@ object GetRequest
 	
 	private class SimpleGetRequest(override val path: String, deprecationCondition: => Boolean) extends GetRequest
 	{
-		override def isDeprecated = deprecationCondition
+		override def deprecated = deprecationCondition
 	}
 }
 
@@ -33,8 +33,5 @@ object GetRequest
 trait GetRequest extends ApiRequest
 {
 	override def method = Get
-	
 	override def body = Value.empty
-	
-	override def persistingModel = None
 }

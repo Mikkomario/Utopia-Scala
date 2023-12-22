@@ -49,7 +49,7 @@ object DbAuthPreparation
 	{
 		override protected def parent = DbAuthPreparation
 		
-		override def filterCondition = model.withToken(token).toCondition
+		override def filterCondition = this.model.withToken(token).toCondition
 	}
 }
 

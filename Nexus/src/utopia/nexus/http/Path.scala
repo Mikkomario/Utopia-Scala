@@ -57,7 +57,6 @@ case class Path(parts: Seq[String])
      * The first string element in the path
      */
     def head = parts.head
-    
     /**
      * The remaining portion of the path after the first element
      */
@@ -124,22 +123,19 @@ case class Path(parts: Seq[String])
      * @return the path portion before the specified path portion. None if this path doesn't 
      * contain the specified portion of if this path starts with the specified portion
      */
-    def before(part: Path) = 
-    {
+    def before(part: Path) = {
         val partIndex = parts.indexOfSlice(part.parts)
         if (partIndex <= 0)
             None
         else
             Some(Path(parts.take(partIndex)))
     }
-    
     /**
      * Finds the path after a specified path portion
      * @return the path portion after the specified path portion. None if this path doesn't 
      * contain the specified portion of if this path ends with the specified portion
      */
-    def after(part: Path) = 
-    {
+    def after(part: Path) = {
         val partIndex = parts.indexOfSlice(part.parts)
         if (partIndex < 0)
             None
@@ -152,7 +148,6 @@ case class Path(parts: Seq[String])
                 Some(Path(parts.drop(partEndIndex)))
         }
     }
-    
     /**
      * @param element A path element
      * @return The portion of this path that comes before the specified element. None if the specified element is not

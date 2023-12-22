@@ -8,8 +8,9 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.ModelType
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.view.immutable.eventful.Fixed
 
-object PostRequest
+object PostSpiritRequest
 {
 	// ATTRIBUTES	---------------------
 	
@@ -24,32 +25,32 @@ object PostRequest
 	  * @tparam S Type of posted spirit
 	  * @return A new request for posting spirit data
 	  */
-	def apply[S <: Spirit with ModelConvertible](spirit: S, method: Method = Post): PostRequest[S] =
-		SimplePostRequest[S](spirit, method)
+	def apply[S <: Spirit with ModelConvertible](spirit: S, method: Method = Post): PostSpiritRequest[S] =
+		SimplePostSpiritRequest[S](spirit, method)
 	
 	/**
 	  * @param spiritFactory A factory for parsing spirit data from models
 	  * @tparam S Type of parsed spirit
 	  * @return A factory for parsing persisted post requests
 	  */
-	def factory[S <: Spirit with ModelConvertible](spiritFactory: FromModelFactory[S]): FromModelFactory[PostRequest[S]] =
+	def factory[S <: Spirit with ModelConvertible](spiritFactory: FromModelFactory[S]): FromModelFactory[PostSpiritRequest[S]] =
 		PostRequestFactory(spiritFactory)
 	
 	
 	// NESTED	-------------------------
 	
 	private case class PostRequestFactory[+S <: Spirit with ModelConvertible](spiritFactory: FromModelFactory[S])
-		extends FromModelFactory[PostRequest[S]]
+		extends FromModelFactory[PostSpiritRequest[S]]
 	{
 		override def apply(model: ModelLike[Property]) = baseSchema.validate(model).toTry.flatMap { valid =>
 			spiritFactory(valid("spirit").getModel).map { spirit =>
-				PostRequest(spirit, valid("method").string.flatMap(Method.parse).getOrElse(Post))
+				PostSpiritRequest(spirit, valid("method").string.flatMap(Method.parse).getOrElse(Post))
 			}
 		}
 	}
 	
-	private case class SimplePostRequest[+S <: Spirit with ModelConvertible](spirit: S, override val method: Method = Post)
-		extends PostRequest[S]
+	private case class SimplePostSpiritRequest[+S <: Spirit with ModelConvertible](spirit: S, override val method: Method = Post)
+		extends PostSpiritRequest[S]
 }
 
 /**
@@ -57,7 +58,7 @@ object PostRequest
   * @author Mikko Hilpinen
   * @since 16.6.2020, v1
   */
-trait PostRequest[+S <: Spirit with ModelConvertible] extends ApiRequest
+trait PostSpiritRequest[+S <: Spirit with ModelConvertible] extends ApiRequest with Persisting
 {
 	// ABSTRACT ---------------------------
 	
@@ -69,14 +70,12 @@ trait PostRequest[+S <: Spirit with ModelConvertible] extends ApiRequest
 	
 	// IMPLEMENTED    ---------------------
 	
-	override def isDeprecated = false
-	
-	override def persistingModel =
-		Some(Model(Vector("method" -> method.toString, "spirit" -> spirit.toModel)))
-	
 	def method: Method = Post
-	
 	override def path = spirit.postPath
-	
 	override def body = spirit.postBody
+	
+	override def deprecated = false
+	
+	override def persistingModelPointer =
+		Fixed(Some(Model(Vector("method" -> method.toString, "spirit" -> spirit.toModel))))
 }

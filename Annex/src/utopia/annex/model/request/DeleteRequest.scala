@@ -7,6 +7,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValida
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.view.immutable.eventful.Fixed
 
 import scala.util.{Failure, Success}
 
@@ -47,13 +48,13 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-trait DeleteRequest extends ApiRequest
+trait DeleteRequest extends ApiRequest with Persisting
 {
 	override def method = Delete
-	
 	override def body = Value.empty
 	
-	override def isDeprecated = false
+	override def deprecated = false
 	
-	override def persistingModel = Some(Model(Vector("method" -> method.toString, "path" -> path)))
+	override def persistingModelPointer =
+		Fixed(Some(Model(Vector("method" -> method.toString, "path" -> path))))
 }

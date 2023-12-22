@@ -96,11 +96,10 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 		}
 	}
 	
-	override protected def add(component: C, index: Int) =
-	{
+	override protected def add(component: C, index: Int) = {
 		// The wrapper to display is created during update, but the visibility change is activated after the update
 		// (In order to avoid deadlock-situations)
-		val wrapperToShow = wrappersList.pop { old =>
+		val wrapperToShow = wrappersList.mutate { old =>
 			// If the component was being removed from the container, cancels the removal
 			// (may still need to reposition the wrapper)
 			old.findIndexWhere { _._1.display == component } match {

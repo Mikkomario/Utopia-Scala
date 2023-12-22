@@ -3,7 +3,7 @@ package utopia.journey.controller.user
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
 import utopia.annex.model.error.{RequestDeniedException, UnauthorizedRequestException}
-import utopia.annex.model.request.{GetRequest, PostRequest}
+import utopia.annex.model.request.{GetRequest, PostSpiritRequest}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
@@ -102,7 +102,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		hiddenIds :+= invitationId
 		
 		// Sends the request, returns a modified version of the response
-		queue.push(PostRequest(InvitationResponseSpirit(invitationId, isAccepted, isBlocked))).map {
+		queue.push(PostSpiritRequest(InvitationResponseSpirit(invitationId, isAccepted, isBlocked))).map {
 			case _: Response.Success =>
 				// Removes the invitation from locally cached data
 				cached.update { _.filterNot { _.id == invitationId } }
@@ -131,7 +131,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		
 		private val bodyFactory = InvitationResponseSpirit
 		
-		override val factory = PostRequest.factory(bodyFactory)
+		override val factory = PostSpiritRequest.factory(bodyFactory)
 		
 		
 		// IMPLEMENTED	------------------------

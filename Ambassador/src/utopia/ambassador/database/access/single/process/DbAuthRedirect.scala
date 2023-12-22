@@ -55,12 +55,12 @@ object DbAuthRedirect
 	{
 		override protected def parent = DbAuthRedirect
 		
-		override def filterCondition = model.withToken(token).toCondition
+		override def filterCondition = this.model.withToken(token).toCondition
 	}
 	
 	class DbRedirectForPreparation(preparationId: Int) extends UniqueAuthRedirectAccess
 	{
-		override def accessCondition = Some(model.withPreparationId(preparationId).toCondition)
+		override def accessCondition = Some(this.model.withPreparationId(preparationId).toCondition)
 	}
 }
 

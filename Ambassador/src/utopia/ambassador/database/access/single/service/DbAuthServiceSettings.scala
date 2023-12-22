@@ -50,7 +50,7 @@ object DbAuthServiceSettings
 		extends UniqueAuthServiceSettingsAccess with LatestModelAccess[AuthServiceSettings] with SubView
 	{
 		override protected def parent = DbAuthServiceSettings
-		override def filterCondition = model.withServiceId(serviceId).toCondition
+		override def filterCondition = this.model.withServiceId(serviceId).toCondition
 	}
 }
 
