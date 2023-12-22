@@ -3,7 +3,7 @@ package utopia.scribe.client.controller.logging
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
-import utopia.annex.model.request.{ApiRequest, ConsistentlyPersisting}
+import utopia.annex.model.request.{ApiRequest, Persisting}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
@@ -15,6 +15,7 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
@@ -23,8 +24,9 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{Mutate, NotEmpty}
-import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.Changing
 import utopia.scribe.core.controller.listener.MaximumLogLimitReachedListener
 import utopia.scribe.core.model.cached.event.MaximumLogLimitReachedEvent
 import utopia.scribe.core.model.enumeration.Severity
@@ -276,36 +278,65 @@ object MasterScribe
 			override def factory: FromModelFactory[ApiRequest] = PostIssuesRequest
 			
 			override def shouldHandle(requestModel: Model): Boolean = requestModel.contains("issues")
-			override def handle(result: RequestResult): Unit = handlePostResult(Vector(), result)
+			override def handle(requestModel: Model, request: ApiRequest, result: RequestResult): Unit = {
+				val issues = request match {
+					case postRequest: PostIssuesRequest => postRequest.remainingIssues
+					case _ => PostIssuesRequest.parseIssuesFrom(requestModel).success.getOrElse(Vector.empty)
+				}
+				handlePostResult(issues, result)
+			}
 		}
 		
 		private object PostIssuesRequest extends FromModelFactory[PostIssuesRequest]
 		{
+			// IMPLEMENTED  ---------------------
+			
 			override def apply(model: ModelLike[Property]): Try[PostIssuesRequest] =
-				model("issues").getVector
-					// Attempts to parse the issues
-					.map { v =>
-						val issueModel = v.getModel
-						ClientIssue(issueModel).map { _ -> issueModel("lastUpdated").getInstant }
-					}
-					// Logs non-critical errors using the backup logger
-					.toTryCatch.logToTry
-					// Converts to a request
-					.map { new PostIssuesRequest(_) }
+				parseIssuesFrom(model).logToTry.map { new PostIssuesRequest(_) }
+			
+			
+			// OTHER    ------------------------
+			
+			def parseIssuesFrom(model: AnyModel) = model("issues").getVector
+				// Attempts to parse the issues
+				.map { v =>
+					val issueModel = v.getModel
+					ClientIssue(issueModel).map { _ -> issueModel("lastUpdated").getInstant }
+				}
+				// Logs non-critical errors using the backup logger
+				.toTryCatch
 		}
-		
 		private class PostIssuesRequest(initialIssues: Vector[(ClientIssue, Instant)])
-			extends ApiRequest with ConsistentlyPersisting
+			extends ApiRequest with Persisting
 		{
 			// ATTRIBUTES   --------------------
 			
-			private val remainingIssuesPointer = Pointer(initialIssues)
+			private val remainingIssuesPointer = EventfulPointer(initialIssues)
+			
+			override lazy val persistingModelPointer: Changing[Option[Model]] = {
+				// Updates the issue status before persisting them
+				updateStoreDurations()
+				deprecateOldIssues()
+				remainingIssuesPointer.map { issues =>
+					NotEmpty(issues).map { issues =>
+						Model.from(
+							"issues" -> issues.map { case (issue, lastUpdate) =>
+								issue.toModel + Constant("lastUpdated", lastUpdate)
+							}
+						)
+					}
+				}
+			}
+			
+			
+			// COMPUTED ------------------------
+			
+			def remainingIssues = remainingIssuesPointer.value
 			
 			
 			// IMPLEMENTED  --------------------
 			
 			override def path: String = loggingEndpointPath
-			
 			override def method: Method = Post
 			
 			// Updates the store durations of all the issues
@@ -314,17 +345,6 @@ object MasterScribe
 			// Removes the deprecated issues
 			// Considers this request deprecated once all issues have deprecated
 			override def deprecated: Boolean = deprecateOldIssues().isEmpty
-			
-			override def persistingModel = {
-				// Updates the issue status before persisting them
-				updateStoreDurations()
-				val issues = deprecateOldIssues()
-				Model.from(
-					"issues" -> issues.map { case (issue, lastUpdate) =>
-						issue.toModel + Constant("lastUpdated", lastUpdate)
-					}
-				)
-			}
 			
 			
 			// OTHER    ------------------------

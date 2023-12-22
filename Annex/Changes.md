@@ -7,6 +7,7 @@ Supports **Flow v2.3**
   This is now defined in **Persisting** and **ConsistentlyPersisting**, which you may extend if you want the 
   persisting functionality.
 - Renamed `.isDeprecated` to `.deprecated` in **ApiRequest**
+- **PersistedRequestHandler**`.handle(...)` now accepts 3 parameters (model, request & result) instead of just 1 (result)
 - Replaced `offlineDelayIncreaseModifier: Double` in **QueueSystem** constructor to 
   `increaseOfflineDelay: FiniteDuration => FiniteDuration`
 - Renamed **PostRequest** to **PostSpiritRequest**

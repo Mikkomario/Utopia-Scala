@@ -15,19 +15,21 @@ trait PersistedRequestHandler
 	// ABSTRACT ----------------------------
 	
 	/**
-	  * @param requestModel A model
-	  * @return Whether this handler should attempt to parse the specified model
-	  */
-	def shouldHandle(requestModel: Model): Boolean
-	
-	/**
-	  * @return Factory used for parsing requests
+	  * @return Factory used for parsing requests.
+	  *         Only needs to process models accepted by 'shouldHandle'.
 	  */
 	def factory: FromModelFactory[ApiRequest]
 	
 	/**
+	  * @param requestModel A model
+	  * @return Whether this handler should attempt to parse the specified model
+	  */
+	def shouldHandle(requestModel: Model): Boolean
+	/**
 	  * Handles a response received for a persisted request
+	  * @param requestModel The persisted model from which the request was parsed
+	  * @param request The request that was parsed and (possibly) sent to the server
 	  * @param result Result received for the persisted request
 	  */
-	def handle(result: RequestResult): Unit
+	def handle(requestModel: Model, request: ApiRequest, result: RequestResult): Unit
 }

@@ -115,7 +115,7 @@ trait PersistingRequestQueue extends RequestQueue
 							// Once result is received, removes the persisted request and lets the handler
 							// handle the response
 							removePersistedRequest(requestModel)
-							result.foreach(handler.handle)
+							result.foreach { handler.handle(requestModel, request, _) }
 						}
 						None
 					case Failure(error) => Some(error)
