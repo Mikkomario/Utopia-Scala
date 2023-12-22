@@ -12,8 +12,9 @@ import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, Has
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
-object Acceleration2D extends DimensionsWrapperFactory[LinearAcceleration, Acceleration2D]
-	with ChangeFromModelFactory[Acceleration2D, Velocity2D]
+object Acceleration2D
+	extends DimensionsWrapperFactory[LinearAcceleration, Acceleration2D]
+		with ChangeFromModelFactory[Acceleration2D, Velocity2D]
 {
 	/**
 	  * A zero acceleration

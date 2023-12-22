@@ -1,6 +1,6 @@
 package utopia.annex.controller
 
-import utopia.annex.model.request.{ApiRequest, ApiRequestSeed}
+import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, RequestQueueable}
 import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 
@@ -70,6 +70,5 @@ trait RequestQueue
 	  *                     Right: A prepared request
 	  * @return Asynchronous final request result
 	  */
-	def push(request: Either[ApiRequestSeed, ApiRequest]) =
-		queue.push { master.pushBlocking(request) }
+	def push(request: RequestQueueable) = queue.push { master.pushBlocking(request) }
 }

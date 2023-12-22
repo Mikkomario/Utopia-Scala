@@ -60,6 +60,8 @@
   - Added `.flatten` function for **Changing** items that contain **Changing** values
 - **Delay**
   - Added `.future(...)`
+- **FromModelFactory**
+  - Added `.mapParseResult(...)` and `.flatMapParseResult(...)`
 - **Future** (**AsyncExtensions**)
   - Added `.or(Future)`
 - **IterableOnce** (**CollectionExtensions**)

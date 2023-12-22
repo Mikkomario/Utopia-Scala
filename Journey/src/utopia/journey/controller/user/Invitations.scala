@@ -3,7 +3,7 @@ package utopia.journey.controller.user
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
 import utopia.annex.model.error.{RequestDeniedException, UnauthorizedRequestException}
-import utopia.annex.model.request.{GetRequest, PostSpiritRequest}
+import utopia.annex.model.request.{GetRequest, PostSpiritRequest, RequestQueueable}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
@@ -131,7 +131,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		
 		private val bodyFactory = InvitationResponseSpirit
 		
-		override val factory = PostSpiritRequest.factory(bodyFactory)
+		override val factory = PostSpiritRequest.factory(bodyFactory).mapParseResult { Right(_) }
 		
 		
 		// IMPLEMENTED	------------------------
@@ -139,8 +139,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		override def shouldHandle(requestModel: Model) =
 			bodyFactory.isProbablyValidModel(requestModel)
 		
-		override def handle(result: RequestResult) =
-		{
+		override def handle(requestModel: Model, request: RequestQueueable, result: RequestResult) = {
 			result match {
 				case Response.Success(status, body, _) =>
 					body match {

@@ -49,12 +49,21 @@ trait FromModelFactory[+A]
 	  * Parses an instance from a JSON string. Returns none if either the JSON string couldn't be
 	  * parsed or if the instance couldn't be parsed from read data.
 	  */
+	def fromJson(json: String)(implicit parser: JsonParser) = parser(json).map(v => apply(v.getModel)).flatten
+	
 	@deprecated("Please use fromJson instead", "< v2.3")
 	def fromJSON(json: String) = JsonReader(json).map(v => apply(v.getModel)).flatten
 	
 	/**
-	  * Parses an instance from a JSON string. Returns none if either the JSON string couldn't be
-	  * parsed or if the instance couldn't be parsed from read data.
+	  * @param f A mapping function for parse results
+	  * @tparam B Type of mapped parse results
+	  * @return A factory that utilizes this factory, but also applies the specified mapping function
 	  */
-	def fromJson(json: String)(implicit parser: JsonParser) = parser(json).map(v => apply(v.getModel)).flatten
+	def mapParseResult[B](f: A => B) = FromModelFactory { apply(_).map(f) }
+	/**
+	  * @param f A mapping function for parse results. May return a failure.
+	  * @tparam B Type of mapped parse results, when successful
+	  * @return A factory that utilizes this factory, but also applies the specified mapping function
+	  */
+	def flatMapParseResult[B](f: A => Try[B]) = FromModelFactory { apply(_).flatMap(f) }
 }

@@ -3,7 +3,7 @@ package utopia.scribe.client.controller.logging
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
-import utopia.annex.model.request.{ApiRequest, Persisting}
+import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, Persisting, RequestQueueable}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
@@ -275,13 +275,17 @@ object MasterScribe
 		
 		private object RequestHandler extends PersistedRequestHandler
 		{
-			override def factory: FromModelFactory[ApiRequest] = PostIssuesRequest
+			override lazy val factory = PostIssuesRequest.mapParseResult { Right(_) }
 			
 			override def shouldHandle(requestModel: Model): Boolean = requestModel.contains("issues")
-			override def handle(requestModel: Model, request: ApiRequest, result: RequestResult): Unit = {
-				val issues = request match {
-					case postRequest: PostIssuesRequest => postRequest.remainingIssues
-					case _ => PostIssuesRequest.parseIssuesFrom(requestModel).success.getOrElse(Vector.empty)
+			override def handle(requestModel: Model, request: RequestQueueable, result: RequestResult): Unit = {
+				val postRequest = request.toOption.flatMap {
+					case r: PostIssuesRequest => Some(r)
+					case _ => None
+				}
+				val issues = postRequest match {
+					case Some(postRequest) => postRequest.remainingIssues
+					case None => PostIssuesRequest.parseIssuesFrom(requestModel).success.getOrElse(Vector.empty)
 				}
 				handlePostResult(issues, result)
 			}

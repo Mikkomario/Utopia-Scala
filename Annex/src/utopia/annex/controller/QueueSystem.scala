@@ -1,7 +1,7 @@
 package utopia.annex.controller
 
 import utopia.access.http.Status.ServiceUnavailable
-import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, Retractable}
+import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, RequestQueueable, Retractable}
 import utopia.annex.model.response.RequestNotSent.{RequestSendingFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
@@ -111,7 +111,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *                Left: A request seed that will be converted into a request upon sending.
 	  * @return Asynchronous final send result
 	  */
-	def push(request: Either[ApiRequestSeed, ApiRequest]): Future[RequestResult] = {
+	def push(request: RequestQueueable): Future[RequestResult] = {
 		// In online mode, performs the requests side by side (i.e. parallel)
 		if (isOnline)
 			Future { sendBlocking(request).rightOrMap(handleDelayedRequestBlocking) }
@@ -183,7 +183,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *
 	  * @return Final send result, once acquired
 	  */
-	def pushBlocking(request: Either[ApiRequestSeed, ApiRequest]): RequestResult = {
+	def pushBlocking(request: RequestQueueable): RequestResult = {
 		// In online mode, performs the requests side by side
 		if (isOnline)
 			sendBlocking(request).rightOrMap(handleDelayedRequestBlocking)
@@ -212,7 +212,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	// Returns either:
 	//      Left: Future that may resolve into an API-request to send (delayed seed germination in sequential -use-case)
 	//      Right: Request result (blocks) (parallel & offline request -use-cases)
-	private def sendBlocking(request: Either[ApiRequestSeed, ApiRequest],
+	private def sendBlocking(request: RequestQueueable,
 	                         offlineMode: Boolean = false): Either[Future[Try[ApiRequest]], RequestResult] =
 	{
 		afterPossibleWait[Either[Future[Try[ApiRequest]], RequestResult]](request.either,

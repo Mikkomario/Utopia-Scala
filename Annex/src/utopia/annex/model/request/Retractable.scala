@@ -6,7 +6,7 @@ package utopia.annex.model.request
   * @author Mikko Hilpinen
   * @since 21.12.2023, v1.7
   */
-trait Retractable
+trait Retractable extends Any
 {
 	// ABSTRACT -------------------------
 	

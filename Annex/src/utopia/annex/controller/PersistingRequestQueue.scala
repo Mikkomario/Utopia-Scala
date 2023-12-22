@@ -1,17 +1,17 @@
 package utopia.annex.controller
 
-import java.nio.file.Path
-import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, Persisting}
+import utopia.annex.model.request.{Persisting, RequestQueueable}
 import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
 import utopia.flow.parse.file.container.{FileContainer, ModelsFileContainer, SaveTiming}
-import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.Flag
 
+import java.nio.file.Path
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -77,7 +77,7 @@ trait PersistingRequestQueue extends RequestQueue
 	
 	// IMPLEMENTED	---------------------
 	
-	override def push(request: Either[ApiRequestSeed, ApiRequest]) = {
+	override def push(request: RequestQueueable) = {
 		request match {
 			// Case: Request seed => Always persists
 			case Left(seed) => pushPersisting(seed) { super.push(request) }
