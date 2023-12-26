@@ -43,7 +43,7 @@ object LocalDatabase
 	/**
 	  * A pointer to this database's status
 	  */
-	def statusPointer = _statusPointer.valueView
+	def statusPointer = _statusPointer.readOnly
 	
 	
 	// OTHER	-------------------------------

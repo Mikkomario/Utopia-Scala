@@ -42,13 +42,12 @@ object CloseHook
 	/**
 	  * @return A pointer that contains true after the shutdown procedure has been initiated
 	  */
-	def shutdownPointer = _shutdownPointer.valueView
+	def shutdownPointer = _shutdownPointer.readOnly
 	
 	/**
 	  * @return Whether the shutdown procedure has started
 	  */
 	def isShutdown = _shutdownPointer.value
-	
 	/**
 	  * @return Whether the shutdown procedure has not been started
 	  */

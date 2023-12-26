@@ -98,6 +98,8 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	
 	override def destiny: Destiny = if (isCompleted) Sealed else MaySeal
 	
+	override def readOnly = this
+	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
 		stopListeners :+= listener
 	

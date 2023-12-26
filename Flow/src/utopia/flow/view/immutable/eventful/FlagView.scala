@@ -13,4 +13,6 @@ class FlagView(flag: Flag) extends FlagLike with ChangingWrapper[Boolean]
 	// IMPLEMENTED  -------------------
 	
 	override protected def wrapped = flag
+	
+	override def readOnly = this
 }

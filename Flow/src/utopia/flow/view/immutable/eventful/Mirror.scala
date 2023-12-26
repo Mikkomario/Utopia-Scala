@@ -77,4 +77,6 @@ class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Bo
 		// Case: Condition is variable => Only becomes fixed if the source does
 		case ForeverFlux => source.destiny
 	}
+	
+	override def readOnly = this
 }

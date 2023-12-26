@@ -4,7 +4,7 @@ import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.{AbstractChanging, ChangingWrapper}
+import utopia.flow.view.template.eventful.AbstractChanging
 
 object Volatile
 {
@@ -24,10 +24,8 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
 {
     // ATTRIBUTES   ----------------
     
-    /**
-      * An immutable view of this volatile instance
-      */
-    lazy val valueView = ChangingWrapper(this)
+    // Caches the read-only view
+    override lazy val readOnly = super.readOnly
     
     
     // COMPUTED    -----------------
@@ -40,6 +38,12 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
       * @see value
       */
     def synchronizedValue = this.synchronized { _value }
+    
+    /**
+      * An immutable view of this volatile instance
+      */
+    @deprecated("Please switch to using .readOnly instead", "v2.3")
+    def valueView = readOnly
     
     
     // IMPLEMENTED  ----------------

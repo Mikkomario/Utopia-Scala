@@ -66,4 +66,6 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Changing[
 	
 	override def value: R = bridge.value
 	override def destiny: Destiny = origin.destiny
+	
+	override def readOnly = this
 }

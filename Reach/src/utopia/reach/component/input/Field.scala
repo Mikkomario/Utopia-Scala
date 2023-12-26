@@ -669,7 +669,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 	/**
 	  * @return A pointer to this component's focus state
 	  */
-	override def focusPointer = _focusPointer.view
+	override def focusPointer = _focusPointer.readOnly
 	
 	override protected def focusable = field
 	

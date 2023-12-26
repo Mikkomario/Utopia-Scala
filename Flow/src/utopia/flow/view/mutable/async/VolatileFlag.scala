@@ -2,6 +2,7 @@ package utopia.flow.view.mutable.async
 
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.eventful.ResettableFlag
+import utopia.flow.view.template.eventful.FlagLike
 
 object VolatileFlag
 {
@@ -22,12 +23,15 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
 {
     // ATTRIBUTES   --------------
     
-    override lazy val view = new FlagView(this)
+    override lazy val readOnly: FlagLike = new FlagView(this)
+    
     //noinspection PostfixUnaryOperation
     override lazy val unary_! = super.unary_!
     
     
     // IMPLEMENTED  ---------------
+    
+    override def view = readOnly
     
     /**
       * Sets this flag (same as !getAndSet(true))

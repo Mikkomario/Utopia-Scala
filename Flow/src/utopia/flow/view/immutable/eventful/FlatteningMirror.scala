@@ -95,6 +95,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	}
 	
 	override protected def wrapped = pointer
+	override def readOnly = this
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) = {
 		if (source.mayChange)

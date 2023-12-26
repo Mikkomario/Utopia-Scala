@@ -19,6 +19,7 @@
   - You can work around this by appending `.toTuple` after these method calls
 - Deleted classes and functions that were deprecated at v2.0 or earlier
 ### Deprecations
+- `.view` in **Volatile** and **EventfulPointer** is now replaced with `.readOnly` in **Changing**
 - Renamed `Regex.parenthesis` to `.parentheses`
 ### Bugfixes
 - **JsonSettingsAccess** settings file search algorithm was bugged, now fixed
@@ -78,6 +79,8 @@
   - Added `.indicesAroundIterator(...)` for iterating over an area around a certain position
 - **MayStopChanging**
   - Added a couple of "onceNotChanging" method variants
+- **Model** (object)
+  - Added `.from(AnyModel)`
 - **OptimizedBridge**
   - Added `.detach()`
 - **Pair**

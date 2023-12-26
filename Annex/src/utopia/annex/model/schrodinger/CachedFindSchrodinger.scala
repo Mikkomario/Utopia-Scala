@@ -4,6 +4,7 @@ import utopia.annex.model.response.RequestNotSent.{RequestSendingFailed, Request
 import utopia.annex.model.response.{RequestResult, Response, ResponseBody}
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -49,7 +50,7 @@ class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 						parseResult.failure.foreach(recordError)
 						complete(parseResult)
 					case Response.Failure(status, message, _) =>
-						val errorMessage = message match {
+						val errorMessage = message.notEmpty match {
 							case Some(m) => s"Invitation retrieval failed ($status). Response message: $m"
 							case None => s"Invitation retrieval failed with status $status"
 						}

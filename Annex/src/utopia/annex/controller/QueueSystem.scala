@@ -56,7 +56,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  * @return A pointer that contains true while there is (presumably) a valid connection to the server.
 	  *         Contains false during offline mode.
 	  */
-	def onlineFlag = _onlineFlag.valueView
+	def onlineFlag = _onlineFlag.readOnly
 	
 	/**
 	  * @return Whether the system is currently in online mode and functioning normally

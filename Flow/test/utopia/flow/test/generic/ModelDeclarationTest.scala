@@ -3,7 +3,7 @@ package utopia.flow.test.generic
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{BooleanType, IntType, StringType}
-import utopia.flow.generic.model.mutable.{DataType, MutableModel}
+import utopia.flow.generic.model.mutable.MutableModel
 
 /**
  *

@@ -59,7 +59,7 @@ class ListenableMutableLazy[A](generator: => A) extends MutableLazy[A] with List
 		}
 	}
 	
-	override def stateView: Changing[Option[A]] = statePointer.view
+	override def stateView: Changing[Option[A]] = statePointer.readOnly
 	
 	override def nextValueFuture: Future[A] = statePointer.findMapNextFuture(Identity)
 	

@@ -11,6 +11,7 @@ import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.StringExtensions._
 import utopia.journey.model.UserCredentials
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -196,9 +197,9 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	private def handleLoginFailureResponse(response: Response.Failure) =
 	{
 		if (response.status == Unauthorized)
-			Failure(new UnauthorizedRequestException(response.message.getOrElse("Invalid user credentials")))
+			Failure(new UnauthorizedRequestException(response.message.nonEmptyOrElse("Invalid user credentials")))
 		else
 			Failure(new RequestFailedException(
-				response.message.getOrElse(s"Unexpected response status (${response.status})")))
+				response.message.nonEmptyOrElse(s"Unexpected response status (${response.status})")))
 	}
 }

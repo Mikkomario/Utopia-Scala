@@ -113,7 +113,7 @@ class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Comp
 	
 	// COMPUTED --------------------------------
 	
-	override def selectedDisplayPointer: Changing[Iterable[Display]] = _selectedDisplayPointer.view
+	override def selectedDisplayPointer: Changing[Iterable[Display]] = _selectedDisplayPointer.readOnly
 	
 	
 	// IMPLEMENTED	----------------------------

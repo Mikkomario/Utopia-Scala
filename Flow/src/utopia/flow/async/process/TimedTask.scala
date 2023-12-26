@@ -14,7 +14,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -267,6 +267,21 @@ object TimedTask
 		  * @return A new timed task that runs only once
 		  */
 		def once[U](f: => U) = completing { f; None }
+		/**
+		  * @param interval Interval between function calls
+		  * @param f Function to call repeatedly
+		  * @tparam U Arbitrary function result type
+		  * @return A new task that calls the specified function between regular intervals
+		  */
+		def regularly[U](interval: Duration)(f: => U) = interval.finite match {
+			case Some(interval) =>
+				apply {
+					val startTime = Now.toInstant
+					f
+					startTime + interval
+				}
+			case None => once(f)
+		}
 	}
 	
 	private class _TimedTask(firstTime: => Instant)(f: => Future[Changing[Option[Instant]]])

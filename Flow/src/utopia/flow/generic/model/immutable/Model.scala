@@ -4,7 +4,8 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.DataType.ModelType
-import utopia.flow.generic.model.mutable.Variable
+import utopia.flow.generic.model.mutable.{MutableModel, Variable}
+import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction}
 import utopia.flow.operator.MaybeEmpty
@@ -36,7 +37,7 @@ object Model
     }
     
     
-    // OPERATORS    --------------------
+    // OTHER    --------------------
     
     /**
       * Creates a new model that contains the specified constants
@@ -69,11 +70,37 @@ object Model
     def apply(content: Iterable[(String, Value)]): Model = apply(content, PropertyFactory.forConstants)
     
     /**
+      * Converts a model into an immutable format
+      * @param model A model
+      * @return An immutable version of that model (specified model if already immutable)
+      */
+    def from(model: AnyModel): Model = model match {
+        case m: Model => m
+        case m: MutableModel[_] => m.immutableCopy
+        case m =>
+            withConstants(m.properties.map {
+                case c: Constant => c
+                case p => Constant(p.name, p.value)
+            })
+    }
+    /**
       * @param first First name-value pair
       * @param more More name-value pairs
       * @return A new model with all specified name-value pairs as attributes
       */
     def from(first: (String, Value), more: (String, Value)*): Model = apply(first +: more)
+    /**
+      * @param pair A name value -pair
+      * @return A new model that contains the specified name-value pair
+      */
+    def from(pair: (String, Value)): Model = apply(Vector(pair))
+    /**
+      * @param pair A name-values -pair
+      * @param convert Implicit value conversion for the specified value
+      * @tparam A Type of the specified value
+      * @return A model that contains the specified name value pair
+      */
+    def from[A](pair: (String, A))(implicit convert: A => Value): Model = apply(Vector(pair._1 -> convert(pair._2)))
     
     /**
      * Converts a map of valueConvertible elements into a model format. The generator the model 

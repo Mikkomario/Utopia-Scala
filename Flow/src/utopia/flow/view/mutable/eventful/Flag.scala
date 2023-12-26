@@ -76,6 +76,8 @@ object Flag
 			case o => o
 		}
 		
+		override def readOnly = view
+		
 		override def set(): Boolean = indirectSet()
 	}
 }
@@ -86,6 +88,8 @@ object Flag
   */
 trait Flag extends FlagLike
 {
+	// ABSTRACT -------------------
+	
 	/**
 	  * @return An immutable view into this flag
 	  */
@@ -96,4 +100,9 @@ trait Flag extends FlagLike
 	  * @return Whether the state of this flag was altered, i.e. whether this flag was not set previously.
 	  */
 	def set(): Boolean
+	
+	
+	// IMPLEMENTED  --------------
+	
+	override def readOnly: Changing[Boolean] = view
 }

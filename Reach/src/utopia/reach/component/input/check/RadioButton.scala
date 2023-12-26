@@ -316,7 +316,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = {
 		if (settings.enabledPointer.isAlwaysTrue)
-			baseStatePointer.view
+			baseStatePointer.readOnly
 		else
 			baseStatePointer.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	}

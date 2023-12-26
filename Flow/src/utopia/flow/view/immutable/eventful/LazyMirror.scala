@@ -1,7 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
 

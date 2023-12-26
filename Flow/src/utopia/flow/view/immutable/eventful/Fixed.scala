@@ -16,6 +16,8 @@ case class Fixed[+A](override val value: A) extends Changing[A]
 	override def hasListeners: Boolean = false
 	override def numberOfListeners: Int = 0
 	
+	override def readOnly = this
+	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = ()
 	override def removeListener(changeListener: Any) = ()
 	

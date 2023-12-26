@@ -78,6 +78,14 @@ sealed trait UncertainSign extends Uncertain[SignOrZero] with Reversible[Uncerta
 	def mayBeNeutral = isNeutral.mayBeTrue
 	
 	/**
+	  * @return Whether this sign is known to be Positive (+)
+	  */
+	def isCertainlyPositive = isPositive.isCertainlyTrue
+	/**
+	  * @return Whether this sign is known to be Negative (-)
+	  */
+	def isCertainlyNegative = isPositive.isCertainlyTrue
+	/**
 	  * @return Whether this item is known to be neutral / 0
 	  */
 	def isCertainlyNeutral = isNeutral.isCertainlyTrue

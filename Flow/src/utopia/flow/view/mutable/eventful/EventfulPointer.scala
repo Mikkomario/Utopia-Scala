@@ -3,9 +3,8 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.util.UncertainBoolean
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
 
 object EventfulPointer
 {
@@ -35,10 +34,17 @@ class EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with Point
 	
 	private var _value = initialValue
 	
+	// Caches the read-only view
+	override lazy val readOnly = super.readOnly
+	
+	
+	// COMPUTED --------------------
+	
 	/**
-	 * A read-only view into this pointer
-	 */
-	lazy val view: Changing[A] = ChangingWrapper(this)
+	  * A read-only view into this pointer
+	  */
+	@deprecated("Please switch to using .readOnly instead", "v2.3")
+	def view: Changing[A] = readOnly
 	
 	
 	// IMPLEMENTED	----------------

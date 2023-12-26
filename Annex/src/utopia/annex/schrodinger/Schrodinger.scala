@@ -155,6 +155,8 @@ object Schrodinger
   *                         The state of this item consists of two parts:
   *                             1) The current manifest (placeholder or final), and
   *                             2) The server result that was acquired, if applicable (e.g. as an Option)
+*                           The specified pointer must not change after its state has been set to final.
+  *                         Doing so might cause illogical behavior in this instance.
   * @tparam M Type of manifest wrapped by this Schrödinger. Manifest is the form in which attempts and results appear
   *           (i.e. the common class between the Schrödinger state, the alive state and the dead state)
   * @tparam R Type for tracking received responses
@@ -167,16 +169,16 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) 
 	  * @return A pointer to the current manifest form of the Schrödinger item
 	  */
 	lazy val manifestPointer: Changing[Manifestation[M]] =
-		fullStatePointer.map { case (m, _, state) => Manifestation(m, state) }
+		fullStatePointer.mapUntil { case (m, _, state) => Manifestation(m, state) } { _.isFinal }
 	/**
 	  * @return A pointer to the currently tracked server response / result.
 	  */
 	lazy val resultPointer: Changing[Manifestation[R]] =
-		fullStatePointer.map { case (_, r, state) => Manifestation(r, state) }
+		fullStatePointer.mapUntil { case (_, r, state) => Manifestation(r, state) } { _.isFinal }
 	/**
 	  * A pointer to the current state of this schrödinger item, whether it be alive or dead, or flux
 	  */
-	lazy val statePointer = fullStatePointer.map { _._3 }
+	lazy val statePointer = fullStatePointer.mapUntil { _._3 } { _.isFinal }
 	
 	/**
 	  * @return A future of the eventual server result
@@ -212,6 +214,14 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) 
 	  *         (i.e. whether server result has been received)
 	  */
 	def isResolved = isFinal
+	
+	/**
+	  * @return A pointer that contains 3 elements concerning this Schrödinger:
+	  *         1) The current manifest form,
+	  *         2) The current result form,
+	  *         3) The current state
+	  */
+	def pointer = fullStatePointer.readOnly
 	
 	
 	// OTHER    ---------------------------

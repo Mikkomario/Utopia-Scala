@@ -48,7 +48,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	/**
 	  * @return A read-only pointer to this button's state
 	  */
-	def statePointer = _statePointer.view
+	def statePointer = _statePointer.readOnly
 	
 	/**
 	  * @return Whether this button is currently enabled

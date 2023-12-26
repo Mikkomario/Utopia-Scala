@@ -179,7 +179,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	override protected def drawable = wrapped
 	
-	override def statePointer = _statePointer.view
+	override def statePointer = _statePointer.readOnly
 	
 	override def trigger() = actions.foreach { _() }
 	

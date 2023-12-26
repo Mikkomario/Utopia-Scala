@@ -6,6 +6,7 @@ import utopia.disciple.http.response.BufferedResponse
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.StringExtensions._
 
 import scala.util.{Failure, Try}
 
@@ -96,6 +97,8 @@ object RequestNotSent
 	case object RequestWasDeprecated extends RequestNotSent
 	{
 		override def cause = new RequestFailedException("Request was deprecated")
+		
+		override def toString = "Request deprecation"
 	}
 	
 	/**
@@ -106,6 +109,8 @@ object RequestNotSent
 	{
 		@deprecated("Please use .cause instead", "v1.6")
 		def error = cause
+		
+		override def toString = s"Request sending failed (${cause.getMessage})"
 	}
 }
 
@@ -140,7 +145,7 @@ object Response
 	def from(response: BufferedResponse[Value]): Response = {
 		if (StatusGroup.failure.contains(response.status.group)) {
 			// The error message may be embedded within a model, also
-			val message = response.body("error", "description", "message").string.orElse(response.body.string)
+			val message = response.body("error", "description", "message").stringOr(response.body.getString)
 			Failure(response.status, message, response.headers)
 		}
 		else
@@ -159,6 +164,8 @@ object Response
 	{
 		override def isSuccess = true
 		
+		override def toString = s"$status: $body"
+		
 		override def toEmptyTry = scala.util.Success(())
 		override def singleParsedFromSuccess[A](parser: FromModelFactory[A]) = body.tryParseSingleWith(parser)
 		override def manyParsedFromSuccess[A](parser: FromModelFactory[A]) = body.vector(parser).parsed
@@ -167,9 +174,10 @@ object Response
 	/**
 	  * Failure responses are used when the server refuses to appropriate the request
 	  * @param status Status returned by the server
-	  * @param message Error description or other message within the response body (optional)
+	  * @param message Error description or other message within the response body. May be empty.
+	  * @param headers Headers sent along with the response
 	  */
-	case class Failure(status: Status, message: Option[String] = None, headers: Headers)
+	case class Failure(status: Status, message: String = "", headers: Headers)
 		extends Response with RequestFailure
 	{
 		// COMPUTED --------------------------
@@ -183,7 +191,7 @@ object Response
 		  * @return An exception based on this failure
 		  */
 		def toException = {
-			val errorMessage = message match {
+			val errorMessage = message.notEmpty match {
 				case Some(message) => s"$message ($status)"
 				case None => s"Server responded with status $status"
 			}
@@ -194,5 +202,7 @@ object Response
 		// IMPLEMENTED  ----------------------
 		
 		override def cause = toException
+		
+		override def toString = s"$status${message.mapIfNotEmpty { message => s": $message" }}"
 	}
 }

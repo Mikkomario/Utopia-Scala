@@ -85,7 +85,7 @@ object ContainerUpdateTimeManipulationTest extends App
 			}
 		}
 		
-		override protected def handleFailureResponse(status: Status, message: Option[String]): Unit =
+		override protected def handleFailureResponse(status: Status, message: String): Unit =
 			throw new IllegalStateException("Failures not allowed")
 		
 		override protected def merge(oldData: Value, readData: ResponseBody): (Value, FiniteDuration) =

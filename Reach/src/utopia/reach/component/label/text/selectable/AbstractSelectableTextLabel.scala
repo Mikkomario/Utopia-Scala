@@ -335,7 +335,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// COMPUTED	------------------------------
 		
-		def focusPointer = _focusPointer.view
+		def focusPointer = _focusPointer.readOnly
 		
 		def focus = _focusPointer.value
 		private def focus_=(newState: Boolean) = _focusPointer.value = newState

@@ -19,6 +19,9 @@ object ChangingWrapper
 	def apply[A](c: Changing[A]): Changing[A] = new _ChangingWrapper[A](c)
 	
 	private class _ChangingWrapper[+A](override val wrapped: Changing[A]) extends ChangingWrapper[A]
+	{
+		override def readOnly = this
+	}
 }
 
 /**
@@ -39,6 +42,7 @@ trait ChangingWrapper[+A] extends Changing[A]
 	// IMPLEMENTED  --------------------
 	
 	override def value = wrapped.value
+	override def readOnly = wrapped.readOnly
 	
 	override def destiny: Destiny = wrapped.destiny
 	

@@ -13,6 +13,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.util.StringExtensions._
 import utopia.journey.model.UserCredentials
 
 import scala.concurrent.duration.Duration
@@ -97,7 +98,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 					Failure(new UnauthorizedRequestException(
 						"Couldn't acquire a new session key with the old credentials"))
 				else
-					Failure(new RequestFailedException(message.getOrElse(
+					Failure(new RequestFailedException(message.nonEmptyOrElse(
 						s"Couldn't acquire a new session key. Response status: $status")))
 			case failure: RequestFailure => Failure(new RequestFailedException("Couldn't access the server", failure.cause))
 		}

@@ -11,6 +11,8 @@ Supports **Flow v2.3**
 - Replaced `offlineDelayIncreaseModifier: Double` in **QueueSystem** constructor to 
   `increaseOfflineDelay: FiniteDuration => FiniteDuration`
 - Renamed **PostRequest** to **PostSpiritRequest**
+- **Response.Failure** message is now **String** instead of an **Option**
+- The message parameter in **ContainerUpdateLoop**`.handleFailureResponse(...)` is now **String** instead of an **Option**
 ### Deprecations
 - Renamed **QueueSystem**`.pushSynchronous(ApiRequest)` to `.pushBlocking(ApiRequest)`
 ### New features
@@ -21,7 +23,12 @@ Supports **Flow v2.3**
 ### New methods
 - **QueueSystem**
   - Added `.onlineFlag`
+- **Schrodinger**
+  - Added `.pointer`, which provides read-only access to the wrapped `.fullStatePointer`
+- **SchrodingerState**
+  - Added `.isAlive` and `.isDead`
 ### Other changes
+- Schrödinger now uses `.mapUntil(...)` to form its derived pointers
 - Scala version updated to 2.13.12
 
 ## v1.6 - 27.09.2023

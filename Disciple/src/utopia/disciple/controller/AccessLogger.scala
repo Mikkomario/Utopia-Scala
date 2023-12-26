@@ -88,7 +88,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 		// Attaches the acquired response to the queued request.
 		// Logs request response -pairs in the same order as they were sent
 		// This means that sometimes logging may be delayed and sometimes multiple items are logged at once
-		val toLog = queue.pop { queue =>
+		val toLog = queue.mutate { queue =>
 			// Checks whether the acquired response fits the first queued request
 			queue.headOption.filter { _._1 == request } match {
 				// Case: First request matches => Logs that request, as well as potential delayed items

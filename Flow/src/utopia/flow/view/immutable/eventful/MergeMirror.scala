@@ -104,4 +104,6 @@ class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing
 		case MaySeal => sourceDestiny.possibleToSeal
 		case ForeverFlux => sourceDestiny
 	}
+	
+	override def readOnly = this
 }

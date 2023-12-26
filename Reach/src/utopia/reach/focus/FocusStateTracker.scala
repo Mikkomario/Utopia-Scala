@@ -19,7 +19,7 @@ class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener 
 	/**
 	  * @return A pointer to the tracked focus state
 	  */
-	def focusPointer = pointer.view
+	def focusPointer = pointer.readOnly
 	
 	
 	// IMPLEMENTED	-------------------------

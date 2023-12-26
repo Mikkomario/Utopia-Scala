@@ -35,9 +35,9 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	
 	/**
 	  * @param status Response status (not OK)
-	  * @param message Response message. None if no message was provided with the response.
+	  * @param message Response message. Empty if no message was provided with the response.
 	  */
-	protected def handleFailureResponse(status: Status, message: Option[String]): Unit
+	protected def handleFailureResponse(status: Status, message: String): Unit
 	
 	/**
 	  * Performs an update request

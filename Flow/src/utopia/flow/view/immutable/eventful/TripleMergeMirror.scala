@@ -129,4 +129,6 @@ class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changi
 	
 	override def value = _value
 	override def destiny: Destiny = sources.map { _.destiny }.reduce { _ + _ }
+	
+	override def readOnly = this
 }

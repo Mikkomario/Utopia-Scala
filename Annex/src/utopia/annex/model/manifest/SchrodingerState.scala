@@ -3,6 +3,7 @@ package utopia.annex.model.manifest
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.UncertainSign.{NotNeutral, UncertainBinarySign}
 import utopia.flow.operator.sign.{BinarySigned, Sign}
+import utopia.flow.util.UncertainBoolean
 
 import scala.language.implicitConversions
 
@@ -11,7 +12,6 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 20.11.2022, v1.4
   */
-// TODO: Use uncertain signed trait once it is available
 sealed trait SchrodingerState
 {
 	// ABSTRACT ------------------------
@@ -20,6 +20,11 @@ sealed trait SchrodingerState
 	  * @return Whether this is (potentially) a temporary state, and may still change
 	  */
 	def isFlux: Boolean
+	/**
+	  * @return Whether this state has been resolved and is known to be Alive.
+	  *         Uncertain while in flux.
+	  */
+	def isAlive: UncertainBoolean
 	
 	/**
 	  * @return The sign, or expectancy, of this state.
@@ -36,6 +41,11 @@ sealed trait SchrodingerState
 	  * @return Whether this is a permanent state and will not change (anymore)
 	  */
 	def isFinal = !isFlux
+	/**
+	  * @return Whether this state has been resolved and is known to be Dead.
+	  *         Uncertain while in flux.
+	  */
+	def isDead: UncertainBoolean = !isAlive
 	/**
 	  * @return Whether this state has a positive or negative expectancy
 	  */
@@ -101,7 +111,8 @@ object SchrodingerState
 	  * A common trait for fluctuating / temporary Schrödinger states.
 	  * Also selfesents a Schrödinger state by itself.
 	  */
-	sealed trait Flux extends SchrodingerState {
+	sealed trait Flux extends SchrodingerState
+	{
 		// ABSTRACT ---------------------
 		
 		/**
@@ -113,11 +124,13 @@ object SchrodingerState
 		// IMPLEMENTED  -----------------
 		
 		override def isFlux = true
+		override def isAlive: UncertainBoolean = UncertainBoolean
 	}
 	/**
 	  * A common trait for Flux states which have a sign.
 	  */
-	sealed trait SignedFlux extends Flux with BinarySigned[SignedFlux] {
+	sealed trait SignedFlux extends Flux with BinarySigned[SignedFlux]
+	{
 		override def self = this
 		override def estimate = sign
 		override def expectancy = Some(Final(sign))
@@ -165,6 +178,7 @@ object SchrodingerState
 	  */
 	case object Alive extends Final {
 		override def sign: Sign = Positive
+		override def isAlive = true
 		override def unary_- = Dead
 	}
 	/**
@@ -172,6 +186,7 @@ object SchrodingerState
 	  */
 	case object Dead extends Final {
 		override def sign: Sign = Negative
+		override def isAlive = false
 		override def unary_- = Alive
 	}
 }

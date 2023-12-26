@@ -116,7 +116,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  * @return A flag that contains true after the JVM hosting this process has scheduled a shutdown during
 	  *         this process' completion
 	  */
-	def shutdownPointer = _shutdownPointer.valueView
+	def shutdownPointer = _shutdownPointer.readOnly
 	
 	
 	// COMPUTED ----------------------------------
@@ -128,7 +128,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	/**
 	  * @return A pointer that holds this wait instance's state
 	  */
-	def statePointer = _statePointer.valueView
+	def statePointer = _statePointer.readOnly
 	
 	/**
 	  * @return Whether this process should hurry to complete itself

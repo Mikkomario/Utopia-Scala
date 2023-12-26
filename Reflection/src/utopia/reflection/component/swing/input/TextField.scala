@@ -317,7 +317,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	/**
 	  * @return An immutable pointer to this field's current text
 	  */
-	def textPointer = _textPointer.view
+	def textPointer = _textPointer.readOnly
 	
 	/**
 	  * @return The width (stack length) of this field

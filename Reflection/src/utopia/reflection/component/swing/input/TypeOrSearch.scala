@@ -159,7 +159,7 @@ class TypeOrSearch
 	// IMPLEMENTED  ----------------------------
 	
 	override protected def wrapped: Stack[_] = view
-	override def contentPointer = selectedItemsPointer.view
+	override def contentPointer = selectedItemsPointer.readOnly
 	
 	
 	// OTHER    --------------------------------

@@ -5,6 +5,7 @@ import utopia.annex.model.error.{RequestDeniedException, UnauthorizedRequestExce
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
 import utopia.disciple.model.error.RequestFailedException
+import utopia.flow.util.StringExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -39,7 +40,7 @@ class TryFindSchrodinger[I](localResult: Try[I]) extends Schrodinger[Try[I], Try
 				result match {
 					case Response.Success(_, body, _) => complete(parse(body))
 					case Response.Failure(status, message, _) =>
-						val errorMessage = message.getOrElse(s"Received a response with status $status")
+						val errorMessage = message.nonEmptyOrElse(s"Received a response with status $status")
 						val error = status match {
 							case Unauthorized => new UnauthorizedRequestException(errorMessage)
 							case Forbidden => new RequestDeniedException(errorMessage)

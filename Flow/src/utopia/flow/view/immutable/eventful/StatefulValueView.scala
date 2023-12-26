@@ -106,6 +106,8 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 		if (origin.isFixed) raw.asFinal else raw
 	}
 	
+	override def readOnly = this
+	
 	
 	// OTHER    ------------------------
 	

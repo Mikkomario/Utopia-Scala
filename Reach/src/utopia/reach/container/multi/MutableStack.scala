@@ -123,7 +123,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	/**
 	 * @return A read-only pointer to this stack's current contents
 	 */
-	def componentsPointer = _componentsPointer.view
+	def componentsPointer = _componentsPointer.readOnly
 	
 	
 	// IMPLEMENTED	------------------------

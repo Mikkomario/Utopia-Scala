@@ -794,11 +794,11 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 	/**
 	  * @return A read-only version of this text field's text pointer
 	  */
-	def textPointer = textContentPointer.view
+	def textPointer = textContentPointer.readOnly
 	/**
 	  * @return A pointer that contains the current state of this field
 	  */
-	def statePointer = _statePointer.view
+	def statePointer = _statePointer.readOnly
 	
 	/**
 	  * @return The current state of this field

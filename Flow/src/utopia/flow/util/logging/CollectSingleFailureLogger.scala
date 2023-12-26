@@ -61,7 +61,7 @@ class CollectSingleFailureLogger(failureContainer: EventfulPointer[Option[Throwa
 {
 	// IMPLEMENTED  ---------------------
 	
-	override protected def wrapped: Changing[Option[Throwable]] = failureContainer.view
+	override protected def wrapped: Changing[Option[Throwable]] = failureContainer.readOnly
 	
 	override def apply(error: Option[Throwable], message: String): Unit = {
 		// Stores the encountered error, if one was present and if there is space

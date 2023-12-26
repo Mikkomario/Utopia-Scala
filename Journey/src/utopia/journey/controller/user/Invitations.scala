@@ -14,6 +14,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.StringExtensions._
 import utopia.journey.model.InvitationResponseSpirit
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DetailedInvitation, InvitationWithResponse}
@@ -111,10 +112,10 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 			case Response.Failure(status, message, _) =>
 				status match {
 					case Unauthorized => Failure(new UnauthorizedRequestException(
-						message.getOrElse("Unauthorized to answer the invitation")))
-					case Forbidden => Failure(new RequestDeniedException(message.getOrElse(
+						message.nonEmptyOrElse("Unauthorized to answer the invitation")))
+					case Forbidden => Failure(new RequestDeniedException(message.nonEmptyOrElse(
 						"Invitation response was denied")))
-					case _ => Failure(new RequestFailedException(message.getOrElse(
+					case _ => Failure(new RequestFailedException(message.nonEmptyOrElse(
 						s"Server responded with status $status")))
 				}
 			case failure: RequestFailure => failure.toFailure
@@ -155,7 +156,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 							}
 						case Empty => logger(s"Invitation answer response didn't contain a body. Status: $status")
 					}
-				case Response.Failure(status, message, _) => logger(new RequestFailedException(message.getOrElse(
+				case Response.Failure(status, message, _) => logger(new RequestFailedException(message.nonEmptyOrElse(
 					s"Server rejected invitation answer. Status: $status")))
 				case RequestWasDeprecated => () // Ignored
 				case failure: RequestFailure => logger(failure.cause, "Failed to send invitation answer")
