@@ -85,10 +85,12 @@ object Model
     }
     /**
       * @param first First name-value pair
+      * @param second Second name-value pair
       * @param more More name-value pairs
       * @return A new model with all specified name-value pairs as attributes
       */
-    def from(first: (String, Value), more: (String, Value)*): Model = apply(first +: more)
+    def from(first: (String, Value), second: (String, Value), more: (String, Value)*): Model =
+        apply(Vector(first, second) ++ more)
     /**
       * @param pair A name value -pair
       * @return A new model that contains the specified name-value pair

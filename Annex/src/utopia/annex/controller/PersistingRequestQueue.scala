@@ -105,7 +105,7 @@ trait PersistingRequestQueue extends RequestQueue
 	  * @param handlers Request handlers which are used for parsing persisted requests and handling their responses
 	  * @return A list of errors that occurred while parsing the requests
 	  */
-	protected def start(handlers: Iterable[PersistedRequestHandler]) = {
+	def start(handlers: Iterable[PersistedRequestHandler]) = {
 		val persistedModels = requestContainer.current
 		val errors = persistedModels.flatMap { requestModel =>
 			handlers.view.filter { _.shouldHandle(requestModel) }.tryFindMap { h => h.factory(requestModel)

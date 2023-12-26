@@ -28,6 +28,7 @@ Supports **Flow v2.3**
 - **SchrodingerState**
   - Added `.isAlive` and `.isDead`
 ### Other changes
+- **PersistingRequestQueue**`.start(...)` is now public instead of protected
 - Schrödinger now uses `.mapUntil(...)` to form its derived pointers
 - Scala version updated to 2.13.12
 
