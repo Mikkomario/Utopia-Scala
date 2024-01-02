@@ -6,7 +6,6 @@ import utopia.citadel.util.CitadelContext
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments, CommandArgumentsSchema}
 import utopia.flow.collection.CollectionExtensions._
