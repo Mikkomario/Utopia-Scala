@@ -33,6 +33,10 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 	private var scribes = Vector[Scribe]()
 	private var loggers = Vector[Logger]()
 	
+	// Logging implementations where entries are copied to (besides the primary scribes / loggers)
+	private var copyToLoggers: Vector[Logger] = Vector.empty
+	private var copyToScribes: Vector[Scribe] = Vector.empty
+	
 	
 	// IMPLEMENTED  --------------------------
 	
@@ -79,6 +83,17 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 		else
 			loggers = loggers :+ logger
 	}
+	
+	/**
+	  * Registers a Scribe-instance to which all logging entries are **copied**
+	  * @param scribe A scribe that will receive a copy of all logging entries
+	  */
+	def copyTo(scribe: Scribe) = copyToScribes :+= scribe
+	/**
+	  * Registers a Logger instance to which all logging entries are **copied**
+	  * @param logger A Logger that will receive a copy of all logging entries
+	  */
+	def copyTo(logger: Logger) = copyToLoggers :+= logger
 	
 	private def _apply(context: String, error: Option[Throwable], message: String, occurrenceDetails: Model,
 	                   severity: Severity, variantDetails: Model) =
@@ -143,6 +158,17 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 			System.err.println("Failure during logging")
 			error.printStackTrace()
 		}
+		
+		// Copies the logging entries to the specified Scribe & Logger instances
+		Try {
+			copyToScribes.foreach { _.in(context)(variantDetails, severity).apply(error, message, occurrenceDetails) }
+			copyToLoggers.foreach { _(error, message) }
+		}.failure
+			// Prints a warning for failures, but doesn't process them further
+			.foreach { error =>
+				System.err.println("Failure during copy-logging")
+				error.printStackTrace()
+			}
 	}
 	
 	private def logUsingAnyOf[L](loggers: Iterable[L])

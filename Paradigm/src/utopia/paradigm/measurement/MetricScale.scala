@@ -70,8 +70,8 @@ object MetricScale extends HasExtremes[MetricScale]
 	  * @return The most extreme unit in that direction
 	  */
 	override def apply(extreme: Extreme): MetricScale = extreme match {
-		case Min => min
-		case Max => max
+		case Min => Micro
+		case Max => Mega
 	}
 	
 	

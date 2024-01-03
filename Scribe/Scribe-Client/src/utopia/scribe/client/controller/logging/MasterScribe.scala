@@ -3,7 +3,7 @@ package utopia.scribe.client.controller.logging
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
-import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, Persisting, RequestQueueable}
+import utopia.annex.model.request.{ApiRequest, Persisting, RequestQueueable}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
