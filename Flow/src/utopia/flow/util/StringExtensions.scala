@@ -502,6 +502,17 @@ object StringExtensions
 		  *         Otherwise returns this item.
 		  */
 		def mapIfNotEmpty[B >: String](f: String => B) = if (s.isEmpty) s else f(s)
+		
+		/**
+		  * @param suffix A suffix to append to this string if it is not empty
+		  * @return This string if empty, otherwise an appended version
+		  */
+		def appendIfNotEmpty(suffix: => String) = if (s.isEmpty) s else s"$s$suffix"
+		/**
+		  * @param prefix A prefix to prepend to this string if it is not empty
+		  * @return This string if empty, otherwise a prepended version
+		  */
+		def prependIfNotEmpty(prefix: => String) = if (s.isEmpty) s else s"$prefix$s"
 	}
 	
 	private class StringIndexOfIterator(val string: String, val searched: String) extends Iterator[Int]

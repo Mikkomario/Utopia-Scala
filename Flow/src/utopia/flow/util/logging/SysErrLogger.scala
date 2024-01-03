@@ -7,6 +7,16 @@ package utopia.flow.util.logging
  */
 object SysErrLogger extends Logger
 {
+	// COMPUTED -------------------------
+	
+	/**
+	  * @return A System.err logger version that includes timestamps
+	  */
+	def includingTime = TimedSysErrLogger
+	
+	
+	// IMPLEMENTED  ---------------------
+	
 	override def apply(error: Option[Throwable], message: String) = {
 		if (message.nonEmpty)
 			System.err.println(message)

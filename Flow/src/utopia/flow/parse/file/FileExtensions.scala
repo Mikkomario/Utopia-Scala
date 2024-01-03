@@ -107,6 +107,13 @@ object FileExtensions
 		  * @return An absolute path based on this path (if this path is already absolute, returns this)
 		  */
 		def absolute = Try { p.toAbsolutePath }.getOrElse(p)
+		/**
+		  * @return A cleaned absolute version of this path, if possible to acquire.
+		  *         If real path and absolute path formation are impossible, returns a normalized version of this path.
+		  */
+		def real = Try { p.toRealPath() }
+			.orElse { Try { p.toAbsolutePath.normalize() } }
+			.getOrElse { p.normalize() }
 		
 		/**
 		  * @return Whether this path represents an existing directory

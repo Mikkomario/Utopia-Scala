@@ -39,6 +39,7 @@
 - Added new **TwoThreadBuffer** class for buffered parallel push & pull operations
 - Added **CollectSingleFailureLogger** for specialized logging use-cases 
   where errors need to be caught and handled later (typically for **Try**`.failWith(...)` / `.failIf(...)`)
+- Added **TimedSysErrLogger** class
 - Added **Use** object for providing scope-specific (implicit) access to certain values
 - Added **LockableBridge** class
 - Added **ChangingUntil** & **StatefulValueView** **Changing** mirror classes
@@ -86,6 +87,7 @@
 - **Pair**
   - Added `.mapAndMerge(...)(...)`
 - **Path** (**FileExtensions**)
+  - Added `.real`, which is a safe version of `.toRealPath()`
   - Added `.hasSameContentAs(Path)` for identical file -searching (not yet tested)
   - Added `.tryIterateChildrenCatching(...)`
 - **Regex** (object)
@@ -96,6 +98,8 @@
   - Added new `*` variant
 - **SpanLike**
   - Added `.withEnd(A, End)`, as well as multiple map end variations
+- **String** (**StringExtensions**)
+  - Added `.prependIfNotEmpty(String)` and `.appendIfNotEmpty(String)`
 - **Try** (**CollectionExtensions**)
   - Added `.failWith(Throwable)` and `.failIf(=> Option[Throwable])`
 ### Other changes
