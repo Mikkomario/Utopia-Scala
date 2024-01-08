@@ -18,6 +18,7 @@ import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
 import utopia.reach.container.ReachCanvas
+import utopia.reach.container.layered.LayerPositioning
 import utopia.reach.container.multi.{Stack, StackSettings}
 import utopia.reach.container.wrapper.Framing
 
@@ -293,6 +294,10 @@ object OpenComponent
 	  * Typically used in view containers.
 	  */
 	type SwitchableOpenComponents[+C, +R] = ComponentCreationResult[SeparateOpenComponents[C, Changing[Boolean]], R]
+	/**
+	  * Type of open component that wraps a main component, plus possibly multiple additional layers.
+	  */
+	type OpenLayerComponents[+M, +C, +R] = OpenComponent[(M, Vector[(C, LayerPositioning)]), R]
 	
 	
 	// IMPLICIT	-----------------------------

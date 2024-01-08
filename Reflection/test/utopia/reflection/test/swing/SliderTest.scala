@@ -23,7 +23,7 @@ object SliderTest extends App
 	import TestContext._
 	
 	implicit val context: ColorContext = baseContext.against(colorScheme(Gray).light)
-	val sliderWidth = 228.any.withLowPriority
+	val sliderWidth = 228.any.lowPriority
 	val defaultRange = Animation { p => p }
 	val defaultOptions = Iterator.iterate(0.0) { _ + 0.2 }.takeWhile { _ <= 1.0 }.toVector
 	val defaultColor = context.color.secondary

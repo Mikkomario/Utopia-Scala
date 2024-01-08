@@ -20,7 +20,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 
 /**
   * Common trait for view image label factories and settings
@@ -210,13 +210,9 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
   */
 trait ViewImageLabelFactoryLike[+Repr]
 	extends ViewImageLabelSettingsWrapper[Repr] with FramedFactory[Repr] with LinearSizeAdjustable[Repr]
+		with PartOfComponentHierarchy
 {
 	// ABSTRACT ------------------------------
-	
-	/**
-	  * The component hierarchy, to which created view image labels will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
 	
 	protected def allowUpscalingPointer: Changing[Boolean]
 	

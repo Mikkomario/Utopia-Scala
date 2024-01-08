@@ -57,7 +57,7 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	/**
 	  * @return A copy of these insets where each side is marked with low priority
 	  */
-	def withLowPriority = StackInsets(Direction2D.values.map { d => d -> apply(d).withLowPriority }.toMap)
+	def withLowPriority = StackInsets(Direction2D.values.map { d => d -> apply(d).lowPriority }.toMap)
 	
 	/**
 	  * @return A copy of these insets where no side has a maximum limit and all sides expand easily

@@ -27,7 +27,7 @@ import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -146,15 +146,7 @@ trait CheckBoxSettingsWrapper[+Repr] extends CheckBoxSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 20.06.2023, v1.1
   */
-trait CheckBoxFactoryLike[+Repr] extends CheckBoxSettingsWrapper[Repr]
-{
-	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created check boxes will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
-}
+trait CheckBoxFactoryLike[+Repr] extends CheckBoxSettingsWrapper[Repr] with PartOfComponentHierarchy
 
 /**
   * Factory class used for constructing check boxs using contextual component creation information

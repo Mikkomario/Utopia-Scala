@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 3.10.2020, v0.1
   */
-trait ReachComponentLike extends Stackable
+trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 {
 	// ABSTRACT	------------------------
 	
@@ -46,12 +46,6 @@ trait ReachComponentLike extends Stackable
 	  * @return A pointer to the current bounds (position + size) of this component
 	  */
 	def boundsPointer: Changing[Bounds]
-	
-	/**
-	  * @return Hierarchy containing all this component's parents. This hierarchy should be static/unchanging,
-	  *         since it may be listened by other components.
-	  */
-	def parentHierarchy: ComponentHierarchy
 	
 	override def children: Seq[ReachComponentLike] = Vector()
 	

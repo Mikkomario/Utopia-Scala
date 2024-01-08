@@ -13,7 +13,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualVariableBackgroundAssignable}
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, VariableBackgroundAssignable}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 
 object ViewEmptyLabel extends Cff[ViewEmptyLabelFactory] with ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup]
 {
@@ -91,13 +91,8 @@ case class ViewEmptyLabelSetup(settings: ViewEmptyLabelSettings)
 		copy(settings = settings)
 }
 
-trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Repr]
+trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
-	// ABSTRACT --------------------------
-	
-	def parentHierarchy: ComponentHierarchy
-	
-	
 	// OTHER    --------------------------
 	
 	/**

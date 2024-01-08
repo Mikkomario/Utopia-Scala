@@ -158,7 +158,7 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	/**
 	  * @return A copy of this context where (stack) margins shrink and expand easily
 	  */
-	def withLowPriorityMargin = mapStackMargin { _.withLowPriority }
+	def withLowPriorityMargin = mapStackMargin { _.lowPriority }
 	/**
 	  * @return A copy of this context where (stack) margins don't shrink or expand easily
 	  */

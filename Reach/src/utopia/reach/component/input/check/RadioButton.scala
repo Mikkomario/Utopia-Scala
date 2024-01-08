@@ -20,7 +20,7 @@ import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
+import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
 import utopia.reach.drawing.Priority.High
 import utopia.reach.focus.FocusListener
@@ -155,16 +155,8 @@ trait RadioButtonSettingsWrapper[+Repr] extends RadioButtonSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr]
+trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created radio buttons will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
-	
-	
 	// OTHER    -------------------
 	
 	/**

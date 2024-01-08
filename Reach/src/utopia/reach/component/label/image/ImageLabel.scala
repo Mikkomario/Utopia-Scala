@@ -13,7 +13,7 @@ import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy, ReachComponentLike}
 
 /**
   * Common trait for image label factories and settings
@@ -150,11 +150,9 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 }
 
 trait ImageLabelFactoryLike[+Repr]
-	extends ImageLabelSettingsWrapper[Repr] with LinearSizeAdjustable[Repr]
+	extends ImageLabelSettingsWrapper[Repr] with LinearSizeAdjustable[Repr] with PartOfComponentHierarchy
 {
 	// ABSTRACT ---------------------------
-	
-	protected def parentHierarchy: ComponentHierarchy
 	
 	protected def allowsUpscaling: Boolean
 	

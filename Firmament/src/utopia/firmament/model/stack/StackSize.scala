@@ -209,7 +209,10 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
     /**
       * @return A copy of this size with low priority for both width and height
       */
-    def withLowPriority = mapEachDimension { _.withLowPriority }
+    // WET WET
+    def lowPriority = mapEachDimension { _.lowPriority }
+    @deprecated("Renamed to .lowPriority", "v1.1.1")
+    def withLowPriority = lowPriority
     /**
       * @return A copy of this size that is more easily shrinked
       */
@@ -273,8 +276,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @param axis Target axis
       * @return The length of this size along the specified axis
       */
-    def along(axis: Axis2D) = axis match 
-    {
+    def along(axis: Axis2D) = axis match {
         case X => width
         case Y => height
     }
@@ -306,8 +308,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @param axis Axis that specifies whether lenght is width or height
       * @return A copy of this size with new side
       */
-    def withSide(side: StackLength, axis: Axis2D) = axis match 
-    {
+    def withSide(side: StackLength, axis: Axis2D) = axis match {
         case X => withWidth(side)
         case Y => withHeight(side)
     }
@@ -328,8 +329,7 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
       * @return A copy of this size with a mapped side
       */
     @deprecated("Please use mapDimension instead", "v2.0")
-    def mapSide(axis: Axis2D)(map: StackLength => StackLength) = axis match
-    {
+    def mapSide(axis: Axis2D)(map: StackLength => StackLength) = axis match {
         case X => mapWidth(map)
         case Y => mapHeight(map)
     }

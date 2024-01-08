@@ -29,7 +29,7 @@ import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
+import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
 import utopia.reach.drawing.Priority.VeryHigh
 import utopia.reach.focus.FocusListener
@@ -150,16 +150,8 @@ trait SwitchSettingsWrapper[+Repr] extends SwitchSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr]
+trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created switchs will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
-	
-	
 	// OTHER    -------------------
 	
 	/**

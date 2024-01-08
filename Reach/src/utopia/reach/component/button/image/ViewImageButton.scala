@@ -18,7 +18,7 @@ import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings, ViewImageLabelSettingsLike}
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -151,14 +151,10 @@ trait ViewImageButtonSettingsWrapper[+Repr] extends ViewImageButtonSettingsLike[
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[Repr]
+trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
 	// ABSTRACT	--------------------
 	
-	/**
-	  * The component hierarchy, to which created view image buttons will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
 	/**
 	  * @return Pointer that determines whether the drawn images should be allowed to scale
 	  *         beyond their original source resolution

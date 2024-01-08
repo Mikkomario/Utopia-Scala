@@ -2,6 +2,9 @@
 
 ## v1.1.1 (in development)
 Supports **Flow v2.3**
+### Deprecations
+- Renamed `.withLowPriority` to `.lowPriority` in **StackLength** and **StackSize**
+- Renamed `.withDefaultPriority` to `.normalPriority` in **StackLength**
 ### Other changes
 - Scala version updated to 2.13.12
 

@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
+import utopia.reach.container.layered.LayerPositioning
 
 import scala.language.implicitConversions
 
@@ -19,6 +20,11 @@ object ComponentCreationResult
 	  * Component creation result that wraps multiple components at once
 	  */
 	type ComponentsResult[+C, +R] = ComponentCreationResult[Vector[C], R]
+	/**
+	  * Component creation result that wraps a primary component (of type M),
+	  * plus potentially multiple layers (of type C), with an additional result (of type R)
+	  */
+	type LayersResult[+M, +C, +R] = ComponentCreationResult[(M, Vector[(C, LayerPositioning)]), R]
 	/**
 	  * A wrapper that wraps multiple creation results, containing an additional result of its own
 	  */
@@ -84,6 +90,29 @@ object ComponentCreationResult
 	 * @return A new component creation result
 	 */
 	def many[C, R](items: Vector[C], result: R) = new ComponentCreationResult(items, result)
+	
+	/**
+	  * Creates a component creation result for building layered views
+	  * @param main The main component
+	  * @param layers The layer components
+	  * @param result Additional creation result
+	  * @tparam M Type of the main component
+	  * @tparam C Type of the layer components
+	  * @tparam R Type of the creation result
+	  * @return A new component creation result
+	  */
+	def layers[M, C, R](main: M, layers: Vector[(C, LayerPositioning)], result: R): LayersResult[M, C, R] =
+		ComponentCreationResult(main -> layers, result)
+	/**
+	  * Creates a component creation result for building layered views (without using an additional creation result)
+	  * @param main The main component
+	  * @param layers The layer components
+	  * @tparam M Type of the main component
+	  * @tparam C Type of the layer components
+	  * @return A new component creation result
+	  */
+	def layers[M, C](main: M, layers: Vector[(C, LayerPositioning)]): LayersResult[M, C, Unit] =
+		this.layers(main, layers, ())
 }
 
 /**

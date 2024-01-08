@@ -160,7 +160,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			if (axes.contains(axis)) {
 				// Uses content size but may limit it in process
 				val raw = contentSize(axis)
-				val limited = (if (limitsToContentSize) raw else raw.noMax).withLowPriority.noMin
+				val limited = (if (limitsToContentSize) raw else raw.noMax).lowPriority.noMin
 				// May also expand according to scroll bar width
 				if (scrollBarIsInsideContent)
 					limited

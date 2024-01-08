@@ -1,13 +1,19 @@
 # Utopia Reach - List of Changes
 
-## v1.1.1 (in development)
+## v1.2 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- Renamed **LayeredView** trait to **Layers**
+  - Also, the trait no longer accepts a generic type parameter
 ### Bugfixes
 - Fixed cursor shade calculation in **MutableImageButton**, **ViewImageButton** and **SelectionList**
 ### New features
 - Added support for cursors with edges
   - To use this, specify the `drawEdgesFor` -parameter in `CursorSet.loadIcons(...)` or use 
     `Cursor(SingleColorIcon, Boolean)`
+- Added a new **Layers** -container
+  - This container is used for presenting multiple components on top of each other
+  - Currently only the static container version is available
 ### Other changes
 - Cursor shade-detection algorithm is now much simpler, resulting in faster code and smaller memory use, 
   with the cost of less accurate cursor color

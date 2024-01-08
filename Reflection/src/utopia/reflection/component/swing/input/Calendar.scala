@@ -322,9 +322,9 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		private val rows = {
 			// Adds empty labels as placeholders on partial weeks
 			val firstRow = if (buttons.head.size >= 7) buttons.head.map { _._2 } else
-				Vector.fill(7 - buttons.head.size) { new StackSpace(StackSize.any.withLowPriority) } ++ buttons.head.map { _._2 }
+				Vector.fill(7 - buttons.head.size) { new StackSpace(StackSize.any.lowPriority) } ++ buttons.head.map { _._2 }
 			val lastRow = if (buttons.last.size >= 7) buttons.last.map { _._2 } else
-				buttons.last.map { _._2 } ++ Vector.fill(7 - buttons.last.size) { new StackSpace(StackSize.any.withLowPriority) }
+				buttons.last.map { _._2 } ++ Vector.fill(7 - buttons.last.size) { new StackSpace(StackSize.any.lowPriority) }
 			val rowElements = firstRow +: buttons.slice(1, buttons.size - 1).map { _.map { _._2 } } :+ lastRow
 			
 			// Adds button listening

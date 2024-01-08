@@ -28,7 +28,7 @@ object StackTest extends App
 
 	// Creates the stack
 	val items = Vector.fill(3)(makeItem()) :+ {
-		val item = new EmptyLabel().withStackSize(64.any.withLowPriority x 64.any)
+		val item = new EmptyLabel().withStackSize(64.any.lowPriority x 64.any)
 		item.background = Color.cyan
 		item
 	}

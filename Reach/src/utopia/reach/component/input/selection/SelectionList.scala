@@ -31,7 +31,7 @@ import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
-import utopia.reach.component.template.{CursorDefining, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsLike}
@@ -163,14 +163,9 @@ trait SelectionListSettingsWrapper[+Repr] extends SelectionListSettingsLike[Repr
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
+trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
 	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created selection lists will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
 	
 	/**
 	  * @return Pointer that determines the margin placed between selectable items
@@ -398,8 +393,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Vector[A], P] with CursorDefining
 {
 	// ATTRIBUTES	---------------------------------
-	
-	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
 	override lazy val focusId = hashCode()
 	private val focusTracker = new FocusStateTracker(false)

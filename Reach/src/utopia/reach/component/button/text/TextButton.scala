@@ -19,7 +19,7 @@ import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 
 /**
@@ -28,16 +28,9 @@ import utopia.reach.cursor.Cursor
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-trait TextButtonFactoryLike[+Repr] extends ButtonSettingsWrapper[Repr] with CustomDrawableFactory[Repr]
+trait TextButtonFactoryLike[+Repr]
+	extends ButtonSettingsWrapper[Repr] with CustomDrawableFactory[Repr] with PartOfComponentHierarchy
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created text buttons will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
-	
-	
 	// OTHER	--------------------
 	
 	protected def _apply(text: LocalizedString, font: Font, color: Color, textColor: Color, alignment: Alignment,

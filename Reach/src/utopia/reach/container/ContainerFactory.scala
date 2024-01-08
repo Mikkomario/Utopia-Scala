@@ -1,6 +1,6 @@
 package utopia.reach.container
 
-import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.PartOfComponentHierarchy
 
 /**
   * Common trait for pre-initialized container factories
@@ -20,14 +20,9 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
   *                     2) Type of created component(s), and
   *                     3) Additional result type
   */
-trait ContainerFactory[+Container, -Top, -Content[_, _], +Result[+_, _, _]]
+trait ContainerFactory[+Container, -Top, -Content[_, _], +Result[+_, _, _]] extends PartOfComponentHierarchy
 {
 	// ABSTRACT ---------------------------
-	
-	/**
-	  * @return The component hierarchy used by this factory
-	  */
-	def parentHierarchy: ComponentHierarchy
 	
 	/**
 	  * @param content The content to wrap within this container (as a creation result)
@@ -39,12 +34,4 @@ trait ContainerFactory[+Container, -Top, -Content[_, _], +Result[+_, _, _]]
 	  *             3) The additional result from the content
 	  */
 	def apply[C <: Top, R](content: Content[C, R]): Result[Container, C, R]
-	
-	
-	// COMPUTED -------------------------
-	
-	/**
-	  * @return The reach canvas modified by this factory
-	  */
-	implicit def canvas: ReachCanvas = parentHierarchy.top
 }

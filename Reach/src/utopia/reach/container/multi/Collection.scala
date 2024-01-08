@@ -286,7 +286,7 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 					}
 					Stacker.calculateStackSize(rowSizes, secondaryAxis, innerMargin, outerMargin,
 						betweenRowsLayout)
-						.mapDimension(primaryAxis) { _.withLowPriority }
+						.mapDimension(primaryAxis) { _.lowPriority }
 						.mapDimension(secondaryAxis) { _.expanding }
 				// Case: No split threshold specified => Places all items on the same row, if possible
 				case None =>

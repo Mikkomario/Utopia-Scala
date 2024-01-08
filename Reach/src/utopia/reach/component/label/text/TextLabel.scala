@@ -14,7 +14,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 
 /**
   * Common trait for factories that are used for constructing text labels
@@ -22,16 +22,8 @@ import utopia.reach.component.template.CustomDrawReachComponent
   * @author Mikko Hilpinen
   * @since 20.07.2023, v1.1
   */
-trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr]
+trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr] with PartOfComponentHierarchy
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created text labels will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
-	
-	
 	// OTHER    -------------------
 	
 	protected def _apply(text: LocalizedString, drawContext: TextDrawContext, allowTextShrink: Boolean = false) =

@@ -69,7 +69,7 @@ object DropDown
 		val dd = new DropDown[A, C](context.actorHandler, noResultsView, icon,
 			BackgroundDrawer(highlightColor, Normal), highlightColor, selectionPromptText,
 			context.font, context.textColor, displayFunction, context.textAlignment, context.textInsets,
-			context.textInsets.mapVertical { _.withLowPriority }, context.textColor,
+			context.textInsets.mapVertical { _.lowPriority }, context.textColor,
 			context.buttonBorderWidth, context.smallStackMargin, displayStackLayout, contentPointer, valuePointer,
 			!context.allowTextShrink, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
 			contentIsStateless)(makeDisplayFunction)

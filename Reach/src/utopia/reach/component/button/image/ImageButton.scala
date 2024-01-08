@@ -17,7 +17,7 @@ import utopia.reach.component.factory.contextual.{ColorContextualFactory, Contex
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageLabelSettings, ImageLabelSettingsLike, ViewImageLabel}
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -144,14 +144,9 @@ trait ImageButtonSettingsWrapper[+Repr] extends ImageButtonSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-trait ImageButtonFactoryLike[+Repr] extends ImageButtonSettingsWrapper[Repr]
+trait ImageButtonFactoryLike[+Repr] extends ImageButtonSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
 	// ABSTRACT	--------------------
-	
-	/**
-	  * The component hierarchy, to which created image buttons will be attached
-	  */
-	protected def parentHierarchy: ComponentHierarchy
 	
 	/**
 	  * @return Whether images should be allowed to scale beyond their source resolution

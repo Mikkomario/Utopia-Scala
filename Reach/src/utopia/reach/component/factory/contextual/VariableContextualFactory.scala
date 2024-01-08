@@ -2,21 +2,16 @@ package utopia.reach.component.factory.contextual
 
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.PartOfComponentHierarchy
 
 /**
   * Common trait for component factories that use a variable context parameter (i.e. a context pointer)
   * @author Mikko Hilpinen
   * @since 31.5.2023, v1.1
   */
-trait VariableContextualFactory[N, +Repr]
+trait VariableContextualFactory[N, +Repr] extends PartOfComponentHierarchy
 {
 	// ABSTRACT --------------------------
-	
-	/**
-	  * @return Component hierarchy used when creating the new components
-	  */
-	protected def parentHierarchy: ComponentHierarchy
 	
 	/**
 	  * @return Pointer that determines the context of the created components

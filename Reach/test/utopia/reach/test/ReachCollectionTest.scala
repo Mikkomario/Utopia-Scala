@@ -27,7 +27,7 @@ object ReachCollectionTest extends App
 			Vector.fill(20) {
 				labelF.withBackground(colorOptions.random).apply(
 					StackSize.upscaling(Size.square(16),
-						Size.square(16) + Size.square(Random.nextDouble() * 228)).withLowPriority) }
+						Size.square(16) + Size.square(Random.nextDouble() * 228)).lowPriority) }
 		}
 	}
 	

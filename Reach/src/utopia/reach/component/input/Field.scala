@@ -805,7 +805,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 		// In other cases only the message field (which is hidden while empty)
 		// The right side hint label expands to the left and not right
 		val rightContextPointer = Lazy { hintContextPointer.map { context =>
-			context.mapTextInsets { _.mapRight { _.withDefaultPriority }.mapLeft { _.expanding } }
+			context.mapTextInsets { _.mapRight { _.normalPriority }.mapLeft { _.expanding } }
 				.withHorizontalTextAlignment(Far)
 		} }
 		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, rightContextPointer)) match {
