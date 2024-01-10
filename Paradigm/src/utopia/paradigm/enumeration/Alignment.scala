@@ -1,10 +1,12 @@
 package utopia.paradigm.enumeration
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, DimensionsWrapperFactory, HasDimensions}
@@ -168,6 +170,26 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	  * @return A copy of this alignment with the specified vertical component
 	  */
 	def withVertical(vertical: LinearAlignment): Alignment = Alignment(horizontal, vertical)
+	
+	/**
+	  * Places the specified insets so that they cover the sides of this alignment,
+	  * opposite to where it moves the content.
+	  *
+	  * E.g. if called for Left, places all horizontal inset to the right side while dividing the vertical inset in half.
+	  * If called for TopRight, places all horizontal inset to the left side and all vertical inset to the bottom.
+	  * Center divides the inset equally between the two sides.
+	  *
+	  * @param totalInsets Total amount of insets to assign
+	  * @return The specified amount of insets assigned according to this alignment,
+	  *         so that they are placed opposite to where this alignment would position content.
+	  */
+	def surroundWith(totalInsets: Size) = Insets(dimensions.mergeWith(totalInsets, Pair.twice(0.0)) { (direction, totalLength) =>
+		direction match {
+			case Close => Pair(0.0, totalLength)
+			case Far => Pair(totalLength, 0.0)
+			case Middle => Pair.twice(totalLength / 2.0)
+		}
+	})
 	
 	/**
 	  * @param area An area to position

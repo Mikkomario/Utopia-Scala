@@ -11,7 +11,8 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.paradigm.angular.{Angle, DirectionalRotation}
 import utopia.paradigm.color.ColorShade.Dark
 import utopia.paradigm.color.{Color, ColorShade}
-import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.enumeration.Alignment.Center
+import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape1d.Dimension
 import utopia.paradigm.shape.shape1d.vector.Vector1D
 import utopia.paradigm.shape.shape2d._
@@ -415,10 +416,10 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	}
 	// Only works when specified area is inside the original image's bounds and scaled according to source resolution
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) = {
-		val newSource = img.getSubimage(relativeArea.leftX.toInt, relativeArea.topY.toInt, relativeArea.width.toInt,
-			relativeArea.height.toInt)
-		val newLazyPixels = Lazy { _pixels.value.view(relativeArea) }
-		new Image(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - relativeArea.position },
+		val area = relativeArea.round
+		val newSource = img.getSubimage(area.leftX.toInt, area.topY.toInt, area.width.toInt, area.height.toInt)
+		val newLazyPixels = Lazy { _pixels.value.view(area) }
+		new Image(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - area.position },
 			newLazyPixels, newLazyPixels.map { _.averageShade })
 	}
 	
@@ -427,16 +428,14 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param insets Insets to crop out of this image
 	  * @return A cropped copy of this image
 	  */
-	def crop(insets: Insets) = {
-		source match {
-			case Some(img) =>
-				val totalInsets = insets.total
-				if (totalInsets.width > width || totalInsets.height > height)
-					Image.empty
-				else
-					_subImage(img, (Bounds(Point.origin, size) - insets) / scaling)
-			case None => this
-		}
+	def crop(insets: Insets) = source match {
+		case Some(img) =>
+			val totalInsets = insets.total
+			if (totalInsets.width > width || totalInsets.height > height)
+				Image.empty
+			else
+				_subImage(img, (Bounds(Point.origin, size) - insets) / scaling)
+		case None => this
 	}
 	/**
 	  * @param side Side from which to crop from this image
@@ -444,6 +443,48 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A cropped copy of this image
 	  */
 	def cropFromSide(side: Direction2D, amount: Double) = crop(Insets.towards(side, amount))
+	
+	/**
+	  * Increases or decreases the size of the canvas around this image.
+	  * In other words, modifies this image's size without scaling it.
+	  * If the size gets smaller, crops this image. If it gets larger, adds padding.
+	  * @param canvasSize New canvas size
+	  * @param alignment Alignment that determines how the padding or cropping is applied.
+	  *                  E.g. If set to Center (default), applies the padding or cropping symmetrically.
+	  *                  If set to BottomLeft, on the other hand, the padding or cropping would be applied on the
+	  *                  right and top edges only.
+	  * @return Copy of this image with the new size
+	  */
+	def withCanvasSize(canvasSize: Size, alignment: Alignment = Center) = {
+		// Case: Preserving size => No change is necessary
+		if (canvasSize == size)
+			this
+		// Case: Size gets smaller => Crops
+		else if (canvasSize.forAllDimensionsWith(size) { _ <= _ })
+			crop(alignment.surroundWith(size - canvasSize))
+		// Case: Size gets larger on at least one side => Repaints with padding
+		else
+			source match {
+				case Some(raw) =>
+					// Performs the changes in the original scaling
+					val newSourceSize = (canvasSize / scaling).round
+					// Paints the new image
+					val modified = Image
+						.paint(newSourceSize) { drawer =>
+							drawer.drawAwtImage(raw, alignment.position(sourceResolution, newSourceSize).toPoint)
+						}
+						.copy(scaling = scaling)
+					// Case: Size increased on all sides => We know that the image shade is fully preserved, also
+					if (canvasSize.forAllDimensionsWith(size) { _ >= _ })
+						modified.copy(_shade = _shade)
+					// Case: Cropping plus padding at the same time
+					// => We don't know the resulting shade without calculating it
+					else
+						modified
+				// Case: Empty image (no awt source) => No need to paint anything
+				case None => withSize(canvasSize)
+			}
+	}
 	
 	/**
 	  * Converts this one image into a strip containing multiple parts. The splitting is done horizontally.

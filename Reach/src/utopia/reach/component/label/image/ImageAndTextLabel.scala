@@ -5,10 +5,10 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.SizeCategory.VerySmall
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
@@ -171,6 +171,15 @@ case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vecto
                                      isHint: Boolean = false)
 	extends ImageAndTextLabelSettingsLike[ImageAndTextLabelSettings]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return A copy of these settings that may be used in constructing pointer-based image-and-text labels
+	  */
+	def toViewSettings = ViewImageAndTextLabelSettings(customDrawers, imageSettings.toViewSettings,
+		forceEqualBreadth = forceEqualBreadth)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageAndTextLabelSettings =
@@ -230,6 +239,15 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 		with ContextualBackgroundAssignableFactory[TextContext, ContextualImageAndTextLabelFactory]
 		with FromAlignmentFactory[ContextualImageAndTextLabelFactory]
 {
+	// COMPUTED --------------------
+	
+	/**
+	  * @return A factory resembling this factory, which may be used for constructing view-based labels
+	  */
+	def toViewFactory: ContextualViewImageAndTextLabelFactory =
+		ContextualViewImageAndTextLabelFactory(parentHierarchy, Fixed(context), settings.toViewSettings)
+	
+	
 	// IMPLEMENTED  ----------------
 	
 	override def self: ContextualImageAndTextLabelFactory = this

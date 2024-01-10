@@ -18,6 +18,11 @@ object Insets extends InsetsFactory[Double, Insets]
     val zero = new Insets(HashMap())
     
     
+    // IMPLEMENTED  ------------------------
+    
+    override def withAmounts(amounts: Map[Direction2D, Double]): Insets = apply(amounts)
+    
+    
     // OTHER    ----------------------------
     
     /**

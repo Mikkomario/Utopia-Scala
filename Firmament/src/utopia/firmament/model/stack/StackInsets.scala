@@ -22,6 +22,11 @@ object StackInsets extends InsetsFactory[StackLength, StackInsets]
 	val zero = symmetric(StackLength.fixedZero)
 	
 	
+	// IMPLEMENTED  -----------------------
+	
+	override def withAmounts(amounts: Map[Direction2D, StackLength]): StackInsets = apply(amounts)
+	
+	
 	// OTHER	---------------------------
 	
 	/**

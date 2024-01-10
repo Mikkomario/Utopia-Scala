@@ -14,6 +14,8 @@ Supports **Flow v2.3**
 - Added a new **Layers** -container
   - This container is used for presenting multiple components on top of each other
   - Currently only the static container version is available
+- **ImageLabel** factories can now more easily be converted to **ViewImageLabel** factories by calling `.toViewFactory`
+  - Similar addition was made to **ImageAndTextLabel**, as well as **ImageAndTextButton**
 ### Other changes
 - Cursor shade-detection algorithm is now much simpler, resulting in faster code and smaller memory use, 
   with the cost of less accurate cursor color

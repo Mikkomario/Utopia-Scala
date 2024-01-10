@@ -10,6 +10,8 @@
   the direction of the **Rotation** instance.
   - In order to match previous functionality, you may have to use `.absoluteArcLengthOver(Double)`
 - Renamed **LineLike**`.map(...)` to `.mapEnds(...)` because of a name clash / compiler problems in **Line**
+- Renamed **InsetsFactory**`.apply(Map)` to **InsetsFactory**`.withAmounts(Map)` because of name conflicts
+  - Also, **InsetsFactory** now extends **DimensionalFactory**, which might cause some name clashes
 - Removed classes and functions that were deprecated before v1.2
 ### Deprecations
 - Deprecated most of the existing **Rotation** (/**DirectionalRotation**) functions in favor of the new syntax
@@ -18,7 +20,10 @@
 ### New features
 - Added more extensive metric unit support (see **MetricScale**, **MetricUnit** & **MeterUnit**), 
   including some new **DistanceUnits** and
+- Added **InsetsBuilder** class (accessible via **InsetsFactoryLike**`.newBuilder`)
 ### New methods
+- **Alignment**
+  - Added `.surroundWith(Size)`, which may be used for constructing insets
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
 - **Color**
@@ -30,6 +35,8 @@
 - **NumericVectorLike**
   - Added `.mapLength(...)`
 ### Other changes
+- **Direction2D** values lists are now **Pairs** instead of **Vectors**. 
+  - Similarly, **Axis2D**`.directions` returns a **Pair** instead of a **Vector** now.
 - **Distance** now extends **MayBeAboutZero**
 - Improved **Distance** `.toString`
 - Scala version updated to 2.13.12

@@ -7,12 +7,14 @@
 - Deleted functions and classes that were deprecated at v3.0 or earlier
 ### New methods
 - **Image**
+  - Added `.withCanvasSize(Size)` function, which adds padding or crops the image in order to get it to the desired size
   - Added a number of functions for extracting and highlighting image edges
 - **ImageLike**
   - Added `.shade` function
 - **Pixels**
   - Added `.averageShade`
 ### Other changes
+- **Image**`.crop(...)` & `.subImage(...)` now use rounding
 - **DrawSettings** now extends **ScopeUsable**
 - Scala version updated to 2.13.12
 

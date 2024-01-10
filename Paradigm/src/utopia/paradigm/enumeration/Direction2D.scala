@@ -1,5 +1,6 @@
 package utopia.paradigm.enumeration
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.Reversible
@@ -164,8 +165,7 @@ object Direction2D
 	  * @param axis Target axis
 	  * @return Directions along that axis
 	  */
-	def along(axis: Axis2D) = axis match
-	{
+	def along(axis: Axis2D) = axis match {
 		case X => horizontal
 		case Y => vertical
 	}
@@ -175,8 +175,7 @@ object Direction2D
 	  * @param sign Direction along that axis (positive or negative)
 	  * @return A 2D direction
 	  */
-	def apply(axis: Axis2D, sign: Sign): Direction2D = axis match
-	{
+	def apply(axis: Axis2D, sign: Sign): Direction2D = axis match {
 		case X => if (sign.isPositive) Right else Left
 		case Y => if (sign.isPositive) Down else Up
 	}
@@ -264,7 +263,7 @@ object HorizontalDirection
 	/**
 	  * All horizontal direction options (left & right)
 	  */
-	val values = Vector[HorizontalDirection](Direction2D.Left, Direction2D.Right)
+	val values = Pair[HorizontalDirection](Direction2D.Left, Direction2D.Right)
 	
 	
 	// OTHER	----------------------------
@@ -287,7 +286,7 @@ object VerticalDirection
 	/**
 	  * All vertical direction options (up & down)
 	  */
-	val values = Vector[VerticalDirection](Direction2D.Up, Direction2D.Down)
+	val values = Pair[VerticalDirection](Direction2D.Up, Direction2D.Down)
 	
 	
 	// OTHER	----------------------------

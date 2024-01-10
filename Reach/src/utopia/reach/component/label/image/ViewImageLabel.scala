@@ -71,6 +71,14 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	def withInsetsPointer(p: Changing[StackInsets]): Repr
 	
 	
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Unchanging copy of these settings, which may be used for constructing immutable image labels.
+	  */
+	def toImageLabelSettings = ImageLabelSettings.from(this)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def alignment: Alignment = alignmentPointer.value
@@ -104,7 +112,12 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 
 object ViewImageLabelSettings
 {
+	// ATTRIBUTES   --------------------------
+	
 	val default = apply()
+	
+	
+	// OTHER    ------------------------------
 	
 	/**
 	  * @param staticSettings Fixed image settings

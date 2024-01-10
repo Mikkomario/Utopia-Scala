@@ -5,6 +5,10 @@ Supports **Flow v2.3**
 ### Deprecations
 - Renamed `.withLowPriority` to `.lowPriority` in **StackLength** and **StackSize**
 - Renamed `.withDefaultPriority` to `.normalPriority` in **StackLength**
+### New methods
+- **ButtonImageSet** (object)
+  - Added `.changingSize(Image, Double)`
+    - Also added functions to **SingleColorIcon** for converting them into this type of button-image-set
 ### Other changes
 - Scala version updated to 2.13.12
 

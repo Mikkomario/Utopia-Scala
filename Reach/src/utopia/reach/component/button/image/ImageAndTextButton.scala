@@ -3,8 +3,8 @@ package utopia.reach.component.button.image
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
-import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.localization.LocalizedString
+import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
@@ -183,7 +183,7 @@ case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarc
 	  * @return A new button
 	  */
 	def apply(image: Either[Image, SingleColorIcon], text: LocalizedString)(action: => Unit) =
-		new ImageAndTextButton(parentHierarchy, context, image, text, settings)(action)
+		_apply(Left(image), text)(action)
 	/**
 	  * Creates a new button with both image and text
 	  * @param image  Image displayed on this button
@@ -202,6 +202,15 @@ case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarc
 	  */
 	def apply(icon: SingleColorIcon, text: LocalizedString)(action: => Unit): ImageAndTextButton =
 		apply(Right(icon), text)(action)
+	/**
+	  * Creates a new button with an image-set, plus static text
+	  * @param imageSet Image set that determines the images to display in different button states
+	  * @param text Text to display on this button
+	  * @param action Action called whenever this button is triggered
+	  * @return A new button
+	  */
+	def apply(imageSet: ButtonImageSet, text: LocalizedString)(action: => Unit) =
+		_apply(Right(imageSet), text)(action)
 	
 	/**
 	  * Creates a new button with both image and text
@@ -213,6 +222,21 @@ case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarc
 	@deprecated("Please use .apply(SingleColorIcon, LocalizedString)(=> Unit) instead", "v1.1")
 	def withIcon(icon: SingleColorIcon, text: LocalizedString)(action: => Unit) =
 		apply(icon, text)(action)
+	
+	/**
+	  * Creates a new button with both image and text
+	  * @param image                    Image displayed on this button.
+	  *                                 Either
+	  *                                     Left/Left: A static image,
+	  *                                     Left/Right: A static icon, or
+	  *                                     Right: A button image set
+	  * @param text                     Text displayed on this button
+	  * @param action                   Action called whenever this button is triggered
+	  * @return A new button
+	  */
+	private def _apply(image: Either[Either[Image, SingleColorIcon], ButtonImageSet], text: LocalizedString)
+	                  (action: => Unit) =
+		new ImageAndTextButton(parentHierarchy, context, image, text, settings)(action)
 }
 
 /**
@@ -247,7 +271,7 @@ object ImageAndTextButton extends ImageAndTextButtonSetup()
   * @since 10.11.2020, v0.1
   */
 class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextContext,
-                         image: Either[Image, SingleColorIcon], text: LocalizedString,
+                         image: Either[Either[Image, SingleColorIcon], ButtonImageSet], text: LocalizedString,
                          settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
                         (action: => Unit)
 	extends ReachComponentWrapper with ButtonLike
@@ -262,8 +286,8 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	override val focusId = hashCode()
 	
 	override protected val wrapped = {
-		// val alignment = context.textAlignment
 		val borderWidth = context.buttonBorderWidth
+		// Decreases the insets that separate the text and the image
 		val actualContext = context.mapTextInsets { original =>
 			val smallDirections = context.textAlignment.directions
 			original.mapWithDirection { (side, len) =>
@@ -273,21 +297,29 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 					len + borderWidth + settings.insets(side)
 			}
 		}
-		// val actualContext = context.mapTextInsets { _/2 + settings.insets.withoutSides(alignment.directions) + borderWidth }
-		ImageAndTextLabel(settings.labelSettings)
+		// Prepares the component factory
+		val factory = ImageAndTextLabel(settings.labelSettings)
 			.withContext(parentHierarchy, actualContext)
+			// Again, decreases the insets
 			.mapImageInsets { original =>
 				val smallDirections = context.textAlignment.opposite.directions
 				original.mapWithDirection { (side, len) =>
 					if (smallDirections.contains(side))
-						len/2
+						len / 2
 					else
 						len + borderWidth + settings.insets(side)
 				}
 			}
+			// Adds state-based background-drawing
 			.withCustomBackgroundDrawer(
 				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, Fixed(borderWidth)))
-			.apply(image, text)
+		image match {
+			// Case: Image won't change => Constructs an immutable label
+			case Left(staticImage) => factory(staticImage, text)
+			// Case: Image is defined as a set and will changed based on the state => Constructs a view-label
+			case Right(imageSet) =>
+				factory.toViewFactory(Fixed(text), statePointer.map(imageSet.apply), DisplayFunction.identity)
+		}
 	}
 	
 	

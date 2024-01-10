@@ -145,8 +145,7 @@ trait ImageLike extends HasSize
 	  * @param transformation An additional linear transformation to apply (optional)
 	  * @return Whether this image was fully drawn
 	  */
-	def drawWith(drawer: Drawer, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
-	{
+	def drawWith(drawer: Drawer, position: Point = Point.origin, transformation: Option[Matrix2D] = None) = {
 		source.forall { s =>
 			// Uses transformations in following order:
 			// 1) Translates so that image origin is at (0,0)

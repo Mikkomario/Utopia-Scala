@@ -17,7 +17,7 @@ trait FramedFactory[+Repr]
 	/**
 	  * @return Insets placed around the created components
 	  */
-	protected def insets: StackInsets
+	def insets: StackInsets
 	
 	/**
 	  * @param insets Insets to place around the created components

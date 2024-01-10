@@ -1,14 +1,18 @@
 package utopia.reach.test
 
 import utopia.firmament.component.Window
+import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.LocalString._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
+import utopia.genesis.image.Image
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
+import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.text.EditableTextLabel
@@ -59,10 +63,19 @@ object ReachComponentTest extends App
 								.triggeredWithKeyIndex(KeyEvent.VK_F1)
 								.apply("Clear (F1)") { editableLabel.text = "" }
 							// 2.2: Close Button
+							val closeButtonFactory = factories.mapContext { _ / Primary }(ImageAndTextButton)
+								.withFocusListener(focusReporter("Close Button"))
+								.triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
+							val closeButton = closeButtonFactory.apply(SingleColorIcon(
+									Image.readFrom("Reach/test-images/close.png").getOrElse(Image.empty))
+									.inButton.sizeChanging.contextual(closeButtonFactory.context),
+								"Close (esc)") { windowPointer.value.foreach { _.close() } }
+							/*
 							val closeButton = factories.mapContext { _ / Primary }(TextButton)
 								.withFocusListener(focusReporter("Close Button"))
 								.triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
 								.apply("Close (esc)") { windowPointer.value.foreach { _.close() } }
+							 */
 							Vector(clearButton, closeButton)
 						}
 						Vector(editableLabel, buttonStack.parent)

@@ -6,17 +6,18 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.paradigm.shape.template.{Dimensional, Dimensions}
+import utopia.paradigm.shape.template.{Dimensional, DimensionalBuilder, DimensionalFactory, Dimensions}
 import utopia.paradigm.transform.LinearSizeAdjustable
 
-import scala.collection.immutable.HashMap
+import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.mutable
 
 /**
   * Common trait for factories which produce insets
   * @tparam L Type of inset lengths used
   * @tparam I Type of insets produced by this factory
   */
-trait InsetsFactory[-L, +I]
+trait InsetsFactory[-L, +I] extends DimensionalFactory[Pair[L], I]
 {
     // ABSTRACT ---------------------------
     
@@ -25,7 +26,23 @@ trait InsetsFactory[-L, +I]
       * @param amounts Lengths of each side in these insets
       * @return A set of insets with specified lengths
       */
-    def apply(amounts: Map[Direction2D, L]): I
+    def withAmounts(amounts: Map[Direction2D, L]): I
+    
+    
+    // IMPLEMENTED  -----------------------
+    
+    override def newBuilder = new InsetsBuilder[L, I](this)
+    
+    override def apply(values: IndexedSeq[Pair[L]]): I = from(values)
+    override def apply(values: Map[Axis, Pair[L]]): I = withAmounts(values.flatMap { case (axis, lengths) =>
+        axis match {
+            case axis: Axis2D => axis.directions.zip(lengths)
+            case _ => None
+        }
+    })
+    
+    override def from(values: IterableOnce[Pair[L]]): I =
+        withAmounts(Axis2D.values.zip(values).flatMap { case (axis, lengths) => axis.directions.zip(lengths)}.toMap)
     
     
     // OTHER    ---------------------------
@@ -38,8 +55,8 @@ trait InsetsFactory[-L, +I]
       * @param bottom Amount of insets on the bottom side
       * @return A new set of insets
       */
-    def apply(left: L, right: L, top: L, bottom: L): I = apply(
-        HashMap(Direction2D.Left -> left, Direction2D.Right -> right, Up -> top, Down -> bottom))
+    def apply(left: L, right: L, top: L, bottom: L): I = withAmounts(
+        Map(Direction2D.Left -> left, Direction2D.Right -> right, Up -> top, Down -> bottom))
     
     /**
       * Creates a set of insets where top = bottom and left = right
@@ -58,7 +75,7 @@ trait InsetsFactory[-L, +I]
       * @param axis Targeted axis (X|Y)
       * @return A set of either horizontal or vertical insets
       */
-    def symmetric(sideWidth: L, axis: Axis2D) = apply(axis.directions.map { d => d -> sideWidth }.toMap)
+    def symmetric(sideWidth: L, axis: Axis2D) = withAmounts(axis.directions.map { d => d -> sideWidth }.toMap)
     
     /**
       * Creates a horizontal set of insets
@@ -66,7 +83,7 @@ trait InsetsFactory[-L, +I]
       * @param right Right side
       * @return New insets
       */
-    def horizontal(left: L, right: L) = apply(HashMap(Direction2D.Left -> left, Direction2D.Right -> right))
+    def horizontal(left: L, right: L) = withAmounts(Map(Direction2D.Left -> left, Direction2D.Right -> right))
     /**
       * Creates a horizontal set of insets
       * @param w left / right side
@@ -80,7 +97,7 @@ trait InsetsFactory[-L, +I]
       * @param bottom Bottom side
       * @return New insets
       */
-    def vertical(top: L, bottom: L) = apply(HashMap(Up -> top, Down -> bottom))
+    def vertical(top: L, bottom: L) = withAmounts(Map(Up -> top, Down -> bottom))
     /**
       * Creates a vertical set of insets
       * @param h Top / bottom side
@@ -93,7 +110,7 @@ trait InsetsFactory[-L, +I]
       * @param amount length of inset
       * @return An inset with only one side
       */
-    def towards(direction: Direction2D, amount: L) = apply(HashMap(direction -> amount))
+    def towards(direction: Direction2D, amount: L) = withAmounts(Map(direction -> amount))
     
     /**
       * @param amount Length of inset
@@ -115,6 +132,127 @@ trait InsetsFactory[-L, +I]
       * @return An inset with only bottom side
       */
     def bottom(amount: L) = towards(Down, amount)
+}
+
+/**
+  * A builder used for building insets
+  * @param factory Factory used for constructing the resulting insets
+  * @tparam L Type of the inset lengths applied
+  * @tparam I Type of the resulting insets
+  */
+class InsetsBuilder[-L, +I](factory: InsetsFactory[L, I]) extends DimensionalBuilder[Pair[L], I]
+{
+    // ATTRIBUTES   ---------------------
+    
+    // Unchecked variance because this value is protected and carefully handled
+    private val buffer: mutable.Map[Direction2D, L @uncheckedVariance] = mutable.Map()
+    
+    
+    // IMPLEMENTED  ---------------------
+    
+    override def update(axis: Axis, value: Pair[L]): Unit = axis match {
+        case axis: Axis2D => update(axis, value)
+        case _ => ()
+    }
+    
+    override def clear() = buffer.clear()
+    override def result() = factory.withAmounts(buffer.toMap)
+    
+    override def addOne(elem: Pair[L]) = {
+        // If X-directions have not been specified yet, specifies those
+        if (X.directions.exists { !buffer.contains(_) })
+            buffer ++= X.directions.zip(elem)
+        // Otherwise, if the Y-directions haven't been specified yet, specifies those
+        else if (Y.directions.exists { !buffer.contains(_) })
+            buffer ++= Y.directions.zip(elem)
+        // Won't accept elements after both axes have been specified
+        this
+    }
+    
+    
+    // OTHER    ------------------------
+    
+    /**
+      * Updates a single direction's side
+      * @param direction Targeted direction / side
+      * @param length Assigned inset length
+      * @return This builder
+      */
+    def update(direction: Direction2D, length: L) = {
+        buffer += (direction -> length)
+        this
+    }
+    /**
+      * Updates the lengths along a single axis
+      * @param axis Targeted axis
+      * @param lengths The inset lengths to assign
+      *                (first towards the negative direction, then towards the positive direction)
+      * @return This builder
+      */
+    def update(axis: Axis2D, lengths: Pair[L]) = {
+        buffer ++= axis.directions.zip(lengths)
+        this
+    }
+    
+    /**
+      * @param top Top inset to assign
+      * @return This builder
+      */
+    def setTop(top: L) = update(Up, top)
+    /**
+      * @param bottom Bottom inset to assign
+      * @return This builder
+      */
+    def setBottom(bottom: L) = update(Down, bottom)
+    /**
+      * @param left Left inset to assign
+      * @return This builder
+      */
+    def setLeft(left: L) = update(Direction2D.Left, left)
+    /**
+      * @param right Right inset to assign
+      * @return This builder
+      */
+    def setRight(right: L) = update(Direction2D.Right, right)
+    
+    /**
+      * Assigns the same length to both directions along a specific axis
+      * @param axis Targeted axis
+      * @param length Length to assign to insets on the both sides along that axis
+      * @return This builder
+      */
+    def setSymmetric(axis: Axis2D, length: L) = update(axis, Pair.twice(length))
+    /**
+      * Assigns symmetric left and right inset
+      * @param length Inset to assign to both sides
+      * @return This builder
+      */
+    def setHorizontallySymmetric(length: L) = setSymmetric(X, length)
+    /**
+      * Assigns symmetric top and bottom inset
+      * @param length Inset to assign to both sides
+      * @return This builder
+      */
+    def setVerticallySymmetric(length: L) = setSymmetric(Y, length)
+    
+    /**
+      * Removes an assigned direction
+      * @param direction Direction to remove
+      * @return This builder
+      */
+    def -=(direction: Direction2D) = {
+        buffer -= direction
+        this
+    }
+    /**
+      * Removes all assignments along an axis
+      * @param axis Axis to remove / set to zero
+      * @return This builder
+      */
+    def -=(axis: Axis2D): InsetsBuilder[L, I] = {
+        axis.directions.foreach { this -= _ }
+        this
+    }
 }
 
 /**

@@ -6,6 +6,7 @@ import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFacto
 import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackSize}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
@@ -103,13 +104,38 @@ trait ImageLabelSettingsLike[+Repr]
 
 object ImageLabelSettings
 {
+	// ATTRIBUTES   ------------------------
+	
 	val default = apply()
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param settings Image label settings or related settings
+	  * @return Image label settings from the specified settings
+	  */
+	def from(settings: ImageLabelSettingsLike[_]) = settings match {
+		case s: ImageLabelSettings => s
+		case s => apply(s.insets, s.alignment, s.imageScaling, s.colorOverlay, s.customDrawers, s.usesLowPrioritySize)
+	}
 }
 case class ImageLabelSettings(insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Center,
                               imageScaling: Double = 1.0, colorOverlay: Option[Color] = None,
                               customDrawers: Vector[CustomDrawer] = Vector.empty, usesLowPrioritySize: Boolean = false)
 	extends ImageLabelSettingsLike[ImageLabelSettings]
 {
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return A set of view-image-label-settings that match these settings
+	  */
+	def toViewSettings = ViewImageLabelSettings(customDrawers, Fixed(insets), Fixed(alignment),
+		colorOverlay.map(Fixed.apply), Fixed(imageScaling), usesLowPrioritySize = usesLowPrioritySize)
+	
+	
+	// IMPLEMENTED  ------------------------
+	
 	override def withInsets(insets: StackInsetsConvertible): ImageLabelSettings = copy(insets = insets.toInsets)
 	override def withImageScaling(scaling: Double): ImageLabelSettings = copy(imageScaling = scaling)
 	override def withColor(color: Option[Color]): ImageLabelSettings = copy(colorOverlay = color)
@@ -149,12 +175,17 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 	def mapSettings(f: ImageLabelSettings => ImageLabelSettings) = withSettings(f(settings))
 }
 
-trait ImageLabelFactoryLike[+Repr]
+trait ImageLabelFactoryLike[+Repr, +VF]
 	extends ImageLabelSettingsWrapper[Repr] with LinearSizeAdjustable[Repr] with PartOfComponentHierarchy
 {
 	// ABSTRACT ---------------------------
 	
 	protected def allowsUpscaling: Boolean
+	
+	/**
+	  * @return A view (pointer) -based copy of this factory
+	  */
+	def toViewFactory: VF
 	
 	
 	// OTHER    ---------------------------
@@ -198,12 +229,16 @@ trait ImageLabelFactoryLike[+Repr]
 case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
                              settings: ImageLabelSettings = ImageLabelSettings.default,
                              allowsUpscaling: Boolean = false)
-	extends ImageLabelFactoryLike[ImageLabelFactory] with BackgroundAssignable[ImageLabelFactory]
+	extends ImageLabelFactoryLike[ImageLabelFactory, ViewImageLabelFactory] with BackgroundAssignable[ImageLabelFactory]
 		with FromContextFactory[ColorContext, ContextualImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------
 	
 	override def self: ImageLabelFactory = this
+	
+	override def toViewFactory: ViewImageLabelFactory =
+		ViewImageLabelFactory(parentHierarchy, settings.toViewSettings,
+			allowUpscalingPointer = Fixed(allowsUpscaling))
 	
 	override def *(mod: Double): ImageLabelFactory = withImageScaledBy(mod).withInsetsScaledBy(mod)
 	
@@ -225,7 +260,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 
 case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
                                        settings: ImageLabelSettings = ImageLabelSettings.default)
-	extends ImageLabelFactoryLike[ContextualImageLabelFactory]
+	extends ImageLabelFactoryLike[ContextualImageLabelFactory, ContextualViewImageLabelFactory]
 		with ColorContextualFactory[ContextualImageLabelFactory]
 		with ContextualBackgroundAssignableFactory[ColorContext, ContextualImageLabelFactory]
 		with ContextualFramedFactory[ContextualImageLabelFactory]
@@ -235,6 +270,9 @@ case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, cont
 	override def self: ContextualImageLabelFactory = this
 	
 	override protected def allowsUpscaling: Boolean = context.allowImageUpscaling
+	
+	override def toViewFactory: ContextualViewImageLabelFactory =
+		ContextualViewImageLabelFactory(parentHierarchy, Fixed(context), settings.toViewSettings)
 	
 	override def withSettings(settings: ImageLabelSettings): ContextualImageLabelFactory =
 		copy(settings = settings)
