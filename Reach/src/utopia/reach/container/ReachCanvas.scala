@@ -2,6 +2,7 @@ package utopia.reach.container
 
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.Component
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
@@ -16,10 +17,10 @@ import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, Rese
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
-import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
-import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
+import utopia.genesis.handling.mutable.{ActorHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.text.Font
-import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.genesis.view.{GlobalKeyboardEventHandler, MouseEventGenerator}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
@@ -107,6 +108,7 @@ object ReachCanvas
 	  * The resulting canvas will never resize itself automatically. If you want the canvas to change size, you
 	  * must resize it manually. Remember to call .updateLayout() after any size change.
 	  *
+	  * @param actorHandler               Actor handler used for delivering action events to the mouse event generator
 	  * @param backgroundPointer          A pointer that contains the background use in this canvas.
 	  *
 	  *                                   Please note that a transparent background is not supported here,
@@ -138,7 +140,8 @@ object ReachCanvas
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def forSwing[C <: ReachComponentLike, R](backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
+	def forSwing[C <: ReachComponentLike, R](actorHandler: ActorHandler, backgroundPointer: Changing[Color],
+	                                         cursors: Option[CursorSet] = None,
 	                                         revalidateListener: ReachCanvas => Unit = _ => (),
 	                                         enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
 	                                        (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
@@ -174,7 +177,7 @@ object ReachCanvas
 				canvas.updateLayout()
 			}(createContent)
 			componentPointer.set(canvas.component)
-			val tracker = new SwingAttachmentTracker(attachmentPointer, absoluteParentPositionView)
+			val tracker = new SwingAttachmentTracker(actorHandler, canvas, attachmentPointer, absoluteParentPositionView)
 			canvas.component.addAncestorListener(tracker)
 			
 			// Initializes canvas size
@@ -187,11 +190,48 @@ object ReachCanvas
 	
 	// NESTED   ----------------------------
 	
-	private class SwingAttachmentTracker(pointer: ResettableFlag, absolutePositionView: Resettable)
+	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: Component, attachedFlag: ResettableFlag,
+	                                     absolutePositionView: Resettable)
+	                                    (implicit exc: ExecutionContext)
 		extends AncestorListener
 	{
-		override def ancestorAdded(event: AncestorEvent) = pointer.set()
-		override def ancestorRemoved(event: AncestorEvent) = pointer.reset()
+		// ATTRIBUTES   --------------------
+		
+		private val parentPointer = EventfulPointer.empty[java.awt.Component]()
+		private val generatorPointer = parentPointer.strongMap { _.map { new MouseEventGenerator(_) } }
+		
+		
+		// INITIAL CODE --------------------
+		
+		// Distributes the mouse events from the parent component into the canvas element
+		generatorPointer.addContinuousListener { event =>
+			event.oldValue.foreach { _.kill() }
+			event.newValue.foreach { generator =>
+				generator.buttonHandler += MouseButtonStateListener() { event =>
+					canvas.distributeMouseButtonEvent(event)
+					None
+				}
+				generator.moveHandler += MouseMoveListener() { event =>
+					canvas.distributeMouseMoveEvent(event)
+				}
+				generator.wheelHandler += MouseWheelListener()({ event =>
+					canvas.distributeMouseWheelEvent(event)
+				})
+				actorHandler += generator
+			}
+		}
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def ancestorAdded(event: AncestorEvent) = {
+			attachedFlag.set()
+			parentPointer.value = Some(event.getAncestor)
+		}
+		override def ancestorRemoved(event: AncestorEvent) = {
+			parentPointer.value = None
+			attachedFlag.reset()
+		}
 		
 		override def ancestorMoved(event: AncestorEvent) = absolutePositionView.reset()
 	}
@@ -303,12 +343,15 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	}
 	
 	attachmentPointer.addListener { event =>
-		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
+		// When attached to the stack hierarchy,
+		// makes sure to update immediate content layout and repaint this component
 		if (event.newValue) {
+			currentPainter.foreach { _.resetBuffer() }
 			// TODO: Do we need to reset every stack size or just the top level?
 			currentContent.foreach { _.resetEveryCachedStackSize() }
 			layoutUpdateQueue.clear()
 			updateWholeLayout(size)
+			super[ReachCanvasLike].repaint()
 			// Listens to tabulator key events for manual focus handling
 			if (!disableFocus)
 				GlobalKeyboardEventHandler += FocusKeyListener
@@ -400,27 +443,27 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		super[ReachCanvasLike].repaint()
 	}
 	
-	// Distributes the events via the canvas content element
+	// Distributes the events via the canvas content element, but transforms the coordinates relative to this canvas
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) = {
 		super.distributeMouseButtonEvent(event) match {
 			case Some(consumed) =>
 				val newEvent = event.consumed(consumed)
-				currentContent.foreach { _.distributeMouseButtonEvent(newEvent) }
+				currentContent.foreach { _.distributeMouseButtonEvent(newEvent.relativeTo(position)) }
 				Some(consumed)
-			case None => currentContent.flatMap { _.distributeMouseButtonEvent(event) }
+			case None => currentContent.flatMap { _.distributeMouseButtonEvent(event.relativeTo(position)) }
 		}
 	}
 	override def distributeMouseMoveEvent(event: MouseMoveEvent) = {
 		super.distributeMouseMoveEvent(event)
-		currentContent.foreach { _.distributeMouseMoveEvent(event) }
+		currentContent.foreach { _.distributeMouseMoveEvent(event.relativeTo(position)) }
 	}
 	override def distributeMouseWheelEvent(event: MouseWheelEvent) = {
 		super.distributeMouseWheelEvent(event) match {
 			case Some(consumed) =>
 				val newEvent = event.consumed(consumed)
-				currentContent.foreach { _.distributeMouseWheelEvent(newEvent) }
+				currentContent.foreach { _.distributeMouseWheelEvent(newEvent.relativeTo(position)) }
 				Some(consumed)
-			case None => currentContent.flatMap { _.distributeMouseWheelEvent(event) }
+			case None => currentContent.flatMap { _.distributeMouseWheelEvent(event.relativeTo(position)) }
 		}
 	}
 	

@@ -47,7 +47,8 @@ trait CustomDrawer
 	/**
 	  * Performs the drawing
 	  * @param drawer A drawer used for the drawing (origin located at parent component origin)
-	  * @param bounds Draw area bounds
+	  * @param bounds Draw area bounds, which match the component bounds.
+	  *               For optimized drawing, also consider drawer.clippingBounds
 	  */
 	def draw(drawer: Drawer, bounds: Bounds): Unit
 	

@@ -10,6 +10,7 @@ import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandle
 import utopia.genesis.handling.Actor
 import utopia.inception.handling.mutable.Killable
 import utopia.inception.handling.{HandlerType, Mortal}
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext
@@ -28,6 +29,13 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     extends Actor with Mortal with Killable
 {
     // ATTRIBUTES    -----------------
+    
+    private lazy val positionAdjustment = c match {
+        case window: java.awt.Window =>
+            val insets = window.getInsets
+            Vector2D(-insets.left, -insets.top)
+        case c => Vector2D.zero
+    }
     
     // Generated events are fired one at a time using an event queue
     private val eventQueue = new ActionQueue()
@@ -72,16 +80,13 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     // This generator dies once component is no longer reachable
     override def isDead = component.isEmpty
     
-    override def kill() =
-    {
-        component.foreach { c =>
-            c.removeMouseListener(MouseEventReceiver)
-            c.removeMouseWheelListener(MouseWheelEventReceiver)
-            componentPointer.clear()
-            _moveHandler.clear()
-            _buttonHandler.clear()
-            _wheelHandler.clear()
-        }
+    override def kill() = component.foreach { c =>
+        c.removeMouseListener(MouseEventReceiver)
+        c.removeMouseWheelListener(MouseWheelEventReceiver)
+        componentPointer.clear()
+        _moveHandler.clear()
+        _buttonHandler.clear()
+        _wheelHandler.clear()
     }
     
     // Allows handling when component is visible
@@ -93,7 +98,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
             // Sometimes mouse position can't be calculated, in which case assumes mouse to remain static
             Try { Option(MouseInfo.getPointerInfo) }.toOption.flatten.foreach { pointerInfo =>
                 val absoluteMousePosition = Point of pointerInfo.getLocation
-                val mousePosition = pointInPanel(absoluteMousePosition, c) / scaling
+                val mousePosition = (pointInPanel(absoluteMousePosition, c) + positionAdjustment) / scaling
                 if (mousePosition != lastMousePosition) {
                     val previousMousePosition = lastMousePosition
                     lastMousePosition = mousePosition
@@ -115,11 +120,9 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     /**
       * Simulates the release of all currently held-down mouse buttons
       */
-    def releaseAllKeys() =
-    {
+    def releaseAllKeys() = {
         // Updates local button status
-        if (buttonStatus.isAnyButtonPressed)
-        {
+        if (buttonStatus.isAnyButtonPressed) {
             val oldButtonStatus = buttonStatus
             buttonStatus = MouseButtonStatus.empty
     
@@ -135,12 +138,9 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     }
     
     @scala.annotation.tailrec
-    private def pointInPanel(point: Point, panel: Component): Point =
-    {
+    private def pointInPanel(point: Point, panel: Component): Point = {
         val relativePoint = point - (Point of panel.getLocation)
-        
-        panel match
-        {
+        panel match {
             case _: java.awt.Window => relativePoint
             case _ =>
                 val parent = panel.getParent
@@ -155,7 +155,6 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     {
         // IMPLEMENTED  -------------
         
-        // TODO: Use an action queue in the simulated events to make sure release events are distributed AFTER the press events
         override def mousePressed(e: MouseEvent) = distributeEvent(e, isDown = true)
         override def mouseReleased(e: MouseEvent) = distributeEvent(e, isDown = false)
         
@@ -166,8 +165,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
         
         // OTHER    ---------------
         
-        private def distributeEvent(event: MouseEvent, isDown: Boolean) =
-        {
+        private def distributeEvent(event: MouseEvent, isDown: Boolean) = {
             buttonStatus += (event.getButton, isDown)
             _buttonHandler.foreach { handler =>
                 val newEvent = MouseButtonStateEvent(event.getButton, isDown, lastMousePosition,

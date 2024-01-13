@@ -6,6 +6,7 @@ Supports **Flow v2.3**
 - Renamed **LayeredView** trait to **Layers**
   - Also, the trait no longer accepts a generic type parameter
 ### Bugfixes
+- **ReachCanvas** in Swing context now properly fires mouse events
 - Fixed cursor shade calculation in **MutableImageButton**, **ViewImageButton** and **SelectionList**
 ### New features
 - Added support for cursors with edges
