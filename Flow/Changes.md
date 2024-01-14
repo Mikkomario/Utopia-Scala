@@ -47,6 +47,7 @@
 - Added **ChangeResult** model, relating to other **Changing** changes
 - Added conditional mirroring support to **OptimizedMirror**
 - Added a **PairView** class, as well as a general **HasTwoEnds** -trait
+- Added **CacheLatest** class
 - Added **HasSign** and **HasBinarySign** traits based on the **Signed** and **BinarySigned** traits
 - Added **HasExtremes** -trait
 - Added **SomeBeforeNone** utility ordering class for altered **Option**-ordering

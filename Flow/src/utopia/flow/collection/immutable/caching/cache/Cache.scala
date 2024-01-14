@@ -75,6 +75,15 @@ object Cache
 	                                  (request: K => V)
 	                                  (implicit exc: ExecutionContext) =
 		ReleasingCache.after(threshold)(request)
+	
+	/**
+	  * Creates a new cache that only caches the latest requested value
+	  * @param f A function for generating values for requested keys
+	  * @tparam K Type of keys used
+	  * @tparam V Type of values returned
+	  * @return A new cache
+	  */
+	def onlyLatest[K, V](f: K => V) = CacheLatest(f)
 		
 	
 	// NESTED   ---------------------------
