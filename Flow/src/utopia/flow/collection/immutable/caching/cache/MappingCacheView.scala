@@ -1,7 +1,5 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import utopia.flow.collection.template.CacheLike
-
 object MappingCacheView
 {
 	/**
@@ -13,7 +11,7 @@ object MappingCacheView
 	  * @tparam R Type of mapped cache values
 	  * @return A new mapping cache view
 	  */
-	def apply[K, O, R](wrapped: CacheLike[K, O])(f: O => R) = new MappingCacheView[K, O, R](wrapped)(f)
+	def apply[K, O, R](wrapped: Cache[K, O])(f: O => R) = new MappingCacheView[K, O, R](wrapped)(f)
 }
 
 /**
@@ -26,13 +24,11 @@ object MappingCacheView
   * @tparam O Type of values in the wrapped cache
   * @tparam R Type of mapped cache values
   */
-class MappingCacheView[-K, O, +R](wrapped: CacheLike[K, O])(f: O => R) extends CacheLike[K, R]
+class MappingCacheView[-K, O, +R](wrapped: Cache[K, O])(f: O => R) extends Cache[K, R]
 {
 	override def cachedValues = wrapped.cachedValues.view.map(f)
 	
 	override def cached(key: K) = wrapped.cached(key).map(f)
-	
 	override def apply(key: K) = f(wrapped(key))
-	
 	override def isValueCached(key: K) = wrapped.isValueCached(key)
 }

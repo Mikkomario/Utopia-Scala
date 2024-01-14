@@ -3,7 +3,6 @@ package utopia.reach.container.wrapper
 import utopia.firmament.component.input.{InputWithPointer, InteractionWithPointer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.collection.immutable.caching.cache.Cache
-import utopia.flow.collection.template.CacheLike
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -186,7 +185,7 @@ class CachingViewSwapper[A, +C <: ReachComponentLike, +P <: Changing[A]]
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val componentCache: CacheLike[A, C] = Cache[A, C] { item =>
+	private val componentCache: Cache[A, C] = Cache[A, C] { item =>
 		// Creates the item in open form first
 		val open = makeContent(item)
 		// Attaches this item based on the selected value

@@ -1,10 +1,9 @@
 package utopia.vault.database
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching
 import utopia.flow.collection.immutable.caching.cache.{Cache, ExpiringCache}
-import utopia.flow.collection.template.CacheLike
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.sql.Condition
@@ -55,24 +54,20 @@ class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleMode
 							maxCacheDuration: Duration = Duration.Inf, maxFailureCacheDuration: Duration = Duration.Inf)
 						   (keyToCondition: Key => Condition)
 						   (implicit exc: ExecutionContext)
-	extends CacheLike[Key, Try[A]]
+	extends Cache[Key, Try[A]]
 {
 	// ATTRIBUTES	-----------------------
 	
-	private val cache =
-	{
+	private val cache = {
 		// Creates a different type of cache based on specified parameters
-		maxCacheDuration.finite match
-		{
+		maxCacheDuration.finite match {
 			case Some(maxTime) =>
-				maxFailureCacheDuration.finite match
-				{
+				maxFailureCacheDuration.finite match {
 					case Some(maxFailTime) => caching.cache.TryCache(maxFailTime, maxTime)(request)
 					case None => ExpiringCache.after(maxTime)(request)
 				}
 			case None =>
-				maxFailureCacheDuration.finite match
-				{
+				maxFailureCacheDuration.finite match {
 					case Some(maxFailTime) => caching.cache.TryCache(maxFailTime)(request)
 					case None => Cache(request)
 				}
@@ -91,8 +86,7 @@ class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleMode
 	
 	// OTHER	--------------------------
 	
-	private def request(key: Key) =
-	{
+	private def request(key: Key) = {
 		connectionPool.tryWith { implicit connection =>
 			val condition = keyToCondition(key)
 			accessor.find(condition).toTry(

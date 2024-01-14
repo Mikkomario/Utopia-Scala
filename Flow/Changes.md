@@ -8,6 +8,7 @@
   - The abstract functions `.isChanging` and `.mayStopChanging` were replaced with `.destiny`
   - The abstract function `_addListenerOfPriority(...)` no longer needs to account for the case
   where the item has already stopped from changing, as it will only be called for still-changing items
+- **Cache** is now a trait instead of a class, and replaces the **CacheLike** -trait
 - Rewrote some parts of the **Matrix** classes
   - Implementing classes need to be adjusted a lot
   - `.iterator` and `.indexIterator` ordering may have changed, use the specifically ordered variants in case your 

@@ -1,11 +1,10 @@
 package utopia.flow.collection.immutable.caching.cache
 
 import utopia.flow.async.process.{LoopingProcess, Wait, WaitUtils}
-import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.collection.template.CacheLike
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.Now
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 
@@ -48,7 +47,7 @@ object ExpiringCache
   */
 class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Duration)
                          (implicit exc: ExecutionContext)
-	extends CacheLike[K, V]
+	extends Cache[K, V]
 {
 	// ATTRIBUTES   -----------------------------
 	

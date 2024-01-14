@@ -1,7 +1,5 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import utopia.flow.collection.template.CacheLike
-
 import scala.collection.immutable.HashMap
 import scala.ref.WeakReference
 
@@ -21,7 +19,7 @@ object WeakCache
   * @author Mikko Hilpinen
   * @since 11.11.2020, v1.9
   */
-class WeakCache[Key, Value <: AnyRef](request: Key => Value) extends CacheLike[Key, Value]
+class WeakCache[Key, Value <: AnyRef](request: Key => Value) extends Cache[Key, Value]
 {
 	// ATTRIBUTES	---------------
 	

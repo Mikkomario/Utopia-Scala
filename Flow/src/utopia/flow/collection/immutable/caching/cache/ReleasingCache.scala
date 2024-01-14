@@ -1,7 +1,5 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import utopia.flow.collection.template.CacheLike
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.ref.WeakReference
@@ -46,7 +44,7 @@ object ReleasingCache
   */
 class ReleasingCache[K, V <: AnyRef](request: K => V)(calculateReferenceLength: (K, V) => Duration)
                                     (implicit exc: ExecutionContext)
-	extends CacheLike[K, V]
+	extends Cache[K, V]
 {
 	// ATTRIBUTES   ------------------------------
 	

@@ -23,7 +23,7 @@ object MultiLazy
 	  * @tparam P Type of lazy containers used
 	  * @return A new cache that provides direct access to the values also
 	  */
-	def apply[K, V, P <: Lazy[V]](cacheCache: CacheLike[K, P]): MultiLazyLike[K, V, P] =
+	def apply[K, V, P <: Lazy[V]](cacheCache: Cache[K, P]): MultiLazyLike[K, V, P] =
 		new MultiLazyWrapper[K, V, P](cacheCache)
 	
 	/**
@@ -37,7 +37,7 @@ object MultiLazy
 	def apply[K, V, P <: Lazy[V]](cacheForKey: K => P): MultiLazyLike[K, V, P] =
 		apply[K, V, P](Cache[K, P](cacheForKey))
 	
-	private class MultiLazyWrapper[-K, +V, +P <: Lazy[V]](caches: CacheLike[K, P])
+	private class MultiLazyWrapper[-K, +V, +P <: Lazy[V]](caches: Cache[K, P])
 		extends MultiLazyLike[K, V, P]
 	{
 		override def cachedValues = caches.cachedValues.flatMap { _.current }
@@ -51,7 +51,7 @@ object MultiLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.10
   */
-trait MultiLazyLike[-K, +V, +P <: Lazy[V]] extends CacheLike[K, V]
+trait MultiLazyLike[-K, +V, +P <: Lazy[V]] extends Cache[K, V]
 {
 	// ABSTRACT ------------------------------
 	
